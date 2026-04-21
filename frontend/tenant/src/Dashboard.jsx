@@ -1,21 +1,16 @@
 import React from 'react';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import './App.css'; // Assuming common styles are here or will be added
 =======
 import { Link } from 'react-router-dom';
 import './App.css';
 >>>>>>> day1
+=======
+>>>>>>> parent of 49aa005 (completed tenant portal upgrades and env setup for day1)
 
 function Dashboard() {
-  const user = JSON.parse(localStorage.getItem('user') || '{"name": "Tenant"}');
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
-
-  const activities = [
-    { id: 1, type: 'payment', title: 'Rent Paid Successfully', desc: 'April 2026 rent payment confirmed', time: '2 hours ago', color: 'var(--accent-success)' },
-    { id: 2, type: 'complaint', title: 'WiFi Maintenance', desc: 'Your ticket #442 has been resolved', time: 'Yesterday', color: 'var(--accent-primary)' },
-    { id: 3, type: 'mess', title: 'Special Menu Update', desc: 'Biryani Special tonight at 8:00 PM', time: '12 Apr', color: 'var(--accent-warning)' },
-  ];
+  const user = JSON.parse(localStorage.getItem('user') || '{"name": "Guest"}');
 
   const stats = [
     {
@@ -62,6 +57,7 @@ function Dashboard() {
   ];
 
   return (
+<<<<<<< HEAD
     <div className="dashboard-container">
 <<<<<<< HEAD
       {/* Aesthetic Background Elements */}
@@ -202,10 +198,17 @@ function Dashboard() {
           </div>
         </aside>
 >>>>>>> day1
+=======
+    <div>
+      <h1>👤 Welcome, {user.name}</h1>
+      <p>Manage your hostel life and rewards.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
+        <div className="card"><h3>Next Rent Due</h3><h2 style={{ color: 'var(--accent-error)' }}>₹6,500</h2><p>Due in 5 days</p></div>
+        <div className="card"><h3>Loyalty Points</h3><h2 style={{ color: 'var(--accent-success)' }}>450</h2><p>Level: Silver</p></div>
+        <div className="card"><h3>Mess Attendance</h3><h2 style={{ color: 'var(--accent-primary)' }}>92%</h2><p>This month</p></div>
+>>>>>>> parent of 49aa005 (completed tenant portal upgrades and env setup for day1)
       </div>
     </div>
   );
 }
-
 export default Dashboard;
-
