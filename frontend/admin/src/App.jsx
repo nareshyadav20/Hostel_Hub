@@ -10,6 +10,7 @@ import Subscriptions from './pages/Subscriptions';
 import Payments from './pages/Payments';
 import Promotions from './pages/Promotions';
 import Partners from './pages/Partners';
+import Staff from './pages/Staff';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -29,6 +30,7 @@ function App() {
         <Route path="/payments" element={<Layout><Payments /></Layout>} />
         <Route path="/promotions" element={<Layout><Promotions /></Layout>} />
         <Route path="/partners" element={<Layout><Partners /></Layout>} />
+        <Route path="/staff" element={<Layout><Staff /></Layout>} />
         
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
