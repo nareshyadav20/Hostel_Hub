@@ -1,87 +1,214 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import './Search.css';
+
+// Importing assets
+import room1 from '../assets/hostels/modern_hostel_room_1_1776748847537.png';
+import common1 from '../assets/hostels/hostel_common_area_1_1776748912551.png';
+import single1 from '../assets/hostels/hostel_single_room_1_1776748933811.png';
 
 const Search = () => {
   const [filters, setFilters] = useState({
-    location: '', budget: 10000, gender: 'All', type: 'Any'
+    location: '', budget: 20000, gender: 'All', amenities: []
   });
 
+  const cities = [
+    { name: 'Bengaluru', icon: '📍' },
+    { name: 'Mumbai', icon: '🏢' },
+    { name: 'Pune', icon: '🏛️' },
+    { name: 'Delhi', icon: '🗼' },
+    { name: 'Hyderabad', icon: '🕌' },
+    { name: 'Chennai', icon: '🌊' }
+  ];
+
+  const amenityCategories = [
+    { name: 'WiFi', icon: '📶' },
+    { name: 'AC Rooms', icon: '❄️' },
+    { name: 'Food Included', icon: '🍱' },
+    { name: 'Parking', icon: '🚗' },
+    { name: 'Secure', icon: '🛡️' },
+    { name: 'Premium', icon: '✨' }
+  ];
+
   const hostels = [
-    { id: 1, name: 'Sunshine Residency', location: 'Near City College', price: 6500, gender: 'Boys', type: '2 Sharing', rating: 4.5, image: '🏨' },
-    { id: 2, name: 'Elite Living', location: 'Tech Park Area', price: 8500, gender: 'Girls', type: 'Single', rating: 4.8, image: '🏢' },
-    { id: 3, name: 'Green View Hostel', location: 'Green Valley', price: 5000, gender: 'Co-living', type: '4 Sharing', rating: 4.2, image: '🏡' },
+    { 
+      id: 1, 
+      name: 'Sunrise Student Stay', 
+      location: 'Koramangala, Bengaluru', 
+      price: 6500, 
+      gender: 'CO-ED', 
+      rating: 4.8, 
+      image: room1 
+    },
+    { 
+      id: 2, 
+      name: 'The Brick House Co-Living', 
+      location: 'HSR Layout, Bengaluru', 
+      price: 8000, 
+      gender: 'CO-ED', 
+      rating: 4.7, 
+      image: common1 
+    },
+    { 
+      id: 3, 
+      name: 'Quiet Quarters PG', 
+      location: 'Indiranagar, Bengaluru', 
+      price: 7500, 
+      gender: 'FEMALE', 
+      rating: 4.6, 
+      image: single1 
+    },
+    { 
+      id: 4, 
+      name: 'City Center Boys Hostel', 
+      location: 'Whitefield, Bengaluru', 
+      price: 5500, 
+      gender: 'MALE', 
+      rating: 4.4, 
+      image: common1 
+    },
+    { 
+      id: 5, 
+      name: 'The Maple Loft', 
+      location: 'Bandra West, Mumbai', 
+      price: 11000, 
+      gender: 'CO-ED', 
+      rating: 4.9, 
+      image: room1 
+    },
+    { 
+      id: 6, 
+      name: 'GreenLeaf Residency', 
+      location: 'Aundh, Pune', 
+      price: 6000, 
+      gender: 'CO-ED', 
+      rating: 4.5, 
+      image: common1 
+    }
   ];
 
   return (
     <div className="search-page">
-      <header style={{ marginBottom: '2rem' }}>
-        <h1>🔍 Find Your Perfect Stay</h1>
-        <p>Browse through hundreds of verified hostels near your location.</p>
-      </header>
+      {/* Hero Section */}
+      <section className="search-hero">
+        <h1>Find Your Perfect Stay</h1>
+        <p>Explore verified hostels and PGs across India's top cities.</p>
+        <div className="hero-search-container">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" placeholder="Search by city, area or hostel name..." />
+          <button className="search-btn">Search</button>
+        </div>
+      </section>
 
-      <div className="search-layout" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
-        {/* Filters Sidebar */}
-        <aside className="filters card">
-          <h3 style={{ marginBottom: '1.5rem' }}>Filters</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div className="input-group">
-              <label>Location</label>
-              <input type="text" placeholder="Search by area..." />
+      {/* City Pills */}
+      <div className="city-pills">
+        {cities.map(city => (
+          <div key={city.name} className="city-pill">
+            <span>{city.icon}</span> {city.name}
+          </div>
+        ))}
+      </div>
+
+      {/* Amenity Categories */}
+      <div className="amenity-categories">
+        {amenityCategories.map(cat => (
+          <div key={cat.name} className="amenity-card">
+            <div className="amenity-icon">{cat.icon}</div>
+            <span>{cat.name}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Trending Header */}
+      <div className="section-header">
+        <h2>Trending stays</h2>
+        <Link to="#" className="view-all">View all ➔</Link>
+      </div>
+      <p style={{ marginTop: '-1rem', marginBottom: '2rem', color: 'var(--text-secondary)' }}>Loved by students this week</p>
+
+      {/* Search Layout (Filters + Results) */}
+      <div className="search-results-layout">
+        <aside className="filters-sidebar">
+          <div className="filter-section">
+            <h4>Gender</h4>
+            <div className="gender-pills">
+              {['All', 'Male', 'Female', 'Co-ed'].map(g => (
+                <button 
+                  key={g} 
+                  className={`gender-pill ${filters.gender === g ? 'active' : ''}`}
+                  onClick={() => setFilters({...filters, gender: g})}
+                >
+                  {g}
+                </button>
+              ))}
             </div>
-            <div className="input-group">
-              <label>Budget (upto ₹{filters.budget})</label>
-              <input type="range" min="2000" max="20000" step="500" value={filters.budget} onChange={(e) => setFilters({...filters, budget: e.target.value})} />
+          </div>
+
+          <div className="filter-section">
+            <div className="budget-info">
+              <h4>Max budget</h4>
+              <span>₹{filters.budget}</span>
             </div>
-            <div className="input-group">
-              <label>Gender Preference</label>
-              <select className="btn" style={{ border: '1px solid var(--border-color)', width: '100%' }}>
-                <option>All</option>
-                <option>Boys</option>
-                <option>Girls</option>
-                <option>Co-living</option>
-              </select>
+            <input 
+              type="range" 
+              className="range-slider" 
+              min="2000" 
+              max="30000" 
+              step="500"
+              value={filters.budget}
+              onChange={(e) => setFilters({...filters, budget: e.target.value})}
+            />
+          </div>
+
+          <div className="filter-section">
+            <h4>Amenities</h4>
+            <div className="amenities-pills">
+              {['WiFi', 'AC', 'Food', 'Parking', 'Gym', 'Laundry'].map(a => (
+                <button key={a} className="amenity-pill">{a}</button>
+              ))}
             </div>
-            <div className="amenities">
-              <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Amenities</label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-                {['WiFi', 'AC', 'Laundry', 'Parking', 'Food'].map(item => (
-                  <label key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
-                    <input type="checkbox" /> {item}
-                  </label>
-                ))}
-              </div>
-            </div>
-            <button className="btn btn-primary">Apply Filters</button>
           </div>
         </aside>
 
-        {/* Results Grid */}
-        <main className="results-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-          {hostels.map(hostel => (
-            <div key={hostel.id} className="card result-card" style={{ padding: '0', overflow: 'hidden' }}>
-              <div style={{ height: '180px', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyCenter: 'center', fontSize: '4rem' }}>
-                {hostel.image}
-              </div>
-              <div style={{ padding: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <h3>{hostel.name}</h3>
-                  <span style={{ color: 'var(--accent-warning)' }}>★ {hostel.rating}</span>
+        <main className="results-list">
+          <p style={{ marginBottom: '1.5rem', fontWeight: '600' }}>{hostels.length} stays found</p>
+          <div className="results-grid">
+            {hostels.map(hostel => (
+              <div key={hostel.id} className="hostel-card">
+                <div className="card-image-container">
+                  <img src={hostel.image} alt={hostel.name} />
+                  <span className={`badge ${hostel.gender.toLowerCase()}`}>{hostel.gender}</span>
+                  <button className="wishlist-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                  </button>
                 </div>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.5rem 0' }}>📍 {hostel.location}</p>
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  <span style={{ fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.1)', color: 'var(--accent-primary)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{hostel.gender}</span>
-                  <span style={{ fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.1)', color: 'var(--accent-primary)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{hostel.type}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem' }}>
-                  <div>
-                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-success)' }}>₹{hostel.price}</span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}> / month</span>
+                <div className="card-body">
+                  <div className="card-header-flex">
+                    <h3>{hostel.name}</h3>
+                    <div className="rating">
+                      <span style={{ color: '#f59e0b' }}>★</span> {hostel.rating}
+                    </div>
                   </div>
-                  <Link to={`/listing/${hostel.id}`} className="btn btn-primary" style={{ padding: '0.5rem 1rem' }}>View Details</Link>
+                  <div className="location-info">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    {hostel.location}
+                  </div>
+                  <div className="price-info">
+                    <span className="amount">₹{hostel.price}</span>
+                    <span className="period">/ month</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </main>
       </div>
     </div>
