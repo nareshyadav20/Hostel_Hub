@@ -43,7 +43,7 @@ function Dashboard() {
   return (
     <div className="dashboard-view">
       <header style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: '800' }}>🏘️ Portfolio Overview</h1>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: '800' }}>Portfolio Overview</h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Real-time insights across all your buildings.</p>
       </header>
 
