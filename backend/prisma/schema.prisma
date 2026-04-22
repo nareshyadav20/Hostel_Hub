@@ -1,6 +1,7 @@
 // This is your Prisma schema file
 generator client {
   provider = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
@@ -37,10 +38,12 @@ model Hostel {
   owner         User      @relation("HostelOwner", fields: [ownerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   ownerId       String    @db.ObjectId
   
-  buildings     Building[]
+  floorMappings HostelFloorMapping[]
   staff         User[]    @relation("HostelStaff")
   complaints    Complaint[]
   foodMenus     FoodMenu[]
+  
+  images        String[]
   
   subscription  Subscription?
   createdAt     DateTime  @default(now())
@@ -50,27 +53,51 @@ model Hostel {
 model Building {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
-  hostel    Hostel   @relation(fields: [hostelId], references: [id])
-  hostelId  String   @db.ObjectId
-  rooms     Room[]
+  address   String?
+  images    String[]
+  floors    Floor[]
+}
+
+model Floor {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  floorNumber  String
+  images       String[]
+  building     Building @relation(fields: [buildingId], references: [id])
+  buildingId   String   @db.ObjectId
+  rooms        Room[]
+  hostelMappings HostelFloorMapping[]
 }
 
 model Room {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  number      String
-  floor       Int
-  building    Building @relation(fields: [buildingId], references: [id])
-  buildingId  String   @db.ObjectId
+  roomNumber  String
+  roomType    String
+  capacity    Int
+  images      String[]
+  floor       Floor    @relation(fields: [floorId], references: [id])
+  floorId     String   @db.ObjectId
   beds        Bed[]
 }
 
 model Bed {
-  id       String   @id @default(auto()) @map("_id") @db.ObjectId
-  number   String
-  isOccupied Boolean @default(false)
-  room     Room     @relation(fields: [roomId], references: [id])
-  roomId   String   @db.ObjectId
-  tenant   Tenant?
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  bedNumber   String
+  status      String   @default("AVAILABLE") // AVAILABLE, OCCUPIED
+  images      String[]
+  room        Room     @relation(fields: [roomId], references: [id])
+  roomId      String   @db.ObjectId
+  tenant      Tenant?
+}
+
+model HostelFloorMapping {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  hostel      Hostel   @relation(fields: [hostelId], references: [id])
+  hostelId    String   @db.ObjectId
+  floor       Floor    @relation(fields: [floorId], references: [id])
+  floorId     String   @db.ObjectId
+  buildingId  String   @db.ObjectId
+  
+  @@unique([hostelId, floorId])
 }
 
 model Tenant {

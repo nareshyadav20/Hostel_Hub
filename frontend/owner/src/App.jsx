@@ -13,6 +13,8 @@ import Mess from './pages/Mess';
 import Complaints from './pages/Complaints';
 import Inventory from './pages/Inventory';
 import Notifications from './pages/Notifications';
+import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -35,6 +37,8 @@ function App() {
         <Route path="/complaints" element={<Layout><Complaints /></Layout>} />
         <Route path="/inventory" element={<Layout><Inventory /></Layout>} />
         <Route path="/notifications" element={<Layout><Notifications /></Layout>} />
+        <Route path="/reports" element={<Layout><Reports /></Layout>} />
+        <Route path="/settings" element={<Layout><Settings /></Layout>} />
         
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
