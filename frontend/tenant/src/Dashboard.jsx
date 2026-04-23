@@ -1,5 +1,5 @@
 import React from 'react';
-import './App.css'; // Assuming common styles are here or will be added
+import './App.css';
 
 function Dashboard() {
   const user = JSON.parse(localStorage.getItem('user') || '{"name": "Guest"}');
@@ -110,5 +110,4 @@ function Dashboard() {
     </div>
   );
 }
-
 export default Dashboard;
