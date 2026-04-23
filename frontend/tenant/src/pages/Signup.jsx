@@ -4,7 +4,8 @@ import '@packages/ui-kit/auth.css';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', age: '', gender: 'Male', occupation: '', idProof: '', emergencyContact: ''
+    name: '', mobile: '', email: '', password: '', age: '', gender: 'Male', occupation: '', idProof: '', emergencyContact: '',
+    city: '', budget: '', roommates: '', foodPref: '', sleepTiming: '', language: '', stayDuration: '', shiftTiming: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,6 +58,14 @@ const Signup = () => {
           </div>
 
           <div className="input-group">
+            <label>Mobile Number (+ OTP)</label>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input type="tel" name="mobile" placeholder="10-digit number" onChange={handleChange} required style={{ flex: 1 }} />
+              <button type="button" className="btn btn-secondary" style={{ padding: '0 1rem' }}>Get OTP</button>
+            </div>
+          </div>
+
+          <div className="input-group">
             <label>Email Address</label>
             <input type="email" name="email" placeholder="name@example.com" onChange={handleChange} required />
           </div>
@@ -91,8 +100,77 @@ const Signup = () => {
           </div>
 
           <div className="input-group" style={{ gridColumn: 'span 2' }}>
-            <label>ID Proof (Aadhar / PAN)</label>
-            <input type="text" name="idProof" placeholder="Enter ID Number" onChange={handleChange} required />
+            <label>ID Proof (Aadhar / PAN) Upload</label>
+            <input type="file" name="idProof" onChange={handleChange} required style={{ padding: '0.6rem' }} />
+          </div>
+
+          {/* Smart Profile Features */}
+          <div className="input-group" style={{ gridColumn: 'span 2', marginTop: '1rem' }}>
+            <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>Smart Profile Features</h3>
+          </div>
+
+          <div className="input-group">
+            <label>Preferred City / Area</label>
+            <input type="text" name="city" placeholder="e.g. Indiranagar, Bangalore" onChange={handleChange} required />
+          </div>
+
+          <div className="input-group">
+            <label>Budget Range</label>
+            <select name="budget" onChange={handleChange} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.8rem', color: 'var(--text-primary)' }}>
+              <option value="">Select Budget</option>
+              <option value="5k-8k">₹5,000 - ₹8,000</option>
+              <option value="8k-12k">₹8,000 - ₹12,000</option>
+              <option value="12k+">₹12,000+</option>
+            </select>
+          </div>
+
+          <div className="input-group">
+            <label>Preferred Roommates</label>
+            <select name="roommates" onChange={handleChange} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.8rem', color: 'var(--text-primary)' }}>
+              <option value="Students">Students</option>
+              <option value="Professionals">Working Professionals</option>
+              <option value="Any">Doesn't Matter</option>
+            </select>
+          </div>
+
+          <div className="input-group">
+            <label>Food Preference</label>
+            <select name="foodPref" onChange={handleChange} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.8rem', color: 'var(--text-primary)' }}>
+              <option value="Veg">Vegetarian</option>
+              <option value="NonVeg">Non-Vegetarian</option>
+              <option value="Both">Both</option>
+            </select>
+          </div>
+
+          <div className="input-group">
+            <label>Sleep Timing</label>
+            <select name="sleepTiming" onChange={handleChange} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.8rem', color: 'var(--text-primary)' }}>
+              <option value="Early">Early Bird (before 11 PM)</option>
+              <option value="Late">Night Owl (after 12 AM)</option>
+            </select>
+          </div>
+
+          <div className="input-group">
+            <label>Language Preference</label>
+            <input type="text" name="language" placeholder="English, Hindi, etc." onChange={handleChange} required />
+          </div>
+
+          <div className="input-group">
+            <label>Stay Duration</label>
+            <select name="stayDuration" onChange={handleChange} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.8rem', color: 'var(--text-primary)' }}>
+              <option value="1-3">1 - 3 Months</option>
+              <option value="3-6">3 - 6 Months</option>
+              <option value="6+">6+ Months</option>
+            </select>
+          </div>
+
+          <div className="input-group">
+            <label>Shift Timing (Employees)</label>
+            <select name="shiftTiming" onChange={handleChange} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.8rem', color: 'var(--text-primary)' }}>
+              <option value="Day">Day Shift</option>
+              <option value="Night">Night Shift</option>
+              <option value="Flexible">Flexible</option>
+            </select>
           </div>
           
           <button type="submit" className="auth-btn" style={{ gridColumn: 'span 2' }} disabled={loading}>

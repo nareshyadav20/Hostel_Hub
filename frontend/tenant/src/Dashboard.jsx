@@ -50,6 +50,116 @@ function Dashboard() {
             </div>
           </div>
 
+          <h3 style={{ marginTop: '2.5rem' }}>Live Hostel Status</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginTop: '1rem' }}>
+            <div className="card" style={{ padding: '1rem', textAlign: 'center' }}>
+              <span style={{ fontSize: '1.5rem' }}>💧</span>
+              <h4 style={{ margin: '0.5rem 0 0.2rem' }}>Water</h4>
+              <span style={{ fontSize: '0.8rem', color: 'var(--accent-success)', fontWeight: 'bold' }}>Available</span>
+            </div>
+            <div className="card" style={{ padding: '1rem', textAlign: 'center' }}>
+              <span style={{ fontSize: '1.5rem' }}>⚡</span>
+              <h4 style={{ margin: '0.5rem 0 0.2rem' }}>Power</h4>
+              <span style={{ fontSize: '0.8rem', color: 'var(--accent-warning)', fontWeight: 'bold' }}>Backup</span>
+            </div>
+            <div className="card" style={{ padding: '1rem', textAlign: 'center' }}>
+              <span style={{ fontSize: '1.5rem' }}>📶</span>
+              <h4 style={{ margin: '0.5rem 0 0.2rem' }}>WiFi</h4>
+              <span style={{ fontSize: '0.8rem', color: 'var(--accent-success)', fontWeight: 'bold' }}>Working (50Mbps)</span>
+            </div>
+            <div className="card" style={{ padding: '1rem', textAlign: 'center' }}>
+              <span style={{ fontSize: '1.5rem' }}>🧹</span>
+              <h4 style={{ margin: '0.5rem 0 0.2rem' }}>Washroom</h4>
+              <span style={{ fontSize: '0.8rem', color: 'var(--accent-error)', fontWeight: 'bold' }}>Needs Cleaning</span>
+            </div>
+            <div className="card" style={{ padding: '1rem', textAlign: 'center' }}>
+              <span style={{ fontSize: '1.5rem' }}>🍲</span>
+              <h4 style={{ margin: '0.5rem 0 0.2rem' }}>Food Rating</h4>
+              <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: 'bold' }}>4.2/5 (Live)</span>
+            </div>
+            <div className="card" style={{ padding: '1rem', textAlign: 'center' }}>
+              <span style={{ fontSize: '1.5rem' }}>🔊</span>
+              <h4 style={{ margin: '0.5rem 0 0.2rem' }}>Noise Level</h4>
+              <span style={{ fontSize: '0.8rem', color: 'var(--accent-success)', fontWeight: 'bold' }}>Low</span>
+            </div>
+          </div>
+
+          {/* Role Specific Features */}
+          <h3 style={{ marginTop: '2.5rem' }}>{user.occupation === 'Student' ? '🎓 Student Perks' : '💼 Employee Perks'}</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1rem' }}>
+            {user.occupation === 'Student' ? (
+              <>
+                <div className="card" style={{ padding: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <div style={{ fontSize: '2rem' }}>🤫</div>
+                  <div>
+                    <h4 style={{ margin: 0 }}>Exam Mode</h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Activate quiet hours for your floor.</p>
+                  </div>
+                  <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Activate</button>
+                </div>
+                <div className="card" style={{ padding: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <div style={{ fontSize: '2rem' }}>👨‍👩‍👧</div>
+                  <div>
+                    <h4 style={{ margin: 0 }}>Parent Pay</h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Send payment link to parents.</p>
+                  </div>
+                  <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Send</button>
+                </div>
+                <div className="card" style={{ padding: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <div style={{ fontSize: '2rem' }}>📍</div>
+                  <div>
+                    <h4 style={{ margin: 0 }}>Hostel Attendance</h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Mark your daily presence.</p>
+                  </div>
+                  <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Check-in</button>
+                </div>
+                <div className="card" style={{ padding: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <div style={{ fontSize: '2rem' }}>🕒</div>
+                  <div>
+                    <h4 style={{ margin: 0 }}>Curfew Request</h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Request late entry permission.</p>
+                  </div>
+                  <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Request</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="card" style={{ padding: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <div style={{ fontSize: '2rem' }}>🌙</div>
+                  <div>
+                    <h4 style={{ margin: 0 }}>Night Shift Access</h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Manage auto-entry for late shifts.</p>
+                  </div>
+                  <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Setup</button>
+                </div>
+                <div className="card" style={{ padding: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <div style={{ fontSize: '2rem' }}>📄</div>
+                  <div>
+                    <h4 style={{ margin: 0 }}>GST Invoices</h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Download tax invoices for office claims.</p>
+                  </div>
+                  <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>View</button>
+                </div>
+                <div className="card" style={{ padding: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <div style={{ fontSize: '2rem' }}>🏢</div>
+                  <div>
+                    <h4 style={{ margin: 0 }}>Corporate Booking</h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Manage bulk bookings for teams.</p>
+                  </div>
+                  <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Manage</button>
+                </div>
+                <div className="card" style={{ padding: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <div style={{ fontSize: '2rem' }}>⏰</div>
+                  <div>
+                    <h4 style={{ margin: 0 }}>Flexible Entry</h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Request 24/7 access during projects.</p>
+                  </div>
+                  <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Activate</button>
+                </div>
+              </>
+            )}
+          </div>
+
           <h3 style={{ marginTop: '2.5rem' }}>Quick Actions</h3>
           <div className="quick-actions">
             <Link to="/payments" className="action-btn">

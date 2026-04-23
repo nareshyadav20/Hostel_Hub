@@ -41,10 +41,38 @@ const Search = () => {
                 <option>Co-living</option>
               </select>
             </div>
+            <div className="input-group">
+              <label>Room Type</label>
+              <select className="btn" style={{ border: '1px solid var(--border-color)', width: '100%' }}>
+                <option>Any</option>
+                <option>Single</option>
+                <option>2 Sharing</option>
+                <option>3+ Sharing</option>
+              </select>
+            </div>
+            <div className="input-group">
+              <label>Proximity</label>
+              <select className="btn" style={{ border: '1px solid var(--border-color)', width: '100%' }}>
+                <option>Any</option>
+                <option>Near College</option>
+                <option>Near Office</option>
+                <option>Near Metro/Bus</option>
+              </select>
+            </div>
             <div className="amenities">
               <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Amenities</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-                {['WiFi', 'AC', 'Laundry', 'Parking', 'Food'].map(item => (
+                {['WiFi (High Speed)', 'AC / Non AC', 'Food Included', 'Laundry', 'Parking', 'Security', 'Power Backup', 'Attached Washroom'].map(item => (
+                  <label key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
+                    <input type="checkbox" /> {item}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="amenities">
+              <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Advanced Filters</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                {['Professionals Only', 'Students Only', 'Freshers Friendly', 'Gym Nearby', 'Instant Move-in'].map(item => (
                   <label key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
                     <input type="checkbox" /> {item}
                   </label>
