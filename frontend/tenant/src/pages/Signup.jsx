@@ -80,14 +80,40 @@ const Signup = () => {
             </select>
           </div>
 
-          <div className="input-group">
+          <div className="input-group" style={{ gridColumn: 'span 2' }}>
             <label>Occupation</label>
-            <input type="text" name="occupation" placeholder="Student / Employee" onChange={handleChange} required />
+            <select name="occupation" onChange={handleChange} value={formData.occupation} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.8rem', color: 'var(--text-primary)' }} required>
+              <option value="">Select Occupation</option>
+              <option value="Student">Student</option>
+              <option value="Employee">Employee</option>
+              <option value="Freelancer">Freelancer</option>
+              <option value="Job Seeker">Job Seeker</option>
+              <option value="Intern">Intern</option>
+            </select>
           </div>
+
+          {formData.occupation === 'Student' && (
+            <div className="input-group form-step" style={{ gridColumn: 'span 2' }}>
+              <label>College / University Name</label>
+              <input type="text" name="organization" placeholder="IIT Delhi / VIT" onChange={handleChange} required />
+            </div>
+          )}
+
+          {formData.occupation === 'Employee' && (
+            <div className="input-group form-step" style={{ gridColumn: 'span 2' }}>
+              <label>Company / Organization Name</label>
+              <input type="text" name="organization" placeholder="Google / Microsoft" onChange={handleChange} required />
+            </div>
+          )}
 
           <div className="input-group">
             <label>Emergency Contact</label>
             <input type="text" name="emergencyContact" placeholder="+91 98765 43210" onChange={handleChange} required />
+          </div>
+
+          <div className="input-group">
+            <label>Current Address</label>
+            <input type="text" name="currentAddress" placeholder="City, State" onChange={handleChange} required />
           </div>
 
           <div className="input-group" style={{ gridColumn: 'span 2' }}>

@@ -39,44 +39,45 @@ const Cleaning = () => {
         </div>
       </div>
 
-      <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+      <div className="table-container">
+        <table className="premium-table">
           <thead>
-            <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
-              <th style={{ padding: '1.2rem' }}>Room Number</th>
-              <th style={{ padding: '1.2rem' }}>Task Type</th>
-              <th style={{ padding: '1.2rem' }}>Status</th>
-              <th style={{ padding: '1.2rem' }}>Action</th>
+            <tr>
+              <th>Room Number</th>
+              <th>Task Type</th>
+              <th>Status</th>
+              <th style={{ textAlign: 'right' }}>Action</th>
             </tr>
           </thead>
           <tbody>
             {tasks.map(task => (
-              <tr key={task.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <td style={{ padding: '1.2rem', fontWeight: '700' }}>Room {task.room}</td>
-                <td style={{ padding: '1.2rem' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{task.type}</span>
+              <tr key={task.id}>
+                <td style={{ fontWeight: '700' }}>Room {task.room}</td>
+                <td>
+                  <span style={{ fontSize: '0.9rem' }}>{task.type}</span>
                 </td>
-                <td style={{ padding: '1.2rem' }}>
-                  <span style={{ 
-                    padding: '0.3rem 0.8rem', 
-                    borderRadius: '20px', 
-                    fontSize: '0.75rem', 
-                    fontWeight: '700',
-                    background: task.status === 'Completed' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                    color: task.status === 'Completed' ? 'var(--accent-success)' : 'var(--accent-warning)'
-                  }}>
+                <td>
+                  <span className={`table-badge ${task.status === 'Completed' ? 'success' : 'warning'}`}>
                     {task.status}
                   </span>
                 </td>
-                <td style={{ padding: '1.2rem' }}>
-                  {task.status !== 'Completed' && (
+                <td style={{ textAlign: 'right' }}>
+                  {task.status !== 'Completed' ? (
                     <button 
                       onClick={() => markCompleted(task.id)}
                       className="btn" 
-                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', border: '1px solid var(--accent-success)', color: 'var(--accent-success)' }}
+                      style={{ 
+                        padding: '0.5rem 1rem', 
+                        fontSize: '0.85rem', 
+                        background: 'rgba(16, 185, 129, 0.1)', 
+                        color: 'var(--accent-success)',
+                        fontWeight: '700'
+                      }}
                     >
-                      Mark Completed
+                      Done
                     </button>
+                  ) : (
+                    <span style={{ color: 'var(--accent-success)', fontSize: '0.9rem' }}>✓ Verified</span>
                   )}
                 </td>
               </tr>

@@ -30,49 +30,42 @@ const Inventory = () => {
         <p>Track and update stock for mess and cleaning supplies.</p>
       </header>
 
-      <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+      <div className="table-container">
+        <table className="premium-table">
           <thead>
-            <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
-              <th style={{ padding: '1.2rem' }}>Item Name</th>
-              <th style={{ padding: '1.2rem' }}>Current Stock</th>
-              <th style={{ padding: '1.2rem' }}>Status</th>
-              <th style={{ padding: '1.2rem' }}>Actions</th>
+            <tr>
+              <th>Item Name</th>
+              <th>Current Stock</th>
+              <th>Status</th>
+              <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {items.map(item => (
-              <tr key={item.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <td style={{ padding: '1.2rem', fontWeight: '700' }}>{item.name}</td>
-                <td style={{ padding: '1.2rem' }}>
-                  <span style={{ fontSize: '1.1rem', fontWeight: '800' }}>{item.stock}</span>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.3rem' }}>{item.unit}</span>
+              <tr key={item.id}>
+                <td style={{ fontWeight: '700' }}>{item.name}</td>
+                <td>
+                  <span style={{ fontSize: '1.2rem', fontWeight: '800' }}>{item.stock}</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '0.4rem' }}>{item.unit}</span>
                 </td>
-                <td style={{ padding: '1.2rem' }}>
-                  <span style={{ 
-                    padding: '0.3rem 0.8rem', 
-                    borderRadius: '20px', 
-                    fontSize: '0.75rem', 
-                    fontWeight: '700',
-                    background: item.status === 'Low Stock' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                    color: item.status === 'Low Stock' ? 'var(--accent-error)' : 'var(--accent-success)'
-                  }}>
+                <td>
+                  <span className={`table-badge ${item.status === 'Low Stock' ? 'error' : 'success'}`}>
                     {item.status}
                   </span>
                 </td>
-                <td style={{ padding: '1.2rem' }}>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <td style={{ textAlign: 'right' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                     <button 
                       onClick={() => updateStock(item.id, -1)}
                       className="btn" 
-                      style={{ padding: '0.3rem 0.8rem', border: '1px solid var(--border-color)' }}
+                      style={{ padding: '0.4rem 0.8rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
                     >
                       -
                     </button>
                     <button 
                       onClick={() => updateStock(item.id, 1)}
                       className="btn" 
-                      style={{ padding: '0.3rem 0.8rem', border: '1px solid var(--border-color)' }}
+                      style={{ padding: '0.4rem 0.8rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
                     >
                       +
                     </button>

@@ -20,22 +20,35 @@ const Complaints = () => {
         </button>
       </header>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {complaints.map(item => (
-          <div key={item.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.3rem' }}>{item.issue}</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Reported on {item.date}</p>
-            </div>
-            <span style={{ 
-              padding: '0.4rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '800',
-              background: item.status === 'Resolved' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-              color: item.status === 'Resolved' ? 'var(--accent-success)' : 'var(--accent-warning)'
-            }}>
-              {item.status}
-            </span>
-          </div>
-        ))}
+      <div className="table-container">
+        <table className="premium-table">
+          <thead>
+            <tr>
+              <th>Issue</th>
+              <th>Reported Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {complaints.map(item => (
+              <tr key={item.id}>
+                <td style={{ fontWeight: '600' }}>{item.issue}</td>
+                <td>{item.date}</td>
+                <td>
+                  <span className={`table-badge ${item.status === 'Resolved' ? 'success' : 'warning'}`}>
+                    {item.status}
+                  </span>
+                </td>
+                <td>
+                  <button className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)' }}>
+                    View Details
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

@@ -1,40 +1,41 @@
 .layout {
   display: flex;
   min-height: 100vh;
-  background-color: var(--bg-primary);
 }
 
 .main-content {
   flex: 1;
-  margin-left: 260px; /* Same as sidebar width */
-  display: flex;
-  flex-direction: column;
+  margin-left: 280px;
+  padding: 0 20px 20px 20px;
+  min-height: 100vh;
+  transition: var(--transition-premium);
 }
 
 .content-header {
-  height: 70px;
-  padding: 0 2rem;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
+  height: 50px; /* Minimal header */
+  background: var(--glass-bg);
+  backdrop-filter: blur(15px);
+  border-bottom: 1px solid var(--glass-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 1rem;
+  margin: 0 0 15px 0;
+  box-shadow: none;
   position: sticky;
   top: 0;
-  z-index: 90;
+  z-index: 100;
 }
 
 .search-bar {
-  background: var(--bg-primary);
-  padding: 0.6rem 1.2rem;
-  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  width: 350px;
-  border: 1px solid var(--border-color);
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.3rem 0.8rem;
+  border-radius: 8px;
+  width: 250px; /* Slim search bar */
+  border: 1px solid var(--glass-border);
 }
 
 .search-bar:focus-within {

@@ -1,17 +1,88 @@
 @import "@packages/ui-kit/globals.css";
 
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  --card-border-radius: 24px;
+  --transition-premium: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Partner Portal Specific Styles */
 #root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-primary);
 }
 
 .dashboard-container {
-  padding: 2rem;
-  max-width: 1200px;
+  padding: 2.5rem;
+  max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+}
+
+/* Premium Table Design System */
+.table-container {
+  background: var(--glass-bg);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--card-border-radius);
+  overflow: hidden;
+  box-shadow: var(--glass-shadow);
+  margin-top: 1.5rem;
+}
+
+.premium-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.premium-table thead tr {
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.premium-table th {
+  padding: 1.5rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.premium-table td {
+  padding: 1.5rem;
+  font-size: 1rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--glass-border);
+  transition: var(--transition-premium);
+}
+
+.premium-table tr:last-child td {
+  border-bottom: none;
+}
+
+.premium-table tr:hover td {
+  background: rgba(var(--accent-primary-rgb), 0.03);
+  color: var(--accent-primary);
+}
+
+.table-badge {
+  display: inline-flex;
+  padding: 0.4rem 1rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.table-badge.success {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--accent-success);
 }
 
 .card {

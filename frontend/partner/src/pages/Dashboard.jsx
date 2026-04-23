@@ -40,42 +40,33 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="table-container">
+        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Recent Orders</h2>
           <button className="btn" style={{ fontSize: '0.875rem', color: 'var(--accent-primary)', padding: '0.5rem 1rem' }}>View All Orders</button>
         </div>
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <table className="premium-table">
             <thead>
-              <tr style={{ backgroundColor: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
-                <th style={{ padding: '1rem 1.5rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Order ID</th>
-                <th style={{ padding: '1rem 1.5rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Customer</th>
-                <th style={{ padding: '1rem 1.5rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Service</th>
-                <th style={{ padding: '1rem 1.5rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Date</th>
-                <th style={{ padding: '1rem 1.5rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Amount</th>
-                <th style={{ padding: '1rem 1.5rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Status</th>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Service</th>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
               {recentOrders.map((order, i) => (
-                <tr key={i} style={{ borderBottom: i !== recentOrders.length - 1 ? '1px solid var(--border-color)' : 'none', transition: 'var(--transition-fast)' }}>
-                  <td style={{ padding: '1rem 1.5rem', fontWeight: '500' }}>{order.id}</td>
-                  <td style={{ padding: '1rem 1.5rem' }}>{order.customer}</td>
-                  <td style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)' }}>{order.service}</td>
-                  <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)' }}>{order.date}</td>
-                  <td style={{ padding: '1rem 1.5rem', fontWeight: '600' }}>{order.amount}</td>
-                  <td style={{ padding: '1rem 1.5rem' }}>
-                    <span style={{
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '9999px',
-                      fontSize: '0.75rem',
-                      fontWeight: '600',
-                      backgroundColor: order.status === 'Completed' ? 'rgba(16, 185, 129, 0.1)' : 
-                                       order.status === 'Pending' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                      color: order.status === 'Completed' ? 'var(--accent-success)' : 
-                             order.status === 'Pending' ? 'var(--accent-warning)' : 'var(--accent-secondary)'
-                    }}>
+                <tr key={i}>
+                  <td style={{ fontWeight: '500' }}>{order.id}</td>
+                  <td>{order.customer}</td>
+                  <td>{order.service}</td>
+                  <td>{order.date}</td>
+                  <td style={{ fontWeight: '600' }}>{order.amount}</td>
+                  <td>
+                    <span className={`table-badge ${order.status === 'Completed' ? 'success' : 'warning'}`}>
                       {order.status}
                     </span>
                   </td>

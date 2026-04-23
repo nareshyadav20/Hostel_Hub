@@ -13,6 +13,9 @@ import Rewards from './pages/Rewards';
 import Complaints from './pages/Complaints';
 import Transfers from './pages/Transfers';
 import Discounts from './pages/Discounts';
+import Laundry from './pages/Laundry';
+import Community from './pages/Community';
+import Safety from './pages/Safety';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -35,6 +38,9 @@ function App() {
         <Route path="/complaints" element={<Layout><Complaints /></Layout>} />
         <Route path="/transfers" element={<Layout><Transfers /></Layout>} />
         <Route path="/discounts" element={<Layout><Discounts /></Layout>} />
+        <Route path="/laundry" element={<Layout><Laundry /></Layout>} />
+        <Route path="/community" element={<Layout><Community /></Layout>} />
+        <Route path="/safety" element={<Layout><Safety /></Layout>} />
         
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>

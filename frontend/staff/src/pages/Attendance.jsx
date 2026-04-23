@@ -63,44 +63,37 @@ const Attendance = () => {
         </div>
       </div>
 
-      <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div className="table-container">
+        <table className="premium-table">
           <thead>
-            <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', textAlign: 'left' }}>
-              <th style={{ padding: '1.2rem' }}>Tenant Name</th>
-              <th style={{ padding: '1.2rem' }}>Room</th>
-              <th style={{ padding: '1.2rem', textAlign: 'center' }}>Status</th>
-              <th style={{ padding: '1.2rem', textAlign: 'center' }}>Action</th>
+            <tr>
+              <th>Tenant Name</th>
+              <th>Room</th>
+              <th style={{ textAlign: 'center' }}>Status</th>
+              <th style={{ textAlign: 'right' }}>Action</th>
             </tr>
           </thead>
           <tbody>
             {tenants.map(tenant => (
-              <tr key={tenant.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <td style={{ padding: '1.2rem', fontWeight: '600' }}>{tenant.name}</td>
-                <td style={{ padding: '1.2rem' }}>{tenant.room}</td>
-                <td style={{ padding: '1.2rem', textAlign: 'center' }}>
-                  <span style={{ 
-                    padding: '0.3rem 0.8rem', 
-                    borderRadius: '20px', 
-                    fontSize: '0.75rem', 
-                    fontWeight: '700',
-                    background: tenant[mealType] ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                    color: tenant[mealType] ? 'var(--accent-success)' : 'var(--accent-error)'
-                  }}>
+              <tr key={tenant.id}>
+                <td style={{ fontWeight: '600' }}>{tenant.name}</td>
+                <td>{tenant.room}</td>
+                <td style={{ textAlign: 'center' }}>
+                  <span className={`table-badge ${tenant[mealType] ? 'success' : 'error'}`}>
                     {tenant[mealType] ? 'Present' : 'Absent'}
                   </span>
                 </td>
-                <td style={{ padding: '1.2rem', textAlign: 'center' }}>
+                <td style={{ textAlign: 'right' }}>
                   <button 
                     onClick={() => toggleAttendance(tenant.id, mealType)}
                     className="btn" 
                     style={{ 
-                      padding: '0.4rem 1rem', 
-                      fontSize: '0.8rem', 
-                      background: tenant[mealType] ? 'var(--accent-error)' : 'var(--accent-success)',
-                      color: '#fff',
-                      border: 'none',
-                      minWidth: '100px'
+                      padding: '0.6rem 1.2rem', 
+                      fontSize: '0.85rem', 
+                      background: tenant[mealType] ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                      color: tenant[mealType] ? 'var(--accent-error)' : 'var(--accent-success)',
+                      border: '1px solid transparent',
+                      fontWeight: '700'
                     }}
                   >
                     {tenant[mealType] ? 'Mark Absent' : 'Mark Present'}

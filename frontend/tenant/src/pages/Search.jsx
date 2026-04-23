@@ -171,6 +171,31 @@ const Search = () => {
               ))}
             </div>
           </div>
+
+          <div className="filter-section">
+            <h4>Proximity</h4>
+            <div className="proximity-filters">
+              <label>
+                <input type="checkbox" /> Near College / University
+              </label>
+              <label>
+                <input type="checkbox" /> Near Metro / Bus Station
+              </label>
+              <label>
+                <input type="checkbox" /> Near Office Hub
+              </label>
+            </div>
+          </div>
+
+          <div className="filter-section">
+            <h4>Min WiFi Speed</h4>
+            <select className="filter-select">
+              <option>Any Speed</option>
+              <option>50+ Mbps</option>
+              <option>100+ Mbps</option>
+              <option>200+ Mbps</option>
+            </select>
+          </div>
         </aside>
 
         <main className="results-list">
