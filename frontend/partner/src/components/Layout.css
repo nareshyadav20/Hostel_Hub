@@ -1,11 +1,35 @@
 .layout {
   display: flex;
   min-height: 100vh;
+  background-color: var(--bg-tertiary);
   background-color: var(--bg-primary);
 }
 
 .main-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 260px; /* Width of the sidebar */
+  transition: var(--transition-normal);
+}
+
+.topbar {
+  height: 70px;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.page-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
   margin-left: 260px;
   display: flex;
   flex-direction: column;
@@ -108,6 +132,7 @@
 
 @media (max-width: 1024px) {
   .main-content {
+    margin-left: 0;
     margin-left: 76px;
   }
 }
