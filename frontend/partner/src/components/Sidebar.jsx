@@ -1,10 +1,15 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import { LayoutDashboard, Wrench, Tag, ClipboardList, User, LogOut } from 'lucide-react';
+=======
+import { LayoutDashboard, Scissors, Tag, ShoppingBag, User, LogOut } from 'lucide-react';
+>>>>>>> staff
 import './Sidebar.css';
 
 const Sidebar = () => {
   const navigate = useNavigate();
+<<<<<<< HEAD
   const partner = JSON.parse(localStorage.getItem('partner') || '{"name": "Partner", "serviceType": "Service Provider"}');
 
   const menuItems = [
@@ -47,11 +52,44 @@ const Sidebar = () => {
           >
             <span className="icon">{item.icon}</span>
             <span className="label">{item.name}</span>
+=======
+
+  const handleLogout = () => {
+    navigate('/login');
+  };
+
+  const navItems = [
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/services', label: 'Services', icon: Scissors },
+    { path: '/offers', label: 'Offers & Discounts', icon: Tag },
+    { path: '/orders', label: 'Order Requests', icon: ShoppingBag },
+    { path: '/profile', label: 'Profile', icon: User },
+  ];
+
+  return (
+    <aside className="sidebar">
+      <div className="sidebar-header">
+        <div className="brand">
+          <span style={{ color: 'var(--accent-primary)' }}>✦</span> PartnerHub
+        </div>
+      </div>
+      
+      <nav className="nav-links">
+        {navItems.map((item) => (
+          <NavLink 
+            key={item.path} 
+            to={item.path} 
+            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+          >
+            <item.icon size={20} />
+            <span>{item.label}</span>
+>>>>>>> staff
           </NavLink>
         ))}
       </nav>
 
       <div className="sidebar-footer">
+<<<<<<< HEAD
         <div className="sidebar-user" onClick={handleLogout} title="Logout">
           <div className="sidebar-user-avatar">
             {partner.name?.charAt(0).toUpperCase()}
@@ -62,6 +100,12 @@ const Sidebar = () => {
           </div>
           <LogOut size={16} style={{ color: 'var(--text-muted)' }} />
         </div>
+=======
+        <button className="logout-btn" onClick={handleLogout}>
+          <LogOut size={20} />
+          <span>Logout</span>
+        </button>
+>>>>>>> staff
       </div>
     </aside>
   );
