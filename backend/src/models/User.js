@@ -10,7 +10,23 @@ const userSchema = new mongoose.Schema({
     enum: ['SUPER_ADMIN', 'OWNER', 'STAFF', 'TENANT'], 
     default: 'TENANT' 
   },
-  hostelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hostel' }
+  hostelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hostel' },
+  // Tenant Specific Details
+  mobile: { type: String },
+  age: { type: Number },
+  gender: { type: String },
+  occupation: { type: String },
+  idProof: { type: String },
+  emergencyContact: { type: String },
+  currentAddress: { type: String },
+  city: { type: String },
+  budget: { type: String },
+  roommates: { type: String },
+  foodPref: { type: String },
+  sleepTiming: { type: String },
+  language: { type: String },
+  stayDuration: { type: String },
+  shiftTiming: { type: String }
 }, { timestamps: true });
 
 // Hash password before saving

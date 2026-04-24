@@ -16,6 +16,7 @@ import Discounts from './pages/Discounts';
 import Services from './pages/Services';
 import Community from './pages/Community';
 import Safety from './pages/Safety';
+import Profile from './pages/Profile';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -41,6 +42,7 @@ function App() {
         <Route path="/services" element={<Layout><Services /></Layout>} />
         <Route path="/community" element={<Layout><Community /></Layout>} />
         <Route path="/safety" element={<Layout><Safety /></Layout>} />
+        <Route path="/profile" element={<Layout><Profile /></Layout>} />
         
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
