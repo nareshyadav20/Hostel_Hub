@@ -35,18 +35,34 @@ const Search = () => {
     <div className="search-page fade-in">
 
       {/* ── Header ── */}
-      <header style={{ marginBottom: '2.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
-          stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: '900', lineHeight: 1.1 }}>Find Your Perfect Stay</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '0.3rem' }}>
-            Browse verified, high-quality hostels in your preferred location.
-          </p>
+      <header style={{ marginBottom: '2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
+            stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          <div>
+            <h1 style={{ fontSize: '2rem', fontWeight: '900', lineHeight: 1.1 }}>Find Your Perfect Stay</h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '0.3rem' }}>
+              Browse verified, high-quality hostels in your preferred location.
+            </p>
+          </div>
         </div>
+
+        <Link to="/" style={{ 
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: '40px', height: '40px', borderRadius: '50%', 
+          background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+          color: 'var(--text-muted)', transition: 'all 0.2s ease',
+          textDecoration: 'none'
+        }}
+        onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-error)'}
+        onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </Link>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(270px, 300px) 1fr', gap: '2rem', alignItems: 'start' }}>
