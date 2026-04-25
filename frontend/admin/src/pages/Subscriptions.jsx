@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
+import { 
+  Check, Info, Zap, Shield, Crown, Edit, 
+  ArrowRight, Users, Settings, Database 
+} from 'lucide-react';
+import Modal from '../components/Modal';
 import './Subscriptions.css';
 
 const Subscriptions = () => {
   const [isAnnual, setIsAnnual] = useState(false);
+  const [activeModal, setActiveModal] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
   const plans = [
     {
@@ -10,110 +17,144 @@ const Subscriptions = () => {
       name: 'Basic',
       price: isAnnual ? 9500 : 999,
       limit: 'Up to 50 Beds',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-          <polyline points="9 22 9 12 15 12 15 22"></polyline>
-        </svg>
-      ),
+      icon: <Settings />,
       features: ['Attendance Tracking', 'Cleaning Schedules', 'Member Directory', 'Complaint Portal'],
       color: 'var(--accent-primary)',
-      popular: false
+      badge: 'Starter'
     },
     {
       id: 2,
       name: 'Standard',
       price: isAnnual ? 23000 : 2499,
       limit: 'Up to 200 Beds',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-          <line x1="8" y1="21" x2="16" y2="21"></line>
-          <line x1="12" y1="17" x2="12" y2="21"></line>
-        </svg>
-      ),
+      icon: <Zap />,
       features: ['Everything in Basic', 'Inventory Management', 'Staff Management Portal', 'Revenue Analytics'],
       color: 'var(--accent-secondary)',
-      popular: true
+      popular: true,
+      badge: 'Best Value'
     },
     {
       id: 3,
       name: 'Enterprise',
       price: isAnnual ? 45000 : 4999,
       limit: 'Unlimited Beds',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-          <path d="M2 17l10 5 10-5"></path>
-          <path d="M2 12l10 5 10-5"></path>
-        </svg>
-      ),
+      icon: <Crown />,
       features: ['Everything in Standard', 'Multi-property Support', 'Dedicated Support', 'API Access'],
-      color: '#0f172a',
-      popular: false,
-      isEnterprise: true
+      color: '#8b5cf6',
+      badge: 'Custom'
     }
   ];
 
-  const CheckIcon = () => (
-    <svg className="feature-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-  );
+  const handleEditPlan = (plan) => {
+    setSelectedPlan(plan);
+    setActiveModal('edit-plan');
+  };
 
   return (
-    <div className="subscriptions-page">
+    <div className="subscriptions-page page-container animate-fade">
       <header className="subs-header">
-        <h1>💎 Subscription Plans</h1>
-        <p>Choose the right tier to scale your hostel business with ease.</p>
+        <div className="header-badge">HostelHub Premium</div>
+        <h1>Subscription <span style={{ color: 'var(--accent-primary)' }}>Command Center</span></h1>
+        <p>Manage global tiers, pricing structures, and feature entitlements.</p>
       </header>
 
       {/* Billing Toggle */}
-      <div className="billing-toggle-container">
-        <span className={`toggle-label ${!isAnnual ? 'active' : ''}`}>Monthly</span>
-        <div className={`toggle-switch ${isAnnual ? 'annual' : ''}`} onClick={() => setIsAnnual(!isAnnual)}>
-          <div className="toggle-knob"></div>
+      <div className="billing-wrapper">
+        <div className="billing-toggle-container">
+          <button className={`toggle-btn ${!isAnnual ? 'active' : ''}`} onClick={() => setIsAnnual(false)}>Monthly</button>
+          <button className={`toggle-btn ${isAnnual ? 'active' : ''}`} onClick={() => setIsAnnual(true)}>
+            Annual <span>Save 20%</span>
+          </button>
         </div>
-        <span className={`toggle-label ${isAnnual ? 'active' : ''}`}>Annual</span>
-        <span className="save-badge">Save 20%</span>
       </div>
 
       <div className="plans-grid">
         {plans.map((plan) => (
-          <div key={plan.id} className={`plan-card ${plan.popular ? 'popular' : ''} ${plan.isEnterprise ? 'enterprise' : ''}`}>
-            {plan.popular && <div className="popular-badge">Best Value</div>}
-            
-            <div className="plan-icon" style={{ backgroundColor: plan.isEnterprise ? 'rgba(255,255,255,0.1)' : `${plan.color}15`, color: plan.isEnterprise ? 'white' : plan.color }}>
-              {plan.icon}
+          <div key={plan.id} className={`plan-card-premium ${plan.popular ? 'popular' : ''}`}>
+            <div className="plan-header">
+              <div className="plan-icon-box" style={{ background: `${plan.color}15`, color: plan.color }}>
+                {plan.icon}
+              </div>
+              <div className="plan-title-area">
+                <span className="plan-badge" style={{ color: plan.color }}>{plan.badge}</span>
+                <h3 className="plan-name">{plan.name}</h3>
+              </div>
             </div>
 
-            <h3 className="plan-tier">{plan.name}</h3>
-            
-            <div className="plan-price-container">
-              <span className="plan-currency">₹</span>
-              <span className="plan-amount">{plan.price.toLocaleString()}</span>
-              <span className="plan-period">{isAnnual ? '/year' : '/month'}</span>
+            <div className="plan-price-area">
+              <div className="price-main">
+                <span className="currency">₹</span>
+                <h2 className="amount">{plan.price.toLocaleString()}</h2>
+                <span className="period">{isAnnual ? '/yr' : '/mo'}</span>
+              </div>
+              <p className="limit-info">{plan.limit}</p>
             </div>
 
-            <p className="plan-limit">{plan.limit}</p>
+            <div className="features-section">
+              <p className="features-title">Core Entitlements</p>
+              <ul className="premium-features-list">
+                {plan.features.map((feature, idx) => (
+                  <li key={idx}>
+                    <Check size={16} color="var(--accent-primary)" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-            <ul className="plan-features">
-              {plan.features.map((feature, idx) => (
-                <li key={idx}>
-                  <CheckIcon />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-
-            <button className="plan-button">
-              {plan.isEnterprise ? 'Contact Sales' : 'Edit Plan Details'}
-            </button>
+            <div className="plan-actions">
+              <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => handleEditPlan(plan)}>
+                <Edit size={16} /> Edit Plan Details
+              </button>
+              <button className="btn btn-ghost" style={{ width: '100%', marginTop: '0.5rem' }}>
+                View Entitlement Logs
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
+      {/* Edit Plan Modal */}
+      <Modal 
+        isOpen={activeModal === 'edit-plan'} 
+        onClose={() => setActiveModal(null)}
+        title={`Configure ${selectedPlan?.name} Tier`}
+        footer={
+          <>
+            <button className="btn btn-secondary" onClick={() => setActiveModal(null)}>Cancel</button>
+            <button className="btn btn-primary" onClick={() => setActiveModal(null)}>Save Changes</button>
+          </>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div className="form-group">
+            <label className="form-label">Tier Name</label>
+            <input type="text" className="form-input" defaultValue={selectedPlan?.name} />
+          </div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label className="form-label">Monthly Price (₹)</label>
+              <input type="number" className="form-input" defaultValue={selectedPlan?.price} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Bed Limit</label>
+              <input type="text" className="form-input" defaultValue={selectedPlan?.limit} />
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Active Entitlements</label>
+            <div className="entitlement-tags" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {selectedPlan?.features.map((f, i) => (
+                <span key={i} className="badge badge-info" style={{ textTransform: 'none' }}>{f}</span>
+              ))}
+              <button className="badge badge-success" style={{ cursor: 'pointer' }}>+ Add Feature</button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
 
 export default Subscriptions;
+
