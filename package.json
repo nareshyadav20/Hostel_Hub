@@ -2,7 +2,10 @@
   "name": "hostelhub",
   "private": true,
   "workspaces": [
-    "frontend/*",
+    "frontend/admin",
+    "frontend/owner",
+    "frontend/staff",
+    "frontend/tenant",
     "backend",
     "packages/*"
   ],
