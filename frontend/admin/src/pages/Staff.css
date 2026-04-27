@@ -248,7 +248,7 @@
 
 .rating-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent-warning), #fbbf24);
+  background: linear-gradient(90deg, var(--accent-warning), var(--accent-primary));
   border-radius: 3px;
 }
 

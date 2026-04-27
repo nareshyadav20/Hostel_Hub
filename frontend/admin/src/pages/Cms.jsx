@@ -42,8 +42,8 @@ const Cms = () => {
             onClick={() => setActiveTab(t)}
             className="btn"
             style={{
-              background: activeTab === t ? '#fbbf24' : 'transparent',
-              color: activeTab === t ? '#000' : '#64748b',
+              background: activeTab === t ? '#7c3aed' : 'transparent',
+              color: activeTab === t ? '#fff' : '#64748b',
               border: 'none',
               fontWeight: activeTab === t ? 700 : 500,
               padding: '0.5rem 1.2rem',
@@ -61,11 +61,11 @@ const Cms = () => {
               key={i}
               onClick={() => setSelectedPage(page)}
               className="card"
-              style={{ cursor: 'pointer', border: selectedPage.name === page.name ? '1px solid rgba(251,191,36,0.4)' : '1px solid rgba(255,255,255,0.07)', padding: '1rem' }}
+              style={{ cursor: 'pointer', border: selectedPage.name === page.name ? '1px solid rgba(124, 58, 237, 0.4)' : '1px solid rgba(255,255,255,0.07)', padding: '1rem' }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-                  <FileText size={16} color={selectedPage.name === page.name ? '#fbbf24' : '#475569'} />
+                  <FileText size={16} color={selectedPage.name === page.name ? '#7c3aed' : '#475569'} />
                   <div>
                     <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{page.name}</div>
                     <div style={{ fontSize: '0.75rem', color: '#475569' }}>{page.lastEdit}</div>

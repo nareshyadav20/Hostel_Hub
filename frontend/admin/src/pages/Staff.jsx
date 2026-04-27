@@ -23,7 +23,7 @@ const Staff = () => {
     setForm({ name: '', email: '', role: 'KYC Moderator' });
   };
 
-  const roleColors = { 'Super Admin': '#fbbf24', 'City Manager': '#38bdf8', 'KYC Moderator': '#a78bfa' };
+  const roleColors = { 'Super Admin': '#7c3aed', 'City Manager': '#38bdf8', 'KYC Moderator': '#a78bfa' };
 
   return (
     <div className="animate-fade" style={{ maxWidth: '1300px' }}>
@@ -42,7 +42,7 @@ const Staff = () => {
           <div key={s.id} className="card animate-fade">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem' }}>
+                <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem' }}>
                   {s.name.charAt(0)}
                 </div>
                 <div>

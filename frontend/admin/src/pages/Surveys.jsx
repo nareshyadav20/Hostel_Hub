@@ -45,7 +45,7 @@ const Surveys = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.5fr)', gap: '2rem' }}>
         <div className="card">
           <h3 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <MessageCircle size={18} color="#fbbf24" /> Satisfaction Scores
+            <MessageCircle size={18} color="#7c3aed" /> Satisfaction Scores
           </h3>
           <div style={{ width: '100%', height: 320 }}>
             <ResponsiveContainer>
@@ -53,7 +53,7 @@ const Surveys = () => {
                 <XAxis type="number" hide domain={[0, 100]} />
                 <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} width={90} />
                 <Tooltip cursor={{ fill: 'rgba(255,255,255,0.02)' }} contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px', color: '#f8fafc' }} />
-                <Bar dataKey="score" radius={[0, 6, 6, 0]} fill="#fbbf24" />
+                <Bar dataKey="score" radius={[0, 6, 6, 0]} fill="#7c3aed" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -75,7 +75,7 @@ const Surveys = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                   <div style={{ padding: '0.6rem', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
-                    <ClipboardList size={20} color={s.status === 'Active' ? '#fbbf24' : '#475569'} />
+                    <ClipboardList size={20} color={s.status === 'Active' ? '#7c3aed' : '#475569'} />
                   </div>
                   <div>
                     <div style={{ fontWeight: 600 }}>{s.title}</div>

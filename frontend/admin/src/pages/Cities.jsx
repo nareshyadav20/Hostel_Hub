@@ -39,7 +39,7 @@ const Cities = () => {
               <div>
                 <h2 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0 }}>{city.name}</h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#94a3b8', fontSize: '0.85rem', marginTop: '0.3rem' }}>
-                  <MapPin size={14} color="#fbbf24" /> Active Operations
+                  <MapPin size={14} color="#7c3aed" /> Active Operations
                 </div>
               </div>
               <span style={{ padding: '0.3rem 0.8rem', borderRadius: '8px', background: 'rgba(16,185,129,0.1)', color: '#10b981', fontWeight: 800, fontSize: '0.8rem' }}>
