@@ -53,7 +53,7 @@ function Dashboard() {
   
   const handleInvite = () => {
     showToast('Referral link copied to clipboard! Share it with your friends.');
-    navigator.clipboard.writeText('https://staynest.com/refer/uma2026');
+    navigator.clipboard.writeText('https://livora.com/refer/uma2026');
   };
 
   return (

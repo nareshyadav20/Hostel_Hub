@@ -247,20 +247,63 @@ const Listing = () => {
             </ul>
           </div>
 
-          <div className="card">
-            <h3>🍽️ Food Menu Preview</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-              <div style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '8px' }}>
-                <p style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>BREAKFAST</p>
-                <p>{hostel.menu.breakfast}</p>
+          <div className="card" style={{ padding: '2.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: '800' }}>🍽️ Daily & Weekly Nutrition</h3>
               </div>
-              <div style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '8px' }}>
-                <p style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--accent-success)' }}>LUNCH</p>
-                <p>{hostel.menu.lunch}</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.2rem', marginBottom: '3rem' }}>
+              <div style={{ padding: '1.5rem', borderRadius: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', position: 'relative', overflow: 'hidden' }}>
+                <p style={{ color: 'var(--accent-primary)', fontWeight: '800', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.4rem' }}>Breakfast</p>
+                <p style={{ fontSize: '1rem', fontWeight: '700' }}>{hostel.menu.breakfast}</p>
               </div>
-              <div style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '8px' }}>
-                <p style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--accent-warning)' }}>DINNER</p>
-                <p>{hostel.menu.dinner}</p>
+              <div style={{ padding: '1.5rem', borderRadius: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', position: 'relative', overflow: 'hidden' }}>
+                <p style={{ color: 'var(--accent-success)', fontWeight: '800', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.4rem' }}>Lunch</p>
+                <p style={{ fontSize: '1rem', fontWeight: '700' }}>{hostel.menu.lunch}</p>
+              </div>
+              <div style={{ padding: '1.5rem', borderRadius: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', position: 'relative', overflow: 'hidden' }}>
+                <p style={{ color: 'var(--accent-warning)', fontWeight: '800', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.4rem' }}>Dinner</p>
+                <p style={{ fontSize: '1rem', fontWeight: '700' }}>{hostel.menu.dinner}</p>
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--bg-secondary)', borderRadius: '20px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+              <div style={{ padding: '1.2rem 1.5rem', background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span style={{ fontWeight: '800', fontSize: '0.9rem' }}>Weekly Dining Schedule</span>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)' }}>
+                      <th style={{ padding: '1rem 1.5rem' }}>DAY</th>
+                      <th style={{ padding: '1rem 1.5rem' }}>TIFFIN</th>
+                      <th style={{ padding: '1rem 1.5rem' }}>LUNCH</th>
+                      <th style={{ padding: '1rem 1.5rem' }}>DINNER</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { d: 'Mon', t: 'Dosa/Podi', l: 'South Thali', dn: 'Veg Pulao' },
+                      { d: 'Tue', t: 'Poha/Jalebi', l: 'Rice/Dal/Sabzi', dn: 'Phulka/Alu' },
+                      { d: 'Wed', t: 'Vada Sambar', l: 'Curd Rice', dn: 'Dal Tadka' },
+                      { d: 'Thu', t: 'Upma/Chutney', l: 'Roti/Mix Veg', dn: 'Egg Curry' },
+                      { d: 'Fri', t: 'Paratha/Curd', l: 'Veg Biryani', dn: 'Chapati/Sabzi' },
+                      { d: 'Sat', t: 'Omelette', l: 'Fried Rice', dn: 'Chinese' },
+                      { d: 'Sun', t: 'Puri Bhaji', l: 'Sunday Feast', dn: 'Chef Special' }
+                    ].map((m, i) => (
+                      <tr key={i} style={{ borderBottom: i === 6 ? 'none' : '1px solid var(--border-color)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
+                        <td style={{ padding: '0.8rem 1.5rem', fontWeight: '800' }}>{m.d}</td>
+                        <td style={{ padding: '0.8rem 1.5rem', color: 'var(--text-secondary)' }}>{m.t}</td>
+                        <td style={{ padding: '0.8rem 1.5rem', color: 'var(--text-secondary)' }}>{m.l}</td>
+                        <td style={{ padding: '0.8rem 1.5rem', color: 'var(--text-secondary)' }}>{m.dn}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

@@ -68,20 +68,6 @@ const Search = () => {
                 </select>
               </div>
 
-              {/* Budget Slider */}
-              <div className="filter-group">
-                <div className="group-label">
-                  <ICONS.Budget /> <span>Budget Range</span>
-                </div>
-                <div className="budget-slider-container">
-                  <div className="budget-value">₹{Number(filters.budget).toLocaleString()}</div>
-                  <input type="range" min="2000" max="20000" step="500" value={filters.budget} onChange={(e) => setFilters({ ...filters, budget: e.target.value })} className="pro-range" />
-                  <div className="range-labels">
-                    <span>₹2,000</span>
-                    <span>₹20k</span>
-                  </div>
-                </div>
-              </div>
 
               {/* Gender Preference */}
               <div className="filter-group">
@@ -241,7 +227,7 @@ const Search = () => {
 
         .search-layout {
           display: grid;
-          grid-template-columns: 320px 1fr;
+          grid-template-columns: 380px 1fr;
           gap: 3rem;
           align-items: start;
         }
@@ -275,7 +261,7 @@ const Search = () => {
         }
 
         .filter-group {
-          margin-bottom: 2.2rem;
+          margin-bottom: 1.5rem;
         }
 
         .group-label {
@@ -354,7 +340,7 @@ const Search = () => {
 
         .amenities-checklist {
           display: grid;
-          grid-template-columns: 1fr;
+          grid-template-columns: 1fr 1fr;
           gap: 0.6rem;
         }
 
@@ -410,13 +396,20 @@ const Search = () => {
           border: 1px solid var(--border-color);
           border-radius: 20px;
           overflow: hidden;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
         }
 
         .pro-table-row {
           display: block;
           cursor: pointer;
           border-bottom: 1px solid var(--border-color);
+          border-right: 1px solid var(--border-color);
           transition: all 0.2s ease;
+        }
+
+        .pro-table-row:nth-child(2n) {
+          border-right: none;
         }
 
         .pro-table-row:last-child {
@@ -431,7 +424,7 @@ const Search = () => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 1.2rem 1.5rem;
+          padding: 0.6rem 1rem;
         }
 
         .row-info {
@@ -442,14 +435,14 @@ const Search = () => {
         }
 
         .row-label {
-          font-size: 0.95rem;
+          font-size: 0.85rem;
           font-weight: 700;
           color: var(--text-primary);
         }
 
         .row-radio-custom, .row-check-custom {
-          width: 20px;
-          height: 20px;
+          width: 16px;
+          height: 16px;
           border: 2px solid var(--border-color);
           border-radius: 50%;
           position: relative;
@@ -471,10 +464,10 @@ const Search = () => {
         .pro-table-row input:checked + .row-content .row-radio-custom::after {
           content: '';
           position: absolute;
-          top: 4px;
-          left: 4px;
-          width: 8px;
-          height: 8px;
+          top: 3px;
+          left: 3px;
+          width: 6px;
+          height: 6px;
           background: var(--accent-primary);
           border-radius: 50%;
         }

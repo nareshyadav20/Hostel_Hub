@@ -19,7 +19,7 @@ const Landing = () => {
   const hostels = [
     {
       id: 1,
-      name: 'StayNest Elite - Koramangala',
+      name: 'Livora Elite - Koramangala',
       locality: 'Koramangala 4th Block, Bengaluru',
       rating: 4.8,
       price: 12500,
@@ -83,11 +83,17 @@ const Landing = () => {
     <div className="landing-page">
       <header className="landing-header">
         <div className="logo-container" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L3 9V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V9L12 2Z" fill="url(#logo_gradient)" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <defs>
+              <linearGradient id="logo_gradient" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stopColor="var(--accent-primary)"/>
+                <stop offset="1" stopColor="var(--accent-secondary)"/>
+              </linearGradient>
+            </defs>
           </svg>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: '900', letterSpacing: '-0.5px' }}>StayNest</h1>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '950', letterSpacing: '-1.5px', background: 'linear-gradient(to right, var(--text-primary), var(--accent-primary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Livora</h1>
         </div>
         <nav className="nav-links">
           <ThemeToggle />
@@ -249,7 +255,7 @@ const Landing = () => {
       </div>
 
       <footer className="landing-footer-minimal">
-        <p>© 2026 StayNest Private Limited. All rights reserved.</p>
+        <p>© 2026 Livora Private Limited. All rights reserved.</p>
       </footer>
     </div>
   );

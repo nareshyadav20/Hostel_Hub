@@ -129,7 +129,21 @@ const Sidebar = () => {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-header"><h2 className="logo">StayNest</h2></div>
+      <div className="sidebar-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '0 1rem' }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L3 9V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V9L12 2Z" fill="url(#sidebar_logo_gradient)" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <defs>
+              <linearGradient id="sidebar_logo_gradient" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stopColor="var(--accent-primary)"/>
+                <stop offset="1" stopColor="var(--accent-secondary)"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <h2 className="logo" style={{ fontSize: '1.8rem', fontWeight: '950', letterSpacing: '-1px', background: 'linear-gradient(to right, #0ea5e9, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>Livora</h2>
+        </div>
+      </div>
       <nav className="sidebar-nav">
         {menuItems.map((item) => (
           <NavLink key={item.name} to={item.path} className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
