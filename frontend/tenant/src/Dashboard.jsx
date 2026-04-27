@@ -119,6 +119,12 @@ function Dashboard() {
     { id: 2, icon: '🎉', title: 'Movie Night', desc: 'This Saturday at the common lounge!', time: 'Saturday' },
   ];
 
+  const activities = [
+    { id: 1, title: 'Rent Paid', desc: 'Successfully paid rent for March.', time: '2 days ago', color: 'var(--accent-success)' },
+    { id: 2, title: 'New Menu', desc: 'Summer special menu added to Mess.', time: '4 days ago', color: 'var(--accent-primary)' },
+    { id: 3, title: 'Support Ticket', desc: 'WiFi issue resolved in Room B-402.', time: '1 week ago', color: 'var(--accent-warning)' },
+  ];
+
   const showToast = (message) => {
     setNotification(message);
     setTimeout(() => setNotification(null), 3000);
