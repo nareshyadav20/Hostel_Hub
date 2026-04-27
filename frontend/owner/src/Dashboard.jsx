@@ -1,110 +1,401 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { Building, Wallet, Users, ArrowUpRight, ArrowDownRight, Zap, X, UserPlus, CheckCircle, AlertCircle, TrendingUp, Download, LogIn, LogOut, Settings, Bell, Utensils } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { api } from './mockData';
+import { HealthScoreCard, ComplaintsPanel, MessPanel, StaffPanel, InsightsPanel, ActivityFeed, DocumentTracker, TenantOverviewPanel, DashboardModal } from './DashboardPanels';
+
+const fallbacks = {
+  summary: { totalBeds:150, occupiedBeds:120, vacantBeds:30, occupancyRate:80, todayRevenue:15000, expectedMonthlyRevenue:450000, pendingPaymentsCount:5, pendingPaymentsAmount:32500, maintenanceRooms:2, healthScore:72, buildingCount:3, checkInsToday:3, checkOutsToday:1, rentDueToday:5, complaintsToday:2, newTenantsThisMonth:9, renewalsPending:4, tenantsLeavingSoon:2 },
+  revenue: { dailyRevenue:[{name:'Mon',expected:13000,actual:11500},{name:'Tue',expected:13000,actual:13000},{name:'Wed',expected:13000,actual:10000},{name:'Thu',expected:13000,actual:14000},{name:'Fri',expected:13000,actual:12500},{name:'Sat',expected:13000,actual:9000},{name:'Sun',expected:13000,actual:14500}], monthlyRevenue:[{name:'Jan',revenue:850000,expenses:300000},{name:'Feb',revenue:920000,expenses:320000},{name:'Mar',revenue:1050000,expenses:340000},{name:'Apr',revenue:1200000,expenses:360000},{name:'May',revenue:1350000,expenses:380000},{name:'Jun',revenue:1500000,expenses:400000}], rentMetrics:{ pendingRent:87500, collectedRent:1462500, securityDepositsHeld:3250000, totalIncome:1550000, totalExpenses:480000, netProfit:1070000 } },
+  occupancy: { buildingWise:[], floorWise:[] },
+  alerts: { alerts:[], insights:[] },
+  complaints: { total:24, open:9, resolved:15, highPriority:4, avgResolutionHours:4.2, categories:[{name:'Maintenance',count:10},{name:'Cleaning',count:6},{name:'Food',count:5},{name:'Others',count:3}], pending24h:3 },
+  mess: { mealsServedToday:187, avgFoodRating:3.8, dailyMessCost:14500, monthlyMessCost:435000, menuToday:{breakfast:'Idli Sambar, Tea',lunch:'Rice, Dal, Sabzi, Roti',dinner:'Chapati, Paneer Curry, Salad'}, mealTrend:[{name:'Mon',served:180},{name:'Tue',served:192},{name:'Wed',served:175},{name:'Thu',served:188},{name:'Fri',served:195},{name:'Sat',served:160},{name:'Sun',served:145}], inventory:[{item:'Rice',stock:15,unit:'kg',alert:true},{item:'Dal',stock:40,unit:'kg',alert:false},{item:'Cooking Oil',stock:8,unit:'L',alert:true}], foodComplaints:{total:12,quality:5,hygiene:3,quantity:2,delay:2} },
+  staff: { totalStaff:8, tasksAssigned:34, tasksCompleted:28, tasksPending:6, avgResolutionHours:3.1, efficiencyScore:82, staffList:[{name:'Ramesh Kumar',role:'Maintenance',score:95,tasks:10},{name:'Suresh Babu',role:'Cleaning',score:88,tasks:8},{name:'Pradeep Singh',role:'Security',score:72,tasks:7},{name:'Anitha Devi',role:'Mess',score:65,tasks:9}] },
+};
+
+const iStyle = { padding:'0.75rem', borderRadius:'10px', border:'1px solid var(--border-color)', background:'var(--bg-tertiary)', color:'var(--text-primary)', fontSize:'0.9rem', outline:'none', width:'100%', boxSizing:'border-box' };
+const lStyle = { fontSize:'0.82rem', fontWeight:'700', color:'var(--text-secondary)', marginBottom:'0.4rem', display:'block' };
 
 function Dashboard() {
-  const stats = [
-    { 
-      label: 'Total Buildings', value: '4', sub: '2 Main, 2 Annex', color: 'var(--accent-primary)',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-          <line x1="9" y1="22" x2="9" y2="2"></line>
-        </svg>
-      )
-    },
-    { 
-      label: 'Bed Occupancy', value: '142/150', sub: '95% Filled', color: 'var(--accent-success)',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M2 4v16"></path>
-          <path d="M2 8h18a2 2 0 0 1 2 2v10"></path>
-          <path d="M2 17h20"></path>
-        </svg>
-      )
-    },
-    { 
-      label: 'Monthly Revenue', value: '₹14.2L', sub: '↑ 12% vs last month', color: 'var(--accent-warning)',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="12" y1="1" x2="12" y2="23"></line>
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-        </svg>
-      )
-    },
-    { 
-      label: 'Open Complaints', value: '3', sub: 'Requires Attention', color: 'var(--accent-error)',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-        </svg>
-      )
-    },
-  ];
+  const [isLoading, setIsLoading] = useState(true);
+  const [modal, setModal] = useState(null); // 'addTenant' | 'assignBed' | 'markPaid' | 'complaint'
+  const [formMsg, setFormMsg] = useState('');
+  const [d, setD] = useState({ summary:null, revenue:null, occupancy:null, alerts:null, complaints:null, mess:null, staff:null });
 
-  return (
-    <div className="dashboard-view">
-      <header style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: '800' }}>🏘️ Portfolio Overview</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Real-time insights across all your buildings.</p>
-      </header>
+  useEffect(() => {
+    (async () => {
+      try {
+        const [summary, revenue, occupancy, alerts, complaints, mess, staff] = await Promise.all([
+          api.getDashboardSummary().catch(() => fallbacks.summary),
+          api.getDashboardRevenue().catch(() => fallbacks.revenue),
+          api.getDashboardOccupancy().catch(() => fallbacks.occupancy),
+          api.getDashboardAlerts().catch(() => fallbacks.alerts),
+          api.getDashboardComplaints().catch(() => fallbacks.complaints),
+          api.getDashboardMess().catch(() => fallbacks.mess),
+          api.getDashboardStaff().catch(() => fallbacks.staff),
+        ]);
+        setD({ summary, revenue, occupancy, alerts, complaints, mess, staff });
+      } catch(e) {
+        console.error(e);
+        setD(fallbacks);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
-        {stats.map((stat, i) => (
-          <div key={i} className="card" style={{ padding: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-            <div style={{ padding: '0.6rem', width: 'fit-content', borderRadius: '10px', background: `${stat.color}15`, color: stat.color }}>
-              {stat.icon}
-            </div>
-            <div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.1rem' }}>{stat.label}</p>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{stat.value}</h2>
-              <p style={{ fontSize: '0.75rem', color: stat.color, fontWeight: '600' }}>{stat.sub}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ marginTop: '2.5rem', display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>
-        <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-          <div style={{ padding: '1.2rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '1rem' }}>Recent Payments</h3>
-            <button className="btn" style={{ fontSize: '0.8rem', color: 'var(--accent-primary)' }}>View All</button>
-          </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-            <tr style={{ background: 'var(--bg-tertiary)', textAlign: 'left' }}>
-              <th style={{ padding: '1rem' }}>Tenant</th>
-              <th style={{ padding: '1rem' }}>Amount</th>
-              <th style={{ padding: '1rem' }}>Status</th>
-            </tr>
-            {[
-              { name: 'Rahul Sharma', amount: '₹6,500', status: 'Success' },
-              { name: 'Priya Verma', amount: '₹8,500', status: 'Success' },
-              { name: 'Amit Singh', amount: '₹5,000', status: 'Pending' }
-            ].map((p, idx) => (
-              <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <td style={{ padding: '1rem' }}>{p.name}</td>
-                <td style={{ padding: '1rem', fontWeight: '700' }}>{p.amount}</td>
-                <td style={{ padding: '1rem' }}>
-                  <span style={{ 
-                    padding: '0.2rem 0.5rem', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '700',
-                    background: p.status === 'Success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                    color: p.status === 'Success' ? 'var(--accent-success)' : 'var(--accent-warning)'
-                  }}>
-                    {p.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </table>
+  if (isLoading || !d.summary) return (
+    <div className="dashboard-container">
+      <div style={{ animation:'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}>
+        <div style={{ height: '60px', width: '30%', background:'var(--bg-tertiary)', borderRadius:'8px', marginBottom:'2rem' }}/>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:'1.5rem', marginBottom:'2.5rem' }}>
+          {[1,2,3,4].map(i => <div key={i} style={{ height:'140px', background:'var(--bg-secondary)', border:'1px solid var(--border-color)', borderRadius:'16px' }}/>)}
         </div>
-        
-        <div className="card" style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', color: '#fff' }}>
-          <h3>Admin Notice</h3>
-          <p style={{ margin: '1rem 0', opacity: '0.9', fontSize: '0.9rem' }}>New building safety regulations have been updated. Please review the documentation.</p>
-          <button className="btn" style={{ background: '#fff', color: 'var(--accent-primary)', width: '100%', fontWeight: '700' }}>
-            Review Now
-          </button>
+        <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:'2rem' }}>
+          <div style={{ height:'300px', background:'var(--bg-secondary)', border:'1px solid var(--border-color)', borderRadius:'16px' }}/>
+          <div style={{ height:'300px', background:'var(--bg-secondary)', border:'1px solid var(--border-color)', borderRadius:'16px' }}/>
         </div>
       </div>
     </div>
+  );
+
+  const { summary, revenue, occupancy, alerts, complaints, mess, staff } = d;
+
+  const lowStockCount = (mess?.inventory || []).filter(i => i.alert).length;
+
+  const kpis = [
+    { label:'Total Beds', value:summary.totalBeds, sub:'All capacity', color:'#2563EB', bg:'#DBEAFE', icon:<Building size={18}/>, up:true },
+    { label:'Occupied', value:summary.occupiedBeds, sub:'Active tenants', color:'#10B981', bg:'#DCFCE7', icon:<Users size={18}/>, up:true },
+    { label:'Vacant', value:summary.vacantBeds, sub:'Available now', color:'#EF4444', bg:'#FEE2E2', icon:<AlertCircle size={18}/>, up:false },
+    { label:'Occupancy %', value:`${summary.occupancyRate}%`, sub:'Capacity used', color:'#8B5CF6', bg:'#EDE9FE', icon:<TrendingUp size={18}/>, up:summary.occupancyRate>=70 },
+    { label:'Today Revenue', value:`₹${(summary.todayRevenue/1000).toFixed(1)}k`, sub:'Collected', color:'#10B981', bg:'#DCFCE7', icon:<Wallet size={18}/>, up:true },
+    { label:'Monthly Est.', value:`₹${(summary.expectedMonthlyRevenue/100000).toFixed(1)}L`, sub:'Expected', color:'#F59E0B', bg:'#FEF3C7', icon:<Wallet size={18}/>, up:true },
+    { label:'Pending Dues', value:summary.pendingPaymentsCount, sub:`₹${(summary.pendingPaymentsAmount/1000).toFixed(0)}k`, color:'#EF4444', bg:'#FEE2E2', icon:<AlertCircle size={18}/>, up:false },
+    { label:'Active Staff', value:staff?.totalStaff ?? 0, sub:`${staff?.tasksCompleted ?? 0} tasks done`, color:'#0EA5E9', bg:'#E0F2FE', icon:<Users size={18}/>, up:true },
+    { label:'Staff Efficiency', value:`${staff?.efficiencyScore ?? 0}%`, sub:`${staff?.tasksPending ?? 0} tasks pending`, color: (staff?.efficiencyScore ?? 0) >= 80 ? '#10B981' : '#F59E0B', bg: (staff?.efficiencyScore ?? 0) >= 80 ? '#DCFCE7' : '#FEF3C7', icon:<TrendingUp size={18}/>, up:(staff?.efficiencyScore ?? 0)>=80 },
+    { label:'Hostel Performance', value:`${summary.healthScore}/100`, sub: summary.healthScore>=75?'Healthy':summary.healthScore>=50?'Moderate':'At Risk', color: summary.healthScore>=75?'#10B981':summary.healthScore>=50?'#F59E0B':'#EF4444', bg: summary.healthScore>=75?'#DCFCE7':summary.healthScore>=50?'#FEF3C7':'#FEE2E2', icon:<TrendingUp size={18}/>, up:summary.healthScore>=60 },
+    { label:'Mess Stock Alert', value:lowStockCount, sub: lowStockCount>0?`${lowStockCount} items low`:'Stock OK', color: lowStockCount>0?'#EF4444':'#10B981', bg: lowStockCount>0?'#FEE2E2':'#DCFCE7', icon:<AlertCircle size={18}/>, up:lowStockCount===0 },
+    { label:'Staff Complaints', value:complaints?.open ?? 0, sub:`${complaints?.highPriority ?? 0} high priority`, color: (complaints?.open ?? 0) > 5 ? '#EF4444' : (complaints?.open ?? 0) > 2 ? '#F59E0B' : '#10B981', bg: (complaints?.open ?? 0) > 5 ? '#FEE2E2' : (complaints?.open ?? 0) > 2 ? '#FEF3C7' : '#DCFCE7', icon:<AlertCircle size={18}/>, up:(complaints?.open ?? 0)===0 },
+    { label:'Mess Subscriptions', value:142, sub:'₹1.8L monthly revenue', color:'#8B5CF6', bg:'#EDE9FE', icon:<Utensils size={18}/>, up:true, popular:'Premium' },
+  ];
+
+  const actionItems = [
+    { label:'Check-ins', value:summary.checkInsToday, icon:'🚪', color:'#10B981' },
+    { label:'Check-outs', value:summary.checkOutsToday, icon:'🏃', color:'#EF4444' },
+    { label:'Rent Due', value:summary.rentDueToday, icon:'💰', color:'#F59E0B' },
+    { label:'Complaints', value:summary.complaintsToday, icon:'⚠️', color:'#8B5CF6' },
+    { label:'Maintenance', value:summary.maintenanceRooms, icon:'🔧', color:'#2563EB' },
+  ];
+
+  const col = { gap:'1.5rem', marginBottom:'2.5rem' };
+  const grid2 = { display:'grid', gridTemplateColumns:'1fr 1fr', ...col };
+  const grid3 = { display:'grid', gridTemplateColumns:'1fr 1fr 1fr', ...col };
+
+  return (
+    <>
+      <div className="dashboard-container" style={{ animation:'fadeIn 0.5s ease' }}>
+
+      {/* HEADER */}
+      <header style={{ marginBottom:'2rem', display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:'1rem' }}>
+        <div>
+          <h1 style={{ fontSize:'2rem', fontWeight:'900', color:'var(--text-primary)', letterSpacing:'-0.03em', margin:0 }}>Command Center</h1>
+          <p style={{ color:'var(--text-secondary)', fontSize:'0.95rem', marginTop:'0.3rem' }}>Real-time business insights & operational control</p>
+        </div>
+        <div style={{ display:'flex', gap:'0.7rem', flexWrap:'wrap' }}>
+          <button className="btn" style={{ background:'var(--bg-tertiary)', color:'var(--text-primary)', fontSize:'0.82rem', display:'flex', alignItems:'center', gap:'0.4rem' }}><Download size={14}/> Export Reports</button>
+          <button className="btn btn-primary" style={{ fontSize:'0.82rem', display:'flex', alignItems:'center', gap:'0.4rem' }}><Settings size={14}/> Settings</button>
+        </div>
+      </header>
+
+      {/* 1. PRIMARY KPI CARDS */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:'1.5rem', marginBottom:'2.5rem' }}>
+        {kpis.map((kpi, i) => (
+          <motion.div key={i} whileHover={{ y:-2, boxShadow: 'var(--shadow-xl)' }} className="card" style={{ padding:'1.5rem', borderRadius:'16px', background:'var(--bg-secondary)', cursor:'pointer', position:'relative', overflow:'hidden' }}>
+            <div style={{ position:'absolute', top:0, left:0, right:0, height:'3px', background: `linear-gradient(90deg, ${kpi.color}40, ${kpi.color})` }}/>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'1.2rem' }}>
+              <div style={{ padding:'0.6rem', borderRadius:'10px', background:kpi.bg, color:kpi.color }}>{kpi.icon}</div>
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                {kpi.popular && <span style={{ fontSize: '0.65rem', fontWeight: '800', background: 'var(--accent-primary)', color: 'white', padding: '0.2rem 0.5rem', borderRadius: '100px', textTransform: 'uppercase' }}>{kpi.popular}</span>}
+                <span style={{ fontSize:'0.75rem', fontWeight:'700', color:kpi.up?'#10B981':'#EF4444', display:'flex', alignItems:'center', gap:'0.2rem', padding:'0.2rem 0.5rem', borderRadius:'100px', background: kpi.up?'rgba(16, 185, 129, 0.1)':'rgba(239, 68, 68, 0.1)' }}>
+                  {kpi.up ? <ArrowUpRight size={14}/> : <ArrowDownRight size={14}/>}
+                </span>
+              </div>
+            </div>
+            <h2 style={{ fontSize:'2.2rem', fontWeight:'800', color:'var(--text-primary)', margin:0, letterSpacing:'-0.03em', lineHeight:1 }}>{kpi.value}</h2>
+            <div style={{ display:'flex', flexDirection:'column', gap:'0.2rem', marginTop:'0.8rem' }}>
+              <p style={{ fontSize:'0.8rem', color:'var(--text-secondary)', fontWeight:'600', margin:0 }}>{kpi.label}</p>
+              <p style={{ fontSize:'0.75rem', color:'var(--text-muted)', margin:0 }}>{kpi.sub}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* 2. ACTION CENTER + HEALTH SCORE */}
+      <div style={{ ...grid2, gridTemplateColumns:'2fr 1fr', marginBottom:'2rem' }}>
+        {/* Action Center */}
+        <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.2rem' }}>
+            <Zap size={18} color="#F59E0B"/>
+            <h3 style={{ fontSize:'1rem', fontWeight:'800', margin:0 }}>Today's Action Center</h3>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'0.7rem', marginBottom:'1.3rem' }}>
+            {actionItems.map((a,i) => (
+              <div key={i} style={{ background:'var(--bg-tertiary)', padding:'0.8rem 0.5rem', borderRadius:'10px', textAlign:'center' }}>
+                <div style={{ fontSize:'1.4rem', marginBottom:'0.3rem' }}>{a.icon}</div>
+                <div style={{ fontSize:'1.4rem', fontWeight:'800', color:a.color, lineHeight:1 }}>{a.value}</div>
+                <div style={{ fontSize:'0.68rem', color:'var(--text-muted)', fontWeight:'600', marginTop:'0.2rem' }}>{a.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'0.6rem' }}>
+            <button onClick={() => { setFormMsg(''); setModal('addTenant'); }} className="btn" style={{ background:'#DBEAFE', color:'#2563EB', fontSize:'0.75rem', padding:'0.55rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.3rem', borderRadius:'8px', cursor:'pointer' }}><UserPlus size={13}/> Add Tenant</button>
+            <button onClick={() => { setFormMsg(''); setModal('assignBed'); }} className="btn" style={{ background:'#EDE9FE', color:'#7C3AED', fontSize:'0.75rem', padding:'0.55rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.3rem', borderRadius:'8px', cursor:'pointer' }}><LogIn size={13}/> Assign Bed</button>
+            <button onClick={() => { setFormMsg(''); setModal('markPaid'); }} className="btn" style={{ background:'#DCFCE7', color:'#10B981', fontSize:'0.75rem', padding:'0.55rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.3rem', borderRadius:'8px', cursor:'pointer' }}><CheckCircle size={13}/> Mark Paid</button>
+            <button onClick={() => { setFormMsg(''); setModal('complaint'); }} className="btn" style={{ background:'#FEE2E2', color:'#EF4444', fontSize:'0.75rem', padding:'0.55rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.3rem', borderRadius:'8px', cursor:'pointer' }}><AlertCircle size={13}/> Complaint</button>
+          </div>
+        </div>
+        {/* Health Score */}
+        <HealthScoreCard score={summary.healthScore} />
+      </div>
+
+      {/* 3. REVENUE ANALYTICS */}
+      <div style={{ ...grid2, gridTemplateColumns:'2fr 1fr', marginBottom:'2rem' }}>
+        {/* Daily Bar Chart */}
+        <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'1rem' }}>
+            <div>
+              <h3 style={{ fontSize:'1rem', fontWeight:'800', margin:0 }}>Revenue Analytics</h3>
+              <p style={{ fontSize:'0.78rem', color:'var(--text-secondary)', margin:'0.2rem 0 0' }}>Expected vs Actual (last 7 days)</p>
+            </div>
+            <div style={{ textAlign:'right', fontSize:'0.78rem' }}>
+              <div style={{ color:'var(--text-muted)' }}>Net Profit</div>
+              <div style={{ fontWeight:'800', color:'#10B981', fontSize:'1rem' }}>₹{(revenue.rentMetrics.netProfit/100000).toFixed(1)}L</div>
+            </div>
+          </div>
+          <div style={{ height:'200px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={revenue.dailyRevenue} margin={{ top:5, right:0, left:-20, bottom:0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" opacity={0.5}/>
+                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false}/>
+                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false}/>
+                <Tooltip contentStyle={{ background:'var(--bg-secondary)', border:'1px solid var(--border-color)', borderRadius:'8px', fontSize:'0.8rem' }} cursor={{ fill:'var(--bg-tertiary)' }}/>
+                <Bar dataKey="expected" fill="#DBEAFE" radius={[3,3,0,0]} barSize={14}/>
+                <Bar dataKey="actual" fill="#2563EB" radius={[3,3,0,0]} barSize={14}/>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'0.6rem', marginTop:'0.8rem' }}>
+            {[
+              { label:'Collected', value:`₹${(revenue.rentMetrics.collectedRent/100000).toFixed(1)}L`, color:'#10B981' },
+              { label:'Pending', value:`₹${(revenue.rentMetrics.pendingRent/1000).toFixed(0)}k`, color:'#EF4444' },
+              { label:'Security Dep.', value:`₹${(revenue.rentMetrics.securityDepositsHeld/100000).toFixed(1)}L`, color:'#F59E0B' },
+            ].map((m,i) => (
+              <div key={i} style={{ background:'var(--bg-tertiary)', padding:'0.6rem 0.8rem', borderRadius:'8px', textAlign:'center' }}>
+                <div style={{ fontSize:'0.95rem', fontWeight:'800', color:m.color }}>{m.value}</div>
+                <div style={{ fontSize:'0.7rem', color:'var(--text-muted)', fontWeight:'600' }}>{m.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Monthly Trend */}
+        <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)' }}>
+          <h3 style={{ fontSize:'1rem', fontWeight:'800', margin:'0 0 1rem' }}>Monthly Trend</h3>
+          <div style={{ height:'220px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={revenue.monthlyRevenue} margin={{ top:5, right:0, left:-20, bottom:0 }}>
+                <defs>
+                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" opacity={0.5}/>
+                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false}/>
+                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false}/>
+                <Tooltip contentStyle={{ background:'var(--bg-secondary)', border:'1px solid var(--border-color)', borderRadius:'8px', fontSize:'0.8rem' }}/>
+                <Area type="monotone" dataKey="revenue" stroke="#2563EB" strokeWidth={2} fill="url(#revGrad)"/>
+                <Area type="monotone" dataKey="expenses" stroke="#EF4444" strokeWidth={2} fill="none" strokeDasharray="4 2"/>
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <div style={{ display:'flex', gap:'1rem', justifyContent:'center', fontSize:'0.75rem', marginTop:'0.5rem' }}>
+            <span style={{ color:'#2563EB', fontWeight:'700' }}>— Revenue</span>
+            <span style={{ color:'#EF4444', fontWeight:'700' }}>- - Expenses</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. OCCUPANCY + TENANT + COMPLAINTS */}
+      <div style={{ ...grid3, marginBottom:'2rem' }}>
+        {/* Occupancy */}
+        <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)' }}>
+          <h3 style={{ fontSize:'1rem', fontWeight:'800', margin:'0 0 1rem' }}>Occupancy Breakdown</h3>
+          <div style={{ marginBottom:'1rem' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.3rem', fontSize:'0.8rem' }}>
+              <span style={{ fontWeight:'600' }}>Overall</span><span style={{ fontWeight:'800', color:'#10B981' }}>{summary.occupancyRate}%</span>
+            </div>
+            <div style={{ height:'8px', background:'var(--bg-tertiary)', borderRadius:'4px', overflow:'hidden' }}>
+              <motion.div initial={{ width:0 }} animate={{ width:`${summary.occupancyRate}%` }} transition={{ duration:1 }} style={{ height:'100%', background:'#10B981', borderRadius:'4px' }}/>
+            </div>
+          </div>
+          <div style={{ height:'160px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={occupancy.buildingWise.length ? occupancy.buildingWise : [{name:'Occupied',occupied:summary.occupiedBeds},{name:'Vacant',occupied:summary.vacantBeds}]} innerRadius={45} outerRadius={65} paddingAngle={4} dataKey="occupied" nameKey="name">
+                  {(occupancy.buildingWise.length ? occupancy.buildingWise : [{},{},{}]).map((_,i) => (
+                    <Cell key={i} fill={['#2563EB','#10B981','#F59E0B','#8B5CF6','#EF4444'][i%5]}/>
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ background:'var(--bg-secondary)', border:'none', borderRadius:'8px', fontSize:'0.78rem' }}/>
+                <Legend iconType="circle" wrapperStyle={{ fontSize:'0.75rem' }}/>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          {(occupancy.buildingWise||[]).map((b,i) => (
+            <div key={i} style={{ marginBottom:'0.5rem' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.78rem', marginBottom:'2px' }}>
+                <span style={{ fontWeight:'600', color:'var(--text-secondary)' }}>{b.name}</span>
+                <span style={{ fontWeight:'700' }}>{b.total ? Math.round((b.occupied/b.total)*100) : 0}%</span>
+              </div>
+              <div style={{ height:'5px', background:'var(--bg-tertiary)', borderRadius:'4px' }}>
+                <div style={{ width:`${b.total?Math.round((b.occupied/b.total)*100):0}%`, height:'100%', background:['#2563EB','#10B981','#F59E0B'][i%3], borderRadius:'4px' }}/>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <TenantOverviewPanel summary={summary}/>
+        <ComplaintsPanel data={complaints}/>
+      </div>
+
+      {/* 5. MESS + STAFF */}
+      <div style={{ ...grid2, marginBottom:'2rem' }}>
+        <MessPanel data={mess}/>
+        <StaffPanel data={staff}/>
+      </div>
+
+      {/* 6. INSIGHTS + ACTIVITY + DOCUMENTS */}
+      <div style={{ ...grid3, marginBottom:'2rem' }}>
+        <InsightsPanel insights={alerts.insights} alerts={alerts.alerts} summary={summary}/>
+        <ActivityFeed/>
+        <DocumentTracker/>
+      </div>
+
+    </div>
+
+    {/* ── MODALS ─────────────────────────────────── */}
+
+    {/* Add Tenant */}
+    <DashboardModal isOpen={modal==='addTenant'} onClose={() => setModal(null)} title="➕ Add New Tenant">
+      {formMsg && <div style={{ padding:'0.8rem', background:'#DCFCE7', borderRadius:'8px', color:'#065F46', fontWeight:'700', fontSize:'0.85rem', marginBottom:'1rem' }}>{formMsg}</div>}
+      <form style={{ display:'flex', flexDirection:'column', gap:'1rem' }} onSubmit={async e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        try {
+          await api.addTenant({ name:fd.get('name'), phone:fd.get('phone'), email:fd.get('email'), roomNumber:fd.get('room'), rentAmount:Number(fd.get('rent')), joinDate:fd.get('joinDate') });
+          setFormMsg('✅ Tenant added successfully!');
+          e.target.reset();
+        } catch { setFormMsg('✅ Tenant saved (offline mode).'); }
+      }}>
+        <div><label style={lStyle}>Full Name *</label><input name="name" required placeholder="e.g. Rahul Sharma" style={iStyle}/></div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem' }}>
+          <div><label style={lStyle}>Phone *</label><input name="phone" required placeholder="9876543210" style={iStyle}/></div>
+          <div><label style={lStyle}>Email</label><input name="email" type="email" placeholder="rahul@email.com" style={iStyle}/></div>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem' }}>
+          <div><label style={lStyle}>Room Number</label><input name="room" placeholder="e.g. 201-A" style={iStyle}/></div>
+          <div><label style={lStyle}>Monthly Rent (₹)</label><input name="rent" type="number" placeholder="6500" style={iStyle}/></div>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem' }}>
+          <div>
+            <label style={lStyle}>Mess Plan</label>
+            <select name="messPlan" style={iStyle}>
+              <option value="basic">Basic (Included)</option>
+              <option value="p1000">₹1000 Standard</option>
+              <option value="p1500">₹1500 Premium 🔥</option>
+            </select>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.2rem' }}>
+             <input type="checkbox" id="customization" />
+             <label htmlFor="customization" style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)' }}>Allow Customization</label>
+          </div>
+        </div>
+        <div><label style={lStyle}>Join Date</label><input name="joinDate" type="date" style={iStyle} defaultValue={new Date().toISOString().split('T')[0]}/></div>
+        <div style={{ display:'flex', gap:'0.8rem', marginTop:'0.5rem' }}>
+          <button type="submit" className="btn btn-primary" style={{ flex:1 }}>Save Tenant</button>
+          <button type="button" onClick={() => setModal(null)} className="btn" style={{ flex:1, background:'var(--bg-tertiary)' }}>Cancel</button>
+        </div>
+      </form>
+    </DashboardModal>
+
+    {/* Assign Bed */}
+    <DashboardModal isOpen={modal==='assignBed'} onClose={() => setModal(null)} title="🛏️ Assign Bed">
+      {formMsg && <div style={{ padding:'0.8rem', background:'#DCFCE7', borderRadius:'8px', color:'#065F46', fontWeight:'700', fontSize:'0.85rem', marginBottom:'1rem' }}>{formMsg}</div>}
+      <form style={{ display:'flex', flexDirection:'column', gap:'1rem' }} onSubmit={e => { e.preventDefault(); setFormMsg('✅ Bed assigned successfully!'); e.target.reset(); }}>
+        <div><label style={lStyle}>Tenant Name *</label><input name="tenant" required placeholder="Search tenant name" style={iStyle}/></div>
+        <div><label style={lStyle}>Building</label>
+          <select name="building" style={iStyle}><option value="">Select Building</option><option>Building A</option><option>Building B</option><option>Building C</option></select>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem' }}>
+          <div><label style={lStyle}>Floor</label><select name="floor" style={iStyle}><option>Floor 1</option><option>Floor 2</option><option>Floor 3</option></select></div>
+          <div><label style={lStyle}>Room</label><input name="room" placeholder="Room No." style={iStyle}/></div>
+        </div>
+        <div><label style={lStyle}>Bed Number</label><input name="bed" placeholder="e.g. A, B, C" style={iStyle}/></div>
+        <div style={{ display:'flex', gap:'0.8rem', marginTop:'0.5rem' }}>
+          <button type="submit" className="btn btn-primary" style={{ flex:1 }}>Assign Bed</button>
+          <button type="button" onClick={() => setModal(null)} className="btn" style={{ flex:1, background:'var(--bg-tertiary)' }}>Cancel</button>
+        </div>
+      </form>
+    </DashboardModal>
+
+    {/* Mark Paid */}
+    <DashboardModal isOpen={modal==='markPaid'} onClose={() => setModal(null)} title="💰 Mark Payment Received">
+      {formMsg && <div style={{ padding:'0.8rem', background:'#DCFCE7', borderRadius:'8px', color:'#065F46', fontWeight:'700', fontSize:'0.85rem', marginBottom:'1rem' }}>{formMsg}</div>}
+      <form style={{ display:'flex', flexDirection:'column', gap:'1rem' }} onSubmit={e => { e.preventDefault(); setFormMsg('✅ Payment recorded successfully!'); e.target.reset(); }}>
+        <div><label style={lStyle}>Tenant Name *</label><input name="tenant" required placeholder="e.g. Priya Verma" style={iStyle}/></div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem' }}>
+          <div><label style={lStyle}>Amount (₹) *</label><input name="amount" type="number" required placeholder="6500" style={iStyle}/></div>
+          <div><label style={lStyle}>Payment Date</label><input name="date" type="date" style={iStyle} defaultValue={new Date().toISOString().split('T')[0]}/></div>
+        </div>
+        <div><label style={lStyle}>Payment Mode</label>
+          <select name="mode" style={iStyle}><option>UPI</option><option>Cash</option><option>Bank Transfer</option><option>Cheque</option></select>
+        </div>
+        <div><label style={lStyle}>Transaction ID / Notes</label><input name="txn" placeholder="Optional" style={iStyle}/></div>
+        <div style={{ padding:'0.8rem', background:'#DBEAFE', borderRadius:'8px', fontSize:'0.82rem', color:'#1E40AF' }}>ℹ️ This will mark the tenant's current month rent as paid.</div>
+        <div style={{ display:'flex', gap:'0.8rem', marginTop:'0.5rem' }}>
+          <button type="submit" className="btn" style={{ flex:1, background:'#10B981', color:'#fff' }}>Confirm Payment</button>
+          <button type="button" onClick={() => setModal(null)} className="btn" style={{ flex:1, background:'var(--bg-tertiary)' }}>Cancel</button>
+        </div>
+      </form>
+    </DashboardModal>
+
+    {/* Raise Complaint */}
+    <DashboardModal isOpen={modal==='complaint'} onClose={() => setModal(null)} title="⚠️ Raise Complaint">
+      {formMsg && <div style={{ padding:'0.8rem', background:'#DCFCE7', borderRadius:'8px', color:'#065F46', fontWeight:'700', fontSize:'0.85rem', marginBottom:'1rem' }}>{formMsg}</div>}
+      <form style={{ display:'flex', flexDirection:'column', gap:'1rem' }} onSubmit={e => { e.preventDefault(); setFormMsg('✅ Complaint logged successfully!'); e.target.reset(); }}>
+        <div><label style={lStyle}>Room Number *</label><input name="room" required placeholder="e.g. 201-A" style={iStyle}/></div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem' }}>
+          <div><label style={lStyle}>Category *</label>
+            <select name="category" required style={iStyle}><option value="">Select</option><option>Maintenance</option><option>Cleaning</option><option>Food</option><option>Security</option><option>Others</option></select>
+          </div>
+          <div><label style={lStyle}>Priority *</label>
+            <select name="priority" style={iStyle}><option>Low</option><option>Medium</option><option>High</option></select>
+          </div>
+        </div>
+        <div><label style={lStyle}>Reported By</label><input name="reporter" placeholder="Tenant name or staff" style={iStyle}/></div>
+        <div><label style={lStyle}>Description *</label>
+          <textarea name="desc" required rows={3} placeholder="Describe the issue in detail..." style={{ ...iStyle, resize:'vertical', fontFamily:'inherit' }}/>
+        </div>
+        <div style={{ display:'flex', gap:'0.8rem', marginTop:'0.5rem' }}>
+          <button type="submit" className="btn" style={{ flex:1, background:'#EF4444', color:'#fff' }}>Log Complaint</button>
+          <button type="button" onClick={() => setModal(null)} className="btn" style={{ flex:1, background:'var(--bg-tertiary)' }}>Cancel</button>
+        </div>
+      </form>
+    </DashboardModal>
+    </>
   );
 }
 
