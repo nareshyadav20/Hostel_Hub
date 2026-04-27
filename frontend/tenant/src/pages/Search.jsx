@@ -1,243 +1,690 @@
 import React, { useState } from 'react';
-import HostelIcon from '../components/HostelIcon';
 import { Link } from 'react-router-dom';
 
-/* ─── icon name map ─── */
-const ICON_MAP = { 1: 'sunshine', 2: 'elite', 3: 'green' };
+/* ─── icons (SVG constants) ─── */
+const ICONS = {
+  Location: (props) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+  Budget: (props) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>,
+  Gender: (props) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>,
+  Amenities: (props) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
+  WiFi: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>,
+  AC: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M6.34 17.66l-1.41 1.41"/><path d="M19.07 4.93l-1.41 1.41"/></svg>,
+  Food: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
+  Security: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+  Category: (props) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 21v-7a4 4 0 1 1 8 0v7"/><path d="M9 15v2"/><path d="M12 21v-7a4 4 0 1 1 8 0v7"/><path d="M17 15v2"/><path d="M3 8h18"/><path d="m3 8 2.1-5.1a2 2 0 0 1 1.8-1.1h10.2a2 2 0 0 1 1.8 1.1L21 8"/></svg>,
+  Student: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+  Work: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>,
+  Luxury: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+};
 
 /* ─── hostel data ─── */
 const HOSTELS = [
-  { id: 1, name: 'Sunshine Residency', location: 'Near City College', price: 6500,  gender: 'Boys',      type: '2 Sharing', rating: 4.5 },
-  { id: 2, name: 'Elite Living',        location: 'Tech Park Area',    price: 8500,  gender: 'Girls',     type: 'Single',    rating: 4.8 },
-  { id: 3, name: 'Green View Hostel',   location: 'Green Valley',      price: 5000,  gender: 'Co-living', type: '4 Sharing', rating: 4.2 },
+  { id: 1, name: 'Sunshine Residency', location: 'Near City College', price: 6500, gender: 'Boys', type: '2 Sharing', rating: 4.5, image: '/sunshine_residency_hostel.png' },
+  { id: 2, name: 'Elite Living', location: 'Tech Park Area', price: 8500, gender: 'Girls', type: 'Single', rating: 4.8, image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000' },
+  { id: 3, name: 'Green View Hostel', location: 'Green Valley', price: 5000, gender: 'Co-living', type: '4 Sharing', rating: 4.2, image: 'https://images.unsplash.com/photo-1623625434462-e5e42318ae49?auto=format&fit=crop&q=80&w=1000' },
 ];
 
 const Search = () => {
   const [filters, setFilters] = useState({ location: 'bengaluru', budget: 10000, gender: 'All' });
-
-  /* ── wishlist: load from localStorage ── */
-  const [wishlist, setWishlist] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('wishlist') || '[]'); }
-    catch { return []; }
-  });
+  const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
 
   const isWishlisted = (id) => wishlist.some((h) => h.id === id);
 
   const toggleWishlist = (hostel) => {
-    const next = isWishlisted(hostel.id)
-      ? wishlist.filter((h) => h.id !== hostel.id)
-      : [...wishlist, hostel];
+    const next = isWishlisted(hostel.id) ? wishlist.filter((h) => h.id !== hostel.id) : [...wishlist, hostel];
     setWishlist(next);
     localStorage.setItem('wishlist', JSON.stringify(next));
   };
 
   return (
-    <div className="search-page fade-in">
-
-      {/* ── Header ── */}
-      <header style={{ marginBottom: '2.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
-          stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: '900', lineHeight: 1.1 }}>Find Your Perfect Stay</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '0.3rem' }}>
-            Browse verified, high-quality hostels in your preferred location.
-          </p>
+    <div className="search-page-professional fade-in">
+      {/* Header Section */}
+      <header className="professional-header">
+        <div className="header-content">
+          <h1 className="header-title">Find Your Perfect Stay</h1>
+          <p className="header-subtitle">Browse verified, premium co-living spaces with real-time availability.</p>
         </div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(270px, 300px) 1fr', gap: '2rem', alignItems: 'start' }}>
+      <div className="search-layout">
+        {/* Professional Sidebar */}
+        <aside className="sidebar-professional">
+          <div className="filter-card">
+            <div className="filter-header">
+              <ICONS.Amenities style={{ color: 'var(--text-muted)' }} />
+              <h3>Search Filters</h3>
+            </div>
 
-        {/* ── Filters Sidebar ── */}
-        <aside className="glass-card" style={{ padding: '1.8rem', position: 'sticky', top: '90px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '1.8rem' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-              stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-            </svg>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '800' }}>Filters</h3>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.6rem' }}>
-
-            {/* Location */}
-            <div>
-              <label style={labelStyle}>Location</label>
-              <div style={{ position: 'relative', marginTop: '0.5rem' }}>
-                <span style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', color: 'var(--text-muted)' }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-                  </svg>
-                </span>
-                <select value={filters.location} onChange={(e) => setFilters({ ...filters, location: e.target.value })} style={selectStyle({ pl: '2.6rem' })}>
+            <div className="filter-sections">
+              {/* Location */}
+              <div className="filter-group">
+                <div className="group-label">
+                  <ICONS.Location /> <span>Location</span>
+                </div>
+                <select value={filters.location} onChange={(e) => setFilters({ ...filters, location: e.target.value })} className="pro-select">
                   <option value="bengaluru">Bengaluru</option>
                   <option value="hyderabad">Hyderabad</option>
                   <option value="mumbai">Mumbai</option>
-                  <option value="delhi">Delhi</option>
-                  <option value="pune">Pune</option>
                 </select>
               </div>
-            </div>
 
-            {/* Budget */}
-            <div>
-              <label style={labelStyle}>Budget — ₹{Number(filters.budget).toLocaleString()}</label>
-              <input type="range" min="2000" max="20000" step="500" value={filters.budget}
-                onChange={(e) => setFilters({ ...filters, budget: e.target.value })}
-                style={{ width: '100%', marginTop: '0.8rem', accentColor: 'var(--accent-primary)' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
-                <span>₹2,000</span><span>₹20,000</span>
+              {/* Budget Slider */}
+              <div className="filter-group">
+                <div className="group-label">
+                  <ICONS.Budget /> <span>Budget Range</span>
+                </div>
+                <div className="budget-slider-container">
+                  <div className="budget-value">₹{Number(filters.budget).toLocaleString()}</div>
+                  <input type="range" min="2000" max="20000" step="500" value={filters.budget} onChange={(e) => setFilters({ ...filters, budget: e.target.value })} className="pro-range" />
+                  <div className="range-labels">
+                    <span>₹2,000</span>
+                    <span>₹20k</span>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Gender */}
-            <div>
-              <label style={labelStyle}>Gender Preference</label>
-              <select value={filters.gender} onChange={(e) => setFilters({ ...filters, gender: e.target.value })} style={selectStyle({})}>
-                <option>All</option>
-                <option>Boys Only</option>
-                <option>Girls Only</option>
-                <option>Co-living</option>
-              </select>
-            </div>
+              {/* Gender Preference */}
+              <div className="filter-group">
+                <div className="group-label">
+                  <ICONS.Gender /> <span>Gender Preference</span>
+                </div>
+                <div className="gender-toggle-group">
+                  {['All', 'Boys', 'Girls', 'Mixed'].map(g => (
+                    <button key={g} onClick={() => setFilters({...filters, gender: g})} className={`gender-btn ${filters.gender === g ? 'active' : ''}`}>
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            {/* Amenities */}
-            <div>
-              <label style={{ ...labelStyle, display: 'block', marginBottom: '0.7rem' }}>Amenities</label>
-              {['WiFi', 'A/C', 'Food', 'Laundry', 'Gym', 'Security'].map((item) => (
-                <label key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', fontSize: '0.9rem', cursor: 'pointer', color: 'var(--text-secondary)', marginBottom: '0.55rem' }}>
-                  <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: 'var(--accent-primary)', cursor: 'pointer' }} />
-                  {item}
-                </label>
-              ))}
-            </div>
+              {/* Budget Categories Table-like layout */}
+              <div className="filter-group">
+                <div className="group-label">
+                  <ICONS.Budget /> <span>Budget Segments</span>
+                </div>
+                <div className="pro-filter-table">
+                  {[
+                    { label: '₹0 - ₹5k', value: 'budget-1' },
+                    { label: '₹5k - ₹10k', value: 'budget-2' },
+                    { label: '₹10k - ₹15k', value: 'budget-3' },
+                    { label: '₹15k+', value: 'budget-4' }
+                  ].map(item => (
+                    <label key={item.value} className="pro-table-row">
+                      <input type="radio" name="budget-seg" />
+                      <span className="row-content">
+                        <span className="row-label">{item.label}</span>
+                        <span className="row-radio-custom"></span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
-            <button className="btn btn-primary" style={{ width: '100%', padding: '0.85rem' }}>Apply Filters</button>
+              {/* Property Categories */}
+              <div className="filter-group">
+                <div className="group-label">
+                  <ICONS.Category /> <span>Property Style</span>
+                </div>
+                <div className="pro-filter-table">
+                  {[
+                    { label: 'Student Friendly', icon: <ICONS.Student />, value: 'student' },
+                    { label: 'Professional Hubs', icon: <ICONS.Work />, value: 'work' },
+                    { label: 'Luxury Suites', icon: <ICONS.Luxury />, value: 'luxury' }
+                  ].map(item => (
+                    <label key={item.value} className="pro-table-row">
+                      <input type="checkbox" />
+                      <span className="row-content">
+                        <span className="row-info">
+                          {item.icon}
+                          <span className="row-label">{item.label}</span>
+                        </span>
+                        <span className="row-check-custom"></span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Amenities checklist */}
+              <div className="filter-group">
+                <div className="group-label">
+                  <ICONS.Amenities /> <span>Essential Amenities</span>
+                </div>
+                <div className="amenities-checklist">
+                  {[
+                    { id: 'wifi', label: 'WiFi', icon: <ICONS.WiFi /> },
+                    { id: 'ac', label: 'A/C', icon: <ICONS.AC /> },
+                    { id: 'food', label: 'Food', icon: <ICONS.Food /> },
+                    { id: 'security', label: 'Security', icon: <ICONS.Security /> }
+                  ].map(amenity => (
+                    <label key={amenity.id} className="amenity-checkbox">
+                      <input type="checkbox" />
+                      <span className="checkbox-content">
+                        {amenity.icon}
+                        <span>{amenity.label}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <button className="apply-btn">Apply Filters</button>
+            </div>
           </div>
         </aside>
 
-        {/* ── Results Grid ── */}
-        <main style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.8rem', alignContent: 'start' }}>
-          {HOSTELS.map((hostel) => {
-            const saved = isWishlisted(hostel.id);
-            return (
-              <div key={hostel.id} className="glass-card hostel-card"
-                style={{ padding: 0, overflow: 'hidden', borderRadius: '20px', transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}>
-
-                {/* Image Area */}
-                <div style={{ height: '200px', background: 'linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%)', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-
-                  {/* Rating badge */}
-                  <span style={{ position: 'absolute', top: '1rem', left: '1rem', background: '#22c55e', color: '#fff', padding: '0.28rem 0.7rem', borderRadius: '8px', fontWeight: '800', fontSize: '0.82rem', letterSpacing: '0.3px' }}>
-                    {hostel.rating} ★
-                  </span>
-
-                  <HostelIcon name={ICON_MAP[hostel.id]} width={110} height={110} />
-
-                  {/* Heart wishlist icon button (top-right) */}
-                  <button
-                    onClick={() => toggleWishlist(hostel)}
-                    title={saved ? 'Remove from Wishlist' : 'Add to Wishlist'}
-                    style={{
-                      position: 'absolute', top: '0.9rem', right: '0.9rem',
-                      width: '36px', height: '36px', borderRadius: '50%', border: 'none',
-                      background: saved ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.12)',
-                      backdropFilter: 'blur(8px)',
-                      color: saved ? '#ef4444' : 'var(--text-muted)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer', transition: 'all 0.25s ease',
-                    }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24"
-                      fill={saved ? '#ef4444' : 'none'}
-                      stroke={saved ? '#ef4444' : 'currentColor'}
-                      strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                    </svg>
-                  </button>
+        {/* Results Main Area */}
+        <main className="results-professional">
+          {HOSTELS.map(hostel => (
+            <div key={hostel.id} className="pro-hostel-card">
+              <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image})` }}>
+                <div className="rating-tag">{hostel.rating} ★</div>
+                <button className={`wishlist-icon ${isWishlisted(hostel.id) ? 'active' : ''}`} onClick={() => toggleWishlist(hostel)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted(hostel.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                </button>
+              </div>
+              <div className="pro-card-content">
+                <div className="pro-card-header">
+                  <div>
+                    <h2 className="hostel-name">{hostel.name}</h2>
+                    <p className="hostel-loc"><ICONS.Location style={{width: '12px', height: '12px'}} /> {hostel.location}</p>
+                  </div>
+                  <div className="gender-tag">{hostel.gender}</div>
                 </div>
 
-                {/* Card Body */}
-                <div style={{ padding: '1.4rem' }}>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: '800', marginBottom: '0.3rem' }}>{hostel.name}</h3>
+                <div className="hostel-specs">
+                  <div className="spec-item">{hostel.type}</div>
+                  <div className="spec-item">Fully Managed</div>
+                  <div className="spec-item">Verified</div>
+                </div>
 
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-                    </svg>
-                    {hostel.location}
-                  </p>
-
-                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.2rem', flexWrap: 'wrap' }}>
-                    <span style={tagStyle('rgba(56,189,248,0.12)', 'var(--accent-primary)')}>{hostel.gender}</span>
-                    <span style={tagStyle('rgba(99,102,241,0.12)', 'var(--accent-secondary)')}>{hostel.type}</span>
+                <div className="pro-card-footer">
+                  <div className="price-tag">
+                    <span className="price-val">₹{hostel.price.toLocaleString()}</span>
+                    <span className="price-period">/mo</span>
                   </div>
-
-                  {/* Price + Action Row */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <span style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-primary)' }}>₹{hostel.price.toLocaleString()}</span>
-                      <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}> / mo</span>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      {/* ─ Wishlist text button ─ */}
-                      <button
-                        onClick={() => toggleWishlist(hostel)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: '0.35rem',
-                          background: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700',
-                          padding: '0.5rem 0.85rem', borderRadius: '10px', transition: 'all 0.2s ease',
-                          border: `1.5px solid ${saved ? '#ef4444' : 'var(--border-color)'}`,
-                          color: saved ? '#ef4444' : 'var(--text-muted)',
-                        }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24"
-                          fill={saved ? '#ef4444' : 'none'}
-                          stroke={saved ? '#ef4444' : 'currentColor'}
-                          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                        </svg>
-                        {saved ? 'Saved' : 'Wishlist'}
-                      </button>
-
-                      <Link to={`/listing/${hostel.id}`} className="btn btn-primary"
-                        style={{ padding: '0.5rem 1.1rem', fontSize: '0.82rem' }}>
-                        Details
-                      </Link>
-                    </div>
+                  <div className="card-actions">
+                    <button className="btn-wish-outline" onClick={() => toggleWishlist(hostel)}>
+                      {isWishlisted(hostel.id) ? 'Saved' : 'Wishlist'}
+                    </button>
+                    <Link to={`/listing/${hostel.id}`} className="btn-details">Details</Link>
                   </div>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </main>
       </div>
 
       <style>{`
-        .hostel-card:hover { transform: translateY(-7px); box-shadow: 0 24px 60px rgba(0,0,0,0.28); }
+        .search-page-professional {
+          padding: 1rem 0;
+        }
+
+        .professional-header {
+          margin-bottom: 3rem;
+          padding: 1.5rem 0;
+        }
+
+        .header-title {
+          font-size: 2.8rem;
+          font-weight: 900;
+          letter-spacing: -1.5px;
+          margin-bottom: 0.5rem;
+          color: var(--text-primary);
+        }
+
+        .header-subtitle {
+          font-size: 1.1rem;
+          color: var(--text-muted);
+        }
+
+        .search-layout {
+          display: grid;
+          grid-template-columns: 320px 1fr;
+          gap: 3rem;
+          align-items: start;
+        }
+
+        .sidebar-professional {
+          position: sticky;
+          top: 100px;
+        }
+
+        .filter-card {
+          background: var(--bg-secondary);
+          border: 1px solid var(--border-color);
+          border-radius: 28px;
+          padding: 2.2rem;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        }
+
+        .filter-header {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          margin-bottom: 2.5rem;
+          border-bottom: 1px solid var(--border-color);
+          padding-bottom: 1.2rem;
+        }
+
+        .filter-header h3 {
+          font-size: 1.2rem;
+          font-weight: 800;
+          margin: 0;
+        }
+
+        .filter-group {
+          margin-bottom: 2.2rem;
+        }
+
+        .group-label {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          font-size: 0.75rem;
+          font-weight: 800;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          margin-bottom: 1rem;
+        }
+
+        .pro-select {
+          width: 100%;
+          padding: 1rem 1.2rem;
+          background: var(--bg-tertiary);
+          border: 1px solid var(--border-color);
+          border-radius: 16px;
+          color: var(--text-primary);
+          font-weight: 600;
+          outline: none;
+          cursor: pointer;
+        }
+
+        .budget-value {
+          font-size: 1.8rem;
+          font-weight: 900;
+          color: var(--text-primary);
+          margin-bottom: 0.5rem;
+        }
+
+        .pro-range {
+          width: 100%;
+          height: 6px;
+          background: var(--bg-tertiary);
+          border-radius: 10px;
+          appearance: none;
+          outline: none;
+          accent-color: var(--accent-primary);
+        }
+
+        .range-labels {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.8rem;
+          color: var(--text-muted);
+          margin-top: 0.5rem;
+        }
+
+        .gender-toggle-group {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 0.8rem;
+        }
+
+        .gender-btn {
+          padding: 0.8rem;
+          background: var(--bg-tertiary);
+          border: 1px solid var(--border-color);
+          border-radius: 12px;
+          color: var(--text-secondary);
+          font-weight: 700;
+          font-size: 0.85rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .gender-btn.active {
+          background: var(--accent-primary);
+          color: white;
+          border-color: var(--accent-primary);
+          box-shadow: 0 4px 15px rgba(14, 165, 233, 0.25);
+        }
+
+        .amenities-checklist {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 0.6rem;
+        }
+
+        .amenity-checkbox {
+          cursor: pointer;
+        }
+
+        .amenity-checkbox input {
+          display: none;
+        }
+
+        .checkbox-content {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          padding: 0.8rem 1.2rem;
+          background: var(--bg-tertiary);
+          border: 1px solid var(--border-color);
+          border-radius: 14px;
+          color: var(--text-secondary);
+          font-weight: 600;
+          font-size: 0.9rem;
+          transition: all 0.2s ease;
+        }
+
+        .amenity-checkbox input:checked + .checkbox-content {
+          background: rgba(34, 197, 94, 0.1);
+          border-color: #22c55e;
+          color: #22c55e;
+        }
+
+        .apply-btn {
+          width: 100%;
+          padding: 1.2rem;
+          background: var(--text-primary);
+          color: var(--bg-primary);
+          border: none;
+          border-radius: 18px;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          margin-top: 1rem;
+        }
+
+        .apply-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Pro Filter Table Styles */
+        .pro-filter-table {
+          background: var(--bg-tertiary);
+          border: 1px solid var(--border-color);
+          border-radius: 20px;
+          overflow: hidden;
+        }
+
+        .pro-table-row {
+          display: block;
+          cursor: pointer;
+          border-bottom: 1px solid var(--border-color);
+          transition: all 0.2s ease;
+        }
+
+        .pro-table-row:last-child {
+          border-bottom: none;
+        }
+
+        .pro-table-row input {
+          display: none;
+        }
+
+        .row-content {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.2rem 1.5rem;
+        }
+
+        .row-info {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          color: var(--text-secondary);
+        }
+
+        .row-label {
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: var(--text-primary);
+        }
+
+        .row-radio-custom, .row-check-custom {
+          width: 20px;
+          height: 20px;
+          border: 2px solid var(--border-color);
+          border-radius: 50%;
+          position: relative;
+          transition: all 0.2s ease;
+        }
+
+        .row-check-custom {
+          border-radius: 6px;
+        }
+
+        .pro-table-row input:checked + .row-content {
+          background: rgba(14, 165, 233, 0.05);
+        }
+
+        .pro-table-row input:checked + .row-content .row-radio-custom {
+          border-color: var(--accent-primary);
+        }
+
+        .pro-table-row input:checked + .row-content .row-radio-custom::after {
+          content: '';
+          position: absolute;
+          top: 4px;
+          left: 4px;
+          width: 8px;
+          height: 8px;
+          background: var(--accent-primary);
+          border-radius: 50%;
+        }
+
+        .pro-table-row input:checked + .row-content .row-check-custom {
+          background: var(--accent-primary);
+          border-color: var(--accent-primary);
+        }
+
+        .pro-table-row input:checked + .row-content .row-check-custom::after {
+          content: '✓';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: white;
+          font-size: 0.75rem;
+          font-weight: 900;
+        }
+
+        .pro-table-row:hover {
+          background: rgba(255, 255, 255, 0.03);
+        }
+
+        .results-professional {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 2.2rem;
+        }
+
+        .pro-hostel-card {
+          display: flex;
+          background: var(--bg-secondary);
+          border: 1px solid var(--border-color);
+          border-radius: 32px;
+          overflow: hidden;
+          transition: all 0.4s ease;
+          height: 320px;
+        }
+
+        .pro-hostel-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 25px 60px rgba(0,0,0,0.08);
+          border-color: var(--accent-primary);
+        }
+
+        .pro-card-image {
+          width: 400px;
+          background-size: cover;
+          background-position: center;
+          position: relative;
+        }
+
+        .rating-tag {
+          position: absolute;
+          top: 1.5rem;
+          left: 1.5rem;
+          background: #22c55e;
+          color: white;
+          padding: 0.4rem 1rem;
+          border-radius: 10px;
+          font-weight: 800;
+          font-size: 0.9rem;
+        }
+
+        .wishlist-icon {
+          position: absolute;
+          top: 1.5rem;
+          right: 1.5rem;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          border: none;
+          background: rgba(255,255,255,0.2);
+          backdrop-filter: blur(10px);
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .wishlist-icon.active {
+          background: #ef4444;
+          color: white;
+        }
+
+        .pro-card-content {
+          flex: 1;
+          padding: 2.5rem;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+
+        .hostel-name {
+          font-size: 2.2rem;
+          font-weight: 900;
+          margin: 0;
+          color: var(--text-primary);
+          letter-spacing: -1px;
+        }
+
+        .hostel-loc {
+          color: var(--text-muted);
+          font-size: 1rem;
+          margin: 0.5rem 0 0;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .gender-tag {
+          padding: 0.5rem 1.2rem;
+          background: var(--bg-tertiary);
+          border-radius: 12px;
+          font-size: 0.85rem;
+          font-weight: 800;
+          color: var(--accent-primary);
+          text-transform: uppercase;
+        }
+
+        .pro-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+        }
+
+        .hostel-specs {
+          display: flex;
+          gap: 1.5rem;
+          margin: 1.5rem 0;
+        }
+
+        .spec-item {
+          font-size: 0.9rem;
+          color: var(--text-secondary);
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .spec-item::before {
+          content: '•';
+          color: var(--accent-primary);
+          font-size: 1.5rem;
+        }
+
+        .pro-card-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          border-top: 1px solid var(--border-color);
+          padding-top: 1.5rem;
+        }
+
+        .price-val {
+          font-size: 2.4rem;
+          font-weight: 950;
+          color: var(--text-primary);
+        }
+
+        .price-period {
+          color: var(--text-muted);
+          font-size: 1.1rem;
+          margin-left: 0.4rem;
+        }
+
+        .card-actions {
+          display: flex;
+          gap: 1rem;
+        }
+
+        .btn-wish-outline {
+          padding: 0.8rem 1.5rem;
+          background: transparent;
+          border: 1px solid var(--border-color);
+          border-radius: 14px;
+          color: var(--text-secondary);
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .btn-details {
+          padding: 0.8rem 2.2rem;
+          background: var(--accent-primary);
+          color: white;
+          text-decoration: none;
+          border-radius: 14px;
+          font-weight: 800;
+          transition: all 0.3s ease;
+          box-shadow: 0 8px 20px rgba(14, 165, 233, 0.2);
+        }
+
+        .btn-details:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 12px 30px rgba(14, 165, 233, 0.3);
+        }
+
+        @media (max-width: 1024px) {
+          .search-layout { grid-template-columns: 1fr; }
+          .pro-hostel-card { flex-direction: column; height: auto; }
+          .pro-card-image { width: 100%; height: 250px; }
+        }
       `}</style>
     </div>
   );
 };
-
-/* ── style helpers ── */
-const labelStyle = {
-  color: 'var(--accent-primary)', fontWeight: '800',
-  fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '1px',
-};
-
-const selectStyle = ({ pl = '1rem' }) => ({
-  width: '100%', marginTop: '0.5rem',
-  background: 'var(--bg-primary)', border: '1px solid var(--border-color)',
-  borderRadius: '12px', padding: `0.75rem 1rem 0.75rem ${pl}`,
-  color: 'var(--text-primary)', fontWeight: '600', outline: 'none', cursor: 'pointer',
-});
-
-const tagStyle = (bg, color) => ({
-  fontSize: '0.76rem', background: bg, color,
-  padding: '0.28rem 0.7rem', borderRadius: '7px', fontWeight: '700',
-});
 
 export default Search;

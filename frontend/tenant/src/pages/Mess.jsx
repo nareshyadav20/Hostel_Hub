@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const Mess = () => {
   const [attended, setAttended] = useState(false);
@@ -22,7 +23,15 @@ const Mess = () => {
   };
 
   return (
-    <div className="mess-page fade-in dashboard-container">
+    <div className="mess-page fade-in dashboard-container" style={{ position: 'relative' }}>
+      <Link to="/dashboard" style={{
+        position: 'absolute', top: '20px', right: '20px', background: 'var(--bg-secondary)',
+        width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', border: '1px solid var(--border-color)', color: 'var(--text-primary)',
+        boxShadow: 'var(--shadow-md)', transition: 'all 0.3s ease', zIndex: 10
+      }} className="hover-scale">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </Link>
       <header style={{ marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '2.2rem', fontWeight: '900', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
@@ -127,6 +136,59 @@ const Mess = () => {
           </div>
         </div>
       </div>
+      {/* Weekly Menu Table */}
+      <section style={{ marginTop: '4rem' }} className="fade-in-up">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '2rem' }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <h3 style={{ fontSize: '1.6rem', fontWeight: '950', letterSpacing: '-1px' }}>Weekly Dining Plan</h3>
+        </div>
+        
+        <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
+                  <th style={{ padding: '1.5rem 2rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Day</th>
+                  <th style={{ padding: '1.5rem 2rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Tiffin (Breakfast)</th>
+                  <th style={{ padding: '1.5rem 2rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Lunch</th>
+                  <th style={{ padding: '1.5rem 2rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Dinner</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { day: 'Monday', tiffin: 'Dosa & Podi', lunch: 'South Indian Thali', dinner: 'Veg Pulao & Raita' },
+                  { day: 'Tuesday', tiffin: 'Poha & Jalebi', lunch: 'Rice, Dal & Sabzi', dinner: 'Phulka & Alu Methi' },
+                  { day: 'Wednesday', tiffin: 'Vada Sambar', lunch: 'Curd Rice & Pickle', dinner: 'Dal Tadka & Jeera Rice' },
+                  { day: 'Thursday', tiffin: 'Upma & Chutney', lunch: 'Roti & Mix Veg', dinner: 'Egg Curry / Paneer' },
+                  { day: 'Friday', tiffin: 'Paratha & Curd', lunch: 'Veg Biryani', dinner: 'Chapati & Mix Sabzi' },
+                  { day: 'Saturday', tiffin: 'Bread Omelette', lunch: 'Special Fried Rice', dinner: 'Chinese Special' },
+                  { day: 'Sunday', tiffin: 'Puri Bhaji', lunch: 'Sunday Feast', dinner: 'Chef\'s Choice' }
+                ].map((menu, idx) => (
+                  <tr key={idx} style={{ 
+                    borderBottom: '1px solid var(--border-color)',
+                    background: idx % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.02)',
+                    transition: 'background 0.3s ease'
+                  }} className="menu-row-hover">
+                    <td style={{ padding: '1.2rem 2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{menu.day}</td>
+                    <td style={{ padding: '1.2rem 2rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>{menu.tiffin}</td>
+                    <td style={{ padding: '1.2rem 2rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>{menu.lunch}</td>
+                    <td style={{ padding: '1.2rem 2rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>{menu.dinner}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <style>{`
+        .menu-row-hover:hover {
+          background: rgba(14, 165, 233, 0.05) !important;
+        }
+        @media (max-width: 768px) {
+          th, td { padding: 1rem !important; min-width: 150px; }
+        }
+      `}</style>
     </div>
   );
 };

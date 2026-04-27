@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const Payments = () => {
   const [history, setHistory] = useState([
@@ -13,7 +14,15 @@ const Payments = () => {
   const handlePayNow = () => alert('Redirecting to Payment Gateway...');
 
   return (
-    <div className="payments-page fade-in dashboard-container">
+    <div className="payments-page fade-in dashboard-container" style={{ position: 'relative' }}>
+      <Link to="/dashboard" style={{
+        position: 'absolute', top: '20px', right: '20px', background: 'var(--bg-secondary)',
+        width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', border: '1px solid var(--border-color)', color: 'var(--text-primary)',
+        boxShadow: 'var(--shadow-md)', transition: 'all 0.3s ease', zIndex: 10
+      }} className="hover-scale">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </Link>
       <header style={{ marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '2.2rem', fontWeight: '900', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
