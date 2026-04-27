@@ -1,164 +1,176 @@
 import React, { useState } from 'react';
 import { 
   Building2, Plus, Search, Filter, MoreHorizontal, 
-  MapPin, Users, CheckCircle2, XCircle, TrendingUp,
-  Activity, ArrowUpRight, Zap
+  MapPin, Users, Activity, ArrowUpRight, Zap,
+  TrendingUp, ShieldCheck, Home
 } from 'lucide-react';
 import Modal from '../components/Modal';
+import '../NexusElite.css';
 
 const Hostels = () => {
   const [activeModal, setActiveModal] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [hostels, setHostels] = useState([
-    { id: 1, name: 'Sapphire Men\'s PG', location: 'Koramangala, BLR', owner: 'Vikram M.', capacity: 120, occupancy: 85, status: 'Active', revenue: '₹4.2L' },
-    { id: 2, name: 'Royal Ladies Nest', location: 'HSR Layout, BLR', owner: 'Anjali S.', capacity: 80, occupancy: 92, status: 'Active', revenue: '₹3.8L' },
-    { id: 3, name: 'Metro Living Space', location: 'Indiranagar, BLR', owner: 'Suresh I.', capacity: 150, occupancy: 42, status: 'Inactive', revenue: '₹1.1L' },
-    { id: 4, name: 'Green Valley Hostel', location: 'Viman Nagar, PUN', owner: 'Rahul K.', capacity: 60, occupancy: 100, status: 'Active', revenue: '₹2.9L' },
+    { id: 1, name: 'Sapphire Men\'s PG', location: 'Koramangala, BLR', owner: 'Vikram M.', capacity: 120, occupancy: 85, status: 'Active', revenue: '4.2L' },
+    { id: 2, name: 'Royal Ladies Nest', location: 'HSR Layout, BLR', owner: 'Anjali S.', capacity: 80, occupancy: 92, status: 'Active', revenue: '3.8L' },
+    { id: 3, name: 'Metro Living Space', location: 'Indiranagar, BLR', owner: 'Suresh I.', capacity: 150, occupancy: 42, status: 'Inactive', revenue: '1.1L' },
+    { id: 4, name: 'Green Valley Hostel', location: 'Viman Nagar, PUN', owner: 'Rahul K.', capacity: 60, occupancy: 100, status: 'Active', revenue: '2.9L' },
   ]);
 
+  const stats = [
+    { label: 'Total Properties', value: '1,240', icon: <Building2 />, color: 'var(--accent-primary)' },
+    { label: 'Global Occupancy', value: '82%', icon: <Users />, color: 'var(--accent-success)' },
+    { label: 'Asset Valuation', value: '₹420 Cr', icon: <TrendingUp />, color: 'var(--accent-secondary)' },
+  ];
+
   return (
-    <div className="page-container animate-fade">
-      {/* Premium Header */}
-      <div className="page-header" style={{ marginBottom: '3.5rem' }}>
+    <div className="hostels-view">
+      <header className="page-header">
         <div>
-          <h1 style={{ fontSize: '2.75rem', fontWeight: 900, letterSpacing: '-0.04em' }}>
-            Infrastructure <span style={{ color: 'var(--accent-primary)' }}>Grid</span>
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginTop: '0.5rem' }}>
-            Operational oversight of the platform's physical property assets.
-          </p>
+          <h1 className="page-title">🏠 Infrastructure Grid</h1>
+          <p className="page-subtitle">Strategic management of platform-wide property assets and operational health.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button className="btn btn-secondary">
-            <Filter size={18} /> Global Filters
+          <button className="nexus-btn-icon" style={{ width: 'auto', padding: '0 1.5rem', borderRadius: '12px' }}>
+            <Zap size={18} style={{ marginRight: '0.75rem' }} /> Deployment Mode
           </button>
-          <button className="btn btn-primary" onClick={() => setActiveModal('register')}>
-            <Plus size={18} /> Register Property
+          <button className="btn btn-primary" style={{ padding: '1rem 2rem', borderRadius: '16px' }} onClick={() => setActiveModal('register')}>
+            <Plus size={20} /> Register Property
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Advanced Filter Bar */}
-      <div className="global-filter-bar" style={{ marginBottom: '2.5rem' }}>
-        <div className="filter-group">
-          <Activity size={18} color="var(--accent-primary)" />
-          <span className="filter-label">Health Status:</span>
-          <select className="filter-select">
-            <option>All Properties</option>
-            <option>High Occupancy</option>
-            <option>Underperforming</option>
-          </select>
-        </div>
-        <div style={{ width: '1px', height: '24px', background: 'var(--border-color)' }}></div>
-        <div className="filter-group">
-          <Search size={18} color="var(--text-muted)" />
-          <input type="text" placeholder="Filter by city, name, or owner..." style={{ background: 'none', border: 'none', color: '#fff', outline: 'none', fontSize: '0.85rem', width: '250px' }} />
-        </div>
-      </div>
-
-      {/* Infrastructure Grid */}
-      <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '2rem' }}>
-        {hostels.map(h => (
-          <div key={h.id} className="stat-card-premium" style={{ border: h.status === 'Active' ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <div className="stat-icon-container" style={{ width: '48px', height: '48px', background: h.status === 'Active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: h.status === 'Active' ? '#10b981' : '#ef4444' }}>
-                  <Building2 size={22} />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{h.name}</h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600 }}>
-                    <MapPin size={12} /> {h.location}
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                <div className={`badge ${h.status === 'Active' ? 'badge-success' : 'badge-danger'}`} style={{ padding: '0.4rem 0.75rem' }}>
-                  {h.status === 'Active' ? <div className="pulse-dot" style={{ width: 6, height: 6 }}></div> : null}
-                  {h.status}
-                </div>
-                <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>ID: #{h.id}042</span>
-              </div>
+      {/* Stats Grid */}
+      <div className="nexus-stats-grid">
+        {stats.map((stat, i) => (
+          <div key={i} className="stat-card-elite">
+            <div className="stat-icon-elite" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>
+              {stat.icon}
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--border-light)' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Occupancy Rate</span>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', marginTop: '0.4rem' }}>
-                  <span style={{ fontSize: '1.5rem', fontWeight: 900, color: h.occupancy > 80 ? '#10b981' : h.occupancy < 50 ? '#ef4444' : '#fff' }}>{h.occupancy}%</span>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>of {h.capacity}</span>
-                </div>
-              </div>
-              <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--border-light)' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Revenue Flow</span>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', marginTop: '0.4rem' }}>
-                  <span style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent-primary)' }}>{h.revenue}</span>
-                  <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 800 }}>+4.2%</span>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div style={{ height: '6px', width: '100%', background: 'var(--bg-tertiary)', borderRadius: '10px', overflow: 'hidden' }}>
-                <div style={{ 
-                  height: '100%', 
-                  width: `${h.occupancy}%`, 
-                  background: `linear-gradient(to right, ${h.occupancy > 90 ? '#10b981' : 'var(--accent-primary)'}, #fbbf24)`, 
-                  boxShadow: '0 0 10px rgba(251, 191, 36, 0.3)'
-                }}></div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-light)', paddingTop: '1.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, border: '1px solid var(--border-color)' }}>
-                  {h.owner.charAt(0)}
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Managed by</span>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{h.owner}</span>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '0.6rem' }}>
-                <button className="btn btn-secondary btn-sm" style={{ padding: '0.5rem 1rem' }}>
-                  View Node <ArrowUpRight size={14} style={{ marginLeft: 4 }} />
-                </button>
-                <button className="icon-action-btn"><MoreHorizontal size={18} /></button>
-              </div>
+            <div className="stat-data">
+              <h3>{stat.value}</h3>
+              <p>{stat.label}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Register Modal */}
+      {/* Filter Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem', gap: '1.5rem' }}>
+        <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <Search size={18} style={{ position: 'absolute', left: '1.5rem', color: 'var(--text-muted)' }} />
+          <input 
+            type="text" 
+            placeholder="Search by city, name, or owner reference..." 
+            style={{ 
+              width: '100%', padding: '1rem 1rem 1rem 3.5rem', 
+              background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+              borderRadius: '16px', color: 'var(--text-primary)', outline: 'none'
+            }}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <button className="nexus-btn-icon" style={{ width: '56px', height: '56px' }}>
+          <Filter size={20} />
+        </button>
+      </div>
+
+      {/* Infrastructure Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
+        {hostels.map((h) => (
+          <div key={h.id} className="stat-card-elite" style={{ display: 'block', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', gap: '1.25rem' }}>
+                <div style={{ 
+                  width: '56px', height: '56px', borderRadius: '16px', 
+                  background: h.status === 'Active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  color: h.status === 'Active' ? 'var(--accent-success)' : 'var(--accent-error)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <Home size={28} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', margin: 0 }}>{h.name}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                    <MapPin size={14} /> {h.location}
+                  </div>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span className="nexus-badge" style={{ 
+                  backgroundColor: h.status === 'Active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  color: h.status === 'Active' ? 'var(--accent-success)' : 'var(--accent-error)'
+                }}>
+                   <span className="status-dot" style={{ backgroundColor: h.status === 'Active' ? 'var(--accent-success)' : 'var(--accent-error)' }}></span>
+                   {h.status}
+                </span>
+                <p style={{ margin: '0.5rem 0 0', fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>ID: #{h.id}X00</p>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '2rem' }}>
+              <div style={{ background: 'var(--bg-tertiary)', padding: '1.25rem', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
+                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Occupancy</p>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <span style={{ fontSize: '1.6rem', fontWeight: '900', color: h.occupancy > 85 ? 'var(--accent-success)' : 'var(--text-primary)' }}>{h.occupancy}%</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>of {h.capacity}</span>
+                </div>
+              </div>
+              <div style={{ background: 'var(--bg-tertiary)', padding: '1.25rem', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
+                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Revenue Flow</p>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.5rem' }}>
+                   <span style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--accent-primary)' }}>₹{h.revenue}</span>
+                   <span style={{ fontSize: '0.75rem', color: 'var(--accent-success)', fontWeight: '800' }}>+12%</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '10px', overflow: 'hidden', marginBottom: '2rem' }}>
+               <div style={{ 
+                 height: '100%', width: `${h.occupancy}%`, 
+                 background: `linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))`,
+                 boxShadow: '0 0 10px var(--accent-primary)'
+               }}></div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.8rem', border: '1px solid var(--border-color)' }}>
+                    {h.owner.charAt(0)}
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700' }}>Managed by</p>
+                    <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700' }}>{h.owner}</p>
+                  </div>
+               </div>
+               <div className="nexus-action-group">
+                 <button className="nexus-btn-icon"><ArrowUpRight size={18} /></button>
+                 <button className="nexus-btn-icon"><MoreHorizontal size={18} /></button>
+               </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
       <Modal 
         isOpen={activeModal === 'register'} 
         onClose={() => setActiveModal(null)}
         title="Initialize New Property Node"
-        footer={<button className="btn btn-primary" onClick={() => setActiveModal(null)}>Confirm Registration</button>}
+        footer={<button className="btn btn-primary" style={{ padding: '0.8rem 2rem' }} onClick={() => setActiveModal(null)}>Confirm Registration</button>}
       >
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', padding: '1rem 0' }}>
           <div className="form-group">
-            <label className="form-label">Property Name</label>
-            <input className="form-input" placeholder="Elite Living PG" />
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Property Name</label>
+            <input style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }} placeholder="Elite Living PG" />
           </div>
           <div className="form-group">
-            <label className="form-label">City Hub</label>
-            <select className="form-input">
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>City Hub</label>
+            <select style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px', color: '#fff' }}>
               <option>Bangalore (Koramangala)</option>
               <option>Pune (Viman Nagar)</option>
               <option>Hyderabad (Gachibowli)</option>
             </select>
-          </div>
-        </div>
-        <div className="form-group">
-          <label className="form-label">Owner Reference</label>
-          <input className="form-input" placeholder="Search verified owners..." />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Property Key Stats</label>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <input className="form-input" placeholder="Total Beds" type="number" />
-            <input className="form-input" placeholder="Base Rent" type="number" />
           </div>
         </div>
       </Modal>

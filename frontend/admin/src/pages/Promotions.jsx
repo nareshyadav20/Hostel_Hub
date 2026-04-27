@@ -1,64 +1,125 @@
 import React, { useState } from 'react';
+import { Tag, Calendar, ShieldCheck, Plus, Search, Filter, Trash2, Edit2 } from 'lucide-react';
+import '../NexusElite.css';
 
 const Promotions = () => {
+  const [searchTerm, setSearchTerm] = useState('');
   const [offers, setOffers] = useState([
-    { id: 1, code: 'WELCOME50', discount: '50% OFF', validity: '31 Dec 2026', status: 'Active' },
-    { id: 2, code: 'EARLYBIRD', discount: '20% OFF', validity: '30 Jun 2026', status: 'Active' },
-    { id: 3, code: 'EXPIRED10', discount: '10% OFF', validity: '01 Jan 2026', status: 'Disabled' },
+    { id: 1, code: 'WELCOME50', discount: '50% OFF', type: 'Percentage', validity: '31 Dec 2026', status: 'Active', usage: '1.2k' },
+    { id: 2, code: 'EARLYBIRD', discount: '20% OFF', type: 'Flat', validity: '30 Jun 2026', status: 'Active', usage: '850' },
+    { id: 3, code: 'EXPIRED10', discount: '10% OFF', type: 'Percentage', validity: '01 Jan 2026', status: 'Disabled', usage: '42' },
   ]);
 
-  const handleToggle = (id) => {
-    setOffers(offers.map(o => o.id === id ? { ...o, status: o.status === 'Active' ? 'Disabled' : 'Active' } : o));
-  };
+  const stats = [
+    { label: 'Active Campaigns', value: '12', icon: <Tag />, color: 'var(--accent-primary)' },
+    { label: 'Total Redemptions', value: '14.2k', icon: <Plus />, color: 'var(--accent-success)' },
+    { label: 'Platform ROI', value: '24%', icon: <ShieldCheck />, color: 'var(--accent-secondary)' },
+  ];
 
   return (
-    <div className="promotions-page">
-      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="promotions-view">
+      <header className="page-header">
         <div>
-          <h1>🎁 Marketing Promotions</h1>
-          <p>Create and manage discount coupons for new owners.</p>
+          <h1 className="page-title">🎁 Marketing Engine</h1>
+          <p className="page-subtitle">Configure strategic discount campaigns and owner acquisition incentives.</p>
         </div>
-        <button className="btn btn-primary">+ Create Offer</button>
+        <button className="btn btn-primary" style={{ padding: '1rem 2rem', borderRadius: '16px' }}>
+          <Tag size={18} />
+          Create New Offer
+        </button>
       </header>
 
-      <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+      {/* Stats Grid */}
+      <div className="nexus-stats-grid">
+        {stats.map((stat, i) => (
+          <div key={i} className="stat-card-elite">
+            <div className="stat-icon-elite" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>
+              {stat.icon}
+            </div>
+            <div className="stat-data">
+              <h3>{stat.value}</h3>
+              <p>{stat.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', gap: '1.5rem' }}>
+        <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <Search size={18} style={{ position: 'absolute', left: '1.5rem', color: 'var(--text-muted)' }} />
+          <input 
+            type="text" 
+            placeholder="Search by code or campaign name..." 
+            style={{ 
+              width: '100%', padding: '1rem 1rem 1rem 3.5rem', 
+              background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+              borderRadius: '16px', color: 'var(--text-primary)', outline: 'none'
+            }}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <button className="nexus-btn-icon" style={{ width: '56px', height: '56px' }}>
+          <Filter size={20} />
+        </button>
+      </div>
+
+      {/* Promotions Table */}
+      <div className="nexus-table-container">
+        <table className="nexus-table">
           <thead>
-            <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
-              <th style={{ padding: '1.2rem' }}>Coupon Code</th>
-              <th style={{ padding: '1.2rem' }}>Discount</th>
-              <th style={{ padding: '1.2rem' }}>Validity</th>
-              <th style={{ padding: '1.2rem' }}>Status</th>
-              <th style={{ padding: '1.2rem' }}>Action</th>
+            <tr>
+              <th>Coupon Code</th>
+              <th>Benefit</th>
+              <th>Type</th>
+              <th>Total Usage</th>
+              <th>Validity</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {offers.map(o => (
-              <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <td style={{ padding: '1.2rem' }}>
-                  <code style={{ fontSize: '1.1rem', fontWeight: '800', background: 'rgba(56, 189, 248, 0.1)', color: 'var(--accent-primary)', padding: '0.4rem 0.8rem', borderRadius: '6px' }}>
-                    {o.code}
+            {offers.map((offer) => (
+              <tr key={offer.id} className="nexus-row">
+                <td>
+                  <code style={{ 
+                    fontSize: '1rem', fontWeight: '900', 
+                    background: 'rgba(56, 189, 248, 0.1)', color: 'var(--accent-primary)', 
+                    padding: '0.5rem 1rem', borderRadius: '10px', border: '1px dashed var(--accent-primary)'
+                  }}>
+                    {offer.code}
                   </code>
                 </td>
-                <td style={{ padding: '1.2rem', fontWeight: '800', color: 'var(--accent-success)' }}>{o.discount}</td>
-                <td style={{ padding: '1.2rem', color: 'var(--text-muted)' }}>{o.validity}</td>
-                <td style={{ padding: '1.2rem' }}>
-                  <span style={{ 
-                    padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700',
-                    background: o.status === 'Active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                    color: o.status === 'Active' ? 'var(--accent-success)' : 'var(--accent-error)'
+                <td>
+                  <span style={{ fontSize: '1.1rem', fontWeight: '900', color: 'var(--accent-success)' }}>{offer.discount}</span>
+                </td>
+                <td style={{ fontWeight: '700', color: 'var(--text-secondary)' }}>{offer.type}</td>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800' }}>
+                     {offer.usage} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Claims</span>
+                  </div>
+                </td>
+                <td>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)' }}>
+                      <Calendar size={14} />
+                      {offer.validity}
+                   </div>
+                </td>
+                <td>
+                  <span className="nexus-badge" style={{ 
+                    backgroundColor: offer.status === 'Active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    color: offer.status === 'Active' ? 'var(--accent-success)' : 'var(--accent-error)'
                   }}>
-                    {o.status}
+                    <span className="status-dot" style={{ backgroundColor: offer.status === 'Active' ? 'var(--accent-success)' : 'var(--accent-error)' }}></span>
+                    {offer.status}
                   </span>
                 </td>
-                <td style={{ padding: '1.2rem' }}>
-                  <button 
-                    onClick={() => handleToggle(o.id)}
-                    className="btn" 
-                    style={{ fontSize: '0.75rem', border: `1px solid ${o.status === 'Active' ? 'var(--accent-error)' : 'var(--accent-success)'}`, color: o.status === 'Active' ? 'var(--accent-error)' : 'var(--accent-success)' }}
-                  >
-                    {o.status === 'Active' ? 'Disable' : 'Enable'}
-                  </button>
+                <td>
+                  <div className="nexus-action-group">
+                    <button className="nexus-btn-icon"><Edit2 size={16} /></button>
+                    <button className="nexus-btn-icon delete"><Trash2 size={16} /></button>
+                  </div>
                 </td>
               </tr>
             ))}

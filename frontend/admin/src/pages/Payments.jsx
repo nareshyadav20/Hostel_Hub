@@ -1,53 +1,127 @@
 import React, { useState } from 'react';
+import { IndianRupee, TrendingUp, CreditCard, Download, ExternalLink, Calendar, Search, Filter } from 'lucide-react';
+import '../NexusElite.css';
 
 const Payments = () => {
+  const [searchTerm, setSearchTerm] = useState('');
   const [payments, setPayments] = useState([
-    { id: 1, owner: 'Rahul Sharma', amount: '₹4,999', plan: 'Enterprise', date: '20 Apr 2026', status: 'Success' },
-    { id: 2, owner: 'Priya Verma', amount: '₹2,499', plan: 'Standard', date: '18 Apr 2026', status: 'Success' },
-    { id: 3, owner: 'Amit Singh', amount: '₹999', plan: 'Basic', date: '15 Apr 2026', status: 'Success' },
+    { id: 'TXN-9921', owner: 'Rahul Sharma', amount: '4,999', plan: 'Enterprise', date: '20 Apr 2026', status: 'Success', method: 'UPI' },
+    { id: 'TXN-9922', owner: 'Priya Verma', amount: '2,499', plan: 'Standard', date: '18 Apr 2026', status: 'Success', method: 'Card' },
+    { id: 'TXN-9923', owner: 'Amit Singh', amount: '999', plan: 'Basic', date: '15 Apr 2026', status: 'Failed', method: 'UPI' },
+    { id: 'TXN-9924', owner: 'Vikram Mehta', amount: '4,999', plan: 'Enterprise', date: '12 Apr 2026', status: 'Success', method: 'Net Banking' },
   ]);
 
+  const stats = [
+    { label: 'Total Revenue', value: '₹1.24 Cr', icon: <IndianRupee />, color: 'var(--accent-success)' },
+    { label: 'Avg Ticket Size', value: '₹3,450', icon: <TrendingUp />, color: 'var(--accent-primary)' },
+    { label: 'Pending Payouts', value: '₹5.2L', icon: <CreditCard />, color: 'var(--accent-warning)' },
+  ];
+
   return (
-    <div className="payments-page">
-      <header style={{ marginBottom: '2rem' }}>
-        <h1>💰 Platform Revenue</h1>
-        <p>Track subscription payments and owner transactions.</p>
+    <div className="payments-view">
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">💰 Financial Ledger</h1>
+          <p className="page-subtitle">Track every subscription, payout, and platform transaction in real-time.</p>
+        </div>
+        <button className="btn btn-primary" style={{ padding: '1rem 2rem', borderRadius: '16px' }}>
+          <Download size={18} />
+          Export Financial Report
+        </button>
       </header>
 
-      <div className="card" style={{ padding: '2rem', marginBottom: '2rem', borderLeft: '4px solid var(--accent-success)' }}>
-        <p style={{ color: 'var(--text-muted)' }}>Total Platform Revenue (LifeTime)</p>
-        <h2 style={{ fontSize: '2.5rem', color: 'var(--accent-success)' }}>₹1,24,50,000</h2>
+      {/* Stats Grid */}
+      <div className="nexus-stats-grid">
+        {stats.map((stat, i) => (
+          <div key={i} className="stat-card-elite">
+            <div className="stat-icon-elite" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>
+              {stat.icon}
+            </div>
+            <div className="stat-data">
+              <h3>{stat.value}</h3>
+              <p>{stat.label}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+      {/* Filters */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', gap: '1.5rem' }}>
+        <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <Search size={18} style={{ position: 'absolute', left: '1.5rem', color: 'var(--text-muted)' }} />
+          <input 
+            type="text" 
+            placeholder="Search by Transaction ID or Owner Name..." 
+            style={{ 
+              width: '100%', padding: '1rem 1rem 1rem 3.5rem', 
+              background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+              borderRadius: '16px', color: 'var(--text-primary)', outline: 'none'
+            }}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button className="nexus-btn-icon" style={{ width: 'auto', padding: '0 1.5rem', borderRadius: '16px' }}>
+             <Calendar size={18} style={{ marginRight: '0.75rem' }} />
+             Last 30 Days
+          </button>
+          <button className="nexus-btn-icon" style={{ width: '56px', height: '56px' }}>
+            <Filter size={20} />
+          </button>
+        </div>
+      </div>
+
+      {/* Payments Table */}
+      <div className="nexus-table-container">
+        <table className="nexus-table">
           <thead>
-            <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
-              <th style={{ padding: '1.2rem' }}>Owner Name</th>
-              <th style={{ padding: '1.2rem' }}>Amount</th>
-              <th style={{ padding: '1.2rem' }}>Plan</th>
-              <th style={{ padding: '1.2rem' }}>Date</th>
-              <th style={{ padding: '1.2rem' }}>Status</th>
-              <th style={{ padding: '1.2rem' }}>Action</th>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Owner / Entity</th>
+              <th>Amount</th>
+              <th>Plan</th>
+              <th>Method</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {payments.map(p => (
-              <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <td style={{ padding: '1.2rem', fontWeight: '700' }}>{p.owner}</td>
-                <td style={{ padding: '1.2rem', fontWeight: '800' }}>{p.amount}</td>
-                <td style={{ padding: '1.2rem' }}>{p.plan}</td>
-                <td style={{ padding: '1.2rem', color: 'var(--text-muted)' }}>{p.date}</td>
-                <td style={{ padding: '1.2rem' }}>
-                  <span style={{ 
-                    padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700',
-                    background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)'
+            {payments.map((p) => (
+              <tr key={p.id} className="nexus-row">
+                <td>
+                  <span style={{ fontFamily: 'monospace', fontWeight: '800', color: 'var(--accent-primary)' }}>{p.id}</span>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.date}</p>
+                </td>
+                <td>
+                  <p style={{ fontWeight: '700', margin: 0 }}>{p.owner}</p>
+                </td>
+                <td>
+                  <span style={{ fontSize: '1.1rem', fontWeight: '900', color: 'var(--text-primary)' }}>₹{p.amount}</span>
+                </td>
+                <td>
+                   <span style={{ fontWeight: '700', color: 'var(--text-secondary)' }}>{p.plan}</span>
+                </td>
+                <td>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: '600' }}>
+                      <CreditCard size={14} color="var(--text-muted)" />
+                      {p.method}
+                   </div>
+                </td>
+                <td>
+                  <span className="nexus-badge" style={{ 
+                    backgroundColor: p.status === 'Success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    color: p.status === 'Success' ? 'var(--accent-success)' : 'var(--accent-error)'
                   }}>
+                    <span className="status-dot" style={{ backgroundColor: p.status === 'Success' ? 'var(--accent-success)' : 'var(--accent-error)' }}></span>
                     {p.status}
                   </span>
                 </td>
-                <td style={{ padding: '1.2rem' }}>
-                  <button className="btn" style={{ fontSize: '0.75rem' }}>View Transaction</button>
+                <td>
+                  <div className="nexus-action-group">
+                    <button className="nexus-btn-icon"><Download size={16} /></button>
+                    <button className="nexus-btn-icon"><ExternalLink size={16} /></button>
+                  </div>
                 </td>
               </tr>
             ))}

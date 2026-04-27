@@ -46,8 +46,8 @@ const Sidebar = () => {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h2 className="logo">Hostel<span>Hub</span></h2>
-        <span className="logo-sub">Admin Panel</span>
+        <h2 className="logo">LEVORA</h2>
+        <span className="logo-sub">GLOBAL COMMAND</span>
       </div>
 
       <nav className="sidebar-nav">
