@@ -3,7 +3,8 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, 
   CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
-import { Filter, Calendar, Download, TrendingUp, TrendingDown } from 'lucide-react';
+import { Filter, Calendar, Download, TrendingUp, TrendingDown, BarChart3, Activity, PieChart as PieIcon } from 'lucide-react';
+import '../NexusElite.css';
 
 const REVENUE_DATA = [
   { name: 'Mon', rev: 4000, exp: 2400 },
@@ -25,73 +26,96 @@ const COLORS = ['var(--accent-primary)', 'var(--accent-secondary)', '#10b981'];
 
 const Analytics = () => {
   return (
-    <div className="page-container animate-fade">
-      <div className="page-header">
+    <div className="analytics-view">
+      <header className="page-header">
         <div>
-          <h1>Analytics Engine</h1>
-          <p>Advanced metrics and predictive growth algorithms.</p>
+          <h1 className="page-title">📈 Analytics Engine</h1>
+          <p className="page-subtitle">Advanced market intelligence and predictive growth algorithms.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.8rem' }}>
-          <button className="btn btn-secondary"><Calendar size={18} /> Select Range</button>
-          <button className="btn btn-primary"><Download size={18} /> Export Intel</button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button className="nexus-btn-icon" style={{ width: 'auto', padding: '0 1.5rem', borderRadius: '12px' }}>
+            <Calendar size={18} style={{ marginRight: '0.75rem' }} /> Select Range
+          </button>
+          <button className="btn btn-primary" style={{ padding: '1rem 2rem', borderRadius: '16px' }}>
+            <Download size={20} /> Export Intel
+          </button>
+        </div>
+      </header>
+
+      {/* Stats Cards */}
+      <div className="nexus-stats-grid">
+        <div className="stat-card-elite">
+          <div className="stat-icon-elite" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)' }}>
+            <TrendingUp />
+          </div>
+          <div className="stat-data">
+            <h3>₹42.5L</h3>
+            <p>Net Profit Margin</p>
+          </div>
+          <div style={{ position: 'absolute', right: '2rem', top: '2rem', color: 'var(--accent-success)', fontWeight: '800', fontSize: '0.8rem' }}>
+             +12.4%
+          </div>
+        </div>
+        <div className="stat-card-elite">
+          <div className="stat-icon-elite" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-error)' }}>
+            <Activity />
+          </div>
+          <div className="stat-data">
+            <h3>2.4%</h3>
+            <p>Churn Velocity</p>
+          </div>
+          <div style={{ position: 'absolute', right: '2rem', top: '2rem', color: 'var(--accent-error)', fontWeight: '800', fontSize: '0.8rem' }}>
+             -0.8%
+          </div>
+        </div>
+        <div className="stat-card-elite">
+          <div className="stat-icon-elite" style={{ backgroundColor: 'rgba(14, 165, 233, 0.1)', color: 'var(--accent-primary)' }}>
+            <BarChart3 />
+          </div>
+          <div className="stat-data">
+            <h3>8.2k</h3>
+            <p>Monthly Queries</p>
+          </div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Net Profit Margin</span>
-            <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.8rem', fontWeight: 700 }}>
-              <TrendingUp size={14} /> +4.2%
-            </span>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
+        <div className="nexus-table-container" style={{ padding: '2.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '900', margin: 0 }}>Growth Trajectory</h3>
+            <button className="nexus-btn-icon"><Filter size={16} /></button>
           </div>
-          <h2 style={{ fontSize: '2rem' }}>₹42.5L</h2>
-          <div style={{ marginTop: '1rem', height: '4px', background: 'var(--bg-tertiary)', borderRadius: '2px' }}>
-            <div style={{ width: '65%', height: '100%', background: 'var(--accent-primary)', borderRadius: '2px' }}></div>
-          </div>
-        </div>
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Churn Rate</span>
-            <span style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.8rem', fontWeight: 700 }}>
-              <TrendingDown size={14} /> +1.2%
-            </span>
-          </div>
-          <h2 style={{ fontSize: '2rem' }}>2.4%</h2>
-          <div style={{ marginTop: '1rem', height: '4px', background: 'var(--bg-tertiary)', borderRadius: '2px' }}>
-            <div style={{ width: '15%', height: '100%', background: '#ef4444', borderRadius: '2px' }}></div>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>
-        <div className="card">
-          <h3>Growth Trajectory</h3>
-          <div style={{ width: '100%', height: 350, marginTop: '2rem' }}>
+          <div style={{ width: '100%', height: 350 }}>
             <ResponsiveContainer>
               <BarChart data={REVENUE_DATA}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--text-muted)', fontSize: 12}} />
-                <Tooltip contentStyle={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '8px' }} />
-                <Bar dataKey="rev" fill="var(--accent-primary)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="exp" fill="rgba(255,255,255,0.05)" radius={[4, 4, 0, 0]} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--text-muted)', fontSize: 12, fontWeight: 700}} />
+                <Tooltip 
+                  contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '16px', boxShadow: 'var(--shadow-lg)' }} 
+                  itemStyle={{ fontWeight: 800 }}
+                />
+                <Bar dataKey="rev" fill="var(--accent-primary)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="exp" fill="var(--bg-tertiary)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="card">
-          <h3>Hostel Mix</h3>
-          <div style={{ width: '100%', height: 300, marginTop: '2rem' }}>
+        <div className="nexus-table-container" style={{ padding: '2.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '900', margin: 0 }}>Portfolio Mix</h3>
+            <PieIcon size={20} color="var(--text-muted)" />
+          </div>
+          <div style={{ width: '100%', height: 280 }}>
             <ResponsiveContainer>
               <PieChart>
                 <Pie
                   data={PIE_DATA}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
+                  innerRadius={70}
                   outerRadius={100}
-                  paddingAngle={5}
+                  paddingAngle={8}
                   dataKey="value"
                 >
                   {PIE_DATA.map((entry, index) => (
@@ -102,14 +126,14 @@ const Analytics = () => {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div style={{ marginTop: '1rem' }}>
+          <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {PIE_DATA.map((item, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.8rem', fontSize: '0.9rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: COLORS[i] }}></div>
-                  <span color="var(--text-secondary)">{item.name}</span>
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: COLORS[i] }}></div>
+                  <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>{item.name}</span>
                 </div>
-                <strong>{item.value} Units</strong>
+                <strong style={{ fontSize: '1rem' }}>{item.value} Units</strong>
               </div>
             ))}
           </div>

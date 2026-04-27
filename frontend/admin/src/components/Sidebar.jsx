@@ -1,8 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, Building2, Users, UserCog, UserCheck, 
-  BarChart3, Bell, Globe, Tags, ClipboardList, Map, Settings, LogOut 
+import {
+  LayoutDashboard, Building2, Users, UserCog, UserCheck,
+  BarChart3, Bell, Globe, Tags, ClipboardList, Map, Settings, LogOut
 } from 'lucide-react';
 import './Sidebar.css';
 
