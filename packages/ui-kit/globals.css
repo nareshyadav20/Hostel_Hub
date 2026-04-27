@@ -32,6 +32,9 @@
   --radius-md: 12px;
   --radius-lg: 20px;
   --radius-xl: 32px;
+  
+  --landing-overlay-1: rgba(255, 255, 255, 0.7);
+  --landing-overlay-2: rgba(255, 255, 255, 0.95);
 }
 
 [data-theme='dark'] {
@@ -52,6 +55,9 @@
   --border-color: rgba(255, 255, 255, 0.06);
   --glass-bg: rgba(15, 23, 42, 0.7);
   --glass-border: rgba(255, 255, 255, 0.1);
+  
+  --landing-overlay-1: rgba(15, 23, 42, 0.7);
+  --landing-overlay-2: rgba(15, 23, 42, 0.95);
 }
 
 * {

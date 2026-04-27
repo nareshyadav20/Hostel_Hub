@@ -14,7 +14,7 @@ const Layout = ({ children }) => {
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    navigate('/');
+    window.location.href = '/';
   };
 
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -66,8 +66,13 @@ const Layout = ({ children }) => {
                   {showDropdown && (
                     <div className="profile-dropdown glass-card">
                       <div className="dropdown-header">
-                        <h4>{user.name}</h4>
-                        <p>{user.email}</p>
+                        <div className="dropdown-avatar-large">
+                          {user.name ? user.name[0].toUpperCase() : 'U'}
+                        </div>
+                        <div className="dropdown-user-info">
+                          <h4>{user.name || 'uma'}</h4>
+                          <p>{user.email || 'uma@gmail.com'}</p>
+                        </div>
                       </div>
                       <div className="dropdown-divider"></div>
                       
@@ -95,14 +100,14 @@ const Layout = ({ children }) => {
                       )}
                       
                       <div className="dropdown-divider"></div>
-                      <button className="dropdown-item">
+                      <button className="dropdown-item" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                           <circle cx="12" cy="7" r="4"></circle>
                         </svg>
                         Profile
                       </button>
-                      <button className="dropdown-item" onClick={() => navigate('/payments')}>
+                      <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/payments'); }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                           <line x1="1" y1="10" x2="23" y2="10"></line>
