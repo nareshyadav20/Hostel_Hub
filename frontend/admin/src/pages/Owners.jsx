@@ -1,64 +1,142 @@
 import React, { useState } from 'react';
+import { UserPlus, Mail, Phone, Home, ShieldCheck, MoreVertical, Search, Filter } from 'lucide-react';
+import '../NexusElite.css';
 
 const Owners = () => {
+  const [searchTerm, setSearchTerm] = useState('');
   const [owners, setOwners] = useState([
-    { id: 1, name: 'Rahul Sharma', contact: 'rahul@example.com', hostels: 4, plan: 'Enterprise', status: 'Active' },
-    { id: 2, name: 'Priya Verma', contact: '+91 98765 43210', hostels: 2, plan: 'Standard', status: 'Active' },
-    { id: 3, name: 'Amit Singh', contact: 'amit@example.com', hostels: 1, plan: 'Basic', status: 'Deactivated' },
+    { id: 1, name: 'Rahul Sharma', email: 'rahul@sharma.com', phone: '+91 98765 12345', hostels: 4, plan: 'Enterprise', status: 'Active', joined: 'Jan 2024' },
+    { id: 2, name: 'Priya Verma', email: 'priya.v@outlook.com', phone: '+91 98765 23456', hostels: 2, plan: 'Standard', status: 'Active', joined: 'Mar 2024' },
+    { id: 3, name: 'Amit Singh', email: 'amit.singh@gmail.com', phone: '+91 98765 34567', hostels: 1, plan: 'Basic', status: 'Deactivated', joined: 'Feb 2024' },
+    { id: 4, name: 'Vikram Mehta', email: 'v.mehta@elite.in', phone: '+91 98765 45678', hostels: 8, plan: 'Enterprise', status: 'Active', joined: 'May 2024' },
   ]);
 
-  const handleToggle = (id) => {
-    setOwners(owners.map(o => o.id === id ? { ...o, status: o.status === 'Active' ? 'Deactivated' : 'Active' } : o));
+  const stats = [
+    { label: 'Total Owners', value: '142', icon: <UserPlus />, color: 'var(--accent-primary)' },
+    { label: 'Enterprise', value: '38', icon: <ShieldCheck />, color: 'var(--accent-success)' },
+    { label: 'Total Hostels', value: '456', icon: <Home />, color: 'var(--accent-secondary)' },
+  ];
+
+  const getPlanColor = (plan) => {
+    switch (plan) {
+      case 'Enterprise': return '#8b5cf6';
+      case 'Standard': return '#0ea5e9';
+      default: return '#64748b';
+    }
   };
 
   return (
-    <div className="owners-page">
-      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="owners-view">
+      <header className="page-header">
         <div>
-          <h1>👤 Hostel Owners</h1>
-          <p>Manage owner accounts and platform access.</p>
+          <h1 className="page-title">👤 Hostel Owners</h1>
+          <p className="page-subtitle">Manage platform-wide owner accounts and strategic partnerships.</p>
         </div>
-        <button className="btn btn-primary">+ Add New Owner</button>
+        <button className="btn btn-primary" style={{ padding: '1rem 2rem', borderRadius: '16px' }}>
+          <UserPlus size={20} />
+          Add New Owner
+        </button>
       </header>
 
-      <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+      {/* Stats Grid */}
+      <div className="nexus-stats-grid">
+        {stats.map((stat, i) => (
+          <div key={i} className="stat-card-elite">
+            <div className="stat-icon-elite" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>
+              {stat.icon}
+            </div>
+            <div className="stat-data">
+              <h3>{stat.value}</h3>
+              <p>{stat.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters & Actions */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', gap: '1.5rem' }}>
+        <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <Search size={18} style={{ position: 'absolute', left: '1.5rem', color: 'var(--text-muted)' }} />
+          <input 
+            type="text" 
+            placeholder="Search owners by name, email or phone..." 
+            style={{ 
+              width: '100%', padding: '1rem 1rem 1rem 3.5rem', 
+              background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+              borderRadius: '16px', color: 'var(--text-primary)', outline: 'none'
+            }}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <button className="nexus-btn-icon" style={{ width: '56px', height: '56px' }}>
+          <Filter size={20} />
+        </button>
+      </div>
+
+      {/* Owners Table */}
+      <div className="nexus-table-container">
+        <table className="nexus-table">
           <thead>
-            <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
-              <th style={{ padding: '1.2rem' }}>Owner Name</th>
-              <th style={{ padding: '1.2rem' }}>Contact</th>
-              <th style={{ padding: '1.2rem' }}>Hostels</th>
-              <th style={{ padding: '1.2rem' }}>Plan</th>
-              <th style={{ padding: '1.2rem' }}>Status</th>
-              <th style={{ padding: '1.2rem' }}>Action</th>
+            <tr>
+              <th>Owner Profile</th>
+              <th>Properties</th>
+              <th>Membership</th>
+              <th>Status</th>
+              <th>Joined</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {owners.map(o => (
-              <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <td style={{ padding: '1.2rem', fontWeight: '700' }}>{o.name}</td>
-                <td style={{ padding: '1.2rem' }}>{o.contact}</td>
-                <td style={{ padding: '1.2rem' }}>{o.hostels} Hostels</td>
-                <td style={{ padding: '1.2rem' }}>
-                  <span style={{ fontWeight: '700', color: 'var(--accent-primary)' }}>{o.plan}</span>
+            {owners.map((owner) => (
+              <tr key={owner.id} className="nexus-row">
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                    <div style={{ 
+                      width: '48px', height: '48px', borderRadius: '14px', 
+                      background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'white', fontWeight: '800', fontSize: '1rem'
+                    }}>
+                      {owner.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div>
+                      <p style={{ fontWeight: '700', margin: 0 }}>{owner.name}</p>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>{owner.email}</p>
+                    </div>
+                  </div>
                 </td>
-                <td style={{ padding: '1.2rem' }}>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
+                    <Home size={14} color="var(--accent-primary)" />
+                    {owner.hostels} Hostels
+                  </div>
+                </td>
+                <td>
                   <span style={{ 
-                    padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700',
-                    background: o.status === 'Active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                    color: o.status === 'Active' ? 'var(--accent-success)' : 'var(--accent-error)'
+                    padding: '0.4rem 1rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '800',
+                    background: `${getPlanColor(owner.plan)}15`, color: getPlanColor(owner.plan),
+                    border: `1px solid ${getPlanColor(owner.plan)}30`
                   }}>
-                    {o.status}
+                    {owner.plan.toUpperCase()}
                   </span>
                 </td>
-                <td style={{ padding: '1.2rem' }}>
-                  <button 
-                    onClick={() => handleToggle(o.id)}
-                    className="btn" 
-                    style={{ fontSize: '0.75rem', border: `1px solid ${o.status === 'Active' ? 'var(--accent-error)' : 'var(--accent-success)'}`, color: o.status === 'Active' ? 'var(--accent-error)' : 'var(--accent-success)' }}
-                  >
-                    {o.status === 'Active' ? 'Deactivate' : 'Activate'}
-                  </button>
+                <td>
+                  <span className="nexus-badge" style={{ 
+                    backgroundColor: owner.status === 'Active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    color: owner.status === 'Active' ? 'var(--accent-success)' : 'var(--accent-error)'
+                  }}>
+                    <span className="status-dot" style={{ backgroundColor: owner.status === 'Active' ? 'var(--accent-success)' : 'var(--accent-error)' }}></span>
+                    {owner.status}
+                  </span>
+                </td>
+                <td style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>{owner.joined}</td>
+                <td>
+                  <div className="nexus-action-group">
+                    <button className="nexus-btn-icon"><Mail size={16} /></button>
+                    <button className="nexus-btn-icon"><Phone size={16} /></button>
+                    <button className="nexus-btn-icon"><MoreVertical size={16} /></button>
+                  </div>
                 </td>
               </tr>
             ))}

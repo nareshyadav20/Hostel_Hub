@@ -1,185 +1,437 @@
-import React from 'react';
-import { 
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell
+  PieChart, Pie, Cell
 } from 'recharts';
-import { 
-  TrendingUp, Users, Building, CreditCard, Activity, 
-  ShieldCheck, AlertCircle, ArrowUpRight, Zap
+import {
+  Users, Building, CreditCard, Activity, Percent,
+  ArrowUpRight, ArrowDownRight, ShieldCheck,
+  Bell, Search, Plus, Download, Filter, MoreHorizontal,
+  CheckCircle2, AlertTriangle, FileText, Globe, Cpu, Calendar,
+  ChevronRight, ExternalLink, ArrowRight, XCircle
 } from 'lucide-react';
+import Modal from './components/Modal';
 import './Dashboard.css';
 
 const REVENUE_DATA = [
-  { name: 'Jan', revenue: 450000, visitors: 2400 },
-  { name: 'Feb', revenue: 520000, visitors: 1398 },
-  { name: 'Mar', revenue: 480000, visitors: 9800 },
-  { name: 'Apr', revenue: 610000, visitors: 3908 },
-  { name: 'May', revenue: 590000, visitors: 4800 },
-  { name: 'Jun', revenue: 820000, visitors: 3800 },
-  { name: 'Jul', revenue: 950000, visitors: 4300 },
+  { name: 'Jan', revenue: 450000, target: 400000 },
+  { name: 'Feb', revenue: 520000, target: 450000 },
+  { name: 'Mar', revenue: 480000, target: 500000 },
+  { name: 'Apr', revenue: 610000, target: 550000 },
+  { name: 'May', revenue: 590000, target: 600000 },
+  { name: 'Jun', revenue: 820000, target: 700000 },
+  { name: 'Jul', revenue: 950000, target: 850000 },
 ];
 
-const OCCUPANCY_DATA = [
-  { name: 'North', value: 85, color: '#0ea5e9' },
-  { name: 'South', value: 92, color: '#6366f1' },
-  { name: 'East', value: 78, color: '#10b981' },
-  { name: 'West', value: 88, color: '#f59e0b' },
+const LEADERBOARD = [
+  { name: 'Bangalore Central', revenue: '₹42.5L', growth: '+15.2%', trend: 'up' },
+  { name: 'Pune West Hub', revenue: '₹28.2L', growth: '+8.4%', trend: 'up' },
+  { name: 'Hyderabad Tech', revenue: '₹24.1L', growth: '+12.1%', trend: 'up' },
+];
+
+const INITIAL_ACTIONS = [
+  { id: 1, type: 'KYC Verification', owner: 'Rahul Mehta', priority: 'High', status: 'Pending', date: '2h ago' },
+  { id: 2, type: 'Property Listing', owner: 'Sriya Reddy', priority: 'Medium', status: 'Pending', date: '5h ago' },
+  { id: 3, type: 'Subscription Renewal', owner: 'Amit Shah', priority: 'Urgent', status: 'Pending', date: '15m ago' },
 ];
 
 const Dashboard = () => {
+  const [activeModal, setActiveModal] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [actions, setActions] = useState(INITIAL_ACTIONS);
+  const [processingId, setProcessingId] = useState(null);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+  const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpenDropdownId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  const [filterRegion, setFilterRegion] = useState('All Regions');
+
+  const handleAction = (type, task = null) => {
+    if (task) setSelectedTask(task);
+    setActiveModal(type);
+  };
+
+  const handleTaskAction = (actionType, task = null) => {
+    const targetTask = task || selectedTask;
+    if (!targetTask) return;
+
+    // Set processing state
+    setProcessingId(targetTask.id);
+    setOpenDropdownId(null);
+
+    // Update local state to show feedback
+    setActions(prev => prev.map(a =>
+      a.id === targetTask.id ? { ...a, status: actionType } : a
+    ));
+
+    // Reset processing state after delay
+    setTimeout(() => {
+      setProcessingId(null);
+      setActiveModal(null);
+      setSelectedTask(null);
+    }, 1000);
+  };
+
   const stats = [
-    { label: 'Total Hostels', value: '124', icon: <Building size={20} />, color: 'var(--accent-primary)', trend: '+12%', growth: true },
-    { label: 'Total Owners', value: '86', icon: <Users size={20} />, color: 'var(--accent-success)', trend: '+5%', growth: true },
-    { label: 'Active Tenants', value: '4,500', icon: <Users size={20} />, color: 'var(--accent-warning)', trend: '+18%', growth: true },
-    { label: 'Total Revenue', value: '₹1.2Cr', icon: <CreditCard size={20} />, color: 'var(--accent-error)', trend: '+22%', growth: true },
+    { label: 'Total Hostels', value: '124', icon: <Building size={20} />, trend: '+12.5%', progress: 85, trendUp: true },
+    { label: 'Active Tenants', value: '4,500', icon: <Users size={20} />, trend: '+18.2%', progress: 92, trendUp: true },
+    { label: 'Avg Occupancy', value: '87.4%', icon: <Percent size={20} />, trend: '+3.1%', progress: 78, trendUp: true },
+    { label: 'Ecosystem GMV', value: '₹1.24Cr', icon: <CreditCard size={20} />, trend: '+22.4%', progress: 65, trendUp: true },
+    { label: 'Active Complaints', value: '18', icon: <AlertTriangle size={20} />, trend: '-5.2%', progress: 12, trendUp: false },
   ];
 
   return (
-    <div className="dashboard-container dashboard-view">
-      <header className="dashboard-header">
-        <div>
-          <h1>Platform Overview</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Real-time analytics and system-wide performance metrics.</p>
+    <div className="dashboard-view page-container animate-fade">
+      {/* Global Dashboard Filter Bar */}
+      <div className="global-filter-bar">
+        <div className="filter-group">
+          <Calendar size={18} color="var(--accent-primary)" />
+          <span className="filter-label">Timeline:</span>
+          <select className="filter-select">
+            <option>Last 30 Days</option>
+            <option>Last Quarter</option>
+            <option>Current Year</option>
+          </select>
         </div>
-        <div className="health-widget-mini">
-          <span className="pulse-red"></span>
-          <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>System Live</span>
+        <div style={{ width: '1px', height: '24px', background: 'var(--border-color)' }}></div>
+        <div className="filter-group">
+          <Globe size={18} color="var(--accent-primary)" />
+          <span className="filter-label">Region:</span>
+          <select className="filter-select" value={filterRegion} onChange={(e) => setFilterRegion(e.target.value)}>
+            <option>All Regions</option>
+            <option>Bangalore</option>
+            <option>Pune</option>
+            <option>Hyderabad</option>
+          </select>
         </div>
-      </header>
+        <div style={{ flex: 1 }}></div>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="btn btn-secondary btn-sm" onClick={() => handleAction('report')}>
+            <FileText size={16} /> Audit Report
+          </button>
+          <button className="btn btn-primary btn-sm" onClick={() => navigate('/hostels')}>
+            <Plus size={16} /> New Property
+          </button>
+        </div>
+      </div>
 
-      {/* Primary Stats */}
+      {/* Stats Grid */}
       <div className="stats-grid">
         {stats.map((stat, i) => (
           <div key={i} className="stat-card-premium">
-            <div className="stat-header">
-              <div className="stat-icon-box" style={{ background: `${stat.color}15`, color: stat.color }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', marginBottom: '1rem' }}>
+              <div className="stat-icon-container" style={{ width: '42px', height: '42px' }}>
                 {stat.icon}
               </div>
-              <span className="stat-trend" style={{ color: stat.growth ? 'var(--accent-success)' : 'var(--accent-error)' }}>
-                {stat.trend} <ArrowUpRight size={14} />
-              </span>
+              <span className={`stat-trend trend-${stat.trendUp ? 'up' : 'down'}`}>{stat.trend}</span>
             </div>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>{stat.label}</p>
-            <h2 className="stat-value">{stat.value}</h2>
-            <div style={{ height: '4px', width: '100%', background: 'var(--bg-tertiary)', borderRadius: '2px', marginTop: '1rem' }}>
-              <div style={{ height: '100%', width: '70%', background: stat.color, borderRadius: '2px' }}></div>
+            <div style={{ width: '100%' }}>
+              <span className="stat-label">{stat.label}</span>
+              <h2 className="stat-value" style={{ margin: '0.2rem 0' }}>{stat.value}</h2>
+              <div className="kpi-gauge-container" style={{ marginTop: '0.75rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', fontWeight: 800 }}>
+                  <span style={{ color: 'var(--text-muted)' }}>PERFORMANCE</span>
+                  <span>{stat.progress}%</span>
+                </div>
+                <div className="gauge-track">
+                  <div className="gauge-fill" style={{ width: `${stat.progress}%` }}></div>
+                </div>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="analytics-section">
-        {/* Main Chart */}
-        <div className="chart-card card">
-          <div className="chart-header">
-            <h3 className="chart-title"><TrendingUp size={20} color="var(--accent-primary)" /> Revenue Analytics</h3>
-            <select style={{ padding: '0.4rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
-              <option>Last 7 Months</option>
-              <option>Last Year</option>
-            </select>
-          </div>
-          <div style={{ width: '100%', height: 300 }}>
-            <ResponsiveContainer>
-              <AreaChart data={REVENUE_DATA}>
-                <defs>
-                  <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--text-muted)', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--text-muted)', fontSize: 12}} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-lg)' }}
-                  itemStyle={{ fontWeight: 700 }}
-                />
-                <Area type="monotone" dataKey="revenue" stroke="var(--accent-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Secondary Widgets Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* Occupancy Widget */}
-          <div className="activity-card card">
-            <h3 className="chart-title" style={{ marginBottom: '1.5rem' }}>🎯 Regional Occupancy</h3>
-            <div style={{ width: '100%', height: 180 }}>
+      {/* Analytics & Health */}
+      <div className="analytics-layout">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div className="main-chart-card">
+            <div className="card-header">
+              <div className="card-title">
+                <h3>Revenue vs Target</h3>
+                <span>Global financial performance benchmarks</span>
+              </div>
+              <button className="btn btn-secondary btn-sm"><Download size={14} /> Export</button>
+            </div>
+            <div style={{ width: '100%', height: 350 }}>
               <ResponsiveContainer>
-                <BarChart data={OCCUPANCY_DATA}>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--text-muted)', fontSize: 11}} />
-                  <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '10px' }} />
-                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                    {OCCUPANCY_DATA.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
+                <AreaChart data={REVENUE_DATA}>
+                  <defs>
+                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+                  <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }} />
+                  <Area type="monotone" dataKey="revenue" stroke="var(--accent-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
+                  <Area type="monotone" dataKey="target" stroke="rgba(255,255,255,0.2)" strokeWidth={2} strokeDasharray="5 5" fill="none" />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* System Health Widget */}
-          <div className="health-widget">
-            <h3 className="chart-title" style={{ color: 'white' }}><Zap size={20} fill="#fbbf24" color="#fbbf24" /> System Nodes</h3>
-            <div className="health-status-grid">
-              <div className="status-item">
-                <label>Main Server</label>
-                <span>Online (99.9%)</span>
+          <div className="leaderboard-card">
+            <div className="card-header" style={{ marginBottom: '1rem' }}>
+              <div className="card-title">
+                <h3>Regional Performance Hubs</h3>
+                <span>Highest growth properties by city</span>
               </div>
-              <div className="status-item">
-                <label>Database</label>
-                <span>Synced</span>
-              </div>
-              <div className="status-item">
-                <label>Auth Service</label>
-                <span>Healthy</span>
-              </div>
-              <div className="status-item">
-                <label>Storage</label>
-                <span>82% Scale</span>
-              </div>
+            </div>
+            <div className="leaderboard-list">
+              {LEADERBOARD.map((item, i) => (
+                <div key={i} className="leader-item">
+                  <div className="leader-info">
+                    <span className="leader-name">{item.name}</span>
+                    <span className="leader-sub">Monthly Volume: {item.revenue}</span>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span className={`stat-trend trend-${item.trend}`} style={{ fontSize: '0.9rem' }}>{item.growth}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Bottom Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>
-        <div className="activity-card card">
-          <h3 className="chart-title"><Activity size={20} color="var(--accent-secondary)" /> Platform Live Feed</h3>
-          <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {[
-              { text: 'New Owner Registered: Green Valley Hostels', time: '2m ago', icon: <Building size={16} /> },
-              { text: 'Enterprise Plan Renewed by Elite Living', time: '1h ago', icon: <ShieldCheck size={16} /> },
-              { text: 'New Integration: City Pharmacy Services', time: '3h ago', icon: <Zap size={16} /> },
-              { text: 'Staff Alert: Maintenance needed at City View', time: '5h ago', icon: <AlertCircle size={16} color="var(--accent-error)" /> }
-            ].map((item, idx) => (
-              <div key={idx} className="activity-item">
-                <div className="activity-icon">{item.icon}</div>
-                <div className="activity-content">
-                  <p>{item.text}</p>
-                  <span>{item.time}</span>
+        <div className="pro-sidebar-panel">
+          {/* Platform SaaS Health */}
+          <div className="saas-health-card">
+            <div className="card-header" style={{ marginBottom: '1rem' }}>
+              <div className="card-title">
+                <h3 style={{ color: '#fff' }}>Platform Economy</h3>
+                <span style={{ color: 'rgba(255,255,255,0.5)' }}>SaaS Subscription Revenue</span>
+              </div>
+              <ArrowUpRight color="var(--accent-primary)" />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+              <div>
+                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: 800 }}>MONTHLY REVENUE</span>
+                <h2 style={{ color: '#fff', fontSize: '1.5rem', margin: '0.2rem 0' }}>₹18.4L</h2>
+                <span style={{ color: '#10b981', fontSize: '0.75rem', fontWeight: 700 }}>+12.4% from Mar</span>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: 800 }}>ACTIVE OWNERS</span>
+                <h2 style={{ color: '#fff', fontSize: '1.5rem', margin: '0.2rem 0' }}>842</h2>
+                <span style={{ color: '#10b981', fontSize: '0.75rem', fontWeight: 700 }}>+42 new</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Security Sentinel */}
+          <div className="security-sentinel">
+            <div className="card-header" style={{ marginBottom: '1rem' }}>
+              <div className="card-title">
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <ShieldCheck size={18} color="var(--accent-primary)" /> Security Sentinel
+                </h3>
+              </div>
+              <span className="badge badge-success" style={{ fontSize: '0.6rem' }}>PROTECTED</span>
+            </div>
+            <div className="sentinel-list">
+              <div className="sentinel-event">
+                <div className="event-dot success"></div>
+                <div className="leader-info">
+                  <span className="leader-name" style={{ fontSize: '0.8rem' }}>Superadmin Login</span>
+                  <span className="leader-sub">IP: 192.168.1.45 • 2m ago</span>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="activity-card card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', background: 'linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary))' }}>
-          <div style={{ padding: '2rem' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: 'white', boxShadow: '0 0 20px var(--accent-primary)' }}>
-              <ShieldCheck size={32} />
+              <div className="sentinel-event">
+                <div className="event-dot warning"></div>
+                <div className="leader-info">
+                  <span className="leader-name" style={{ fontSize: '0.8rem' }}>Failed Partner Login</span>
+                  <span className="leader-sub">Mumbai Node • 15m ago</span>
+                </div>
+              </div>
+              <div className="sentinel-event">
+                <div className="event-dot error"></div>
+                <div className="leader-info">
+                  <span className="leader-name" style={{ fontSize: '0.8rem' }}>Critical System Patch</span>
+                  <span className="leader-sub">Applied via CLI • 1h ago</span>
+                </div>
+              </div>
             </div>
-            <h3 style={{ marginBottom: '0.5rem' }}>Security Audit</h3>
-            <p style={{ fontSize: '0.85rem', marginBottom: '1.5rem' }}>Last vulnerability scan was completed 4 hours ago. All systems are secure.</p>
-            <button className="btn btn-primary" style={{ width: '100%' }}>View Full Log</button>
+          </div>
+
+          {/* Global Broadcast */}
+          <div className="broadcast-card" onClick={() => handleAction('broadcast')}>
+            <div className="broadcast-icon-box">
+              <Bell size={20} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 900 }}>Global Broadcast</h3>
+              <p style={{ fontSize: '0.8rem', fontWeight: 600, opacity: 0.8 }}>Send an immediate alert to all Properties.</p>
+            </div>
+            <ArrowRight size={18} style={{ alignSelf: 'flex-end' }} />
+          </div>
+
+          {/* System Health & Node Monitor */}
+          <div className="health-monitor-card" style={{ padding: '1.5rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(251, 191, 36, 0.15)' }}>
+            <div className="card-header" style={{ marginBottom: '1.25rem' }}>
+              <div className="card-title">
+                <h3 style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '1rem', fontWeight: 800 }}>
+                  <Cpu size={18} color="var(--accent-primary)" /> Global System Nodes
+                </h3>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>LIVE CLUSTER STATUS</span>
+              </div>
+              <div className="pulse-dot"></div>
+            </div>
+            <div className="health-grid" style={{ marginTop: 0, gap: '0.75rem' }}>
+              <div className="health-item" style={{ padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
+                <span className="health-label" style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}>API LATENCY</span>
+                <span className="health-value" style={{ fontSize: '1.2rem', color: '#10b981', fontWeight: 900 }}>24ms</span>
+              </div>
+              <div className="health-item" style={{ padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
+                <span className="health-label" style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}>NODE UPTIME</span>
+                <span className="health-value" style={{ fontSize: '1.2rem', color: 'var(--accent-primary)', fontWeight: 900 }}>99.9%</span>
+              </div>
+              <div className="health-item" style={{ padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)', gridColumn: 'span 2' }}>
+                <span className="health-label" style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}>DATABASE LOAD</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+                  <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px' }}>
+                    <div style={{ width: '42%', height: '100%', background: '#10b981', borderRadius: '2px' }}></div>
+                  </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 800 }}>42%</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Critical Actions Table */}
+      <div className="operational-queue-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h3 style={{ fontWeight: 800, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Activity size={18} color="var(--accent-primary)" /> Operational Intelligence Queue
+          </h3>
+          <button className="btn btn-ghost btn-sm" onClick={() => setActions(INITIAL_ACTIONS)}>Refresh Queue</button>
+        </div>
+        <table className="pro-table">
+          <thead>
+            <tr>
+              <th>Task Type</th>
+              <th>Partner Node</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th style={{ textAlign: 'right' }}>Command</th>
+            </tr>
+          </thead>
+          <tbody>
+            {actions.map((action) => (
+              <tr key={action.id} style={{ opacity: processingId === action.id ? 0.5 : 1, transition: 'all 0.3s' }}>
+                <td style={{ fontWeight: 700 }}>{action.type}</td>
+                <td>{action.owner}</td>
+                <td><span className={`priority-badge priority-${action.priority.toLowerCase()}`}>{action.priority}</span></td>
+                <td>
+                  <span style={{
+                    color: action.status === 'Approved' ? '#10b981' :
+                      action.status === 'Rejected' ? '#ef4444' :
+                        action.status === 'Flagged' ? '#f59e0b' : 'var(--text-muted)',
+                    fontWeight: 800,
+                    fontSize: '0.75rem',
+                    textTransform: 'uppercase'
+                  }}>
+                    {processingId === action.id ? 'Processing...' : action.status}
+                  </span>
+                </td>
+                <td style={{ textAlign: 'right' }}>
+                  <div className="command-dropdown-container" style={{ position: 'relative', display: 'inline-block' }}>
+                    <button
+                      className={`btn btn-ghost btn-sm ${openDropdownId === action.id ? 'active' : ''}`}
+                      style={{ padding: '0.4rem' }}
+                      onClick={() => setOpenDropdownId(openDropdownId === action.id ? null : action.id)}
+                      disabled={processingId !== null}
+                    >
+                      <MoreHorizontal size={18} />
+                    </button>
+
+                    {openDropdownId === action.id && (
+                      <div className="command-dropdown-menu" ref={dropdownRef}>
+                        <button className="dropdown-item approve" onClick={() => handleTaskAction('Approved', action)}>
+                          <CheckCircle2 size={14} /> Approve Request
+                        </button>
+                        <button className="dropdown-item flag" onClick={() => handleTaskAction('Flagged', action)}>
+                          <AlertTriangle size={14} /> Flag for Audit
+                        </button>
+                        <button className="dropdown-item reject" onClick={() => handleTaskAction('Rejected', action)}>
+                          <XCircle size={14} /> Reject Partner
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+
+
+      {/* Infrastructure Audit Report */}
+      <Modal
+        isOpen={activeModal === 'report'}
+        onClose={() => setActiveModal(null)}
+        title={<span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ShieldCheck size={18} /> Audit Intelligence</span>}
+        footer={<button className="btn btn-primary" style={{ background: '#10b981', borderColor: '#10b981', color: '#000' }} onClick={() => setActiveModal(null)}>Export PDF</button>}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ padding: '1.25rem', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '16px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+              <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 800, display: 'block', textTransform: 'uppercase' }}>COMPLIANCE</span>
+              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#10b981', marginTop: '0.2rem' }}>94.2%</div>
+            </div>
+            <div style={{ padding: '1.25rem', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, display: 'block', textTransform: 'uppercase' }}>NODES SCANNED</span>
+              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#fff', marginTop: '0.2rem' }}>1,242</div>
+            </div>
+          </div>
+          <div style={{ padding: '1.25rem', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              All global nodes are currently operating within established safety parameters. Financial reconciliations for Q2 are verified.
+            </p>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Global Platform Broadcast */}
+      <Modal
+        isOpen={activeModal === 'broadcast'}
+        onClose={() => setActiveModal(null)}
+        title={<span style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Bell size={18} /> Global Broadcast</span>}
+        footer={<button className="btn btn-primary" onClick={() => setActiveModal(null)}>Deploy Alert</button>}
+      >
+        <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+          <label className="form-label" style={{ fontWeight: 800, fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>MESSAGE CONTENT</label>
+          <textarea
+            className="form-input"
+            placeholder="Type your emergency message..."
+            style={{ width: '100%', height: '120px', marginTop: '0.5rem', padding: '1rem', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: '#fff', resize: 'none' }}
+          ></textarea>
+        </div>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}>
+            <input type="checkbox" defaultChecked /> Owners
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}>
+            <input type="checkbox" defaultChecked /> Tenants
+          </label>
+        </div>
+      </Modal>
     </div>
   );
 };
-
 export default Dashboard;

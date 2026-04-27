@@ -1,49 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 const ThemeToggle = () => {
-  const [isDark, setIsDark] = useState(() => {
-    return localStorage.getItem('theme') === 'dark';
-  });
-
-  useEffect(() => {
-    const theme = isDark ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }, [isDark]);
+  const { isDark, toggle } = useTheme();
 
   return (
-    <button 
-      onClick={() => setIsDark(!isDark)}
-      className="theme-toggle"
+    <button
+      onClick={toggle}
+      title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
       style={{
-        padding: '0.5rem',
-        borderRadius: '50%',
-        background: 'var(--bg-tertiary)',
+        width: '40px',
+        height: '40px',
+        borderRadius: '10px',
+        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        color: isDark ? '#fbbf24' : '#475569',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        border: '1px solid var(--border-color)',
         cursor: 'pointer',
-        transition: 'var(--transition-normal)'
+        transition: 'all 0.2s ease',
       }}
+      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.09)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
     >
-      {isDark ? (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-      ) : (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-      )}
+      {isDark ? <Sun size={18} /> : <Moon size={18} />}
     </button>
   );
 };
