@@ -34,8 +34,8 @@ const Offers = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-        <div className="card" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, transparent 100%)' }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>Discounts Redeemed</div>
+        <div className="card" style={{ background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, transparent 100%)' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>Discounts Redeemed</div>
           <div style={{ fontSize: '2.2rem', fontWeight: 800 }}>₹8.4L</div>
           <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.3rem' }}>Total value this month</div>
         </div>
@@ -66,7 +66,7 @@ const Offers = () => {
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                       <div style={{ padding: '0.4rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
-                        <Tag size={16} color="#fbbf24" />
+                        <Tag size={16} color="#7c3aed" />
                       </div>
                       <span style={{ fontWeight: 800, fontFamily: 'monospace', fontSize: '0.95rem' }}>{p.code}</span>
                     </div>
@@ -81,7 +81,7 @@ const Offers = () => {
                       <span style={{ fontWeight: 700 }}>{pct}%</span>
                     </div>
                     <div style={{ height: '4px', background: '#1e293b', borderRadius: '10px' }}>
-                      <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: pct >= 100 ? '#ef4444' : '#fbbf24', borderRadius: '10px' }} />
+                      <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: pct >= 100 ? '#ef4444' : '#7c3aed', borderRadius: '10px' }} />
                     </div>
                   </td>
                   <td style={{ color: '#94a3b8', fontSize: '0.875rem' }}>

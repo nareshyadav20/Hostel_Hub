@@ -30,9 +30,9 @@ const Notifications = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>
-        <div className="card" style={{ border: '1px solid rgba(251,191,36,0.2)' }}>
+        <div className="card" style={{ border: '1px solid rgba(124, 58, 237, 0.2)' }}>
           <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <Send size={18} color="#fbbf24" /> Compose Broadcast
+            <Send size={18} color="#7c3aed" /> Compose Broadcast
           </h3>
           <form onSubmit={handleSend}>
             <div className="form-group">
@@ -62,7 +62,7 @@ const Notifications = () => {
               <label className="form-label">Message</label>
               <textarea className="form-input" rows={5} placeholder="Write your message..." value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} style={{ resize: 'none' }} required />
             </div>
-            <div style={{ padding: '0.8rem 1rem', background: 'rgba(251,191,36,0.05)', border: '1px dashed rgba(251,191,36,0.3)', borderRadius: '10px', marginBottom: '1.5rem', fontSize: '0.8rem', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ padding: '0.8rem 1rem', background: 'rgba(124, 58, 237, 0.05)', border: '1px dashed rgba(124, 58, 237, 0.3)', borderRadius: '10px', marginBottom: '1.5rem', fontSize: '0.8rem', color: '#7c3aed', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <AlertCircle size={14} /> Estimated Reach: 14,250 Users
             </div>
             <button type="submit" className="btn btn-primary" style={{ width: '100%', height: '48px', fontWeight: 800, fontSize: '0.95rem' }}>

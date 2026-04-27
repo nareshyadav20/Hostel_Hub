@@ -21,9 +21,10 @@ body {
   --bg-secondary: #0f172a;
   --bg-tertiary: #1e293b;
   --bg-card: #111827;
-  --accent-primary: #fbbf24;
+  --accent-primary: #7c3aed;
   --accent-secondary: #38bdf8;
-  --accent-glow: rgba(251, 191, 36, 0.3);
+  --accent-glow: rgba(124, 58, 237, 0.3);
+  --accent-primary-rgb: 124, 58, 237;
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #475569;
@@ -43,7 +44,7 @@ body {
   --bg-secondary: #ffffff;
   --bg-tertiary: #e2e8f0;
   --bg-card: #ffffff;
-  --accent-primary: #d97706;
+  --accent-primary: #6d28d9;
   --accent-secondary: #0ea5e9;
   --text-primary: #0f172a;
   --text-secondary: #475569;
@@ -76,13 +77,13 @@ body {
 }
 
 [data-theme='light'] .nav-item.active {
-  color: #d97706;
-  background: rgba(217, 119, 6, 0.08);
-  border-left-color: #d97706;
+  color: #6d28d9;
+  background: rgba(109, 40, 217, 0.08);
+  border-left-color: #6d28d9;
 }
 
 [data-theme='light'] .logo {
-  color: #d97706;
+  color: #6d28d9;
 }
 
 [data-theme='light'] .logo span {
@@ -122,9 +123,9 @@ body {
 }
 
 [data-theme='light'] .admin-avatar {
-  background: rgba(217, 119, 6, 0.1);
-  border-color: rgba(217, 119, 6, 0.25);
-  color: #d97706;
+  background: rgba(109, 40, 217, 0.1);
+  border-color: rgba(109, 40, 217, 0.25);
+  color: #6d28d9;
 }
 
 [data-theme='light'] .card {
@@ -274,14 +275,14 @@ body {
 }
 
 .btn-primary {
-  background: #fbbf24;
-  color: #000;
-  border-color: #fbbf24;
+  background: #7c3aed;
+  color: #fff;
+  border-color: #7c3aed;
 }
 
 .btn-primary:hover {
-  background: #f59e0b;
-  box-shadow: 0 0 18px rgba(251, 191, 36, 0.35);
+  background: #6d28d9;
+  box-shadow: 0 0 18px rgba(124, 58, 237, 0.35);
 }
 
 .btn-secondary {
@@ -535,7 +536,7 @@ tr:hover td {
 
 .form-input:focus {
   border-color: var(--accent-primary);
-  background: rgba(251, 191, 36, 0.04);
+  background: rgba(124, 58, 237, 0.04);
 }
 
 .form-input::placeholder {
