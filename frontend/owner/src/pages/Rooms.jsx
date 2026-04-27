@@ -48,33 +48,41 @@ const Rooms = () => {
   const toggleBed = async (roomId, bedId) => {
     const room = rooms.find(r => r.id === roomId);
     const bed = beds.find(b => b.id === bedId);
-    if (!room || !bed || room.status === 'Maintenance') return;
+    if (!room || !bed) return;
+    if (room.status === 'Maintenance') {
+      alert("Cannot change bed status while room is under maintenance!");
+      return;
+    }
     const newStatus = bed.status === 'OCCUPIED' ? 'AVAILABLE' : 'OCCUPIED';
     // Optimistic UI update first
     setBeds(prev => prev.map(b => b.id === bedId ? { ...b, status: newStatus } : b));
-    try {
-      await api.updateBedStatus(bedId, newStatus, newStatus === 'OCCUPIED' ? 'New Tenant' : null);
-      // Sync with server
-      const fresh = await api.getAllBeds();
-      if (fresh) setBeds(fresh);
-    } catch (err) {
+    
+    // Fire and forget update (no await, no blocking re-fetch)
+    api.updateBedStatus(bedId, newStatus, null).catch(err => {
       console.error('Failed to update bed status:', err);
-      // Revert on error
+      // Revert quietly on actual failure
       setBeds(prev => prev.map(b => b.id === bedId ? { ...b, status: bed.status } : b));
-    }
+    });
   };
 
   const toggleMaintenance = async (roomId) => {
     const room = rooms.find(r => r.id === roomId);
     const roomBeds = beds.filter(b => b.roomId === roomId);
     if (!room) return;
+    
     if (room.status === 'Maintenance') {
-      await api.updateRoomStatus(roomId, 'Active');
+      // Optimistic update
+      setRooms(prev => prev.map(r => r.id === roomId ? { ...r, status: 'Active' } : r));
+      api.updateRoomStatus(roomId, 'Active').catch(err => {
+        setRooms(prev => prev.map(r => r.id === roomId ? { ...r, status: room.status } : r));
+      });
     } else {
-      if (roomBeds.some(b => b.status === 'OCCUPIED')) return;
-      await api.updateRoomStatus(roomId, 'Maintenance');
+      // Optimistic update (forcing maintenance regardless of occupancy)
+      setRooms(prev => prev.map(r => r.id === roomId ? { ...r, status: 'Maintenance' } : r));
+      api.updateRoomStatus(roomId, 'Maintenance').catch(err => {
+        setRooms(prev => prev.map(r => r.id === roomId ? { ...r, status: room.status } : r));
+      });
     }
-    setRooms(await api.getAllRooms() || []);
   };
 
   const toggleBuilding = (id) => setExpandedBuildings(p => ({ ...p, [id]: !p[id] }));
