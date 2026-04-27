@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 /* ─── icons (SVG constants) ─── */
 const ICONS = {
@@ -25,6 +25,7 @@ const HOSTELS = [
 ];
 
 const Search = () => {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({ location: 'bengaluru', budget: 10000, gender: 'All' });
   const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
 
@@ -40,6 +41,14 @@ const Search = () => {
     <div className="search-page-professional fade-in">
       {/* Header Section */}
       <header className="professional-header">
+        <div className="header-nav-row" style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 2rem' }}>
+          <button className="pro-close-btn" onClick={() => navigate('/')} aria-label="Close search">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
         <div className="header-content">
           <h1 className="header-title">Find Your Perfect Stay</h1>
           <p className="header-subtitle">Browse verified, premium co-living spaces with real-time availability.</p>
@@ -210,6 +219,37 @@ const Search = () => {
         .professional-header {
           margin-bottom: 3rem;
           padding: 1.5rem 0;
+          position: relative;
+        }
+
+        .header-nav-row {
+          position: absolute;
+          top: 1rem;
+          right: 2rem;
+          z-index: 10;
+        }
+
+        .pro-close-btn {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          border: 1px solid var(--border-color);
+          background: var(--bg-secondary);
+          color: var(--text-muted);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .pro-close-btn:hover {
+          background: var(--accent-error);
+          color: white;
+          border-color: var(--accent-error);
+          transform: rotate(90deg) scale(1.1);
+          box-shadow: 0 8px 20px rgba(244, 63, 94, 0.3);
         }
 
         .header-title {

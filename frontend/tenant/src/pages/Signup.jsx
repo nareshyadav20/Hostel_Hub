@@ -51,7 +51,7 @@ const Signup = () => {
           </svg>
         </button>
         <div className="auth-header">
-          <h1>StayNest</h1>
+          <h1>Livora</h1>
           <p>Join the community and find your perfect room</p>
         </div>
 

@@ -40,7 +40,7 @@ const Login = () => {
           </svg>
         </button>
         <div className="auth-header">
-          <h1>StayNest</h1>
+          <h1>Livora</h1>
           <p>Sign in to your digital hostel home</p>
         </div>
         

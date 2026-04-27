@@ -4,104 +4,63 @@ import { useParams, Link } from 'react-router-dom';
 const Listing = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('photos');
+  const [selectedRoomIdx, setSelectedRoomIdx] = useState(0);
 
-  // Mock Database based on Landing.jsx
+  // Mock Database synced with Search.jsx
   const allHostels = [
     {
       id: '1',
-      name: 'StayNest Elite - Koramangala',
-      location: 'Koramangala 4th Block, Bengaluru',
-      rating: 4.8, reviews: 156, safetyScore: 9.5, occupancy: '92%', verified: true,
-      price: 12500, deposit: 25000,
+      name: 'Sunshine Residency',
+      location: 'Near City College, Bengaluru',
+      rating: 4.5, reviews: 156, safetyScore: 9.5, occupancy: '92%', verified: true,
+      price: 6500, deposit: 13000,
       amenities: ['High-Speed WiFi', 'A/C', 'Mess', 'Gym', 'Laundry', 'Study Room'],
       roomTypes: [
-        { type: 'Single Elite', price: 18000, status: 'Waitlist', color: 'var(--accent-warning)' },
-        { type: 'Luxury 2 Sharing', price: 12500, status: 'Available', color: 'var(--accent-success)' },
-        { type: 'Comfort 3 Sharing', price: 9500, status: 'Limited', color: 'var(--accent-error)' }
+        { type: 'Single Elite', price: 18000, deposit: 36000, status: 'Waitlist', color: 'var(--accent-warning)' },
+        { type: 'Luxury 2 Sharing', price: 12500, deposit: 25000, status: 'Available', color: 'var(--accent-success)' },
+        { type: 'Comfort 3 Sharing', price: 9500, deposit: 19000, status: 'Limited', color: 'var(--accent-error)' },
+        { type: 'Budget 4 Sharing', price: 6500, deposit: 13000, status: 'Available', color: 'var(--accent-success)' }
       ],
-      landmarks: [{ name: 'Christ University', distance: '800m' }, { name: 'Nexus Mall', distance: '1.2km' }, { name: 'Sony World Signal', distance: '500m' }],
+      landmarks: [{ name: 'City College', distance: '200m' }, { name: 'Metro Station', distance: '800m' }, { name: 'Central Mall', distance: '1.2km' }],
       rules: ['No smoking inside', 'Quiet hours 11 PM - 6 AM', 'Visitors allowed till 9 PM'],
       menu: { breakfast: 'Poha / Idli / Vada', lunch: 'Rice, Dal, 2 Veg Curries', dinner: 'Roti, Paneer Sabzi, Salad' }
     },
     {
       id: '2',
-      name: 'Modern Stay for Students',
-      location: 'Indiranagar, Bengaluru',
-      rating: 4.5, reviews: 112, safetyScore: 9.0, occupancy: '85%', verified: true,
+      name: 'Elite Living',
+      location: 'Tech Park Area, Bengaluru',
+      rating: 4.8, reviews: 112, safetyScore: 9.8, occupancy: '85%', verified: true,
       price: 8500, deposit: 17000,
-      amenities: ['Laundry', 'Study Room', '24/7 Security', 'High-Speed WiFi'],
+      amenities: ['Workstations', 'High-Speed WiFi', 'Cafe', 'Gym', 'Housekeeping'],
       roomTypes: [
-        { type: 'Private Room', price: 14000, status: 'Available', color: 'var(--accent-success)' },
-        { type: 'Standard 2 Sharing', price: 8500, status: 'Limited', color: 'var(--accent-warning)' }
+        { type: 'Private Room', price: 22000, deposit: 44000, status: 'Available', color: 'var(--accent-success)' },
+        { type: 'Standard 2 Sharing', price: 12000, deposit: 24000, status: 'Limited', color: 'var(--accent-warning)' },
+        { type: 'Compact 3 Sharing', price: 8500, deposit: 17000, status: 'Available', color: 'var(--accent-success)' }
       ],
-      landmarks: [{ name: 'Indiranagar Metro', distance: '400m' }, { name: '100ft Road', distance: '600m' }],
+      landmarks: [{ name: 'Indiranagar Metro', distance: '400m' }, { name: 'IT Park', distance: '600m' }],
       rules: ['Student ID required', 'Quiet hours 10 PM - 7 AM', 'No outside food delivery after 11 PM'],
       menu: { breakfast: 'Aloo Paratha / Upma', lunch: 'Rice, Rajma, Sabzi', dinner: 'Roti, Dal Tadka, Veggies' }
     },
     {
       id: '3',
-      name: 'Professional Co-Living',
-      location: 'HSR Layout Sector 2, Bengaluru',
-      rating: 4.6, reviews: 204, safetyScore: 9.6, occupancy: '95%', verified: true,
-      price: 14000, deposit: 28000,
-      amenities: ['Workstations', 'High-Speed WiFi', 'Cafe', 'Gym', 'Housekeeping'],
+      name: 'Green View Hostel',
+      location: 'Green Valley, Bengaluru',
+      rating: 4.2, reviews: 204, safetyScore: 9.0, occupancy: '95%', verified: true,
+      price: 5000, deposit: 10000,
+      amenities: ['Laundry', 'Study Room', '24/7 Security', 'High-Speed WiFi'],
       roomTypes: [
-        { type: 'Studio', price: 22000, status: 'Waitlist', color: 'var(--accent-error)' },
-        { type: 'Premium 2 Sharing', price: 14000, status: 'Available', color: 'var(--accent-success)' }
+        { type: 'Premium 2 Sharing', price: 14000, deposit: 28000, status: 'Available', color: 'var(--accent-success)' },
+        { type: 'Standard 3 Sharing', price: 9000, deposit: 18000, status: 'Limited', color: 'var(--accent-warning)' },
+        { type: 'Budget 4 Sharing', price: 5000, deposit: 10000, status: 'Available', color: 'var(--accent-success)' }
       ],
-      landmarks: [{ name: 'Silk Board Signal', distance: '1.5km' }, { name: 'HSR BDA Complex', distance: '900m' }],
+      landmarks: [{ name: 'Indiranagar Metro', distance: '400m' }, { name: '100ft Road', distance: '600m' }],
       rules: ['Professionals only', 'Pets allowed (subject to approval)'],
       menu: { breakfast: 'Continental Spread', lunch: 'Buffet (North & South Indian)', dinner: 'Multi-cuisine Buffet' }
-    },
-    {
-      id: '4',
-      name: 'The Hive - Whitefield',
-      location: 'Whitefield Main Road, Bengaluru',
-      rating: 4.7, reviews: 89, safetyScore: 9.2, occupancy: '78%', verified: false,
-      price: 11000, deposit: 22000,
-      amenities: ['Gaming Zone', 'Power Backup', 'Housekeeping', 'Mess'],
-      roomTypes: [
-        { type: 'Standard Single', price: 16000, status: 'Available', color: 'var(--accent-success)' },
-        { type: 'Classic 2 Sharing', price: 11000, status: 'Available', color: 'var(--accent-success)' }
-      ],
-      landmarks: [{ name: 'ITPL', distance: '2.1km' }, { name: 'Phoenix Marketcity', distance: '3.5km' }],
-      rules: ['No loud music after 10 PM', 'Visitors allowed till 10 PM'],
-      menu: { breakfast: 'Dosa / Uttapam', lunch: 'Rice, Sambar, Poriyal', dinner: 'Roti, Chana Masala' }
-    },
-    {
-      id: '5',
-      name: 'Zenith Living Hyderabad',
-      location: 'Gachibowli, Hyderabad',
-      rating: 4.9, reviews: 320, safetyScore: 9.8, occupancy: '98%', verified: true,
-      price: 15500, deposit: 31000,
-      amenities: ['Premium Mess', 'Swimming Pool', 'Yoga Deck', 'High-Speed WiFi', 'A/C'],
-      roomTypes: [
-        { type: 'Luxury Single', price: 25000, status: 'Waitlist', color: 'var(--accent-error)' },
-        { type: 'Elite 2 Sharing', price: 15500, status: 'Limited', color: 'var(--accent-warning)' }
-      ],
-      landmarks: [{ name: 'DLF Cyber City', distance: '1.2km' }, { name: 'Biodiversity Park', distance: '800m' }],
-      rules: ['No smoking', 'Biometric entry only'],
-      menu: { breakfast: 'Idli / Dosa / Vada', lunch: 'Hyderabadi Biryani (Weekends), Rice, Dal', dinner: 'Roti, Mixed Veg, Chicken Curry (Optional)' }
-    },
-    {
-      id: '6',
-      name: 'Urban Den Mumbai',
-      location: 'Andheri West, Mumbai',
-      rating: 4.4, reviews: 67, safetyScore: 8.9, occupancy: '88%', verified: true,
-      price: 18000, deposit: 36000,
-      amenities: ['Co-working Space', 'Gym', 'Terrace Garden', 'A/C', 'Housekeeping'],
-      roomTypes: [
-        { type: 'Compact Single', price: 28000, status: 'Available', color: 'var(--accent-success)' },
-        { type: 'Standard 2 Sharing', price: 18000, status: 'Available', color: 'var(--accent-success)' },
-        { type: 'Budget 3 Sharing', price: 14000, status: 'Limited', color: 'var(--accent-warning)' }
-      ],
-      landmarks: [{ name: 'Andheri Station', distance: '1.5km' }, { name: 'Lokhandwala', distance: '2km' }],
-      rules: ['Curfew 12 AM', 'No visitors in rooms'],
-      menu: { breakfast: 'Misal Pav / Poha', lunch: 'Rice, Dal, Bhaji', dinner: 'Roti, Veg Curry, Dessert' }
     }
   ];
 
-  const hostel = allHostels.find(h => h.id === id) || allHostels[0];
+  const hostel = allHostels.find(h => h.id === String(id)) || allHostels[0];
+  const selectedRoom = hostel.roomTypes[selectedRoomIdx] || hostel.roomTypes[0];
 
   const handleBookingClick = (e) => {
     const token = localStorage.getItem('token');
@@ -116,38 +75,50 @@ const Listing = () => {
     <div className="listing-page" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem 3rem 1rem', animation: 'authFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }}>
       {/* Top Nav Row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0' }}>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'var(--text-primary)', fontWeight: '700', padding: '0.6rem 1.2rem', background: 'var(--bg-secondary)', borderRadius: '20px', border: '1px solid var(--border-color)', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--border-color)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-secondary)'}>
+        <Link to="/search" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'var(--text-primary)', fontWeight: '700', padding: '0.6rem 1.2rem', background: 'var(--bg-secondary)', borderRadius: '20px', border: '1px solid var(--border-color)', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-          Back to Listings
+          Back to Search
         </Link>
 
-        <Link to="/" style={{ width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '50%', color: 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.3s', textDecoration: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-error)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.transform = 'rotate(90deg)'; }} onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-secondary)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.transform = 'rotate(0deg)'; }}>
+        <Link to="/" style={{ width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '50%', color: 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.3s', textDecoration: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </Link>
       </div>
 
-      <header className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '2.5rem', borderRadius: '24px', background: 'linear-gradient(135deg, rgba(30,30,40,0.8) 0%, rgba(20,20,30,0.95) 100%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.25)', backdropFilter: 'blur(16px)' }}>
+      <header className="glass-card" style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '2rem',
+        padding: '2.5rem',
+        borderRadius: '24px',
+        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 20px 40px rgba(16, 185, 129, 0.25)',
+        backdropFilter: 'blur(16px)',
+        color: 'white'
+      }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', background: 'linear-gradient(to right, #fff, #a0a0b0)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{hostel.name}</h1>
-            {hostel.verified && <span style={{ background: 'rgba(34, 197, 94, 0.15)', color: 'var(--accent-success)', padding: '0.4rem 1rem', borderRadius: '30px', fontSize: '0.85rem', fontWeight: '800', border: '1px solid rgba(34, 197, 94, 0.3)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: 'white' }}>{hostel.name}</h1>
+            {hostel.verified && <span style={{ background: 'rgba(255, 255, 255, 0.2)', color: 'white', padding: '0.4rem 1rem', borderRadius: '30px', fontSize: '0.85rem', fontWeight: '800', border: '1px solid rgba(255, 255, 255, 0.3)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
               Owner Verified
             </span>}
           </div>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '0.8rem', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          <p style={{ color: 'rgba(255, 255, 255, 0.9)', marginTop: '0.8rem', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             {hostel.location}
           </p>
         </div>
-        <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--accent-primary)', textShadow: '0 0 20px rgba(56, 189, 248, 0.3)', lineHeight: '1' }}>₹{hostel.price}<span style={{ fontSize: '1.1rem', color: 'var(--text-muted)', fontWeight: '600' }}>/mo</span></div>
+        <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.1)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'white', textShadow: '0 2px 10px rgba(0,0,0,0.1)', lineHeight: '1' }}>₹{selectedRoom.price.toLocaleString()}<span style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', fontWeight: '600' }}>/mo</span></div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.8rem', justifyContent: 'flex-end' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-warning)', padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '800' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'rgba(255, 255, 255, 0.2)', color: 'white', padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '800' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
               {hostel.rating} ({hostel.reviews})
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'rgba(168, 85, 247, 0.15)', color: '#a855f7', padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '800' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'rgba(255, 255, 255, 0.2)', color: 'white', padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '800' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
               Safety: {hostel.safetyScore}/10
             </span>
@@ -215,11 +186,25 @@ const Listing = () => {
             <h3>🛏️ Available Room Types</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.2rem', marginTop: '1.5rem' }}>
               {hostel.roomTypes.map((room, i) => (
-                <div key={i} className="glass-card" style={{ padding: '1.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '16px', position: 'relative' }}>
+                <div
+                  key={i}
+                  onClick={() => setSelectedRoomIdx(i)}
+                  className="glass-card"
+                  style={{
+                    padding: '1.5rem',
+                    background: selectedRoomIdx === i ? 'rgba(14, 165, 233, 0.08)' : 'var(--bg-secondary)',
+                    border: selectedRoomIdx === i ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                    borderRadius: '16px',
+                    position: 'relative',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    transform: selectedRoomIdx === i ? 'scale(1.02)' : 'scale(1)'
+                  }}
+                >
                   <div style={{ position: 'absolute', top: '0.8rem', right: '0.8rem', width: '8px', height: '8px', borderRadius: '50%', background: room.color }}></div>
                   <p style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>{room.status.toUpperCase()}</p>
                   <h4 style={{ fontSize: '1.1rem', fontWeight: '800' }}>{room.type}</h4>
-                  <p style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--accent-primary)', marginTop: '0.8rem' }}>₹{room.price}<span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}> / mo</span></p>
+                  <p style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--accent-primary)', marginTop: '0.8rem' }}>₹{room.price.toLocaleString()}<span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}> / mo</span></p>
                 </div>
               ))}
             </div>
@@ -230,7 +215,7 @@ const Listing = () => {
             <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>A premium stay for students and professionals. Current Occupancy: <strong style={{ color: 'var(--accent-success)' }}>{hostel.occupancy}</strong></p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', marginTop: '1rem' }}>
               {hostel.amenities.map((item, i) => (
-                <span key={i} style={{ background: 'rgba(56, 189, 248, 0.1)', color: 'var(--accent-primary)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem' }}>{item}</span>
+                <span key={i} style={{ background: 'rgba(56, 189, 248, 0.1)', color: 'var(--accent-primary)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '700' }}>{item}</span>
               ))}
             </div>
           </div>
@@ -239,9 +224,9 @@ const Listing = () => {
             <h3>📍 Landmarks & Distance</h3>
             <ul style={{ marginTop: '1rem', listStyle: 'none', padding: 0 }}>
               {hostel.landmarks.map((l, i) => (
-                <li key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.8rem 0', borderBottom: '1px solid var(--border-color)' }}>
-                  <span>{l.name}</span>
-                  <strong>{l.distance}</strong>
+                <li key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem 0', borderBottom: i === hostel.landmarks.length - 1 ? 'none' : '1px solid var(--border-color)' }}>
+                  <span style={{ fontWeight: '600' }}>{l.name}</span>
+                  <strong style={{ color: 'var(--accent-primary)' }}>{l.distance}</strong>
                 </li>
               ))}
             </ul>
@@ -257,32 +242,32 @@ const Listing = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.2rem', marginBottom: '3rem' }}>
               <div style={{ padding: '1.5rem', borderRadius: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', position: 'relative', overflow: 'hidden' }}>
-                <p style={{ color: 'var(--accent-primary)', fontWeight: '800', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.4rem' }}>Breakfast</p>
-                <p style={{ fontSize: '1rem', fontWeight: '700' }}>{hostel.menu.breakfast}</p>
+                <p style={{ color: 'var(--accent-primary)', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.6rem' }}>Breakfast</p>
+                <p style={{ fontSize: '1.1rem', fontWeight: '800' }}>{hostel.menu.breakfast}</p>
               </div>
               <div style={{ padding: '1.5rem', borderRadius: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', position: 'relative', overflow: 'hidden' }}>
-                <p style={{ color: 'var(--accent-success)', fontWeight: '800', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.4rem' }}>Lunch</p>
-                <p style={{ fontSize: '1rem', fontWeight: '700' }}>{hostel.menu.lunch}</p>
+                <p style={{ color: 'var(--accent-success)', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.6rem' }}>Lunch</p>
+                <p style={{ fontSize: '1.1rem', fontWeight: '800' }}>{hostel.menu.lunch}</p>
               </div>
               <div style={{ padding: '1.5rem', borderRadius: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', position: 'relative', overflow: 'hidden' }}>
-                <p style={{ color: 'var(--accent-warning)', fontWeight: '800', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.4rem' }}>Dinner</p>
-                <p style={{ fontSize: '1rem', fontWeight: '700' }}>{hostel.menu.dinner}</p>
+                <p style={{ color: 'var(--accent-warning)', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.6rem' }}>Dinner</p>
+                <p style={{ fontSize: '1.1rem', fontWeight: '800' }}>{hostel.menu.dinner}</p>
               </div>
             </div>
 
             <div style={{ background: 'var(--bg-secondary)', borderRadius: '20px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
               <div style={{ padding: '1.2rem 1.5rem', background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                <span style={{ fontWeight: '800', fontSize: '0.9rem' }}>Weekly Dining Schedule</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span style={{ fontWeight: '800', fontSize: '1rem' }}>Weekly Dining Schedule</span>
               </div>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '1rem' }}>
                   <thead>
-                    <tr style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)' }}>
-                      <th style={{ padding: '1rem 1.5rem' }}>DAY</th>
-                      <th style={{ padding: '1rem 1.5rem' }}>TIFFIN</th>
-                      <th style={{ padding: '1rem 1.5rem' }}>LUNCH</th>
-                      <th style={{ padding: '1rem 1.5rem' }}>DINNER</th>
+                    <tr style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
+                      <th style={{ padding: '1.5rem 2rem' }}>DAY</th>
+                      <th style={{ padding: '1.5rem 2rem' }}>TIFFIN</th>
+                      <th style={{ padding: '1.5rem 2rem' }}>LUNCH</th>
+                      <th style={{ padding: '1.5rem 2rem' }}>DINNER</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -295,11 +280,11 @@ const Listing = () => {
                       { d: 'Sat', t: 'Omelette', l: 'Fried Rice', dn: 'Chinese' },
                       { d: 'Sun', t: 'Puri Bhaji', l: 'Sunday Feast', dn: 'Chef Special' }
                     ].map((m, i) => (
-                      <tr key={i} style={{ borderBottom: i === 6 ? 'none' : '1px solid var(--border-color)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
-                        <td style={{ padding: '0.8rem 1.5rem', fontWeight: '800' }}>{m.d}</td>
-                        <td style={{ padding: '0.8rem 1.5rem', color: 'var(--text-secondary)' }}>{m.t}</td>
-                        <td style={{ padding: '0.8rem 1.5rem', color: 'var(--text-secondary)' }}>{m.l}</td>
-                        <td style={{ padding: '0.8rem 1.5rem', color: 'var(--text-secondary)' }}>{m.dn}</td>
+                      <tr key={i} style={{ borderBottom: i === 6 ? 'none' : '1px solid var(--border-color)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
+                        <td style={{ padding: '1.2rem 2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{m.d}</td>
+                        <td style={{ padding: '1.2rem 2rem', color: 'var(--text-secondary)', fontWeight: '600' }}>{m.t}</td>
+                        <td style={{ padding: '1.2rem 2rem', color: 'var(--text-secondary)', fontWeight: '600' }}>{m.l}</td>
+                        <td style={{ padding: '1.2rem 2rem', color: 'var(--text-secondary)', fontWeight: '600' }}>{m.dn}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -313,32 +298,43 @@ const Listing = () => {
         {/* Right Column: Pricing & Booking */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
-          <div className="card">
-            <h3>Price Breakdown</h3>
-            <div style={{ marginTop: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span>Monthly Rent</span>
-                <strong>₹{hostel.price}</strong>
+          <div className="card" style={{ position: 'sticky', top: '100px' }}>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: '900', marginBottom: '1.5rem' }}>Price Breakdown</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Monthly Rent ({selectedRoom.type})</span>
+                <strong style={{ fontSize: '1.1rem' }}>₹{selectedRoom.price.toLocaleString()}</strong>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span>Security Deposit (Refundable)</span>
-                <strong>₹{hostel.deposit}</strong>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Security Deposit</span>
+                <strong style={{ fontSize: '1.1rem' }}>₹{selectedRoom.deposit.toLocaleString()}</strong>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>
-                <span>Maintenance Fee</span>
-                <strong>₹500</strong>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-muted)', fontWeight: '500' }}>Maintenance Fee</span>
+                <strong style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>₹500</strong>
               </div>
-              <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '1rem 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                <span>Total Move-in Cost</span>
-                <span style={{ color: 'var(--accent-primary)' }}>₹{hostel.price + hostel.deposit + 500}</span>
+
+              <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '0.5rem 0' }} />
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '1.2rem', fontWeight: '900' }}>Total Move-in</span>
+                  <span style={{ fontSize: '1.6rem', fontWeight: '950', color: 'var(--accent-primary)' }}>₹{(selectedRoom.price + selectedRoom.deposit + 500).toLocaleString()}</span>
+                </div>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'right' }}>*Refundable deposit included</p>
               </div>
             </div>
+
             <Link
               to="/booking"
               onClick={handleBookingClick}
               className="btn btn-primary"
-              style={{ width: '100%', marginTop: '1.5rem', textAlign: 'center', padding: '1.2rem', fontWeight: '800', borderRadius: '12px' }}
+              style={{
+                width: '100%', marginTop: '2rem', textAlign: 'center', padding: '1.4rem',
+                fontWeight: '900', borderRadius: '16px', fontSize: '1.1rem',
+                boxShadow: '0 15px 30px rgba(14, 165, 233, 0.3)',
+                display: 'block', textDecoration: 'none'
+              }}
             >
               Proceed to Book
             </Link>
@@ -346,9 +342,12 @@ const Listing = () => {
 
           <div className="card">
             <h3>📋 House Rules</h3>
-            <ul style={{ marginTop: '1rem', paddingLeft: '1.2rem', color: 'var(--text-secondary)' }}>
+            <ul style={{ marginTop: '1.5rem', paddingLeft: '0', listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {hostel.rules.map((rule, i) => (
-                <li key={i} style={{ marginBottom: '0.5rem' }}>{rule}</li>
+                <li key={i} style={{ display: 'flex', gap: '0.8rem', color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="3" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  {rule}
+                </li>
               ))}
             </ul>
           </div>

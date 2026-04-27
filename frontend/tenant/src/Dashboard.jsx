@@ -50,7 +50,7 @@ function Dashboard() {
       showToast('Late entry request submitted to Warden.');
     }
   };
-  
+
   const handleInvite = () => {
     showToast('Referral link copied to clipboard! Share it with your friends.');
     navigator.clipboard.writeText('https://livora.com/refer/uma2026');
@@ -187,8 +187,8 @@ function Dashboard() {
               </>
             ) : (
               <div className="card perk-card glass-card">
-                 {/* Similar structure for Employee Perks */}
-                 <p>Employee features coming soon...</p>
+                {/* Similar structure for Employee Perks */}
+                <p>Employee features coming soon...</p>
               </div>
             )}
           </div>
@@ -221,7 +221,7 @@ function Dashboard() {
                 <span style={{ fontSize: '1.5rem' }}>📢</span> Notice & Activity
               </h3>
             </div>
-            
+
             <div className="merged-content-scroll" style={{ maxHeight: '600px', overflowY: 'auto', padding: '1.5rem' }}>
               <div className="notice-list" style={{ marginBottom: '2.5rem' }}>
                 <p style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1rem' }}>Latest Notices</p>
@@ -256,10 +256,28 @@ function Dashboard() {
             </div>
           </div>
 
-          <div className="card promo-card fade-in-up" style={{ animationDelay: '0.8s', background: '#f0fdf4', border: '1px solid #bbf7d0', boxShadow: '0 10px 25px rgba(34, 197, 94, 0.1)' }}>
-            <h3 style={{ color: '#166534', fontWeight: '900' }}>Did you know?</h3>
-            <p style={{ color: '#166534', fontWeight: '500' }}>Referring a friend gives you 200 loyalty points and a 5% discount on next month's rent!</p>
-            <button onClick={handleInvite} className="btn btn-primary btn-full" style={{ background: '#22c55e', color: 'white', border: 'none', fontWeight: '800', boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)' }}>Invite Now</button>
+          <div className="card promo-card fade-in-up" style={{
+            animationDelay: '0.8s',
+            background: 'linear-gradient(135deg, var(--accent-primary) 0%, #4f46e5 100%)',
+            border: 'none',
+            boxShadow: '0 15px 35px rgba(14, 165, 233, 0.25)',
+            color: 'white'
+          }}>
+            <h3 style={{ color: 'white', fontWeight: '950', letterSpacing: '-0.5px' }}>Did you know? 💡</h3>
+            <p style={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: '600', lineHeight: '1.5' }}>
+              Referring a friend gives you <strong style={{ color: 'white' }}>200 loyalty points</strong> and a 5% discount on next month's rent!
+            </p>
+            <button onClick={handleInvite} className="btn" style={{
+              background: 'white',
+              color: 'var(--accent-primary)',
+              border: 'none',
+              fontWeight: '900',
+              width: '100%',
+              padding: '1rem',
+              borderRadius: '14px',
+              marginTop: '0.5rem',
+              boxShadow: '0 8px 20px rgba(0,0,0,0.1)'
+            }}>Invite Now</button>
           </div>
         </aside>
       </div>
