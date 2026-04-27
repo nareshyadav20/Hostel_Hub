@@ -92,34 +92,34 @@ const Listing = () => {
         marginBottom: '2rem',
         padding: '2.5rem',
         borderRadius: '24px',
-        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 20px 40px rgba(16, 185, 129, 0.25)',
+        background: 'var(--bg-secondary)',
+        border: '1px solid var(--border-color)',
+        boxShadow: 'var(--shadow-premium)',
         backdropFilter: 'blur(16px)',
-        color: 'white'
+        color: 'var(--text-primary)'
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: 'white' }}>{hostel.name}</h1>
-            {hostel.verified && <span style={{ background: 'rgba(255, 255, 255, 0.2)', color: 'white', padding: '0.4rem 1rem', borderRadius: '30px', fontSize: '0.85rem', fontWeight: '800', border: '1px solid rgba(255, 255, 255, 0.3)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: '900', color: 'var(--text-primary)' }}>{hostel.name}</h1>
+            {hostel.verified && <span style={{ background: 'var(--bg-tertiary)', color: 'var(--accent-primary)', padding: '0.4rem 1rem', borderRadius: '30px', fontSize: '0.85rem', fontWeight: '800', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
               Owner Verified
             </span>}
           </div>
-          <p style={{ color: 'rgba(255, 255, 255, 0.9)', marginTop: '0.8rem', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.8rem', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             {hostel.location}
           </p>
         </div>
-        <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.1)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'white', textShadow: '0 2px 10px rgba(0,0,0,0.1)', lineHeight: '1' }}>₹{selectedRoom.price.toLocaleString()}<span style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', fontWeight: '600' }}>/mo</span></div>
+        <div style={{ textAlign: 'right', background: 'var(--bg-tertiary)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--text-primary)', textShadow: 'none', lineHeight: '1' }}>₹{selectedRoom.price.toLocaleString()}<span style={{ fontSize: '1.1rem', color: 'var(--text-muted)', fontWeight: '600' }}>/mo</span></div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.8rem', justifyContent: 'flex-end' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'rgba(255, 255, 255, 0.2)', color: 'white', padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '800' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'var(--bg-primary)', color: 'var(--text-primary)', padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '800', border: '1px solid var(--border-color)' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
               {hostel.rating} ({hostel.reviews})
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'rgba(255, 255, 255, 0.2)', color: 'white', padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '800' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'var(--bg-primary)', color: 'var(--text-primary)', padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '800', border: '1px solid var(--border-color)' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
               Safety: {hostel.safetyScore}/10
             </span>
           </div>
