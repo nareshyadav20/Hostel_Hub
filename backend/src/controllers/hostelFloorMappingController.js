@@ -1,20 +1,15 @@
-const prisma = require('../config/prisma');
+const HostelFloorMapping = require('../models/HostelFloorMapping');
 
 const createMapping = async (req, res) => {
   try {
     const { hostelId, floorId, buildingId } = req.body;
     
-    // Create or update mapping
-    const mapping = await prisma.hostelFloorMapping.upsert({
-      where: {
-        hostelId_floorId: {
-          hostelId,
-          floorId
-        }
-      },
-      update: { buildingId },
-      create: { hostelId, floorId, buildingId }
-    });
+    // Find and update or create
+    const mapping = await HostelFloorMapping.findOneAndUpdate(
+      { hostel: hostelId, floor: floorId },
+      { building: buildingId },
+      { upsert: true, new: true }
+    );
     
     res.status(201).json(mapping);
   } catch (error) {
@@ -28,14 +23,11 @@ const getMappings = async (req, res) => {
     if (!hostelId) {
       return res.status(400).json({ error: "hostelId is required" });
     }
-    const mappings = await prisma.hostelFloorMapping.findMany({
-      where: { hostelId },
-      include: {
-        floor: {
-          include: { building: true }
-        }
-      }
-    });
+    const mappings = await HostelFloorMapping.find({ hostel: hostelId })
+      .populate({
+        path: 'floor',
+        populate: { path: 'building' }
+      });
     res.status(200).json(mappings);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -45,14 +37,7 @@ const getMappings = async (req, res) => {
 const removeMapping = async (req, res) => {
   try {
     const { hostelId, floorId } = req.query;
-    await prisma.hostelFloorMapping.delete({
-      where: {
-        hostelId_floorId: {
-          hostelId,
-          floorId
-        }
-      }
-    });
+    await HostelFloorMapping.deleteOne({ hostel: hostelId, floor: floorId });
     res.status(200).json({ message: 'Mapping removed' });
   } catch (error) {
     res.status(500).json({ error: error.message });

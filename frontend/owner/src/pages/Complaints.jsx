@@ -4,13 +4,15 @@ import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare,
 
 const Complaints = () => {
   const [complaints, setComplaints] = useState([
-    { id: 1, room: '201-A', issue: 'Water Leakage in Bathroom', category: 'Plumbing', urgency: 'High', status: 'Pending', reportedBy: 'Rahul Sharma', timeElapsed: '2 hours ago' },
-    { id: 2, room: '202-B', issue: 'AC Not Cooling properly', category: 'Electrical', urgency: 'Medium', status: 'In-Progress', reportedBy: 'Priya Verma', timeElapsed: '1 day ago' },
-    { id: 3, room: '101-A', issue: 'WiFi Connection dropping', category: 'Internet', urgency: 'Low', status: 'Resolved', reportedBy: 'Amit Singh', timeElapsed: '3 days ago' },
-    { id: 4, room: '305-C', issue: 'Deep Cleaning Required', category: 'Cleaning', urgency: 'Medium', status: 'Pending', reportedBy: 'Sneha Kapur', timeElapsed: '4 hours ago' },
+    { id: 1, room: '201-A', issue: 'Water Leakage in Bathroom', category: 'Plumbing', urgency: 'High', status: 'Pending', reportedBy: 'Rahul Sharma', timeElapsed: '2 hours ago', description: 'Water is dripping from the ceiling in the attached bathroom. Possible pipe burst in floor above.' },
+    { id: 2, room: '202-B', issue: 'AC Not Cooling properly', category: 'Electrical', urgency: 'Medium', status: 'In-Progress', reportedBy: 'Priya Verma', timeElapsed: '1 day ago', description: 'The AC unit makes a loud noise and does not cool the room even at 16 degrees.' },
+    { id: 3, room: '101-A', issue: 'WiFi Connection dropping', category: 'Internet', urgency: 'Low', status: 'Resolved', reportedBy: 'Amit Singh', timeElapsed: '3 days ago', description: 'Frequent disconnections every 15 minutes. Signal strength is weak.' },
+    { id: 4, room: '305-C', issue: 'Deep Cleaning Required', category: 'Cleaning', urgency: 'Medium', status: 'Pending', reportedBy: 'Sneha Kapur', timeElapsed: '4 hours ago', description: 'Dust accumulation in corners and under the bed. Need thorough cleaning.' },
   ]);
 
   const [expandedId, setExpandedId] = useState(null);
+  const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
+  const [broadcastMessage, setBroadcastMessage] = useState('');
 
   const totalComplaints = complaints.length;
   const pendingCount = complaints.filter(c => c.status === 'Pending').length;
@@ -18,6 +20,19 @@ const Complaints = () => {
   
   const handleStatusChange = (id, newStatus) => {
     setComplaints(complaints.map(c => c.id === id ? { ...c, status: newStatus } : c));
+  };
+
+  const handleArchive = (id) => {
+    if (window.confirm('Archive this complaint?')) {
+      setComplaints(complaints.filter(c => c.id !== id));
+    }
+  };
+
+  const handleBroadcast = (e) => {
+    e.preventDefault();
+    alert(`Broadcast sent: ${broadcastMessage}`);
+    setIsBroadcastModalOpen(false);
+    setBroadcastMessage('');
   };
 
   const getUrgencyBadge = (urgency) => {
@@ -47,6 +62,8 @@ const Complaints = () => {
     }
   };
 
+  const inputStyle = { padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', width: '100%' };
+
   return (
     <div className="complaints-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
       <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
@@ -56,7 +73,7 @@ const Complaints = () => {
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Track, prioritize, and resolve maintenance issues reported by tenants.</p>
         </div>
-        <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
+        <button onClick={() => setIsBroadcastModalOpen(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
             <MessageSquare size={16} /> Broadcast Update
         </button>
       </header>
@@ -89,77 +106,120 @@ const Complaints = () => {
           <tbody>
             <AnimatePresence>
               {complaints.map(c => (
-                <motion.tr 
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  key={c.id} 
-                  style={{ borderBottom: '1px solid var(--border-color)', background: c.status === 'Resolved' ? 'var(--bg-tertiary)' : 'transparent', opacity: c.status === 'Resolved' ? 0.7 : 1 }}
-                  className="table-row-hover"
-                >
-                  <td style={{ padding: '1.2rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                      <span style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>Room {c.room}</span>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ticket #{1000 + c.id} • {c.timeElapsed}</span>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
-                        By: <span style={{ fontWeight: '600' }}>{c.reportedBy}</span>
-                      </span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1.2rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-start' }}>
-                       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                         <span style={{ padding: '0.3rem', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
-                           {getCategoryIcon(c.category)}
-                         </span>
-                         <span style={{ fontWeight: '600' }}>{c.issue}</span>
-                       </div>
-                       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.3rem' }}>
-                         {getUrgencyBadge(c.urgency)}
-                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.category}</span>
-                       </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1.2rem' }}>
-                    {getStatusDisplay(c.status)}
-                  </td>
-                  <td style={{ padding: '1.2rem', textAlign: 'right' }}>
-                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                        {c.status === 'Pending' && (
-                          <button 
-                            onClick={() => handleStatusChange(c.id, 'In-Progress')}
-                            className="btn btn-primary" 
-                            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
-                          >
-                            Assign Task
-                          </button>
-                        )}
-                        {c.status === 'In-Progress' && (
-                          <button 
-                            onClick={() => handleStatusChange(c.id, 'Resolved')}
-                            className="btn" 
-                            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', border: '1px solid var(--accent-success)' }}
-                          >
-                            <CheckCircle2 size={14} style={{ marginRight: '0.4rem' }}/> Mark Resolved
-                          </button>
-                        )}
-                        {c.status === 'Resolved' && (
-                          <button 
-                            className="btn" 
-                            style={{ padding: '0.5rem', fontSize: '0.8rem', border: '1px solid var(--border-color)', color: 'var(--text-muted)' }}
-                          >
-                            Archive
-                          </button>
-                        )}
-                     </div>
-                  </td>
-                </motion.tr>
+                <React.Fragment key={c.id}>
+                  <motion.tr 
+                    layout
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
+                    style={{ borderBottom: '1px solid var(--border-color)', background: c.status === 'Resolved' ? 'var(--bg-tertiary)' : 'transparent', opacity: c.status === 'Resolved' ? 0.7 : 1, cursor: 'pointer' }}
+                    className="table-row-hover"
+                  >
+                    <td style={{ padding: '1.2rem' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                        <span style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>Room {c.room}</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ticket #{1000 + c.id} • {c.timeElapsed}</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
+                          By: <span style={{ fontWeight: '600' }}>{c.reportedBy}</span>
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '1.2rem' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <span style={{ padding: '0.3rem', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
+                            {getCategoryIcon(c.category)}
+                          </span>
+                          <span style={{ fontWeight: '600' }}>{c.issue}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.3rem' }}>
+                          {getUrgencyBadge(c.urgency)}
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.category}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '1.2rem' }}>
+                      {getStatusDisplay(c.status)}
+                    </td>
+                    <td style={{ padding: '1.2rem', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                          {c.status === 'Pending' && (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'In-Progress'); }}
+                              className="btn btn-primary" 
+                              style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                            >
+                              Assign Task
+                            </button>
+                          )}
+                          {c.status === 'In-Progress' && (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'Resolved'); }}
+                              className="btn" 
+                              style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', border: '1px solid var(--accent-success)' }}
+                            >
+                              <CheckCircle2 size={14} style={{ marginRight: '0.4rem' }}/> Mark Resolved
+                            </button>
+                          )}
+                          {c.status === 'Resolved' && (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleArchive(c.id); }}
+                              className="btn" 
+                              style={{ padding: '0.5rem', fontSize: '0.8rem', border: '1px solid var(--border-color)', color: 'var(--text-muted)' }}
+                            >
+                              Archive
+                            </button>
+                          )}
+                      </div>
+                    </td>
+                  </motion.tr>
+                  {expandedId === c.id && (
+                    <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: 'var(--bg-tertiary)' }}>
+                      <td colSpan="4" style={{ padding: '1.5rem 2.5rem' }}>
+                        <div style={{ borderLeft: '4px solid var(--accent-primary)', paddingLeft: '1.5rem' }}>
+                          <p style={{ fontWeight: '700', color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Issue Details</p>
+                          <p style={{ fontSize: '1rem', lineHeight: '1.6', color: 'var(--text-primary)' }}>{c.description}</p>
+                          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '2rem' }}>
+                             <div>
+                               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>REPORTED BY</p>
+                               <p style={{ fontWeight: '600' }}>{c.reportedBy} (Room {c.room})</p>
+                             </div>
+                             <div>
+                               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>URGENCY LEVEL</p>
+                               <p style={{ fontWeight: '600' }}>{c.urgency}</p>
+                             </div>
+                          </div>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  )}
+                </React.Fragment>
               ))}
             </AnimatePresence>
           </tbody>
         </table>
       </div>
+
+      <AnimatePresence>
+        {isBroadcastModalOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsBroadcastModalOpen(false)} />
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '20%', left: '50%', x: '-50%', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem' }}>Broadcast Maintenance Update</h2>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Send a notification to all tenants regarding ongoing or upcoming maintenance work.</p>
+              <form onSubmit={handleBroadcast} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <textarea placeholder="Write your update message here..." value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} style={{ ...inputStyle, minHeight: '120px' }} required />
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem' }}>Send Broadcast</button>
+                  <button className="btn" type="button" onClick={() => setIsBroadcastModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Cancel</button>
+                </div>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       <style>{`
         .table-row-hover:hover {
           background: rgba(0,0,0,0.02);

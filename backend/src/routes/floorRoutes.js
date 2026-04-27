@@ -1,9 +1,12 @@
 const express = require('express');
-const { createFloor, getFloors } = require('../controllers/floorController');
+const floorController = require('../controllers/floorController');
 
 const router = express.Router();
 
-router.post('/', createFloor);
-router.get('/', getFloors);
+router.post('/', floorController.createFloor);
+router.post('/bulk', floorController.bulkCreateFloors);
+router.get('/:buildingId', floorController.getFloors);
+router.patch('/:id', floorController.updateFloor);
+router.delete('/:id', floorController.deleteFloor);
 
 module.exports = router;

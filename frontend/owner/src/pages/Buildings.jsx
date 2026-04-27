@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useParams } from 'react-router-dom';
 import { 
   Building as BuildingIcon, Layers, DoorOpen, Bed, PlusCircle, 
   ArrowLeft, CheckSquare, Square, Trash2, Edit2, Zap, X, Image as ImageIcon
@@ -43,6 +44,7 @@ const Modal = ({ isOpen, onClose, title, children }) => (
 );
 
 const Buildings = () => {
+  const { buildingId } = useParams();
   const [view, setView] = useState('buildings'); // buildings, floors, rooms, beds, assign
   
   const [buildings, setBuildings] = useState([]);
@@ -70,7 +72,12 @@ const Buildings = () => {
   const fetchBuildings = async () => {
     try {
       const data = await api.getBuildings();
-      setBuildings(data || []);
+      const bData = data || [];
+      if (buildingId) {
+        setBuildings(bData.filter(b => (b.id || b._id) === buildingId));
+      } else {
+        setBuildings(bData);
+      }
     } catch (err) {
       console.error(err);
     }

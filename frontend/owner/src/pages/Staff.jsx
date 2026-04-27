@@ -35,15 +35,53 @@ const Staff = () => {
   ]);
 
   const [expandedRow, setExpandedRow] = useState(null);
+  const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [activeStaffForTask, setActiveStaffForTask] = useState(null);
+  
+  const [newStaffData, setNewStaffData] = useState({ name: '', role: 'Warden', phone: '', salary: '' });
+  const [newTaskText, setNewTaskText] = useState('');
 
   const toggleRow = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
+  };
+
+  const handleAddStaff = (e) => {
+    e.preventDefault();
+    const newStaff = {
+      ...newStaffData,
+      id: staffList.length + 1,
+      status: 'Active',
+      attendance: '0/26 days',
+      recentTasks: []
+    };
+    setStaffList([...staffList, newStaff]);
+    setIsAddStaffModalOpen(false);
+    setNewStaffData({ name: '', role: 'Warden', phone: '', salary: '' });
+  };
+
+  const handleAssignTask = (e) => {
+    e.preventDefault();
+    setStaffList(staffList.map(s => {
+      if (s.id === activeStaffForTask.id) {
+        return { ...s, recentTasks: [...(s.recentTasks || []), { task: newTaskText, completed: false }] };
+      }
+      return s;
+    }));
+    setIsTaskModalOpen(false);
+    setNewTaskText('');
+  };
+
+  const handleProcessPayment = (name) => {
+    alert(`Processing monthly salary for ${name}... Success!`);
   };
 
   const getStatusBadge = (status) => {
     if (status === 'Active') return <span style={{ padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)' }}>ACTIVE</span>;
     return <span style={{ padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--accent-warning)' }}>ON LEAVE</span>;
   };
+
+  const inputStyle = { padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', width: '100%' };
 
   return (
     <div className="staff-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
@@ -54,7 +92,7 @@ const Staff = () => {
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Manage your hostel operations team, tasks, and payroll.</p>
         </div>
-        <button className="btn btn-primary" style={{ padding: '0.8rem 1.5rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <button className="btn btn-primary" onClick={() => setIsAddStaffModalOpen(true)} style={{ padding: '0.8rem 1.5rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <UserPlus size={18} /> Add Staff
         </button>
       </header>
@@ -111,19 +149,18 @@ const Staff = () => {
                              <h4 style={{ fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                <ClipboardList size={16} /> Recent Tasks
                              </h4>
-                             {s.recentTasks && s.recentTasks.length > 0 ? (
-                               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                                 {s.recentTasks.map((t, idx) => (
-                                    <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.8rem', padding: '0.8rem', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                                      {t.completed ? <CheckCircle size={18} color="var(--accent-success)" /> : <Clock size={18} color="var(--accent-warning)" />}
-                                      <p style={{ fontSize: '0.9rem', color: t.completed ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: t.completed ? 'line-through' : 'none' }}>{t.task}</p>
-                                    </div>
-                                 ))}
-                                 <button className="btn" style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', alignSelf: 'flex-start', padding: 0, marginTop: '0.5rem' }}>+ Assign New Task</button>
-                               </div>
-                             ) : (
-                               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>No active tasks.</p>
-                             )}
+                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                               {s.recentTasks && s.recentTasks.map((t, idx) => (
+                                  <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.8rem', padding: '0.8rem', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                                    {t.completed ? <CheckCircle size={18} color="var(--accent-success)" /> : <Clock size={18} color="var(--accent-warning)" />}
+                                    <p style={{ fontSize: '0.9rem', color: t.completed ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: t.completed ? 'line-through' : 'none' }}>{t.task}</p>
+                                  </div>
+                               ))}
+                               <button 
+                                 onClick={(e) => { e.stopPropagation(); setActiveStaffForTask(s); setIsTaskModalOpen(true); }}
+                                 className="btn" 
+                                 style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', alignSelf: 'flex-start', padding: 0, marginTop: '0.5rem' }}>+ Assign New Task</button>
+                             </div>
                            </div>
 
                            {/* HR & Payroll */}
@@ -142,8 +179,8 @@ const Staff = () => {
                                </div>
                              </div>
                              <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
-                               <button className="btn" style={{ flex: 1, fontSize: '0.8rem', border: '1px solid var(--border-color)', background: 'var(--bg-primary)' }}>View Timesheet</button>
-                               <button className="btn btn-primary" style={{ flex: 1, fontSize: '0.8rem' }}>Process Payment</button>
+                               <button className="btn" onClick={(e) => e.stopPropagation()} style={{ flex: 1, fontSize: '0.8rem', border: '1px solid var(--border-color)', background: 'var(--bg-primary)' }}>View Timesheet</button>
+                               <button className="btn btn-primary" onClick={(e) => { e.stopPropagation(); handleProcessPayment(s.name); }} style={{ flex: 1, fontSize: '0.8rem' }}>Process Payment</button>
                              </div>
                            </div>
 
@@ -157,6 +194,50 @@ const Staff = () => {
           </tbody>
         </table>
       </div>
+
+      <AnimatePresence>
+        {isAddStaffModalOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsAddStaffModalOpen(false)} />
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '20%', left: '50%', x: '-50%', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem' }}>Register New Staff</h2>
+              <form onSubmit={handleAddStaff} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                <input placeholder="Full Name" value={newStaffData.name} onChange={e => setNewStaffData({...newStaffData, name: e.target.value})} style={inputStyle} required />
+                <select value={newStaffData.role} onChange={e => setNewStaffData({...newStaffData, role: e.target.value})} style={inputStyle}>
+                  <option value="Warden">Warden</option>
+                  <option value="Cook">Cook</option>
+                  <option value="Security">Security</option>
+                  <option value="Cleaning">Cleaning</option>
+                  <option value="Maintenance">Maintenance</option>
+                </select>
+                <input placeholder="Phone Number" value={newStaffData.phone} onChange={e => setNewStaffData({...newStaffData, phone: e.target.value})} style={inputStyle} required />
+                <input placeholder="Monthly Salary (₹)" value={newStaffData.salary} onChange={e => setNewStaffData({...newStaffData, salary: `₹${e.target.value}`})} style={inputStyle} required />
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem' }}>Confirm Registration</button>
+                  <button className="btn" type="button" onClick={() => setIsAddStaffModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Cancel</button>
+                </div>
+              </form>
+            </motion.div>
+          </>
+        )}
+
+        {isTaskModalOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsTaskModalOpen(false)} />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ position: 'fixed', top: '30%', left: '50%', x: '-50%', width: '90%', maxWidth: '400px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+              <h2 style={{ fontSize: '1.3rem', fontWeight: '800', marginBottom: '1rem' }}>Assign Task to {activeStaffForTask?.name}</h2>
+              <form onSubmit={handleAssignTask} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                <textarea placeholder="Task Description..." value={newTaskText} onChange={e => setNewTaskText(e.target.value)} style={{ ...inputStyle, minHeight: '100px' }} required />
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem' }}>Assign Task</button>
+                  <button className="btn" type="button" onClick={() => setIsTaskModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Cancel</button>
+                </div>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       <style>{`
         .table-row-hover:hover {
           background: rgba(0,0,0,0.02) !important;

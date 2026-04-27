@@ -1,3 +1,3 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient({});
-module.exports = prisma;
+// Prisma is no longer used. Infrastructure is handled via Mongoose.
+// This file is kept for compatibility but exports null.
+module.exports = null;

@@ -1,76 +1,235 @@
-// In-memory mock data store to allow additions and updates in the frontend
+import axios from 'axios';
 
-export let mockBuildings = [
-  { id: 'b1', name: 'Alpha Tower', address: 'Silicon Valley', images: ['/assets/building.jpg'] }, 
-  { id: 'b2', name: 'Beta Block', address: 'Tech Park', images: ['/assets/building.jpg'] }
-];
+const API_URL = 'http://localhost:5001/api';
 
-export let mockFloors = [
-  { id: 'f1', buildingId: 'b1', floorNumber: 'G', images: ['/assets/floor.png'] }, 
-  { id: 'f2', buildingId: 'b1', floorNumber: '1', images: ['/assets/floor.png'] },
-  { id: 'f3', buildingId: 'b2', floorNumber: '1', images: ['/assets/floor.png'] }
-];
-
-export let mockRooms = [
-  { id: 'r1', floorId: 'f1', roomNumber: '101', roomType: 'Single', capacity: 1, status: 'Active', images: ['/assets/room.png'] }, 
-  { id: 'r2', floorId: 'f1', roomNumber: '102', roomType: 'Shared', capacity: 2, status: 'Active', images: ['/assets/room.png'] },
-  { id: 'r3', floorId: 'f2', roomNumber: '201', roomType: 'Dormitory', capacity: 4, status: 'Active', images: ['/assets/room.png'] },
-  { id: 'r4', floorId: 'f3', roomNumber: '101', roomType: 'Single', capacity: 1, status: 'Maintenance', images: ['/assets/room.png'] }
-];
-
-export let mockBeds = [
-  { id: 'bed1', roomId: 'r1', bedNumber: '101A', status: 'OCCUPIED', tenant: 'Rahul Sharma', images: ['/assets/bed.jpg'] },
-  { id: 'bed2', roomId: 'r2', bedNumber: '102A', status: 'OCCUPIED', tenant: 'Priya Verma', images: ['/assets/bed.jpg'] },
-  { id: 'bed3', roomId: 'r2', bedNumber: '102B', status: 'AVAILABLE', tenant: null, images: ['/assets/bed.jpg'] },
-  { id: 'bed4', roomId: 'r3', bedNumber: '201A', status: 'OCCUPIED', tenant: 'Anita Singh', images: ['/assets/bed.jpg'] },
-  { id: 'bed5', roomId: 'r3', bedNumber: '201B', status: 'AVAILABLE', tenant: null, images: ['/assets/bed.jpg'] },
-  { id: 'bed6', roomId: 'r3', bedNumber: '201C', status: 'AVAILABLE', tenant: null, images: ['/assets/bed.jpg'] },
-  { id: 'bed7', roomId: 'r3', bedNumber: '201D', status: 'MAINTENANCE', tenant: null, images: ['/assets/bed.jpg'] },
-  { id: 'bed8', roomId: 'r4', bedNumber: '101A', status: 'AVAILABLE', tenant: null, images: ['/assets/bed.jpg'] }
-];
+const handleId = (item) => {
+  if (!item || typeof item !== 'object') return item;
+  if (Array.isArray(item)) return item.map(handleId);
+  
+  const newItem = { ...item };
+  if (item._id && !item.id) newItem.id = item._id.toString();
+  
+  // Recursively handle all properties
+  Object.keys(newItem).forEach(key => {
+    if (newItem[key] && typeof newItem[key] === 'object') {
+      newItem[key] = handleId(newItem[key]);
+    }
+  });
+  
+  return newItem;
+};
 
 export const api = {
-  getBuildings: async () => [...mockBuildings],
-  getFloors: async (bId) => mockFloors.filter(f => f.buildingId === bId),
-  getAllFloors: async () => [...mockFloors],
-  getRooms: async (fId) => mockRooms.filter(r => r.floorId === fId),
-  getAllRooms: async () => [...mockRooms],
-  getBeds: async (rId) => mockBeds.filter(b => b.roomId === rId),
-  getAllBeds: async () => [...mockBeds],
-  getHostels: async () => [{ id: 'h1', name: 'Men Hostel A' }, { id: 'h2', name: 'Women Hostel B' }],
-  getAssignedFloors: async (hId) => ['f1'],
-  
+  // Buildings
+  getBuildings: async () => {
+    const res = await axios.get(`${API_URL}/buildings`);
+    return handleId(res.data);
+  },
   addBuilding: async (data) => {
-    const newB = { id: 'b' + Date.now(), ...data };
-    mockBuildings.push(newB);
-    return newB;
+    const res = await axios.post(`${API_URL}/buildings`, data);
+    return handleId(res.data);
+  },
+  updateBuilding: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/buildings/${id}`, data);
+    return handleId(res.data);
+  },
+  deleteBuilding: async (id) => {
+    const res = await axios.delete(`${API_URL}/buildings/${id}`);
+    return res.data;
+  },
+  bulkCreateBuildings: async (buildings) => {
+    const res = await axios.post(`${API_URL}/buildings/bulk`, { buildings });
+    return handleId(res.data);
+  },
+
+  // Floors
+  getFloors: async (bId) => {
+    const res = await axios.get(`${API_URL}/floors/${bId}`);
+    return handleId(res.data);
+  },
+  getAllFloors: async () => {
+    const res = await axios.get(`${API_URL}/buildings`);
+    const buildings = res.data;
+    let allFloors = [];
+    buildings.forEach(b => {
+      if (b.floors) allFloors = [...allFloors, ...b.floors.map(f => ({ ...f, buildingId: b._id.toString() }))];
+    });
+    return handleId(allFloors);
   },
   addFloor: async (data) => {
-    const newF = { id: 'f' + Date.now(), ...data };
-    mockFloors.push(newF);
-    return newF;
+    const res = await axios.post(`${API_URL}/floors`, data);
+    return handleId(res.data);
+  },
+  updateFloor: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/floors/${id}`, data);
+    return handleId(res.data);
+  },
+  deleteFloor: async (id) => {
+    const res = await axios.delete(`${API_URL}/floors/${id}`);
+    return res.data;
+  },
+  bulkCreateFloors: async (buildingId, floorNumbers) => {
+    const res = await axios.post(`${API_URL}/floors/bulk`, { buildingId, floorNumbers });
+    return handleId(res.data);
+  },
+
+  // Rooms
+  getRooms: async (fId) => {
+    const res = await axios.get(`${API_URL}/rooms/${fId}`);
+    return handleId(res.data);
+  },
+  getAllRooms: async () => {
+    const res = await axios.get(`${API_URL}/buildings`);
+    const buildings = res.data;
+    let allRooms = [];
+    buildings.forEach(b => {
+      if (b.floors) {
+        b.floors.forEach(f => {
+          if (f.rooms) allRooms = [...allRooms, ...f.rooms.map(r => ({ ...r, floorId: f._id.toString() }))];
+        });
+      }
+    });
+    return handleId(allRooms);
   },
   addRoom: async (data) => {
-    const newR = { id: 'r' + Date.now(), status: 'Active', ...data };
-    mockRooms.push(newR);
-    return newR;
+    const res = await axios.post(`${API_URL}/rooms`, data);
+    return handleId(res.data);
+  },
+  bulkCreateRooms: async (data) => {
+    const res = await axios.post(`${API_URL}/rooms/bulk-create`, data);
+    return handleId(res.data);
+  },
+  updateRoom: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/rooms/${id}`, data);
+    return handleId(res.data);
+  },
+  updateRoomStatus: async (id, status) => {
+    const res = await axios.patch(`${API_URL}/rooms/${id}`, { status });
+    return handleId(res.data);
+  },
+  deleteRoom: async (id) => {
+    const res = await axios.delete(`${API_URL}/rooms/${id}`);
+    return res.data;
+  },
+
+  // Beds
+  getBeds: async (rId) => {
+    const res = await axios.get(`${API_URL}/beds/${rId}`);
+    return handleId(res.data);
+  },
+  getAllBeds: async () => {
+    const res = await axios.get(`${API_URL}/buildings`);
+    const buildings = res.data;
+    let allBeds = [];
+    buildings.forEach(b => {
+      if (b.floors) {
+        b.floors.forEach(f => {
+          if (f.rooms) {
+            f.rooms.forEach(r => {
+              if (r.beds) allBeds = [...allBeds, ...r.beds.map(bed => ({ ...bed, roomId: r._id.toString() }))];
+            });
+          }
+        });
+      }
+    });
+    return handleId(allBeds);
   },
   addBed: async (data) => {
-    const newB = { id: 'bed' + Date.now(), tenant: null, ...data };
-    mockBeds.push(newB);
-    return newB;
+    const res = await axios.post(`${API_URL}/beds`, data);
+    return handleId(res.data);
   },
-  updateRoomStatus: async (roomId, newStatus) => {
-    const roomIndex = mockRooms.findIndex(r => r.id === roomId);
-    if (roomIndex !== -1) {
-      mockRooms[roomIndex].status = newStatus;
-    }
+  updateBed: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/beds/${id}`, data);
+    return handleId(res.data);
   },
-  updateBedStatus: async (bedId, newStatus, tenant = null) => {
-    const bedIndex = mockBeds.findIndex(b => b.id === bedId);
-    if (bedIndex !== -1) {
-      mockBeds[bedIndex].status = newStatus;
-      mockBeds[bedIndex].tenant = tenant;
-    }
-  }
+  updateBedStatus: async (id, status, tenant) => {
+    const res = await axios.patch(`${API_URL}/beds/${id}`, { status, tenant });
+    return handleId(res.data);
+  },
+  deleteBed: async (id) => {
+    const res = await axios.delete(`${API_URL}/beds/${id}`);
+    return res.data;
+  },
+  bulkCreateBeds: async (roomId, beds) => {
+    const res = await axios.post(`${API_URL}/beds/bulk-create`, { roomId, beds });
+    return handleId(res.data);
+  },
+
+  // Hostels & Mappings
+  getHostels: async () => [{ id: 'h1', name: 'Men Hostel A' }, { id: 'h2', name: 'Women Hostel B' }],
+  getAssignedFloors: async (hId) => {
+     const res = await axios.get(`${API_URL}/hostel-floor-mapping?hostelId=${hId}`);
+     // Use handleId to ensure we have .id, then map
+     const data = handleId(res.data);
+     return data.map(m => m.floor.id);
+  },
+  
+  // Complaints
+  getComplaints: async () => [
+    { id: 1, room: '201-A', issue: 'Water Leakage in Bathroom', category: 'Plumbing', urgency: 'High', status: 'Pending', reportedBy: 'Rahul Sharma', timeElapsed: '2 hours ago' },
+    { id: 2, room: '202-B', issue: 'AC Not Cooling properly', category: 'Electrical', urgency: 'Medium', status: 'In-Progress', reportedBy: 'Priya Verma', timeElapsed: '1 day ago' },
+    { id: 3, room: '101-A', issue: 'WiFi Connection dropping', category: 'Internet', urgency: 'Low', status: 'Resolved', reportedBy: 'Amit Singh', timeElapsed: '3 days ago' },
+    { id: 4, room: '305-C', issue: 'Deep Cleaning Required', category: 'Cleaning', urgency: 'Medium', status: 'Pending', reportedBy: 'Sneha Kapur', timeElapsed: '4 hours ago' },
+  ],
+
+  // Mess Subscriptions
+  getMessPlans: async () => [
+    { id: 'p1', name: 'Basic Plan', price: 0, features: ['Standard Meals', 'No Customization'], color: '#94a3b8' },
+    { id: 'p2', name: 'Standard Plan', price: 1000, features: ['Standard Meals', 'Partial Customization', '1 Special Meal/mo'], color: '#3b82f6' },
+    { id: 'p3', name: 'Premium Plan', price: 1500, features: ['Full Customization', 'Unlimited Special Meals', 'Add-on Priority'], color: '#8b5cf6', popular: true },
+  ],
+  getMessSubscriptions: async () => [
+    { tenantId: 't1', planId: 'p3', startDate: '2024-01-01', addons: ['Evening Snacks'] },
+    { tenantId: 't2', planId: 'p2', startDate: '2024-01-05', addons: [] },
+    { tenantId: 't3', planId: 'p1', startDate: '2024-01-10', addons: [] },
+  ],
+
+  // Tenants
+  getTenants: async () => {
+    const res = await axios.get(`${API_URL}/tenants`);
+    return handleId(res.data);
+  },
+  addTenant: async (data) => {
+    const res = await axios.post(`${API_URL}/tenants`, data);
+    return handleId(res.data);
+  },
+  bulkCreateTenants: async (tenants) => {
+    const res = await axios.post(`${API_URL}/tenants/bulk-create`, { tenants });
+    return handleId(res.data);
+  },
+
+  // Dashboard
+  getDashboardSummary: async () => {
+    const res = await axios.get(`${API_URL}/dashboard/summary`);
+    return res.data;
+  },
+  getDashboardRevenue: async () => {
+    const res = await axios.get(`${API_URL}/dashboard/revenue`);
+    return res.data;
+  },
+  getDashboardOccupancy: async () => {
+    const res = await axios.get(`${API_URL}/dashboard/occupancy`);
+    return res.data;
+  },
+  getDashboardAlerts: async () => {
+    const res = await axios.get(`${API_URL}/dashboard/alerts`);
+    return res.data;
+  },
+  getDashboardComplaints: async () => {
+    const res = await axios.get(`${API_URL}/dashboard/complaints`);
+    return res.data;
+  },
+  getDashboardMess: async () => {
+    const res = await axios.get(`${API_URL}/dashboard/mess`);
+    return res.data;
+  },
+  getDashboardStaff: async () => {
+    const res = await axios.get(`${API_URL}/dashboard/staff`);
+    return res.data;
+  },
+
+  // Auth
+  login: async (email, password) => {
+    return { success: true, user: { email, role: 'owner' } };
+  },
 };

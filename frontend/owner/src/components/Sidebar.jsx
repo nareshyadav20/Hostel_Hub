@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useParams, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Building2, 
@@ -17,27 +17,33 @@ import {
 import './Sidebar.css';
 
 const Sidebar = () => {
+  const { buildingId } = useParams();
   const iconProps = { size: 22, strokeWidth: 2.5 };
 
   const menuItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard {...iconProps} /> },
-    { name: 'Buildings', path: '/buildings', icon: <Building2 {...iconProps} /> },
-    { name: 'Rooms & Beds', path: '/rooms', icon: <BedDouble {...iconProps} /> },
-    { name: 'Tenants', path: '/tenants', icon: <UsersRound {...iconProps} /> },
-    { name: 'Payments', path: '/payments', icon: <Banknote {...iconProps} /> },
-    { name: 'Staff', path: '/staff', icon: <Briefcase {...iconProps} /> },
-    { name: 'Mess Menu', path: '/mess', icon: <UtensilsCrossed {...iconProps} /> },
-    { name: 'Complaints', path: '/complaints', icon: <MessageSquareWarning {...iconProps} /> },
-    { name: 'Inventory', path: '/inventory', icon: <PackageOpen {...iconProps} /> },
-    { name: 'Reports', path: '/reports', icon: <BarChart3 {...iconProps} /> },
-    { name: 'Settings', path: '/settings', icon: <Settings {...iconProps} /> },
-    { name: 'Notifications', path: '/notifications', icon: <BellRing {...iconProps} /> },
+    { name: 'Dashboard', path: `/owner/building/${buildingId}/dashboard`, icon: <LayoutDashboard {...iconProps} /> },
+    { name: 'Buildings', path: `/owner/building/${buildingId}/buildings`, icon: <Building2 {...iconProps} /> },
+    { name: 'Rooms & Beds', path: `/owner/building/${buildingId}/rooms`, icon: <BedDouble {...iconProps} /> },
+    { name: 'Tenants', path: `/owner/building/${buildingId}/tenants`, icon: <UsersRound {...iconProps} /> },
+    { name: 'Payments', path: `/owner/building/${buildingId}/payments`, icon: <Banknote {...iconProps} /> },
+    { name: 'Staff', path: `/owner/building/${buildingId}/staff`, icon: <Briefcase {...iconProps} /> },
+    { name: 'Mess Menu', path: `/owner/building/${buildingId}/mess`, icon: <UtensilsCrossed {...iconProps} /> },
+    { name: 'Complaints', path: `/owner/building/${buildingId}/complaints`, icon: <MessageSquareWarning {...iconProps} /> },
+    { name: 'Inventory', path: `/owner/building/${buildingId}/inventory`, icon: <PackageOpen {...iconProps} /> },
+    { name: 'Reports', path: `/owner/building/${buildingId}/reports`, icon: <BarChart3 {...iconProps} /> },
+    { name: 'Settings', path: `/owner/building/${buildingId}/settings`, icon: <Settings {...iconProps} /> },
+    { name: 'Notifications', path: `/owner/building/${buildingId}/notifications`, icon: <BellRing {...iconProps} /> },
   ];
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-header">
+      <div className="sidebar-header" style={{ paddingBottom: '1rem' }}>
         <h2 className="logo">StayNest</h2>
+      </div>
+      <div style={{ padding: '0 1.5rem', marginBottom: '1.5rem' }}>
+        <Link to="/owner/portfolio" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>
+          &larr; Back to Portfolio
+        </Link>
       </div>
       <nav className="sidebar-nav">
         {menuItems.map((item) => (

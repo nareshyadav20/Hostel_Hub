@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useParams } from 'react-router-dom';
 import { 
   BedDouble, User, AlertTriangle, SlidersHorizontal, 
   Settings2, History, Filter, Layers, ChevronDown, ChevronRight 
@@ -7,6 +8,7 @@ import {
 import { api } from '../mockData';
 
 const Rooms = () => {
+  const { buildingId } = useParams();
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloors] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -47,12 +49,19 @@ const Rooms = () => {
     const room = rooms.find(r => r.id === roomId);
     const bed = beds.find(b => b.id === bedId);
     if (!room || !bed || room.status === 'Maintenance') return;
-    if (bed.status === 'OCCUPIED') {
-      await api.updateBedStatus(bedId, 'AVAILABLE', null);
-    } else {
-      await api.updateBedStatus(bedId, 'OCCUPIED', 'New Tenant');
+    const newStatus = bed.status === 'OCCUPIED' ? 'AVAILABLE' : 'OCCUPIED';
+    // Optimistic UI update first
+    setBeds(prev => prev.map(b => b.id === bedId ? { ...b, status: newStatus } : b));
+    try {
+      await api.updateBedStatus(bedId, newStatus, newStatus === 'OCCUPIED' ? 'New Tenant' : null);
+      // Sync with server
+      const fresh = await api.getAllBeds();
+      if (fresh) setBeds(fresh);
+    } catch (err) {
+      console.error('Failed to update bed status:', err);
+      // Revert on error
+      setBeds(prev => prev.map(b => b.id === bedId ? { ...b, status: bed.status } : b));
     }
-    setBeds(await api.getAllBeds() || []);
   };
 
   const toggleMaintenance = async (roomId) => {
@@ -104,7 +113,10 @@ const Rooms = () => {
       </AnimatePresence>
 
       <div>
-        {buildings.map(building => {
+        {(buildings.some(b => (b.id || b._id) === buildingId)
+          ? buildings.filter(b => (b.id || b._id) === buildingId)
+          : buildings
+        ).map(building => {
           const buildingFloors = floors.filter(f => f.buildingId === building.id);
           if (buildingFloors.length === 0) return null;
           return (
