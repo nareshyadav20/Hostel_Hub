@@ -4,13 +4,15 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  phone: { type: String },
   password: { type: String, required: true },
   role: { 
     type: String, 
     enum: ['SUPER_ADMIN', 'OWNER', 'STAFF', 'TENANT'], 
     default: 'TENANT' 
   },
-  hostelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hostel' }
+  hostelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hostel' },
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' }
 }, { timestamps: true });
 
 // Hash password before saving

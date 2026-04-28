@@ -99,4 +99,12 @@ const bulkCreateBuildings = async (req, res) => {
   } catch (err) { res.status(400).json({ error: err.message }); }
 };
 
-module.exports = { createBuilding, getBuildings, updateBuilding, deleteBuilding, bulkCreateBuildings };
+const getBuildingById = async (req, res) => {
+  try {
+    const building = await Building.findById(req.params.id).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
+    if (!building) return res.status(404).json({ error: 'Building not found' });
+    res.status(200).json(building);
+  } catch (error) { res.status(500).json({ error: error.message }); }
+};
+
+module.exports = { createBuilding, getBuildings, getBuildingById, updateBuilding, deleteBuilding, bulkCreateBuildings };

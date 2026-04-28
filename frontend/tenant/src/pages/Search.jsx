@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import API from '../api/axios';
 
 /* ─── icons (SVG constants) ─── */
 const ICONS = {
@@ -28,6 +29,33 @@ const Search = () => {
   const navigate = useNavigate();
   const [filters, setFilters] = useState({ location: 'bengaluru', budget: 10000, gender: 'All' });
   const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
+  const [hostels, setHostels] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHostels = async () => {
+      try {
+        const response = await API.get('/buildings');
+        // Map backend building structure to frontend hostel structure if needed
+        const mapped = response.data.map(b => ({
+          id: b._id,
+          name: b.name,
+          location: b.address,
+          price: b.startingPrice || 5000, // Fallback if not in DB
+          gender: b.type || 'Co-living',
+          type: 'Premium',
+          rating: 4.5,
+          image: b.images?.[0] || '/sunshine_residency_hostel.png'
+        }));
+        setHostels(mapped);
+      } catch (err) {
+        console.error('Error fetching hostels:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHostels();
+  }, []);
 
   const isWishlisted = (id) => wishlist.some((h) => h.id === id);
 
@@ -170,44 +198,55 @@ const Search = () => {
 
         {/* Results Main Area */}
         <main className="results-professional">
-          {HOSTELS.map(hostel => (
-            <div key={hostel.id} className="pro-hostel-card">
-              <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image})` }}>
-                <div className="rating-tag">{hostel.rating} ★</div>
-                <button className={`wishlist-icon ${isWishlisted(hostel.id) ? 'active' : ''}`} onClick={() => toggleWishlist(hostel)}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted(hostel.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                </button>
-              </div>
-              <div className="pro-card-content">
-                <div className="pro-card-header">
-                  <div>
-                    <h2 className="hostel-name">{hostel.name}</h2>
-                    <p className="hostel-loc"><ICONS.Location style={{width: '12px', height: '12px'}} /> {hostel.location}</p>
-                  </div>
-                  <div className="gender-tag">{hostel.gender}</div>
-                </div>
-
-                <div className="hostel-specs">
-                  <div className="spec-item">{hostel.type}</div>
-                  <div className="spec-item">Fully Managed</div>
-                  <div className="spec-item">Verified</div>
-                </div>
-
-                <div className="pro-card-footer">
-                  <div className="price-tag">
-                    <span className="price-val">₹{hostel.price.toLocaleString()}</span>
-                    <span className="price-period">/mo</span>
-                  </div>
-                  <div className="card-actions">
-                    <button className="btn-wish-outline" onClick={() => toggleWishlist(hostel)}>
-                      {isWishlisted(hostel.id) ? 'Saved' : 'Wishlist'}
-                    </button>
-                    <Link to={`/listing/${hostel.id}`} className="btn-details">Details</Link>
-                  </div>
-                </div>
-              </div>
+          {loading ? (
+            <div style={{ textAlign: 'center', gridColumn: '1/-1', padding: '5rem' }}>
+              <div className="loading-spinner">Discovering stays...</div>
             </div>
-          ))}
+          ) : hostels.length === 0 ? (
+            <div style={{ textAlign: 'center', gridColumn: '1/-1', padding: '5rem' }}>
+              <h2>No hostels found matching your criteria.</h2>
+              <p>Try adjusting your filters or location.</p>
+            </div>
+          ) : (
+            hostels.map(hostel => (
+              <div key={hostel.id} className="pro-hostel-card">
+                <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image})` }}>
+                  <div className="rating-tag">{hostel.rating} ★</div>
+                  <button className={`wishlist-icon ${isWishlisted(hostel.id) ? 'active' : ''}`} onClick={() => toggleWishlist(hostel)}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted(hostel.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                  </button>
+                </div>
+                <div className="pro-card-content">
+                  <div className="pro-card-header">
+                    <div>
+                      <h2 className="hostel-name">{hostel.name}</h2>
+                      <p className="hostel-loc"><ICONS.Location style={{width: '12px', height: '12px'}} /> {hostel.location}</p>
+                    </div>
+                    <div className="gender-tag">{hostel.gender}</div>
+                  </div>
+
+                  <div className="hostel-specs">
+                    <div className="spec-item">{hostel.type}</div>
+                    <div className="spec-item">Fully Managed</div>
+                    <div className="spec-item">Verified</div>
+                  </div>
+
+                  <div className="pro-card-footer">
+                    <div className="price-tag">
+                      <span className="price-val">₹{hostel.price.toLocaleString()}</span>
+                      <span className="price-period">/mo</span>
+                    </div>
+                    <div className="card-actions">
+                      <button className="btn-wish-outline" onClick={() => toggleWishlist(hostel)}>
+                        {isWishlisted(hostel.id) ? 'Saved' : 'Wishlist'}
+                      </button>
+                      <Link to={`/listing/${hostel.id}`} className="btn-details">Details</Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </main>
       </div>
 

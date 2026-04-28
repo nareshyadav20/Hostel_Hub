@@ -91,7 +91,7 @@ const ProfileDropdown = () => {
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-            <button className="dropdown-item-premium">
+            <button onClick={() => { setIsOpen(false); navigate('/profile'); }} className="dropdown-item-premium">
               <User size={16} strokeWidth={2.5} /> <span>Resident Profile</span>
             </button>
             <button className="dropdown-item-premium">

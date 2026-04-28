@@ -1,65 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import API from '../api/axios';
 
 const Listing = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('photos');
   const [selectedRoomIdx, setSelectedRoomIdx] = useState(0);
+  const [hostel, setHostel] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock Database synced with Search.jsx
-  const allHostels = [
-    {
-      id: '1',
-      name: 'Sunshine Residency',
-      location: 'Near City College, Bengaluru',
-      rating: 4.5, reviews: 156, safetyScore: 9.5, occupancy: '92%', verified: true,
-      price: 6500, deposit: 13000,
-      amenities: ['High-Speed WiFi', 'A/C', 'Mess', 'Gym', 'Laundry', 'Study Room'],
-      roomTypes: [
-        { type: 'Single Elite', price: 18000, deposit: 36000, status: 'Waitlist', color: 'var(--accent-warning)' },
-        { type: 'Luxury 2 Sharing', price: 12500, deposit: 25000, status: 'Available', color: 'var(--accent-success)' },
-        { type: 'Comfort 3 Sharing', price: 9500, deposit: 19000, status: 'Limited', color: 'var(--accent-error)' },
-        { type: 'Budget 4 Sharing', price: 6500, deposit: 13000, status: 'Available', color: 'var(--accent-success)' }
-      ],
-      landmarks: [{ name: 'City College', distance: '200m' }, { name: 'Metro Station', distance: '800m' }, { name: 'Central Mall', distance: '1.2km' }],
-      rules: ['No smoking inside', 'Quiet hours 11 PM - 6 AM', 'Visitors allowed till 9 PM'],
-      menu: { breakfast: 'Poha / Idli / Vada', lunch: 'Rice, Dal, 2 Veg Curries', dinner: 'Roti, Paneer Sabzi, Salad' }
-    },
-    {
-      id: '2',
-      name: 'Elite Living',
-      location: 'Tech Park Area, Bengaluru',
-      rating: 4.8, reviews: 112, safetyScore: 9.8, occupancy: '85%', verified: true,
-      price: 8500, deposit: 17000,
-      amenities: ['Workstations', 'High-Speed WiFi', 'Cafe', 'Gym', 'Housekeeping'],
-      roomTypes: [
-        { type: 'Private Room', price: 22000, deposit: 44000, status: 'Available', color: 'var(--accent-success)' },
-        { type: 'Standard 2 Sharing', price: 12000, deposit: 24000, status: 'Limited', color: 'var(--accent-warning)' },
-        { type: 'Compact 3 Sharing', price: 8500, deposit: 17000, status: 'Available', color: 'var(--accent-success)' }
-      ],
-      landmarks: [{ name: 'Indiranagar Metro', distance: '400m' }, { name: 'IT Park', distance: '600m' }],
-      rules: ['Student ID required', 'Quiet hours 10 PM - 7 AM', 'No outside food delivery after 11 PM'],
-      menu: { breakfast: 'Aloo Paratha / Upma', lunch: 'Rice, Rajma, Sabzi', dinner: 'Roti, Dal Tadka, Veggies' }
-    },
-    {
-      id: '3',
-      name: 'Green View Hostel',
-      location: 'Green Valley, Bengaluru',
-      rating: 4.2, reviews: 204, safetyScore: 9.0, occupancy: '95%', verified: true,
-      price: 5000, deposit: 10000,
-      amenities: ['Laundry', 'Study Room', '24/7 Security', 'High-Speed WiFi'],
-      roomTypes: [
-        { type: 'Premium 2 Sharing', price: 14000, deposit: 28000, status: 'Available', color: 'var(--accent-success)' },
-        { type: 'Standard 3 Sharing', price: 9000, deposit: 18000, status: 'Limited', color: 'var(--accent-warning)' },
-        { type: 'Budget 4 Sharing', price: 5000, deposit: 10000, status: 'Available', color: 'var(--accent-success)' }
-      ],
-      landmarks: [{ name: 'Indiranagar Metro', distance: '400m' }, { name: '100ft Road', distance: '600m' }],
-      rules: ['Professionals only', 'Pets allowed (subject to approval)'],
-      menu: { breakfast: 'Continental Spread', lunch: 'Buffet (North & South Indian)', dinner: 'Multi-cuisine Buffet' }
-    }
-  ];
+  useEffect(() => {
+    const fetchHostelDetails = async () => {
+      try {
+        const response = await API.get(`/buildings/${id}`);
+        const b = response.data;
+        
+        // Map backend building to the structure expected by Listing.jsx
+        // We'll use a mix of real data and mock data for fields not in DB yet
+        const mapped = {
+          id: b._id,
+          name: b.name,
+          location: b.address,
+          rating: 4.5,
+          reviews: 156,
+          safetyScore: 9.5,
+          occupancy: '92%',
+          verified: true,
+          price: b.startingPrice || 6500,
+          deposit: (b.startingPrice || 6500) * 2,
+          amenities: b.amenities.length > 0 ? b.amenities : ['WiFi', 'Mess', 'Laundry'],
+          roomTypes: b.floors?.[0]?.rooms?.slice(0, 4).map(r => ({
+            type: r.roomNumber,
+            price: b.startingPrice || 6500,
+            deposit: (b.startingPrice || 6500) * 2,
+            status: 'Available',
+            color: 'var(--accent-success)'
+          })) || [
+            { type: 'Standard 2 Sharing', price: 6500, deposit: 13000, status: 'Available', color: 'var(--accent-success)' }
+          ],
+          landmarks: [{ name: 'City College', distance: '200m' }],
+          rules: ['No smoking', 'Quiet hours 11 PM'],
+          menu: { breakfast: 'Poha', lunch: 'Rice/Dal', dinner: 'Roti/Sabzi' }
+        };
+        setHostel(mapped);
+      } catch (err) {
+        console.error('Error fetching building details:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHostelDetails();
+  }, [id]);
 
-  const hostel = allHostels.find(h => h.id === String(id)) || allHostels[0];
+  if (loading) return <div className="dashboard-container" style={{ textAlign: 'center', padding: '5rem' }}>Loading property details...</div>;
+  if (!hostel) return <div className="dashboard-container" style={{ textAlign: 'center', padding: '5rem' }}>Property not found.</div>;
+
   const selectedRoom = hostel.roomTypes[selectedRoomIdx] || hostel.roomTypes[0];
 
   const handleBookingClick = (e) => {
