@@ -12,40 +12,75 @@ const Landing = () => {
   const navigate = useNavigate();
   const [guests, setGuests] = useState(1);
   const [showGuestDropdown, setShowGuestDropdown] = useState(false);
-  const [selectedCity, setSelectedCity] = useState('Bengaluru');
+  const [selectedCity, setSelectedCity] = useState('Hyderabad');
+  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [activeTab, setActiveTab] = useState('coliving');
+  const [selectedGender, setSelectedGender] = useState('');
+  const [showGenderDropdown, setShowGenderDropdown] = useState(false);
+  const [selectedAmenities, setSelectedAmenities] = useState([]);
+  const [showAmenitiesDropdown, setShowAmenitiesDropdown] = useState(false);
+  const [joiningDate, setJoiningDate] = useState('');
+  const [isLocalityExpanded, setIsLocalityExpanded] = useState(false);
+  const [searchLocality, setSearchLocality] = useState('');
+  const [searchCollege, setSearchCollege] = useState('');
+  const [searchProperty, setSearchProperty] = useState('');
+  const [userDetails, setUserDetails] = useState({ name: '', contact: '' });
 
   const hostels = [
-    { id: 1, city: 'Bengaluru', name: 'Livora Elite - Koramangala', locality: 'Koramangala 4th Block, Bengaluru', rating: 4.8, price: 12500, img: heroBg, amenities: ['Free WiFi', 'A/C', 'Mess', 'Gym'] },
-    { id: 2, city: 'Bengaluru', name: 'Modern Stay for Students', locality: 'Indiranagar, Bengaluru', rating: 4.5, price: 8500, img: studentImg, amenities: ['Laundry', 'Study Room', '24/7 Security'] },
-    { id: 3, city: 'Bengaluru', name: 'Professional Co-Living', locality: 'HSR Layout Sector 2, Bengaluru', rating: 4.6, price: 14000, img: professionalImg, amenities: ['Workstations', 'High-speed WiFi', 'Cafe'] },
-    { id: 4, city: 'Bengaluru', name: 'The Hive - Whitefield', locality: 'Whitefield Main Road, Bengaluru', rating: 4.7, price: 11000, img: heroBg, amenities: ['Gaming Zone', 'Power Backup', 'Housekeeping'] },
-    { id: 5, city: 'Hyderabad', name: 'Zenith Living Hyderabad', locality: 'Gachibowli, Hyderabad', rating: 4.9, price: 15500, img: studentImg, amenities: ['Premium Mess', 'Swimming Pool', 'Yoga Deck'] },
-    { id: 6, city: 'Mumbai', name: 'Urban Den Mumbai', locality: 'Andheri West, Mumbai', rating: 4.4, price: 18000, img: professionalImg, amenities: ['Co-working Space', 'Gym', 'Terrace Garden'] },
-    { id: 7, city: 'Hyderabad', name: 'Stellar Suites', locality: 'Banjara Hills, Hyderabad', rating: 4.7, price: 16000, img: heroBg, amenities: ['Jacuzzi', 'Mini Theater', 'Valet'] },
-    { id: 8, city: 'Pune', name: 'The Nest - Pune', locality: 'Viman Nagar, Pune', rating: 4.3, price: 9000, img: studentImg, amenities: ['Library', 'Music Room', 'Mess'] },
-    { id: 9, city: 'Bengaluru', name: 'Vibe Residency', locality: 'Koramangala, Bengaluru', rating: 4.6, price: 13000, img: professionalImg, amenities: ['EV Charging', 'Smart Locks', 'Cafe'] },
-    { id: 10, city: 'Delhi', name: 'Aura Living', locality: 'Gurugram Sector 44', rating: 4.8, price: 19500, img: heroBg, amenities: ['Private Balcony', 'Chef', 'Gym'] },
-    { id: 11, city: 'Bengaluru', name: 'Campus Core', locality: 'Manipal, Karnataka', rating: 4.5, price: 7500, img: studentImg, amenities: ['Shuttle', 'Study Hall', 'Mess'] },
-    { id: 12, city: 'Mumbai', name: 'Metro Hub Mumbai', locality: 'Powai, Mumbai', rating: 4.5, price: 17000, img: professionalImg, amenities: ['Business Center', 'Rooftop Pool'] },
-    { id: 13, city: 'Bengaluru', name: 'Serene Stays', locality: 'Whitefield, Bengaluru', rating: 4.7, price: 14500, img: heroBg, amenities: ['Garden', 'Yoga', 'High-speed WiFi'] },
-    { id: 14, city: 'Delhi', name: 'Zest Living', locality: 'Chennai OMR', rating: 4.4, price: 10500, img: studentImg, amenities: ['Game Room', 'Mess', 'A/C'] },
-    { id: 15, city: 'Delhi', name: 'Nexus Co-Living', locality: 'Noida Sector 62', rating: 4.6, price: 12000, img: professionalImg, amenities: ['Work Pods', 'Gym', 'Laundry'] },
-    { id: 16, city: 'Bengaluru', name: 'Elite Abodes', locality: 'Salt Lake, Kolkata', rating: 4.8, price: 15000, img: heroBg, amenities: ['Theater', 'Mess', 'Gym'] }
+    { id: 1, city: 'Bengaluru', name: 'Livora Elite - Koramangala', locality: 'Koramangala', rating: 4.8, price: 12500, img: heroBg, amenities: ['Free WiFi', 'A/C', 'Mess', 'Gym'], gender: 'Unisex', category: 'Professional' },
+    { id: 2, city: 'Bengaluru', name: 'Modern Stay for Students', locality: 'Indiranagar', rating: 4.5, price: 8500, img: studentImg, amenities: ['Laundry', 'Study Room', '24/7 Security'], gender: 'Women', category: 'Student' },
+    { id: 3, city: 'Bengaluru', name: 'Professional Co-Living', locality: 'HSR Layout', rating: 4.6, price: 14000, img: professionalImg, amenities: ['Workstations', 'High-speed WiFi', 'Cafe'], gender: 'Men', category: 'Professional' },
+    { id: 4, city: 'Bengaluru', name: 'The Hive - Whitefield', locality: 'Whitefield', rating: 4.7, price: 11000, img: heroBg, amenities: ['Gaming Zone', 'Power Backup', 'Housekeeping'], gender: 'Unisex', category: 'Professional' },
+    { id: 5, city: 'Hyderabad', name: 'Zenith Living Hyderabad', locality: 'Gachibowli', rating: 4.9, price: 15500, img: studentImg, amenities: ['Premium Mess', 'Swimming Pool', 'Yoga Deck', 'Gym', 'Food', 'AC'], gender: 'Unisex', category: 'Professional' },
+    { id: 6, city: 'Mumbai', name: 'Urban Den Mumbai', locality: 'Andheri West', rating: 4.4, price: 18000, img: professionalImg, amenities: ['Co-working Space', 'Gym', 'Terrace Garden'], gender: 'Men', category: 'Professional' },
+    { id: 7, city: 'Hyderabad', name: 'Stellar Suites', locality: 'Banjara Hills', rating: 4.7, price: 16000, img: heroBg, amenities: ['Jacuzzi', 'Mini Theater', 'Valet', 'Gym', 'AC'], gender: 'Unisex', category: 'Professional' },
+    { id: 8, city: 'Pune', name: 'The Nest - Pune', locality: 'Viman Nagar', rating: 4.3, price: 9000, img: studentImg, amenities: ['Library', 'Music Room', 'Mess'], gender: 'Women', category: 'Student' },
+    { id: 9, city: 'Bengaluru', name: 'Vibe Residency', locality: 'Koramangala', rating: 4.6, price: 13000, img: professionalImg, amenities: ['EV Charging', 'Smart Locks', 'Cafe'], gender: 'Unisex', category: 'Professional' },
+    { id: 10, city: 'Delhi', name: 'Aura Living', locality: 'Gurugram', rating: 4.8, price: 19500, img: heroBg, amenities: ['Private Balcony', 'Chef', 'Gym'], gender: 'Unisex', category: 'Professional' },
+    { id: 11, city: 'Bengaluru', name: 'Campus Core', locality: 'Manipal', rating: 4.5, price: 7500, img: studentImg, amenities: ['Shuttle', 'Study Hall', 'Mess'], gender: 'Men', category: 'Student' },
+    { id: 12, city: 'Mumbai', name: 'Metro Hub Mumbai', locality: 'Powai', rating: 4.5, price: 17000, img: professionalImg, amenities: ['Business Center', 'Rooftop Pool'], gender: 'Unisex', category: 'Professional' },
+    { id: 13, city: 'Bengaluru', name: 'Serene Stays', locality: 'Whitefield', rating: 4.7, price: 14500, img: heroBg, amenities: ['Garden', 'Yoga', 'High-speed WiFi'], gender: 'Unisex', category: 'Professional' },
+    { id: 14, city: 'Chennai', name: 'Zest Living', locality: 'OMR', rating: 4.4, price: 10500, img: studentImg, amenities: ['Game Room', 'Mess', 'A/C'], gender: 'Men', category: 'Student' },
+    { id: 15, city: 'Delhi', name: 'Nexus Co-Living', locality: 'Noida', rating: 4.6, price: 12000, img: professionalImg, amenities: ['Work Pods', 'Gym', 'Laundry'], gender: 'Unisex', category: 'Professional' },
+    { id: 16, city: 'Kolkata', name: 'Elite Abodes', locality: 'Salt Lake', rating: 4.8, price: 15000, img: heroBg, amenities: ['Theater', 'Mess', 'Gym'], gender: 'Unisex', category: 'Professional' },
+    { id: 17, city: 'Hyderabad', name: 'Cyber Hub Stay', locality: 'HITEC City', rating: 4.6, price: 11500, img: professionalImg, amenities: ['High-speed WiFi', 'Cafe', 'Gym', 'AC'], gender: 'Men', category: 'Professional' },
+    { id: 18, city: 'Hyderabad', name: 'Kondapur Komfort', locality: 'Kondapur', rating: 4.4, price: 9500, img: studentImg, amenities: ['Mess', 'Laundry', 'Security', 'Food'], gender: 'Women', category: 'Student' },
+    { id: 19, city: 'Hyderabad', name: 'Gowlidoddy Grand', locality: 'Gowlidoddy', rating: 4.5, price: 10000, img: heroBg, amenities: ['AC', 'Power Backup', 'Wifi'], gender: 'Unisex', category: 'Professional' },
+    { id: 20, city: 'Hyderabad', name: 'KPHB Residency', locality: 'KPHB', rating: 4.3, price: 8000, img: studentImg, amenities: ['Budget Stay', 'Clean Rooms', 'Mess', 'Food'], gender: 'Men', category: 'Student' },
+    { id: 21, city: 'Hyderabad', name: 'Journalist Colony Suites', locality: 'Journalist colony', rating: 4.7, price: 14500, img: professionalImg, amenities: ['Premium Decor', 'Parking', 'Gym', 'AC'], gender: 'Unisex', category: 'Professional' },
+    { id: 22, city: 'Hyderabad', name: 'KOKAPET Heights', locality: 'KOKAPET', rating: 4.8, price: 16500, img: heroBg, amenities: ['Swimming Pool', 'Luxury', 'Chef', 'Gym', 'Food', 'AC'], gender: 'Unisex', category: 'Professional' },
+    { id: 23, city: 'Hyderabad', name: 'Lanco Hills Living', locality: 'Lanco Hills Manikonda', rating: 4.6, price: 13500, img: studentImg, amenities: ['Scenic View', 'Gym', 'Wifi', 'Food'], gender: 'Women', category: 'Student' },
+    { id: 24, city: 'Hyderabad', name: 'Madhapur Metro View', locality: 'Madhapur', rating: 4.7, price: 12500, img: professionalImg, amenities: ['Metro Access', 'Gym', 'AC', 'Fridge'], gender: 'Unisex', category: 'Professional' },
+    { id: 25, city: 'Hyderabad', name: 'Manikonda Manor', locality: 'Manikonda', rating: 4.5, price: 11000, img: heroBg, amenities: ['Parking', 'Power Backup', 'AC'], gender: 'Unisex', category: 'Professional' },
+    { id: 26, city: 'Hyderabad', name: 'Miyapur Modern', locality: 'Miyapur', rating: 4.4, price: 9000, img: studentImg, amenities: ['Food', 'Laundry', 'Wifi'], gender: 'Men', category: 'Student' },
+    { id: 27, city: 'Hyderabad', name: 'Serilingampally Suites', locality: 'Serilingampally', rating: 4.6, price: 10500, img: professionalImg, amenities: ['Peaceful', 'AC', 'Parking'], gender: 'Unisex', category: 'Professional' }
   ];
 
-  const filteredHostels = hostels.filter(h => h.city === selectedCity);
+  const filteredHostels = hostels.filter(h => {
+    const matchesCity = h.city === selectedCity;
+    const matchesLocality = searchLocality ? h.locality.toLowerCase().includes(searchLocality.toLowerCase()) : true;
+    const matchesProperty = searchProperty ? h.name.toLowerCase().includes(searchProperty.toLowerCase()) : true;
+    const matchesGender = selectedGender ? (h.gender === selectedGender || h.gender === 'Unisex') : true;
+    const matchesAmenities = selectedAmenities.length > 0 ? selectedAmenities.every(a => h.amenities.includes(a)) : true;
+    const matchesTab = activeTab === 'student' ? h.category === 'Student' : true;
+    return matchesCity && matchesLocality && matchesProperty && matchesGender && matchesAmenities && matchesTab;
+  });
+
+  const allLocalities = ['Gachibowli', 'Gopanpally Gachibowli', 'Gowlidoddy', 'HITEC City', 'Journalist colony', 'KOKAPET', 'Kondapur', 'KPHB', 'Kukatpally', 'Lanco Hills Manikonda', 'Madhapur', 'Manikonda', 'Miyapur', 'Serilingampally'];
+  const visibleLocalities = isLocalityExpanded ? allLocalities : allLocalities.slice(0, 10);
 
   return (
     <div className="landing-page">
       <header className="landing-header">
         <div className="logo-container" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L3 9V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V9L12 2Z" fill="url(#logo_gradient)" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 2L3 9V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V9L12 2Z" fill="url(#logo_gradient)" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             <defs>
               <linearGradient id="logo_gradient" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
-                <stop stopColor="var(--accent-primary)"/>
-                <stop offset="1" stopColor="var(--accent-secondary)"/>
+                <stop stopColor="var(--accent-primary)" />
+                <stop offset="1" stopColor="var(--accent-secondary)" />
               </linearGradient>
             </defs>
           </svg>
@@ -60,65 +95,180 @@ const Landing = () => {
 
       <section className="search-hero">
         <div className="fade-in">
-          <h2 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Find Your Perfect Home</h2>
-          <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '4rem', maxWidth: '800px', margin: '0 auto 4rem' }}>Discover premium hostels and co-living spaces designed for the modern lifestyle.</p>
+          <h2>Find Your Perfect Home, Your Way In <span style={{ color: '#00b0f0', cursor: 'pointer' }}>{selectedCity}</span></h2>
+          <p>Discover premium hostels and co-living spaces designed for the modern lifestyle.</p>
         </div>
-        
-        <div className="goibibo-search-container fade-in" style={{ animationDelay: '0.2s', maxWidth: '800px' }}>
-          <div className="search-field">
-            <label>Where to?</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-              <select 
-                value={selectedCity} 
-                onChange={(e) => setSelectedCity(e.target.value)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: '800', outline: 'none', width: '100%', cursor: 'pointer' }}
-              >
-                <option value="Bengaluru">Bengaluru</option>
-                <option value="Hyderabad">Hyderabad</option>
-                <option value="Mumbai">Mumbai</option>
-                <option value="Delhi">Delhi</option>
-                <option value="Pune">Pune</option>
-              </select>
-            </div>
+
+        <div className="zolo-search-trigger fade-in" onClick={() => setIsSearchOverlayOpen(true)}>
+          <div className="search-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           </div>
-          <div className="search-field" style={{ position: 'relative', borderRight: 'none' }}>
-            <label>Occupancy</label>
-            <div 
-              style={{ padding: '0.2rem 0', color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: '800', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-              onClick={() => setShowGuestDropdown(!showGuestDropdown)}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                {guests} Resident{guests > 1 ? 's' : ''}
-              </div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showGuestDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </div>
-            {showGuestDropdown && (
-              <div className="glass-card guest-dropdown-content" style={{ position: 'absolute', top: 'calc(100% + 20px)', right: 0, width: '320px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '24px', padding: '2rem', zIndex: 50, boxShadow: '0 25px 50px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h4 style={{ margin: 0, fontWeight: '800', fontSize: '1.2rem', color: 'var(--text-primary)' }}>Residents</h4>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total members</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <button style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid var(--border-color)', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setGuests(Math.max(1, guests - 1))}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    </button>
-                    <span style={{ fontWeight: '900', width: '24px', textAlign: 'center', fontSize: '1.3rem', color: 'var(--text-primary)' }}>{guests}</span>
-                    <button style={{ width: '40px', height: '40px', borderRadius: '50%', border: 'none', background: '#22c55e', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 16px rgba(34, 197, 94, 0.3)' }} onClick={() => setGuests(guests + 1)}>
-                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          <button className="search-btn-large" onClick={() => navigate('/search')} style={{ padding: '0 2rem' }}>FIND NOW</button>
+          <span>Where do you want to stay? Search for State, City, Offices, Localities...</span>
         </div>
       </section>
+
+      {isSearchOverlayOpen && (
+        <div className="search-overlay-backdrop" onClick={() => setIsSearchOverlayOpen(false)}>
+          <div className="search-overlay-content" onClick={e => e.stopPropagation()}>
+            <div className="overlay-header">
+              <h2 style={{ position: 'relative' }}>
+                Find Your Perfect Home, Your Way In{' '}
+                <span onClick={() => setShowCityDropdown(!showCityDropdown)} style={{ color: '#00b0f0', cursor: 'pointer' }}>
+                  {selectedCity} ⌵
+                </span>
+                {showCityDropdown && (
+                  <div className="city-dropdown" style={{ position: 'absolute', top: '100%', left: 0, background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', minWidth: '200px' }}>
+                    {['Hyderabad', 'Bengaluru', 'Mumbai', 'Delhi', 'Pune', 'Chennai', 'Kolkata'].map(city => (
+                      <div
+                        key={city}
+                        className="city-option"
+                        style={{ padding: '0.5rem', cursor: 'pointer', borderBottom: '1px solid #eee' }}
+                        onClick={() => { setSelectedCity(city); setShowCityDropdown(false); }}
+                      >
+                        {city}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </h2>
+              <button className="close-btn" onClick={() => setIsSearchOverlayOpen(false)}>✕</button>
+            </div>
+
+            <div className="filter-row">
+              <div
+                className={`filter-chip coliving ${activeTab === 'coliving' ? 'active' : ''}`}
+                onClick={() => setActiveTab('coliving')}
+                style={{ border: activeTab === 'coliving' ? '2px solid #00b0f0' : 'none' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill={activeTab === 'coliving' ? "#00b0f0" : "#757575"}><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>
+                Coliving
+              </div>
+              <div
+                className={`filter-chip student ${activeTab === 'student' ? 'active' : ''}`}
+                onClick={() => setActiveTab('student')}
+                style={{ border: activeTab === 'student' ? '2px solid #00b0f0' : 'none' }}
+              >
+                <span className="new-badge">NEW</span>
+                <div style={{ width: 18, height: 18, borderRadius: '50%', border: activeTab === 'student' ? '2px solid #00b0f0' : '2px solid #cbd5e1', marginRight: 8, background: activeTab === 'student' ? '#00b0f0' : 'transparent' }}></div>
+                Student Only
+              </div>
+
+              {/* Gender Dropdown */}
+              <div className="filter-chip gender" onClick={() => setShowGenderDropdown(!showGenderDropdown)} style={{ position: 'relative' }}>
+                {selectedGender || 'Gender'}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                {showGenderDropdown && (
+                  <div className="glass-card dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: 'white', zIndex: 20, marginTop: '5px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    {['Men', 'Women', 'Unisex'].map(g => (
+                      <div key={g} style={{ padding: '0.8rem', cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setSelectedGender(g); setShowGenderDropdown(false); }}>{g}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Joining Date */}
+              <div className="filter-chip date">
+                <input
+                  type="date"
+                  value={joiningDate}
+                  onChange={(e) => setJoiningDate(e.target.value)}
+                  style={{ background: 'transparent', border: 'none', color: 'inherit', font: 'inherit', outline: 'none', cursor: 'pointer', width: '100%' }}
+                />
+              </div>
+
+              {/* Amenities Dropdown */}
+              <div className="filter-chip amenities" onClick={() => setShowAmenitiesDropdown(!showAmenitiesDropdown)} style={{ position: 'relative' }}>
+                {selectedAmenities.length > 0 ? `${selectedAmenities.length} Selected` : 'Amenities'}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                {showAmenitiesDropdown && (
+                  <div className="glass-card dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, width: '200px', background: 'white', zIndex: 20, marginTop: '5px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '0.5rem' }}>
+                    {['AC', 'Food', 'Fridge', 'Gym', 'Parking', 'Power Backup'].map(a => (
+                      <label key={a} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedAmenities.includes(a)}
+                          onChange={() => {
+                            if (selectedAmenities.includes(a)) setSelectedAmenities(selectedAmenities.filter(item => item !== a));
+                            else setSelectedAmenities([...selectedAmenities, a]);
+                          }}
+                        />
+                        {a}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="input-section">
+              <label>Where would you like to stay?</label>
+              <input
+                type="text"
+                className="zolo-input"
+                placeholder="Search for the Place, Locality or Landmark"
+                value={searchLocality}
+                onChange={(e) => setSearchLocality(e.target.value)}
+              />
+              <div className="locality-chips">
+                {visibleLocalities.map(loc => (
+                  <div key={loc} className="locality-chip" onClick={() => setSearchLocality(loc)}>{loc}</div>
+                ))}
+                <div className="locality-chip view-more" style={{ color: '#00b0f0' }} onClick={() => setIsLocalityExpanded(!isLocalityExpanded)}>
+                  {isLocalityExpanded ? 'View Less' : 'View More'}
+                </div>
+              </div>
+            </div>
+
+            {activeTab === 'student' && (
+              <div className="input-section">
+                <label>Looking for an accommodation near your college/university?</label>
+                <input
+                  type="text"
+                  className="zolo-input"
+                  placeholder="Search for College/University"
+                  value={searchCollege}
+                  onChange={(e) => setSearchCollege(e.target.value)}
+                />
+              </div>
+            )}
+
+            <div className="input-section">
+              <label>Looking for a specific property?</label>
+              <input
+                type="text"
+                className="zolo-input"
+                placeholder="Search for Properties"
+                value={searchProperty}
+                onChange={(e) => setSearchProperty(e.target.value)}
+              />
+            </div>
+
+            <div className="input-section">
+              <label>Please share details below for us to help you better.</label>
+              <div className="details-row">
+                <input
+                  type="text"
+                  className="zolo-input"
+                  placeholder="Name"
+                  value={userDetails.name}
+                  onChange={(e) => setUserDetails({ ...userDetails, name: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className="zolo-input"
+                  placeholder="Contact Number"
+                  value={userDetails.contact}
+                  onChange={(e) => setUserDetails({ ...userDetails, contact: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="search-action">
+              <button className="zolo-search-btn" onClick={() => { setIsSearchOverlayOpen(false); navigate('/search'); }}>Search</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="landing-content" style={{ display: 'block' }}>
         <main className="hostels-grid">

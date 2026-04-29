@@ -18,7 +18,7 @@ const Transfers = () => {
   });
 
   const handleRequestTransfer = () => setShowForm(true);
-  
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitted(true);
@@ -53,15 +53,15 @@ const Transfers = () => {
 
         <div className="card" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '3rem', borderRadius: '24px', background: 'linear-gradient(145deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%)' }}>
           <div style={{ width: '80px', height: '80px', background: 'rgba(56, 189, 248, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: 'var(--accent-primary)' }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5"/><path d="M8 21H3v-5"/><path d="M12 21l9-9"/><path d="M3 3l9 9"/></svg>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5" /><path d="M8 21H3v-5" /><path d="M12 21l9-9" /><path d="M3 3l9 9" /></svg>
           </div>
           <h3 style={{ marginBottom: '1rem', fontSize: '1.4rem', fontWeight: '800' }}>Request Transfer</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '2.5rem', lineHeight: '1.6' }}>
             Want a different view or more space? Our concierge will help you find the perfect new spot.
           </p>
-          <button 
-            onClick={handleRequestTransfer} 
-            className="btn btn-primary" 
+          <button
+            onClick={handleRequestTransfer}
+            className="btn btn-primary"
             style={{ padding: '1.2rem', fontWeight: '800', borderRadius: '14px', boxShadow: '0 10px 25px rgba(14, 165, 233, 0.2)' }}
           >
             ➕ Request New Transfer
@@ -83,20 +83,20 @@ const Transfers = () => {
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div className="input-group">
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.6rem' }}>Full Name</label>
-                <input 
-                  type="text" 
-                  value={formData.name} 
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   style={{ width: '100%', padding: '1rem 1.2rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-primary)', fontWeight: '600' }}
-                  required 
+                  required
                 />
               </div>
 
               <div className="input-group">
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.6rem' }}>Current Room Name</label>
-                <input 
-                  type="text" 
-                  value={formData.oldRoom} 
+                <input
+                  type="text"
+                  value={formData.oldRoom}
                   readOnly
                   style={{ width: '100%', padding: '1rem 1.2rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-muted)', fontWeight: '600', cursor: 'not-allowed' }}
                 />
@@ -104,19 +104,19 @@ const Transfers = () => {
 
               <div className="input-group">
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.6rem' }}>Shift to New Room (Target)</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="e.g. 402-B or Premium Single"
-                  value={formData.newRoom} 
-                  onChange={(e) => setFormData({...formData, newRoom: e.target.value})}
+                  value={formData.newRoom}
+                  onChange={(e) => setFormData({ ...formData, newRoom: e.target.value })}
                   style={{ width: '100%', padding: '1rem 1.2rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-primary)', fontWeight: '600' }}
-                  required 
+                  required
                 />
               </div>
 
-              <button 
-                type="submit" 
-                className="btn btn-primary" 
+              <button
+                type="submit"
+                className="btn btn-primary"
                 disabled={submitted}
                 style={{ marginTop: '1rem', padding: '1.2rem', fontWeight: '800', borderRadius: '14px', position: 'relative', overflow: 'hidden' }}
               >

@@ -70,14 +70,14 @@ const ForgotPassword = () => {
                     <polyline points="22,6 12,13 2,6"></polyline>
                   </svg>
                 </span>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   name="email"
-                  placeholder="name@example.com" 
+                  placeholder="name@example.com"
                   style={{ paddingLeft: '3rem' }}
                   value={formData.email}
                   onChange={handleChange}
-                  required 
+                  required
                 />
               </div>
             </div>
@@ -91,14 +91,14 @@ const ForgotPassword = () => {
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                   </svg>
                 </span>
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   name="newPassword"
-                  placeholder="New Password" 
+                  placeholder="New Password"
                   style={{ paddingLeft: '3rem' }}
                   value={formData.newPassword}
                   onChange={handleChange}
-                  required 
+                  required
                 />
               </div>
             </div>
@@ -111,14 +111,14 @@ const ForgotPassword = () => {
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                   </svg>
                 </span>
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   name="confirmPassword"
-                  placeholder="Confirm New Password" 
+                  placeholder="Confirm New Password"
                   style={{ paddingLeft: '3rem' }}
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  required 
+                  required
                 />
               </div>
             </div>

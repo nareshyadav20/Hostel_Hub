@@ -1,0 +1,97 @@
+.home-splash {
+  min-height: 100vh;
+  width: 100%;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.splash-content {
+  max-width: 1000px;
+  width: 100%;
+  text-align: center;
+}
+
+.splash-logo {
+  font-size: 5rem;
+  font-weight: 900;
+  color: #00b0f0;
+  letter-spacing: 5px;
+  margin-bottom: 0.5rem;
+}
+
+.splash-subtitle {
+  color: #64748b;
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 4rem;
+}
+
+.city-grid-splash {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+.city-card-splash {
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 24px;
+  padding: 2.5rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.city-card-splash:hover {
+  background: white;
+  border-color: #00b0f0;
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 176, 240, 0.1);
+}
+
+.city-icon-wrapper {
+  color: #cbd5e1;
+  transition: color 0.3s;
+}
+
+.city-card-splash:hover .city-icon-wrapper {
+  color: #00b0f0;
+}
+
+.city-card-splash span {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.splash-footer {
+  position: absolute;
+  bottom: 2rem;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .city-grid-splash {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .splash-logo {
+    font-size: 3.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .city-grid-splash {
+    grid-template-columns: 1fr;
+  }
+}
