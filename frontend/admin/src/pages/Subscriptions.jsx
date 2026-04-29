@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import './Subscriptions.css';
 
 const Subscriptions = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -16,7 +15,14 @@ const Subscriptions = () => {
           <polyline points="9 22 9 12 15 12 15 22"></polyline>
         </svg>
       ),
-      features: ['Attendance Tracking', 'Cleaning Schedules', 'Member Directory', 'Complaint Portal'],
+      features: [
+        '3 Full Meals / Day (Breakfast, Lunch & Dinner)',
+        'Attendance Tracking',
+        'Cleaning Schedules',
+        'Member Directory',
+        'Complaint Portal'
+      ],
+      addon: { label: '🍛 2 Customization Curries', price: 500 },
       color: 'var(--accent-primary)',
       popular: false
     },
@@ -32,7 +38,7 @@ const Subscriptions = () => {
           <line x1="12" y1="17" x2="12" y2="21"></line>
         </svg>
       ),
-      features: ['Everything in Basic', 'Inventory Management', 'Staff Management Portal', 'Revenue Analytics'],
+      features: ['Everything in Basic', 'Full Meal Customization', 'Inventory Management', 'Staff Management Portal', 'Revenue Analytics', 'SMS / WhatsApp Alerts'],
       color: 'var(--accent-secondary)',
       popular: true
     },
@@ -48,7 +54,7 @@ const Subscriptions = () => {
           <path d="M2 12l10 5 10-5"></path>
         </svg>
       ),
-      features: ['Everything in Standard', 'Multi-property Support', 'Dedicated Support', 'API Access'],
+      features: ['Everything in Standard', 'Multi-property Support', 'Dedicated Account Manager', 'API Access & Webhooks', 'Custom Meal Menus', 'Priority 24x7 Support'],
       color: '#0f172a',
       popular: false,
       isEnterprise: true
@@ -96,6 +102,25 @@ const Subscriptions = () => {
             </div>
 
             <p className="plan-limit">{plan.limit}</p>
+
+            {plan.addon && (
+              <div style={{
+                background: `${plan.color}18`,
+                border: `1px dashed ${plan.color}`,
+                borderRadius: '10px',
+                padding: '0.55rem 0.9rem',
+                marginBottom: '1rem',
+                fontSize: '0.78rem',
+                fontWeight: '700',
+                color: plan.color,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span>{plan.addon.label}</span>
+                <span style={{ opacity: 0.8 }}>+₹{plan.addon.price}/mo</span>
+              </div>
+            )}
 
             <ul className="plan-features">
               {plan.features.map((feature, idx) => (

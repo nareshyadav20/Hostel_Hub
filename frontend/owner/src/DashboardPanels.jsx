@@ -27,9 +27,9 @@ export function DashboardModal({ isOpen, onClose, title, children }) {
 }
 
 // ── HEALTH SCORE ────────────────────────────────────────────
-export function HealthScoreCard({ score }) {
-  const status = score >= 75 ? { label:'Healthy', color:'#10B981', bg:'#DCFCE7' }
-    : score >= 50 ? { label:'Moderate', color:'#F59E0B', bg:'#FEF3C7' }
+export function HealthScoreCard({ score, threshold = 75 }) {
+  const status = score >= threshold ? { label:'Healthy', color:'#10B981', bg:'#DCFCE7' }
+    : score >= (threshold - 20) ? { label:'Moderate', color:'#F59E0B', bg:'#FEF3C7' }
     : { label:'At Risk', color:'#EF4444', bg:'#FEE2E2' };
   const r = 40, circ = 2 * Math.PI * r;
   const dash = circ - (score / 100) * circ;
@@ -50,9 +50,9 @@ export function HealthScoreCard({ score }) {
         <div>
           <span style={{ padding:'0.3rem 0.8rem', borderRadius:'100px', fontSize:'0.8rem', fontWeight:'700', background:status.bg, color:status.color }}>{status.label}</span>
           <div style={{ marginTop:'0.8rem', display:'flex', flexDirection:'column', gap:'0.4rem' }}>
-            {score < 75 && <p style={{ fontSize:'0.78rem', color:'#EF4444' }}>⚠ Low occupancy impacting revenue</p>}
+            {score < threshold && <p style={{ fontSize:'0.78rem', color:'#EF4444' }}>⚠ Score below threshold ({threshold}%)</p>}
             {score < 60 && <p style={{ fontSize:'0.78rem', color:'#EF4444' }}>⚠ High pending payments detected</p>}
-            <p style={{ fontSize:'0.78rem', color:'var(--text-muted)' }}>Updated in real-time</p>
+            <p style={{ fontSize:'0.78rem', color:'var(--text-muted)' }}>Managed by system threshold</p>
           </div>
         </div>
       </div>
@@ -83,7 +83,7 @@ export function ComplaintsPanel({ data }) {
         ))}
       </div>
       <div style={{ height:'130px' }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={1}>
           <PieChart>
             <Pie data={data.categories} dataKey="count" nameKey="name" innerRadius={30} outerRadius={50} paddingAngle={3}>
               {data.categories.map((c,i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
@@ -157,7 +157,8 @@ export function MessPanel({ data }) {
 // ── STAFF PANEL ──────────────────────────────────────────────
 export function StaffPanel({ data }) {
   if (!data) return null;
-  const sorted = [...(data.staffList || [])].sort((a,b) => b.score - a.score);
+  const staffArray = Array.isArray(data.staffList) ? data.staffList : [];
+  const sorted = [...staffArray].sort((a,b) => (b.score || 0) - (a.score || 0));
   return (
     <div className="card" style={{ padding:'1.5rem', borderRadius:'16px', border:'1px solid var(--border-color)' }}>
       <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.2rem' }}>

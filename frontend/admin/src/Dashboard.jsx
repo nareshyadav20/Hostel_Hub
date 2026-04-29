@@ -7,7 +7,6 @@ import {
   TrendingUp, Users, Building, CreditCard, Activity, 
   ShieldCheck, AlertCircle, ArrowUpRight, Zap
 } from 'lucide-react';
-import './Dashboard.css';
 
 const REVENUE_DATA = [
   { name: 'Jan', revenue: 450000, visitors: 2400 },

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api, backendOnline } from '../mockData';
 import Sidebar from './Sidebar';
@@ -93,35 +94,47 @@ const Layout = ({ children }) => {
       <main className="main-content">
         <header className="content-header">
 
-          {/* ── Building selector pills ── */}
-          <div className="header-building-selector" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {buildings.length === 0 ? (
-              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                {backendStatus === null ? 'Loading…' : backendStatus === 'cached' && buildings.length === 0
-                  ? 'No data — connect to backend once to cache data.'
-                  : 'No buildings found.'}
-              </span>
-            ) : buildingId ? (
+          {/* ── Building Information ── */}
+          <div className="header-building-info" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            {buildings.length > 0 ? (
               (() => {
-                const b = buildings.find(x => (x.id || x._id) === buildingId);
-                if (!b) return null;
+                const b = buildings.find(x => (x.id || x._id) === buildingId) || buildings[0];
                 return (
-                  <div style={{
-                    padding: '0.42rem 1.05rem',
-                    borderRadius: '100px',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-secondary)',
-                    color: 'var(--text-primary)',
-                    fontWeight: '800',
-                    fontSize: '0.9rem',
-                    display: 'flex', alignItems: 'center', gap: '0.4rem',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                  }}>
-                    <span>🏢</span> {b.name}
+                  <div 
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      background: 'var(--bg-tertiary)',
+                      padding: '0.5rem 1.25rem',
+                      borderRadius: '12px',
+                      border: '1px solid var(--border-color)',
+                      boxShadow: 'var(--shadow-sm)'
+                    }}
+                  >
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: 'var(--accent-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontSize: '1.2rem'
+                    }}>
+                      🏢
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0, lineHeight: 1 }}>Active Property</p>
+                      <h2 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0.1rem 0 0 0', lineHeight: 1 }}>Tower A</h2>
+                    </div>
                   </div>
                 );
               })()
-            ) : null}
+            ) : (
+              <div style={{ height: '40px', width: '150px', background: 'var(--bg-tertiary)', borderRadius: '12px', animation: 'pulse 2s infinite' }} />
+            )}
           </div>
 
           {/* ── Right side: theme + bell + profile ── */}

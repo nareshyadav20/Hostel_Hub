@@ -37,6 +37,20 @@ const AVAILABLE_FILTER_FEATURES = [
   'WiFi', 'AC Rooms', 'Food Included', 'CCTV', 'Laundry', 'Parking', 'Power Backup', 'Gym'
 ];
 
+const STEP_CONFIG = [
+  { step: 1,  title: 'Basic Info',      icon: '🏨', desc: 'Name, type, description' },
+  { step: 2,  title: 'Location',        icon: '📍', desc: 'Address & landmarks' },
+  { step: 3,  title: 'Structure',       icon: '🏗️',  desc: 'Buildings & rooms' },
+  { step: 4,  title: 'Pricing',         icon: '💰', desc: 'Rent & deposits' },
+  { step: 5,  title: 'Room Setup',      icon: '🛏️',  desc: 'Room configuration' },
+  { step: 6,  title: 'Food & Mess',     icon: '🍽️',  desc: 'Meals & plans' },
+  { step: 7,  title: 'Amenities',       icon: '✨', desc: 'Facilities & features' },
+  { step: 8,  title: 'Policies',        icon: '📋', desc: 'Rules & stay terms' },
+  { step: 9,  title: 'Staff',           icon: '👤', desc: 'Warden & contacts' },
+  { step: 10, title: 'Owner Details',   icon: '🔑', desc: 'Contact information' },
+  { step: 11, title: 'Review',          icon: '✅', desc: 'Final summary' },
+];
+
 const INITIAL_FORM_STATE = {
   name: '', buildingName: '', propertyType: 'Hostel', gender: '', 
   shortDesc: '', longDesc: '', coverImage: null, gallery: [],
@@ -212,8 +226,8 @@ ${formData.longDesc || formData.shortDesc || ''}`;
           popularityLabel,
           features: amenities
         };
-      } catch (err) {
-        return { id: Math.random(), name: 'Error Loading', occupancyRate: 0, features: [], status: 'Error' };
+      } catch (_err) {
+        return { id: `err-${Date.now()}`, name: 'Error Loading', occupancyRate: 0, features: [], status: 'Error' };
       }
     });
   }, [data]);
@@ -232,7 +246,7 @@ ${formData.longDesc || formData.shortDesc || ''}`;
         totalDues: buildingStats.reduce((acc, b) => acc + (b.pendingDues || 0), 0),
         totalComplaints: buildingStats.reduce((acc, b) => acc + (b.complaintsCount || 0), 0)
       };
-    } catch (err) {
+    } catch (_err) {
       return { totalBuildings: 0, totalRooms: 0, totalBeds: 0, occupiedBeds: 0, occupancyRate: 0, totalRevenue: 0, totalDues: 0, totalComplaints: 0 };
     }
   }, [buildingStats]);
@@ -249,7 +263,7 @@ ${formData.longDesc || formData.shortDesc || ''}`;
           const matchesOccupancy = occupancyFilter === 'All' || (occupancyFilter === 'High' && b.occupancyRate >= 80) || (occupancyFilter === 'Medium' && b.occupancyRate >= 50 && b.occupancyRate < 80) || (occupancyFilter === 'Low' && b.occupancyRate < 50);
           const matchesFeatures = selectedFeatures.length === 0 || selectedFeatures.every(f => b.features?.includes(f));
           return matchesSearch && matchesOccupancy && matchesFeatures;
-        } catch (err) { return false; }
+        } catch (_err) { return false; }
       })
       .sort((a, b) => {
         try {
@@ -462,7 +476,7 @@ ${formData.longDesc || formData.shortDesc || ''}`;
           <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem' }}><div className="loader"></div></div>
         ) : processedBuildings.length > 0 ? (
           processedBuildings.map((b) => (
-            <motion.div key={b.id || `b-${Math.random()}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card" style={{ padding: 0, overflow: 'hidden', borderTop: `4px solid ${b.occupancyRate >= 80 ? '#10B981' : b.occupancyRate >= 50 ? '#F59E0B' : '#EF4444'}`, position: 'relative' }}>
+            <motion.div key={b.id || b.name || `b-${b.address}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card" style={{ padding: 0, overflow: 'hidden', borderTop: `4px solid ${b.occupancyRate >= 80 ? '#10B981' : b.occupancyRate >= 50 ? '#F59E0B' : '#EF4444'}`, position: 'relative' }}>
               <div style={{ height: '180px', position: 'relative', cursor: 'pointer' }} onClick={() => navigate(`/owner/building/${b.id}/dashboard`)}>
                 <div style={{ height: '100%', width: '100%', backgroundImage: `url("${b.images?.[0] || 'https://images.unsplash.com/photo-1555854817-5b2260d19dca?auto=format&fit=crop&q=80&w=800'}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.7))' }} />
@@ -473,9 +487,16 @@ ${formData.longDesc || formData.shortDesc || ''}`;
                     </div>
                   )}
                 </div>
-                <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.4rem' }}>
-                  <div style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', color: 'white', fontSize: '0.7rem', fontWeight: '800' }}>{b.occupancyRate}%</div>
-                  <div style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', background: b.status === 'Active' ? '#10B981' : '#F59E0B', color: 'white', fontSize: '0.7rem', fontWeight: '800' }}>{b.status}</div>
+                <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.4rem', flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <div style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', color: 'white', fontSize: '0.7rem', fontWeight: '800' }}>{b.occupancyRate}%</div>
+                    <div style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', background: b.status === 'Active' ? '#10B981' : '#F59E0B', color: 'white', fontSize: '0.7rem', fontWeight: '800' }}>{b.status}</div>
+                  </div>
+                  {b.features?.includes('AC Rooms') && (
+                    <div style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', background: '#3b82f6', color: 'white', fontSize: '0.65rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+                      <Wind size={12} /> AC ENABLED
+                    </div>
+                  )}
                 </div>
               </div>
               <div style={{ padding: '1.2rem' }}>
@@ -531,24 +552,76 @@ ${formData.longDesc || formData.shortDesc || ''}`;
 
       <AnimatePresence>
         {isAddModalOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '1rem' }} onClick={() => setIsAddModalOpen(false)}>
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="card" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '650px', padding: '2rem', borderRadius: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <div><h2 style={{ fontSize: '1.5rem', fontWeight: '900' }}>Register New Hostel</h2>
-                  <p style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>Step {currentStep} of 11</p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 2000, display: 'flex', flexDirection: 'column' }}
+          >
+            {/* TOP BAR */}
+            <div style={{ background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.1rem' }}>🏨</div>
+                <div>
+                  <h2 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>Register New Hostel</h2>
+                  <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0 }}>Complete all steps to publish your listing</p>
                 </div>
-                <button onClick={() => setIsAddModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={24} /></button>
               </div>
-              <form onSubmit={handleCreateHostel} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {renderStep()}
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  {currentStep > 1 && (<button type="button" onClick={() => setCurrentStep(s => s - 1)} className="btn-outline" style={{ flex: 1, padding: '0.8rem' }}><ChevronLeft size={18} /> Back</button>)}
-                  <button disabled={isSubmitting} type="submit" className="btn-primary" style={{ flex: 2, padding: '0.8rem', fontSize: '1rem' }}>
-                    {isSubmitting ? 'Processing...' : currentStep === 11 ? 'Finalize Registration' : 'Continue'} <ChevronRight size={18} />
-                  </button>
+              <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                <button type="button" onClick={() => { localStorage.setItem('hostel_draft', JSON.stringify(formData)); alert('Draft saved!'); }} style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#475569', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem' }}>💾 Save Draft</button>
+                <button onClick={() => setIsAddModalOpen(false)} style={{ background: '#F1F5F9', border: 'none', color: '#64748B', cursor: 'pointer', padding: '0.6rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
+              </div>
+            </div>
+
+            {/* PROGRESS BAR */}
+            <div style={{ background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '0.8rem 2rem', flexShrink: 0, overflowX: 'auto' }}>
+              <div style={{ display: 'flex', gap: 0, minWidth: 'max-content' }}>
+                {STEP_CONFIG.map((s, i) => {
+                  const done = currentStep > s.step;
+                  const active = currentStep === s.step;
+                  return (
+                    <div key={s.step} style={{ display: 'flex', alignItems: 'center' }}>
+                      <div onClick={() => done && setCurrentStep(s.step)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '8px', cursor: done ? 'pointer' : 'default', background: active ? '#EFF6FF' : 'transparent' }}>
+                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: done ? '#10B981' : active ? '#3B82F6' : '#E2E8F0', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '900', flexShrink: 0 }}>
+                          {done ? '✓' : s.step}
+                        </div>
+                        <span style={{ fontSize: '0.75rem', fontWeight: active ? '800' : '600', color: active ? '#1D4ED8' : done ? '#059669' : '#94A3B8', whiteSpace: 'nowrap' }}>{s.title}</span>
+                      </div>
+                      {i < STEP_CONFIG.length - 1 && <div style={{ width: '20px', height: '2px', background: done ? '#10B981' : '#E2E8F0', flexShrink: 0 }} />}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* CONTENT AREA */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '2rem', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: '100%', maxWidth: '700px' }}>
+                {/* Step Header */}
+                <div style={{ marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid #E2E8F0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.3rem' }}>
+                    <span style={{ fontSize: '1.8rem' }}>{STEP_CONFIG[currentStep - 1]?.icon}</span>
+                    <h3 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{STEP_CONFIG[currentStep - 1]?.title}</h3>
+                  </div>
+                  <p style={{ color: '#64748B', fontSize: '0.95rem', margin: 0 }}>{STEP_CONFIG[currentStep - 1]?.desc}</p>
                 </div>
-              </form>
-            </motion.div>
+
+                <form onSubmit={handleCreateHostel} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {renderStep()}
+                  {/* FOOTER BUTTONS */}
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #E2E8F0' }}>
+                    {currentStep > 1 && (
+                      <button type="button" onClick={() => setCurrentStep(s => s - 1)} style={{ flex: 1, padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#475569', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
+                        <ChevronLeft size={18}/> Back
+                      </button>
+                    )}
+                    <button disabled={isSubmitting} type="submit" style={{ flex: 2, padding: '1rem', borderRadius: '12px', border: 'none', background: currentStep === 11 ? '#10B981' : '#3B82F6', color: 'white', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
+                      {isSubmitting ? 'Processing...' : currentStep === 11 ? '🚀 Finalize & Publish' : `Continue to ${STEP_CONFIG[currentStep]?.title || 'Next'}`} <ChevronRight size={18}/>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

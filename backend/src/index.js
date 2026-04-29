@@ -23,6 +23,7 @@ const bedRoutes = require('./routes/bedRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
 const hostelFloorMappingRoutes = require('./routes/hostelFloorMappingRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -32,6 +33,7 @@ app.use('/api/beds', bedRoutes);
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/hostel-floor-mapping', hostelFloorMappingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

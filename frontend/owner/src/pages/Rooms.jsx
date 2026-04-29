@@ -13,9 +13,14 @@ const Rooms = () => {
   const [floors, setFloors] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [beds, setBeds] = useState([]);
+  const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expandedBuildings, setExpandedBuildings] = useState({});
+  
+  // Hierarchy state
+  const [selectedBuildingId, setSelectedBuildingId] = useState(buildingId || null);
   const [expandedFloors, setExpandedFloors] = useState({});
+  const [expandedRooms, setExpandedRooms] = useState({});
+  const [selectedTenantInfo, setSelectedTenantInfo] = useState(null);
 
   const [filterType, setFilterType] = useState('All');
   const [showFilters, setShowFilters] = useState(false);
@@ -27,14 +32,15 @@ const Rooms = () => {
         const f = await api.getAllFloors();
         const r = await api.getAllRooms();
         const bd = await api.getAllBeds();
+        const t = await api.getTenants();
+        
         setBuildings(b || []);
         setFloors(f || []);
         setRooms(r || []);
         setBeds(bd || []);
+        setTenants(t || []);
 
-        const bExp = {}; b?.forEach(x => bExp[x.id] = true);
         const fExp = {}; f?.forEach(x => fExp[x.id] = true);
-        setExpandedBuildings(bExp);
         setExpandedFloors(fExp);
       } catch (err) {
         console.error(err);
@@ -67,30 +73,47 @@ const Rooms = () => {
 
   const toggleMaintenance = async (roomId) => {
     const room = rooms.find(r => r.id === roomId);
-    const roomBeds = beds.filter(b => b.roomId === roomId);
     if (!room) return;
     
     if (room.status === 'Maintenance') {
       // Optimistic update
       setRooms(prev => prev.map(r => r.id === roomId ? { ...r, status: 'Active' } : r));
-      api.updateRoomStatus(roomId, 'Active').catch(err => {
+      api.updateRoomStatus(roomId, 'Active').catch(() => {
         setRooms(prev => prev.map(r => r.id === roomId ? { ...r, status: room.status } : r));
       });
     } else {
       // Optimistic update (forcing maintenance regardless of occupancy)
       setRooms(prev => prev.map(r => r.id === roomId ? { ...r, status: 'Maintenance' } : r));
-      api.updateRoomStatus(roomId, 'Maintenance').catch(err => {
+      api.updateRoomStatus(roomId, 'Maintenance').catch(() => {
         setRooms(prev => prev.map(r => r.id === roomId ? { ...r, status: room.status } : r));
       });
     }
   };
 
-  const toggleBuilding = (id) => setExpandedBuildings(p => ({ ...p, [id]: !p[id] }));
   const toggleFloorCollapse = (id) => setExpandedFloors(p => ({ ...p, [id]: !p[id] }));
+  const toggleRoomExpand = (id) => setExpandedRooms(p => ({ ...p, [id]: !p[id] }));
+
+  const handleBedClick = (room, bed) => {
+    if (bed.status === 'OCCUPIED') {
+      // Find tenant info
+      const tenantInfo = tenants.find(t => t.name === bed.tenant || t.id === bed.tenantId) || { name: bed.tenant || 'Unknown Tenant', status: 'Active', room: `${room.roomNumber}-${bed.bedNumber}` };
+      setSelectedTenantInfo({ ...tenantInfo, roomId: room.id, bedId: bed.id });
+    } else {
+      // Toggle if not occupied, or show action menu
+      toggleBed(room.id, bed.id);
+    }
+  };
 
   const types = [...new Set(rooms.map(r => r.roomType).filter(Boolean))];
 
   if (loading) return <div style={{ padding: '2rem', color: 'var(--text-secondary)' }}>Loading...</div>;
+
+  const totalRooms = rooms.length;
+  const totalBedsCount = beds.length;
+  const occupiedBedsCount = beds.filter(b => b.status === 'OCCUPIED').length;
+  const occupancyRate = totalBedsCount > 0 ? Math.round((occupiedBedsCount / totalBedsCount) * 100) : 0;
+
+  const activeBuilding = buildings.find(b => (b.id || b._id) === selectedBuildingId);
 
   return (
     <div className="rooms-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
@@ -120,83 +143,236 @@ const Rooms = () => {
         )}
       </AnimatePresence>
 
-      <div>
-        {(buildings.some(b => (b.id || b._id) === buildingId)
-          ? buildings.filter(b => (b.id || b._id) === buildingId)
-          : buildings
-        ).map(building => {
-          const buildingFloors = floors.filter(f => f.buildingId === building.id);
-          if (buildingFloors.length === 0) return null;
-          return (
-            <div key={building.id} style={{ marginBottom: '3rem' }}>
-              <div onClick={() => toggleBuilding(building.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.8rem 1.2rem', background: 'var(--bg-secondary)', borderRadius: '10px', border: '1px solid var(--border-color)', cursor: 'pointer', marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundImage: building.images?.[0] ? `url("${building.images[0]}")` : 'none', backgroundColor: 'var(--bg-tertiary)', backgroundSize: 'cover' }} />
-                  <h2 style={{ fontSize: '1.3rem', fontWeight: '800', margin: 0 }}>{building.name}</h2>
-                </div>
-                {expandedBuildings[building.id] ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-              </div>
+      {/* Dashboard KPIs */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Total Rooms</p>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{totalRooms}</h2>
+        </div>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #10b981' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Total Beds</p>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{totalBedsCount}</h2>
+        </div>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Occupancy Rate</p>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{occupancyRate}%</h2>
+        </div>
+      </div>
 
-              <AnimatePresence>
-                {expandedBuildings[building.id] && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
-                    {buildingFloors.map(floor => {
-                      const floorRooms = rooms.filter(r => r.floorId === floor.id && (filterType === 'All' || r.roomType === filterType));
-                      if (floorRooms.length === 0) return null;
-                      return (
-                        <div key={floor.id} style={{ marginBottom: '2rem', paddingLeft: '2rem', borderLeft: '3px solid var(--bg-tertiary)' }}>
-                          <div onClick={() => toggleFloorCollapse(floor.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.4rem 0.8rem', background: 'var(--bg-tertiary)', borderRadius: '6px', width: 'fit-content', cursor: 'pointer', marginBottom: '1rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                              <Layers size={14} color="var(--accent-primary)" />
-                              <h3 style={{ fontSize: '1rem', fontWeight: '700', margin: 0 }}>Floor {floor.floorNumber}</h3>
-                            </div>
-                            {expandedFloors[floor.id] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                          </div>
-                          
-                          <AnimatePresence>
-                            {expandedFloors[floor.id] && (
-                              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                                  {floorRooms.map(room => {
-                                    const roomBeds = beds.filter(b => b.roomId === room.id);
-                                    const available = roomBeds.filter(b => b.status === 'AVAILABLE').length;
-                                    return (
-                                      <motion.div key={room.id} className="card" style={{ padding: 0, overflow: 'hidden', border: room.status === 'Maintenance' ? '2px dashed var(--accent-warning)' : '1px solid var(--border-color)' }}>
-                                        {room.images?.[0] && <div style={{ height: '90px', width: '100%', backgroundImage: `url("${room.images[0]}")`, backgroundSize: 'cover' }} />}
-                                        <div style={{ padding: '1rem' }}>
-                                          <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>Room {room.roomNumber}</h3>
-                                          <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{room.roomType} • {available}/{roomBeds.length}</p>
-                                          <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.8rem', overflowX: 'auto' }}>
-                                            {roomBeds.map(bed => (
-                                              <div key={bed.id} onClick={() => toggleBed(room.id, bed.id)} style={{ padding: '0.5rem', borderRadius: '6px', background: bed.status === 'OCCUPIED' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', cursor: 'pointer', textAlign: 'center', minWidth: '60px' }}>
-                                                {bed.status === 'OCCUPIED' ? <User size={12} color="var(--accent-error)" /> : <BedDouble size={12} color="var(--accent-success)" />}
-                                                <p style={{ fontSize: '0.5rem', margin: '0.2rem 0 0 0' }}>{bed.bedNumber}</p>
+      <div>
+        {!selectedBuildingId ? (
+          /* Level 1: Building Cards */
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem' }}>Select Building</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
+              {buildings.map(building => {
+                const bFloors = floors.filter(f => f.buildingId === building.id);
+                const bRooms = rooms.filter(r => bFloors.some(f => f.id === r.floorId));
+                const bBeds = beds.filter(b => bRooms.some(r => r.id === b.roomId));
+                const bOccupied = bBeds.filter(b => b.status === 'OCCUPIED').length;
+                const bOccRate = bBeds.length > 0 ? Math.round((bOccupied / bBeds.length) * 100) : 0;
+                
+                return (
+                  <motion.div 
+                    key={building.id} 
+                    whileHover={{ y: -5 }}
+                    className="card" 
+                    onClick={() => setSelectedBuildingId(building.id)}
+                    style={{ padding: '0', overflow: 'hidden', cursor: 'pointer', border: '1px solid var(--border-color)', borderRadius: '20px' }}
+                  >
+                    <div style={{ height: '140px', width: '100%', backgroundImage: building.images?.[0] ? `url("${building.images[0]}")` : 'url("/assets/building.jpg")', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                    <div style={{ padding: '1.5rem' }}>
+                      <h3 style={{ fontSize: '1.3rem', fontWeight: '800', margin: '0 0 0.5rem 0' }}>{building.name}</h3>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>{building.address || 'Premium Hostel Property'}</p>
+                      
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
+                        <span style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>Occupancy</span>
+                        <span style={{ fontWeight: '800' }}>{bOccRate}%</span>
+                      </div>
+                      <div style={{ width: '100%', height: '6px', background: 'var(--bg-tertiary)', borderRadius: '3px', marginBottom: '1rem' }}>
+                        <div style={{ width: `${bOccRate}%`, height: '100%', background: 'var(--accent-primary)', borderRadius: '3px' }} />
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Beds</p>
+                          <p style={{ fontSize: '1.1rem', fontWeight: '800' }}>{bOccupied}/{bBeds.length}</p>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Est. Revenue</p>
+                          <p style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--accent-success)' }}>₹{bOccupied * 8000}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          /* Level 2+: Floor -> Room -> Bed */
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+              <button className="btn" onClick={() => setSelectedBuildingId(null)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1rem' }}>
+                <ChevronDown size={18} style={{ transform: 'rotate(90deg)' }} /> Back to Buildings
+              </button>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: '800', margin: 0 }}>{activeBuilding?.name}</h2>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {floors.filter(f => f.buildingId === selectedBuildingId).map(floor => {
+                const floorRooms = rooms.filter(r => r.floorId === floor.id && (filterType === 'All' || r.roomType === filterType));
+                if (floorRooms.length === 0) return null;
+                
+                return (
+                  <div key={floor.id} className="card" style={{ padding: '1.5rem', borderRadius: '16px' }}>
+                    {/* Floor Accordion Header */}
+                    <div 
+                      onClick={() => toggleFloorCollapse(floor.id)} 
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', paddingBottom: expandedFloors[floor.id] ? '1.5rem' : '0', borderBottom: expandedFloors[floor.id] ? '1px solid var(--border-color)' : 'none' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '12px' }}>
+                          <Layers size={20} />
+                        </div>
+                        <div>
+                          <h3 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0 }}>{floor.floorNumber}</h3>
+                          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>{floorRooms.length} Rooms</p>
+                        </div>
+                      </div>
+                      <div style={{ padding: '0.5rem', background: 'var(--bg-tertiary)', borderRadius: '50%' }}>
+                        {expandedFloors[floor.id] ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                      </div>
+                    </div>
+
+                    {/* Room Grid */}
+                    <AnimatePresence>
+                      {expandedFloors[floor.id] && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', paddingTop: '1.5rem' }}>
+                            {floorRooms.map(room => {
+                              const roomBeds = beds.filter(b => b.roomId === room.id);
+                              const available = roomBeds.filter(b => b.status === 'AVAILABLE').length;
+                              const occRate = roomBeds.length > 0 ? Math.round(((roomBeds.length - available) / roomBeds.length) * 100) : 0;
+                              
+                              return (
+                                <div key={room.id} style={{ border: room.status === 'Maintenance' ? '2px dashed var(--accent-warning)' : '1px solid var(--border-color)', borderRadius: '16px', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
+                                  {/* Room Header Info */}
+                                  <div style={{ padding: '1.2rem', borderBottom: '1px solid var(--border-color)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                      <div>
+                                        <h4 style={{ fontSize: '1.2rem', fontWeight: '900', margin: '0 0 0.2rem 0' }}>Room {room.roomNumber}</h4>
+                                        <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', background: 'var(--bg-tertiary)', borderRadius: '12px', fontWeight: '600' }}>{room.roomType}</span>
+                                      </div>
+                                      <div style={{ textAlign: 'right' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: `conic-gradient(var(--accent-primary) ${occRate}%, var(--bg-tertiary) 0)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <div style={{ width: '24px', height: '24px', background: 'var(--bg-secondary)', borderRadius: '50%' }} />
+                                          </div>
+                                          <span style={{ fontWeight: '800', fontSize: '1rem' }}>{roomBeds.length - available}/{roomBeds.length}</span>
+                                        </div>
+                                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Beds Occupied</p>
+                                      </div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                      <button onClick={() => toggleRoomExpand(room.id)} className="btn btn-primary" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', borderRadius: '8px' }}>
+                                        {expandedRooms[room.id] ? 'Hide Beds' : 'View Beds'}
+                                      </button>
+                                      <button onClick={() => toggleMaintenance(room.id)} className="btn" style={{ padding: '0.5rem', fontSize: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: room.status === 'Maintenance' ? '#f59e0b20' : 'var(--bg-tertiary)', color: room.status === 'Maintenance' ? '#f59e0b' : 'var(--text-primary)' }}>
+                                        <AlertTriangle size={14} />
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Bed Grid (Expanded) */}
+                                  <AnimatePresence>
+                                    {expandedRooms[room.id] && (
+                                      <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} style={{ overflow: 'hidden' }}>
+                                        <div style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '0.8rem' }}>
+                                          {roomBeds.map(bed => {
+                                            let bg = 'var(--bg-secondary)';
+                                            let color = 'var(--text-secondary)';
+                                            let border = 'var(--border-color)';
+                                            
+                                            if (bed.status === 'OCCUPIED') { bg = '#ef444415'; color = '#ef4444'; border = '#ef444450'; }
+                                            else if (bed.status === 'AVAILABLE') { bg = '#10b98115'; color = '#10b981'; border = '#10b98150'; }
+                                            else if (bed.status === 'RESERVED') { bg = '#f59e0b15'; color = '#f59e0b'; border = '#f59e0b50'; }
+
+                                            return (
+                                              <div 
+                                                key={bed.id} 
+                                                onClick={() => handleBedClick(room, bed)} 
+                                                style={{ padding: '0.8rem 0.5rem', borderRadius: '10px', background: bg, border: `1px solid ${border}`, color: color, cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.2s' }}
+                                              >
+                                                {bed.status === 'OCCUPIED' ? <User size={20} /> : <BedDouble size={20} />}
+                                                <span style={{ fontSize: '0.8rem', fontWeight: '800' }}>{bed.bedNumber}</span>
+                                                <span style={{ fontSize: '0.6rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>{bed.status.substring(0,3)}</span>
                                               </div>
-                                            ))}
-                                          </div>
-                                          <div style={{ marginTop: '1rem', paddingTop: '0.8rem', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '0.4rem' }}>
-                                            <button onClick={() => toggleMaintenance(room.id)} className="btn" style={{ flex: 1, fontSize: '0.65rem', padding: '0.3rem' }}>
-                                              {room.status === 'Maintenance' ? 'End Mnt' : 'Mnt'}
-                                            </button>
-                                          </div>
+                                            );
+                                          })}
+                                        </div>
+                                        <div style={{ padding: '0.8rem 1.2rem', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between' }}>
+                                           <button className="btn" style={{ fontSize: '0.7rem', padding: '0.3rem 0.8rem' }}>Auto Allocate</button>
+                                           <button className="btn" style={{ fontSize: '0.7rem', padding: '0.3rem 0.8rem' }}>Reserve</button>
                                         </div>
                                       </motion.div>
-                                    );
-                                  })}
+                                    )}
+                                  </AnimatePresence>
                                 </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          </motion.div>
+        )}
       </div>
+
+      {/* Tenant Details Modal */}
+      <AnimatePresence>
+        {selectedTenantInfo && (
+          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setSelectedTenantInfo(null)} />
+            <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} style={{ position: 'relative', width: '100%', maxWidth: '400px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', zIndex: 1001, border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button onClick={() => setSelectedTenantInfo(null)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}>✕</button>
+              </div>
+              <div style={{ textAlign: 'center', marginTop: '-1rem' }}>
+                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: '800', margin: '0 auto 1rem', boxShadow: '0 8px 20px rgba(99, 102, 241, 0.3)' }}>
+                  {selectedTenantInfo.name.charAt(0)}
+                </div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '0.2rem' }}>{selectedTenantInfo.name}</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Room {selectedTenantInfo.room}</p>
+                
+                <div style={{ background: 'var(--bg-tertiary)', borderRadius: '16px', padding: '1.5rem', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600' }}>Status</span>
+                    <span style={{ background: '#10b98120', color: '#10b981', padding: '0.2rem 0.8rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '800' }}>ACTIVE</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600' }}>Rent Status</span>
+                    <span style={{ fontWeight: '800' }}>Paid (Mar)</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600' }}>Stay Duration</span>
+                    <span style={{ fontWeight: '800' }}>14 Months</span>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+                  <button onClick={() => { toggleBed(selectedTenantInfo.roomId, selectedTenantInfo.bedId); setSelectedTenantInfo(null); }} className="btn" style={{ flex: 1, fontWeight: '700', borderRadius: '12px', background: '#ef444415', color: '#ef4444', border: '1px solid #ef444430' }}>Vacate Bed</button>
+                  <button className="btn btn-primary" style={{ flex: 1, fontWeight: '700', borderRadius: '12px' }}>Message</button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
