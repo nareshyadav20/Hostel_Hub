@@ -197,10 +197,10 @@ exports.getStaffStats = async (req, res) => {
       avgResolutionHours: 3.1,
       efficiencyScore: Math.round((28 / 34) * 100),
       staffList: [
-        { name: 'Ramesh Kumar', role: 'Maintenance', score: 95, tasks: 10 },
-        { name: 'Suresh Babu', role: 'Cleaning', score: 88, tasks: 8 },
-        { name: 'Pradeep Singh', role: 'Security', score: 72, tasks: 7 },
-        { name: 'Anitha Devi', role: 'Mess', score: 65, tasks: 9 },
+        { id: 's1', name: 'Ramesh Kumar', role: 'Warden', status: 'Active', performance: 4.8, tasks: [], attendance: { percentage: 95 }, metrics: { efficiencyScore: 95 } },
+        { id: 's2', name: 'Suresh Babu', role: 'Cleaner', status: 'Active', performance: 4.2, tasks: [], attendance: { percentage: 88 }, metrics: { efficiencyScore: 88 } },
+        { id: 's3', name: 'Pradeep Singh', role: 'Security', status: 'Active', performance: 3.8, tasks: [], attendance: { percentage: 72 }, metrics: { efficiencyScore: 72 } },
+        { id: 's4', name: 'Anitha Devi', role: 'Cook', status: 'Active', performance: 4.5, tasks: [], attendance: { percentage: 85 }, metrics: { efficiencyScore: 85 } },
       ]
     });
   } catch (error) {

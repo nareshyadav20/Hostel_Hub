@@ -388,6 +388,9 @@ const RoomsList = ({ rooms, floor, onSelect, onBack, onAdd }) => (
               style={{ padding: '1rem', cursor: 'pointer', borderRadius: '16px', border: '1px solid #E2E8F0', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}
               onClick={() => onSelect(r)}
             >
+              {/* Room Image */}
+              <div style={{ height: '100px', width: '100%', margin: '-1rem -1rem 0 -1rem', backgroundImage: r.images?.[0] ? `url("${r.images[0]}")` : 'url("/assets/room.png")', backgroundSize: 'cover', backgroundPosition: 'center', borderBottom: '1px solid #E2E8F0' }} />
+              
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6', fontWeight: '800', fontSize: '0.9rem' }}>
                   {r.roomNumber}
@@ -435,6 +438,9 @@ const BedsList = ({ beds, room, onBack, onAdd }) => (
           className="card" 
           style={{ padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', borderRadius: '16px', borderTop: `4px solid ${b.status === 'AVAILABLE' ? '#10B981' : b.status === 'OCCUPIED' ? '#3B82F6' : '#EF4444'}`, textAlign: 'center' }}
         >
+          {/* Bed Image */}
+          <div style={{ height: '80px', width: '100%', margin: '-1rem -1rem 0.5rem -1rem', backgroundImage: b.images?.[0] ? `url("${b.images[0]}")` : 'url("/assets/bed.jpg")', backgroundSize: 'cover', backgroundPosition: 'center', borderBottom: `1px solid ${b.status === 'AVAILABLE' ? '#10B98150' : b.status === 'OCCUPIED' ? '#3B82F650' : '#EF444450'}` }} />
+          
           <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: b.status === 'AVAILABLE' ? '#ECFDF5' : '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: b.status === 'AVAILABLE' ? '#10B981' : '#3B82F6' }}>
             <Bed size={18} />
           </div>

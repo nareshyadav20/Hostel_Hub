@@ -75,7 +75,7 @@ const Staff = () => {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                <MetricCard label="Active Tasks" value={selectedStaff.tasks?.filter(t=>t.status!=='COMPLETED').length || 0} sub="Requires attention" color="#F59E0B" />
+                <MetricCard label="Active Tasks" value={Array.isArray(selectedStaff.tasks) ? selectedStaff.tasks.filter(t=>t.status!=='COMPLETED').length : (typeof selectedStaff.tasks === 'number' ? selectedStaff.tasks : 0)} sub="Requires attention" color="#F59E0B" />
                 <MetricCard label="Monthly Pay" value={`₹${selectedStaff.salary || 0}`} sub="Next: May 5th" color="#10B981" />
                 <MetricCard label="Attendance" value={`${selectedStaff.attendance?.percentage || 0}%`} sub="Last 30 days" color="var(--accent-primary)" />
                 <MetricCard label="Joining" value="12 Jan 24" sub="4 months ago" color="#8B5CF6" />
@@ -109,9 +109,9 @@ const Staff = () => {
                 <MetricCard label="Late Marks" value="1" sub="Arrival exceptions" color="#F59E0B" />
               </div>
               
-              <div className="card" style={{ padding: '2rem', height: '400px', background: 'var(--bg-tertiary)', borderRadius: '20px', border: '1px solid var(--border-color)', minWidth: 0 }}>
+              <div className="card" style={{ padding: '2rem', height: '400px', background: 'var(--bg-tertiary)', borderRadius: '20px', border: '1px solid var(--border-color)', minWidth: '300px', width: '100%' }}>
                 <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem', textTransform: 'uppercase' }}>Weekly Engagement Trend</h4>
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <BarChart data={Array.isArray(selectedStaff.attendance?.monthly) ? selectedStaff.attendance.monthly : []}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                     <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
@@ -170,9 +170,9 @@ const Staff = () => {
                 <MetricCard label="Reliability" value="High" sub="System calculated" color="#F59E0B" />
               </div>
 
-              <div className="card" style={{ padding: '2rem', height: '400px', background: 'var(--bg-tertiary)', borderRadius: '20px', border: '1px solid var(--border-color)', minWidth: 0 }}>
+              <div className="card" style={{ padding: '2rem', height: '400px', background: 'var(--bg-tertiary)', borderRadius: '20px', border: '1px solid var(--border-color)', minWidth: '300px', width: '100%' }}>
                 <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem', textTransform: 'uppercase' }}>Performance History</h4>
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <AreaChart data={Array.isArray(selectedStaff.metrics?.history) ? selectedStaff.metrics.history : []}>
                     <defs>
                       <linearGradient id="colorRate" x1="0" y1="0" x2="0" y2="1">
@@ -341,7 +341,7 @@ const Staff = () => {
           const status = getStatusStyle(s.status);
           const roleStyle = ROLE_COLORS[s.role] || ROLE_COLORS['Cleaner'];
           const initials = s.name ? s.name.split(' ').map(n => n[0]).join('') : '??';
-          const tasksDue = (s.tasks || []).filter(t => t.status !== 'COMPLETED').length;
+          const tasksDue = Array.isArray(s.tasks) ? s.tasks.filter(t => t.status !== 'COMPLETED').length : (typeof s.tasks === 'number' ? s.tasks : 0);
           return (
             <motion.div
               key={s.id || idx}

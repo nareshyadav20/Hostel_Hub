@@ -257,6 +257,9 @@ const Rooms = () => {
                               
                               return (
                                 <div key={room.id} style={{ border: room.status === 'Maintenance' ? '2px dashed var(--accent-warning)' : '1px solid var(--border-color)', borderRadius: '16px', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
+                                  {/* Room Image */}
+                                  <div style={{ height: '120px', width: '100%', backgroundImage: room.images?.[0] ? `url("${room.images[0]}")` : 'url("/assets/room.png")', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                                  
                                   {/* Room Header Info */}
                                   <div style={{ padding: '1.2rem', borderBottom: '1px solid var(--border-color)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
@@ -343,8 +346,10 @@ const Rooms = () => {
                 <button onClick={() => setSelectedTenantInfo(null)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}>✕</button>
               </div>
               <div style={{ textAlign: 'center', marginTop: '-1rem' }}>
-                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: '800', margin: '0 auto 1rem', boxShadow: '0 8px 20px rgba(99, 102, 241, 0.3)' }}>
-                  {selectedTenantInfo.name.charAt(0)}
+                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: '800', margin: '0 auto 1rem', boxShadow: '0 8px 20px rgba(99, 102, 241, 0.3)', overflow: 'hidden' }}>
+                  {selectedTenantInfo.images?.[0] || beds.find(b => b.id === selectedTenantInfo.bedId)?.images?.[0] ? (
+                    <img src={selectedTenantInfo.images?.[0] || beds.find(b => b.id === selectedTenantInfo.bedId)?.images?.[0]} alt="Bed" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : selectedTenantInfo.name.charAt(0)}
                 </div>
                 <h3 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '0.2rem' }}>{selectedTenantInfo.name}</h3>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Room {selectedTenantInfo.room}</p>
