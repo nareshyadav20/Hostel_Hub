@@ -13,13 +13,24 @@ const Complaints = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
   const [broadcastMessage, setBroadcastMessage] = useState('');
+  
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedComplaintId, setSelectedComplaintId] = useState(null);
+  
+  const staffMembers = [
+    { id: 1, name: 'Ramesh Kumar', role: 'Plumber', active: true, avatar: 'RK' },
+    { id: 2, name: 'Suresh Babu', role: 'Electrician', active: true, avatar: 'SB' },
+    { id: 3, name: 'Pradeep Singh', role: 'Cleaning Lead', active: true, avatar: 'PS' },
+    { id: 4, name: 'Anita Devi', role: 'Mess Manager', active: false, avatar: 'AD' }
+  ];
 
   const totalComplaints = complaints.length;
   const pendingCount = complaints.filter(c => c.status === 'Pending').length;
   const inProgressCount = complaints.filter(c => c.status === 'In-Progress').length;
   
-  const handleStatusChange = (id, newStatus) => {
-    setComplaints(complaints.map(c => c.id === id ? { ...c, status: newStatus } : c));
+  const handleStatusChange = (id, newStatus, assignedTo = null) => {
+    setComplaints(complaints.map(c => c.id === id ? { ...c, status: newStatus, assignedTo } : c));
+    setIsAssignModalOpen(false);
   };
 
   const handleArchive = (id) => {
@@ -146,7 +157,7 @@ const Complaints = () => {
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                           {c.status === 'Pending' && (
                             <button 
-                              onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'In-Progress'); }}
+                              onClick={(e) => { e.stopPropagation(); setSelectedComplaintId(c.id); setIsAssignModalOpen(true); }}
                               className="btn btn-primary" 
                               style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
                             >
@@ -185,10 +196,16 @@ const Complaints = () => {
                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>REPORTED BY</p>
                                <p style={{ fontWeight: '600' }}>{c.reportedBy} (Room {c.room})</p>
                              </div>
-                             <div>
+                           <div>
                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>URGENCY LEVEL</p>
                                <p style={{ fontWeight: '600' }}>{c.urgency}</p>
                              </div>
+                             {c.assignedTo && (
+                               <div>
+                                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>ASSIGNED TO</p>
+                                 <p style={{ fontWeight: '600', color: 'var(--accent-primary)' }}>{c.assignedTo}</p>
+                               </div>
+                             )}
                           </div>
                         </div>
                       </td>
@@ -215,6 +232,37 @@ const Complaints = () => {
                   <button className="btn" type="button" onClick={() => setIsBroadcastModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Cancel</button>
                 </div>
               </form>
+            </motion.div>
+          </>
+        )}
+
+        {isAssignModalOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsAssignModalOpen(false)} />
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '20%', left: '50%', x: '-50%', width: '90%', maxWidth: '400px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem' }}>Assign Staff</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                {staffMembers.filter(s => s.active).map(s => (
+                  <button 
+                    key={s.id} 
+                    onClick={() => handleStatusChange(selectedComplaintId, 'In-Progress', s.name)}
+                    style={{ 
+                      display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', 
+                      borderRadius: '12px', border: '1px solid var(--border-color)', 
+                      background: 'var(--bg-tertiary)', cursor: 'pointer', transition: 'all 0.2s' 
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                  >
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>{s.avatar}</div>
+                    <div style={{ textAlign: 'left' }}>
+                      <p style={{ fontWeight: '700', fontSize: '0.95rem' }}>{s.name}</p>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{s.role}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <button className="btn" onClick={() => setIsAssignModalOpen(false)} style={{ width: '100%', marginTop: '1.5rem', border: '1px solid var(--border-color)' }}>Cancel</button>
             </motion.div>
           </>
         )}

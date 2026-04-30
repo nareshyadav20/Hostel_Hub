@@ -11,8 +11,6 @@ import {
   CheckCircle2, AlertTriangle, FileText, Globe, Cpu, Calendar,
   ChevronRight, ExternalLink, ArrowRight, XCircle
 } from 'lucide-react';
-import Modal from './components/Modal';
-import './Dashboard.css';
 
 const REVENUE_DATA = [
   { name: 'Jan', revenue: 450000, target: 400000 },

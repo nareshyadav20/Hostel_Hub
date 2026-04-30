@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import { 
@@ -63,18 +64,13 @@ const Buildings = () => {
   const [isAddBedOpen, setIsAddBedOpen] = useState(false);
 
   // Form states
-  const [formData, setFormData] = useState({ name: '', address: '', number: '', type: 'Single', capacity: 1, status: 'AVAILABLE', imageUrl: '' });
-
-  useEffect(() => {
-    fetchBuildings();
-  }, []);
+  const [formData, setFormData] = useState({ name: '', address: '', number: '', type: 'Single', capacity: 1, status: 'AVAILABLE', imageUrl: '', isAC: false });
 
   const fetchBuildings = async () => {
     try {
-      const data = await api.getBuildings();
-      const bData = data || [];
+      const bData = await api.getBuildings() || [];
       if (buildingId) {
-        setBuildings(bData.filter(b => (b.id || b._id) === buildingId));
+        setBuildings(bData.filter(b => b.id === buildingId || b._id === buildingId));
       } else {
         setBuildings(bData);
       }
@@ -82,6 +78,12 @@ const Buildings = () => {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchBuildings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSelectBuilding = async (b) => {
     setSelectedBuilding(b);
@@ -93,6 +95,8 @@ const Buildings = () => {
       console.error(err);
     }
   };
+
+
 
   const handleSelectFloor = async (f) => {
     setSelectedFloor(f);
@@ -148,7 +152,7 @@ const Buildings = () => {
     const newB = await api.addBuilding({ name: formData.name, address: formData.address, images: formData.imageUrl ? [formData.imageUrl] : [] });
     setBuildings([...buildings, newB]);
     setIsAddBuildingOpen(false);
-    setFormData({ name: '', address: '', number: '', type: 'Single', capacity: 1, status: 'AVAILABLE', imageUrl: '' });
+    setFormData({ name: '', address: '', number: '', type: 'Single', capacity: 1, status: 'AVAILABLE', imageUrl: '', isAC: false });
   };
 
   const handleAddFloor = async (e) => {
@@ -156,15 +160,22 @@ const Buildings = () => {
     const newF = await api.addFloor({ buildingId: selectedBuilding.id, floorNumber: formData.number, images: formData.imageUrl ? [formData.imageUrl] : [] });
     setFloors([...floors, newF]);
     setIsAddFloorOpen(false);
-    setFormData({ name: '', address: '', number: '', type: 'Single', capacity: 1, status: 'AVAILABLE', imageUrl: '' });
+    setFormData({ name: '', address: '', number: '', type: 'Single', capacity: 1, status: 'AVAILABLE', imageUrl: '', isAC: false });
   };
 
   const handleAddRoom = async (e) => {
     e.preventDefault();
-    const newR = await api.addRoom({ floorId: selectedFloor.id, roomNumber: formData.number, roomType: formData.type, capacity: formData.capacity, images: formData.imageUrl ? [formData.imageUrl] : [] });
+    const newR = await api.addRoom({ 
+      floorId: selectedFloor.id, 
+      roomNumber: formData.number, 
+      roomType: formData.type, 
+      capacity: formData.capacity, 
+      isAC: formData.isAC,
+      images: formData.imageUrl ? [formData.imageUrl] : [] 
+    });
     setRooms([...rooms, newR]);
     setIsAddRoomOpen(false);
-    setFormData({ name: '', address: '', number: '', type: 'Single', capacity: 1, status: 'AVAILABLE', imageUrl: '' });
+    setFormData({ name: '', address: '', number: '', type: 'Single', capacity: 1, status: 'AVAILABLE', imageUrl: '', isAC: false });
   };
 
   const handleAddBed = async (e) => {
@@ -228,6 +239,12 @@ const Buildings = () => {
           <input placeholder="Building Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={inputStyle} required />
           <input placeholder="Address / Location" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} style={inputStyle} required />
           <input placeholder="Image URL (Optional)" value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} style={inputStyle} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '10px', cursor: 'pointer' }} onClick={() => setFormData({...formData, isAC: !formData.isAC})}>
+            <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.isAC ? 'var(--accent-primary)' : 'transparent' }}>
+              {formData.isAC && <div style={{ width: '8px', height: '8px', background: 'white', borderRadius: '1px' }} />}
+            </div>
+            <span style={{ fontSize: '0.9rem', fontWeight: '700' }}>This is an AC Building</span>
+          </div>
           <button className="btn btn-primary" type="submit">Save Building</button>
         </form>
       </Modal>
@@ -250,6 +267,12 @@ const Buildings = () => {
           </select>
           <input type="number" placeholder="Capacity (Beds)" value={formData.capacity} onChange={e => setFormData({...formData, capacity: parseInt(e.target.value)})} style={inputStyle} required min="1" />
           <input placeholder="Image URL (Optional)" value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} style={inputStyle} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '10px', cursor: 'pointer' }} onClick={() => setFormData({...formData, isAC: !formData.isAC})}>
+            <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.isAC ? 'var(--accent-primary)' : 'transparent' }}>
+              {formData.isAC && <div style={{ width: '8px', height: '8px', background: 'white', borderRadius: '1px' }} />}
+            </div>
+            <span style={{ fontSize: '0.9rem', fontWeight: '700' }}>This is an AC Room</span>
+          </div>
           <button className="btn btn-primary" type="submit">Save Room</button>
         </form>
       </Modal>
@@ -280,24 +303,37 @@ const BuildingsList = ({ buildings, onSelect, onAdd }) => (
       <button className="btn btn-primary" onClick={onAdd}><PlusCircle size={18} /> Add Building</button>
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-      {buildings.map(b => (
-        <div key={b.id} className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.2s', borderTop: '4px solid var(--accent-primary)' }} onClick={() => onSelect(b)} onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-          {b.images && b.images.length > 0 ? (
-            <div style={{ height: '140px', width: '100%', backgroundImage: `url("${b.images[0]}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          ) : (
-            <div style={{ height: '140px', width: '100%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <BuildingIcon size={50} color="var(--accent-primary)" style={{ opacity: 0.5 }} />
-            </div>
-          )}
+      {buildings.length > 0 ? buildings.map(b => (
+        <div key={b.id} className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', borderTop: '4px solid var(--accent-primary)', position: 'relative' }} onClick={() => onSelect(b)} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+          <div style={{ height: '160px', width: '100%', backgroundImage: b.images?.[0] ? `url("${b.images[0]}")` : 'url("/assets/building.jpg")', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+            {b.isAC && (
+              <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(255, 255, 255, 0.95)', color: '#2563EB', padding: '0.4rem 0.8rem', borderRadius: '12px', fontWeight: '900', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.4rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', backdropFilter: 'blur(4px)', border: '1px solid rgba(37, 99, 235, 0.2)' }}>
+                <Zap size={14} fill="#2563EB" /> AC ENABLED
+              </div>
+            )}
+          </div>
           <div style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: '800', marginBottom: '0.5rem' }}>{b.name}</h3>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>{b.address}</p>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Manage Floors &rarr;</span>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: '900', margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>{b.name}</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: '1.4' }}>{b.address}</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '1.2rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {b.amenities?.slice(0, 3).map((a, i) => (
+                  <span key={i} style={{ fontSize: '0.65rem', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700' }}>{a}</span>
+                ))}
+              </div>
+              <span style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                View Floors <ArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
+              </span>
             </div>
           </div>
         </div>
-      ))}
+      )) : (
+        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
+          <BuildingIcon size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
+          <h3 style={{ color: 'var(--text-primary)' }}>No Buildings Found</h3>
+          <p style={{ color: 'var(--text-secondary)' }}>Add your first building to start managing rooms.</p>
+        </div>
+      )}
     </div>
   </div>
 );
@@ -312,21 +348,24 @@ const FloorsList = ({ floors, building, onSelect, onBack, onAdd }) => (
       <button className="btn btn-primary" onClick={onAdd}><PlusCircle size={18} /> Add Floor</button>
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem' }}>
-      {floors.map(f => (
-        <div key={f.id} className="card" onClick={() => onSelect(f)} style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', display: 'flex', flexDirection: 'column' }}>
-          {f.images && f.images.length > 0 ? (
-            <div style={{ height: '100px', width: '100%', backgroundImage: `url("${f.images[0]}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          ) : (
-             <div style={{ height: '100px', width: '100%', background: 'linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-               <Layers size={40} color="var(--accent-primary)" style={{ opacity: 0.5 }} />
-             </div>
-          )}
-          <div style={{ padding: '1.5rem', textAlign: 'center' }}>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Floor {f.floorNumber}</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem' }}>Click to view rooms</p>
+      {floors.length > 0 ? floors.map(f => (
+        <motion.div 
+          key={f.id} whileHover={{ y: -5 }} className="card" 
+          style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }}
+          onClick={() => onSelect(f)}
+        >
+          <div style={{ height: '120px', backgroundImage: `url("${f.images?.[0] || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+          <div style={{ padding: '1.2rem', textAlign: 'center' }}>
+            <Layers size={24} color="var(--accent-primary)" style={{ marginBottom: '0.5rem' }} />
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>Floor {f.floorNumber}</h3>
           </div>
+        </motion.div>
+      )) : (
+        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
+          <Layers size={32} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
+          <p style={{ color: 'var(--text-secondary)' }}>No floors found in this building.</p>
         </div>
-      ))}
+      )}
     </div>
   </div>
 );
@@ -340,25 +379,42 @@ const RoomsList = ({ rooms, floor, onSelect, onBack, onAdd }) => (
       </div>
       <button className="btn btn-primary" onClick={onAdd}><PlusCircle size={18} /> Add Room</button>
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-      {rooms.map(r => (
-        <div key={r.id} className="card" onClick={() => onSelect(r)} style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }}>
-          {r.images && r.images.length > 0 ? (
-            <div style={{ height: '120px', width: '100%', backgroundImage: `url("${r.images[0]}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          ) : null}
-          <div style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-              <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-                <DoorOpen size={24} color="var(--accent-primary)" />
-                <h3 style={{ fontSize: '1.4rem', fontWeight: '800' }}>{r.roomNumber}</h3>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1rem' }}>
+          {rooms.length > 0 ? rooms.map(r => (
+            <motion.div 
+              key={r.id} 
+              whileHover={{ scale: 1.02, y: -2 }}
+              className="card" 
+              style={{ padding: '1rem', cursor: 'pointer', borderRadius: '16px', border: '1px solid #E2E8F0', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}
+              onClick={() => onSelect(r)}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6', fontWeight: '800', fontSize: '0.9rem' }}>
+                  {r.roomNumber}
+                </div>
+                {r.isAC && <div style={{ background: '#FFF7ED', color: '#C2410C', padding: '0.2rem 0.4rem', borderRadius: '6px', fontSize: '0.65rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '2px' }}><Zap size={10} fill="#C2410C"/> AC</div>}
               </div>
-              <span style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', borderRadius: '12px', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>{r.roomType}</span>
+              
+              <div>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748B', fontWeight: '600', textTransform: 'uppercase' }}>{r.type}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.2rem' }}>
+                   <span style={{ fontSize: '0.85rem', fontWeight: '800', color: r.status === 'AVAILABLE' ? '#10B981' : '#F59E0B' }}>{r.status}</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '4px', marginTop: 'auto' }}>
+                {Array.from({ length: r.capacity }).map((_, i) => (
+                  <div key={i} style={{ flex: 1, height: '4px', borderRadius: '2px', background: i < (r.occupied || 0) ? '#3B82F6' : '#E2E8F0' }} />
+                ))}
+              </div>
+            </motion.div>
+          )) : (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
+              <DoorOpen size={32} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
+              <p style={{ color: 'var(--text-secondary)' }}>No rooms found on this floor.</p>
             </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Capacity: {r.capacity} Persons</p>
-          </div>
+          )}
         </div>
-      ))}
-    </div>
   </div>
 );
 
@@ -371,21 +427,37 @@ const BedsList = ({ beds, room, onBack, onAdd }) => (
       </div>
       <button className="btn btn-primary" onClick={onAdd}><PlusCircle size={18} /> Add Bed</button>
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem' }}>
-      {beds.map(b => (
-        <div key={b.id} className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-           {b.images && b.images.length > 0 ? (
-            <div style={{ height: '100px', width: '100%', backgroundImage: `url("${b.images[0]}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          ) : null}
-          <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', width: '100%' }}>
-            <Bed size={32} color={b.status === 'AVAILABLE' ? 'var(--accent-success)' : 'var(--text-muted)'} />
-            <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>{b.bedNumber}</h3>
-            <span style={{ fontSize: '0.8rem', padding: '0.3rem 0.8rem', borderRadius: '20px', background: b.status === 'AVAILABLE' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: b.status === 'AVAILABLE' ? 'var(--accent-success)' : '#ef4444' }}>
-              {b.status}
-            </span>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '1rem' }}>
+      {beds.length > 0 ? beds.map(b => (
+        <motion.div 
+          key={b.id} 
+          whileHover={{ scale: 1.05 }}
+          className="card" 
+          style={{ padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', borderRadius: '16px', borderTop: `4px solid ${b.status === 'AVAILABLE' ? '#10B981' : b.status === 'OCCUPIED' ? '#3B82F6' : '#EF4444'}`, textAlign: 'center' }}
+        >
+          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: b.status === 'AVAILABLE' ? '#ECFDF5' : '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: b.status === 'AVAILABLE' ? '#10B981' : '#3B82F6' }}>
+            <Bed size={18} />
           </div>
+          <div>
+            <h3 style={{ fontSize: '1rem', fontWeight: '900', margin: 0, color: '#0F172A' }}>{b.bedNumber}</h3>
+            <span style={{ fontSize: '0.65rem', fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>{b.status}</span>
+          </div>
+          {b.tenant ? (
+            <div style={{ marginTop: '0.2rem', padding: '0.3rem 0.6rem', borderRadius: '8px', background: '#F8FAFC', width: '100%' }}>
+              <p style={{ fontSize: '0.7rem', color: '#475569', fontWeight: '700', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                👤 {b.tenant}
+              </p>
+            </div>
+          ) : (
+            <div style={{ height: '22px' }} />
+          )}
+        </motion.div>
+      )) : (
+        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
+          <Bed size={32} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
+          <p style={{ color: 'var(--text-secondary)' }}>No beds found in this room.</p>
         </div>
-      ))}
+      )}
     </div>
   </div>
 );
@@ -405,6 +477,7 @@ const AssignFloors = ({ buildings, onBack }) => {
     if (selectedBuilding) {
       api.getFloors(selectedBuilding).then(setFloors);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFloors([]);
     }
   }, [selectedBuilding]);
@@ -413,6 +486,7 @@ const AssignFloors = ({ buildings, onBack }) => {
     if (selectedHostel) {
       api.getAssignedFloors(selectedHostel).then(fIds => setAssignedFloors(new Set(fIds || [])));
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAssignedFloors(new Set());
     }
   }, [selectedHostel]);
