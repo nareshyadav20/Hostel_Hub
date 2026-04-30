@@ -21,7 +21,7 @@ const Signup = () => {
     // Mock Signup Logic
     setTimeout(() => {
       const storedUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
-      
+
       if (storedUsers.some(u => u.email === formData.email)) {
         setError('Email already registered.');
         setLoading(false);
@@ -32,10 +32,10 @@ const Signup = () => {
       const newUser = { ...formData, id: Date.now(), profileCompletion: 25 };
       storedUsers.push(newUser);
       localStorage.setItem('mock_users', JSON.stringify(storedUsers));
-      
+
       localStorage.setItem('token', 'mock_token_' + Date.now());
       localStorage.setItem('user', JSON.stringify(newUser));
-      
+
       navigate('/dashboard');
       setLoading(false);
     }, 800);
@@ -56,10 +56,10 @@ const Signup = () => {
         </div>
 
         {error && <div className="error-message" style={{ color: 'var(--accent-error)', textAlign: 'center', marginBottom: '1.5rem', padding: '0.8rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px' }}>{error}</div>}
-        
+
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-            
+
             <div className="input-group">
               <label>Full Name</label>
               <div style={{ position: 'relative' }}>
@@ -102,13 +102,13 @@ const Signup = () => {
                 <input type="password" name="password" placeholder="••••••••" value={formData.password} onChange={handleChange} required style={{ paddingLeft: '3rem', width: '100%' }} />
               </div>
             </div>
-            
+
             <button type="submit" className="auth-btn" disabled={loading} style={{ marginTop: '1rem' }}>
               {loading ? 'Creating Account...' : 'Continue'}
             </button>
           </div>
         </form>
-        
+
         <div className="auth-footer">
           Already have an account? <Link to="/login">Sign In</Link>
         </div>

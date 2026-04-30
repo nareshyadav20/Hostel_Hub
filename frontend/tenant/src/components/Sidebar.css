@@ -37,11 +37,13 @@
   flex-direction: column;
   gap: 0.4rem;
   overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .sidebar-nav::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
+  /* Chrome/Safari */
 }
 
 .nav-item {
@@ -117,17 +119,22 @@
     top: 10px;
     height: calc(100vh - 20px);
   }
-  .label, .sidebar-header h2 {
+
+  .label,
+  .sidebar-header h2 {
     display: none;
   }
+
   .sidebar-header {
     padding: 1.5rem 0.5rem;
   }
+
   .nav-item {
     justify-content: center;
     padding: 1rem;
     transform: none !important;
   }
+
   .nav-item.active::before {
     display: none;
   }

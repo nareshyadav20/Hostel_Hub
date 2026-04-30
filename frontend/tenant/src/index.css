@@ -1,5 +1,20 @@
 @import "@packages/ui-kit/globals.css";
 
+html {
+  font-size: 15px; /* Scales down UI to match 80% zoom look at 100% zoom */
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --sidebar-width: 260px;
+  --sidebar-width-mobile: 80px;
+  --content-padding: 1.5rem;
+  --content-padding-mobile: 0.8rem;
+}
+
 /* Portal Specific Styles */
 #root {
   min-height: 100vh;
@@ -7,13 +22,16 @@
 
 .main-content {
   flex: 1;
-  margin-left: 260px;
+  margin-left: var(--sidebar-width);
   min-height: 100vh;
+  width: calc(100% - var(--sidebar-width));
   transition: margin-left var(--transition-normal);
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboard-container {
-  padding: 2rem;
+  padding: var(--content-padding);
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
@@ -45,7 +63,9 @@
   box-shadow: var(--shadow-lg);
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   color: var(--text-primary);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -94,8 +114,10 @@ p {
 
 @media (max-width: 768px) {
   .main-content {
-    margin-left: 80px;
+    margin-left: var(--sidebar-width-mobile);
+    width: calc(100% - var(--sidebar-width-mobile));
   }
+
   .dashboard-container {
     padding: 1rem;
   }
@@ -110,6 +132,7 @@ p {
 
 .table-responsive table {
   width: 100%;
-  min-width: 600px; /* Ensures minimum width so columns don't squish too much */
+  min-width: 600px;
+  /* Ensures minimum width so columns don't squish too much */
   border-collapse: collapse;
-}
+}

@@ -13,7 +13,7 @@ const Landing = () => {
   const navigate = useNavigate();
   const [selectedCity, setSelectedCity] = useState('Hyderabad');
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
-  
+
   const [activeTab, setActiveTab] = useState('coliving');
   const [selectedGender, setSelectedGender] = useState('');
   const [selectedAmenities, setSelectedAmenities] = useState([]);
@@ -161,8 +161,8 @@ const Landing = () => {
             <h4>Sharing Types</h4>
             {['Private', '2 Sharing', '3 Sharing', 'More than 3 Sharing'].map(type => (
               <label className="checkbox-label" key={type}>
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={sharingTypes.includes(type)}
                   onChange={(e) => {
                     if (e.target.checked) setSharingTypes([...sharingTypes, type]);
@@ -186,11 +186,11 @@ const Landing = () => {
 
           <div className="filter-section">
             <h4>Price Range</h4>
-            <input 
-              type="range" 
-              min="0" max="60000" 
+            <input
+              type="range"
+              min="0" max="60000"
               step="500"
-              value={priceRange[1]} 
+              value={priceRange[1]}
               onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
               className="price-slider"
             />
@@ -218,12 +218,12 @@ const Landing = () => {
             <h4>Amenities</h4>
             {['AC', 'Gym', 'Food', 'Fridge', 'Parking', 'Power Backup'].map(a => (
               <label className="checkbox-label" key={a}>
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={selectedAmenities.includes(a)}
                   onChange={(e) => {
-                     if (e.target.checked) setSelectedAmenities([...selectedAmenities, a]);
-                     else setSelectedAmenities(selectedAmenities.filter(item => item !== a));
+                    if (e.target.checked) setSelectedAmenities([...selectedAmenities, a]);
+                    else setSelectedAmenities(selectedAmenities.filter(item => item !== a));
                   }}
                 />
                 <span className="checkbox-custom"></span> {a}
