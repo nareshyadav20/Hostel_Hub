@@ -26,6 +26,10 @@ const Landing = () => {
   const [searchCollege, setSearchCollege] = useState('');
   const [searchProperty, setSearchProperty] = useState('');
   const [userDetails, setUserDetails] = useState({ name: '', contact: '' });
+  
+  const [sortBy, setSortBy] = useState('');
+  const [sharingTypes, setSharingTypes] = useState([]);
+  const [priceRange, setPriceRange] = useState([0, 60000]);
 
   const hostels = [
     { id: 1, city: 'Bengaluru', name: 'Livora Elite - Koramangala', locality: 'Koramangala', rating: 4.8, price: 12500, img: heroBg, amenities: ['Free WiFi', 'A/C', 'Mess', 'Gym'], gender: 'Unisex', category: 'Professional' },
@@ -57,15 +61,22 @@ const Landing = () => {
     { id: 27, city: 'Hyderabad', name: 'Serilingampally Suites', locality: 'Serilingampally', rating: 4.6, price: 10500, img: professionalImg, amenities: ['Peaceful', 'AC', 'Parking'], gender: 'Unisex', category: 'Professional' }
   ];
 
-  const filteredHostels = hostels.filter(h => {
+  let filteredHostels = hostels.filter(h => {
     const matchesCity = h.city === selectedCity;
     const matchesLocality = searchLocality ? h.locality.toLowerCase().includes(searchLocality.toLowerCase()) : true;
     const matchesProperty = searchProperty ? h.name.toLowerCase().includes(searchProperty.toLowerCase()) : true;
     const matchesGender = selectedGender ? (h.gender === selectedGender || h.gender === 'Unisex') : true;
     const matchesAmenities = selectedAmenities.length > 0 ? selectedAmenities.every(a => h.amenities.includes(a)) : true;
     const matchesTab = activeTab === 'student' ? h.category === 'Student' : true;
-    return matchesCity && matchesLocality && matchesProperty && matchesGender && matchesAmenities && matchesTab;
+    const matchesPrice = h.price >= priceRange[0] && h.price <= priceRange[1];
+    return matchesCity && matchesLocality && matchesProperty && matchesGender && matchesAmenities && matchesTab && matchesPrice;
   });
+
+  if (sortBy === 'price_low_high') {
+    filteredHostels.sort((a, b) => a.price - b.price);
+  } else if (sortBy === 'price_high_low') {
+    filteredHostels.sort((a, b) => b.price - a.price);
+  }
 
   const allLocalities = ['Gachibowli', 'Gopanpally Gachibowli', 'Gowlidoddy', 'HITEC City', 'Journalist colony', 'KOKAPET', 'Kondapur', 'KPHB', 'Kukatpally', 'Lanco Hills Manikonda', 'Madhapur', 'Manikonda', 'Miyapur', 'Serilingampally'];
   const visibleLocalities = isLocalityExpanded ? allLocalities : allLocalities.slice(0, 10);
@@ -270,7 +281,137 @@ const Landing = () => {
         </div>
       )}
 
-      <div className="landing-content" style={{ display: 'block' }}>
+      <div className="landing-content">
+        <aside className="filters-sidebar">
+          <div className="sidebar-header">
+            <h3>Filters</h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#757575" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          </div>
+
+          <div className="filter-section">
+            <h4>Stay Type</h4>
+            <label className="radio-label">
+              <input type="radio" name="stayType" checked={activeTab === 'coliving'} onChange={() => setActiveTab('coliving')} />
+              <span className="radio-custom"></span> Coliving
+            </label>
+            <label className="radio-label">
+              <input type="radio" name="stayType" checked={activeTab === 'student'} onChange={() => setActiveTab('student')} />
+              <span className="radio-custom"></span> Student Living
+            </label>
+          </div>
+
+          <div className="filter-section">
+            <h4>Sort By</h4>
+            <label className="radio-label">
+              <input type="radio" name="sortBy" checked={sortBy === 'price_low_high'} onChange={() => setSortBy('price_low_high')} />
+              <span className="radio-custom"></span> Price: Low to High
+            </label>
+            <label className="radio-label">
+              <input type="radio" name="sortBy" checked={sortBy === 'price_high_low'} onChange={() => setSortBy('price_high_low')} />
+              <span className="radio-custom"></span> Price: High to Low
+            </label>
+          </div>
+
+          <div className="filter-section">
+            <h4>Sharing Types</h4>
+            {['Private', '2 Sharing', '3 Sharing', 'More than 3 Sharing'].map(type => (
+              <label className="checkbox-label" key={type}>
+                <input 
+                  type="checkbox" 
+                  checked={sharingTypes.includes(type)}
+                  onChange={(e) => {
+                    if (e.target.checked) setSharingTypes([...sharingTypes, type]);
+                    else setSharingTypes(sharingTypes.filter(t => t !== type));
+                  }}
+                />
+                <span className="checkbox-custom"></span> {type}
+              </label>
+            ))}
+          </div>
+
+          <div className="filter-section">
+            <h4>Gender</h4>
+            {['Men', 'Women', 'Unisex'].map(g => (
+              <label className="radio-label" key={g}>
+                <input type="radio" name="genderFilter" checked={selectedGender === g} onChange={() => setSelectedGender(g)} />
+                <span className="radio-custom"></span> {g}
+              </label>
+            ))}
+          </div>
+
+          <div className="filter-section">
+            <h4>Price Range</h4>
+            <input 
+              type="range" 
+              min="0" max="60000" 
+              step="500"
+              value={priceRange[1]} 
+              onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+              className="price-slider"
+            />
+            <div className="price-inputs">
+              <select className="price-select" value={priceRange[0]} onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}>
+                <option value={0}>Rs. 0</option>
+                <option value={5000}>Rs. 5000</option>
+                <option value={10000}>Rs. 10000</option>
+                <option value={15000}>Rs. 15000</option>
+                <option value={20000}>Rs. 20000</option>
+              </select>
+              <span>-</span>
+              <select className="price-select" value={priceRange[1]} onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}>
+                <option value={10000}>Rs. 10000</option>
+                <option value={20000}>Rs. 20000</option>
+                <option value={30000}>Rs. 30000</option>
+                <option value={40000}>Rs. 40000</option>
+                <option value={50000}>Rs. 50000</option>
+                <option value={60000}>Rs. 60000</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="filter-section">
+            <h4>Amenities</h4>
+            {['AC', 'Gym', 'Food', 'Fridge', 'Parking', 'Power Backup'].map(a => (
+              <label className="checkbox-label" key={a}>
+                <input 
+                  type="checkbox" 
+                  checked={selectedAmenities.includes(a)}
+                  onChange={(e) => {
+                     if (e.target.checked) setSelectedAmenities([...selectedAmenities, a]);
+                     else setSelectedAmenities(selectedAmenities.filter(item => item !== a));
+                  }}
+                />
+                <span className="checkbox-custom"></span> {a}
+              </label>
+            ))}
+          </div>
+
+          <div className="filter-section border-0" style={{ paddingBottom: '2rem' }}>
+            <h4>Locality</h4>
+            <div className="locality-search">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" placeholder="Search Localities" value={searchLocality} onChange={e => setSearchLocality(e.target.value)} />
+            </div>
+            <div className="locality-list">
+              {visibleLocalities.map(loc => (
+                <label className="radio-label" key={loc}>
+                  <input type="radio" name="localityFilterList" checked={searchLocality === loc} onChange={() => setSearchLocality(searchLocality === loc ? '' : loc)} onClick={(e) => {
+                    // allows unchecking
+                    if (searchLocality === loc) {
+                      e.preventDefault();
+                      setSearchLocality('');
+                    }
+                  }} />
+                  <span className="radio-custom"></span> {loc}
+                </label>
+              ))}
+              <div className="show-more" onClick={() => setIsLocalityExpanded(!isLocalityExpanded)}>
+                {isLocalityExpanded ? 'Show less' : 'Show more'}
+              </div>
+            </div>
+          </div>
+        </aside>
+
         <main className="hostels-grid">
           {filteredHostels.map((hostel, index) => (
             <div key={hostel.id} className="hostel-card-vertical fade-in-up" style={{ animationDelay: `${0.1 * index}s` }}>
