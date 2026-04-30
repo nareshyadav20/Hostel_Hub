@@ -14,7 +14,7 @@ const Listing = () => {
       try {
         const response = await API.get(`/buildings/${id}`);
         const b = response.data;
-        
+
         // Map backend building to the structure expected by Listing.jsx
         // We'll use a mix of real data and mock data for fields not in DB yet
         const mapped = {
@@ -36,8 +36,8 @@ const Listing = () => {
             status: 'Available',
             color: 'var(--accent-success)'
           })) || [
-            { type: 'Standard 2 Sharing', price: 6500, deposit: 13000, status: 'Available', color: 'var(--accent-success)' }
-          ],
+              { type: 'Standard 2 Sharing', price: 6500, deposit: 13000, status: 'Available', color: 'var(--accent-success)' }
+            ],
           landmarks: [{ name: 'City College', distance: '200m' }],
           rules: ['No smoking', 'Quiet hours 11 PM'],
           menu: { breakfast: 'Poha', lunch: 'Rice/Dal', dinner: 'Roti/Sabzi' }
@@ -45,6 +45,27 @@ const Listing = () => {
         setHostel(mapped);
       } catch (err) {
         console.error('Error fetching building details:', err);
+        // Fallback for mock IDs like "1", "2", "3" used in Landing.jsx
+        const fallbackPrice = (!isNaN(parseInt(id)) && parseInt(id) > 0) ? 6500 + ((parseInt(id) % 10) * 500) : 6500;
+        setHostel({
+          id: id,
+          name: `Premium Property ${id}`,
+          location: 'Prime Location',
+          rating: 4.6,
+          reviews: 124,
+          safetyScore: 9.5,
+          occupancy: '92%',
+          verified: true,
+          price: fallbackPrice,
+          deposit: fallbackPrice * 2,
+          amenities: ['WiFi', 'Mess', 'Laundry', 'AC'],
+          roomTypes: [
+            { type: 'Standard 2 Sharing', price: fallbackPrice, deposit: fallbackPrice * 2, status: 'Available', color: 'var(--accent-success)' }
+          ],
+          landmarks: [{ name: 'City Center', distance: '500m' }],
+          rules: ['No smoking', 'Quiet hours 11 PM'],
+          menu: { breakfast: 'Poha/Idli', lunch: 'Thali', dinner: 'Chapati/Curry' }
+        });
       } finally {
         setLoading(false);
       }

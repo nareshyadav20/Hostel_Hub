@@ -167,25 +167,43 @@ const Home = () => {
             <h2>Perfect for working, <span className="highlight">More so for unwinding after.</span></h2>
           </div>
           <div className="features-grid-classic">
-            <div className="feat-col">24x7<br />Assistance</div>
-            <div className="feat-col">App Based Issue<br />Resolution</div>
-            <div className="feat-col">Thoughtful<br />Facilities</div>
-            <div className="feat-col">WhatsApp<br />Video Tour</div>
-            <div className="feat-col">Zero Brokerage<br />One Month Deposit</div>
+            <div className="feat-col">
+              <div className="feat-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+              <span>24x7<br />Assistance</span>
+            </div>
+            <div className="feat-col">
+              <div className="feat-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><path d="M12 18h.01"/></svg></div>
+              <span>App Based Issue<br />Resolution</span>
+            </div>
+            <div className="feat-col">
+              <div className="feat-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="6.5"/></svg></div>
+              <span>Thoughtful<br />Facilities</span>
+            </div>
+            <div className="feat-col">
+              <div className="feat-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
+              <span>WhatsApp<br />Video Tour</span>
+            </div>
+            <div className="feat-col">
+              <div className="feat-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+              <span>Zero Brokerage<br />One Month Deposit</span>
+            </div>
           </div>
         </section>
 
         {/* Stay Easy Section exactly like Image 3 */}
         <section className="stay-easy-section">
           <div className="stay-easy-grid">
-            <div className="stay-easy-img-container">
+            <div className="stay-easy-card">
               <img src={professionalCat} alt="Professional Co-Living" />
+              <div className="stay-overlay"><h3>Professionals</h3></div>
             </div>
-            <div className="stay-easy-img-container">
+            <div className="stay-easy-card">
               <img src={stayEasy} alt="Peaceful Living" />
+              <div className="stay-overlay"><h3>Community</h3></div>
             </div>
-            <div className="stay-easy-img-container">
+            <div className="stay-easy-card">
               <img src={studentCat} alt="Student Accommodation" />
+              <div className="stay-overlay"><h3>Students</h3></div>
             </div>
           </div>
         </section>
@@ -203,12 +221,8 @@ const Home = () => {
             </div>
           </div>
           <div className="bond-easy-images-wrapper">
-            <div className="bond-easy-img-container">
-              <img src={bondEasy} alt="Community" />
-            </div>
-            <div className="bond-easy-img-container">
-              <img src={heroCouple} alt="Lifestyle" />
-            </div>
+            <img src={bondEasy} alt="Community" className="bond-easy-img-1" />
+            <img src={heroCouple} alt="Lifestyle" className="bond-easy-img-2" />
           </div>
         </section>
 
@@ -300,6 +314,9 @@ const Home = () => {
             <h4>Scan the QR<br />to install the app!</h4>
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://livora.com" alt="" className="qr-img" />
           </div>
+        </div>
+        <div className="footer-bottom">
+          &copy; {new Date().getFullYear()} Livora Stays. All rights reserved.
         </div>
       </footer>
     </div>

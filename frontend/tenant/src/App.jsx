@@ -19,7 +19,6 @@ import Discounts from './pages/Discounts';
 import Services from './pages/Services';
 import Community from './pages/Community';
 import Safety from './pages/Safety';
-import Laundry from './pages/Laundry';
 import Profile from './pages/Profile';
 import Layout from './components/Layout';
 import './index.css';
@@ -57,7 +56,6 @@ function App() {
         <Route path="/services"   element={<ProtectedRoute><Layout><Services /></Layout></ProtectedRoute>} />
         <Route path="/community"  element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />
         <Route path="/safety"     element={<ProtectedRoute><Layout><Safety /></Layout></ProtectedRoute>} />
-        <Route path="/laundry"    element={<ProtectedRoute><Layout><Laundry /></Layout></ProtectedRoute>} />
         <Route path="/profile"    element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
 
         {/* Fallback */}
