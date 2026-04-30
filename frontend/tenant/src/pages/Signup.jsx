@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import API from '../api/axios';
 import '@packages/ui-kit/auth.css';
 
 const Signup = () => {
@@ -14,31 +15,30 @@ const Signup = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
-    // Mock Signup Logic
-    setTimeout(() => {
-      const storedUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
+    try {
+      const response = await API.post('/auth/register', { 
+        name: formData.name, 
+        email: formData.email, 
+        password: formData.password,
+        phone: formData.mobile,
+        role: 'TENANT'
+      });
       
-      if (storedUsers.some(u => u.email === formData.email)) {
-        setError('Email already registered.');
-        setLoading(false);
-        return;
-      }
-
-      // Step 1 Output: profileCompletion = 25
-      const newUser = { ...formData, id: Date.now(), profileCompletion: 25 };
-      storedUsers.push(newUser);
-      localStorage.setItem('mock_users', JSON.stringify(storedUsers));
-      
-      localStorage.setItem('token', 'mock_token_' + Date.now());
-      localStorage.setItem('user', JSON.stringify(newUser));
+      const { user, token } = response.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
       
       navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   return (

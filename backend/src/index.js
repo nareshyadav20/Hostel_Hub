@@ -1,4 +1,4 @@
-// HostelHub API Server - Dashboard routes enabled
+// HostelHub API Server - Fully integrated
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -23,6 +23,8 @@ const bedRoutes = require('./routes/bedRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
 const hostelFloorMappingRoutes = require('./routes/hostelFloorMappingRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const complaintRoutes = require('./routes/complaintRoutes');
+const laundryRoutes = require('./routes/laundryRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -32,6 +34,8 @@ app.use('/api/beds', bedRoutes);
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/hostel-floor-mapping', hostelFloorMappingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/complaints', complaintRoutes);
+app.use('/api/laundry', laundryRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

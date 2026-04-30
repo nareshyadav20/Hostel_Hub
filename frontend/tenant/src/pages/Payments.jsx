@@ -1,14 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import API from '../api/axios';
 
 const Payments = () => {
+  const [tenantData, setTenantData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [history] = useState([
     { id: 1, date: '01 Apr 2026', amount: 6500, status: 'Success' },
     { id: 2, date: '01 Mar 2026', amount: 6500, status: 'Success' },
     { id: 3, date: '01 Feb 2026', amount: 6500, status: 'Success' },
   ]);
 
-  const pendingRent = 6500;
+  useEffect(() => {
+    const fetchPaymentInfo = async () => {
+      try {
+        const response = await API.get('/tenants/me');
+        setTenantData(response.data);
+      } catch (err) {
+        console.error('Error fetching payment data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPaymentInfo();
+  }, []);
+
+  const pendingRent = tenantData?.rentStatus === 'PENDING' ? (tenantData?.rent || 0) : 0;
   const totalPaid = history.reduce((acc, curr) => acc + curr.amount, 0);
 
   const handlePayNow = () => alert('Redirecting to Payment Gateway...');
@@ -19,6 +36,8 @@ const Payments = () => {
     { id: '#INV-2024-003', date: 'Feb 01, 2026', month: 'February 2026',  amount: '₹6,500', status: 'Paid' },
     { id: '#INV-2023-012', date: 'Jan 01, 2026', month: 'January 2026',   amount: '₹6,500', status: 'Late' },
   ];
+
+  if (loading) return <div className="dashboard-container"><div className="loading-spinner">Fetching Financials...</div></div>;
 
   return (
     <div className="payments-page fade-in dashboard-container" style={{ position: 'relative' }}>

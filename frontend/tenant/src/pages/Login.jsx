@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import API from '../api/axios';
 import '@packages/ui-kit/auth.css';
 
 const Login = () => {
@@ -14,20 +15,18 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    // Mock Login Logic
-    setTimeout(() => {
-      const storedUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
-      const user = storedUsers.find(u => u.email === email && u.password === password);
-
-      if (user || (email === 'tenant@example.com' && password === 'password')) {
-        localStorage.setItem('token', 'mock_token_' + Date.now());
-        localStorage.setItem('user', JSON.stringify(user || { name: 'Demo Tenant', email }));
-        navigate('/dashboard');
-      } else {
-        setError('Invalid email or password. (Try tenant@example.com / password)');
-      }
+    try {
+      const response = await API.post('/auth/login', { email, password });
+      const { user, token } = response.data;
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid email or password');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   return (

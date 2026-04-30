@@ -1,13 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import API from './api/axios';
 import './App.css';
 
 function Dashboard() {
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{"name": "Tenant", "occupation": "Student"}'));
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{"name": "Tenant"}'));
+  const [tenantData, setTenantData] = useState(null);
+  const [hostelStats, setHostelStats] = useState(null);
   const [examMode, setExamMode] = useState(false);
   const [attendanceMarked, setAttendanceMarked] = useState(false);
   const [curfewRequested, setCurfewRequested] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const [profileRes, statsRes] = await Promise.all([
+          API.get('/tenants/me'),
+          API.get('/dashboard/alerts')
+        ]);
+        setTenantData(profileRes.data);
+        setHostelStats(statsRes.data);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
@@ -158,6 +180,8 @@ function Dashboard() {
     navigator.clipboard.writeText('https://livora.com/refer/uma2026');
   };
 
+  if (loading) return <div className="dashboard-container"><div className="loading-spinner">Loading Portal...</div></div>;
+
   return (
     <div className="dashboard-container">
       {notification && (
@@ -172,17 +196,17 @@ function Dashboard() {
 
       <section className="welcome-section fade-in-up">
         <div className="welcome-text">
-          <h1>{greeting}, {user.name}! 👋</h1>
+          <h1>{greeting}, {tenantData?.name || user.name}! 👋</h1>
           <p>Welcome back to your digital hostel home. Everything looks good for today.</p>
         </div>
         <div className="welcome-stats">
           <div className="mini-stat">
             <span className="mini-stat-label">Room</span>
-            <span className="mini-stat-value">B-402</span>
+            <span className="mini-stat-value">{tenantData?.room || 'N/A'}</span>
           </div>
           <div className="mini-stat">
-            <span className="mini-stat-label">Floor</span>
-            <span className="mini-stat-value">4th</span>
+            <span className="mini-stat-label">Status</span>
+            <span className="mini-stat-value" style={{ color: tenantData?.status === 'ACTIVE' ? 'var(--accent-success)' : 'var(--accent-warning)' }}>{tenantData?.status || 'Pending'}</span>
           </div>
         </div>
       </section>
@@ -194,13 +218,15 @@ function Dashboard() {
             <div className="card stat-card rent-card fade-in-up" style={{ animationDelay: '0.1s' }}>
               <div className="card-header">
                 <h3>Rent Cycle</h3>
-                <span className="badge badge-error">3 DAYS LEFT</span>
+                <span className={`badge ${tenantData?.rentStatus === 'PAID' ? 'badge-success' : 'badge-error'}`}>
+                  {tenantData?.rentStatus === 'PAID' ? 'PAID' : 'PENDING'}
+                </span>
               </div>
-              <div className="stat-value">₹6,500</div>
+              <div className="stat-value">₹{tenantData?.rent || '0'}</div>
               <div className="progress-bar">
-                <div className="progress-fill error" style={{ width: '90%' }}></div>
+                <div className={`progress-fill ${tenantData?.rentStatus === 'PAID' ? 'success' : 'error'}`} style={{ width: tenantData?.rentStatus === 'PAID' ? '100%' : '70%' }}></div>
               </div>
-              <p className="stat-desc">Next payment due on 30th April</p>
+              <p className="stat-desc">{tenantData?.rentStatus === 'PAID' ? 'Rent settled for this month' : 'Next payment due soon'}</p>
             </div>
 
             {/* Loyalty Card */}

@@ -1,16 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import API from '../api/axios';
 
 const Mess = () => {
   const [attended, setAttended] = useState(false);
   const [skipped, setSkipped] = useState(false);
   const [rating, setRating] = useState(0);
-  
-  const todayMenu = {
-    breakfast: 'Idli, Sambar & Chutney',
-    lunch: 'Rice, Dal, Veg Fry & Curd',
-    dinner: 'Roti, Paneer Masala & Salad'
-  };
+  const [todayMenu, setTodayMenu] = useState({
+    breakfast: 'Loading...',
+    lunch: 'Loading...',
+    dinner: 'Loading...'
+  });
+  const [messStats, setMessStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMessData = async () => {
+      try {
+        const response = await API.get('/dashboard/mess');
+        setMessStats(response.data);
+        if (response.data.menuToday) {
+          setTodayMenu(response.data.menuToday);
+        }
+      } catch (err) {
+        console.error('Error fetching mess data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMessData();
+  }, []);
 
   const handleMarkAttendance = () => {
     setAttended(true);
@@ -21,6 +40,8 @@ const Mess = () => {
     setSkipped(true);
     setAttended(false);
   };
+
+  if (loading) return <div className="dashboard-container"><div className="loading-spinner">Fetching Menu...</div></div>;
 
   return (
     <div className="mess-page fade-in dashboard-container" style={{ position: 'relative' }}>
@@ -48,7 +69,7 @@ const Mess = () => {
               <h3 style={{ fontSize: '1.4rem', fontWeight: '800' }}>Daily Menu</h3>
             </div>
             <span style={{ background: 'rgba(251, 191, 36, 0.1)', color: 'var(--accent-warning)', padding: '0.5rem 1.2rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '800', border: '1px solid rgba(251, 191, 36, 0.2)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              Live: 4.2 
+              Live: {messStats?.avgFoodRating || '0.0'} 
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
             </span>
           </div>

@@ -1,36 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import API from '../api/axios';
 
 const Complaints = () => {
-  const [complaints, setComplaints] = useState([
-    { id: 1, issue: 'WiFi not working', status: 'Pending', date: '20 Apr 2026', category: 'Maintenance' },
-    { id: 2, issue: 'Bathroom cleaning', status: 'Resolved', date: '15 Apr 2026', category: 'Housekeeping' },
-  ]);
-
+  const [complaints, setComplaints] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ title: '', category: 'Maintenance', description: '' });
 
-  const handleRaiseComplaint = (e) => {
+  useEffect(() => {
+    fetchComplaints();
+  }, []);
+
+  const fetchComplaints = async () => {
+    try {
+      const response = await API.get('/complaints/me');
+      setComplaints(response.data);
+    } catch (err) {
+      console.error('Error fetching complaints:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRaiseComplaint = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      const newTicket = {
-        id: complaints.length + 1,
-        issue: formData.title,
-        status: 'Pending',
-        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-        category: formData.category
-      };
-      
-      setComplaints([newTicket, ...complaints]);
-      setSubmitting(false);
+    try {
+      const response = await API.post('/complaints', formData);
+      setComplaints([response.data, ...complaints]);
       setShowForm(false);
       setFormData({ title: '', category: 'Maintenance', description: '' });
       alert('Ticket raised successfully! Our team will look into it shortly.');
-    }, 1500);
+    } catch (err) {
+      console.error('Error raising complaint:', err);
+      alert('Failed to raise ticket. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -60,48 +69,56 @@ const Complaints = () => {
       </header>
 
       {/* ── Ticket List ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
-        {complaints.map(item => (
-          <div key={item.id} className="glass-card complaint-item" style={{ 
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-            padding: '1.8rem 2.5rem', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
-            borderLeft: item.status === 'Resolved' ? '6px solid var(--accent-success)' : '6px solid var(--accent-warning)',
-            borderRadius: '24px', position: 'relative'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <div style={{ 
-                width: '64px', height: '64px', background: item.status === 'Resolved' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)', 
-                borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: item.status === 'Resolved' ? 'var(--accent-success)' : 'var(--accent-warning)' 
-              }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-              </div>
-              <div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: '900', marginBottom: '0.4rem', color: 'var(--text-primary)' }}>{item.issue}</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>Ticket ID: #{item.id}0248</span>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    {item.date}
-                  </span>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>Loading requests...</div>
+      ) : complaints.length === 0 ? (
+        <div className="glass-card" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '1.2rem', fontWeight: '600' }}>No active requests found. Everything seems to be working perfectly! ✨</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
+          {complaints.map(item => (
+            <div key={item._id} className="glass-card complaint-item" style={{ 
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+              padding: '1.8rem 2.5rem', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+              borderLeft: item.status === 'Resolved' ? '6px solid var(--accent-success)' : '6px solid var(--accent-warning)',
+              borderRadius: '24px', position: 'relative'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                <div style={{ 
+                  width: '64px', height: '64px', background: item.status === 'Resolved' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)', 
+                  borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: item.status === 'Resolved' ? 'var(--accent-success)' : 'var(--accent-warning)' 
+                }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', marginBottom: '0.4rem', color: 'var(--text-primary)' }}>{item.title}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>{item.category}</span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                      {new Date(item.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
                 </div>
               </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                <span style={{ 
+                  padding: '0.6rem 1.4rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '900',
+                  background: item.status === 'Resolved' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)',
+                  color: item.status === 'Resolved' ? 'var(--accent-success)' : 'var(--accent-warning)',
+                  display: 'inline-flex', alignItems: 'center', gap: '0.6rem'
+                }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'currentColor' }}></div>
+                  {item.status}
+                </span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <span style={{ 
-                padding: '0.6rem 1.4rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '900',
-                background: item.status === 'Resolved' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)',
-                color: item.status === 'Resolved' ? 'var(--accent-success)' : 'var(--accent-warning)',
-                display: 'inline-flex', alignItems: 'center', gap: '0.6rem'
-              }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'currentColor' }}></div>
-                {item.status}
-              </span>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}><polyline points="9 18 15 12 9 6"></polyline></svg>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* ── New Ticket Modal ── */}
       {showForm && (

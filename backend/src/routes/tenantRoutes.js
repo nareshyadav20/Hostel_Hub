@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const tenantController = require('../controllers/tenantController');
+const authMiddleware = require('../utils/authMiddleware');
 
-router.get('/', tenantController.getTenants);
+router.get('/me', authMiddleware, tenantController.getTenantProfile);
 router.post('/', tenantController.createTenant);
-router.post('/bulk-create', tenantController.bulkCreateTenants);
-router.patch('/:id', tenantController.updateTenant);
+router.get('/', tenantController.getTenants);
+router.post('/bulk', tenantController.bulkCreateTenants);
+router.put('/:id', tenantController.updateTenant);
 router.delete('/:id', tenantController.deleteTenant);
 
 module.exports = router;
