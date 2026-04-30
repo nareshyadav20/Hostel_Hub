@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Home.css';
+import SearchOverlay from '../components/SearchOverlay';
 import heroCouple from '../assets/hero_couple.png';
 import stayEasy from '../assets/stay_easy.png';
 import bondEasy from '../assets/bond_easy.png';
@@ -11,6 +12,7 @@ const Home = () => {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState('');
   const [scrolled, setScrolled] = useState(false);
+  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [currentBadgeIndex, setCurrentBadgeIndex] = useState(0);
 
   const badgeOptions = [
@@ -60,11 +62,7 @@ const Home = () => {
   };
 
   const handleSearch = () => {
-    if (searchValue.trim()) {
-      navigate(`/search?q=${searchValue}`);
-    } else {
-      navigate('/search');
-    }
+    setIsSearchOverlayOpen(true);
   };
 
   return (
@@ -111,15 +109,16 @@ const Home = () => {
             </div>
 
             <div className="home-search-container">
-              <div className="search-input-wrapper">
+              <div className="search-input-wrapper" onClick={() => setIsSearchOverlayOpen(true)} style={{ cursor: 'pointer' }}>
                 <input
                   type="text"
                   placeholder="Find a Livora near your place of Work/Study"
                   value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  readOnly
+                  onClick={() => setIsSearchOverlayOpen(true)}
+                  style={{ cursor: 'pointer' }}
                 />
-                <div className="search-icon-btn" onClick={handleSearch}>
+                <div className="search-icon-btn" onClick={() => setIsSearchOverlayOpen(true)}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00b0f0" strokeWidth="2.5">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -302,6 +301,11 @@ const Home = () => {
           </div>
         </div>
       </footer>
+      <SearchOverlay
+        isOpen={isSearchOverlayOpen}
+        onClose={() => setIsSearchOverlayOpen(false)}
+        initialCity="Hyderabad"
+      />
     </div>
   );
 };
