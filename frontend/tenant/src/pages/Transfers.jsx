@@ -11,7 +11,7 @@ const Transfers = () => {
   const requestStatus = 'No Active Requests';
 
   const [showForm, setShowForm] = React.useState(false);
-  const [submitted, setSubmitted] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [transfers, setTransfers] = React.useState([]);
   const [tenantData, setTenantData] = React.useState(null);
@@ -36,7 +36,7 @@ const Transfers = () => {
       setTransfers(transfersRes.data);
       setFormData(prev => ({
         ...prev,
-        name: profileRes.data.name,
+        name: profileRes.data.name || '',
         oldRoom: profileRes.data.room || 'Not Assigned'
       }));
     } catch (err) {
@@ -50,17 +50,18 @@ const Transfers = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSubmitting(true);
     try {
       const response = await API.post('/transfers', formData);
       setTransfers([response.data, ...transfers]);
       setShowForm(false);
-      setFormData({ newRoom: '', reason: '' });
+      setFormData(prev => ({ ...prev, newRoom: '', reason: '' }));
       alert('Transfer Request Submitted Successfully!');
     } catch (err) {
       console.error('Error submitting transfer:', err);
       alert('Failed to submit transfer request.');
-      setSubmitted(false);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -156,8 +157,8 @@ const Transfers = () => {
                 <input
                   type="text"
                   placeholder="e.g. 402-B or Premium Single"
-                  value={formData.newRoom}
-                  onChange={(e) => setFormData({ ...formData, newRoom: e.target.value })}
+                  value={formData.newRoom || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, newRoom: e.target.value }))}
                   style={{ width: '100%', padding: '1rem 1.2rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-primary)', fontWeight: '600' }}
                   required
                 />
@@ -167,8 +168,8 @@ const Transfers = () => {
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.6rem' }}>Reason for Transfer</label>
                 <textarea
                   placeholder="e.g. Need more space, current room has issues..."
-                  value={formData.reason}
-                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                  value={formData.reason || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
                   style={{ width: '100%', padding: '1rem 1.2rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-primary)', fontWeight: '600', minHeight: '100px', resize: 'none' }}
                   required
                 />

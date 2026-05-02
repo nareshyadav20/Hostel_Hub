@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5001/api';
+const API_URL = 'http://localhost:5000/api';
 export const backendOnline = true;
 
 // --- SEED GENERATOR ---
@@ -290,12 +290,12 @@ export const api = {
   }, []),
 
   getRoomTransfers: () => cached('room_transfers_v1', async () => {
-    const res = await axios.get(`${API_URL}/room-transfers`);
+    const res = await axios.get(`${API_URL}/transfers`);
     return handleId(res.data);
   }, []),
 
   updateRoomTransferStatus: async (id, status) => {
-    const res = await axios.patch(`${API_URL}/room-transfers/${id}`, { status });
+    const res = await axios.patch(`${API_URL}/transfers/${id}`, { status });
     // Invalidate cache
     sessionStorage.removeItem('room_transfers_v1');
     return handleId(res.data);

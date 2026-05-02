@@ -18,16 +18,42 @@ const ICONS = {
   Luxury: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
 };
 
-/* ─── hostel data ─── */
-const HOSTELS = [
-  { id: 1, name: 'Sunshine Residency', location: 'Near City College', price: 6500, gender: 'Boys', type: '2 Sharing', rating: 4.5, image: '/sunshine_residency_hostel.png' },
-  { id: 2, name: 'Elite Living', location: 'Tech Park Area', price: 8500, gender: 'Girls', type: 'Single', rating: 4.8, image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000' },
-  { id: 3, name: 'Green View Hostel', location: 'Green Valley', price: 5000, gender: 'Co-living', type: '4 Sharing', rating: 4.2, image: 'https://images.unsplash.com/photo-1623625434462-e5e42318ae49?auto=format&fit=crop&q=80&w=1000' },
+const bNames = [
+  { id: 'b1', name: 'Alpha Tower', address: 'North Campus', desc: 'Premium Boys Hostel', gender: 'Boys', price: 6500 },
+  { id: 'b2', name: 'Beta Block', address: 'South Campus', desc: 'Standard Girls Hostel', gender: 'Girls', price: 5000 },
+  { id: 'b3', name: 'Gamma Guesthouse', address: 'West University', desc: 'Budget Student Stay', gender: 'Mixed', price: 4500 },
+  { id: 'b4', name: 'Delta Dorms', address: 'Technical Hub', desc: 'Professional Co-living', gender: 'Mixed', price: 8000 },
+  { id: 'b5', name: 'Epsilon Enclave', address: 'Down Town', desc: 'Luxury Executive Suite', gender: 'Mixed', price: 15500 },
+  { id: 'b6', name: 'Zeta Zone', address: 'Sector 12', desc: 'Quiet Residential Stay', gender: 'Mixed', price: 6000 },
+  { id: 'b7', name: 'Eta Heights', address: 'Main Market', desc: 'Centrally Located', gender: 'Mixed', price: 7500 },
+  { id: 'b8', name: 'Theta Terraces', address: 'Lake View', desc: 'Scenic View Residency', gender: 'Mixed', price: 9000 },
+  { id: 'b9', name: 'Iota Inn', address: 'Central Hub', desc: 'Modern Student Living', gender: 'Mixed', price: 5500 },
+  { id: 'b10', name: 'Kappa Korner', address: 'East Side', desc: 'Cozy Budget Rooms', gender: 'Mixed', price: 4000 },
+  { id: 'b11', name: 'Lambda Lodge', address: 'Science Park', desc: 'Researchers Choice', gender: 'Mixed', price: 8500 },
+  { id: 'b12', name: 'Mu Mansion', address: 'Royal Lane', desc: 'Premium Heritage Stay', gender: 'Mixed', price: 12000 }
 ];
+
+const HOSTELS = bNames.map(b => ({
+  id: b.id,
+  name: b.name,
+  location: b.address,
+  city: 'bengaluru',
+  price: b.price,
+  gender: b.gender,
+  type: 'Premium',
+  category: b.price > 10000 ? 'luxury' : (b.price > 7000 ? 'work' : 'student'),
+  rating: (4 + Math.random()).toFixed(1),
+  popularityLabel: Math.random() > 0.5 ? 'High Demand' : null,
+  occupancy: '85%',
+  totalRooms: 10,
+  totalBeds: 40,
+  image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
+  amenities: ['WiFi', 'AC', 'Security', 'Food']
+}));
 
 const Search = () => {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({ location: 'bengaluru', budget: 10000, gender: 'All' });
+  const [filters, setFilters] = useState({ location: 'bengaluru', budget: 10000, gender: 'All', categories: [], amenities: [] });
   const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
   const [allHostels, setAllHostels] = useState([]);
   const [hostels, setHostels] = useState([]);
@@ -62,15 +88,15 @@ const Search = () => {
         });
 
         if (mapped.length === 0) {
-          mapped = MOCK_SEED;
+          mapped = HOSTELS;
         }
 
         setAllHostels(mapped);
         setHostels(mapped);
       } catch (err) {
         console.error('Error fetching hostels:', err);
-        setAllHostels(MOCK_SEED);
-        setHostels(MOCK_SEED);
+        setAllHostels(HOSTELS);
+        setHostels(HOSTELS);
       } finally {
         setLoading(false);
       }
@@ -83,7 +109,7 @@ const Search = () => {
 
     // Location filter
     if (filters.location !== 'all') {
-      filtered = filtered.filter(h => h.city.toLowerCase() === filters.location.toLowerCase());
+      filtered = filtered.filter(h => (h.city || 'bengaluru').toLowerCase() === filters.location.toLowerCase());
     }
 
     // Gender filter
@@ -105,13 +131,13 @@ const Search = () => {
 
     // Category filter
     if (filters.categories.length > 0) {
-      filtered = filtered.filter(h => filters.categories.includes(h.category.toLowerCase()));
+      filtered = filtered.filter(h => filters.categories.includes((h.category || 'student').toLowerCase()));
     }
 
     // Amenities filter
     if (filters.amenities.length > 0) {
       filtered = filtered.filter(h => 
-        filters.amenities.every(amn => h.amenities.some(a => a.toLowerCase().includes(amn.toLowerCase())))
+        filters.amenities.every(amn => (h.amenities || []).some(a => a.toLowerCase().includes(amn.toLowerCase())))
       );
     }
 
@@ -208,7 +234,12 @@ const Search = () => {
                     { label: '₹15k+', value: 'budget-4' }
                   ].map(item => (
                     <label key={item.value} className="pro-table-row">
-                      <input type="radio" name="budget-seg" />
+                      <input 
+                        type="radio" 
+                        name="budget-seg" 
+                        checked={filters.budget === item.value}
+                        onChange={() => setFilters({ ...filters, budget: item.value })}
+                      />
                       <span className="row-content">
                         <span className="row-label">{item.label}</span>
                         <span className="row-radio-custom"></span>
@@ -230,7 +261,11 @@ const Search = () => {
                     { label: 'Luxury Suites', icon: <ICONS.Luxury />, value: 'luxury' }
                   ].map(item => (
                     <label key={item.value} className="pro-table-row">
-                      <input type="checkbox" />
+                      <input 
+                        type="checkbox" 
+                        checked={filters.categories.includes(item.value)}
+                        onChange={() => toggleCategory(item.value)}
+                      />
                       <span className="row-content">
                         <span className="row-info">
                           {item.icon}
@@ -256,7 +291,11 @@ const Search = () => {
                     { id: 'security', label: 'Security', icon: <ICONS.Security /> }
                   ].map(amenity => (
                     <label key={amenity.id} className="amenity-checkbox">
-                      <input type="checkbox" />
+                      <input 
+                        type="checkbox" 
+                        checked={filters.amenities.includes(amenity.id)}
+                        onChange={() => toggleAmenity(amenity.id)}
+                      />
                       <span className="checkbox-content">
                         {amenity.icon}
                         <span>{amenity.label}</span>
@@ -489,20 +528,19 @@ const Search = () => {
           border: 1px solid var(--border-color);
           border-radius: 20px;
           overflow: hidden;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
+          display: flex;
+          flex-direction: column;
         }
 
         .pro-table-row {
           display: block;
           cursor: pointer;
           border-bottom: 1px solid var(--border-color);
-          border-right: 1px solid var(--border-color);
           transition: all 0.2s ease;
         }
 
-        .pro-table-row:nth-child(2n) {
-          border-right: none;
+        .pro-table-row:last-child {
+          border-bottom: none;
         }
 
         .pro-table-row input {
@@ -548,6 +586,74 @@ const Search = () => {
           height: 6px;
           background: var(--accent-primary);
           border-radius: 50%;
+        }
+
+        .row-info {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          color: var(--text-secondary);
+        }
+
+        .row-check-custom {
+          width: 18px;
+          height: 18px;
+          border: 2px solid var(--border-color);
+          border-radius: 6px;
+          position: relative;
+          transition: all 0.2s ease;
+        }
+
+        .pro-table-row input:checked + .row-content .row-check-custom {
+          background: var(--accent-primary);
+          border-color: var(--accent-primary);
+        }
+
+        .pro-table-row input:checked + .row-content .row-check-custom::after {
+          content: '✓';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: white;
+          font-size: 0.75rem;
+          font-weight: bold;
+        }
+
+        .amenities-checklist {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1rem;
+        }
+
+        .amenity-checkbox {
+          cursor: pointer;
+          display: block;
+        }
+
+        .amenity-checkbox input {
+          display: none;
+        }
+
+        .checkbox-content {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          padding: 0.8rem 1rem;
+          background: var(--bg-tertiary);
+          border: 1px solid var(--border-color);
+          border-radius: 12px;
+          color: var(--text-secondary);
+          font-size: 0.85rem;
+          font-weight: 700;
+          transition: all 0.3s ease;
+        }
+
+        .amenity-checkbox input:checked + .checkbox-content {
+          background: var(--accent-primary);
+          color: white;
+          border-color: var(--accent-primary);
+          box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
         }
 
         .results-professional {
