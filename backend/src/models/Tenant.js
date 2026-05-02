@@ -18,6 +18,11 @@ const tenantSchema = new mongoose.Schema({
     enum: ['PAID', 'PENDING'], 
     default: 'PENDING' 
   },
+  messPlan: { 
+    type: String, 
+    enum: ['basic', 'standard', 'premium'], 
+    default: 'basic' 
+  },
   aadhaarNumber: { type: String },
   docs: [{
     name: String,

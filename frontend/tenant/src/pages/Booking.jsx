@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import API from '../api/axios';
 
 /* ─── icons (SVG constants) ─── */
 const ICONS = {
@@ -13,8 +14,11 @@ const ICONS = {
 
 const Booking = () => {
   const navigate = useNavigate();
+  const { buildingId } = useParams();
   const [user, setUser] = useState({});
   const [step, setStep] = useState(1);
+  const [hostel, setHostel] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     roomType: 'Single', bed: 'A', duration: '6', moveInDate: '',
     aadhar: null, agreementSigned: false
@@ -26,7 +30,23 @@ const Booking = () => {
     const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
     if (!storedUser.email) navigate('/login');
     setUser(storedUser);
-  }, [navigate]);
+
+    const fetchHostel = async () => {
+      try {
+        const res = await API.get(`/buildings/${buildingId}`);
+        setHostel(res.data);
+        // Set default room type if available
+        if (res.data.floors?.[0]?.rooms?.[0]) {
+          setFormData(prev => ({ ...prev, roomType: res.data.floors[0].rooms[0].roomNumber }));
+        }
+      } catch (err) {
+        console.error('Error fetching hostel for booking:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (buildingId) fetchHostel();
+  }, [navigate, buildingId]);
 
   const updateUserCompletion = (newCompletion) => {
     if (user.profileCompletion >= newCompletion) return;
@@ -45,6 +65,74 @@ const Booking = () => {
     { id: 2, label: 'Verification', icon: <ICONS.Verification /> },
     { id: 3, label: 'Confirmation', icon: <ICONS.Confirmation /> }
   ];
+
+  if (!buildingId) {
+    return (
+      <div className="booking-page-premium fade-in">
+        <div className="booking-overlay"></div>
+        <header className="booking-header">
+          <h1 className="booking-title">My Bookings</h1>
+          <p className="booking-subtitle">Manage your active stays and upcoming reservations.</p>
+        </header>
+
+        <div className="glass-card" style={{ padding: '3rem', borderRadius: '32px' }}>
+          {user.room ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
+              <div>
+                <h2 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '1.5rem' }}>Active Stay</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                  <div className="summary-row">
+                    <span>Hostel</span>
+                    <strong style={{ color: 'var(--accent-primary)' }}>Elite Living</strong>
+                  </div>
+                  <div className="summary-row">
+                    <span>Room Number</span>
+                    <strong>{user.room}</strong>
+                  </div>
+                  <div className="summary-row">
+                    <span>Status</span>
+                    <span className="badge badge-success" style={{ padding: '0.4rem 1rem' }}>ACTIVE</span>
+                  </div>
+                  <div className="summary-row">
+                    <span>Move-in Date</span>
+                    <strong>{user.moveInDate || '01-Jan-2026'}</strong>
+                  </div>
+                </div>
+              </div>
+              <div style={{ background: 'var(--bg-tertiary)', padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '1rem' }}>Financial Overview</h3>
+                <div className="summary-row">
+                  <span>Monthly Rent</span>
+                  <strong>₹{user.rent || '6,500'}</strong>
+                </div>
+                <div className="summary-row">
+                  <span>Due Date</span>
+                  <strong>05-May-2026</strong>
+                </div>
+                <div className="summary-divider"></div>
+                <Link to="/payments" className="pro-btn-next" style={{ textAlign: 'center', textDecoration: 'none', display: 'block', marginTop: '1rem' }}>View Full History</Link>
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '3rem' }}>
+              <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🏠</div>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: '900' }}>No Active Booking</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>You haven't booked any hostel yet or your booking is pending approval.</p>
+              <Link to="/search" className="pro-btn-next" style={{ display: 'inline-block', width: 'auto', padding: '1rem 3rem', textDecoration: 'none' }}>Find a Hostel</Link>
+            </div>
+          )}
+        </div>
+
+        <style>{`
+          .summary-row { display: flex; justify-content: space-between; font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-secondary); }
+          .summary-divider { height: 1px; background: var(--border-color); margin: 1.5rem 0; }
+          .badge-success { background: rgba(34, 197, 94, 0.1); color: #22c55e; border-radius: 8px; font-weight: 800; font-size: 0.8rem; }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (loading) return <div className="booking-page-premium"><div className="loading-spinner">Initializing booking...</div></div>;
 
   return (
     <div className="booking-page-premium fade-in">
@@ -92,9 +180,14 @@ const Booking = () => {
                   <div className="pro-input-group">
                     <label>Room Category</label>
                     <select name="roomType" value={formData.roomType} onChange={handleChange}>
-                      <option value="Single">Single Elite (Waitlist)</option>
-                      <option value="Double">Luxury 2 Sharing</option>
-                      <option value="Triple">Comfort 3 Sharing</option>
+                      {hostel?.floors?.flatMap(f => f.rooms).map(r => (
+                        <option key={r._id} value={r.roomNumber}>{r.roomNumber}</option>
+                      )) || (
+                        <>
+                          <option value="Single">Single Elite (Waitlist)</option>
+                          <option value="Double">Luxury 2 Sharing</option>
+                        </>
+                      )}
                     </select>
                   </div>
 
@@ -211,10 +304,36 @@ const Booking = () => {
 
                 <div className="step-actions">
                   <button className="pro-btn-back" onClick={() => setStep(2)}>Back</button>
-                  <button className="pro-btn-confirm" onClick={() => {
-                    updateUserCompletion(100);
-                    alert('Booking Confirmed! Welcome to your new home.');
-                    navigate('/dashboard');
+                  <button className="pro-btn-confirm" onClick={async () => {
+                    try {
+                      // 1. Get Tenant Profile ID
+                      let tId = user.id || user._id;
+                      try {
+                        const profileRes = await API.get('/tenants/me');
+                        if (profileRes.data && profileRes.data._id) {
+                          tId = profileRes.data._id;
+                        }
+                      } catch (e) {
+                        console.warn("Could not fetch tenant profile, using user ID as fallback");
+                      }
+
+                      // 2. Record Payment
+                      await API.post('/payments', {
+                        tenantId: tId,
+                        amount: 2050,
+                        type: 'Booking',
+                        buildingId: buildingId,
+                        category: formData.roomType,
+                        method: 'UPI'
+                      });
+
+                      updateUserCompletion(100);
+                      alert('Booking Confirmed! Your payment has been recorded and reflected in the Owner Portal.');
+                      navigate('/dashboard');
+                    } catch (err) {
+                      console.error('Booking/Payment Error:', err);
+                      alert('Booking confirmation failed. Please check your connection and try again.');
+                    }
                   }}>Pay & Confirm Booking</button>
                 </div>
               </div>

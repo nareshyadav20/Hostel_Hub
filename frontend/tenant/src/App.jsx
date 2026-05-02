@@ -47,7 +47,8 @@ function App() {
         {/* Protected portal routes */}
         <Route path="/dashboard"  element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
         <Route path="/wishlist"   element={<ProtectedRoute><Layout><Wishlist /></Layout></ProtectedRoute>} />
-        <Route path="/booking"    element={<ProtectedRoute><Layout><Booking /></Layout></ProtectedRoute>} />
+        <Route path="/booking"            element={<ProtectedRoute><Layout><Booking /></Layout></ProtectedRoute>} />
+        <Route path="/booking/:buildingId" element={<ProtectedRoute><Layout><Booking /></Layout></ProtectedRoute>} />
         <Route path="/payments"   element={<ProtectedRoute><Layout><Payments /></Layout></ProtectedRoute>} />
         <Route path="/mess"       element={<ProtectedRoute><Layout><Mess /></Layout></ProtectedRoute>} />
         <Route path="/rewards"    element={<ProtectedRoute><Layout><Rewards /></Layout></ProtectedRoute>} />

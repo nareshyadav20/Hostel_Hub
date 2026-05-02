@@ -4,8 +4,27 @@ const Room = require('../models/Room');
 
 const createBuilding = async (req, res) => {
   try {
-    const { name, address, description, amenities, images } = req.body;
-    const building = await Building.create({ name, address, description, amenities: amenities||[], images: images||[] });
+    const { 
+      name, address, locationCity, description, amenities, images, 
+      startingPrice, genderType, category, rating, popularityLabel,
+      policies, staffInfo 
+    } = req.body;
+
+    const building = await Building.create({ 
+      name, 
+      address, 
+      locationCity: locationCity || 'Bengaluru',
+      description, 
+      amenities: amenities||[], 
+      images: images||[],
+      startingPrice: startingPrice || 5000,
+      genderType: genderType || 'Mixed',
+      category: category || 'Student',
+      rating: rating || 4.5,
+      popularityLabel,
+      policies: policies || { smoking: 'Not Allowed', alcohol: 'Not Allowed', pets: 'No', visitors: 'Till 8 PM' },
+      staffInfo
+    });
     res.status(201).json(building);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };

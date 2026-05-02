@@ -18,17 +18,33 @@ const ICONS = {
   Luxury: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
 };
 
-/* ─── hostel data ─── */
-const HOSTELS = [
-  { id: 1, name: 'Sunshine Residency', location: 'Near City College', price: 6500, gender: 'Boys', type: '2 Sharing', rating: 4.5, image: '/sunshine_residency_hostel.png' },
-  { id: 2, name: 'Elite Living', location: 'Tech Park Area', price: 8500, gender: 'Girls', type: 'Single', rating: 4.8, image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000' },
-  { id: 3, name: 'Green View Hostel', location: 'Green Valley', price: 5000, gender: 'Co-living', type: '4 Sharing', rating: 4.2, image: 'https://images.unsplash.com/photo-1623625434462-e5e42318ae49?auto=format&fit=crop&q=80&w=1000' },
+/* ─── ALL HOSTEL PORTFOLIO DATA ─── */
+const MOCK_SEED = [
+  { id: 'b1', name: 'Alpha Tower', location: 'North Campus, Bengaluru', city: 'bengaluru', price: 8500, gender: 'Boys', category: 'professional', rating: 4.9, popularityLabel: "Student's Favorite", occupancy: '95%', totalRooms: 40, totalBeds: 80, image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800', amenities: ['WiFi', 'AC Rooms', 'Laundry'] },
+  { id: 'b2', name: 'Beta Block', location: 'South Campus, Hyderabad', city: 'hyderabad', price: 6500, gender: 'Girls', category: 'student', rating: 4.8, popularityLabel: "Most Booked", occupancy: '88%', totalRooms: 30, totalBeds: 60, image: 'https://images.unsplash.com/photo-1522770179533-24471fcdba45?auto=format&fit=crop&q=80&w=800', amenities: ['WiFi', 'Attached Bathroom', 'CCTV'] },
+  { id: 'b3', name: 'Gamma Guesthouse', location: 'West University, Mumbai', city: 'mumbai', price: 5000, gender: 'Mixed', category: 'student', rating: 4.7, popularityLabel: "Budget Choice", occupancy: '72%', totalRooms: 20, totalBeds: 80, image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=800', amenities: ['Power Backup', 'Security Guard'] },
+  { id: 'b4', name: 'Delta Dorms', location: 'Technical Hub, Bengaluru', city: 'bengaluru', price: 12000, gender: 'Mixed', category: 'luxury', rating: 5.0, popularityLabel: "Luxury Stay", occupancy: '100%', totalRooms: 15, totalBeds: 15, image: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80', amenities: ['Gym', 'AC Rooms', 'WiFi'] },
+  { id: 'b5', name: 'Epsilon Enclave', location: 'Down Town, Mumbai', city: 'mumbai', price: 15000, gender: 'Boys', category: 'luxury', rating: 4.9, popularityLabel: "Premium Executive", occupancy: '90%', totalRooms: 25, totalBeds: 50, image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80', amenities: ['AC Rooms', 'Parking', 'Pool'] },
+  { id: 'b6', name: 'Zeta Zone', location: 'Sector 12, Bengaluru', city: 'bengaluru', price: 7500, gender: 'Girls', category: 'student', rating: 4.6, popularityLabel: "Quiet Zone", occupancy: '82%', totalRooms: 35, totalBeds: 70, image: 'https://images.unsplash.com/photo-1502672260266-1c1c24240938?auto=format&fit=crop&w=400&q=80', amenities: ['WiFi', 'Library', 'Security Guard'] },
+  { id: 'b7', name: 'Eta Heights', location: 'Main Market, Hyderabad', city: 'hyderabad', price: 9000, gender: 'Mixed', category: 'professional', rating: 4.7, popularityLabel: "Central Hub", occupancy: '85%', totalRooms: 50, totalBeds: 100, image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', amenities: ['Elevator', 'Mess', 'CCTV'] },
+  { id: 'b8', name: 'Theta Terraces', location: 'Lake View, Mumbai', city: 'mumbai', price: 11000, gender: 'Girls', category: 'luxury', rating: 4.8, popularityLabel: "Scenic View", occupancy: '78%', totalRooms: 22, totalBeds: 44, image: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80', amenities: ['Balcony', 'AC Rooms', 'WiFi'] },
+  { id: 'b9', name: 'Iota Inn', location: 'Central Hub, Bengaluru', city: 'bengaluru', price: 5500, gender: 'Boys', category: 'student', rating: 4.5, popularityLabel: "Affordable Student", occupancy: '92%', totalRooms: 45, totalBeds: 135, image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80', amenities: ['WiFi', 'Laundry', 'Mess'] },
+  { id: 'b10', name: 'Kappa Korner', location: 'East Side, Hyderabad', city: 'hyderabad', price: 4500, gender: 'Mixed', category: 'student', rating: 4.4, popularityLabel: "Budget Friendly", occupancy: '65%', totalRooms: 18, totalBeds: 72, image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=800', amenities: ['WiFi', 'Basic Amenities'] },
+  { id: 'b11', name: 'Lambda Lodge', location: 'Science Park, Mumbai', city: 'mumbai', price: 8000, gender: 'Girls', category: 'professional', rating: 4.7, popularityLabel: "Research Choice", occupancy: '89%', totalRooms: 28, totalBeds: 56, image: 'https://images.unsplash.com/photo-1522770179533-24471fcdba45?auto=format&fit=crop&q=80&w=800', amenities: ['WiFi', 'Quiet Environment', 'Library'] },
+  { id: 'b12', name: 'Mu Mansion', location: 'Royal Lane, Bengaluru', city: 'bengaluru', price: 18000, gender: 'Mixed', category: 'luxury', rating: 5.0, popularityLabel: "Royal Experience", occupancy: '98%', totalRooms: 12, totalBeds: 24, image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80', amenities: ['AC Rooms', 'VIP Mess', 'Gym'] }
 ];
 
 const Search = () => {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({ location: 'bengaluru', budget: 10000, gender: 'All' });
+  const [filters, setFilters] = useState({
+    location: 'all',
+    gender: 'All',
+    budget: 'all',
+    categories: [],
+    amenities: []
+  });
   const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
+  const [allHostels, setAllHostels] = useState([]);
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,26 +52,104 @@ const Search = () => {
     const fetchHostels = async () => {
       try {
         const response = await API.get('/buildings');
-        // Map backend building structure to frontend hostel structure if needed
-        const mapped = response.data.map(b => ({
-          id: b._id,
-          name: b.name,
-          location: b.address,
-          price: b.startingPrice || 5000, // Fallback if not in DB
-          gender: b.type || 'Co-living',
-          type: 'Premium',
-          rating: 4.5,
-          image: b.images?.[0] || '/sunshine_residency_hostel.png'
-        }));
+        let mapped = response.data.map(b => {
+          const totalBeds = b.floors?.reduce((acc, f) => acc + (f.rooms?.reduce((rAcc, r) => rAcc + (r.beds?.length || 0), 0) || 0), 0) || 0;
+          const occupiedBeds = b.floors?.reduce((acc, f) => acc + (f.rooms?.reduce((rAcc, r) => rAcc + (r.beds?.filter(bd => bd.status === 'OCCUPIED').length || 0), 0) || 0), 0) || 0;
+          const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+          
+          return {
+            id: b._id,
+            name: b.name,
+            location: b.address,
+            city: (b.locationCity || 'bengaluru').toLowerCase(),
+            price: b.startingPrice || 5000,
+            gender: b.genderType || 'Mixed',
+            category: (b.category || 'Student').toLowerCase(),
+            type: 'Premium',
+            rating: b.rating || (4.0 + Math.random()).toFixed(1),
+            popularityLabel: b.popularityLabel || (occupancyRate > 90 ? 'High Demand' : null),
+            occupancy: `${occupancyRate}%`,
+            totalRooms: b.floors?.reduce((acc, f) => acc + (f.rooms?.length || 0), 0) || 0,
+            totalBeds: totalBeds,
+            image: b.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
+            amenities: b.amenities || []
+          };
+        });
+
+        if (mapped.length === 0) {
+          mapped = MOCK_SEED;
+        }
+
+        setAllHostels(mapped);
         setHostels(mapped);
       } catch (err) {
         console.error('Error fetching hostels:', err);
+        setAllHostels(MOCK_SEED);
+        setHostels(MOCK_SEED);
       } finally {
         setLoading(false);
       }
     };
     fetchHostels();
   }, []);
+
+  useEffect(() => {
+    let filtered = [...allHostels];
+
+    // Location filter
+    if (filters.location !== 'all') {
+      filtered = filtered.filter(h => h.city.toLowerCase() === filters.location.toLowerCase());
+    }
+
+    // Gender filter
+    if (filters.gender !== 'All') {
+      filtered = filtered.filter(h => h.gender === filters.gender || h.gender === 'Mixed');
+    }
+
+    // Budget filter
+    if (filters.budget !== 'all') {
+      filtered = filtered.filter(h => {
+        const price = h.price;
+        if (filters.budget === 'budget-1') return price <= 5000;
+        if (filters.budget === 'budget-2') return price > 5000 && price <= 10000;
+        if (filters.budget === 'budget-3') return price > 10000 && price <= 15000;
+        if (filters.budget === 'budget-4') return price > 15000;
+        return true;
+      });
+    }
+
+    // Category filter
+    if (filters.categories.length > 0) {
+      filtered = filtered.filter(h => filters.categories.includes(h.category.toLowerCase()));
+    }
+
+    // Amenities filter
+    if (filters.amenities.length > 0) {
+      filtered = filtered.filter(h => 
+        filters.amenities.every(amn => h.amenities.some(a => a.toLowerCase().includes(amn.toLowerCase())))
+      );
+    }
+
+    setHostels(filtered);
+  }, [filters, allHostels]);
+
+  const toggleCategory = (cat) => {
+    setFilters(prev => ({
+      ...prev,
+      categories: prev.categories.includes(cat) 
+        ? prev.categories.filter(c => c !== cat)
+        : [...prev.categories, cat]
+    }));
+  };
+
+  const toggleAmenity = (amn) => {
+    setFilters(prev => ({
+      ...prev,
+      amenities: prev.amenities.includes(amn)
+        ? prev.amenities.filter(a => a !== amn)
+        : [...prev.amenities, amn]
+    }));
+  };
 
   const isWishlisted = (id) => wishlist.some((h) => h.id === id);
 
@@ -99,6 +193,7 @@ const Search = () => {
                   <ICONS.Location /> <span>Location</span>
                 </div>
                 <select value={filters.location} onChange={(e) => setFilters({ ...filters, location: e.target.value })} className="pro-select">
+                  <option value="all">All Cities</option>
                   <option value="bengaluru">Bengaluru</option>
                   <option value="hyderabad">Hyderabad</option>
                   <option value="mumbai">Mumbai</option>
@@ -127,13 +222,19 @@ const Search = () => {
                 </div>
                 <div className="pro-filter-table">
                   {[
+                    { label: 'All Budgets', value: 'all' },
                     { label: '₹0 - ₹5k', value: 'budget-1' },
                     { label: '₹5k - ₹10k', value: 'budget-2' },
                     { label: '₹10k - ₹15k', value: 'budget-3' },
                     { label: '₹15k+', value: 'budget-4' }
                   ].map(item => (
                     <label key={item.value} className="pro-table-row">
-                      <input type="radio" name="budget-seg" />
+                      <input 
+                        type="radio" 
+                        name="budget-seg" 
+                        checked={filters.budget === item.value}
+                        onChange={() => setFilters({ ...filters, budget: item.value })}
+                      />
                       <span className="row-content">
                         <span className="row-label">{item.label}</span>
                         <span className="row-radio-custom"></span>
@@ -151,11 +252,15 @@ const Search = () => {
                 <div className="pro-filter-table">
                   {[
                     { label: 'Student Friendly', icon: <ICONS.Student />, value: 'student' },
-                    { label: 'Professional Hubs', icon: <ICONS.Work />, value: 'work' },
+                    { label: 'Professional Hubs', icon: <ICONS.Work />, value: 'professional' },
                     { label: 'Luxury Suites', icon: <ICONS.Luxury />, value: 'luxury' }
                   ].map(item => (
                     <label key={item.value} className="pro-table-row">
-                      <input type="checkbox" />
+                      <input 
+                        type="checkbox" 
+                        checked={filters.categories.includes(item.value)}
+                        onChange={() => toggleCategory(item.value)}
+                      />
                       <span className="row-content">
                         <span className="row-info">
                           {item.icon}
@@ -174,18 +279,14 @@ const Search = () => {
                   <ICONS.Amenities /> <span>Essential Amenities</span>
                 </div>
                 <div className="amenities-checklist">
-                  {[
-                    { id: 'wifi', label: 'WiFi', icon: <ICONS.WiFi /> },
-                    { id: 'ac', label: 'A/C', icon: <ICONS.AC /> },
-                    { id: 'food', label: 'Food', icon: <ICONS.Food /> },
-                    { id: 'security', label: 'Security', icon: <ICONS.Security /> }
-                  ].map(amenity => (
-                    <label key={amenity.id} className="amenity-checkbox">
-                      <input type="checkbox" />
-                      <span className="checkbox-content">
-                        {amenity.icon}
-                        <span>{amenity.label}</span>
-                      </span>
+                  {['WiFi', 'AC Rooms', 'Attached Bathroom', 'Power Backup', 'Laundry', 'Security Guard'].map(amn => (
+                    <label key={amn} className="amn-item">
+                      <input 
+                        type="checkbox" 
+                        checked={filters.amenities.includes(amn)}
+                        onChange={() => toggleAmenity(amn)}
+                      />
+                      <span className="amn-label">{amn}</span>
                     </label>
                   ))}
                 </div>
@@ -209,10 +310,24 @@ const Search = () => {
             </div>
           ) : (
             hostels.map(hostel => (
-              <div key={hostel.id} className="pro-hostel-card">
+              <div 
+                key={hostel.id} 
+                className="pro-hostel-card" 
+                style={{ cursor: 'pointer' }}
+                onClick={() => navigate(`/listing/${hostel.id}`)}
+              >
                 <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image})` }}>
-                  <div className="rating-tag">{hostel.rating} ★</div>
-                  <button className={`wishlist-icon ${isWishlisted(hostel.id) ? 'active' : ''}`} onClick={() => toggleWishlist(hostel)}>
+                  <div className="card-badge-row">
+                    <div className="rating-tag">{hostel.rating} ★</div>
+                    {hostel.popularityLabel && <div className="popularity-badge">{hostel.popularityLabel}</div>}
+                  </div>
+                  <button 
+                    className={`wishlist-icon ${isWishlisted(hostel.id) ? 'active' : ''}`} 
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent card click
+                      toggleWishlist(hostel);
+                    }}
+                  >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted(hostel.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                   </button>
                 </div>
@@ -222,13 +337,16 @@ const Search = () => {
                       <h2 className="hostel-name">{hostel.name}</h2>
                       <p className="hostel-loc"><ICONS.Location style={{width: '12px', height: '12px'}} /> {hostel.location}</p>
                     </div>
-                    <div className="gender-tag">{hostel.gender}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
+                      <div className="gender-tag">{hostel.gender}</div>
+                      <div className="occupancy-tag">{hostel.occupancy} Full</div>
+                    </div>
                   </div>
 
                   <div className="hostel-specs">
-                    <div className="spec-item">{hostel.type}</div>
-                    <div className="spec-item">Fully Managed</div>
-                    <div className="spec-item">Verified</div>
+                    <div className="spec-item">{hostel.category}</div>
+                    <div className="spec-item">{hostel.totalRooms} Rooms</div>
+                    <div className="spec-item">{hostel.totalBeds} Beds</div>
                   </div>
 
                   <div className="pro-card-footer">
@@ -236,11 +354,9 @@ const Search = () => {
                       <span className="price-val">₹{hostel.price.toLocaleString()}</span>
                       <span className="price-period">/mo</span>
                     </div>
-                    <div className="card-actions">
-                      <button className="btn-wish-outline" onClick={() => toggleWishlist(hostel)}>
-                        {isWishlisted(hostel.id) ? 'Saved' : 'Wishlist'}
-                      </button>
-                      <Link to={`/listing/${hostel.id}`} className="btn-details">Details</Link>
+                    <div className="card-actions" style={{ color: 'var(--accent-primary)', fontWeight: '800', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      View Details 
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                     </div>
                   </div>
                 </div>
@@ -747,6 +863,51 @@ const Search = () => {
         .btn-details:hover {
           transform: translateY(-3px);
           box-shadow: 0 12px 30px rgba(14, 165, 233, 0.3);
+        }
+
+        .card-badge-row {
+          position: absolute;
+          top: 1.5rem;
+          left: 1.5rem;
+          display: flex;
+          gap: 0.8rem;
+          z-index: 5;
+        }
+
+        .rating-tag {
+          padding: 0.5rem 1rem;
+          background: rgba(0,0,0,0.6);
+          backdrop-filter: blur(8px);
+          color: #fbbf24;
+          border-radius: 12px;
+          font-size: 0.9rem;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          gap: 0.3rem;
+        }
+
+        .popularity-badge {
+          padding: 0.5rem 1rem;
+          background: var(--accent-primary);
+          color: white;
+          border-radius: 12px;
+          font-size: 0.75rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+
+        .occupancy-tag {
+          font-size: 0.7rem;
+          font-weight: 900;
+          color: var(--accent-success);
+          background: rgba(16, 185, 129, 0.1);
+          padding: 0.4rem 0.8rem;
+          border-radius: 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
 
         @media (max-width: 1024px) {

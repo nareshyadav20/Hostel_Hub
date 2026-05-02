@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   BedDouble, User, AlertTriangle, SlidersHorizontal, 
-  Settings2, History, Filter, Layers, ChevronDown, ChevronRight 
+  Settings2, History, Filter, Layers, ChevronDown, ChevronRight, Building2
 } from 'lucide-react';
 import { api } from '../mockData';
 
 const Rooms = () => {
   const { buildingId } = useParams();
+  const navigate = useNavigate();
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloors] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -24,21 +25,27 @@ const Rooms = () => {
 
   const [filterType, setFilterType] = useState('All');
   const [showFilters, setShowFilters] = useState(false);
+  const [activeTab, setActiveTab] = useState('rooms'); // 'rooms' or 'transfers'
+  const [transferRequests, setTransferRequests] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const b = await api.getBuildings();
-        const f = await api.getAllFloors();
-        const r = await api.getAllRooms();
-        const bd = await api.getAllBeds();
-        const t = await api.getTenants();
+        const [b, f, r, bd, t, tr] = await Promise.all([
+          api.getBuildings(),
+          api.getAllFloors(),
+          api.getAllRooms(),
+          api.getAllBeds(),
+          api.getTenants(),
+          api.getRoomTransfers()
+        ]);
         
         setBuildings(b || []);
         setFloors(f || []);
         setRooms(r || []);
         setBeds(bd || []);
         setTenants(t || []);
+        setTransferRequests(tr || []);
 
         const fExp = {}; f?.forEach(x => fExp[x.id] = true);
         setExpandedFloors(fExp);
@@ -50,6 +57,22 @@ const Rooms = () => {
     };
     fetchData();
   }, []);
+
+  const handleTransferStatus = async (id, status) => {
+    try {
+      await api.updateRoomTransferStatus(id, status);
+      setTransferRequests(prev => prev.map(tr => tr.id === id ? { ...tr, status } : tr));
+      // Refresh rooms and beds if accepted
+      if (status === 'ACCEPTED') {
+        const bd = await api.getAllBeds();
+        const t = await api.getTenants();
+        setBeds(bd);
+        setTenants(t);
+      }
+    } catch (err) {
+      console.error('Failed to update transfer status:', err);
+    }
+  };
 
   const toggleBed = async (roomId, bedId) => {
     const room = rooms.find(r => r.id === roomId);
@@ -124,9 +147,18 @@ const Rooms = () => {
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Hierarchical occupancy tracking.</p>
         </div>
-        <button className="btn" onClick={() => setShowFilters(!showFilters)} style={{ background: showFilters ? 'var(--bg-tertiary)' : 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
-          <Filter size={16} /> Filters
-        </button>
+        <div style={{ display: 'flex', gap: '0.8rem' }}>
+          <button 
+            className="btn" 
+            onClick={() => navigate(`/owner/building/${buildingId}/buildings`)}
+            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--accent-primary)', fontWeight: '700' }}
+          >
+            <Building2 size={18} /> Manage Structure
+          </button>
+          <button className="btn" onClick={() => setShowFilters(!showFilters)} style={{ background: showFilters ? 'var(--bg-tertiary)' : 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+            <Filter size={16} /> Filters
+          </button>
+        </div>
       </header>
 
       <AnimatePresence>
@@ -143,23 +175,100 @@ const Rooms = () => {
         )}
       </AnimatePresence>
 
-      {/* Dashboard KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Total Rooms</p>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{totalRooms}</h2>
-        </div>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #10b981' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Total Beds</p>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{totalBedsCount}</h2>
-        </div>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Occupancy Rate</p>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{occupancyRate}%</h2>
-        </div>
+      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2.5rem' }}>
+        <button 
+          onClick={() => setActiveTab('rooms')} 
+          style={{ padding: '1rem 2rem', background: 'none', border: 'none', borderBottom: activeTab === 'rooms' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: activeTab === 'rooms' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer' }}
+        >
+          Rooms & Infrastructure
+        </button>
+        <button 
+          onClick={() => setActiveTab('transfers')} 
+          style={{ padding: '1rem 2rem', background: 'none', border: 'none', borderBottom: activeTab === 'transfers' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: activeTab === 'transfers' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          Transfer Requests
+          {transferRequests.filter(r => r.status === 'PENDING').length > 0 && (
+            <span style={{ padding: '0.1rem 0.5rem', background: 'var(--accent-error)', color: 'white', borderRadius: '10px', fontSize: '0.7rem' }}>
+              {transferRequests.filter(r => r.status === 'PENDING').length}
+            </span>
+          )}
+        </button>
       </div>
 
-      <div>
+      {activeTab === 'transfers' ? (
+        /* Transfer Requests List */
+        <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+          {transferRequests.length === 0 ? (
+            <div className="card" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              No room transfer requests found.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {transferRequests.map(req => (
+                <div key={req.id} className="card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <div style={{ width: '45px', height: '45px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
+                      {req.tenant?.name?.charAt(0) || 'U'}
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontWeight: '800', fontSize: '1.1rem' }}>{req.tenant?.name || 'Unknown Tenant'}</h4>
+                      <p style={{ margin: '0.2rem 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        Request: <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{req.oldRoom} → {req.newRoom}</span>
+                      </p>
+                      {req.reason && <p style={{ margin: '0.5rem 0 0', fontSize: '0.8rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>"{req.reason}"</p>}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                    {req.status === 'PENDING' ? (
+                      <>
+                        <button 
+                          onClick={() => handleTransferStatus(req.id, 'ACCEPTED')}
+                          className="btn btn-primary" 
+                          style={{ padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}
+                        >
+                          Approve
+                        </button>
+                        <button 
+                          onClick={() => handleTransferStatus(req.id, 'REJECTED')}
+                          className="btn" 
+                          style={{ padding: '0.6rem 1.2rem', fontSize: '0.85rem', border: '1px solid var(--border-color)', color: 'var(--accent-error)' }}
+                        >
+                          Reject
+                        </button>
+                      </>
+                    ) : (
+                      <span style={{ 
+                        padding: '0.4rem 1rem', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '800',
+                        background: req.status === 'ACCEPTED' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        color: req.status === 'ACCEPTED' ? '#10B981' : '#EF4444'
+                      }}>
+                        {req.status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Rooms & Infrastructure Section (Existing) */
+        <>
+          {/* Dashboard KPIs */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+            <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Total Rooms</p>
+              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{totalRooms}</h2>
+            </div>
+            <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #10b981' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Total Beds</p>
+              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{totalBedsCount}</h2>
+            </div>
+            <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Occupancy Rate</p>
+              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{occupancyRate}%</h2>
+            </div>
+          </div>
         {!selectedBuildingId ? (
           /* Level 1: Building Cards */
           <div>
@@ -180,7 +289,12 @@ const Rooms = () => {
                     onClick={() => setSelectedBuildingId(building.id)}
                     style={{ padding: '0', overflow: 'hidden', cursor: 'pointer', border: '1px solid var(--border-color)', borderRadius: '20px' }}
                   >
-                    <div style={{ height: '140px', width: '100%', backgroundImage: building.images?.[0] ? `url("${building.images[0]}")` : 'url("/assets/building.jpg")', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                    <div style={{ height: '140px', width: '100%', backgroundImage: building.images?.[0] ? `url("${building.images[0]}")` : 'url("/assets/building.jpg")', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }}>
+                      <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '5px' }}>
+                        <div style={{ background: 'rgba(255,255,255,0.9)', padding: '0.2rem 0.6rem', borderRadius: '100px', fontSize: '0.65rem', fontWeight: '900', color: 'var(--accent-primary)' }}>{bFloors.length} FLOORS</div>
+                        <div style={{ background: 'var(--accent-primary)', color: 'white', padding: '0.2rem 0.6rem', borderRadius: '100px', fontSize: '0.65rem', fontWeight: '900' }}>{bRooms.length} ROOMS</div>
+                      </div>
+                    </div>
                     <div style={{ padding: '1.5rem' }}>
                       <h3 style={{ fontSize: '1.3rem', fontWeight: '800', margin: '0 0 0.5rem 0' }}>{building.name}</h3>
                       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>{building.address || 'Premium Hostel Property'}</p>
@@ -302,11 +416,27 @@ const Rooms = () => {
                                               <div 
                                                 key={bed.id} 
                                                 onClick={() => handleBedClick(room, bed)} 
-                                                style={{ padding: '0.8rem 0.5rem', borderRadius: '10px', background: bg, border: `1px solid ${border}`, color: color, cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.2s' }}
+                                                style={{ padding: '0', borderRadius: '12px', background: bg, border: `1px solid ${border}`, color: color, cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: 'all 0.2s', minHeight: '110px', position: 'relative' }}
                                               >
-                                                {bed.status === 'OCCUPIED' ? <User size={20} /> : <BedDouble size={20} />}
-                                                <span style={{ fontSize: '0.8rem', fontWeight: '800' }}>{bed.bedNumber}</span>
-                                                <span style={{ fontSize: '0.6rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>{bed.status.substring(0,3)}</span>
+                                                <div style={{ 
+                                                  height: '50px', 
+                                                  width: '100%', 
+                                                  backgroundImage: `url("${(bed.images && bed.images[0]) || 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80'}")`,
+                                                  backgroundSize: 'cover',
+                                                  backgroundPosition: 'center',
+                                                  backgroundRepeat: 'no-repeat',
+                                                  opacity: 0.9,
+                                                  borderBottom: `1px solid ${border}`
+                                                }} />
+                                                <div style={{ padding: '0.5rem 0.4rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.1rem' }}>
+                                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                    {bed.status === 'OCCUPIED' ? <User size={14} /> : <BedDouble size={14} />}
+                                                    <span style={{ fontSize: '0.75rem', fontWeight: '800' }}>{bed.bedNumber}</span>
+                                                  </div>
+                                                  <span style={{ fontSize: '0.55rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>
+                                                    {bed.status === 'OCCUPIED' ? (bed.tenant || 'Occupied') : bed.status}
+                                                  </span>
+                                                </div>
                                               </div>
                                             );
                                           })}
@@ -331,7 +461,8 @@ const Rooms = () => {
             </div>
           </motion.div>
         )}
-      </div>
+        </>
+      )}
 
       {/* Tenant Details Modal */}
       <AnimatePresence>

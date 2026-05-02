@@ -4,7 +4,7 @@ import { Building, Wallet, Users, ArrowUpRight, ArrowDownRight, Zap, X, UserPlus
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, Link } from 'react-router-dom';
 import { api } from './mockData';
-import { HealthScoreCard, ComplaintsPanel, MessPanel, StaffPanel, InsightsPanel, ActivityFeed, DocumentTracker, TenantOverviewPanel, DashboardModal } from './DashboardPanels';
+import { HealthScoreCard, ComplaintsPanel, MessPanel, StaffPanel, InsightsPanel, ActivityFeed, DocumentTracker, TenantOverviewPanel, DashboardModal, InfrastructureOverview } from './DashboardPanels';
 
 const iStyle = { padding:'0.75rem', borderRadius:'10px', border:'1px solid var(--border-color)', background:'var(--bg-tertiary)', color:'var(--text-primary)', fontSize:'0.9rem', outline:'none', width:'100%', boxSizing:'border-box' };
 const lStyle = { fontSize:'0.82rem', fontWeight:'700', color:'var(--text-secondary)', marginBottom:'0.4rem', display:'block' };
@@ -275,10 +275,11 @@ function Dashboard() {
         <ComplaintsPanel data={complaints}/>
       </div>
 
-      {/* 5. MESS + STAFF */}
-      <div style={{ ...grid2, marginBottom:'2rem' }}>
+      {/* 5. MESS + STAFF + INFRASTRUCTURE */}
+      <div style={{ ...grid3, marginBottom:'2rem' }}>
         <MessPanel data={mess}/>
         <StaffPanel data={staff}/>
+        <InfrastructureOverview buildingId={buildingId} />
       </div>
 
       {/* 6. INSIGHTS + ACTIVITY + DOCUMENTS */}

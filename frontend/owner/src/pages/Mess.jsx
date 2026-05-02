@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Utensils, Calendar as CalendarIcon, Users, Edit3, ArrowRight, Sun, Coffee, Moon, CheckCircle, X } from 'lucide-react';
+import { Utensils, Calendar as CalendarIcon, Users, Edit3, ArrowRight, Sun, Coffee, Moon, CheckCircle, X, Grid, List } from 'lucide-react';
+import { api } from '../mockData';
 
 const Mess = () => {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'attendance' | 'menu' | 'subscriptions'
+  const [menuView, setMenuView] = useState('daily'); // 'daily' | 'weekly'
+  const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [plans, setPlans] = useState([
     { 
@@ -45,27 +48,29 @@ const Mess = () => {
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [planToDeactivate, setPlanToDeactivate] = useState(null);
 
-  const initialMenu = {
-    Monday: { breakfast: 'Idli, Sambar', lunch: 'Rice, Dal, Veg Fry', dinner: 'Roti, Paneer Masala' },
-    Tuesday: { breakfast: 'Poha, Jalebi', lunch: 'Rajma Chawal, Papad', dinner: 'Aloo Gobi, Roti' },
-    Wednesday: { breakfast: 'Aloo Paratha', lunch: 'Veg Biryani, Raita', dinner: 'Chole Bhature' },
-    Thursday: { breakfast: 'Upma, Chutney', lunch: 'Kadi Pakoda, Rice', dinner: 'Mushroom Peas' },
-    Friday: { breakfast: 'Masala Dosa', lunch: 'Dal Makhani, Rice', dinner: 'Egg Curry' },
-    Saturday: { breakfast: 'Puri Sabzi', lunch: 'Mix Veg, Roti', dinner: 'Veg Pulao' },
-    Sunday: { breakfast: 'Chole Poori', lunch: 'Special Thali', dinner: 'Light Khichdi' }
-  };
+  const [menuData, setMenuData] = useState({});
 
-  const [menuData, setMenuData] = useState({
-    basic: { ...initialMenu },
-    standard: {
-      ...initialMenu,
-      Sunday: { breakfast: 'Chole Poori, Lassi', lunch: 'Special Chicken/Paneer Thali', dinner: 'Soup & Khichdi' }
-    },
-    premium: {
-      ...initialMenu,
-      Sunday: { breakfast: 'Chole Poori, Lassi, Fruit Bowl', lunch: 'Premium Mutton/Paneer Biryani, Dessert', dinner: 'Creamy Soup, Light Paratha' }
-    }
-  });
+  React.useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        const raw = await api.getMessMenu();
+        const structured = { basic: {}, standard: {}, premium: {} };
+        raw.forEach(item => {
+          structured[item.plan][item.day] = {
+            breakfast: item.breakfast,
+            lunch: item.lunch,
+            dinner: item.dinner
+          };
+        });
+        setMenuData(structured);
+      } catch (err) {
+        console.error('Failed to fetch mess menu:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMenu();
+  }, []);
 
   const [tenants] = useState([
     { id: 't1', name: 'Rahul Sharma', room: '101', plan: 'Premium' },
@@ -89,20 +94,31 @@ const Mess = () => {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const handleEditClick = () => {
+    if (!menuData[selectedMenuPlan] || !menuData[selectedMenuPlan][selectedDay]) return;
     setEditForm(menuData[selectedMenuPlan][selectedDay]);
     setIsEditModalOpen(true);
   };
 
-  const handleSaveMenu = (e) => {
+  const handleSaveMenu = async (e) => {
     e.preventDefault();
-    setMenuData({ 
-      ...menuData, 
-      [selectedMenuPlan]: {
-        ...menuData[selectedMenuPlan],
-        [selectedDay]: editForm
-      } 
-    });
-    setIsEditModalOpen(false);
+    try {
+      await api.updateMessMenu({
+        plan: selectedMenuPlan,
+        day: selectedDay,
+        ...editForm
+      });
+
+      setMenuData({ 
+        ...menuData, 
+        [selectedMenuPlan]: {
+          ...menuData[selectedMenuPlan],
+          [selectedDay]: editForm
+        } 
+      });
+      setIsEditModalOpen(false);
+    } catch (err) {
+      console.error('Failed to save menu:', err);
+    }
   };
 
   const toggleAttendance = (tenantId, meal) => {
@@ -312,84 +328,150 @@ const Mess = () => {
       )}
 
       {activeTab === 'menu' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem', animation: 'fadeIn 0.3s ease' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div className="card" style={{ padding: '1.5rem' }}>
-              <h4 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem' }}>Select Plan</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                {plans.map(plan => (
-                  <button 
-                    key={plan.id}
-                    onClick={() => setSelectedMenuPlan(plan.id)}
-                    style={{ 
-                      padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)',
-                      background: selectedMenuPlan === plan.id ? `${plan.color}15` : 'var(--bg-tertiary)',
-                      borderColor: selectedMenuPlan === plan.id ? plan.color : 'var(--border-color)',
-                      color: selectedMenuPlan === plan.id ? plan.color : 'var(--text-secondary)',
-                      fontWeight: '700', textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s'
-                    }}
-                  >
-                    {plan.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="card" style={{ padding: '1.5rem', background: 'var(--accent-primary)', color: 'white' }}>
-              <p style={{ fontSize: '0.85rem', fontWeight: '600', opacity: 0.8 }}>Active Menu</p>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginTop: '0.5rem' }}>{selectedDay}'s Menu</h3>
-              <p style={{ fontSize: '0.8rem', marginTop: '1rem', opacity: 0.9 }}>You are currently viewing the menu for the <b>{selectedMenuPlan}</b> tier.</p>
-            </div>
+        <div style={{ animation: 'fadeIn 0.3s ease' }}>
+          {/* Sub-tabs for Daily/Weekly view */}
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+            <button 
+              onClick={() => setMenuView('daily')} 
+              style={{ 
+                display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.7rem 1.5rem', borderRadius: '12px', border: 'none', 
+                background: menuView === 'daily' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', 
+                color: menuView === 'daily' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer' 
+              }}
+            >
+              <List size={18} /> Daily Detail
+            </button>
+            <button 
+              onClick={() => setMenuView('weekly')} 
+              style={{ 
+                display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.7rem 1.5rem', borderRadius: '12px', border: 'none', 
+                background: menuView === 'weekly' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', 
+                color: menuView === 'weekly' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer' 
+              }}
+            >
+              <Grid size={18} /> Weekly Overview
+            </button>
           </div>
 
-          <div className="card" style={{ padding: '0', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
+          {loading ? (
+            <div className="card" style={{ padding: '4rem', textAlign: 'center' }}>Loading menu data...</div>
+          ) : menuView === 'weekly' ? (
+            /* Weekly Overview Grid */
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
               {days.map(day => (
-                <button 
-                  key={day}
-                  onClick={() => setSelectedDay(day)}
-                  style={{ 
-                    padding: '1.2rem 2rem', background: 'transparent', border: 'none', borderBottom: selectedDay === day ? `3px solid var(--accent-primary)` : '3px solid transparent',
-                    color: selectedDay === day ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                    fontWeight: selectedDay === day ? '800' : '600', fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s'
-                  }}
-                >
-                  {day}
-                </button>
+                <div key={day} className="card" style={{ padding: '1.5rem', position: 'relative' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+                    <h4 style={{ margin: 0, fontWeight: '800', color: 'var(--accent-primary)' }}>{day}</h4>
+                    <button onClick={() => { setSelectedDay(day); handleEditClick(); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><Edit3 size={14} /></button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                      <Sun size={14} color="#f59e0b" />
+                      <div style={{ fontSize: '0.85rem' }}>
+                        <span style={{ fontWeight: '800', color: '#f59e0b', fontSize: '0.7rem', display: 'block' }}>BREAKFAST</span>
+                        <span style={{ fontWeight: '600' }}>{menuData[selectedMenuPlan]?.[day]?.breakfast || 'Not Set'}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                      <Coffee size={14} color="#10b981" />
+                      <div style={{ fontSize: '0.85rem' }}>
+                        <span style={{ fontWeight: '800', color: '#10b981', fontSize: '0.7rem', display: 'block' }}>LUNCH</span>
+                        <span style={{ fontWeight: '600' }}>{menuData[selectedMenuPlan]?.[day]?.lunch || 'Not Set'}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                      <Moon size={14} color="#6366f1" />
+                      <div style={{ fontSize: '0.85rem' }}>
+                        <span style={{ fontWeight: '800', color: '#6366f1', fontSize: '0.7rem', display: 'block' }}>DINNER</span>
+                        <span style={{ fontWeight: '600' }}>{menuData[selectedMenuPlan]?.[day]?.dinner || 'Not Set'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
-
-            <motion.div 
-              key={`${selectedMenuPlan}-${selectedDay}`}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              style={{ padding: '2.5rem', display: 'grid', gap: '2rem' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-                <div style={{ padding: '1.2rem', background: '#f59e0b15', color: '#f59e0b', borderRadius: '20px' }}><Sun size={32} /></div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Breakfast (8:00 AM - 10:00 AM)</p>
-                  <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData[selectedMenuPlan][selectedDay].breakfast}</p>
+          ) : (
+            /* Daily Detail View (Existing) */
+            <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="card" style={{ padding: '1.5rem' }}>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem' }}>Select Plan</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                    {plans.map(plan => (
+                      <button 
+                        key={plan.id}
+                        onClick={() => setSelectedMenuPlan(plan.id)}
+                        style={{ 
+                          padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)',
+                          background: selectedMenuPlan === plan.id ? `${plan.color}15` : 'var(--bg-tertiary)',
+                          borderColor: selectedMenuPlan === plan.id ? plan.color : 'var(--border-color)',
+                          color: selectedMenuPlan === plan.id ? plan.color : 'var(--text-secondary)',
+                          fontWeight: '700', textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s'
+                        }}
+                      >
+                        {plan.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="card" style={{ padding: '1.5rem', background: 'var(--accent-primary)', color: 'white' }}>
+                  <p style={{ fontSize: '0.85rem', fontWeight: '600', opacity: 0.8 }}>Active Menu</p>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginTop: '0.5rem' }}>{selectedDay}'s Menu</h3>
+                  <p style={{ fontSize: '0.8rem', marginTop: '1rem', opacity: 0.9 }}>You are currently viewing the menu for the <b>{selectedMenuPlan}</b> tier.</p>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-                <div style={{ padding: '1.2rem', background: '#10b98115', color: '#10b981', borderRadius: '20px' }}><Coffee size={32} /></div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Lunch (1:00 PM - 3:00 PM)</p>
-                  <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData[selectedMenuPlan][selectedDay].lunch}</p>
+              <div className="card" style={{ padding: '0', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
+                  {days.map(day => (
+                    <button 
+                      key={day}
+                      onClick={() => setSelectedDay(day)}
+                      style={{ 
+                        padding: '1.2rem 2rem', background: 'transparent', border: 'none', borderBottom: selectedDay === day ? `3px solid var(--accent-primary)` : '3px solid transparent',
+                        color: selectedDay === day ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                        fontWeight: selectedDay === day ? '800' : '600', fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                    >
+                      {day}
+                    </button>
+                  ))}
                 </div>
-              </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-                <div style={{ padding: '1.2rem', background: '#6366f115', color: '#6366f1', borderRadius: '20px' }}><Moon size={32} /></div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Dinner (8:00 PM - 10:30 PM)</p>
-                  <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData[selectedMenuPlan][selectedDay].dinner}</p>
-                </div>
+                <motion.div 
+                  key={`${selectedMenuPlan}-${selectedDay}`}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  style={{ padding: '2.5rem', display: 'grid', gap: '2rem' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ padding: '1.2rem', background: '#f59e0b15', color: '#f59e0b', borderRadius: '20px' }}><Sun size={32} /></div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Breakfast (8:00 AM - 10:00 AM)</p>
+                      <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData[selectedMenuPlan]?.[selectedDay]?.breakfast || 'Not Set'}</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ padding: '1.2rem', background: '#10b98115', color: '#10b981', borderRadius: '20px' }}><Coffee size={32} /></div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Lunch (1:00 PM - 3:00 PM)</p>
+                      <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData[selectedMenuPlan]?.[selectedDay]?.lunch || 'Not Set'}</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ padding: '1.2rem', background: '#6366f115', color: '#6366f1', borderRadius: '20px' }}><Moon size={32} /></div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Dinner (8:00 PM - 10:30 PM)</p>
+                      <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData[selectedMenuPlan]?.[selectedDay]?.dinner || 'Not Set'}</p>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          )}
         </div>
       )}
 
