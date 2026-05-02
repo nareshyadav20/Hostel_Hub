@@ -13,6 +13,6 @@ const transferSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   reason: { type: String },
   date: { type: Date, default: Date.now }
-}, { timestamps: true, collection: 'roomtransfers' });
+}, { timestamps: true, collection: 'room_transfers' });
 
 module.exports = mongoose.model('Transfer', transferSchema);
