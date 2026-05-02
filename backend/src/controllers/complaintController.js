@@ -1,10 +1,10 @@
-const Complaint = require('../models/Complaint');
-const Tenant = require('../models/Tenant');
+const Complaint = require('../models/tenant/Complaint');
+const { getOrCreateTenant } = require('../utils/tenantHelper');
 
 exports.createComplaint = async (req, res) => {
   try {
     const { title, description, category } = req.body;
-    const tenant = await Tenant.findOne({ email: req.user.email });
+    const tenant = await getOrCreateTenant(req.user);
     if (!tenant) return res.status(404).json({ message: 'Tenant profile not found' });
 
     const complaint = await Complaint.create({

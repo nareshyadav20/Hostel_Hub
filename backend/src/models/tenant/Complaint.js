@@ -16,6 +16,6 @@ const complaintSchema = new mongoose.Schema({
   tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   date: { type: Date, default: Date.now }
-}, { timestamps: true });
+}, { timestamps: true, collection: 'complaints' });
 
 module.exports = mongoose.model('Complaint', complaintSchema);

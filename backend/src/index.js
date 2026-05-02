@@ -5,7 +5,8 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 
-dotenv.config();
+const path = require('path');
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Connect to MongoDB
 connectDB();
@@ -25,6 +26,10 @@ const hostelFloorMappingRoutes = require('./routes/hostelFloorMappingRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 
+const complaintRoutes = require('./routes/complaintRoutes');
+const transferRoutes = require('./routes/transferRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
+
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
 app.use('/api/floors', floorRoutes);
@@ -34,6 +39,9 @@ app.use('/api/tenants', tenantRoutes);
 app.use('/api/hostel-floor-mapping', hostelFloorMappingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/complaints', complaintRoutes);
+app.use('/api/transfers', transferRoutes);
+app.use('/api/services', serviceRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

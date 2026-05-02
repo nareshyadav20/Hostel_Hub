@@ -1,84 +1,131 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import API from '../api/axios';
 
 const Services = () => {
   const [activeTab, setActiveTab] = useState('cleaning');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
   
   // Room Cleaning State
   const [cleaningForm, setCleaningForm] = useState({ date: '', slot: 'Morning (10 AM - 12 PM)' });
-  const [cleaningHistory, setCleaningHistory] = useState([
-    { id: 1, date: '05 May 2026', time: '10:00 AM', status: 'Scheduled' },
-    { id: 2, date: '28 Apr 2026', time: '02:00 PM', status: 'Completed' }
-  ]);
+  const [cleaningHistory, setCleaningHistory] = useState([]);
 
   // Visitor State
   const [visitorForm, setVisitorForm] = useState({ name: '', relation: '', arrival: '' });
-  const [visitorHistory, setVisitorHistory] = useState([
-    { id: 1, name: 'John Doe', relation: 'Brother', arrival: 'Tomorrow, 4:00 PM', status: 'Approved' }
-  ]);
+  const [visitorHistory, setVisitorHistory] = useState([]);
 
   // Leave State
   const [leaveForm, setLeaveForm] = useState({ from: '', to: '', reason: '' });
-  const [leaveHistory, setLeaveHistory] = useState([
-    { id: 1, start: '10 May 2026', end: '15 May 2026', reason: 'Semester Break', status: 'Pending' }
-  ]);
+  const [leaveHistory, setLeaveHistory] = useState([]);
 
-  // Handlers
+  // Laundry State
+  const [laundryItems, setLaundryItems] = useState({
+    shirts: 0, tshirts: 0, pants: 0, shorts: 0, others: 0
+  });
+  const [laundryHistory, setLaundryHistory] = useState([]);
 
-  const handleCleaningSubmit = (e) => {
+  useEffect(() => {
+    fetchHistory();
+  }, [activeTab]);
+
+  const fetchHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      let endpoint = '';
+      if (activeTab === 'cleaning') endpoint = '/services/cleaning/me';
+      else if (activeTab === 'laundry') endpoint = '/services/laundry/me';
+      else if (activeTab === 'visitor') endpoint = '/services/visitors/me';
+      else if (activeTab === 'leave') endpoint = '/services/leaves/me';
+
+      const response = await API.get(endpoint);
+      if (activeTab === 'cleaning') setCleaningHistory(response.data);
+      else if (activeTab === 'laundry') setLaundryHistory(response.data);
+      else if (activeTab === 'visitor') setVisitorHistory(response.data);
+      else if (activeTab === 'leave') setLeaveHistory(response.data);
+    } catch (err) {
+      console.error('Error fetching service history:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleCleaningSubmit = async (e) => {
     e.preventDefault();
     if (!cleaningForm.date) return alert('Please select a date.');
     setIsSubmitting(true);
-    setTimeout(() => {
-      const newRequest = {
-        id: cleaningHistory.length + 1,
-        date: new Date(cleaningForm.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-        time: cleaningForm.slot.split(' ')[0],
-        status: 'Scheduled'
-      };
-      setCleaningHistory([newRequest, ...cleaningHistory]);
-      setIsSubmitting(false);
+    try {
+      const response = await API.post('/services/cleaning', cleaningForm);
+      setCleaningHistory([response.data, ...cleaningHistory]);
       alert('🧹 Room cleaning scheduled successfully!');
       setCleaningForm({ date: '', slot: 'Morning (10 AM - 12 PM)' });
-    }, 1200);
+    } catch (err) {
+      alert('Failed to schedule cleaning.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleVisitorSubmit = (e) => {
+  const handleVisitorSubmit = async (e) => {
     e.preventDefault();
     if (!visitorForm.name || !visitorForm.arrival) return alert('Please fill in all details.');
     setIsSubmitting(true);
-    setTimeout(() => {
-      const newVisitor = {
-        id: visitorHistory.length + 1,
+    try {
+      const response = await API.post('/services/visitors', {
         name: visitorForm.name,
         relation: visitorForm.relation,
-        arrival: new Date(visitorForm.arrival).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
-        status: 'Approved'
-      };
-      setVisitorHistory([newVisitor, ...visitorHistory]);
-      setIsSubmitting(false);
-      alert('🎫 Gate Pass generated and sent to visitor!');
+        arrivalDate: visitorForm.arrival
+      });
+      setVisitorHistory([response.data, ...visitorHistory]);
+      alert('🎫 Gate Pass generated successfully!');
       setVisitorForm({ name: '', relation: '', arrival: '' });
-    }, 1200);
+    } catch (err) {
+      alert('Failed to generate gate pass.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleLeaveSubmit = (e) => {
+  const handleLeaveSubmit = async (e) => {
     e.preventDefault();
     if (!leaveForm.from || !leaveForm.to || !leaveForm.reason) return alert('Please fill in all leave details.');
     setIsSubmitting(true);
-    setTimeout(() => {
-      const newLeave = {
-        id: leaveHistory.length + 1,
-        start: new Date(leaveForm.from).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
-        end: new Date(leaveForm.to).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-        reason: leaveForm.reason,
-        status: 'Pending'
-      };
-      setLeaveHistory([newLeave, ...leaveHistory]);
-      setIsSubmitting(false);
+    try {
+      const response = await API.post('/services/leaves', {
+        fromDate: leaveForm.from,
+        toDate: leaveForm.to,
+        reason: leaveForm.reason
+      });
+      setLeaveHistory([response.data, ...leaveHistory]);
       alert('✈️ Leave notice submitted to management.');
       setLeaveForm({ from: '', to: '', reason: '' });
-    }, 1200);
+    } catch (err) {
+      alert('Failed to submit leave notice.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleLaundrySubmit = async (e) => {
+    e.preventDefault();
+    const items = Object.entries(laundryItems)
+      .filter(([_, count]) => count > 0)
+      .map(([name, count]) => ({ name, count }));
+    
+    if (items.length === 0) return alert('Please add at least one item.');
+    setIsSubmitting(true);
+    try {
+      const response = await API.post('/services/laundry', {
+        items,
+        pickupDate: new Date()
+      });
+      setLaundryHistory([response.data, ...laundryHistory]);
+      alert(`👕 Laundry pickup scheduled!`);
+      setLaundryItems({ shirts: 0, tshirts: 0, pants: 0, shorts: 0, others: 0 });
+    } catch (err) {
+      alert('Failed to schedule laundry pickup.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -167,6 +214,16 @@ const Services = () => {
             justify-content: center;
           }
           .counter-btn:hover { background: #f1f5f9; border-color: var(--accent-primary); }
+          .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(14, 165, 233, 0.1);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+          }
+          @keyframes spin { to { transform: rotate(360deg); } }
         `}
       </style>
 
@@ -181,6 +238,7 @@ const Services = () => {
       <div style={{ display: 'flex', gap: '1.2rem', marginBottom: '3.5rem', flexWrap: 'wrap' }}>
         {[
           { id: 'cleaning', label: 'Room Cleaning', icon: '🧹' },
+          { id: 'laundry', label: 'Laundry', icon: '👕' },
           { id: 'visitor', label: 'Visitors', icon: '👤' },
           { id: 'leave', label: 'Leaves', icon: '✈️' }
         ].map(tab => (
@@ -194,6 +252,34 @@ const Services = () => {
         {/* ── Action Section ── */}
         <div className="glass-card-premium" style={{ padding: '3rem' }}>
 
+
+          {activeTab === 'laundry' && (
+            <form onSubmit={handleLaundrySubmit} className="fade-in">
+              <h3 style={{ fontSize: '1.8rem', fontWeight: '900', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 1.9l.58 14.25a2 2 0 0 0 2 1.92h14.28a2 2 0 0 0 2-1.92l.58-14.25a2 2 0 0 0-1.34-1.9z"></path></svg>
+                Laundry Order
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {Object.entries(laundryItems).map(([item, count]) => (
+                  <div key={item} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', background: '#f8fafc', borderRadius: '16px' }}>
+                    <span style={{ fontWeight: '800', textTransform: 'capitalize', color: '#475569' }}>{item}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+                      <button type="button" className="counter-btn" onClick={() => setLaundryItems({...laundryItems, [item]: Math.max(0, count - 1)})}>-</button>
+                      <span style={{ minWidth: '20px', textAlign: 'center', fontWeight: '900', fontSize: '1.1rem' }}>{count}</span>
+                      <button type="button" className="counter-btn" onClick={() => setLaundryItems({...laundryItems, [item]: count + 1})}>+</button>
+                    </div>
+                  </div>
+                ))}
+                <div style={{ marginTop: '1rem', padding: '1.5rem', background: 'var(--accent-primary)', borderRadius: '20px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: '700' }}>Total Items Selected</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: '950' }}>{Object.values(laundryItems).reduce((a, b) => a + b, 0)}</span>
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ padding: '1.2rem', fontWeight: '950', borderRadius: '18px', fontSize: '1.1rem' }}>
+                  {isSubmitting ? '👕 Processing...' : 'Schedule Pickup'}
+                </button>
+              </div>
+            </form>
+          )}
 
           {activeTab === 'cleaning' && (
             <form onSubmit={handleCleaningSubmit} className="fade-in">
@@ -284,40 +370,73 @@ const Services = () => {
             </h3>
             
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-
-
-              {activeTab === 'cleaning' && cleaningHistory.map(item => (
-                <div key={item.id} className="history-item">
-                  <div>
-                    <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#1e293b' }}>Room Cleaning</h4>
-                    <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>{item.date} • {item.time}</p>
-                  </div>
-                  <span className="status-badge" style={{ background: item.status === 'Completed' ? '#10b98115' : '#3b82f615', color: item.status === 'Completed' ? '#10b981' : '#3b82f6' }}>{item.status}</span>
+              {loadingHistory ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <div className="spinner" style={{ margin: '0 auto 1rem' }}></div>
+                  Loading history...
                 </div>
-              ))}
+              ) : (
+                <>
+                  {activeTab === 'laundry' && laundryHistory.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>No laundry orders found.</p>}
+                  {activeTab === 'cleaning' && cleaningHistory.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>No cleaning history found.</p>}
+                  {activeTab === 'visitor' && visitorHistory.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>No visitor records found.</p>}
+                  {activeTab === 'leave' && leaveHistory.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>No leave notices found.</p>}
 
-              {activeTab === 'visitor' && visitorHistory.map(item => (
-                <div key={item.id} className="history-item">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ width: '40px', height: '40px', background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', color: 'var(--accent-primary)' }}>{item.name[0]}</div>
-                    <div>
-                      <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#1e293b' }}>{item.name}</h4>
-                      <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>{item.relation} • {item.arrival}</p>
+                  {activeTab === 'laundry' && laundryHistory.map(item => (
+                    <div key={item._id} className="history-item">
+                      <div>
+                        <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#1e293b' }}>Order {item.orderNumber}</h4>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>
+                          {new Date(item.pickupDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} • {item.items?.reduce((acc, curr) => acc + curr.count, 0) || 0} items
+                        </p>
+                      </div>
+                      <span className="status-badge" style={{ 
+                        background: item.status === 'Delivered' ? '#10b98115' : '#f59e0b15', 
+                        color: item.status === 'Delivered' ? '#10b981' : '#f59e0b' 
+                      }}>{item.status}</span>
                     </div>
-                  </div>
-                  <span className="status-badge" style={{ background: '#10b98115', color: '#10b981' }}>{item.status}</span>
-                </div>
-              ))}
+                  ))}
 
-              {activeTab === 'leave' && leaveHistory.map(item => (
-                <div key={item.id} className="history-item">
-                  <div>
-                    <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#1e293b' }}>{item.reason}</h4>
-                    <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>{item.start} to {item.end}</p>
-                  </div>
-                  <span className="status-badge" style={{ background: '#f59e0b15', color: '#f59e0b' }}>{item.status}</span>
-                </div>
-              ))}
+                  {activeTab === 'cleaning' && cleaningHistory.map(item => (
+                    <div key={item._id} className="history-item">
+                      <div>
+                        <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#1e293b' }}>Room Cleaning</h4>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>
+                          {new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} • {item.slot}
+                        </p>
+                      </div>
+                      <span className="status-badge" style={{ background: item.status === 'Completed' ? '#10b98115' : '#3b82f615', color: item.status === 'Completed' ? '#10b981' : '#3b82f6' }}>{item.status}</span>
+                    </div>
+                  ))}
+
+                  {activeTab === 'visitor' && visitorHistory.map(item => (
+                    <div key={item._id} className="history-item">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ width: '40px', height: '40px', background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', color: 'var(--accent-primary)' }}>{item.name ? item.name[0] : 'V'}</div>
+                        <div>
+                          <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#1e293b' }}>{item.name}</h4>
+                          <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>
+                            {item.relation} • {new Date(item.arrivalDate).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="status-badge" style={{ background: '#10b98115', color: '#10b981' }}>{item.status}</span>
+                    </div>
+                  ))}
+
+                  {activeTab === 'leave' && leaveHistory.map(item => (
+                    <div key={item._id} className="history-item">
+                      <div>
+                        <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#1e293b' }}>{item.reason}</h4>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>
+                          {new Date(item.fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} to {new Date(item.toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                        </p>
+                      </div>
+                      <span className="status-badge" style={{ background: '#f59e0b15', color: '#f59e0b' }}>{item.status}</span>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           </div>
         </div>

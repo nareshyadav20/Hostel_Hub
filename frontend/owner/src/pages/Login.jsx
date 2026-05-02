@@ -2,22 +2,35 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import '@packages/ui-kit/auth.css';
+import API from '../api/axios';
 
 const Login = () => {
   const navigate = useNavigate();
   const [showVault, setShowVault] = React.useState(false);
   const [email, setEmail] = React.useState('owner@hostelhub.com');
   const [password, setPassword] = React.useState('owner123');
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
   
-  const handleSubmit = (e) => { 
+  const handleSubmit = async (e) => { 
     e.preventDefault(); 
-    navigate('/owner/portfolio'); 
+    setLoading(true);
+    setError('');
+    try {
+      const response = await API.post('/auth/login', { email, password });
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      navigate('/owner/portfolio'); 
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid credentials');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleQuickFill = () => {
     setEmail('owner@hostelhub.com');
     setPassword('owner123');
-    setTimeout(() => navigate('/owner/portfolio'), 500);
   };
 
   return (
@@ -27,6 +40,9 @@ const Login = () => {
           <h1>Hostel Owner</h1>
           <p>Sign in to manage your property</p>
         </div>
+        
+        {error && <div className="error-message" style={{ color: 'var(--accent-error)', textAlign: 'center', marginBottom: '1.5rem', padding: '0.8rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px', fontSize: '0.9rem' }}>{error}</div>}
+
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="input-group">
             <label>Owner Email</label>
@@ -46,7 +62,9 @@ const Login = () => {
               required 
             />
           </div>
-          <button type="submit" className="auth-btn">Access Dashboard</button>
+          <button type="submit" className="auth-btn" disabled={loading}>
+            {loading ? 'Accessing...' : 'Access Dashboard'}
+          </button>
         </form>
 
         <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
