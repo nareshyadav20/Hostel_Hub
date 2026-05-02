@@ -347,3 +347,63 @@ export function TenantOverviewPanel({ summary }) {
     </div>
   );
 }
+
+// ── INFRASTRUCTURE OVERVIEW ───────────────────────────────────
+export function InfrastructureOverview({ buildingId }) {
+  const [data, setData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const [floors, rooms, beds] = await Promise.all([
+          window.api.getFloorsByBuilding(buildingId),
+          window.api.getRoomsByBuilding(buildingId),
+          window.api.getBedsByBuilding(buildingId)
+        ]);
+        setData({ floors, rooms, beds });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [buildingId]);
+
+  if (loading || !data) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading Infrastructure...</div>;
+
+  return (
+    <div className="card" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.2rem' }}>
+        <ChevronRight size={18} color="var(--accent-primary)" />
+        <h3 style={{ fontSize: '1rem', fontWeight: '800' }}>Property Infrastructure</h3>
+        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>{data.floors.length} Floors · {data.rooms.length} Rooms</span>
+      </div>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', maxHeight: '320px', overflowY: 'auto' }}>
+        {data.floors.map(f => {
+          const fRooms = data.rooms.filter(r => r.floorId === f.id);
+          const fBeds = data.beds.filter(b => fRooms.some(r => r.id === b.roomId));
+          const fOccupied = fBeds.filter(b => b.status === 'OCCUPIED').length;
+          const fOccRate = fBeds.length > 0 ? Math.round((fOccupied / fBeds.length) * 100) : 0;
+
+          return (
+            <div key={f.id} style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ fontWeight: '800', fontSize: '0.9rem' }}>{f.floorNumber}</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: '700', color: fOccRate >= 80 ? '#EF4444' : '#10B981' }}>{fOccRate}% Occupied</span>
+              </div>
+              <div style={{ height: '4px', background: 'var(--bg-secondary)', borderRadius: '2px', marginBottom: '0.5rem' }}>
+                <div style={{ width: `${fOccRate}%`, height: '100%', background: fOccRate >= 80 ? '#EF4444' : '#10B981', borderRadius: '2px' }} />
+              </div>
+              <div style={{ display: 'flex', gap: '0.8rem', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700' }}>
+                <span>{fRooms.length} Rooms</span>
+                <span>{fOccupied}/{fBeds.length} Beds</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

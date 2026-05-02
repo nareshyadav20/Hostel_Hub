@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -27,6 +27,8 @@ const Staff = () => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [loading, setLoading] = useState(true);
   const [filterRole, setFilterRole] = useState('All');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   async function fetchStaff() {
     try {
@@ -43,6 +45,39 @@ const Staff = () => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStaff();
   }, []);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    
+    // Simulate upload delay
+    setTimeout(() => {
+      const newDoc = {
+        name: file.name,
+        type: file.name.split('.').pop()?.toUpperCase() || 'FILE',
+        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }),
+        url: '#'
+      };
+
+      // Update selected staff locally
+      const updatedStaff = {
+        ...selectedStaff,
+        documents: [...(selectedStaff.documents || []), newDoc]
+      };
+      setSelectedStaff(updatedStaff);
+
+      // Update the main staff list as well
+      setStaffData(prev => ({
+        ...prev,
+        staffList: (prev.staffList || []).map(s => s.id === selectedStaff.id ? updatedStaff : s)
+      }));
+
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }, 1500);
+  };
 
   const getStatusStyle = (status) => {
     if (!status) return { bg: 'rgba(107, 114, 128, 0.1)', color: '#6B7280', label: 'UNKNOWN' };
@@ -252,10 +287,35 @@ const Staff = () => {
                 </button>
               </div>
             ))}
-            <div className="card" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: '2px dashed var(--border-color)', cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}>
-                <Upload size={18} />
-                <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Upload New Document</span>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              style={{ display: 'none' }} 
+              onChange={handleFileUpload}
+            />
+            <div 
+              className="card" 
+              onClick={() => !uploading && fileInputRef.current?.click()}
+              style={{ 
+                padding: '1.2rem', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                background: uploading ? 'var(--bg-tertiary)' : 'transparent', 
+                border: '2px dashed var(--border-color)', 
+                cursor: uploading ? 'wait' : 'pointer',
+                opacity: uploading ? 0.7 : 1
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: uploading ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
+                {uploading ? (
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
+                    <Activity size={18} />
+                  </motion.div>
+                ) : <Upload size={18} />}
+                <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>
+                  {uploading ? 'Processing File...' : 'Upload New Document'}
+                </span>
               </div>
             </div>
           </div>

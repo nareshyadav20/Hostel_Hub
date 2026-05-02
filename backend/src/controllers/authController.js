@@ -9,6 +9,18 @@ const register = async (req, res) => {
 
     const user = await User.create({ email, password, name, role, phone });
 
+    if (role === 'TENANT') {
+      const Tenant = require('../models/Tenant');
+      // Create a default tenant profile so they can raise complaints immediately
+      await Tenant.create({ 
+        name, 
+        email, 
+        phone: phone || 'N/A', 
+        emergencyContact: 'N/A', 
+        status: 'PENDING' 
+      });
+    }
+
     const token = jwt.sign({ id: user._id, role: user.role, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.status(201).json({ user, token });
   } catch (error) {

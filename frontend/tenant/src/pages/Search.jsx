@@ -18,165 +18,18 @@ const ICONS = {
   Luxury: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
 };
 
-/* ─── expanded hostel data ─── */
+/* ─── hostel data ─── */
 const HOSTELS = [
-  { 
-    id: 1, 
-    name: 'Sunshine Residency', 
-    location: 'Bengaluru', 
-    subLoc: 'Near City College', 
-    price: 6500, 
-    gender: 'Boys', 
-    type: '2 Sharing', 
-    rating: 4.8, 
-    images: [
-      'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=1000',
-      'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=1000',
-      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000'
-    ]
-  },
-  { 
-    id: 2, 
-    name: 'Elite Living', 
-    location: 'Bengaluru', 
-    subLoc: 'Tech Park Area', 
-    price: 8500, 
-    gender: 'Girls', 
-    type: 'Single', 
-    rating: 4.5, 
-    images: [
-      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000',
-      'https://images.unsplash.com/photo-1502672260266-1c1c24240938?auto=format&fit=crop&q=80&w=1000',
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1000'
-    ]
-  },
-  { 
-    id: 3, 
-    name: 'Green View Hostel', 
-    location: 'Bengaluru', 
-    subLoc: 'Green Valley', 
-    price: 5000, 
-    gender: 'Mixed', 
-    type: '4 Sharing', 
-    rating: 4.2, 
-    images: [
-      'https://images.unsplash.com/photo-1623625434462-e5e42318ae49?auto=format&fit=crop&q=80&w=1000',
-      'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=1000',
-      'https://images.unsplash.com/photo-1502672260266-1c1c24240938?auto=format&fit=crop&q=80&w=1000'
-    ]
-  },
-  { 
-    id: 4, 
-    name: 'Metro Suites', 
-    location: 'Hyderabad', 
-    subLoc: 'Hitech City', 
-    price: 12000, 
-    gender: 'Mixed', 
-    type: 'Single', 
-    rating: 4.9, 
-    images: [
-      'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=1000',
-      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000',
-      'https://images.unsplash.com/photo-1623625434462-e5e42318ae49?auto=format&fit=crop&q=80&w=1000'
-    ]
-  },
-  { 
-    id: 5, 
-    name: 'Royal Palace', 
-    location: 'Mumbai', 
-    subLoc: 'Andheri West', 
-    price: 15000, 
-    gender: 'Girls', 
-    type: '2 Sharing', 
-    rating: 4.7, 
-    images: [
-      'https://images.unsplash.com/photo-1502672260266-1c1c24240938?auto=format&fit=crop&q=80&w=1000',
-      'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=1000',
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1000'
-    ]
-  },
-  { 
-    id: 6, 
-    name: 'Skyline Dorms', 
-    location: 'Hyderabad', 
-    subLoc: 'Gachibowli', 
-    price: 7500, 
-    gender: 'Boys', 
-    type: '3 Sharing', 
-    rating: 4.4, 
-    images: [
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1000',
-      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000',
-      'https://images.unsplash.com/photo-1502672260266-1c1c24240938?auto=format&fit=crop&q=80&w=1000'
-    ]
-  }
+  { id: 1, name: 'Sunshine Residency', location: 'Near City College', price: 6500, gender: 'Boys', type: '2 Sharing', rating: 4.5, image: '/sunshine_residency_hostel.png' },
+  { id: 2, name: 'Elite Living', location: 'Tech Park Area', price: 8500, gender: 'Girls', type: 'Single', rating: 4.8, image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000' },
+  { id: 3, name: 'Green View Hostel', location: 'Green Valley', price: 5000, gender: 'Co-living', type: '4 Sharing', rating: 4.2, image: 'https://images.unsplash.com/photo-1623625434462-e5e42318ae49?auto=format&fit=crop&q=80&w=1000' },
 ];
-
-/* ─── Hostel Card Component with Carousel ─── */
-const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => {
-  const [currentImg, setCurrentImg] = useState(0);
-
-  // Auto-scroll images
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentImg(prev => (prev + 1) % hostel.images.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [hostel.images.length]);
-
-  return (
-    <div className="pro-hostel-card">
-      <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.images[currentImg]})` }}>
-        <div className="rating-tag">{hostel.rating} ★</div>
-        <button className={`wishlist-icon ${isWishlisted(hostel.id) ? 'active' : ''}`} onClick={() => toggleWishlist(hostel)}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted(hostel.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
-        </button>
-        
-        {/* Carousel Indicators */}
-        <div className="carousel-dots">
-          {hostel.images.map((_, idx) => (
-            <div key={idx} className={`dot ${currentImg === idx ? 'active' : ''}`} onClick={() => setCurrentImg(idx)}></div>
-          ))}
-        </div>
-      </div>
-
-      <div className="pro-card-content">
-        <div className="pro-card-header">
-          <div>
-            <h2 className="hostel-name">{hostel.name}</h2>
-            <p className="hostel-loc"><ICONS.Location style={{ width: '12px', height: '12px' }} /> {hostel.subLoc}, {hostel.location}</p>
-          </div>
-          <div className="gender-tag">{hostel.gender}</div>
-        </div>
-
-        <div className="hostel-specs">
-          <div className="spec-item">{hostel.type}</div>
-          <div className="spec-item">Fully Managed</div>
-          <div className="spec-item">Verified</div>
-        </div>
-
-        <div className="pro-card-footer">
-          <div className="price-tag">
-            <span className="price-val">₹{hostel.price.toLocaleString()}</span>
-            <span className="price-period">/mo</span>
-          </div>
-          <div className="card-actions">
-            <button className="btn-wish-outline" onClick={() => toggleWishlist(hostel)}>
-              {isWishlisted(hostel.id) ? 'Saved' : 'Wishlist'}
-            </button>
-            <Link to={`/listing/${hostel.id}`} className="btn-details">Details</Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const Search = () => {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({ location: 'Bengaluru', budget: 'all', gender: 'All' });
-  const [filteredHostels, setFilteredHostels] = useState(HOSTELS);
+  const [filters, setFilters] = useState({ location: 'bengaluru', budget: 10000, gender: 'All' });
   const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
+  const [allHostels, setAllHostels] = useState([]);
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -184,26 +37,104 @@ const Search = () => {
     const fetchHostels = async () => {
       try {
         const response = await API.get('/buildings');
-        // Map backend building structure to frontend hostel structure if needed
-        const mapped = response.data.map(b => ({
-          id: b._id,
-          name: b.name,
-          location: b.address,
-          price: b.startingPrice || 5000, // Fallback if not in DB
-          gender: b.type || 'Co-living',
-          type: 'Premium',
-          rating: 4.5,
-          image: b.images?.[0] || '/sunshine_residency_hostel.png'
-        }));
+        let mapped = response.data.map(b => {
+          const totalBeds = b.floors?.reduce((acc, f) => acc + (f.rooms?.reduce((rAcc, r) => rAcc + (r.beds?.length || 0), 0) || 0), 0) || 0;
+          const occupiedBeds = b.floors?.reduce((acc, f) => acc + (f.rooms?.reduce((rAcc, r) => rAcc + (r.beds?.filter(bd => bd.status === 'OCCUPIED').length || 0), 0) || 0), 0) || 0;
+          const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+          
+          return {
+            id: b._id,
+            name: b.name,
+            location: b.address,
+            city: (b.locationCity || 'bengaluru').toLowerCase(),
+            price: b.startingPrice || 5000,
+            gender: b.genderType || 'Mixed',
+            category: (b.category || 'Student').toLowerCase(),
+            type: 'Premium',
+            rating: b.rating || (4.0 + Math.random()).toFixed(1),
+            popularityLabel: b.popularityLabel || (occupancyRate > 90 ? 'High Demand' : null),
+            occupancy: `${occupancyRate}%`,
+            totalRooms: b.floors?.reduce((acc, f) => acc + (f.rooms?.length || 0), 0) || 0,
+            totalBeds: totalBeds,
+            image: b.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
+            amenities: b.amenities || []
+          };
+        });
+
+        if (mapped.length === 0) {
+          mapped = MOCK_SEED;
+        }
+
+        setAllHostels(mapped);
         setHostels(mapped);
       } catch (err) {
         console.error('Error fetching hostels:', err);
+        setAllHostels(MOCK_SEED);
+        setHostels(MOCK_SEED);
       } finally {
         setLoading(false);
       }
     };
     fetchHostels();
   }, []);
+
+  useEffect(() => {
+    let filtered = [...allHostels];
+
+    // Location filter
+    if (filters.location !== 'all') {
+      filtered = filtered.filter(h => h.city.toLowerCase() === filters.location.toLowerCase());
+    }
+
+    // Gender filter
+    if (filters.gender !== 'All') {
+      filtered = filtered.filter(h => h.gender === filters.gender || h.gender === 'Mixed');
+    }
+
+    // Budget filter
+    if (filters.budget !== 'all') {
+      filtered = filtered.filter(h => {
+        const price = h.price;
+        if (filters.budget === 'budget-1') return price <= 5000;
+        if (filters.budget === 'budget-2') return price > 5000 && price <= 10000;
+        if (filters.budget === 'budget-3') return price > 10000 && price <= 15000;
+        if (filters.budget === 'budget-4') return price > 15000;
+        return true;
+      });
+    }
+
+    // Category filter
+    if (filters.categories.length > 0) {
+      filtered = filtered.filter(h => filters.categories.includes(h.category.toLowerCase()));
+    }
+
+    // Amenities filter
+    if (filters.amenities.length > 0) {
+      filtered = filtered.filter(h => 
+        filters.amenities.every(amn => h.amenities.some(a => a.toLowerCase().includes(amn.toLowerCase())))
+      );
+    }
+
+    setHostels(filtered);
+  }, [filters, allHostels]);
+
+  const toggleCategory = (cat) => {
+    setFilters(prev => ({
+      ...prev,
+      categories: prev.categories.includes(cat) 
+        ? prev.categories.filter(c => c !== cat)
+        : [...prev.categories, cat]
+    }));
+  };
+
+  const toggleAmenity = (amn) => {
+    setFilters(prev => ({
+      ...prev,
+      amenities: prev.amenities.includes(amn)
+        ? prev.amenities.filter(a => a !== amn)
+        : [...prev.amenities, amn]
+    }));
+  };
 
   const isWishlisted = (id) => wishlist.some((h) => h.id === id);
 
@@ -213,32 +144,6 @@ const Search = () => {
     localStorage.setItem('wishlist', JSON.stringify(next));
   };
 
-  const handleApplyFilters = () => {
-    let results = HOSTELS;
-
-    // Filter by Location
-    if (filters.location !== 'all') {
-      results = results.filter(h => h.location.toLowerCase() === filters.location.toLowerCase());
-    }
-
-    // Filter by Gender
-    if (filters.gender !== 'All') {
-      results = results.filter(h => h.gender === filters.gender);
-    }
-
-    // Filter by Budget
-    if (filters.budget === 'budget-1') results = results.filter(h => h.price <= 5000);
-    else if (filters.budget === 'budget-2') results = results.filter(h => h.price > 5000 && h.price <= 10000);
-    else if (filters.budget === 'budget-3') results = results.filter(h => h.price > 10000 && h.price <= 15000);
-    else if (filters.budget === 'budget-4') results = results.filter(h => h.price > 15000);
-
-    setFilteredHostels(results);
-  };
-
-  // Initial filter on load
-  useEffect(() => {
-    handleApplyFilters();
-  }, []);
 
   return (
     <div className="search-page-professional fade-in">
@@ -271,9 +176,9 @@ const Search = () => {
                   <ICONS.Location /> <span>Location</span>
                 </div>
                 <select value={filters.location} onChange={(e) => setFilters({ ...filters, location: e.target.value })} className="pro-select">
-                  <option value="Bengaluru">Bengaluru</option>
-                  <option value="Hyderabad">Hyderabad</option>
-                  <option value="Mumbai">Mumbai</option>
+                  <option value="bengaluru">Bengaluru</option>
+                  <option value="hyderabad">Hyderabad</option>
+                  <option value="mumbai">Mumbai</option>
                 </select>
               </div>
 
@@ -296,19 +201,14 @@ const Search = () => {
                 </div>
                 <div className="pro-filter-table">
                   {[
+                    { label: 'All Budgets', value: 'all' },
                     { label: '₹0 - ₹5k', value: 'budget-1' },
                     { label: '₹5k - ₹10k', value: 'budget-2' },
                     { label: '₹10k - ₹15k', value: 'budget-3' },
                     { label: '₹15k+', value: 'budget-4' }
                   ].map(item => (
                     <label key={item.value} className="pro-table-row">
-                      <input 
-                        type="radio" 
-                        name="budget-seg" 
-                        value={item.value} 
-                        checked={filters.budget === item.value}
-                        onChange={(e) => setFilters({...filters, budget: e.target.value})}
-                      />
+                      <input type="radio" name="budget-seg" />
                       <span className="row-content">
                         <span className="row-label">{item.label}</span>
                         <span className="row-radio-custom"></span>
@@ -318,27 +218,108 @@ const Search = () => {
                 </div>
               </div>
 
-              <button className="apply-btn" onClick={handleApplyFilters}>Apply Filters</button>
+              {/* Property Categories */}
+              <div className="filter-group">
+                <div className="group-label">
+                  <ICONS.Category /> <span>Property Style</span>
+                </div>
+                <div className="pro-filter-table">
+                  {[
+                    { label: 'Student Friendly', icon: <ICONS.Student />, value: 'student' },
+                    { label: 'Professional Hubs', icon: <ICONS.Work />, value: 'work' },
+                    { label: 'Luxury Suites', icon: <ICONS.Luxury />, value: 'luxury' }
+                  ].map(item => (
+                    <label key={item.value} className="pro-table-row">
+                      <input type="checkbox" />
+                      <span className="row-content">
+                        <span className="row-info">
+                          {item.icon}
+                          <span className="row-label">{item.label}</span>
+                        </span>
+                        <span className="row-check-custom"></span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Amenities checklist */}
+              <div className="filter-group">
+                <div className="group-label">
+                  <ICONS.Amenities /> <span>Essential Amenities</span>
+                </div>
+                <div className="amenities-checklist">
+                  {[
+                    { id: 'wifi', label: 'WiFi', icon: <ICONS.WiFi /> },
+                    { id: 'ac', label: 'A/C', icon: <ICONS.AC /> },
+                    { id: 'food', label: 'Food', icon: <ICONS.Food /> },
+                    { id: 'security', label: 'Security', icon: <ICONS.Security /> }
+                  ].map(amenity => (
+                    <label key={amenity.id} className="amenity-checkbox">
+                      <input type="checkbox" />
+                      <span className="checkbox-content">
+                        {amenity.icon}
+                        <span>{amenity.label}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <button className="apply-btn">Apply Filters</button>
             </div>
           </div>
         </aside>
 
         <main className="results-professional">
-          {filteredHostels.length > 0 ? (
-            filteredHostels.map(hostel => (
-              <HostelCard 
-                key={hostel.id} 
-                hostel={hostel} 
-                isWishlisted={isWishlisted} 
-                toggleWishlist={toggleWishlist} 
-              />
-            ))
-          ) : (
-            <div style={{ textAlign: 'center', padding: '4rem', background: 'var(--bg-secondary)', borderRadius: '32px', border: '1px solid var(--border-color)' }}>
-              <ICONS.Location style={{ width: '48px', height: '48px', color: 'var(--text-muted)', marginBottom: '1rem' }} />
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>No Hostels Found</h2>
-              <p style={{ color: 'var(--text-muted)' }}>Try adjusting your filters to find more results.</p>
+          {loading ? (
+            <div style={{ textAlign: 'center', gridColumn: '1/-1', padding: '5rem' }}>
+              <div className="loading-spinner">Discovering stays...</div>
             </div>
+          ) : hostels.length === 0 ? (
+            <div style={{ textAlign: 'center', gridColumn: '1/-1', padding: '5rem' }}>
+              <h2>No hostels found matching your criteria.</h2>
+              <p>Try adjusting your filters or location.</p>
+            </div>
+          ) : (
+            hostels.map(hostel => (
+              <div key={hostel.id} className="pro-hostel-card">
+                <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image})` }}>
+                  <div className="rating-tag">{hostel.rating} ★</div>
+                  <button className={`wishlist-icon ${isWishlisted(hostel.id) ? 'active' : ''}`} onClick={() => toggleWishlist(hostel)}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted(hostel.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                  </button>
+                </div>
+                <div className="pro-card-content">
+                  <div className="pro-card-header">
+                    <div>
+                      <h2 className="hostel-name">{hostel.name}</h2>
+                      <p className="hostel-loc"><ICONS.Location style={{width: '12px', height: '12px'}} /> {hostel.location}</p>
+                    </div>
+                    <div className="gender-tag">{hostel.gender}</div>
+                  </div>
+
+                  <div className="hostel-specs">
+                    <div className="spec-item">{hostel.type}</div>
+                    <div className="spec-item">Fully Managed</div>
+                    <div className="spec-item">Verified</div>
+                  </div>
+
+                  <div className="pro-card-footer">
+                    <div className="price-tag">
+                      <span className="price-val">₹{hostel.price.toLocaleString()}</span>
+                      <span className="price-period">/mo</span>
+                    </div>
+                    <div className="card-actions">
+                      <button className="btn-wish-outline" onClick={() => toggleWishlist(hostel)}>
+                        {isWishlisted(hostel.id) ? 'Saved' : 'Wishlist'}
+                      </button>
+                      <Link to={`/listing/${hostel.id}`} className="btn-details">Details</Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
           )}
         </main>
       </div>
@@ -770,6 +751,51 @@ const Search = () => {
         .btn-details:hover {
           transform: translateY(-3px);
           box-shadow: 0 12px 30px rgba(14, 165, 233, 0.3);
+        }
+
+        .card-badge-row {
+          position: absolute;
+          top: 1.5rem;
+          left: 1.5rem;
+          display: flex;
+          gap: 0.8rem;
+          z-index: 5;
+        }
+
+        .rating-tag {
+          padding: 0.5rem 1rem;
+          background: rgba(0,0,0,0.6);
+          backdrop-filter: blur(8px);
+          color: #fbbf24;
+          border-radius: 12px;
+          font-size: 0.9rem;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          gap: 0.3rem;
+        }
+
+        .popularity-badge {
+          padding: 0.5rem 1rem;
+          background: var(--accent-primary);
+          color: white;
+          border-radius: 12px;
+          font-size: 0.75rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+
+        .occupancy-tag {
+          font-size: 0.7rem;
+          font-weight: 900;
+          color: var(--accent-success);
+          background: rgba(16, 185, 129, 0.1);
+          padding: 0.4rem 0.8rem;
+          border-radius: 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
 
         @media (max-width: 1024px) {

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
-import { useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { 
   Building as BuildingIcon, Layers, DoorOpen, Bed, PlusCircle, 
-  ArrowLeft, CheckSquare, Square, Trash2, Edit2, Zap, X, Image as ImageIcon
+  ArrowLeft, CheckSquare, Square, Trash2, Edit2, Zap, X, Image as ImageIcon, BedDouble, Filter
 } from 'lucide-react';
 
 import { api } from '../mockData';
@@ -46,7 +46,9 @@ const Modal = ({ isOpen, onClose, title, children }) => (
 
 const Buildings = () => {
   const { buildingId } = useParams();
+  const navigate = useNavigate();
   const [view, setView] = useState('buildings'); // buildings, floors, rooms, beds, assign
+  const [showFilters, setShowFilters] = useState(false);
   
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloors] = useState([]);
@@ -195,9 +197,16 @@ const Buildings = () => {
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Advanced hierarchical management of buildings, floors, rooms, and beds.</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button className="btn" onClick={() => setView('assign')} style={{ border: '1px solid var(--accent-primary)', color: 'var(--accent-primary)', background: 'rgba(99, 102, 241, 0.1)' }}>
-            <Zap size={18} /> Assign Floors to Hostel
+        <div style={{ display: 'flex', gap: '0.8rem' }}>
+          <button 
+            className="btn" 
+            onClick={() => navigate(`/owner/building/${buildingId}/rooms`)}
+            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--accent-primary)', fontWeight: '700' }}
+          >
+            <BedDouble size={18} /> Occupancy View
+          </button>
+          <button className="btn" onClick={() => setShowFilters(!showFilters)} style={{ background: showFilters ? 'var(--bg-tertiary)' : 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+            <Filter size={16} /> Filters
           </button>
         </div>
       </header>
@@ -379,33 +388,37 @@ const RoomsList = ({ rooms, floor, onSelect, onBack, onAdd }) => (
       </div>
       <button className="btn btn-primary" onClick={onAdd}><PlusCircle size={18} /> Add Room</button>
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1rem' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.5rem' }}>
           {rooms.length > 0 ? rooms.map(r => (
             <motion.div 
               key={r.id} 
               whileHover={{ scale: 1.02, y: -2 }}
               className="card" 
-              style={{ padding: '1rem', cursor: 'pointer', borderRadius: '16px', border: '1px solid #E2E8F0', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}
+              style={{ padding: 0, cursor: 'pointer', borderRadius: '16px', border: '1px solid #E2E8F0', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
               onClick={() => onSelect(r)}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6', fontWeight: '800', fontSize: '0.9rem' }}>
-                  {r.roomNumber}
+              <div style={{ height: '100px', width: '100%', backgroundImage: `url("${r.images?.[0] || 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80'}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '4px' }}>
+                  {r.isAC && <div style={{ background: 'rgba(255, 247, 237, 0.9)', color: '#C2410C', padding: '0.2rem 0.4rem', borderRadius: '6px', fontSize: '0.6rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '2px', backdropFilter: 'blur(4px)' }}><Zap size={10} fill="#C2410C"/> AC</div>}
                 </div>
-                {r.isAC && <div style={{ background: '#FFF7ED', color: '#C2410C', padding: '0.2rem 0.4rem', borderRadius: '6px', fontSize: '0.65rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '2px' }}><Zap size={10} fill="#C2410C"/> AC</div>}
               </div>
               
-              <div>
-                <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748B', fontWeight: '600', textTransform: 'uppercase' }}>{r.type}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.2rem' }}>
-                   <span style={{ fontSize: '0.85rem', fontWeight: '800', color: r.status === 'AVAILABLE' ? '#10B981' : '#F59E0B' }}>{r.status}</span>
+              <div style={{ padding: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>Room {r.roomNumber}</div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>{r.type}</span>
                 </div>
-              </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                   <span style={{ fontSize: '0.8rem', fontWeight: '800', color: r.status === 'Active' || r.status === 'AVAILABLE' ? '#10B981' : '#F59E0B' }}>{r.status}</span>
+                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{r.occupied || 0}/{r.capacity} Beds</span>
+                </div>
 
-              <div style={{ display: 'flex', gap: '4px', marginTop: 'auto' }}>
-                {Array.from({ length: r.capacity }).map((_, i) => (
-                  <div key={i} style={{ flex: 1, height: '4px', borderRadius: '2px', background: i < (r.occupied || 0) ? '#3B82F6' : '#E2E8F0' }} />
-                ))}
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {Array.from({ length: r.capacity }).map((_, i) => (
+                    <div key={i} style={{ flex: 1, height: '4px', borderRadius: '2px', background: i < (r.occupied || 0) ? '#3B82F6' : '#E2E8F0' }} />
+                  ))}
+                </div>
               </div>
             </motion.div>
           )) : (
@@ -433,24 +446,33 @@ const BedsList = ({ beds, room, onBack, onAdd }) => (
           key={b.id} 
           whileHover={{ scale: 1.05 }}
           className="card" 
-          style={{ padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', borderRadius: '16px', borderTop: `4px solid ${b.status === 'AVAILABLE' ? '#10B981' : b.status === 'OCCUPIED' ? '#3B82F6' : '#EF4444'}`, textAlign: 'center' }}
+          style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', borderRadius: '16px', borderTop: `4px solid ${b.status === 'AVAILABLE' ? '#10B981' : b.status === 'OCCUPIED' ? '#3B82F6' : '#EF4444'}`, textAlign: 'center' }}
         >
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: b.status === 'AVAILABLE' ? '#ECFDF5' : '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: b.status === 'AVAILABLE' ? '#10B981' : '#3B82F6' }}>
-            <Bed size={18} />
-          </div>
-          <div>
-            <h3 style={{ fontSize: '1rem', fontWeight: '900', margin: 0, color: '#0F172A' }}>{b.bedNumber}</h3>
-            <span style={{ fontSize: '0.65rem', fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>{b.status}</span>
-          </div>
-          {b.tenant ? (
-            <div style={{ marginTop: '0.2rem', padding: '0.3rem 0.6rem', borderRadius: '8px', background: '#F8FAFC', width: '100%' }}>
-              <p style={{ fontSize: '0.7rem', color: '#475569', fontWeight: '700', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                👤 {b.tenant}
-              </p>
+          <div style={{ 
+            height: '100px', 
+            width: '100%', 
+            backgroundImage: `url("${(b.images && b.images[0]) || 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80'}")`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            transition: 'all 0.3s' 
+          }} />
+          <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: b.status === 'AVAILABLE' ? '#ECFDF5' : '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: b.status === 'AVAILABLE' ? '#10B981' : '#3B82F6' }}>
+              <Bed size={18} />
             </div>
-          ) : (
-            <div style={{ height: '22px' }} />
-          )}
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: '900', margin: 0, color: '#0F172A' }}>{b.bedNumber}</h3>
+              <span style={{ fontSize: '0.65rem', fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>{b.status}</span>
+            </div>
+            {b.tenant && (
+              <div style={{ marginTop: '0.2rem', padding: '0.3rem 0.6rem', borderRadius: '8px', background: '#F8FAFC', width: '100%' }}>
+                <p style={{ fontSize: '0.7rem', color: '#475569', fontWeight: '700', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  👤 {b.tenant}
+                </p>
+              </div>
+            )}
+          </div>
         </motion.div>
       )) : (
         <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>

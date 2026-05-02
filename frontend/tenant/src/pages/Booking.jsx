@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import API from '../api/axios';
 
 const Booking = () => {
   const navigate = useNavigate();
+  const { buildingId } = useParams();
   const idUploadRef = useRef(null);
   const photoUploadRef = useRef(null);
   
   const [user, setUser] = useState({});
   const [step, setStep] = useState(1);
+  const [hostel, setHostel] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(null);
-  
   const [formData, setFormData] = useState({
     roomType: 'Double',
     bed: 'A',
@@ -29,7 +32,24 @@ const Booking = () => {
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
     setUser(storedUser);
-  }, [navigate]);
+
+    const fetchHostel = async () => {
+      try {
+        const res = await API.get(`/buildings/${buildingId}`);
+        setHostel(res.data);
+        // Set default room type if available
+        if (res.data.floors?.[0]?.rooms?.[0]) {
+          setFormData(prev => ({ ...prev, roomType: res.data.floors[0].rooms[0].roomNumber }));
+        }
+      } catch (err) {
+        console.error('Error fetching hostel for booking:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (buildingId) fetchHostel();
+    else setLoading(false);
+  }, [navigate, buildingId]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -41,147 +61,83 @@ const Booking = () => {
     if (!file) return;
     
     setIsUploading(type);
-    // Simulate real upload delay
     setTimeout(() => {
       setFormData(prev => ({ ...prev, [type]: file.name }));
       setIsUploading(null);
     }, 1500);
   };
 
-  const currentRoom = roomOptions.find(r => r.id === formData.roomType);
+  const currentRoom = roomOptions.find(r => r.id === formData.roomType) || roomOptions[1];
+
+  if (!buildingId) {
+    return (
+      <div className="booking-page-premium fade-in dashboard-container">
+        <header style={{ marginBottom: '3rem' }}>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-1.5px' }}>My Bookings</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Manage your active stays and upcoming reservations.</p>
+        </header>
+
+        <div className="glass-card" style={{ padding: '3rem', borderRadius: '32px' }}>
+          {user.room ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
+              <div>
+                <h2 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '1.5rem' }}>Active Stay</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                  <div className="summary-row">
+                    <span>Hostel</span>
+                    <strong style={{ color: 'var(--accent-primary)' }}>Elite Living</strong>
+                  </div>
+                  <div className="summary-row">
+                    <span>Room Number</span>
+                    <strong>{user.room}</strong>
+                  </div>
+                  <div className="summary-row">
+                    <span>Status</span>
+                    <span className="badge badge-success" style={{ padding: '0.4rem 1rem' }}>ACTIVE</span>
+                  </div>
+                  <div className="summary-row">
+                    <span>Move-in Date</span>
+                    <strong>{user.moveInDate || '01-Jan-2026'}</strong>
+                  </div>
+                </div>
+              </div>
+              <div style={{ background: 'var(--bg-tertiary)', padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '1rem' }}>Financial Overview</h3>
+                <div className="summary-row">
+                  <span>Monthly Rent</span>
+                  <strong>₹{user.rent || '6,500'}</strong>
+                </div>
+                <div className="summary-row">
+                  <span>Due Date</span>
+                  <strong>05-May-2026</strong>
+                </div>
+                <div className="summary-divider"></div>
+                <Link to="/payments" className="btn btn-primary" style={{ textAlign: 'center', textDecoration: 'none', display: 'block', marginTop: '1rem' }}>View Full History</Link>
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '3rem' }}>
+              <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🏠</div>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: '900' }}>No Active Booking</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>You haven't booked any hostel yet or your booking is pending approval.</p>
+              <Link to="/search" className="btn btn-primary" style={{ display: 'inline-block', width: 'auto', padding: '1rem 3rem', textDecoration: 'none' }}>Find a Hostel</Link>
+            </div>
+          )}
+        </div>
+
+        <style>{`
+          .summary-row { display: flex; justify-content: space-between; font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-secondary); }
+          .summary-divider { height: 1px; background: var(--border-color); margin: 1.5rem 0; }
+          .badge-success { background: rgba(34, 197, 94, 0.1); color: #22c55e; border-radius: 8px; font-weight: 800; font-size: 0.8rem; }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (loading) return <div className="dashboard-container"><div className="loading-spinner">Initializing booking...</div></div>;
 
   return (
     <div className="booking-page fade-in dashboard-container" style={{ position: 'relative', paddingBottom: '8rem' }}>
-      <style>
-        {`
-          .glass-card-premium {
-            backdrop-filter: blur(20px);
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 40px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
-          }
-          .progress-track {
-            display: flex;
-            justify-content: space-between;
-            position: relative;
-            margin-bottom: 5rem;
-            padding: 0 2rem;
-          }
-          .progress-track::before {
-            content: '';
-            position: absolute;
-            top: 24px;
-            left: 2rem;
-            right: 2rem;
-            height: 4px;
-            background: #f1f5f9;
-            z-index: 0;
-          }
-          .progress-bar-active {
-            position: absolute;
-            top: 24px;
-            left: 2rem;
-            height: 4px;
-            background: var(--accent-primary);
-            z-index: 0;
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-          }
-          .step-node {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-          }
-          .node-circle {
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: white;
-            border: 4px solid #f1f5f9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            transition: all 0.4s ease;
-            color: #94a3b8;
-          }
-          .step-node.active .node-circle {
-            border-color: var(--accent-primary);
-            color: var(--accent-primary);
-            transform: scale(1.1);
-            box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
-          }
-          .step-node.done .node-circle {
-            background: var(--accent-primary);
-            border-color: var(--accent-primary);
-            color: white;
-          }
-          .node-label {
-            font-size: 0.9rem;
-            font-weight: 800;
-            color: #64748b;
-          }
-          .step-node.active .node-label { color: #1e293b; }
-          
-          .room-option {
-            padding: 2rem;
-            border-radius: 24px;
-            border: 2px solid #f1f5f9;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            background: white;
-          }
-          .room-option.active {
-            border-color: var(--accent-primary);
-            background: rgba(14, 165, 233, 0.02);
-            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.1);
-          }
-          .room-price {
-            font-size: 1.5rem;
-            font-weight: 950;
-            color: var(--accent-primary);
-          }
-          .input-elite {
-            width: 100%;
-            padding: 1.2rem;
-            background: #f8fafc;
-            border: 2px solid transparent;
-            border-radius: 20px;
-            font-weight: 600;
-            transition: all 0.3s;
-            outline: none;
-          }
-          .input-elite:focus {
-            background: white;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 5px rgba(14, 165, 233, 0.08);
-          }
-          .upload-card {
-            border: 2px dashed #e2e8f0;
-            border-radius: 32px;
-            padding: 3.5rem 2rem;
-            text-align: center;
-            background: #fbfcfd;
-            transition: all 0.3s;
-            cursor: pointer;
-            position: relative;
-          }
-          .upload-card.uploaded {
-            border-color: #10b981;
-            background: #f0fdf4;
-          }
-          .upload-card:hover:not(.uploaded) {
-            border-color: var(--accent-primary);
-            background: rgba(14, 165, 233, 0.02);
-          }
-        `}
-      </style>
-
       <header style={{ marginBottom: '4.5rem', textAlign: 'center' }}>
         <h1 style={{ fontSize: '3.5rem', fontWeight: '950', letterSpacing: '-3px', marginBottom: '1rem', background: 'linear-gradient(to right, #1e293b, #64748b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           Finalize Your Stay
@@ -355,11 +311,142 @@ const Booking = () => {
 
             <div style={{ display: 'flex', gap: '1.5rem' }}>
               <button onClick={() => setStep(2)} className="btn btn-secondary" style={{ flex: 1, padding: '1.2rem', borderRadius: '18px', fontWeight: '800' }}>Back</button>
-              <button onClick={() => { alert('Congratulations! Your stay at Livora is confirmed.'); navigate('/dashboard'); }} className="btn btn-primary" style={{ flex: 2, padding: '1.2rem', borderRadius: '18px', fontWeight: '950', background: '#10b981', border: 'none', boxShadow: '0 10px 25px rgba(16, 185, 129, 0.2)' }}>Pay & Confirm Booking</button>
+              <button onClick={async () => {
+                try {
+                  let tId = user.id || user._id;
+                  try {
+                    const profileRes = await API.get('/tenants/me');
+                    if (profileRes.data && profileRes.data._id) tId = profileRes.data._id;
+                  } catch (e) { console.warn("Fallback to user ID"); }
+
+                  await API.post('/payments', {
+                    tenantId: tId,
+                    amount: parseInt(currentRoom.price) + 2000,
+                    type: 'Booking',
+                    buildingId: buildingId,
+                    category: formData.roomType,
+                    method: 'UPI'
+                  });
+
+                  alert('Congratulations! Your stay at Livora is confirmed.');
+                  navigate('/dashboard');
+                } catch (err) {
+                  console.error('Booking Error:', err);
+                  alert('Booking failed. Please try again.');
+                }
+              }} className="btn btn-primary" style={{ flex: 2, padding: '1.2rem', borderRadius: '18px', fontWeight: '950', background: '#10b981', border: 'none', boxShadow: '0 10px 25px rgba(16, 185, 129, 0.2)' }}>Pay & Confirm Booking</button>
             </div>
           </div>
         )}
       </div>
+
+      <style>{`
+        .glass-card-premium {
+          backdrop-filter: blur(20px);
+          background: rgba(255, 255, 255, 0.9);
+          border: 1px solid rgba(255, 255, 255, 0.5);
+          border-radius: 40px;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+        }
+        .progress-track {
+          display: flex;
+          justify-content: space-between;
+          position: relative;
+          margin-bottom: 5rem;
+          padding: 0 5rem;
+        }
+        .progress-track::before {
+          content: '';
+          position: absolute;
+          top: 24px;
+          left: 5rem;
+          right: 5rem;
+          height: 4px;
+          background: #f1f5f9;
+          z-index: 0;
+        }
+        .progress-bar-active {
+          position: absolute;
+          top: 24px;
+          left: 5rem;
+          height: 4px;
+          background: var(--accent-primary);
+          z-index: 0;
+          transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .step-node {
+          position: relative;
+          z-index: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+        }
+        .node-circle {
+          width: 52px;
+          height: 52px;
+          border-radius: 50%;
+          background: white;
+          border: 4px solid #f1f5f9;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 900;
+          transition: all 0.4s ease;
+          color: #94a3b8;
+        }
+        .step-node.active .node-circle {
+          border-color: var(--accent-primary);
+          color: var(--accent-primary);
+          transform: scale(1.1);
+          box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+        }
+        .step-node.done .node-circle {
+          background: var(--accent-primary);
+          border-color: var(--accent-primary);
+          color: white;
+        }
+        .node-label { font-size: 0.9rem; font-weight: 800; color: #64748b; }
+        .room-option {
+          padding: 2rem;
+          border-radius: 24px;
+          border: 2px solid #f1f5f9;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+          background: white;
+        }
+        .room-option.active {
+          border-color: var(--accent-primary);
+          background: rgba(14, 165, 233, 0.02);
+          box-shadow: 0 10px 25px rgba(14, 165, 233, 0.1);
+        }
+        .room-price { font-size: 1.5rem; font-weight: 950; color: var(--accent-primary); }
+        .input-elite {
+          width: 100%;
+          padding: 1.2rem;
+          background: #f8fafc;
+          border: 2px solid transparent;
+          border-radius: 20px;
+          font-weight: 600;
+          transition: all 0.3s;
+          outline: none;
+        }
+        .input-elite:focus { background: white; border-color: var(--accent-primary); box-shadow: 0 0 0 5px rgba(14, 165, 233, 0.08); }
+        .upload-card {
+          border: 2px dashed #e2e8f0;
+          border-radius: 32px;
+          padding: 3.5rem 2rem;
+          text-align: center;
+          background: #fbfcfd;
+          transition: all 0.3s;
+          cursor: pointer;
+          position: relative;
+        }
+        .upload-card.uploaded { border-color: #10b981; background: #f0fdf4; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 };

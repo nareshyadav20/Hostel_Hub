@@ -6,18 +6,57 @@ const Mess = () => {
   const [attended, setAttended] = useState(false);
   const [skipped, setSkipped] = useState(false);
   const [rating, setRating] = useState(0);
+  const [todayMenu, setTodayMenu] = useState({
+    breakfast: 'Loading...',
+    lunch: 'Loading...',
+    dinner: 'Loading...'
+  });
+  const [weeklyMenu, setWeeklyMenu] = useState([]);
+  const [tenantPlan, setTenantPlan] = useState('basic');
+  const [messStats, setMessStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading
-    setTimeout(() => setLoading(false), 800);
+    const fetchMessData = async () => {
+      try {
+        const [statsRes, menuRes, profileRes] = await Promise.all([
+          API.get('/dashboard/mess'),
+          API.get('/mess/menu'),
+          API.get('/tenants/me')
+        ]);
+        
+        setMessStats(statsRes.data);
+        setTenantPlan(profileRes.data.messPlan || 'basic');
+
+        const plan = profileRes.data.messPlan || 'basic';
+        const filteredMenu = menuRes.data.filter(m => m.plan === plan);
+        
+        // Ensure days are in order
+        const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const sortedMenu = dayOrder.map(day => {
+          const item = filteredMenu.find(m => m.day === day) || { day, breakfast: 'N/A', lunch: 'N/A', dinner: 'N/A' };
+          return item;
+        });
+
+        setWeeklyMenu(sortedMenu);
+
+        // Get today's menu
+        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+        const todayItem = sortedMenu.find(m => m.day === today);
+        if (todayItem) {
+          setTodayMenu(todayItem);
+        } else if (statsRes.data.menuToday) {
+          setTodayMenu(statsRes.data.menuToday);
+        }
+        
+      } catch (err) {
+        console.error('Error fetching mess data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMessData();
   }, []);
-  
-  const todayMenu = {
-    breakfast: 'Idli, Sambar & Coconut Chutney',
-    lunch: 'Hyderabadi Veg Biryani, Mirchi Ka Salan & Raita',
-    dinner: 'Butter Paneer Masala, Garlic Naan & Salad'
-  };
 
   const handleMarkAttendance = () => {
     setAttended(true);
@@ -234,42 +273,43 @@ const Mess = () => {
           </div>
         </div>
       </div>
-
-      {/* ── Weekly Dining Table ── */}
-      <section className="fade-in">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
-          <div style={{ background: '#f1f5f9', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+      {/* Weekly Menu Table */}
+      <section style={{ marginTop: '4rem' }} className="fade-in-up">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <h3 style={{ fontSize: '1.6rem', fontWeight: '950', letterSpacing: '-1px' }}>Weekly Dining Plan</h3>
           </div>
-          <h3 style={{ fontSize: '2rem', fontWeight: '950', letterSpacing: '-1.5px', color: '#1e293b' }}>Weekly Dining Plan</h3>
+          <span style={{ 
+            padding: '0.6rem 1.4rem', borderRadius: '50px', background: 'var(--accent-primary)', color: 'white', 
+            fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' 
+          }}>
+            Active Plan: {tenantPlan}
+          </span>
         </div>
 
         <div className="glass-card-premium" style={{ padding: '2rem', background: 'white' }}>
           <div style={{ overflowX: 'auto' }}>
             <table className="mess-table">
               <thead>
-                <tr>
-                  <th>Day</th>
-                  <th>Breakfast</th>
-                  <th>Lunch</th>
-                  <th>Dinner</th>
+                <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)' }}>
+                  <th style={{ padding: '1.5rem 2rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Day</th>
+                  <th style={{ padding: '1.5rem 2rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Breakfast</th>
+                  <th style={{ padding: '1.5rem 2rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Lunch</th>
+                  <th style={{ padding: '1.5rem 2rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Dinner</th>
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { day: 'Monday', bf: 'Dosa & Podi', lunch: 'South Indian Thali', dinner: 'Veg Pulao & Raita' },
-                  { day: 'Tuesday', bf: 'Poha & Jalebi', lunch: 'Rice, Dal & Sabzi', dinner: 'Phulka & Alu Methi' },
-                  { day: 'Wednesday', bf: 'Vada Sambar', lunch: 'Curd Rice & Pickle', dinner: 'Dal Tadka & Jeera Rice' },
-                  { day: 'Thursday', bf: 'Upma & Chutney', lunch: 'Roti & Mix Veg', dinner: 'Egg Curry / Paneer' },
-                  { day: 'Friday', bf: 'Paratha & Curd', lunch: 'Veg Biryani', dinner: 'Chapati & Mix Sabzi' },
-                  { day: 'Saturday', bf: 'Bread Omelette', lunch: 'Fried Rice', dinner: 'Chinese Special' },
-                  { day: 'Sunday', bf: 'Puri Bhaji', lunch: 'Sunday Feast', dinner: "Chef's Choice" }
-                ].map((menu, idx) => (
-                  <tr key={idx}>
-                    <td>{menu.day}</td>
-                    <td>{menu.bf}</td>
-                    <td>{menu.lunch}</td>
-                    <td>{menu.dinner}</td>
+                {weeklyMenu.map((menu, idx) => (
+                  <tr key={idx} style={{ 
+                    borderBottom: '1px solid var(--border-color)',
+                    background: idx % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.02)',
+                    transition: 'background 0.3s ease'
+                  }} className="menu-row-hover">
+                    <td style={{ padding: '1.2rem 2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{menu.day}</td>
+                    <td style={{ padding: '1.2rem 2rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>{menu.breakfast}</td>
+                    <td style={{ padding: '1.2rem 2rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>{menu.lunch}</td>
+                    <td style={{ padding: '1.2rem 2rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>{menu.dinner}</td>
                   </tr>
                 ))}
               </tbody>

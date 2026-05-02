@@ -7,6 +7,7 @@ const Complaints = () => {
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [toastMsg, setToastMsg] = useState(null);
   const [formData, setFormData] = useState({ title: '', category: 'Maintenance', description: '' });
 
   useEffect(() => {
@@ -33,13 +34,18 @@ const Complaints = () => {
       setComplaints([response.data, ...complaints]);
       setShowForm(false);
       setFormData({ title: '', category: 'Maintenance', description: '' });
-      alert('Ticket raised successfully! Our team will look into it shortly.');
+      showToast('✅ Ticket raised successfully! Our team will look into it shortly.', 'success');
     } catch (err) {
       console.error('Error raising complaint:', err);
-      alert('Failed to raise ticket. Please try again.');
+      showToast('❌ Failed to raise ticket. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const showToast = (msg, type) => {
+    setToastMsg({ text: msg, type });
+    setTimeout(() => setToastMsg(null), 3000);
   };
 
   return (
@@ -155,6 +161,8 @@ const Complaints = () => {
                     <option value="Maintenance">Maintenance</option>
                     <option value="Housekeeping">Housekeeping</option>
                     <option value="WiFi / IT">WiFi / IT</option>
+                    <option value="Leave">Leave Request</option>
+                    <option value="Visitor">Visitor Permission</option>
                     <option value="Other">Other</option>
                   </select>
                 </div>
@@ -180,6 +188,29 @@ const Complaints = () => {
       <style>{`
         .complaint-item:hover { transform: translateX(12px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-color: var(--accent-primary) !important; }
       `}</style>
+
+      {/* ── Toast Overlay ── */}
+      {toastMsg && (
+        <div className="fade-in" style={{
+          position: 'fixed',
+          bottom: '2rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: toastMsg.type === 'success' ? '#10B981' : '#EF4444',
+          color: 'white',
+          padding: '1rem 2rem',
+          borderRadius: '50px',
+          fontWeight: '700',
+          fontSize: '1rem',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+          zIndex: 10000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          {toastMsg.text}
+        </div>
+      )}
     </div>
   );
 };

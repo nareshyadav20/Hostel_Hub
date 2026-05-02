@@ -11,15 +11,38 @@ const Payments = () => {
     { id: 2, date: '01 Mar 2026', amount: 6500, status: 'Success' },
     { id: 3, date: '01 Feb 2026', amount: 6500, status: 'Success' },
   ]);
-
   const [tenantData, setTenantData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [invoices, setInvoices] = useState([]);
 
   useEffect(() => {
     const fetchPaymentInfo = async () => {
       try {
-        const response = await API.get('/tenants/me');
-        setTenantData(response.data);
+        const [profileRes] = await Promise.all([
+          API.get('/tenants/me')
+        ]);
+        setTenantData(profileRes.data);
+
+        // Fetch payments for this tenant
+        const tId = profileRes.data._id;
+        const paymentsRes = await API.get(`/payments/me?tenantId=${tId}`);
+        
+        if (paymentsRes.data && paymentsRes.data.length > 0) {
+          setInvoices(paymentsRes.data.map(p => ({
+            id: p.invoice || `#INV-${p._id.slice(-6)}`,
+            date: new Date(p.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+            month: p.month || 'N/A',
+            amount: `₹${p.amount.toLocaleString()}`,
+            status: p.status,
+            method: p.method
+          })));
+        } else {
+          // Fallback to static if none yet for demo
+          setInvoices([
+            { id: '#INV-2024-001', date: '01 Apr 2026', month: 'April 2026', amount: '₹6,500', status: 'Paid', method: 'UPI' }
+          ]);
+        }
+
       } catch (err) {
         console.error('Error fetching payment data:', err);
       } finally {
@@ -30,9 +53,12 @@ const Payments = () => {
   }, []);
 
   if (loading) return <div className="dashboard-container"><div className="loading-spinner">Fetching Financials...</div></div>;
+  const totalPaid = invoices.filter(inv => inv.status === 'Paid' || inv.status === 'Success').reduce((acc, curr) => {
+    const amt = parseInt(curr.amount.replace(/[^0-9]/g, ''));
+    return acc + amt;
+  }, 0);
 
   const pendingRent = tenantData?.rentStatus === 'PENDING' ? (tenantData?.rent || 0) : 0;
-  const totalPaid = history.reduce((acc, curr) => acc + curr.amount, 0);
 
   const handlePayNow = () => alert('Redirecting to Payment Gateway...');
 
@@ -196,7 +222,7 @@ const Payments = () => {
               </tr>
             </thead>
             <tbody>
-              {history.map(p => (
+              {invoices.map(p => (
                 <tr key={p.id} className="payment-row" style={{ borderBottom: '1px solid #f1f5f9' }}>
                   <td style={{ padding: '1.5rem 2.5rem', color: '#1e293b', fontWeight: '800' }}>{p.date}</td>
                   <td style={{ padding: '1.5rem 2.5rem', fontWeight: '950', fontSize: '1.3rem', color: '#1e293b' }}>₹{p.amount.toLocaleString()}</td>

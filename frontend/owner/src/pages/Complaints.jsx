@@ -1,14 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets } from 'lucide-react';
+import { api } from '../mockData';
 
 const Complaints = () => {
-  const [complaints, setComplaints] = useState([
-    { id: 1, room: '201-A', issue: 'Water Leakage in Bathroom', category: 'Plumbing', urgency: 'High', status: 'Pending', reportedBy: 'Rahul Sharma', timeElapsed: '2 hours ago', description: 'Water is dripping from the ceiling in the attached bathroom. Possible pipe burst in floor above.' },
-    { id: 2, room: '202-B', issue: 'AC Not Cooling properly', category: 'Electrical', urgency: 'Medium', status: 'In-Progress', reportedBy: 'Priya Verma', timeElapsed: '1 day ago', description: 'The AC unit makes a loud noise and does not cool the room even at 16 degrees.' },
-    { id: 3, room: '101-A', issue: 'WiFi Connection dropping', category: 'Internet', urgency: 'Low', status: 'Resolved', reportedBy: 'Amit Singh', timeElapsed: '3 days ago', description: 'Frequent disconnections every 15 minutes. Signal strength is weak.' },
-    { id: 4, room: '305-C', issue: 'Deep Cleaning Required', category: 'Cleaning', urgency: 'Medium', status: 'Pending', reportedBy: 'Sneha Kapur', timeElapsed: '4 hours ago', description: 'Dust accumulation in corners and under the bed. Need thorough cleaning.' },
-  ]);
+  const [complaints, setComplaints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('Maintenance');
+
+  useEffect(() => {
+    fetchComplaints();
+  }, []);
+
+  const fetchComplaints = async () => {
+    try {
+      const data = await api.getComplaints();
+      const formatted = data.map(c => {
+        // Calculate time elapsed
+        const diffHours = Math.floor((new Date() - new Date(c.createdAt)) / (1000 * 60 * 60));
+        const timeElapsed = diffHours < 24 ? `${diffHours} hours ago` : `${Math.floor(diffHours/24)} days ago`;
+        
+        return {
+          id: c._id || c.id,
+          room: c.tenant?.room || 'Unknown',
+          issue: c.title,
+          category: c.category,
+          urgency: ['Leave', 'Visitor'].includes(c.category) ? 'Normal' : (c.category === 'Electrical' || c.category === 'Plumbing' ? 'High' : 'Medium'),
+          status: c.status === 'In Progress' ? 'In-Progress' : c.status,
+          reportedBy: c.tenant?.name || 'Unknown User',
+          timeElapsed,
+          description: c.description
+        };
+      });
+      setComplaints(formatted);
+    } catch (err) {
+      console.error('Failed to fetch complaints:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredComplaints = complaints.filter(c => {
+    if (activeTab === 'Maintenance') return !['Leave', 'Visitor'].includes(c.category);
+    if (activeTab === 'Leave') return c.category === 'Leave';
+    if (activeTab === 'Visitor') return c.category === 'Visitor';
+    return true;
+  });
 
   const [expandedId, setExpandedId] = useState(null);
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
@@ -24,9 +61,9 @@ const Complaints = () => {
     { id: 4, name: 'Anita Devi', role: 'Mess Manager', active: false, avatar: 'AD' }
   ];
 
-  const totalComplaints = complaints.length;
-  const pendingCount = complaints.filter(c => c.status === 'Pending').length;
-  const inProgressCount = complaints.filter(c => c.status === 'In-Progress').length;
+  const totalComplaints = filteredComplaints.length;
+  const pendingCount = filteredComplaints.filter(c => c.status === 'Pending').length;
+  const resolvedCount = filteredComplaints.filter(c => c.status === 'Resolved').length;
   
   const handleStatusChange = (id, newStatus, assignedTo = null) => {
     setComplaints(complaints.map(c => c.id === id ? { ...c, status: newStatus, assignedTo } : c));
@@ -51,15 +88,16 @@ const Complaints = () => {
        case 'High': return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--accent-error)', color: '#fff', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
        case 'Medium': return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--accent-warning)', color: '#fff', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
        case 'Low': return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
-       default: return null;
+       default: return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--bg-tertiary)', color: 'var(--text-muted)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
     }
   };
 
   const getStatusDisplay = (status) => {
     switch(status) {
-      case 'Resolved': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)' }}><CheckCircle2 size={12}/> RESOLVED</span>;
+      case 'Resolved': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)' }}><CheckCircle2 size={12}/> {activeTab === 'Maintenance' ? 'RESOLVED' : 'APPROVED'}</span>;
       case 'In-Progress': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(56, 189, 248, 0.1)', color: 'var(--accent-primary)' }}><Activity size={12}/> IN PROGRESS</span>;
       case 'Pending': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--accent-warning)' }}><Clock size={12}/> PENDING</span>;
+      case 'Rejected': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-error)' }}><Clock size={12}/> REJECTED</span>;
       default: return null;
     }
   };
@@ -69,6 +107,8 @@ const Complaints = () => {
       case 'Plumbing': return <Droplets size={16} color="var(--accent-primary)" />;
       case 'Electrical': return <Zap size={16} color="var(--accent-warning)" />;
       case 'Internet': return <Activity size={16} color="var(--accent-success)" />;
+      case 'Leave': return <Clock size={16} color="#8B5CF6" />;
+      case 'Visitor': return <MessageSquare size={16} color="#EC4899" />;
       default: return <Wrench size={16} color="var(--text-secondary)" />;
     }
   };
@@ -80,27 +120,45 @@ const Complaints = () => {
       <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Wrench size={32} color="var(--accent-primary)" /> Complaint Management
+            <Wrench size={32} color="var(--accent-primary)" /> Service Requests Hub
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Track, prioritize, and resolve maintenance issues reported by tenants.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Manage maintenance tickets, leave applications, and visitor permissions.</p>
         </div>
         <button onClick={() => setIsBroadcastModalOpen(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
             <MessageSquare size={16} /> Broadcast Update
         </button>
       </header>
 
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', width: 'fit-content' }}>
+        {['Maintenance', 'Leave', 'Visitor'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => { setActiveTab(tab); setExpandedId(null); }}
+            style={{ 
+              padding: '0.8rem 1.8rem', borderRadius: '12px', border: 'none', 
+              background: activeTab === tab ? 'var(--bg-primary)' : 'transparent',
+              color: activeTab === tab ? 'var(--accent-primary)' : 'var(--text-secondary)',
+              fontWeight: '800', fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.3s',
+              boxShadow: activeTab === tab ? 'var(--shadow-sm)' : 'none'
+            }}
+          >
+            {tab} {tab === 'Maintenance' ? 'Tickets' : 'Requests'}
+          </button>
+        ))}
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
         <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--text-primary)' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Total Open</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Total {activeTab}</p>
           <h2 style={{ fontSize: '2.4rem', fontWeight: '800' }}>{totalComplaints}</h2>
         </div>
         <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-warning)' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Pending Assignment</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Pending {activeTab === 'Maintenance' ? 'Tickets' : 'Requests'}</p>
           <h2 style={{ fontSize: '2.4rem', fontWeight: '800', color: 'var(--accent-warning)' }}>{pendingCount}</h2>
         </div>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>In Progress</p>
-          <h2 style={{ fontSize: '2.4rem', fontWeight: '800', color: 'var(--accent-primary)' }}>{inProgressCount}</h2>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-success)' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>{activeTab === 'Maintenance' ? 'Resolved' : 'Approved'}</p>
+          <h2 style={{ fontSize: '2.4rem', fontWeight: '800', color: 'var(--accent-success)' }}>{resolvedCount}</h2>
         </div>
       </div>
 
@@ -109,14 +167,14 @@ const Complaints = () => {
           <thead>
             <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
               <th style={{ padding: '1.2rem' }}>Ticket Info</th>
-              <th style={{ padding: '1.2rem' }}>Issue Description</th>
+              <th style={{ padding: '1.2rem' }}>{activeTab} Details</th>
               <th style={{ padding: '1.2rem' }}>Status</th>
               <th style={{ padding: '1.2rem', textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             <AnimatePresence>
-              {complaints.map(c => (
+              {filteredComplaints.map(c => (
                 <React.Fragment key={c.id}>
                   <motion.tr 
                     layout
@@ -155,7 +213,7 @@ const Complaints = () => {
                     </td>
                     <td style={{ padding: '1.2rem', textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                          {c.status === 'Pending' && (
+                          {c.status === 'Pending' && activeTab === 'Maintenance' && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); setSelectedComplaintId(c.id); setIsAssignModalOpen(true); }}
                               className="btn btn-primary" 
@@ -163,6 +221,24 @@ const Complaints = () => {
                             >
                               Assign Task
                             </button>
+                          )}
+                          {c.status === 'Pending' && activeTab !== 'Maintenance' && (
+                            <>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'Resolved'); }}
+                                className="btn btn-primary" 
+                                style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', background: 'var(--accent-success)', borderColor: 'var(--accent-success)' }}
+                              >
+                                Approve
+                              </button>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'Rejected'); }}
+                                className="btn" 
+                                style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', border: '1px solid var(--accent-error)', color: 'var(--accent-error)' }}
+                              >
+                                Reject
+                              </button>
+                            </>
                           )}
                           {c.status === 'In-Progress' && (
                             <button 
@@ -173,7 +249,7 @@ const Complaints = () => {
                               <CheckCircle2 size={14} style={{ marginRight: '0.4rem' }}/> Mark Resolved
                             </button>
                           )}
-                          {c.status === 'Resolved' && (
+                          {(c.status === 'Resolved' || c.status === 'Rejected') && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleArchive(c.id); }}
                               className="btn" 
