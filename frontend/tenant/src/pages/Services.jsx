@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 
 const Services = () => {
-  const [activeTab, setActiveTab] = useState('laundry');
-  const [showLaundryModal, setShowLaundryModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('cleaning');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Laundry State
-  const [laundryData, setLaundryData] = useState({ shirts: 0, pants: 0, others: 0, pickupDate: '' });
-
   // Room Cleaning State
   const [cleaningForm, setCleaningForm] = useState({ date: '', slot: 'Morning (10 AM - 12 PM)' });
   const [cleaningHistory, setCleaningHistory] = useState([
@@ -28,20 +24,6 @@ const Services = () => {
   ]);
 
   // Handlers
-  const handleLaundrySubmit = (e) => {
-    e.preventDefault();
-    if (laundryData.shirts + laundryData.pants + laundryData.others === 0) {
-      alert('Please add at least one item to request pickup.');
-      return;
-    }
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setShowLaundryModal(false);
-      alert('📦 Laundry pickup requested successfully!');
-      setLaundryData({ shirts: 0, pants: 0, others: 0, pickupDate: '' });
-    }, 1500);
-  };
 
   const handleCleaningSubmit = (e) => {
     e.preventDefault();
@@ -198,7 +180,6 @@ const Services = () => {
 
       <div style={{ display: 'flex', gap: '1.2rem', marginBottom: '3.5rem', flexWrap: 'wrap' }}>
         {[
-          { id: 'laundry', label: 'Laundry', icon: '👔' },
           { id: 'cleaning', label: 'Room Cleaning', icon: '🧹' },
           { id: 'visitor', label: 'Visitors', icon: '👤' },
           { id: 'leave', label: 'Leaves', icon: '✈️' }
@@ -212,41 +193,7 @@ const Services = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '3rem' }}>
         {/* ── Action Section ── */}
         <div className="glass-card-premium" style={{ padding: '3rem' }}>
-          {activeTab === 'laundry' && (
-            <div className="fade-in">
-              <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-                <div style={{ width: '80px', height: '80px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: 'var(--accent-primary)' }}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22a7 7 0 1 0 0-14 7 7 0 0 0 0 14z"/><circle cx="12" cy="18" r="3"/></svg>
-                </div>
-                <h3 style={{ fontSize: '1.8rem', fontWeight: '900' }}>Laundry Request</h3>
-                <p style={{ color: '#64748b', marginTop: '0.5rem', fontWeight: '500' }}>Schedule your next garment pickup.</p>
-              </div>
-              <button onClick={() => setShowLaundryModal(true)} className="btn btn-primary" style={{ width: '100%', padding: '1.2rem', fontWeight: '950', borderRadius: '20px', fontSize: '1.1rem' }}>Request New Pickup</button>
-              
-              <div style={{ marginTop: '3rem', padding: '2rem', background: '#f8fafc', borderRadius: '24px', border: '1px solid #f1f5f9' }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1rem', color: '#1e293b' }}>Active Tracking</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'relative' }}>
-                  <div style={{ position: 'absolute', left: '15px', top: '10px', bottom: '10px', width: '2px', background: '#e2e8f0' }}></div>
-                  {[
-                    { label: 'Requested', time: '9:30 AM', done: true },
-                    { label: 'Picked Up', time: '10:45 AM', done: true },
-                    { label: 'Washing', time: 'In Progress', done: false },
-                    { label: 'Delivered', time: 'Pending', done: false }
-                  ].map((step, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: step.done ? '#10b981' : 'white', border: `2px solid ${step.done ? '#10b981' : '#e2e8f0'}`, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                        {step.done && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: '0.9rem', fontWeight: '800', color: step.done ? '#1e293b' : '#94a3b8' }}>{step.label}</p>
-                        <p style={{ fontSize: '0.75rem', color: '#64748b' }}>{step.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+
 
           {activeTab === 'cleaning' && (
             <form onSubmit={handleCleaningSubmit} className="fade-in">
@@ -337,18 +284,7 @@ const Services = () => {
             </h3>
             
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {activeTab === 'laundry' && [
-                { id: 'L-102', title: 'Laundry Pickup', date: '25 Apr', status: 'Delivered', color: '#10b981' },
-                { id: 'L-101', title: 'Laundry Pickup', date: '20 Apr', status: 'Delivered', color: '#10b981' }
-              ].map(item => (
-                <div key={item.id} className="history-item">
-                  <div>
-                    <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#1e293b' }}>{item.title}</h4>
-                    <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>ID: {item.id} • {item.date}</p>
-                  </div>
-                  <span className="status-badge" style={{ background: `${item.color}15`, color: item.color }}>{item.status}</span>
-                </div>
-              ))}
+
 
               {activeTab === 'cleaning' && cleaningHistory.map(item => (
                 <div key={item.id} className="history-item">
@@ -387,38 +323,7 @@ const Services = () => {
         </div>
       </div>
 
-      {/* ── Laundry Request Modal ── */}
-      {showLaundryModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)', padding: '1rem' }}>
-          <div className="glass-card-premium fade-in" style={{ width: '100%', maxWidth: '550px', padding: '3rem', background: 'white', position: 'relative' }}>
-            <button onClick={() => setShowLaundryModal(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            <h2 style={{ fontSize: '2rem', fontWeight: '950', textAlign: 'center', marginBottom: '2.5rem' }}>Laundry Pickup</h2>
-            <form onSubmit={handleLaundrySubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {[
-                { id: 'shirts', label: 'Shirts/Tops' },
-                { id: 'pants', label: 'Pants/Bottoms' },
-                { id: 'others', label: 'Others' }
-              ].map(item => (
-                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#f8fafc', borderRadius: '16px' }}>
-                  <span style={{ fontWeight: '800', color: '#475569' }}>{item.label}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <button type="button" className="counter-btn" onClick={() => setLaundryData({...laundryData, [item.id]: Math.max(0, laundryData[item.id] - 1)})}>−</button>
-                    <span style={{ fontWeight: '900', minWidth: '20px', textAlign: 'center' }}>{laundryData[item.id]}</span>
-                    <button type="button" className="counter-btn" onClick={() => setLaundryData({...laundryData, [item.id]: laundryData[item.id] + 1})}>+</button>
-                  </div>
-                </div>
-              ))}
-              <div className="input-group" style={{ marginTop: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.6rem' }}>Pickup Time</label>
-                <input type="datetime-local" className="input-premium" value={laundryData.pickupDate} onChange={e => setLaundryData({...laundryData, pickupDate: e.target.value})} required />
-              </div>
-              <button type="submit" className="btn btn-primary" style={{ padding: '1.2rem', fontWeight: '950', borderRadius: '18px', marginTop: '1rem' }}>Request Pickup</button>
-            </form>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

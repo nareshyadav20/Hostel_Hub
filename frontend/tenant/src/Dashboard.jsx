@@ -284,7 +284,7 @@ function Dashboard() {
                     {examMode ? 'Deactivate' : 'Activate'}
                   </button>
                 </div>
-                <div className="card perk-card glass-card">
+                <div className="card perk-card" style={{ background: 'transparent', border: '1px solid var(--border-color)' }}>
                   <div className="perk-icon-wrapper" style={{ background: 'rgba(56, 189, 248, 0.1)', color: 'var(--accent-primary)' }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M7 15h0M2 9.5h20"></path></svg>
                   </div>

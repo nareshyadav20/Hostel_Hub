@@ -244,6 +244,7 @@ const Home = () => {
             ))}
           </div>
         </section>
+
       </main>
 
       {/* Footer exactly like Image 5 */}

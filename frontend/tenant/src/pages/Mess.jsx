@@ -6,6 +6,12 @@ const Mess = () => {
   const [attended, setAttended] = useState(false);
   const [skipped, setSkipped] = useState(false);
   const [rating, setRating] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading
+    setTimeout(() => setLoading(false), 800);
+  }, []);
   
   const todayMenu = {
     breakfast: 'Idli, Sambar & Coconut Chutney',

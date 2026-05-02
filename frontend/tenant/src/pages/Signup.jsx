@@ -19,8 +19,10 @@ const Signup = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Mock Signup Logic
-    setTimeout(() => {
+    try {
+      // Mock delay to simulate network request
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
       const storedUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
 
       if (storedUsers.some(u => u.email === formData.email)) {

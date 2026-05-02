@@ -41,11 +41,11 @@ const Booking = () => {
     if (!file) return;
     
     setIsUploading(type);
+    // Simulate real upload delay
     setTimeout(() => {
       setFormData(prev => ({ ...prev, [type]: file.name }));
       setIsUploading(null);
-      alert(`${type === 'idProof' ? 'ID Proof' : 'Profile Photo'} uploaded successfully!`);
-    }, 1200);
+    }, 1500);
   };
 
   const currentRoom = roomOptions.find(r => r.id === formData.roomType);
@@ -255,21 +255,35 @@ const Booking = () => {
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
               <input type="file" ref={idUploadRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload('idProof', e)} />
-              <div className={`upload-card ${formData.idProof ? 'uploaded' : ''}`} onClick={() => idUploadRef.current.click()}>
+              <div className={`upload-card ${formData.idProof ? 'uploaded' : ''}`} onClick={() => !isUploading && idUploadRef.current.click()} style={{ position: 'relative' }}>
+                {isUploading === 'idProof' && (
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.8)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '32px' }}>
+                    <div className="spinner-mini" style={{ width: '30px', height: '30px', border: '3px solid #f3f3f3', borderTop: '3px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                  </div>
+                )}
                 <div style={{ width: '64px', height: '64px', background: formData.idProof ? 'rgba(16, 185, 129, 0.1)' : 'rgba(14, 165, 233, 0.1)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: formData.idProof ? '#10b981' : 'var(--accent-primary)' }}>
-                   {isUploading === 'idProof' ? '⌛' : formData.idProof ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> : <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line></svg>}
+                   {formData.idProof ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> : <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line></svg>}
                 </div>
-                <h4 style={{ fontWeight: '800', marginBottom: '0.5rem' }}>{formData.idProof ? 'ID Uploaded' : 'Upload ID Proof'}</h4>
-                <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{formData.idProof ? formData.idProof : 'Aadhar, PAN or Passport (PDF/JPG)'}</p>
+                <h4 style={{ fontWeight: '800', marginBottom: '0.5rem' }}>{formData.idProof ? 'ID Proof Secured' : 'Upload ID Proof'}</h4>
+                <p style={{ fontSize: '0.85rem', color: formData.idProof ? '#10b981' : '#94a3b8', fontWeight: formData.idProof ? '700' : '500' }}>
+                  {formData.idProof ? `File: ${formData.idProof}` : 'Aadhar, PAN or Passport'}
+                </p>
               </div>
 
               <input type="file" ref={photoUploadRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload('profilePhoto', e)} />
-              <div className={`upload-card ${formData.profilePhoto ? 'uploaded' : ''}`} onClick={() => photoUploadRef.current.click()}>
+              <div className={`upload-card ${formData.profilePhoto ? 'uploaded' : ''}`} onClick={() => !isUploading && photoUploadRef.current.click()} style={{ position: 'relative' }}>
+                {isUploading === 'profilePhoto' && (
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.8)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '32px' }}>
+                    <div className="spinner-mini" style={{ width: '30px', height: '30px', border: '3px solid #f3f3f3', borderTop: '3px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                  </div>
+                )}
                 <div style={{ width: '64px', height: '64px', background: formData.profilePhoto ? 'rgba(16, 185, 129, 0.1)' : 'rgba(14, 165, 233, 0.1)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: formData.profilePhoto ? '#10b981' : 'var(--accent-primary)' }}>
-                   {isUploading === 'profilePhoto' ? '⌛' : formData.profilePhoto ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> : <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>}
+                   {formData.profilePhoto ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> : <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>}
                 </div>
-                <h4 style={{ fontWeight: '800', marginBottom: '0.5rem' }}>{formData.profilePhoto ? 'Photo Uploaded' : 'Profile Photo'}</h4>
-                <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{formData.profilePhoto ? formData.profilePhoto : 'Clear portrait for gate pass access'}</p>
+                <h4 style={{ fontWeight: '800', marginBottom: '0.5rem' }}>{formData.profilePhoto ? 'Photo Verified' : 'Profile Photo'}</h4>
+                <p style={{ fontSize: '0.85rem', color: formData.profilePhoto ? '#10b981' : '#94a3b8', fontWeight: formData.profilePhoto ? '700' : '500' }}>
+                  {formData.profilePhoto ? `File: ${formData.profilePhoto}` : 'Clear portrait for gate pass'}
+                </p>
               </div>
             </div>
 

@@ -12,6 +12,9 @@ const Payments = () => {
     { id: 3, date: '01 Feb 2026', amount: 6500, status: 'Success' },
   ]);
 
+  const [tenantData, setTenantData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchPaymentInfo = async () => {
       try {
@@ -25,6 +28,8 @@ const Payments = () => {
     };
     fetchPaymentInfo();
   }, []);
+
+  if (loading) return <div className="dashboard-container"><div className="loading-spinner">Fetching Financials...</div></div>;
 
   const pendingRent = tenantData?.rentStatus === 'PENDING' ? (tenantData?.rent || 0) : 0;
   const totalPaid = history.reduce((acc, curr) => acc + curr.amount, 0);
@@ -151,20 +156,20 @@ const Payments = () => {
 
       {/* ── Parent Pay & Support Section ── */}
       <div style={{ marginBottom: '4rem', display: 'flex', justifyContent: 'center' }}>
-         <div className="glass-card-premium" style={{ padding: '2.5rem', background: 'white', border: '1px solid #e2e8f0', maxWidth: '850px', width: '100%' }}>
-            <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-               <div style={{ width: '80px', height: '80px', background: '#f8fafc', borderRadius: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', border: '1px solid #f1f5f9' }}>👨‍👩‍👧</div>
+         <div style={{ padding: '2rem', maxWidth: '700px', width: '100%', textAlign: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center' }}>
+               <div style={{ width: '64px', height: '64px', background: 'var(--bg-secondary)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', border: '1px solid var(--border-color)' }}>👨‍👩‍👧</div>
                <div style={{ flex: 1 }}>
-                  <h3 style={{ fontSize: '1.6rem', fontWeight: '950', color: '#1e293b', marginBottom: '0.4rem' }}>Parental Support & Statements</h3>
-                  <p style={{ color: '#64748b', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '1.5rem' }}>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: '950', color: '#1e293b', marginBottom: '0.4rem' }}>Parental Support & Statements</h3>
+                  <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.5', marginBottom: '1.5rem', maxWidth: '500px', margin: '0 auto 1.5rem' }}>
                     Generate secure payment links for your parents or download official financial statements for reimbursement.
                   </p>
-                  <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button onClick={() => setShowParentModal(true)} style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', padding: '1rem 1.8rem', borderRadius: '14px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.9rem', boxShadow: '0 8px 20px rgba(14, 165, 233, 0.2)' }}>
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                    <button onClick={() => setShowParentModal(true)} style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '14px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', boxShadow: '0 8px 20px rgba(14, 165, 233, 0.2)' }}>
                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
                        Send Link
                     </button>
-                    <button onClick={handleDownloadStatements} className="btn btn-secondary" style={{ padding: '1rem 1.8rem', fontWeight: '800', borderRadius: '14px', border: '2px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.9rem' }}>
+                    <button onClick={handleDownloadStatements} className="btn btn-secondary" style={{ padding: '0.8rem 1.5rem', fontWeight: '800', borderRadius: '14px', border: '2px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem' }}>
                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                        Download All
                     </button>
@@ -241,16 +246,26 @@ const Payments = () => {
             </div>
 
             {/* Mock Scanner Visual with Random QR */}
-            <div style={{ position: 'relative', height: '180px', background: '#f8fafc', borderRadius: '24px', border: '2px dashed #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2.5rem', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', height: '220px', background: '#0f172a', borderRadius: '32px', border: '4px solid #1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2.5rem', overflow: 'hidden' }}>
+              {isScanning && <div className="scanner-line" style={{ background: '#10b981', boxShadow: '0 0 20px #10b981' }}></div>}
               <div style={{ textAlign: 'center', zIndex: 1 }}>
                 {isScanning ? (
-                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${Math.random()}`} alt="QR" style={{ width: '100px', height: '100px', opacity: 0.8 }} />
+                  <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ padding: '1rem', background: 'white', borderRadius: '12px', boxShadow: '0 0 40px rgba(16, 185, 129, 0.4)' }}>
+                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${Math.random()}`} alt="QR" style={{ width: '120px', height: '120px', display: 'block' }} />
+                    </div>
+                    <p style={{ fontSize: '0.8rem', fontWeight: '900', color: '#10b981', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                      Secure Link Generated
+                    </p>
+                  </div>
                 ) : (
-                  <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M12 12h.01"/></svg>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M12 12h.01"/></svg>
+                    <p style={{ fontSize: '0.8rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                      Ready to Secure
+                    </p>
+                  </div>
                 )}
-                <p style={{ fontSize: '0.8rem', fontWeight: '800', color: isScanning ? 'var(--accent-primary)' : '#94a3b8', marginTop: '1rem', textTransform: 'uppercase' }}>
-                  {isScanning ? 'Generating Secure QR...' : 'Ready to Secure'}
-                </p>
               </div>
             </div>
 
