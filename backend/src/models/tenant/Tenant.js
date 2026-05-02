@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 
 const tenantSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
   phone: { type: String, required: true },
-  emergencyContact: { type: String, required: true },
-  room: { type: String }, // Can be roomId or room Number string for legacy
+  emergencyContact: { type: String },
+  room: { type: String },
   rent: { type: Number },
   checkInDate: { type: Date, default: Date.now },
   status: { 
@@ -28,7 +28,8 @@ const tenantSchema = new mongoose.Schema({
     name: String,
     url: String,
     verified: { type: Boolean, default: false }
-  }]
-}, { timestamps: true });
+  }],
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+}, { timestamps: true, collection: 'tenants' });
 
 module.exports = mongoose.model('Tenant', tenantSchema);

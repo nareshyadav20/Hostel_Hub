@@ -15,6 +15,6 @@ const laundrySchema = new mongoose.Schema({
     name: String,
     count: Number
   }]
-}, { timestamps: true });
+}, { timestamps: true, collection: 'laundry' });
 
 module.exports = mongoose.model('Laundry', laundrySchema);

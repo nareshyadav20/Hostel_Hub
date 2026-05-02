@@ -1,51 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets } from 'lucide-react';
-import { api } from '../mockData';
+import API from '../api/axios';
 
 const Complaints = () => {
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('Maintenance');
-
-  useEffect(() => {
-    fetchComplaints();
-  }, []);
 
   const fetchComplaints = async () => {
     try {
-      const data = await api.getComplaints();
-      const formatted = data.map(c => {
-        // Calculate time elapsed
-        const diffHours = Math.floor((new Date() - new Date(c.createdAt)) / (1000 * 60 * 60));
-        const timeElapsed = diffHours < 24 ? `${diffHours} hours ago` : `${Math.floor(diffHours/24)} days ago`;
-        
-        return {
-          id: c._id || c.id,
-          room: c.tenant?.room || 'Unknown',
-          issue: c.title,
-          category: c.category,
-          urgency: ['Leave', 'Visitor'].includes(c.category) ? 'Normal' : (c.category === 'Electrical' || c.category === 'Plumbing' ? 'High' : 'Medium'),
-          status: c.status === 'In Progress' ? 'In-Progress' : c.status,
-          reportedBy: c.tenant?.name || 'Unknown User',
-          timeElapsed,
-          description: c.description
-        };
-      });
-      setComplaints(formatted);
+      const response = await API.get('/complaints'); // Admin route or general route
+      setComplaints(response.data);
     } catch (err) {
-      console.error('Failed to fetch complaints:', err);
+      console.error('Error fetching complaints:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredComplaints = complaints.filter(c => {
-    if (activeTab === 'Maintenance') return !['Leave', 'Visitor'].includes(c.category);
-    if (activeTab === 'Leave') return c.category === 'Leave';
-    if (activeTab === 'Visitor') return c.category === 'Visitor';
-    return true;
-  });
+  useState(() => {
+    fetchComplaints();
+  }, []);
 
   const [expandedId, setExpandedId] = useState(null);
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
@@ -61,18 +36,25 @@ const Complaints = () => {
     { id: 4, name: 'Anita Devi', role: 'Mess Manager', active: false, avatar: 'AD' }
   ];
 
-  const totalComplaints = filteredComplaints.length;
-  const pendingCount = filteredComplaints.filter(c => c.status === 'Pending').length;
-  const resolvedCount = filteredComplaints.filter(c => c.status === 'Resolved').length;
+  const totalComplaints = complaints.length;
+  const pendingCount = complaints.filter(c => c.status === 'Pending').length;
+  const inProgressCount = complaints.filter(c => c.status === 'In Progress' || c.status === 'In-Progress').length;
   
-  const handleStatusChange = (id, newStatus, assignedTo = null) => {
-    setComplaints(complaints.map(c => c.id === id ? { ...c, status: newStatus, assignedTo } : c));
-    setIsAssignModalOpen(false);
+  const handleStatusChange = async (id, newStatus, assignedTo = null) => {
+    try {
+      await API.patch(`/complaints/${id}`, { status: newStatus });
+      setComplaints(complaints.map(c => c._id === id ? { ...c, status: newStatus, assignedTo } : c));
+      setIsAssignModalOpen(false);
+    } catch (err) {
+      console.error('Error updating complaint status:', err);
+      alert('Failed to update status.');
+    }
   };
 
   const handleArchive = (id) => {
     if (window.confirm('Archive this complaint?')) {
-      setComplaints(complaints.filter(c => c.id !== id));
+      // Logic for archiving if needed, for now just local filter
+      setComplaints(complaints.filter(c => c._id !== id));
     }
   };
 
@@ -174,23 +156,23 @@ const Complaints = () => {
           </thead>
           <tbody>
             <AnimatePresence>
-              {filteredComplaints.map(c => (
-                <React.Fragment key={c.id}>
+              {complaints.map((c, index) => (
+                <React.Fragment key={c._id}>
                   <motion.tr 
                     layout
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
+                    onClick={() => setExpandedId(expandedId === c._id ? null : c._id)}
                     style={{ borderBottom: '1px solid var(--border-color)', background: c.status === 'Resolved' ? 'var(--bg-tertiary)' : 'transparent', opacity: c.status === 'Resolved' ? 0.7 : 1, cursor: 'pointer' }}
                     className="table-row-hover"
                   >
                     <td style={{ padding: '1.2rem' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                        <span style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>Room {c.room}</span>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ticket #{1000 + c.id} • {c.timeElapsed}</span>
+                        <span style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>{c.tenant?.room || 'N/A'}</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ticket #{index + 1001} • {new Date(c.createdAt).toLocaleDateString()}</span>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
-                          By: <span style={{ fontWeight: '600' }}>{c.reportedBy}</span>
+                          By: <span style={{ fontWeight: '600' }}>{c.tenant?.name || 'Unknown'}</span>
                         </span>
                       </div>
                     </td>
@@ -200,10 +182,10 @@ const Complaints = () => {
                           <span style={{ padding: '0.3rem', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
                             {getCategoryIcon(c.category)}
                           </span>
-                          <span style={{ fontWeight: '600' }}>{c.issue}</span>
+                          <span style={{ fontWeight: '600' }}>{c.title}</span>
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.3rem' }}>
-                          {getUrgencyBadge(c.urgency)}
+                          {getUrgencyBadge(c.priority || 'Medium')}
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.category}</span>
                         </div>
                       </div>
@@ -215,34 +197,16 @@ const Complaints = () => {
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                           {c.status === 'Pending' && activeTab === 'Maintenance' && (
                             <button 
-                              onClick={(e) => { e.stopPropagation(); setSelectedComplaintId(c.id); setIsAssignModalOpen(true); }}
+                              onClick={(e) => { e.stopPropagation(); setSelectedComplaintId(c._id); setIsAssignModalOpen(true); }}
                               className="btn btn-primary" 
                               style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
                             >
                               Assign Task
                             </button>
                           )}
-                          {c.status === 'Pending' && activeTab !== 'Maintenance' && (
-                            <>
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'Resolved'); }}
-                                className="btn btn-primary" 
-                                style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', background: 'var(--accent-success)', borderColor: 'var(--accent-success)' }}
-                              >
-                                Approve
-                              </button>
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'Rejected'); }}
-                                className="btn" 
-                                style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', border: '1px solid var(--accent-error)', color: 'var(--accent-error)' }}
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
-                          {c.status === 'In-Progress' && (
+                          {c.status === 'In Progress' && (
                             <button 
-                              onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'Resolved'); }}
+                              onClick={(e) => { e.stopPropagation(); handleStatusChange(c._id, 'Resolved'); }}
                               className="btn" 
                               style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', border: '1px solid var(--accent-success)' }}
                             >
@@ -251,7 +215,7 @@ const Complaints = () => {
                           )}
                           {(c.status === 'Resolved' || c.status === 'Rejected') && (
                             <button 
-                              onClick={(e) => { e.stopPropagation(); handleArchive(c.id); }}
+                              onClick={(e) => { e.stopPropagation(); handleArchive(c._id); }}
                               className="btn" 
                               style={{ padding: '0.5rem', fontSize: '0.8rem', border: '1px solid var(--border-color)', color: 'var(--text-muted)' }}
                             >
@@ -261,7 +225,7 @@ const Complaints = () => {
                       </div>
                     </td>
                   </motion.tr>
-                  {expandedId === c.id && (
+                  {expandedId === c._id && (
                     <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: 'var(--bg-tertiary)' }}>
                       <td colSpan="4" style={{ padding: '1.5rem 2.5rem' }}>
                         <div style={{ borderLeft: '4px solid var(--accent-primary)', paddingLeft: '1.5rem' }}>
@@ -270,11 +234,11 @@ const Complaints = () => {
                           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '2rem' }}>
                              <div>
                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>REPORTED BY</p>
-                               <p style={{ fontWeight: '600' }}>{c.reportedBy} (Room {c.room})</p>
+                               <p style={{ fontWeight: '600' }}>{c.tenant?.name || 'Unknown'} (Room {c.tenant?.room || 'N/A'})</p>
                              </div>
-                           <div>
-                               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>URGENCY LEVEL</p>
-                               <p style={{ fontWeight: '600' }}>{c.urgency}</p>
+                            <div>
+                               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>CATEGORY</p>
+                               <p style={{ fontWeight: '600' }}>{c.category}</p>
                              </div>
                              {c.assignedTo && (
                                <div>
@@ -289,6 +253,7 @@ const Complaints = () => {
                   )}
                 </React.Fragment>
               ))}
+
             </AnimatePresence>
           </tbody>
         </table>

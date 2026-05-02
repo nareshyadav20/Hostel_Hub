@@ -4,7 +4,7 @@ const Safety = () => {
   const [sosProgress, setSosProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
   const [incidentSubmitted, setIncidentSubmitted] = useState(false);
-  const timerRef = useRef(null);
+  const sirenRef = useRef(new Audio('https://www.soundjay.com/emergency/sounds/siren-1.mp3'));
 
   const startHolding = () => {
     setIsHolding(true);
@@ -15,6 +15,8 @@ const Safety = () => {
       setSosProgress(progress);
       if (progress >= 100) {
         clearInterval(timerRef.current);
+        sirenRef.current.loop = true;
+        sirenRef.current.play().catch(e => console.log('Audio play failed:', e));
         alert('🚨 SOS ALERT SENT! Emergency services and Livora management have been notified with your live location.');
         setSosProgress(0);
         setIsHolding(false);
@@ -26,6 +28,10 @@ const Safety = () => {
     clearInterval(timerRef.current);
     setIsHolding(false);
     setSosProgress(0);
+    if (sirenRef.current) {
+      sirenRef.current.pause();
+      sirenRef.current.currentTime = 0;
+    }
   };
 
   const [formData, setFormData] = useState({

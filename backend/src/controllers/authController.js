@@ -9,15 +9,15 @@ const register = async (req, res) => {
 
     const user = await User.create({ email, password, name, role, phone });
 
+    // Automatically create a Tenant profile if the role is TENANT
     if (role === 'TENANT') {
-      const Tenant = require('../models/Tenant');
-      // Create a default tenant profile so they can raise complaints immediately
-      await Tenant.create({ 
-        name, 
-        email, 
-        phone: phone || 'N/A', 
-        emergencyContact: 'N/A', 
-        status: 'PENDING' 
+      const Tenant = require('../models/tenant/Tenant');
+      await Tenant.create({
+        name,
+        email,
+        phone,
+        status: 'ACTIVE',
+        user: user._id
       });
     }
 
@@ -32,10 +32,10 @@ const login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(401).json({ message: 'Invalid email or password' });
 
     const isPasswordCorrect = await require('bcryptjs').compare(password, user.password);
-    if (!isPasswordCorrect) return res.status(400).json({ message: 'Invalid credentials' });
+    if (!isPasswordCorrect) return res.status(401).json({ message: 'Invalid email or password' });
 
     const token = jwt.sign({ id: user._id, role: user.role, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.status(200).json({ user, token });

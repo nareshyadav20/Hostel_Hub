@@ -42,7 +42,7 @@ const ForgotPassword = () => {
         </button>
         <div className="auth-header">
           <div className="auth-logo" style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
-            <span style={{ fontSize: '2.5rem', fontWeight: '900', background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>StayNest</span>
+            <span style={{ fontSize: '2.5rem', fontWeight: '950', background: 'linear-gradient(to right, #0ea5e9, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Livora</span>
           </div>
           <h1>Reset Password</h1>
           <p>Create a new secure password for your account</p>

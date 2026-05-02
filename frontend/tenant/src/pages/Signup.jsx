@@ -18,26 +18,19 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
-      // Mock delay to simulate network request
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await API.post('/auth/register', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.mobile,
+        role: 'TENANT'
+      });
 
-      const storedUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
-
-      if (storedUsers.some(u => u.email === formData.email)) {
-        setError('Email already registered.');
-        setLoading(false);
-        return;
-      }
-
-      // Step 1 Output: profileCompletion = 25
-      const newUser = { ...formData, id: Date.now(), profileCompletion: 25 };
-      storedUsers.push(newUser);
-      localStorage.setItem('mock_users', JSON.stringify(storedUsers));
-
-      localStorage.setItem('token', 'mock_token_' + Date.now());
-      localStorage.setItem('user', JSON.stringify(newUser));
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
 
       navigate('/dashboard');
     } catch (err) {

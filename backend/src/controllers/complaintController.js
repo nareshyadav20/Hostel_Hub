@@ -1,25 +1,11 @@
-const Complaint = require('../models/Complaint');
-const Tenant = require('../models/Tenant');
+const Complaint = require('../models/tenant/Complaint');
+const { getOrCreateTenant } = require('../utils/tenantHelper');
 
 exports.createComplaint = async (req, res) => {
   try {
     const { title, description, category } = req.body;
-    let tenant = await Tenant.findOne({ email: req.user.email });
-    
-    // If tenant profile is missing (e.g. user registered before we added auto-create), create it now
-    if (!tenant) {
-      const User = require('../models/User');
-      const user = await User.findById(req.user.id);
-      if (!user) return res.status(404).json({ message: 'User not found' });
-      
-      tenant = await Tenant.create({
-        name: user.name,
-        email: user.email,
-        phone: user.phone || 'N/A',
-        emergencyContact: 'N/A',
-        status: 'PENDING'
-      });
-    }
+    const tenant = await getOrCreateTenant(req.user);
+    if (!tenant) return res.status(404).json({ message: 'Tenant profile not found' });
 
     const complaint = await Complaint.create({
       title,
