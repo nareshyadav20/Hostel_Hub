@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 /* ─── icons (SVG constants) ─── */
@@ -17,16 +17,164 @@ const ICONS = {
   Luxury: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
 };
 
-/* ─── hostel data ─── */
+/* ─── expanded hostel data ─── */
 const HOSTELS = [
-  { id: 1, name: 'Sunshine Residency', location: 'Near City College', price: 6500, gender: 'Boys', type: '2 Sharing', rating: 4.5, image: '/sunshine_residency_hostel.png' },
-  { id: 2, name: 'Elite Living', location: 'Tech Park Area', price: 8500, gender: 'Girls', type: 'Single', rating: 4.8, image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000' },
-  { id: 3, name: 'Green View Hostel', location: 'Green Valley', price: 5000, gender: 'Co-living', type: '4 Sharing', rating: 4.2, image: 'https://images.unsplash.com/photo-1623625434462-e5e42318ae49?auto=format&fit=crop&q=80&w=1000' },
+  { 
+    id: 1, 
+    name: 'Sunshine Residency', 
+    location: 'Bengaluru', 
+    subLoc: 'Near City College', 
+    price: 6500, 
+    gender: 'Boys', 
+    type: '2 Sharing', 
+    rating: 4.8, 
+    images: [
+      'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=1000',
+      'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=1000',
+      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000'
+    ]
+  },
+  { 
+    id: 2, 
+    name: 'Elite Living', 
+    location: 'Bengaluru', 
+    subLoc: 'Tech Park Area', 
+    price: 8500, 
+    gender: 'Girls', 
+    type: 'Single', 
+    rating: 4.5, 
+    images: [
+      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000',
+      'https://images.unsplash.com/photo-1502672260266-1c1c24240938?auto=format&fit=crop&q=80&w=1000',
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1000'
+    ]
+  },
+  { 
+    id: 3, 
+    name: 'Green View Hostel', 
+    location: 'Bengaluru', 
+    subLoc: 'Green Valley', 
+    price: 5000, 
+    gender: 'Mixed', 
+    type: '4 Sharing', 
+    rating: 4.2, 
+    images: [
+      'https://images.unsplash.com/photo-1623625434462-e5e42318ae49?auto=format&fit=crop&q=80&w=1000',
+      'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=1000',
+      'https://images.unsplash.com/photo-1502672260266-1c1c24240938?auto=format&fit=crop&q=80&w=1000'
+    ]
+  },
+  { 
+    id: 4, 
+    name: 'Metro Suites', 
+    location: 'Hyderabad', 
+    subLoc: 'Hitech City', 
+    price: 12000, 
+    gender: 'Mixed', 
+    type: 'Single', 
+    rating: 4.9, 
+    images: [
+      'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=1000',
+      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000',
+      'https://images.unsplash.com/photo-1623625434462-e5e42318ae49?auto=format&fit=crop&q=80&w=1000'
+    ]
+  },
+  { 
+    id: 5, 
+    name: 'Royal Palace', 
+    location: 'Mumbai', 
+    subLoc: 'Andheri West', 
+    price: 15000, 
+    gender: 'Girls', 
+    type: '2 Sharing', 
+    rating: 4.7, 
+    images: [
+      'https://images.unsplash.com/photo-1502672260266-1c1c24240938?auto=format&fit=crop&q=80&w=1000',
+      'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=1000',
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1000'
+    ]
+  },
+  { 
+    id: 6, 
+    name: 'Skyline Dorms', 
+    location: 'Hyderabad', 
+    subLoc: 'Gachibowli', 
+    price: 7500, 
+    gender: 'Boys', 
+    type: '3 Sharing', 
+    rating: 4.4, 
+    images: [
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1000',
+      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000',
+      'https://images.unsplash.com/photo-1502672260266-1c1c24240938?auto=format&fit=crop&q=80&w=1000'
+    ]
+  }
 ];
+
+/* ─── Hostel Card Component with Carousel ─── */
+const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => {
+  const [currentImg, setCurrentImg] = useState(0);
+
+  // Auto-scroll images
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImg(prev => (prev + 1) % hostel.images.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [hostel.images.length]);
+
+  return (
+    <div className="pro-hostel-card">
+      <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.images[currentImg]})` }}>
+        <div className="rating-tag">{hostel.rating} ★</div>
+        <button className={`wishlist-icon ${isWishlisted(hostel.id) ? 'active' : ''}`} onClick={() => toggleWishlist(hostel)}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted(hostel.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+        </button>
+        
+        {/* Carousel Indicators */}
+        <div className="carousel-dots">
+          {hostel.images.map((_, idx) => (
+            <div key={idx} className={`dot ${currentImg === idx ? 'active' : ''}`} onClick={() => setCurrentImg(idx)}></div>
+          ))}
+        </div>
+      </div>
+
+      <div className="pro-card-content">
+        <div className="pro-card-header">
+          <div>
+            <h2 className="hostel-name">{hostel.name}</h2>
+            <p className="hostel-loc"><ICONS.Location style={{ width: '12px', height: '12px' }} /> {hostel.subLoc}, {hostel.location}</p>
+          </div>
+          <div className="gender-tag">{hostel.gender}</div>
+        </div>
+
+        <div className="hostel-specs">
+          <div className="spec-item">{hostel.type}</div>
+          <div className="spec-item">Fully Managed</div>
+          <div className="spec-item">Verified</div>
+        </div>
+
+        <div className="pro-card-footer">
+          <div className="price-tag">
+            <span className="price-val">₹{hostel.price.toLocaleString()}</span>
+            <span className="price-period">/mo</span>
+          </div>
+          <div className="card-actions">
+            <button className="btn-wish-outline" onClick={() => toggleWishlist(hostel)}>
+              {isWishlisted(hostel.id) ? 'Saved' : 'Wishlist'}
+            </button>
+            <Link to={`/listing/${hostel.id}`} className="btn-details">Details</Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Search = () => {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({ location: 'bengaluru', budget: 10000, gender: 'All' });
+  const [filters, setFilters] = useState({ location: 'Bengaluru', budget: 'all', gender: 'All' });
+  const [filteredHostels, setFilteredHostels] = useState(HOSTELS);
   const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
 
   const isWishlisted = (id) => wishlist.some((h) => h.id === id);
@@ -37,9 +185,35 @@ const Search = () => {
     localStorage.setItem('wishlist', JSON.stringify(next));
   };
 
+  const handleApplyFilters = () => {
+    let results = HOSTELS;
+
+    // Filter by Location
+    if (filters.location !== 'all') {
+      results = results.filter(h => h.location.toLowerCase() === filters.location.toLowerCase());
+    }
+
+    // Filter by Gender
+    if (filters.gender !== 'All') {
+      results = results.filter(h => h.gender === filters.gender);
+    }
+
+    // Filter by Budget
+    if (filters.budget === 'budget-1') results = results.filter(h => h.price <= 5000);
+    else if (filters.budget === 'budget-2') results = results.filter(h => h.price > 5000 && h.price <= 10000);
+    else if (filters.budget === 'budget-3') results = results.filter(h => h.price > 10000 && h.price <= 15000);
+    else if (filters.budget === 'budget-4') results = results.filter(h => h.price > 15000);
+
+    setFilteredHostels(results);
+  };
+
+  // Initial filter on load
+  useEffect(() => {
+    handleApplyFilters();
+  }, []);
+
   return (
     <div className="search-page-professional fade-in">
-      {/* Header Section */}
       <header className="professional-header">
         <div className="header-nav-row" style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 2rem' }}>
           <button className="pro-close-btn" onClick={() => navigate('/')} aria-label="Close search">
@@ -56,7 +230,6 @@ const Search = () => {
       </header>
 
       <div className="search-layout">
-        {/* Professional Sidebar */}
         <aside className="sidebar-professional">
           <div className="filter-card">
             <div className="filter-header">
@@ -65,20 +238,17 @@ const Search = () => {
             </div>
 
             <div className="filter-sections">
-              {/* Location */}
               <div className="filter-group">
                 <div className="group-label">
                   <ICONS.Location /> <span>Location</span>
                 </div>
                 <select value={filters.location} onChange={(e) => setFilters({ ...filters, location: e.target.value })} className="pro-select">
-                  <option value="bengaluru">Bengaluru</option>
-                  <option value="hyderabad">Hyderabad</option>
-                  <option value="mumbai">Mumbai</option>
+                  <option value="Bengaluru">Bengaluru</option>
+                  <option value="Hyderabad">Hyderabad</option>
+                  <option value="Mumbai">Mumbai</option>
                 </select>
               </div>
 
-
-              {/* Gender Preference */}
               <div className="filter-group">
                 <div className="group-label">
                   <ICONS.Gender /> <span>Gender Preference</span>
@@ -92,7 +262,6 @@ const Search = () => {
                 </div>
               </div>
 
-              {/* Budget Categories Table-like layout */}
               <div className="filter-group">
                 <div className="group-label">
                   <ICONS.Budget /> <span>Budget Segments</span>
@@ -105,7 +274,13 @@ const Search = () => {
                     { label: '₹15k+', value: 'budget-4' }
                   ].map(item => (
                     <label key={item.value} className="pro-table-row">
-                      <input type="radio" name="budget-seg" />
+                      <input 
+                        type="radio" 
+                        name="budget-seg" 
+                        value={item.value} 
+                        checked={filters.budget === item.value}
+                        onChange={(e) => setFilters({...filters, budget: e.target.value})}
+                      />
                       <span className="row-content">
                         <span className="row-label">{item.label}</span>
                         <span className="row-radio-custom"></span>
@@ -115,99 +290,28 @@ const Search = () => {
                 </div>
               </div>
 
-              {/* Property Categories */}
-              <div className="filter-group">
-                <div className="group-label">
-                  <ICONS.Category /> <span>Property Style</span>
-                </div>
-                <div className="pro-filter-table">
-                  {[
-                    { label: 'Student Friendly', icon: <ICONS.Student />, value: 'student' },
-                    { label: 'Professional Hubs', icon: <ICONS.Work />, value: 'work' },
-                    { label: 'Luxury Suites', icon: <ICONS.Luxury />, value: 'luxury' }
-                  ].map(item => (
-                    <label key={item.value} className="pro-table-row">
-                      <input type="checkbox" />
-                      <span className="row-content">
-                        <span className="row-info">
-                          {item.icon}
-                          <span className="row-label">{item.label}</span>
-                        </span>
-                        <span className="row-check-custom"></span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Amenities checklist */}
-              <div className="filter-group">
-                <div className="group-label">
-                  <ICONS.Amenities /> <span>Essential Amenities</span>
-                </div>
-                <div className="amenities-checklist">
-                  {[
-                    { id: 'wifi', label: 'WiFi', icon: <ICONS.WiFi /> },
-                    { id: 'ac', label: 'A/C', icon: <ICONS.AC /> },
-                    { id: 'food', label: 'Food', icon: <ICONS.Food /> },
-                    { id: 'security', label: 'Security', icon: <ICONS.Security /> }
-                  ].map(amenity => (
-                    <label key={amenity.id} className="amenity-checkbox">
-                      <input type="checkbox" />
-                      <span className="checkbox-content">
-                        {amenity.icon}
-                        <span>{amenity.label}</span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <button className="apply-btn">Apply Filters</button>
+              <button className="apply-btn" onClick={handleApplyFilters}>Apply Filters</button>
             </div>
           </div>
         </aside>
 
-        {/* Results Main Area */}
         <main className="results-professional">
-          {HOSTELS.map(hostel => (
-            <div key={hostel.id} className="pro-hostel-card">
-              <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image})` }}>
-                <div className="rating-tag">{hostel.rating} ★</div>
-                <button className={`wishlist-icon ${isWishlisted(hostel.id) ? 'active' : ''}`} onClick={() => toggleWishlist(hostel)}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted(hostel.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
-                </button>
-              </div>
-              <div className="pro-card-content">
-                <div className="pro-card-header">
-                  <div>
-                    <h2 className="hostel-name">{hostel.name}</h2>
-                    <p className="hostel-loc"><ICONS.Location style={{ width: '12px', height: '12px' }} /> {hostel.location}</p>
-                  </div>
-                  <div className="gender-tag">{hostel.gender}</div>
-                </div>
-
-                <div className="hostel-specs">
-                  <div className="spec-item">{hostel.type}</div>
-                  <div className="spec-item">Fully Managed</div>
-                  <div className="spec-item">Verified</div>
-                </div>
-
-                <div className="pro-card-footer">
-                  <div className="price-tag">
-                    <span className="price-val">₹{hostel.price.toLocaleString()}</span>
-                    <span className="price-period">/mo</span>
-                  </div>
-                  <div className="card-actions">
-                    <button className="btn-wish-outline" onClick={() => toggleWishlist(hostel)}>
-                      {isWishlisted(hostel.id) ? 'Saved' : 'Wishlist'}
-                    </button>
-                    <Link to={`/listing/${hostel.id}`} className="btn-details">Details</Link>
-                  </div>
-                </div>
-              </div>
+          {filteredHostels.length > 0 ? (
+            filteredHostels.map(hostel => (
+              <HostelCard 
+                key={hostel.id} 
+                hostel={hostel} 
+                isWishlisted={isWishlisted} 
+                toggleWishlist={toggleWishlist} 
+              />
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', padding: '4rem', background: 'var(--bg-secondary)', borderRadius: '32px', border: '1px solid var(--border-color)' }}>
+              <ICONS.Location style={{ width: '48px', height: '48px', color: 'var(--text-muted)', marginBottom: '1rem' }} />
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>No Hostels Found</h2>
+              <p style={{ color: 'var(--text-muted)' }}>Try adjusting your filters to find more results.</p>
             </div>
-          ))}
+          )}
         </main>
       </div>
 
@@ -328,31 +432,6 @@ const Search = () => {
           cursor: pointer;
         }
 
-        .budget-value {
-          font-size: 1.8rem;
-          font-weight: 900;
-          color: var(--text-primary);
-          margin-bottom: 0.5rem;
-        }
-
-        .pro-range {
-          width: 100%;
-          height: 6px;
-          background: var(--bg-tertiary);
-          border-radius: 10px;
-          appearance: none;
-          outline: none;
-          accent-color: var(--accent-primary);
-        }
-
-        .range-labels {
-          display: flex;
-          justify-content: space-between;
-          font-size: 0.8rem;
-          color: var(--text-muted);
-          margin-top: 0.5rem;
-        }
-
         .gender-toggle-group {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
@@ -378,40 +457,6 @@ const Search = () => {
           box-shadow: 0 4px 15px rgba(14, 165, 233, 0.25);
         }
 
-        .amenities-checklist {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 0.6rem;
-        }
-
-        .amenity-checkbox {
-          cursor: pointer;
-        }
-
-        .amenity-checkbox input {
-          display: none;
-        }
-
-        .checkbox-content {
-          display: flex;
-          align-items: center;
-          gap: 0.8rem;
-          padding: 0.8rem 1.2rem;
-          background: var(--bg-tertiary);
-          border: 1px solid var(--border-color);
-          border-radius: 14px;
-          color: var(--text-secondary);
-          font-weight: 600;
-          font-size: 0.9rem;
-          transition: all 0.2s ease;
-        }
-
-        .amenity-checkbox input:checked + .checkbox-content {
-          background: rgba(34, 197, 94, 0.1);
-          border-color: #22c55e;
-          color: #22c55e;
-        }
-
         .apply-btn {
           width: 100%;
           padding: 1.2rem;
@@ -430,7 +475,6 @@ const Search = () => {
           box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
 
-        /* Pro Filter Table Styles */
         .pro-filter-table {
           background: var(--bg-tertiary);
           border: 1px solid var(--border-color);
@@ -452,10 +496,6 @@ const Search = () => {
           border-right: none;
         }
 
-        .pro-table-row:last-child {
-          border-bottom: none;
-        }
-
         .pro-table-row input {
           display: none;
         }
@@ -467,30 +507,19 @@ const Search = () => {
           padding: 0.6rem 1rem;
         }
 
-        .row-info {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          color: var(--text-secondary);
-        }
-
         .row-label {
           font-size: 0.85rem;
           font-weight: 700;
           color: var(--text-primary);
         }
 
-        .row-radio-custom, .row-check-custom {
+        .row-radio-custom {
           width: 16px;
           height: 16px;
           border: 2px solid var(--border-color);
           border-radius: 50%;
           position: relative;
           transition: all 0.2s ease;
-        }
-
-        .row-check-custom {
-          border-radius: 6px;
         }
 
         .pro-table-row input:checked + .row-content {
@@ -510,26 +539,6 @@ const Search = () => {
           height: 6px;
           background: var(--accent-primary);
           border-radius: 50%;
-        }
-
-        .pro-table-row input:checked + .row-content .row-check-custom {
-          background: var(--accent-primary);
-          border-color: var(--accent-primary);
-        }
-
-        .pro-table-row input:checked + .row-content .row-check-custom::after {
-          content: '✓';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          color: white;
-          font-size: 0.75rem;
-          font-weight: 900;
-        }
-
-        .pro-table-row:hover {
-          background: rgba(255, 255, 255, 0.03);
         }
 
         .results-professional {
@@ -559,6 +568,7 @@ const Search = () => {
           background-size: cover;
           background-position: center;
           position: relative;
+          transition: background-image 0.5s ease-in-out;
         }
 
         .rating-tag {
@@ -594,6 +604,30 @@ const Search = () => {
         .wishlist-icon.active {
           background: #ef4444;
           color: white;
+        }
+
+        .carousel-dots {
+          position: absolute;
+          bottom: 1.5rem;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .dot {
+          width: 8px;
+          height: 8px;
+          background: rgba(255,255,255,0.4);
+          border-radius: 50%;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+
+        .dot.active {
+          background: white;
+          width: 20px;
+          border-radius: 10px;
         }
 
         .pro-card-content {

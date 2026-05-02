@@ -37,15 +37,15 @@ const Home = () => {
   }, []);
 
   const cities = [
-    { name: 'Bangalore', img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v2H6v4h12V7h-3V5a3 3 0 0 0-3-3z"/><path d="M4 11v10h16V11"/><path d="M8 11v10"/><path d="M16 11v10"/><path d="M12 11v10"/><path d="M2 21h20"/></svg> },
-    { name: 'Chennai', img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l-6 19h12L12 2z"/><path d="M8 8h8"/><path d="M7 13h10"/><path d="M6 18h12"/><path d="M2 21h20"/><path d="M11 21v-4h2v4"/></svg> },
-    { name: 'Coimbatore', img: 'https://images.unsplash.com/photo-1621539203666-41ea87d3a824?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20"/><path d="M3 21l6-10 4 6 5-8 4 12"/><circle cx="16" cy="7" r="3"/></svg> },
-    { name: 'Pune', img: 'https://images.unsplash.com/photo-1605368940860-249ee416c117?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 21V9l2-2h12l2 2v12"/><path d="M4 12h16"/><path d="M4 17h16"/><path d="M9 21v-6a3 3 0 0 1 6 0v6"/><path d="M2 21h20"/><path d="M4 7V4h2v3"/><path d="M18 7V4h2v3"/></svg> },
-    { name: 'Hyderabad', active: true, img: 'https://images.unsplash.com/photo-1566509426917-8e682d334dd1?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20"/><path d="M6 21V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v16"/><path d="M14 21V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v16"/><path d="M10 21v-6a2 2 0 0 1 4 0v6"/><path d="M6 10h12"/><path d="M6 14h12"/></svg> },
-    { name: 'Noida', img: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20"/><path d="M4 21V7h4v14"/><path d="M8 21V3h8v18"/><path d="M16 21v-9h4v9"/><path d="M10 7h4"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M5 11h2"/><path d="M5 15h2"/></svg> },
-    { name: 'Delhi', img: 'https://images.unsplash.com/photo-1587474260580-5a3d078bd431?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20"/><path d="M6 21V7h12v14"/><path d="M8 21v-8a4 4 0 0 1 8 0v8"/><path d="M6 7L12 3l6 4"/></svg> },
-    { name: 'Mumbai', img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20"/><path d="M5 21V9h14v12"/><path d="M9 21v-6a3 3 0 0 1 6 0v6"/><path d="M5 9V6a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M8 5a2 2 0 0 1-4 0"/><path d="M20 5a2 2 0 0 1-4 0"/><path d="M15 5a3 3 0 0 0-6 0"/></svg> },
-    { name: 'Gurugram', img: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20"/><path d="M4 21V5h5v16"/><path d="M15 21V3h5v18"/><path d="M9 21v-8h6v8"/><path d="M9 13l6-4"/><path d="M6 9h1"/><path d="M6 13h1"/><path d="M6 17h1"/><path d="M17 7h1"/><path d="M17 11h1"/><path d="M17 15h1"/></svg> }
+    { name: 'Bangalore', img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v2H6v4h12V7h-3V5a3 3 0 0 0-3-3z" /><path d="M4 11v10h16V11" /><path d="M8 11v10" /><path d="M16 11v10" /><path d="M12 11v10" /><path d="M2 21h20" /></svg> },
+    { name: 'Chennai', img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l-6 19h12L12 2z" /><path d="M8 8h8" /><path d="M7 13h10" /><path d="M6 18h12" /><path d="M2 21h20" /><path d="M11 21v-4h2v4" /></svg> },
+    { name: 'Coimbatore', img: 'https://images.unsplash.com/photo-1621539203666-41ea87d3a824?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20" /><path d="M3 21l6-10 4 6 5-8 4 12" /><circle cx="16" cy="7" r="3" /></svg> },
+    { name: 'Pune', img: 'https://images.unsplash.com/photo-1605368940860-249ee416c117?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 21V9l2-2h12l2 2v12" /><path d="M4 12h16" /><path d="M4 17h16" /><path d="M9 21v-6a3 3 0 0 1 6 0v6" /><path d="M2 21h20" /><path d="M4 7V4h2v3" /><path d="M18 7V4h2v3" /></svg> },
+    { name: 'Hyderabad', active: true, img: 'https://images.unsplash.com/photo-1566509426917-8e682d334dd1?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20" /><path d="M6 21V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v16" /><path d="M14 21V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v16" /><path d="M10 21v-6a2 2 0 0 1 4 0v6" /><path d="M6 10h12" /><path d="M6 14h12" /></svg> },
+    { name: 'Noida', img: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20" /><path d="M4 21V7h4v14" /><path d="M8 21V3h8v18" /><path d="M16 21v-9h4v9" /><path d="M10 7h4" /><path d="M10 11h4" /><path d="M10 15h4" /><path d="M5 11h2" /><path d="M5 15h2" /></svg> },
+    { name: 'Delhi', img: 'https://images.unsplash.com/photo-1587474260580-5a3d078bd431?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20" /><path d="M6 21V7h12v14" /><path d="M8 21v-8a4 4 0 0 1 8 0v8" /><path d="M6 7L12 3l6 4" /></svg> },
+    { name: 'Mumbai', img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20" /><path d="M5 21V9h14v12" /><path d="M9 21v-6a3 3 0 0 1 6 0v6" /><path d="M5 9V6a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3" /><path d="M8 5a2 2 0 0 1-4 0" /><path d="M20 5a2 2 0 0 1-4 0" /><path d="M15 5a3 3 0 0 0-6 0" /></svg> },
+    { name: 'Gurugram', img: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20" /><path d="M4 21V5h5v16" /><path d="M15 21V3h5v18" /><path d="M9 21v-8h6v8" /><path d="M9 13l6-4" /><path d="M6 9h1" /><path d="M6 13h1" /><path d="M6 17h1" /><path d="M17 7h1" /><path d="M17 11h1" /><path d="M17 15h1" /></svg> }
   ];
 
   const localities = [
@@ -83,11 +83,11 @@ const Home = () => {
           <h1 style={{ fontSize: '2.2rem', fontWeight: '950', letterSpacing: '-1.5px', color: '#00b0f0', margin: 0 }}>livora</h1>
         </div>
         <nav className="header-nav">
-          <span onClick={() => navigate('/explore')} className="nav-item" style={{cursor: 'pointer'}}>LIVORA SCHOLAR</span>
-          <span onClick={() => navigate('/explore')} className="nav-item" style={{cursor: 'pointer'}}>LIST YOUR PROPERTY</span>
+          <span onClick={() => navigate('/explore')} className="nav-item" style={{ cursor: 'pointer' }}>LIVORA SCHOLAR</span>
+          <span onClick={() => navigate('/explore')} className="nav-item" style={{ cursor: 'pointer' }}>LIST YOUR PROPERTY</span>
           <div className="contact-info">
-            <span onClick={() => navigate('/explore')} className="contact-item" style={{cursor: 'pointer'}}>📞 +91 7569383323</span>
-            <span onClick={() => navigate('/explore')} className="contact-item" style={{cursor: 'pointer'}}>✉️ info@livora.com</span>
+            <span onClick={() => navigate('/explore')} className="contact-item" style={{ cursor: 'pointer' }}>📞 +91 7569383323</span>
+            <span onClick={() => navigate('/explore')} className="contact-item" style={{ cursor: 'pointer' }}>✉️ info@livora.com</span>
           </div>
           <button className="btn-signin-home" onClick={() => navigate('/login')}>SIGN IN</button>
         </nav>
@@ -102,7 +102,7 @@ const Home = () => {
             </h1>
 
             <div className="hero-badge" style={{ transition: 'all 0.5s ease-in-out' }}>
-              <span className="badge-icon" style={{marginRight: '8px'}}>
+              <span className="badge-icon" style={{ marginRight: '8px' }}>
                 {badgeOptions[currentBadgeIndex].icon}
               </span>
               {badgeOptions[currentBadgeIndex].text}

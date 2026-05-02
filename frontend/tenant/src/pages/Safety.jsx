@@ -45,20 +45,83 @@ const Safety = () => {
   };
 
   return (
-    <div className="safety-page fade-in" style={{ maxWidth: '1000px', margin: '0 auto', paddingBottom: '3rem' }}>
-      <header style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2.4rem', fontWeight: '950', letterSpacing: '-1.5px', marginBottom: '0.5rem', background: 'linear-gradient(to right, #f43f5e, #fb7185)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>🛡️ Safety & SOS Center</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1rem', fontWeight: '500' }}>Your security is the heart of Livora. Instant response, 24/7 protection.</p>
+    <div className="safety-page fade-in" style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem 1rem 5rem' }}>
+      <style>
+        {`
+          @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 25px rgba(244, 63, 94, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+          }
+          .sos-pulse {
+            animation: pulse-red 2s infinite;
+          }
+          .glass-card-premium {
+            backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 32px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .glass-card-premium:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+          }
+          .input-premium {
+            width: 100%;
+            padding: 1.2rem;
+            background: #f8fafc;
+            border: 2px solid transparent;
+            border-radius: 18px;
+            color: #1e293b;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            outline: none;
+          }
+          .input-premium:focus {
+            background: white;
+            border-color: #00b0f0;
+            box-shadow: 0 0 0 4px rgba(0, 176, 240, 0.1);
+          }
+          .btn-gradient-primary {
+            background: linear-gradient(135deg, #00b0f0 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+          }
+          .btn-gradient-primary:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 176, 240, 0.3);
+          }
+          .btn-gradient-sos {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+          }
+        `}
+      </style>
+
+      <header style={{ marginBottom: '3.5rem', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <div style={{ padding: '1rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '24px', color: '#f43f5e' }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+        </div>
+        <h1 style={{ fontSize: '2.8rem', fontWeight: '950', letterSpacing: '-2px', marginBottom: '0.8rem', background: 'linear-gradient(to right, #1e293b, #475569)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Safety & SOS Center</h1>
+        <p style={{ color: '#64748b', fontSize: '1.1rem', fontWeight: '500', maxWidth: '600px', margin: '0 auto' }}>Your security is our highest priority. Instant response and 24/7 protection for all Livora residents.</p>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '3.5rem', marginBottom: '4.5rem' }}>
         {/* ── SOS Action Card ── */}
-        <div className="glass-card" style={{ 
+        <div className="glass-card-premium" style={{ 
           textAlign: 'center', 
-          padding: '2.5rem 2rem', 
-          background: 'rgba(244, 63, 94, 0.02)', 
-          border: '1px solid rgba(244, 63, 94, 0.12)',
-          borderRadius: '32px',
+          padding: '4rem 2rem', 
+          background: 'linear-gradient(180deg, rgba(244, 63, 94, 0.05) 0%, rgba(255, 255, 255, 0.8) 100%)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center', 
@@ -66,15 +129,16 @@ const Safety = () => {
           position: 'relative',
           overflow: 'hidden'
         }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '6px', background: 'rgba(244, 63, 94, 0.08)' }}>
-            <div style={{ width: `${sosProgress}%`, height: '100%', background: '#f43f5e', transition: 'width 0.05s linear' }}></div>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '8px', background: 'rgba(244, 63, 94, 0.1)' }}>
+            <div style={{ width: `${sosProgress}%`, height: '100%', background: '#f43f5e', transition: 'width 0.05s linear', boxShadow: '0 0 10px #f43f5e' }}></div>
           </div>
 
           <div 
+            className={isHolding ? "" : "sos-pulse"}
             style={{ 
-              width: '140px', 
-              height: '140px', 
-              background: isHolding ? '#e11d48' : '#f43f5e', 
+              width: '160px', 
+              height: '160px', 
+              background: isHolding ? '#be123c' : 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)', 
               borderRadius: '50%', 
               display: 'flex', 
               flexDirection: 'column',
@@ -82,12 +146,12 @@ const Safety = () => {
               justifyContent: 'center',
               color: 'white',
               cursor: 'pointer',
-              boxShadow: isHolding ? '0 0 50px rgba(244, 63, 94, 0.5)' : '0 12px 28px rgba(244, 63, 94, 0.25)',
-              marginBottom: '1.5rem',
+              marginBottom: '2rem',
               transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
               userSelect: 'none',
-              transform: isHolding ? 'scale(0.94)' : 'scale(1)',
-              border: '6px solid rgba(255,255,255,0.1)'
+              transform: isHolding ? 'scale(0.92)' : 'scale(1)',
+              border: '8px solid rgba(255,255,255,0.2)',
+              boxShadow: isHolding ? 'inset 0 4px 10px rgba(0,0,0,0.2)' : '0 15px 35px rgba(244, 63, 94, 0.3)'
             }}
             onMouseDown={startHolding}
             onMouseUp={stopHolding}
@@ -95,70 +159,80 @@ const Safety = () => {
             onTouchStart={startHolding}
             onTouchEnd={stopHolding}
           >
-            <span style={{ fontSize: '2.8rem', fontWeight: '950', letterSpacing: '1px' }}>SOS</span>
-            <span style={{ fontSize: '0.65rem', fontWeight: '800', opacity: 0.8, marginTop: '0.2rem' }}>HOLD 2S</span>
+            <span style={{ fontSize: '3.2rem', fontWeight: '950', letterSpacing: '2px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>SOS</span>
+            <span style={{ fontSize: '0.7rem', fontWeight: '800', opacity: 0.9, marginTop: '0.2rem', letterSpacing: '1px' }}>HOLD 2S</span>
           </div>
           
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: '#f43f5e' }}>Emergency SOS</h2>
-          <p style={{ marginTop: '0.8rem', color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '300px', lineHeight: '1.5' }}>
-            Alerting Warden, Security, and Emergency services immediately.
+          <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#e11d48', marginBottom: '1rem' }}>Emergency SOS</h2>
+          <p style={{ color: '#475569', fontSize: '1rem', maxWidth: '320px', lineHeight: '1.6', fontWeight: '500' }}>
+            Hold the button to instantly alert the Warden, On-site Security, and local Emergency services.
           </p>
         </div>
 
-        {/* ── Emergency Directory & Live Support ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div className="glass-card" style={{ padding: '1.5rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem' }}>
-              <div style={{ padding: '0.6rem', background: 'rgba(14, 165, 233, 0.08)', color: 'var(--accent-primary)', borderRadius: '10px' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.11-2.11a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        {/* ── Emergency Directory & Support Group ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+          <div className="glass-card-premium" style={{ padding: '2.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+              <div style={{ padding: '0.75rem', background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', borderRadius: '14px' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.11-2.11a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
               </div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '900' }}>Emergency Directory</h3>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#1e293b' }}>Emergency Directory</h3>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               {[
-                { label: 'Warden', phone: '+91 98765 43210' },
-                { label: 'Security', phone: '+91 98765 43211' },
-                { label: 'Police', phone: '112' },
-                { label: 'Ambulance', phone: '102' }
+                { label: 'Warden', phone: '+91 98765 43210', icon: '👤' },
+                { label: 'Security', phone: '+91 98765 43211', icon: '🛡️' },
+                { label: 'Police', phone: '112', icon: '🚔' },
+                { label: 'Ambulance', phone: '102', icon: '🚑' }
               ].map((contact, idx) => (
-                <div key={idx} style={{ padding: '0.8rem 1rem', background: 'var(--bg-tertiary)', borderRadius: '14px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{contact.label}</span>
-                    <span style={{ fontWeight: '800', fontSize: '0.95rem' }}>{contact.phone}</span>
+                <div key={idx} style={{ padding: '1rem 1.2rem', background: '#f8fafc', borderRadius: '18px', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.2s ease' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <span style={{ fontSize: '1.2rem' }}>{contact.icon}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{contact.label}</span>
+                      <span style={{ fontWeight: '800', fontSize: '1.1rem', color: '#1e293b' }}>{contact.phone}</span>
+                    </div>
                   </div>
-                  <button style={{ background: 'rgba(14, 165, 233, 0.08)', border: 'none', padding: '0.5rem 0.8rem', borderRadius: '8px', color: 'var(--accent-primary)', fontWeight: '800', cursor: 'pointer', fontSize: '0.75rem' }}>CALL</button>
+                  <button className="btn-gradient-primary" style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', fontWeight: '800', fontSize: '0.8rem', letterSpacing: '0.5px' }}>CALL</button>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="glass-card" style={{ padding: '1.5rem', borderRadius: '24px', background: 'linear-gradient(135deg, var(--accent-primary) 0%, #4f46e5 100%)', color: 'white', border: 'none' }}>
-            <h3 style={{ color: 'white', fontSize: '1.1rem', fontWeight: '900', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-              Live Support
-            </h3>
-            <p style={{ opacity: 0.9, marginBottom: '1rem', fontSize: '0.85rem' }}>Our team is available 24/7 for concerns.</p>
-            <button className="btn" style={{ background: 'white', color: 'var(--accent-primary)', padding: '0.7rem', width: '100%', fontWeight: '900', borderRadius: '12px', border: 'none', fontSize: '0.85rem' }}>Start Live Chat</button>
+          <div className="glass-card-premium" style={{ padding: '2rem', background: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)', color: 'white', border: 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ padding: '0.75rem', background: 'rgba(255, 255, 255, 0.2)', borderRadius: '14px' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              </div>
+              <h3 style={{ color: 'white', fontSize: '1.4rem', fontWeight: '900' }}>Live Support</h3>
+            </div>
+            <p style={{ opacity: 0.9, marginBottom: '2rem', fontSize: '1rem', lineHeight: '1.6', fontWeight: '500' }}>Need assistance with a non-emergency safety concern? Our team is online 24/7.</p>
+            <button className="btn" style={{ background: 'white', color: '#2563eb', padding: '1.2rem', width: '100%', fontWeight: '900', borderRadius: '18px', border: 'none', fontSize: '1rem', transition: 'all 0.3s ease', cursor: 'pointer', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>Start Live Chat</button>
           </div>
         </div>
       </div>
 
       {/* ── Incident Reporting Portal ── */}
-      <div className="glass-card" style={{ padding: '2rem 2.5rem', borderRadius: '32px', border: '1px solid var(--border-color)' }}>
-        <div style={{ marginBottom: '2rem' }}>
-          <h3 style={{ fontSize: '1.8rem', fontWeight: '950', letterSpacing: '-1px', marginBottom: '0.4rem' }}>📝 Confidential Reporting</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>All reports are encrypted and handled with strict confidentiality.</p>
+      <div className="glass-card-premium" style={{ padding: '3rem', border: '1px solid rgba(0, 176, 240, 0.1)' }}>
+        <div style={{ marginBottom: '3.5rem', display: 'flex', alignItems: 'flex-start', gap: '2rem' }}>
+          <div style={{ padding: '1rem', background: 'rgba(0, 176, 240, 0.1)', color: '#00b0f0', borderRadius: '20px' }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div>
+            <h3 style={{ fontSize: '2.2rem', fontWeight: '950', letterSpacing: '-1.5px', marginBottom: '0.6rem', color: '#1e293b' }}>Confidential Reporting</h3>
+            <p style={{ color: '#64748b', fontSize: '1.1rem', fontWeight: '500' }}>All reports are end-to-end encrypted and handled with absolute discretion.</p>
+          </div>
         </div>
 
-        <form onSubmit={handleIncidentSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+        <form onSubmit={handleIncidentSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2.2rem' }}>
             <div className="input-group">
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.6rem' }}>Classification</label>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.8rem', letterSpacing: '1px' }}>Classification</label>
               <select 
+                className="input-premium"
                 value={formData.type}
                 onChange={(e) => setFormData({...formData, type: e.target.value})}
-                style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '14px', color: 'var(--text-primary)', fontWeight: '700', outline: 'none' }}
               >
                 <option>Theft / Missing Item</option>
                 <option>Harassment</option>
@@ -168,38 +242,44 @@ const Safety = () => {
               </select>
             </div>
             <div className="input-group">
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.6rem' }}>Location</label>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.8rem', letterSpacing: '1px' }}>Location</label>
               <input 
+                className="input-premium"
                 type="text" 
                 placeholder="e.g. Block B, 4th Floor" 
                 value={formData.location}
                 onChange={(e) => setFormData({...formData, location: e.target.value})}
-                style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '14px', color: 'var(--text-primary)', fontWeight: '700', outline: 'none' }}
                 required
               />
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2.2rem' }}>
             <div className="input-group">
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.6rem' }}>Detailed Report</label>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.8rem', letterSpacing: '1px' }}>Detailed Report</label>
               <textarea 
-                rows="4" 
-                placeholder="Describe what happened..."
+                className="input-premium"
+                rows="5" 
+                placeholder="Please provide as much detail as possible..."
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
-                style={{ width: '100%', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '14px', color: 'var(--text-primary)', fontWeight: '600', outline: 'none', resize: 'none' }}
                 required
+                style={{ resize: 'none' }}
               ></textarea>
             </div>
             
             <button 
               type="submit" 
-              className="btn btn-primary" 
+              className="btn-gradient-primary" 
               disabled={incidentSubmitted}
-              style={{ padding: '1.2rem', fontWeight: '950', borderRadius: '16px', fontSize: '1rem', marginTop: 'auto' }}
+              style={{ padding: '1.4rem', fontWeight: '950', borderRadius: '20px', fontSize: '1.1rem', letterSpacing: '1px', marginTop: 'auto' }}
             >
-              {incidentSubmitted ? '🔐 SECURING...' : 'SUBMIT REPORT'}
+              {incidentSubmitted ? (
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+                  <svg className="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+                  SECURING...
+                </span>
+              ) : 'SUBMIT REPORT'}
             </button>
           </div>
         </form>
