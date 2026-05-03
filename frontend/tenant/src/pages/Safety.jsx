@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import API from '../api/axios';
 
 const Safety = () => {
   const [sosProgress, setSosProgress] = useState(0);
@@ -40,14 +41,24 @@ const Safety = () => {
     description: '',
   });
 
-  const handleIncidentSubmit = (e) => {
+  const handleIncidentSubmit = async (e) => {
     e.preventDefault();
     setIncidentSubmitted(true);
-    setTimeout(() => {
-      setIncidentSubmitted(false);
+    try {
+      await API.post('/confidential-reports', {
+        classification: formData.type,
+        location: formData.location,
+        description: formData.description,
+        submittedBy: 'Tenant'
+      });
       alert('Your confidential report has been submitted to the Livora Safety Team.');
       setFormData({ type: 'Theft / Missing Item', location: '', description: '' });
-    }, 2000);
+    } catch (err) {
+      console.error('Error submitting report:', err);
+      alert('Failed to submit report. Please try again later.');
+    } finally {
+      setIncidentSubmitted(false);
+    }
   };
 
   return (

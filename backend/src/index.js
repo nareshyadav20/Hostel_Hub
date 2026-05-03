@@ -29,6 +29,7 @@ const settingsRoutes = require('./routes/settingsRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
 const transferRoutes = require('./routes/transferRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
+const confidentialReportRoutes = require('./routes/confidentialReportRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -42,6 +43,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/transfers', transferRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/confidential-reports', confidentialReportRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

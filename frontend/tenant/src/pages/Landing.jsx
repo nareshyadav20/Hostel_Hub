@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
 import SearchOverlay from '../components/SearchOverlay';
 import './Landing.css';
+import { MOCK_HOSTELS } from '../utils/mockData';
 
 // Import images
 import studentImg from '../assets/student_cat.png';
@@ -24,43 +25,51 @@ const Landing = () => {
   const [sharingTypes, setSharingTypes] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 60000]);
 
-  const hostels = [
-    { id: 1, city: 'Bengaluru', name: 'Livora Elite - Koramangala', locality: 'Koramangala', rating: 4.8, price: 12500, img: heroBg, amenities: ['Free WiFi', 'A/C', 'Mess', 'Gym'], gender: 'Unisex', category: 'Professional' },
-    { id: 2, city: 'Bengaluru', name: 'Modern Stay for Students', locality: 'Indiranagar', rating: 4.5, price: 8500, img: studentImg, amenities: ['Laundry', 'Study Room', '24/7 Security'], gender: 'Women', category: 'Student' },
-    { id: 3, city: 'Bengaluru', name: 'Professional Co-Living', locality: 'HSR Layout', rating: 4.6, price: 14000, img: professionalImg, amenities: ['Workstations', 'High-speed WiFi', 'Cafe'], gender: 'Men', category: 'Professional' },
-    { id: 4, city: 'Bengaluru', name: 'The Hive - Whitefield', locality: 'Whitefield', rating: 4.7, price: 11000, img: heroBg, amenities: ['Gaming Zone', 'Power Backup', 'Housekeeping'], gender: 'Unisex', category: 'Professional' },
-    { id: 5, city: 'Hyderabad', name: 'Zenith Living Hyderabad', locality: 'Gachibowli', rating: 4.9, price: 15500, img: studentImg, amenities: ['Premium Mess', 'Swimming Pool', 'Yoga Deck', 'Gym', 'Food', 'AC'], gender: 'Unisex', category: 'Professional' },
-    { id: 6, city: 'Mumbai', name: 'Urban Den Mumbai', locality: 'Andheri West', rating: 4.4, price: 18000, img: professionalImg, amenities: ['Co-working Space', 'Gym', 'Terrace Garden'], gender: 'Men', category: 'Professional' },
-    { id: 7, city: 'Hyderabad', name: 'Stellar Suites', locality: 'Banjara Hills', rating: 4.7, price: 16000, img: heroBg, amenities: ['Jacuzzi', 'Mini Theater', 'Valet', 'Gym', 'AC'], gender: 'Unisex', category: 'Professional' },
-    { id: 8, city: 'Pune', name: 'The Nest - Pune', locality: 'Viman Nagar', rating: 4.3, price: 9000, img: studentImg, amenities: ['Library', 'Music Room', 'Mess'], gender: 'Women', category: 'Student' },
-    { id: 9, city: 'Bengaluru', name: 'Vibe Residency', locality: 'Koramangala', rating: 4.6, price: 13000, img: professionalImg, amenities: ['EV Charging', 'Smart Locks', 'Cafe'], gender: 'Unisex', category: 'Professional' },
-    { id: 10, city: 'Delhi', name: 'Aura Living', locality: 'Gurugram', rating: 4.8, price: 19500, img: heroBg, amenities: ['Private Balcony', 'Chef', 'Gym'], gender: 'Unisex', category: 'Professional' },
-    { id: 11, city: 'Bengaluru', name: 'Campus Core', locality: 'Manipal', rating: 4.5, price: 7500, img: studentImg, amenities: ['Shuttle', 'Study Hall', 'Mess'], gender: 'Men', category: 'Student' },
-    { id: 12, city: 'Mumbai', name: 'Metro Hub Mumbai', locality: 'Powai', rating: 4.5, price: 17000, img: professionalImg, amenities: ['Business Center', 'Rooftop Pool'], gender: 'Unisex', category: 'Professional' },
-    { id: 13, city: 'Bengaluru', name: 'Serene Stays', locality: 'Whitefield', rating: 4.7, price: 14500, img: heroBg, amenities: ['Garden', 'Yoga', 'High-speed WiFi'], gender: 'Unisex', category: 'Professional' },
-    { id: 14, city: 'Chennai', name: 'Zest Living', locality: 'OMR', rating: 4.4, price: 10500, img: studentImg, amenities: ['Game Room', 'Mess', 'A/C'], gender: 'Men', category: 'Student' },
-    { id: 15, city: 'Delhi', name: 'Nexus Co-Living', locality: 'Noida', rating: 4.6, price: 12000, img: professionalImg, amenities: ['Work Pods', 'Gym', 'Laundry'], gender: 'Unisex', category: 'Professional' },
-    { id: 16, city: 'Kolkata', name: 'Elite Abodes', locality: 'Salt Lake', rating: 4.8, price: 15000, img: heroBg, amenities: ['Theater', 'Mess', 'Gym'], gender: 'Unisex', category: 'Professional' },
-    { id: 17, city: 'Hyderabad', name: 'Cyber Hub Stay', locality: 'HITEC City', rating: 4.6, price: 11500, img: professionalImg, amenities: ['High-speed WiFi', 'Cafe', 'Gym', 'AC'], gender: 'Men', category: 'Professional' },
-    { id: 18, city: 'Hyderabad', name: 'Kondapur Komfort', locality: 'Kondapur', rating: 4.4, price: 9500, img: studentImg, amenities: ['Mess', 'Laundry', 'Security', 'Food'], gender: 'Women', category: 'Student' },
-    { id: 19, city: 'Hyderabad', name: 'Gowlidoddy Grand', locality: 'Gowlidoddy', rating: 4.5, price: 10000, img: heroBg, amenities: ['AC', 'Power Backup', 'Wifi'], gender: 'Unisex', category: 'Professional' },
-    { id: 20, city: 'Hyderabad', name: 'KPHB Residency', locality: 'KPHB', rating: 4.3, price: 8000, img: studentImg, amenities: ['Budget Stay', 'Clean Rooms', 'Mess', 'Food'], gender: 'Men', category: 'Student' },
-    { id: 21, city: 'Hyderabad', name: 'Journalist Colony Suites', locality: 'Journalist colony', rating: 4.7, price: 14500, img: professionalImg, amenities: ['Premium Decor', 'Parking', 'Gym', 'AC'], gender: 'Unisex', category: 'Professional' },
-    { id: 22, city: 'Hyderabad', name: 'KOKAPET Heights', locality: 'KOKAPET', rating: 4.8, price: 16500, img: heroBg, amenities: ['Swimming Pool', 'Luxury', 'Chef', 'Gym', 'Food', 'AC'], gender: 'Unisex', category: 'Professional' },
-    { id: 23, city: 'Hyderabad', name: 'Lanco Hills Living', locality: 'Lanco Hills Manikonda', rating: 4.6, price: 13500, img: studentImg, amenities: ['Scenic View', 'Gym', 'Wifi', 'Food'], gender: 'Women', category: 'Student' },
-    { id: 24, city: 'Hyderabad', name: 'Madhapur Metro View', locality: 'Madhapur', rating: 4.7, price: 12500, img: professionalImg, amenities: ['Metro Access', 'Gym', 'AC', 'Fridge'], gender: 'Unisex', category: 'Professional' },
-    { id: 25, city: 'Hyderabad', name: 'Manikonda Manor', locality: 'Manikonda', rating: 4.5, price: 11000, img: heroBg, amenities: ['Parking', 'Power Backup', 'AC'], gender: 'Unisex', category: 'Professional' },
-    { id: 26, city: 'Hyderabad', name: 'Miyapur Modern', locality: 'Miyapur', rating: 4.4, price: 9000, img: studentImg, amenities: ['Food', 'Laundry', 'Wifi'], gender: 'Men', category: 'Student' },
-    { id: 27, city: 'Hyderabad', name: 'Serilingampally Suites', locality: 'Serilingampally', rating: 4.6, price: 10500, img: professionalImg, amenities: ['Peaceful', 'AC', 'Parking'], gender: 'Unisex', category: 'Professional' }
-  ];
+
+
+  const [hostels, setHostels] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHostels = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/buildings');
+        const data = await response.json();
+        const mapped = data.map(h => ({
+          id: h._id,
+          city: h.locationCity || 'Bengaluru',
+          name: h.name,
+          locality: h.address,
+          rating: h.rating || 4.5,
+          price: h.startingPrice || 8000,
+          img: h.images?.[0] || heroBg,
+          amenities: h.amenities || [],
+          gender: h.genderType || 'Mixed',
+          category: h.category || 'Professional'
+        }));
+        
+        // Combine real data with mock data as fallback
+        setHostels([...mapped, ...MOCK_HOSTELS.map(h => ({
+          ...h,
+          img: h.img || heroBg // Ensure heroBg fallback
+        }))]);
+      } catch (err) {
+        console.error('Error fetching hostels:', err);
+        setHostels(MOCK_HOSTELS);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHostels();
+  }, []);
 
   let filteredHostels = hostels.filter(h => {
-    const matchesCity = h.city === selectedCity;
+    const matchesCity = h.city.toLowerCase() === selectedCity.toLowerCase();
     const matchesLocality = searchLocality ? h.locality.toLowerCase().includes(searchLocality.toLowerCase()) : true;
     const matchesProperty = searchProperty ? h.name.toLowerCase().includes(searchProperty.toLowerCase()) : true;
     const matchesGender = selectedGender ? (h.gender === selectedGender || h.gender === 'Unisex') : true;
     const matchesAmenities = selectedAmenities.length > 0 ? selectedAmenities.every(a => h.amenities.includes(a)) : true;
-    const matchesTab = activeTab === 'student' ? h.category === 'Student' : true;
+    const matchesTab = activeTab === 'student' ? h.category.toLowerCase() === 'student' : true;
     const matchesPrice = h.price >= priceRange[0] && h.price <= priceRange[1];
     return matchesCity && matchesLocality && matchesProperty && matchesGender && matchesAmenities && matchesTab && matchesPrice;
   });
@@ -258,32 +267,42 @@ const Landing = () => {
         </aside>
 
         <main className="hostels-grid">
-          {filteredHostels.map((hostel, index) => (
-            <div key={hostel.id} className="hostel-card-vertical fade-in-up" style={{ animationDelay: `${0.1 * index}s` }}>
-              <Link to={`/listing/${hostel.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div className="card-img-container-v">
-                  <img src={hostel.img} alt={hostel.name} />
-                  <div className="rating-badge-v">{hostel.rating} ★</div>
-                </div>
-                <div className="card-details-v">
-                  <p className="locality-v">{hostel.locality}</p>
-                  <h3>{hostel.name}</h3>
-                  <div className="amenities-row-v">
-                    {hostel.amenities.slice(0, 2).map((a, i) => (
-                      <span key={i}>{a}</span>
-                    ))}
-                  </div>
-                  <div className="price-booking-row-v">
-                    <div className="price-info-v">
-                      <span className="price-val-v">₹{hostel.price}</span>
-                      <span className="price-unit-v">/mo</span>
-                    </div>
-                    <button className="btn-view-v">Details</button>
-                  </div>
-                </div>
-              </Link>
+          {loading ? (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '5rem', color: '#00b0f0', fontWeight: '800' }}>
+              Finding the best stays for you...
             </div>
-          ))}
+          ) : filteredHostels.length > 0 ? (
+            filteredHostels.map((hostel, index) => (
+              <div key={hostel.id} className="hostel-card-vertical fade-in-up" style={{ animationDelay: `${0.1 * index}s` }}>
+                <Link to={`/listing/${hostel.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div className="card-img-container-v">
+                    <img src={hostel.img} alt={hostel.name} />
+                    <div className="rating-badge-v">{hostel.rating} ★</div>
+                  </div>
+                  <div className="card-details-v">
+                    <p className="locality-v">{hostel.locality}</p>
+                    <h3>{hostel.name}</h3>
+                    <div className="amenities-row-v">
+                      {hostel.amenities.slice(0, 2).map((a, i) => (
+                        <span key={i}>{a}</span>
+                      ))}
+                    </div>
+                    <div className="price-booking-row-v">
+                      <div className="price-info-v">
+                        <span className="price-val-v">₹{hostel.price}</span>
+                        <span className="price-unit-v">/mo</span>
+                      </div>
+                      <button className="btn-view-v">Details</button>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ))
+          ) : (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '5rem', color: '#64748B' }}>
+              No properties found in this area.
+            </div>
+          )}
         </main>
       </div>
 

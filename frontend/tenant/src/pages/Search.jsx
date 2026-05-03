@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
+import { MOCK_HOSTELS } from '../utils/mockData';
 
 /* ─── icons (SVG constants) ─── */
 const ICONS = {
@@ -18,37 +19,22 @@ const ICONS = {
   Luxury: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
 };
 
-const bNames = [
-  { id: 'b1', name: 'Alpha Tower', address: 'North Campus', desc: 'Premium Boys Hostel', gender: 'Boys', price: 6500 },
-  { id: 'b2', name: 'Beta Block', address: 'South Campus', desc: 'Standard Girls Hostel', gender: 'Girls', price: 5000 },
-  { id: 'b3', name: 'Gamma Guesthouse', address: 'West University', desc: 'Budget Student Stay', gender: 'Mixed', price: 4500 },
-  { id: 'b4', name: 'Delta Dorms', address: 'Technical Hub', desc: 'Professional Co-living', gender: 'Mixed', price: 8000 },
-  { id: 'b5', name: 'Epsilon Enclave', address: 'Down Town', desc: 'Luxury Executive Suite', gender: 'Mixed', price: 15500 },
-  { id: 'b6', name: 'Zeta Zone', address: 'Sector 12', desc: 'Quiet Residential Stay', gender: 'Mixed', price: 6000 },
-  { id: 'b7', name: 'Eta Heights', address: 'Main Market', desc: 'Centrally Located', gender: 'Mixed', price: 7500 },
-  { id: 'b8', name: 'Theta Terraces', address: 'Lake View', desc: 'Scenic View Residency', gender: 'Mixed', price: 9000 },
-  { id: 'b9', name: 'Iota Inn', address: 'Central Hub', desc: 'Modern Student Living', gender: 'Mixed', price: 5500 },
-  { id: 'b10', name: 'Kappa Korner', address: 'East Side', desc: 'Cozy Budget Rooms', gender: 'Mixed', price: 4000 },
-  { id: 'b11', name: 'Lambda Lodge', address: 'Science Park', desc: 'Researchers Choice', gender: 'Mixed', price: 8500 },
-  { id: 'b12', name: 'Mu Mansion', address: 'Royal Lane', desc: 'Premium Heritage Stay', gender: 'Mixed', price: 12000 }
-];
-
-const HOSTELS = bNames.map(b => ({
-  id: b.id,
-  name: b.name,
-  location: b.address,
-  city: 'bengaluru',
-  price: b.price,
-  gender: b.gender,
+const HOSTELS = MOCK_HOSTELS.map(h => ({
+  id: h.id,
+  name: h.name,
+  location: h.locality,
+  city: h.city.toLowerCase(),
+  price: h.price,
+  gender: h.gender,
   type: 'Premium',
-  category: b.price > 10000 ? 'luxury' : (b.price > 7000 ? 'work' : 'student'),
-  rating: (4 + Math.random()).toFixed(1),
-  popularityLabel: Math.random() > 0.5 ? 'High Demand' : null,
+  category: h.category.toLowerCase(),
+  rating: h.rating,
+  popularityLabel: h.rating > 4.8 ? 'High Demand' : null,
   occupancy: '85%',
   totalRooms: 10,
   totalBeds: 40,
   image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
-  amenities: ['WiFi', 'AC', 'Security', 'Food']
+  amenities: h.amenities || []
 }));
 
 const Search = () => {
