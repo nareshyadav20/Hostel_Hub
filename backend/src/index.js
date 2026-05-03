@@ -8,7 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const path = require('path');
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-// Connect to MongoDB
+// Connect to MongoDB (retries automatically if Atlas rejects — server stays alive)
 connectDB();
 
 const app = express();
