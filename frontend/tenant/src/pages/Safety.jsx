@@ -5,6 +5,7 @@ const Safety = () => {
   const [sosProgress, setSosProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
   const [incidentSubmitted, setIncidentSubmitted] = useState(false);
+  const timerRef = useRef(null);
   const sirenRef = useRef(new Audio('https://www.soundjay.com/emergency/sounds/siren-1.mp3'));
 
   const startHolding = () => {
@@ -178,6 +179,14 @@ const Safety = () => {
           >
             <span style={{ fontSize: '3.2rem', fontWeight: '950', letterSpacing: '2px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>SOS</span>
             <span style={{ fontSize: '0.7rem', fontWeight: '800', opacity: 0.9, marginTop: '0.2rem', letterSpacing: '1px' }}>HOLD 2S</span>
+            {isHolding && (
+              <div style={{
+                position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', fontWeight: '900'
+              }}>
+                {Math.ceil((100 - sosProgress) / 50)}s
+              </div>
+            )}
           </div>
           
           <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#e11d48', marginBottom: '1rem' }}>Emergency SOS</h2>
@@ -225,7 +234,15 @@ const Safety = () => {
               <h3 style={{ color: 'white', fontSize: '1.4rem', fontWeight: '900' }}>Live Support</h3>
             </div>
             <p style={{ opacity: 0.9, marginBottom: '2rem', fontSize: '1rem', lineHeight: '1.6', fontWeight: '500' }}>Need assistance with a non-emergency safety concern? Our team is online 24/7.</p>
-            <button className="btn" style={{ background: 'white', color: '#2563eb', padding: '1.2rem', width: '100%', fontWeight: '900', borderRadius: '18px', border: 'none', fontSize: '1rem', transition: 'all 0.3s ease', cursor: 'pointer', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>Start Live Chat</button>
+            <a 
+              href="https://wa.me/919876543210?text=I%20need%20safety%20assistance" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="btn" 
+              style={{ display: 'block', textDecoration: 'none', textAlign: 'center', background: 'white', color: '#2563eb', padding: '1.2rem', width: '100%', fontWeight: '900', borderRadius: '18px', border: 'none', fontSize: '1rem', transition: 'all 0.3s ease', cursor: 'pointer', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}
+            >
+              Start WhatsApp Support
+            </a>
           </div>
         </div>
       </div>

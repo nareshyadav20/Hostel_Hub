@@ -14,6 +14,7 @@ const Payments = () => {
   const [tenantData, setTenantData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState([]);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
 
   useEffect(() => {
     const fetchPaymentInfo = async () => {
@@ -227,7 +228,7 @@ const Payments = () => {
                   <td style={{ padding: '1.5rem 2.5rem', color: '#1e293b', fontWeight: '800' }}>{p.date}</td>
                   <td style={{ padding: '1.5rem 2.5rem', fontWeight: '950', fontSize: '1.3rem', color: '#1e293b' }}>₹{p.amount.toLocaleString()}</td>
                   <td style={{ padding: '1.5rem 2.5rem', color: '#64748b', fontWeight: '600' }}>UPI / Razorpay</td>
-                  <td style={{ padding: '1.5rem 2.5rem' }}>
+                  <td style={{ padding: '1.5rem 2.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <span style={{ 
                       padding: '0.6rem 1.4rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '900',
                       background: 'rgba(16, 185, 129, 0.1)', color: '#10b981',
@@ -236,6 +237,12 @@ const Payments = () => {
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                       {p.status}
                     </span>
+                    <button 
+                      onClick={() => setSelectedInvoice(p)}
+                      style={{ background: 'transparent', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '800', cursor: 'pointer' }}
+                    >
+                      View Details
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -302,6 +309,57 @@ const Payments = () => {
             >
               {isScanning ? '⏳ Processing...' : 'Send Link to Parent'}
             </button>
+          </div>
+        </div>
+      )}
+      {/* ── Invoice Detail Modal ── */}
+      {selectedInvoice && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+          <div className="glass-card-premium fade-in" style={{ width: '100%', maxWidth: '600px', padding: '3.5rem', background: 'white', position: 'relative' }}>
+            <button 
+              onClick={() => setSelectedInvoice(null)} 
+              style={{ position: 'absolute', top: '2rem', right: '2rem', background: '#f1f5f9', border: 'none', width: '44px', height: '44px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
+              title="Close/Back"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <div style={{ width: '70px', height: '70px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: '#10b981' }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
+              <h2 style={{ fontSize: '2.2rem', fontWeight: '950', letterSpacing: '-1.5px' }}>Payment Successful</h2>
+              <p style={{ color: '#64748b', fontWeight: '600', marginTop: '0.5rem' }}>Transaction ID: {selectedInvoice.id}</p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', background: '#f8fafc', padding: '2rem', borderRadius: '24px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#94a3b8', fontWeight: '700', fontSize: '0.85rem', textTransform: 'uppercase' }}>Amount Paid</span>
+                <span style={{ fontWeight: '900', fontSize: '1.2rem' }}>{selectedInvoice.amount}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#94a3b8', fontWeight: '700', fontSize: '0.85rem', textTransform: 'uppercase' }}>Billing Month</span>
+                <span style={{ fontWeight: '800' }}>{selectedInvoice.month}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#94a3b8', fontWeight: '700', fontSize: '0.85rem', textTransform: 'uppercase' }}>Method</span>
+                <span style={{ fontWeight: '800' }}>{selectedInvoice.method} / Razorpay</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#94a3b8', fontWeight: '700', fontSize: '0.85rem', textTransform: 'uppercase' }}>Date & Time</span>
+                <span style={{ fontWeight: '800' }}>{selectedInvoice.date}, 10:30 AM</span>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem' }}>
+              <button style={{ flex: 1, padding: '1.2rem', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '18px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 10px 25px rgba(14, 165, 233, 0.2)' }}>Download Receipt</button>
+              <button 
+                onClick={() => setSelectedInvoice(null)}
+                style={{ flex: 1, padding: '1.2rem', background: 'white', color: '#ef4444', border: '2px solid #fee2e2', borderRadius: '18px', fontWeight: '900', cursor: 'pointer' }}
+              >
+                Undo / Back
+              </button>
+            </div>
           </div>
         </div>
       )}

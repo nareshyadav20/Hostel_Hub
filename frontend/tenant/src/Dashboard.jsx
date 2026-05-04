@@ -176,8 +176,8 @@ function Dashboard() {
   };
 
   const handleInvite = () => {
-    showToast('Referral link copied to clipboard! Share it with your friends.');
-    navigator.clipboard.writeText('https://livora.com/refer/uma2026');
+    const message = encodeURIComponent("Hey! Join me at Hostel Hub. It's the best digital hostel experience. Use my link to get 100 points: https://hostelhub.com/refer/uma2026");
+    window.open(`https://wa.me/?text=${message}`, '_blank');
   };
 
   if (loading) return <div className="dashboard-container"><div className="loading-spinner">Loading Portal...</div></div>;

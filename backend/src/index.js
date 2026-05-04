@@ -32,6 +32,7 @@ const serviceRoutes = require('./routes/serviceRoutes');
 const confidentialReportRoutes = require('./routes/confidentialReportRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const tenantPortalRoutes = require('./routes/tenantPortalRoutes');
 
 
 app.use('/api/auth', authRoutes);
@@ -49,6 +50,7 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/confidential-reports', confidentialReportRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/tenant-portal', tenantPortalRoutes);
 
 
 app.get('/api/ping', (req, res) => {
