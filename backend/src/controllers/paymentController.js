@@ -1,5 +1,5 @@
 const Payment = require('../models/Payment');
-const Tenant = require('../models/Tenant');
+const Tenant = require('../models/tenant/Tenant');
 
 const createPayment = async (req, res) => {
   try {

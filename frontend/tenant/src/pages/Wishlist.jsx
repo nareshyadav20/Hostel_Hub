@@ -17,7 +17,7 @@ const Wishlist = () => {
   }, [wishlist]);
 
   const handleRemove = (id) => {
-    setWishlist((prev) => prev.filter((item) => item.id !== id));
+    setWishlist((prev) => prev.filter((item) => (item.id || item._id) !== id));
   };
 
   return (
@@ -45,43 +45,46 @@ const Wishlist = () => {
         </div>
       ) : (
         <div className="wishlist-results">
-          {wishlist.map((hostel) => (
-            <div key={hostel.id} className="pro-wishlist-card">
-              <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image || 'https://images.unsplash.com/photo-1555854817-5b27344481c7?auto=format&fit=crop&q=80&w=1000'})` }}>
-                <div className="rating-tag">{hostel.rating} ★</div>
-                <button className="remove-btn" onClick={() => handleRemove(hostel.id)} title="Remove from Wishlist">
-                  <ICONS.Trash />
-                </button>
+          {wishlist.map((hostel) => {
+            const hostelId = hostel.id || hostel._id;
+            return (
+              <div key={hostelId} className="pro-wishlist-card">
+                <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image || 'https://images.unsplash.com/photo-1555854817-5b27344481c7?auto=format&fit=crop&q=80&w=1000'})` }}>
+                  <div className="rating-tag">{hostel.rating} ★</div>
+                  <button className="remove-btn" onClick={() => handleRemove(hostelId)} title="Remove from Wishlist">
+                    <ICONS.Trash />
+                  </button>
+                </div>
+
+                <div className="pro-card-content">
+                  <div className="pro-card-header">
+                    <div>
+                      <h2 className="hostel-name">{hostel.name}</h2>
+                      <p className="hostel-loc"><ICONS.Location /> {hostel.location}</p>
+                    </div>
+                    <div className="status-badge">Ready to Book</div>
+                  </div>
+
+                  <div className="hostel-specs">
+                    <div className="spec-item">{hostel.gender}</div>
+                    <div className="spec-item">{hostel.type}</div>
+                    <div className="spec-item">Instant Confirmation</div>
+                  </div>
+
+                  <div className="pro-card-footer">
+                    <div className="price-tag">
+                      <span className="price-val">₹{hostel.price.toLocaleString()}</span>
+                      <span className="price-period">/mo</span>
+                    </div>
+                    <div className="card-actions">
+                      <Link to={`/booking/${hostelId}`} className="btn-book-now">Book Now</Link>
+                      <Link to={`/listing/${hostelId}`} className="btn-details-outline">View Details</Link>
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              <div className="pro-card-content">
-                <div className="pro-card-header">
-                  <div>
-                    <h2 className="hostel-name">{hostel.name}</h2>
-                    <p className="hostel-loc"><ICONS.Location /> {hostel.location}</p>
-                  </div>
-                  <div className="status-badge">Ready to Book</div>
-                </div>
-
-                <div className="hostel-specs">
-                  <div className="spec-item">{hostel.gender}</div>
-                  <div className="spec-item">{hostel.type}</div>
-                  <div className="spec-item">Instant Confirmation</div>
-                </div>
-
-                <div className="pro-card-footer">
-                  <div className="price-tag">
-                    <span className="price-val">₹{hostel.price.toLocaleString()}</span>
-                    <span className="price-period">/mo</span>
-                  </div>
-                  <div className="card-actions">
-                    <Link to="/booking" className="btn-book-now">Book Now</Link>
-                    <Link to={`/listing/${hostel.id}`} className="btn-details-outline">View Details</Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

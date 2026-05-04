@@ -49,14 +49,21 @@ const Listing = () => {
   const [openPolicy, setOpenPolicy] = useState(0);
 
   useEffect(() => {
-    const fetchHostelDetails = async () => {
-      try {
-        let b;
-        // Check if ID is a mock ID (e.g., b1, b2, etc.)
-        if (id.startsWith('b') && id.length <= 3) {
-          const mock = MOCK_SEED_DETAILS.find(m => m.id === id);
-          if (mock) {
-            b = {
+      const fetchHostelDetails = async () => {
+        if (!id || id === 'undefined' || id === 'null') {
+          setLoading(false);
+          return;
+        }
+        try {
+          console.log("Listing Page - Fetching details for ID:", id);
+          let b;
+          // Check if ID is a mock ID (e.g., b1, b2, etc.)
+          if (id.startsWith('b') && id.length <= 4) {
+            console.log("Detected Mock ID");
+            const mock = MOCK_SEED_DETAILS.find(m => m.id === id);
+            if (mock) {
+              console.log("Found in MOCK_SEED_DETAILS");
+              b = {
               _id: mock.id,
               name: mock.name,
               address: mock.location,

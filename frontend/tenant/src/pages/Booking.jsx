@@ -22,6 +22,7 @@ const Booking = () => {
     idProof: null,
     profilePhoto: null
   });
+  const [bookings, setBookings] = useState([]);
 
   const roomOptions = [
     { id: 'Single', name: 'Single Elite', price: '18000', desc: 'Maximum Privacy & Luxury', icon: '💎', color: '#8b5cf6' },
@@ -48,7 +49,33 @@ const Booking = () => {
       }
     };
     if (buildingId) fetchHostel();
-    else setLoading(false);
+    else {
+      // Fetch bookings for "My Bookings" view
+      const fetchBookings = async () => {
+        try {
+          let tId = storedUser.id || storedUser._id;
+          try {
+            const profileRes = await API.get('/tenants/me');
+            if (profileRes.data) {
+              if (profileRes.data._id) tId = profileRes.data._id;
+              setUser(prev => ({ ...prev, ...profileRes.data }));
+            }
+          } catch (e) { console.warn("Fallback to stored user ID"); }
+
+          if (tId) {
+            console.log("Fetching bookings for tenant:", tId);
+            const res = await API.get(`/bookings/me?tenantId=${tId}`);
+            console.log("Bookings found:", res.data.length);
+            setBookings(res.data);
+          }
+        } catch (err) {
+          console.error('Error fetching bookings:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchBookings();
+    }
   }, [navigate, buildingId]);
 
   const handleChange = (e) => {
@@ -78,7 +105,7 @@ const Booking = () => {
         </header>
 
         <div className="glass-card" style={{ padding: '3rem', borderRadius: '32px' }}>
-          {user.room ? (
+          {user.room && user.room !== '' ? (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
               <div>
                 <h2 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '1.5rem' }}>Active Stay</h2>
@@ -113,6 +140,43 @@ const Booking = () => {
                 </div>
                 <div className="summary-divider"></div>
                 <Link to="/payments" className="btn btn-primary" style={{ textAlign: 'center', textDecoration: 'none', display: 'block', marginTop: '1rem' }}>View Full History</Link>
+              </div>
+            </div>
+          ) : bookings && bookings.length > 0 ? (
+            <div className="fade-in">
+              <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                <h2 style={{ fontSize: '2.5rem', fontWeight: '950', letterSpacing: '-1.5px', marginBottom: '0.5rem' }}>Upcoming Reservations</h2>
+                <p style={{ color: 'var(--text-muted)' }}>Your booked slots are listed below. Our team is preparing your room!</p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2.5rem' }}>
+                {bookings.map(b => (
+                  <div key={b._id} className="glass-card" style={{ padding: '2.5rem', borderRadius: '32px', border: '1px solid var(--border-color)', position: 'relative', overflow: 'hidden', background: 'white', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+                    <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
+                      <span className="badge" style={{ background: b.status === 'Confirmed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)', color: b.status === 'Confirmed' ? '#22c55e' : '#f59e0b', padding: '0.5rem 1.2rem', borderRadius: '12px', fontWeight: '800', fontSize: '0.75rem' }}>
+                        {b.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div style={{ width: '60px', height: '60px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', marginBottom: '1.5rem' }}>🏨</div>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e293b', marginBottom: '0.5rem' }}>{b.buildingId?.name || 'HostelHub Residence'}</h3>
+                    <p style={{ color: 'var(--accent-primary)', fontWeight: '700', fontSize: '0.95rem', marginBottom: '2rem' }}>{b.category}</p>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div className="summary-row" style={{ margin: 0 }}>
+                        <span>Move-in Date</span>
+                        <strong style={{ color: '#1e293b' }}>{b.moveInDate}</strong>
+                      </div>
+                      <div className="summary-row" style={{ margin: 0 }}>
+                        <span>Booking ID</span>
+                        <strong style={{ color: '#64748b', fontSize: '0.85rem' }}>#{b._id.slice(-8).toUpperCase()}</strong>
+                      </div>
+                      <div className="summary-divider" style={{ margin: '1rem 0' }}></div>
+                      <div className="summary-row" style={{ margin: 0, alignItems: 'baseline' }}>
+                        <span>Total Paid</span>
+                        <strong style={{ color: 'var(--accent-primary)', fontSize: '1.8rem', fontWeight: '950' }}>₹{b.totalAmount.toLocaleString()}</strong>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
@@ -319,12 +383,14 @@ const Booking = () => {
                     if (profileRes.data && profileRes.data._id) tId = profileRes.data._id;
                   } catch (e) { console.warn("Fallback to user ID"); }
 
-                  await API.post('/payments', {
+                  await API.post('/bookings', {
                     tenantId: tId,
-                    amount: parseInt(currentRoom.price) + 2000,
-                    type: 'Booking',
                     buildingId: buildingId,
-                    category: formData.roomType,
+                    category: currentRoom.name,
+                    moveInDate: formData.moveInDate || 'TBD',
+                    securityDeposit: parseInt(currentRoom.price),
+                    onboardingFee: 2000,
+                    totalAmount: parseInt(currentRoom.price) + 2000,
                     method: 'UPI'
                   });
 
