@@ -96,6 +96,8 @@ const Booking = () => {
 
   const currentRoom = roomOptions.find(r => r.id === formData.roomType) || roomOptions[1];
 
+  if (loading) return <div className="dashboard-container"><div className="loading-spinner">Initializing booking...</div></div>;
+
   if (!buildingId) {
     return (
       <div className="booking-page-premium fade-in dashboard-container">
@@ -197,8 +199,6 @@ const Booking = () => {
       </div>
     );
   }
-
-  if (loading) return <div className="dashboard-container"><div className="loading-spinner">Initializing booking...</div></div>;
 
   return (
     <div className="booking-page fade-in dashboard-container" style={{ position: 'relative', paddingBottom: '8rem' }}>
