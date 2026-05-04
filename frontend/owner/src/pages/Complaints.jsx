@@ -18,11 +18,15 @@ const MOCK_COMPLAINTS = [
 const Complaints = () => {
   const { buildingId: urlBuildingId } = useParams();
   const navigate = useNavigate();
+  
+  // Step 1: Restore context
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
   const [complaints, setComplaints] = useState([]);
   const [buildings, setBuildings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Maintenance');
-  const [filterBuilding, setFilterBuilding] = useState(urlBuildingId || 'all');
+  const [filterBuilding, setFilterBuilding] = useState(activeBuildingId || 'all');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchComplaints = useCallback(async (showLoading = true) => {

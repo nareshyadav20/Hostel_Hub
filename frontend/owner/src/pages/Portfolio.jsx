@@ -594,82 +594,199 @@ const Portfolio = () => {
         ))}
       </div>
 
-      {/* DRAFTS PANEL */}
+      {/* SAVED DRAFTS — FULL SCREEN OVERLAY */}
       <AnimatePresence>
         {showDrafts && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} style={{ marginBottom: '2rem' }}>
-            <div className="card" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.2rem' }}>
-                <span style={{ fontSize: '1.2rem' }}>📂</span>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>Saved Hostel Drafts</h3>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{drafts.length + (isAddModalOpen ? 1 : 0)} pending</span>
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDrafts(false)}
+              style={{
+                position: 'fixed', inset: 0,
+                background: 'rgba(0,0,0,0.55)',
+                backdropFilter: 'blur(6px)',
+                zIndex: 1500
+              }}
+            />
+
+            {/* Overlay Panel — slides up from bottom, covers full screen */}
+            <motion.div
+              initial={{ opacity: 0, y: '100%' }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 1501,
+                display: 'flex',
+                flexDirection: 'column',
+                background: 'var(--bg-primary)',
+                overflow: 'hidden'
+              }}
+            >
+              {/* ── HEADER ── */}
+              <div style={{
+                padding: '1.5rem 2rem',
+                borderBottom: '1px solid var(--border-color)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: 'var(--bg-secondary)',
+                flexShrink: 0
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>📂</div>
+                  <div>
+                    <h2 style={{ fontSize: '1.4rem', fontWeight: '900', margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>Saved Hostel Drafts</h2>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, fontWeight: '600' }}>
+                      {drafts.length} draft{drafts.length !== 1 ? 's' : ''} saved — click any card to continue filling details
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDrafts(false)}
+                  style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                >
+                  <X size={20} />
+                </button>
               </div>
 
-              {/* IN-PROGRESS CARD — shown when form is currently open */}
-              {isAddModalOpen && (
-                <div style={{ marginBottom: '1rem', padding: '1.2rem', borderRadius: '12px', border: '2px solid #3B82F6', background: 'linear-gradient(135deg, #EFF6FF, #F0FDF4)', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#1D4ED8' }}>{formData.name || '✍️ Untitled — Currently Editing'}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '0.2rem' }}>Currently being filled</div>
-                    </div>
-                    <span style={{ padding: '0.25rem 0.6rem', borderRadius: '20px', background: '#DBEAFE', color: '#1D4ED8', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                      ⏳ In Progress
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.78rem', color: '#475569', fontWeight: '600' }}>📍 Step: {STEP_CONFIG[currentStep - 1]?.title}</div>
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '4px', fontWeight: '700' }}>
-                      <span>Progress</span>
-                      <span style={{ color: '#3B82F6' }}>{Math.round((currentStep / 11) * 100)}%</span>
-                    </div>
-                    <div style={{ height: '6px', background: '#DBEAFE', borderRadius: '100px', overflow: 'hidden' }}>
-                      <div style={{ width: `${Math.round((currentStep / 11) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #6366F1)', borderRadius: '100px', transition: 'width 0.6s ease' }} />
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowDrafts(false)}
-                    style={{ padding: '0.55rem', borderRadius: '8px', background: '#3B82F6', color: 'white', border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.8rem' }}
-                  >
-                    → Continue Editing
-                  </button>
-                </div>
-              )}
-              {drafts.length === 0 ? (
-                <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem', fontSize: '0.9rem' }}>No saved drafts yet. Start creating a hostel and save your progress.</p>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
-                  {drafts.map(draft => {
-                    const progress = Math.round(((draft.lastStep || 1) / 11) * 100);
-                    const stepLabel = STEP_CONFIG[(draft.lastStep || 1) - 1]?.title || 'Basic Info';
-                    const ago = draft.updatedAt ? (() => { const d = (Date.now() - new Date(draft.updatedAt)) / 60000; return d < 60 ? `${Math.round(d)}m ago` : `${Math.round(d/60)}h ago`; })() : 'Recently';
-                    return (
-                      <div key={draft._id} style={{ padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              {/* ── CONTENT ── */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '2rem' }}>
+
+                {/* IN-PROGRESS CARD — wizard currently open */}
+                {isAddModalOpen && (
+                  <div style={{ marginBottom: '2rem' }}>
+                    <p style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.8rem' }}>Currently Editing</p>
+                    <motion.div
+                      whileHover={{ y: -3, boxShadow: '0 12px 32px rgba(59,130,246,0.2)' }}
+                      onClick={() => setShowDrafts(false)}
+                      style={{ padding: '1.4rem', borderRadius: '16px', border: '2px solid #3B82F6', background: 'linear-gradient(135deg, #EFF6FF, #F0FDF4)', display: 'flex', flexDirection: 'column', gap: '0.8rem', cursor: 'pointer', maxWidth: '480px' }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>✍️</div>
                           <div>
-                            <div style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-primary)' }}>{draft.name || 'Untitled Draft'}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Last: {ago}</div>
-                          </div>
-                          <span style={{ padding: '0.25rem 0.6rem', borderRadius: '20px', background: '#FEF3C7', color: '#D97706', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase' }}>Draft</span>
-                        </div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: '600' }}>📍 Step: {stepLabel}</div>
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '4px', fontWeight: '700' }}><span>Progress</span><span style={{ color: 'var(--accent-primary)' }}>{progress}%</span></div>
-                          <div style={{ height: '6px', background: 'var(--bg-secondary)', borderRadius: '100px', overflow: 'hidden' }}>
-                            <div style={{ width: `${progress}%`, height: '100%', background: 'linear-gradient(90deg, #6366F1, #3B82F6)', borderRadius: '100px', transition: 'width 0.6s ease' }} />
+                            <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#1D4ED8' }}>{formData.name || 'Untitled — Currently Editing'}</div>
+                            <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.15rem' }}>Currently being filled</div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '0.6rem', marginTop: '0.2rem' }}>
-                          <button onClick={() => resumeDraft(draft)} style={{ flex: 2, padding: '0.55rem', borderRadius: '8px', background: 'var(--accent-primary)', color: 'white', border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.8rem' }}>▶ Resume</button>
-                          <button onClick={() => deleteDraft(draft._id)} style={{ flex: 1, padding: '0.55rem', borderRadius: '8px', background: '#FEE2E2', color: '#EF4444', border: 'none', fontWeight: '700', cursor: 'pointer', fontSize: '0.8rem' }}>🗑 Delete</button>
+                        <span style={{ padding: '0.25rem 0.6rem', borderRadius: '20px', background: '#DBEAFE', color: '#1D4ED8', fontSize: '0.65rem', fontWeight: '800' }}>⏳ In Progress</span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#475569', fontWeight: '600' }}>📍 Step: <b>{STEP_CONFIG[currentStep - 1]?.title}</b></div>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '6px', fontWeight: '700' }}>
+                          <span>Progress</span><span style={{ color: '#3B82F6' }}>{Math.round((currentStep / 11) * 100)}%</span>
+                        </div>
+                        <div style={{ height: '7px', background: '#DBEAFE', borderRadius: '100px', overflow: 'hidden' }}>
+                          <div style={{ width: `${Math.round((currentStep / 11) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #6366F1)', borderRadius: '100px' }} />
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </motion.div>
+                      <div style={{ padding: '0.65rem', borderRadius: '10px', background: '#3B82F6', color: 'white', fontWeight: '800', fontSize: '0.82rem', textAlign: 'center' }}>
+                        → Continue Editing
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+
+                {/* SAVED DRAFTS GRID */}
+                <p style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1rem' }}>
+                  {drafts.length > 0 ? 'Saved Drafts' : ''}
+                </p>
+
+                {drafts.length === 0 && !isAddModalOpen ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '40vh', gap: '1rem' }}>
+                    <div style={{ fontSize: '4rem', opacity: 0.3 }}>📂</div>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-secondary)', margin: 0 }}>No saved drafts yet</h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Start creating a hostel and save your progress to resume later.</p>
+                    <button onClick={() => { setShowDrafts(false); openFreshForm(); }} style={{ marginTop: '0.5rem', padding: '0.8rem 1.6rem', borderRadius: '12px', background: 'var(--accent-primary)', color: 'white', border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.9rem' }}>
+                      + Create New Hostel
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                    {drafts.map(draft => {
+                      const progress = Math.round(((draft.lastStep || 1) / 11) * 100);
+                      const stepLabel = STEP_CONFIG[(draft.lastStep || 1) - 1]?.title || 'Basic Info';
+                      const ago = draft.updatedAt ? (() => { const d = (Date.now() - new Date(draft.updatedAt)) / 60000; return d < 60 ? `${Math.round(d)}m ago` : `${Math.round(d/60)}h ago`; })() : 'Recently';
+                      return (
+                        <motion.div
+                          key={draft._id}
+                          whileHover={{ y: -5, boxShadow: '0 20px 48px rgba(99,102,241,0.2)', borderColor: '#6366F1' }}
+                          onClick={() => resumeDraft(draft)}
+                          style={{
+                            padding: '1.5rem',
+                            borderRadius: '18px',
+                            border: '1.5px solid var(--border-color)',
+                            background: 'var(--bg-secondary)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '1rem',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            transition: 'border-color 0.2s'
+                          }}
+                        >
+                          {/* Progress accent stripe at top */}
+                          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: `linear-gradient(90deg, #6366F1 ${progress}%, var(--border-color) ${progress}%)`, borderRadius: '4px 4px 0 0' }} />
+
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+                              <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', flexShrink: 0 }}>🏨</div>
+                              <div>
+                                <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>{draft.name || 'Untitled Draft'}</div>
+                                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Last saved {ago}</div>
+                              </div>
+                            </div>
+                            <span style={{ padding: '0.3rem 0.7rem', borderRadius: '20px', background: '#FEF3C7', color: '#D97706', fontSize: '0.68rem', fontWeight: '800', textTransform: 'uppercase', flexShrink: 0 }}>Draft</span>
+                          </div>
+
+                          <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <span style={{ color: 'var(--accent-primary)' }}>📍</span> Paused at: <b style={{ color: 'var(--text-primary)' }}>{stepLabel}</b>
+                          </div>
+
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '6px', fontWeight: '700' }}>
+                              <span style={{ color: 'var(--text-secondary)' }}>Completion</span>
+                              <span style={{ color: 'var(--accent-primary)', fontWeight: '900' }}>{progress}%</span>
+                            </div>
+                            <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '100px', overflow: 'hidden' }}>
+                              <div style={{ width: `${progress}%`, height: '100%', background: 'linear-gradient(90deg, #6366F1, #3B82F6)', borderRadius: '100px', transition: 'width 0.6s ease' }} />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '0.8rem' }}>
+                            <div style={{ flex: 1, padding: '0.75rem', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', color: 'white', fontWeight: '800', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                              ▶ Continue Filling
+                            </div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); deleteDraft(draft._id); }}
+                              style={{ padding: '0.75rem 1rem', borderRadius: '12px', background: '#FEE2E2', color: '#EF4444', border: 'none', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', flexShrink: 0 }}
+                            >
+                              🗑
+                            </button>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* ── FOOTER ── */}
+              <div style={{ padding: '1.2rem 2rem', borderTop: '1px solid var(--border-color)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>Drafts are auto-saved as you fill in the wizard</span>
+                <button onClick={() => { setShowDrafts(false); openFreshForm(); }} style={{ padding: '0.7rem 1.4rem', borderRadius: '10px', background: 'var(--accent-primary)', color: 'white', border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Plus size={16} /> New Hostel
+                </button>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

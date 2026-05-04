@@ -52,8 +52,11 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => (
 );
 
 const Tenants = () => {
-  const { buildingId } = useParams();
+  const { buildingId: urlBuildingId } = useParams();
   
+  // Step 1: Restore context
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
   // Base State
   const [tenants, setTenants] = useState([
     { 
@@ -99,8 +102,9 @@ const Tenants = () => {
   const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
+    console.log("Tenants module fetching for ID:", activeBuildingId);
     fetchTenants();
-  }, [buildingId]);
+  }, [activeBuildingId]);
 
   useEffect(() => {
     if (isBulkRegisterModalOpen) {
@@ -113,7 +117,7 @@ const Tenants = () => {
             api.getAllRooms(),
             api.getAllBeds()
           ]);
-          const filteredB = buildingId ? b.filter(x => (x.id || x._id) === buildingId) : b;
+          const filteredB = activeBuildingId ? b.filter(x => (x.id || x._id) === activeBuildingId) : b;
           setInfrastructure({ buildings: filteredB, floors: f, rooms: r, beds: bd });
         } catch (err) {
           console.error("Failed to fetch infrastructure", err);
@@ -123,7 +127,7 @@ const Tenants = () => {
       };
       fetchInfra();
     }
-  }, [isBulkRegisterModalOpen, buildingId]);
+  }, [isBulkRegisterModalOpen, activeBuildingId]);
 
   const fetchTenants = async () => {
     setIsLoading(true);
@@ -156,9 +160,9 @@ const Tenants = () => {
         docs:             t.docs  || (t.aadhaar ? [{ name: 'Aadhar Card', verified: true }] : []),
       }));
 
-      // Filter by buildingId if we're on a specific building route
-      const filtered = buildingId
-        ? normalized.filter(t => t.buildingId === buildingId)
+      // Filter by activeBuildingId if we're on a specific building route
+      const filtered = activeBuildingId
+        ? normalized.filter(t => t.buildingId === activeBuildingId)
         : normalized;
 
       // Only replace state if we actually got records (never blank the list)
@@ -187,7 +191,7 @@ const Tenants = () => {
       } else {
         const payload = { 
           ...registerFormData, 
-          buildingId: buildingId, // IMPORTANT: Link to building
+          buildingId: activeBuildingId, // IMPORTANT: Link to building
           status: 'ACTIVE' 
         };
         const created = await api.addTenant(payload);

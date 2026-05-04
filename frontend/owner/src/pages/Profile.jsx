@@ -108,6 +108,15 @@ const Profile = () => {
     </div>
   );
 
+  if (!profile && message?.type === 'error') return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '1rem' }}>
+      <AlertCircle size={48} color="#EF4444" />
+      <h3 style={{ margin: 0, fontWeight: '800' }}>Failed to Load Profile</h3>
+      <p style={{ color: 'var(--text-muted)', margin: 0 }}>{message.text}</p>
+      <button className="btn btn-primary" onClick={() => { setLoading(true); fetchData(); }}>Retry Connection</button>
+    </div>
+  );
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={18} /> },
     { id: 'profile', label: 'Identity', icon: <User size={18} /> },
@@ -214,7 +223,7 @@ const Profile = () => {
           {activeTab === 'security' && <SecurityTab profile={profile} onUpdate={(data) => handleUpdate('notificationSettings', data)} onSecurityUpdate={(data) => handleUpdate('securitySettings', data)} onLogoutSession={handleSessionLogout} />}
         </motion.div>
 
-        {activeTab === 'overview' && (
+        {activeTab === 'overview' && profile && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             <ActivityLog logs={profile.activityLogs || []} />
             <BrandingCard profile={profile} onSave={(data) => handleUpdate('businessDetails', data)} />

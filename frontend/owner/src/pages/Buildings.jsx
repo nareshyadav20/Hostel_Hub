@@ -45,9 +45,13 @@ const Modal = ({ isOpen, onClose, title, children }) => (
 );
 
 const Buildings = () => {
-  const { buildingId } = useParams();
+  const { buildingId: urlBuildingId } = useParams();
   const navigate = useNavigate();
-  const [view, setView] = useState('buildings'); // buildings, floors, rooms, beds, assign
+  
+  // Step 1: Restore context
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
+  const [view, setView] = useState('buildings'); 
   const [showFilters, setShowFilters] = useState(false);
   
   const [buildings, setBuildings] = useState([]);
@@ -69,23 +73,24 @@ const Buildings = () => {
   const [formData, setFormData] = useState({ name: '', address: '', number: '', type: 'Single', capacity: 1, status: 'AVAILABLE', imageUrl: '', isAC: false });
 
   const fetchBuildings = async () => {
+    console.log("Buildings module fetching for ID:", activeBuildingId);
     try {
       const bData = await api.getBuildings() || [];
-      if (buildingId) {
-        setBuildings(bData.filter(b => b.id === buildingId || b._id === buildingId));
+      if (activeBuildingId) {
+        const filtered = bData.filter(b => b.id === activeBuildingId || b._id === activeBuildingId);
+        setBuildings(filtered);
+        if (filtered.length > 0) setSelectedBuilding(filtered[0]);
       } else {
         setBuildings(bData);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Fetch error in Buildings:", err);
     }
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchBuildings();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeBuildingId]);
 
   const handleSelectBuilding = async (b) => {
     setSelectedBuilding(b);
@@ -200,7 +205,7 @@ const Buildings = () => {
         <div style={{ display: 'flex', gap: '0.8rem' }}>
           <button 
             className="btn" 
-            onClick={() => navigate(`/owner/building/${buildingId}/rooms`)}
+            onClick={() => navigate(`/owner/building/${activeBuildingId}/rooms`)}
             style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--accent-primary)', fontWeight: '700' }}
           >
             <BedDouble size={18} /> Occupancy View

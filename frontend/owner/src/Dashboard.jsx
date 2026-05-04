@@ -10,7 +10,11 @@ const iStyle = { padding:'0.75rem', borderRadius:'10px', border:'1px solid var(-
 const lStyle = { fontSize:'0.82rem', fontWeight:'700', color:'var(--text-secondary)', marginBottom:'0.4rem', display:'block' };
 
 function Dashboard() {
-  const { buildingId } = useParams();
+  const { buildingId: urlBuildingId } = useParams();
+  
+  // Step 1: Restore context
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
   const [isLoading, setIsLoading] = useState(true);
   const [modal, setModal] = useState(null); // 'addTenant' | 'assignBed' | 'markPaid' | 'complaint'
   const [formMsg, setFormMsg] = useState('');
@@ -18,17 +22,23 @@ function Dashboard() {
   const [d, setD] = useState({ summary:null, revenue:null, occupancy:null, alerts:null, complaints:null, mess:null, staff:null });
 
   useEffect(() => {
+    if (!activeBuildingId) {
+      console.warn("Dashboard: No active building ID found.");
+      return;
+    }
+
     (async () => {
+      console.log("Dashboard module fetching for ID:", activeBuildingId);
       setIsLoading(true);
       try {
         const [summary, revenue, occupancy, alerts, complaints, mess, staff, sData] = await Promise.all([
-          api.getDashboardSummary(buildingId),
-          api.getDashboardRevenue(buildingId),
-          api.getDashboardOccupancy(buildingId),
-          api.getDashboardAlerts(buildingId),
-          api.getDashboardComplaints(buildingId),
-          api.getDashboardMess(buildingId),
-          api.getDashboardStaff(buildingId),
+          api.getDashboardSummary(activeBuildingId),
+          api.getDashboardRevenue(activeBuildingId),
+          api.getDashboardOccupancy(activeBuildingId),
+          api.getDashboardAlerts(activeBuildingId),
+          api.getDashboardComplaints(activeBuildingId),
+          api.getDashboardMess(activeBuildingId),
+          api.getDashboardStaff(activeBuildingId),
           api.getSettings()
         ]);
         setD({ summary, revenue, occupancy, alerts, complaints, mess, staff });
@@ -39,7 +49,7 @@ function Dashboard() {
         setIsLoading(false);
       }
     })();
-  }, [buildingId]);
+  }, [activeBuildingId]);
 
   if (isLoading || !d.summary) return (
     <div className="dashboard-container">
@@ -95,17 +105,17 @@ function Dashboard() {
       <header style={{ marginBottom:'2rem', display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:'1rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.5rem' }}>
-            {buildingId && (
+            {activeBuildingId && (
               <Link to="/owner/portfolio" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent-primary)', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '700' }}>
                 <ArrowLeft size={16} /> Back to Overview
               </Link>
             )}
           </div>
           <h1 style={{ fontSize:'2rem', fontWeight:'900', color:'var(--text-primary)', letterSpacing:'-0.03em', margin:0 }}>
-            {buildingId === 'b1' ? 'Alpha Tower' : buildingId === 'b2' ? 'Beta Block' : 'Command Center'}
+            {summary.buildingName || (activeBuildingId === 'b1' ? 'Alpha Tower' : activeBuildingId === 'b2' ? 'Beta Block' : 'Command Center')}
           </h1>
           <p style={{ color:'var(--text-secondary)', fontSize:'0.95rem', marginTop:'0.3rem' }}>
-            {buildingId ? 'Real-time property performance & operational control' : 'Real-time business insights & operational control'}
+            {activeBuildingId ? 'Real-time property performance & operational control' : 'Real-time business insights & operational control'}
           </p>
         </div>
         <div style={{ display:'flex', gap:'0.7rem', flexWrap:'wrap' }}>
@@ -318,7 +328,7 @@ function Dashboard() {
       <div style={{ ...grid3, marginBottom:'2rem' }}>
         <MessPanel data={mess}/>
         <StaffPanel data={staff}/>
-        <InfrastructureOverview buildingId={buildingId} />
+        <InfrastructureOverview buildingId={activeBuildingId} />
       </div>
 
       {/* 6. INSIGHTS + ACTIVITY + DOCUMENTS */}

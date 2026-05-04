@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -22,6 +23,11 @@ const ROLE_COLORS = {
 };
 
 const Staff = () => {
+  const { buildingId: urlBuildingId } = useParams();
+  
+  // Step 1: Restore context
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
   const [staffData, setStaffData] = useState({ staffList: [], totalStaff: 0 });
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [activeTab, setActiveTab] = useState('Overview');
@@ -31,6 +37,7 @@ const Staff = () => {
   const fileInputRef = useRef(null);
 
   async function fetchStaff() {
+    console.log("Staff module fetching for ID:", activeBuildingId);
     try {
       const data = await api.getDashboardStaff();
       setStaffData(data || { staffList: [] });
@@ -42,9 +49,8 @@ const Staff = () => {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStaff();
-  }, []);
+  }, [activeBuildingId]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];

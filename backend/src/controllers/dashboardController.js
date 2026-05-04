@@ -122,7 +122,9 @@ exports.getAlertsAndInsights = async (req, res) => {
     
     const query = buildingId ? { _id: buildingId } : {};
     const buildings = await Building.find(query).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
-    const { totalBeds, vacantBeds, occupancyRate, maintenanceRooms } = traverseHierarchy(buildings);
+    const { totalBeds, occupiedBeds, maintenanceRooms } = traverseHierarchy(buildings);
+    const vacantBeds = totalBeds - occupiedBeds;
+    const occupancyRate = totalBeds > 0 ? parseFloat(((occupiedBeds / totalBeds) * 100).toFixed(1)) : 0;
     
     const insights = [], alerts = [];
 

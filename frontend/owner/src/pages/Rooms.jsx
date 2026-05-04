@@ -22,8 +22,12 @@ const STATUS_STYLES = {
 };
 
 const Rooms = () => {
-  const { buildingId } = useParams();
+  const { buildingId: urlBuildingId } = useParams();
   const navigate = useNavigate();
+  
+  // Step 1: Restore context
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloors] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -32,7 +36,7 @@ const Rooms = () => {
   const [loading, setLoading] = useState(true);
   
   // Hierarchy state
-  const [selectedBuildingId, setSelectedBuildingId] = useState(buildingId || null);
+  const [selectedBuildingId, setSelectedBuildingId] = useState(activeBuildingId || null);
   const [expandedFloors, setExpandedFloors] = useState({});
   const [expandedRooms, setExpandedRooms] = useState({});
   const [selectedTenantInfo, setSelectedTenantInfo] = useState(null);
@@ -44,6 +48,8 @@ const Rooms = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log("Rooms module fetching for ID:", activeBuildingId);
+      setLoading(true);
       try {
         const [b, f, r, bd, t, tr] = await Promise.all([
           api.getBuildings(),
@@ -59,19 +65,20 @@ const Rooms = () => {
         setRooms(r || []);
         setBeds(bd || []);
         setTenants(t || []);
-        // Use mock data if API returns empty
         setTransferRequests((tr && tr.length > 0) ? tr : MOCK_TRANSFERS);
 
         const fExp = {}; f?.forEach(x => fExp[x.id] = true);
         setExpandedFloors(fExp);
+        
+        if (activeBuildingId) setSelectedBuildingId(activeBuildingId);
       } catch (err) {
-        console.error(err);
+        console.error("Fetch error in Rooms:", err);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [activeBuildingId]);
 
   const handleTransferStatus = async (id, status) => {
     try {
