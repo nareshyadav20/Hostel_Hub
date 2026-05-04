@@ -57,14 +57,14 @@ const Home = () => {
   const [showAllCities, setShowAllCities] = useState(false);
 
   const cities = [
-    { name: 'Bangalore', props: 120, img: 'https://images.unsplash.com/photo-1599933023673-c2484c81013a?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Hyderabad', props: 85, img: 'https://images.unsplash.com/photo-1601202283002-0547473e16ac?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Mumbai', props: 64, img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Bangalore', props: 120, img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Hyderabad', props: 85, img: 'https://images.unsplash.com/photo-1513682121497-80211f36a790?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Mumbai', props: 64, img: 'https://images.unsplash.com/photo-1529253355930-ddbe423a2ac7?auto=format&fit=crop&q=80&w=800' },
     { name: 'Chennai', props: 42, img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Delhi', props: 95, img: 'https://images.unsplash.com/photo-1585938389612-a552a28d6914?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Pune', props: 58, img: 'https://images.unsplash.com/photo-1571679654681-ba01b9e1e117?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Noida', props: 37, img: 'https://images.unsplash.com/photo-1570710891163-6d3b5c47248b?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Gurgaon', props: 72, img: 'https://images.unsplash.com/photo-1614242232338-7634f199e525?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Delhi', props: 95, img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Pune', props: 58, img: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Noida', props: 37, img: 'https://images.unsplash.com/photo-1584988350325-1e0f05edebc2?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Gurgaon', props: 72, img: 'https://images.unsplash.com/photo-1611090001097-f58c7340b0ba?auto=format&fit=crop&q=80&w=800' },
   ];
 
   const displayedCities = showAllCities ? cities : cities.slice(0, 4);
@@ -379,7 +379,9 @@ const Home = () => {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 9V20C3 20.55 3.21 21.04 3.59 21.41 3.96 21.79 4.47 22 5 22H19C19.53 22 20.04 21.79 20.41 21.41 20.79 21.04 21 20.55 21 20V9L12 2Z" fill="#818CF8" /><path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round" /></svg>
               <span>Livora</span>
             </div>
-            <p className="hv2-footer-tagline">Making living simple, safe, and hassle-free.</p>
+            <p className="hv2-footer-tagline">
+              Making living simple, safe, and hassle-free. We provide premium co-living spaces designed for comfort, community, and convenience. Experience a new standard of living with top-notch amenities, 24/7 security, and a vibrant community of professionals and students.
+            </p>
           </div>
 
           <div className="hv2-footer-links-side">
@@ -395,9 +397,18 @@ const Home = () => {
             </div>
             <div className="hv2-footer-column">
               <h4>Contact Info</h4>
-              <span>📍 Cyber Towers, Hitech City, Hyderabad</span>
-              <span>📞 +91 7569383323</span>
-              <span>✉️ support@livora.com</span>
+              <div className="hv2-contact-item" style={{ display: 'flex', gap: '0.8rem', alignItems: 'flex-start', color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.95rem', marginBottom: '0.8rem' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px', color: '#818CF8' }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <p style={{ margin: 0, lineHeight: 1.5 }}>Cyber Towers, Hitech City, Hyderabad</p>
+              </div>
+              <div className="hv2-contact-item" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.95rem', marginBottom: '0.8rem' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: '#818CF8' }}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                <p style={{ margin: 0 }}>+91 7569383323</p>
+              </div>
+              <div className="hv2-contact-item" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.95rem', marginBottom: '0.8rem' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: '#818CF8' }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <p style={{ margin: 0 }}>support@livora.com</p>
+              </div>
             </div>
           </div>
         </div>
