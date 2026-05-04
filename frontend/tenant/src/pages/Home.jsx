@@ -57,14 +57,14 @@ const Home = () => {
   const [showAllCities, setShowAllCities] = useState(false);
 
   const cities = [
-    { name: 'Bangalore', props: 120, img: 'https://images.unsplash.com/photo-1599933023673-c2484c81013a?q=80&w=800&auto=format' },
-    { name: 'Hyderabad', props: 85, img: 'https://images.unsplash.com/photo-1623625434462-e5e42318ae49?q=80&w=800&auto=format' },
-    { name: 'Mumbai', props: 64, img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?q=80&w=800&auto=format' },
-    { name: 'Chennai', props: 42, img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=800&auto=format' },
-    { name: 'Delhi', props: 95, img: 'https://images.unsplash.com/photo-1585938389612-a552a28d6914?q=80&w=800&auto=format' },
-    { name: 'Pune', props: 58, img: 'https://images.unsplash.com/photo-1605368940860-249ee416c117?q=80&w=800&auto=format' },
-    { name: 'Noida', props: 37, img: 'https://images.unsplash.com/photo-1580674285054-bed31e145f59?q=80&w=800&auto=format' },
-    { name: 'Gurgaon', props: 72, img: 'https://images.unsplash.com/photo-1614242232338-7634f199e525?q=80&w=800&auto=format' },
+    { name: 'Bangalore', props: 120, img: 'https://images.unsplash.com/photo-1599933023673-c2484c81013a?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Hyderabad', props: 85, img: 'https://images.unsplash.com/photo-1601202283002-0547473e16ac?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Mumbai', props: 64, img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Chennai', props: 42, img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Delhi', props: 95, img: 'https://images.unsplash.com/photo-1585938389612-a552a28d6914?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Pune', props: 58, img: 'https://images.unsplash.com/photo-1571679654681-ba01b9e1e117?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Noida', props: 37, img: 'https://images.unsplash.com/photo-1570710891163-6d3b5c47248b?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Gurgaon', props: 72, img: 'https://images.unsplash.com/photo-1614242232338-7634f199e525?auto=format&fit=crop&q=80&w=800' },
   ];
 
   const displayedCities = showAllCities ? cities : cities.slice(0, 4);
@@ -372,7 +372,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
       <footer className="hv2-footer">
         <div className="hv2-footer-main">
           <div className="hv2-footer-brand-side">
@@ -395,8 +394,10 @@ const Home = () => {
               <span onClick={() => navigate('/privacy')}>Privacy Policy</span>
             </div>
             <div className="hv2-footer-column">
-              <h4>Support</h4>
-              <span onClick={() => navigate('/contact')}>Help Center</span>
+              <h4>Contact Info</h4>
+              <span>📍 Cyber Towers, Hitech City, Hyderabad</span>
+              <span>📞 +91 7569383323</span>
+              <span>✉️ support@livora.com</span>
             </div>
           </div>
         </div>
@@ -414,5 +415,4 @@ const Home = () => {
   );
 };
 
-export default Home;
 export default Home;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import API from '../api/axios';
+import { MOCK_HOSTELS } from '../utils/mockData';
 
 const Listing = () => {
   const { id } = useParams();
@@ -15,8 +16,6 @@ const Listing = () => {
         const response = await API.get(`/buildings/${id}`);
         const b = response.data;
         
-        // Map backend building to the structure expected by Listing.jsx
-        // We'll use a mix of real data and mock data for fields not in DB yet
         const mapped = {
           id: b._id,
           name: b.name,
@@ -28,7 +27,7 @@ const Listing = () => {
           verified: true,
           price: b.startingPrice || 6500,
           deposit: (b.startingPrice || 6500) * 2,
-          amenities: b.amenities.length > 0 ? b.amenities : ['WiFi', 'Mess', 'Laundry'],
+          amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['WiFi', 'Mess', 'Laundry'],
           roomTypes: b.floors?.[0]?.rooms?.slice(0, 4).map(r => ({
             type: r.roomNumber,
             price: b.startingPrice || 6500,
@@ -44,7 +43,33 @@ const Listing = () => {
         };
         setHostel(mapped);
       } catch (err) {
-        console.error('Error fetching building details:', err);
+        console.error('Error fetching building details, using mock data fallback:', err);
+        // Fallback to mock data
+        const mockHostel = MOCK_HOSTELS.find(h => h.id === id) || MOCK_HOSTELS[0];
+        if (mockHostel) {
+          const mappedMock = {
+            id: mockHostel.id,
+            name: mockHostel.name,
+            location: mockHostel.locality + ', ' + mockHostel.city,
+            rating: mockHostel.rating || 4.5,
+            reviews: 120,
+            safetyScore: 9.5,
+            occupancy: '85%',
+            verified: true,
+            price: mockHostel.price,
+            deposit: mockHostel.price * 2,
+            amenities: mockHostel.amenities || ['WiFi', 'AC', 'Laundry'],
+            roomTypes: [
+              { type: 'Private Room', price: mockHostel.price + 2000, deposit: (mockHostel.price + 2000) * 2, status: 'Available', color: 'var(--accent-success)' },
+              { type: '2 Sharing', price: mockHostel.price, deposit: mockHostel.price * 2, status: 'Available', color: 'var(--accent-success)' },
+              { type: '3 Sharing', price: mockHostel.price - 1500, deposit: (mockHostel.price - 1500) * 2, status: 'Few Left', color: 'var(--accent-warning)' }
+            ],
+            landmarks: [{ name: 'Nearby Station', distance: '500m' }, { name: 'Tech Park', distance: '1.2km' }],
+            rules: ['No smoking indoors', 'Quiet hours 11 PM', 'Visitors allowed until 8 PM'],
+            menu: { breakfast: 'Idli/Dosa', lunch: 'Rice, Dal, Curry', dinner: 'Roti, Paneer' }
+          };
+          setHostel(mappedMock);
+        }
       } finally {
         setLoading(false);
       }
