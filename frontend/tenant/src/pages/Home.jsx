@@ -71,16 +71,16 @@ const Home = () => {
       <header className={`home-header ${scrolled ? 'scrolled' : ''}`}>
         <div className="home-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
           <svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L3 9V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V9L12 2Z" fill="url(#home_logo_gradient)" stroke="#00b0f0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M12 2L3 9V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V9L12 2Z" fill="url(#home_logo_gradient)" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M9 22V12H15V22" stroke="var(--bg-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             <defs>
               <linearGradient id="home_logo_gradient" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#00b0f0" />
-                <stop offset="1" stopColor="#0080c0" />
+                <stop stopColor="var(--accent-primary)" />
+                <stop offset="1" stopColor="var(--accent-secondary)" />
               </linearGradient>
             </defs>
           </svg>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: '950', letterSpacing: '-1.5px', color: '#00b0f0', margin: 0 }}>livora</h1>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '950', letterSpacing: '-1.5px', color: 'var(--accent-primary)', margin: 0 }}>livora</h1>
         </div>
         <nav className="header-nav">
           <span onClick={() => navigate('/explore')} className="nav-item" style={{ cursor: 'pointer' }}>LIVORA SCHOLAR</span>
@@ -119,7 +119,7 @@ const Home = () => {
                   style={{ cursor: 'pointer' }}
                 />
                 <div className="search-icon-btn" onClick={() => setIsSearchOverlayOpen(true)}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00b0f0" strokeWidth="2.5">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                   </svg>

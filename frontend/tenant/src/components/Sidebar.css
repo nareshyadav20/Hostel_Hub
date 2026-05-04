@@ -1,19 +1,25 @@
 .sidebar {
-  width: 260px;
-  height: calc(100vh - 40px);
+  width: var(--sidebar-width);
+  height: 100vh;
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
+  border-right: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   position: fixed;
-  left: 20px;
-  top: 20px;
+  left: 0;
+  top: 0;
   z-index: 100;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  transition: width var(--transition-normal);
+  transition: all var(--transition-normal);
+  overflow: hidden;
+}
+
+@media (max-width: 1440px) {
+  :root {
+    --sidebar-width: 240px;
+    --sidebar-gap: 20px;
+  }
 }
 
 .sidebar-header {

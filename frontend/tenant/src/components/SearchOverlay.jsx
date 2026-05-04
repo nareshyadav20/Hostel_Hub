@@ -49,12 +49,12 @@ const SearchOverlay = ({ isOpen, onClose, initialCity = 'Hyderabad', onSearch })
               {selectedCity} ⌵
             </span>
             {showCityDropdown && (
-              <div className="city-dropdown" style={{ position: 'absolute', top: '100%', left: 0, background: 'white', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', minWidth: '200px' }}>
+              <div className="city-dropdown" style={{ position: 'absolute', top: '100%', left: 0, background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', minWidth: '200px' }}>
                 {CITIES.map(city => (
                   <div
                     key={city}
                     className="city-option"
-                    style={{ padding: '0.5rem', cursor: 'pointer', borderBottom: '1px solid #eee', color: '#333' }}
+                    style={{ padding: '0.5rem', cursor: 'pointer', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
                     onClick={() => { setSelectedCity(city); setShowCityDropdown(false); }}
                   >
                     {city}
@@ -94,9 +94,9 @@ const SearchOverlay = ({ isOpen, onClose, initialCity = 'Hyderabad', onSearch })
             {selectedGender || 'Gender'}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             {showGenderDropdown && (
-              <div className="glass-card dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, width: '140px', background: 'white', zIndex: 20, marginTop: '5px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <div className="glass-card dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, width: '140px', background: 'var(--bg-secondary)', zIndex: 20, marginTop: '5px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                 {['Men', 'Women', 'Unisex'].map(g => (
-                  <div key={g} style={{ padding: '0.8rem', cursor: 'pointer', color: '#333' }} onClick={(e) => { e.stopPropagation(); setSelectedGender(g); setShowGenderDropdown(false); }}>{g}</div>
+                  <div key={g} style={{ padding: '0.8rem', cursor: 'pointer', color: 'var(--text-primary)' }} onClick={(e) => { e.stopPropagation(); setSelectedGender(g); setShowGenderDropdown(false); }}>{g}</div>
                 ))}
               </div>
             )}
@@ -117,9 +117,9 @@ const SearchOverlay = ({ isOpen, onClose, initialCity = 'Hyderabad', onSearch })
             {selectedAmenities.length > 0 ? `${selectedAmenities.length} Selected` : 'Amenities'}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             {showAmenitiesDropdown && (
-              <div className="glass-card dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, width: '200px', background: 'white', zIndex: 20, marginTop: '5px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '0.5rem' }}>
+              <div className="glass-card dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, width: '200px', background: 'var(--bg-secondary)', zIndex: 20, marginTop: '5px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '0.5rem' }}>
                 {['AC', 'Food', 'Fridge', 'Gym', 'Parking', 'Power Backup'].map(a => (
-                  <label key={a} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', cursor: 'pointer', color: '#333' }}>
+                  <label key={a} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', cursor: 'pointer', color: 'var(--text-primary)' }}>
                     <input
                       type="checkbox"
                       checked={selectedAmenities.includes(a)}

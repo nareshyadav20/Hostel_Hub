@@ -97,17 +97,17 @@ const Mess = () => {
         {`
           .glass-card-premium {
             backdrop-filter: blur(16px);
-            background: rgba(255, 255, 255, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
             border-radius: 32px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            box-shadow: var(--shadow-lg);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           }
           .meal-card {
             padding: 2rem;
             border-radius: 24px;
-            background: white;
-            border: 1px solid #f1f5f9;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
@@ -126,34 +126,34 @@ const Mess = () => {
             padding: 1.5rem 2rem;
             font-size: 0.8rem;
             font-weight: 900;
-            color: #64748b;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 1.5px;
             text-align: left;
           }
           .mess-table td {
             padding: 1.5rem 2rem;
-            background: white;
-            border-top: 1px solid #f1f5f9;
-            border-bottom: 1px solid #f1f5f9;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
             font-size: 0.95rem;
             font-weight: 600;
-            color: #1e293b;
+            color: var(--text-primary);
           }
           .mess-table td:first-child {
-            border-left: 1px solid #f1f5f9;
+            border-left: 1px solid var(--border-color);
             border-top-left-radius: 16px;
             border-bottom-left-radius: 16px;
             color: var(--accent-primary);
             font-weight: 900;
           }
           .mess-table td:last-child {
-            border-right: 1px solid #f1f5f9;
+            border-right: 1px solid var(--border-color);
             border-top-right-radius: 16px;
             border-bottom-right-radius: 16px;
           }
           .mess-table tr:hover td {
-            background: #f8fafc;
+            background: var(--bg-tertiary);
             border-color: var(--accent-primary);
           }
           .btn-action {
@@ -174,20 +174,20 @@ const Mess = () => {
 
       <header style={{ marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h1 style={{ fontSize: '2.8rem', fontWeight: '950', letterSpacing: '-2px', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+          <h1 style={{ fontSize: '2.8rem', fontWeight: '950', letterSpacing: '-2px', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '1.2rem', color: 'var(--text-primary)' }}>
             <div style={{ background: 'var(--accent-primary)', width: '48px', height: '48px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
             </div>
             Dining Portal
           </h1>
-          <p style={{ color: '#64748b', fontSize: '1.15rem', fontWeight: '500' }}>Curated nutrition and meal management for a healthy campus life.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.15rem', fontWeight: '500' }}>Curated nutrition and meal management for a healthy campus life.</p>
         </div>
         
         <div style={{ display: 'flex', gap: '1rem' }}>
            <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: '0.8rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase' }}>Current Session</p>
-              <p style={{ fontSize: '1.1rem', fontWeight: '900', color: 'var(--accent-primary)' }}>Lunch (12:30 - 2:30 PM)</p>
-           </div>
+            <p style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Current Session</p>
+            <p style={{ fontSize: '1.1rem', fontWeight: '900', color: 'var(--accent-primary)' }}>Lunch (12:30 - 2:30 PM)</p>
+         </div>
         </div>
       </header>
 
@@ -195,8 +195,8 @@ const Mess = () => {
         {/* ── Today's Menu Section ── */}
         <div className="glass-card-premium" style={{ padding: '3.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-            <h3 style={{ fontSize: '1.8rem', fontWeight: '950', color: '#1e293b' }}>Today's Specials</h3>
-            <div style={{ background: '#fef3c7', color: '#d97706', padding: '0.6rem 1.2rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.8rem', fontWeight: '950', color: 'var(--text-primary)' }}>Today's Specials</h3>
+            <div style={{ background: 'var(--bg-tertiary)', color: 'var(--accent-warning)', padding: '0.6rem 1.2rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
               4.8 Chef's Rating
             </div>
@@ -204,18 +204,18 @@ const Mess = () => {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {[
-              { type: 'Breakfast', menu: todayMenu.breakfast, icon: '🍳', color: '#0ea5e3' },
-              { type: 'Lunch', menu: todayMenu.lunch, icon: '🍛', color: '#10b981' },
-              { type: 'Dinner', menu: todayMenu.dinner, icon: '🥗', color: '#f59e0b' }
+              { type: 'Breakfast', menu: todayMenu.breakfast, icon: '🍳', color: 'var(--accent-info)' },
+              { type: 'Lunch', menu: todayMenu.lunch, icon: '🍛', color: 'var(--accent-success)' },
+              { type: 'Dinner', menu: todayMenu.dinner, icon: '🥗', color: 'var(--accent-warning)' }
             ].map((meal, idx) => (
               <div key={idx} className="meal-card">
                 <div style={{ position: 'absolute', right: '-10px', bottom: '-10px', fontSize: '5rem', opacity: 0.05 }}>{meal.icon}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <span style={{ fontSize: '0.75rem', fontWeight: '900', color: meal.color, textTransform: 'uppercase', letterSpacing: '1.5px' }}>{meal.type}</span>
-                    <h4 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1e293b', marginTop: '0.4rem' }}>{meal.menu}</h4>
+                    <h4 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', marginTop: '0.4rem' }}>{meal.menu}</h4>
                   </div>
-                  <div style={{ width: '44px', height: '44px', background: '#f8fafc', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
+                  <div style={{ width: '44px', height: '44px', background: 'var(--bg-primary)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
                     {meal.icon}
                   </div>
                 </div>
@@ -223,12 +223,12 @@ const Mess = () => {
             ))}
           </div>
 
-          <div style={{ marginTop: '3.5rem', padding: '2rem', background: '#f8fafc', borderRadius: '24px', textAlign: 'center', border: '1px solid #f1f5f9' }}>
-            <p style={{ fontWeight: '800', color: '#475569', marginBottom: '1.2rem' }}>How was your last meal?</p>
+          <div style={{ marginTop: '3.5rem', padding: '2rem', background: 'var(--bg-tertiary)', borderRadius: '24px', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+            <p style={{ fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '1.2rem' }}>How was your last meal?</p>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
               {[1, 2, 3, 4, 5].map(star => (
                 <button key={star} onClick={() => setRating(star)} style={{ background: 'none', border: 'none', cursor: 'pointer', transition: 'transform 0.2s', transform: star <= rating ? 'scale(1.2)' : 'scale(1)' }}>
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill={star <= rating ? "#f59e0b" : "none"} stroke={star <= rating ? "#f59e0b" : "#cbd5e1"} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill={star <= rating ? "var(--accent-warning)" : "none"} stroke={star <= rating ? "var(--accent-warning)" : "var(--text-muted)"} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                 </button>
               ))}
             </div>
@@ -238,21 +238,21 @@ const Mess = () => {
         {/* ── Attendance Management ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
           <div className="glass-card-premium" style={{ padding: '3.5rem', textAlign: 'center' }}>
-            <h3 style={{ fontSize: '1.6rem', fontWeight: '950', color: '#1e293b', marginBottom: '1rem' }}>Manage Attendance</h3>
-            <p style={{ color: '#64748b', fontWeight: '500', marginBottom: '3rem' }}>Help us cook only what's needed. <br/>Save food, save the planet.</p>
+            <h3 style={{ fontSize: '1.6rem', fontWeight: '950', color: 'var(--text-primary)', marginBottom: '1rem' }}>Manage Attendance</h3>
+            <p style={{ color: 'var(--text-secondary)', fontWeight: '500', marginBottom: '3rem' }}>Help us cook only what's needed. <br/>Save food, save the planet.</p>
             
             <div style={{ marginBottom: '3.5rem' }}>
-              <div style={{ width: '100px', height: '100px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: 'var(--accent-primary)' }}>
+              <div style={{ width: '100px', height: '100px', background: 'var(--bg-tertiary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: 'var(--accent-primary)' }}>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-              <button onClick={handleMarkAttendance} className="btn-action" style={{ background: attended ? '#10b981' : 'var(--accent-primary)', color: 'white', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)' }}>
+              <button onClick={handleMarkAttendance} className="btn-action" style={{ background: attended ? 'var(--accent-success)' : 'var(--accent-primary)', color: 'white' }}>
                 {attended ? <><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Presence Marked</> : 'Mark Attendance'}
               </button>
               
-              <button onClick={handleSkipMeal} className="btn-action" style={{ background: 'white', color: skipped ? '#f43f5e' : '#64748b', border: `2px solid ${skipped ? '#f43f5e' : '#f1f5f9'}` }}>
+              <button onClick={handleSkipMeal} className="btn-action" style={{ background: 'var(--bg-secondary)', color: skipped ? 'var(--accent-error)' : 'var(--text-secondary)', border: `2px solid ${skipped ? 'var(--accent-error)' : 'var(--border-color)'}` }}>
                 {skipped ? <><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Meal Skipped</> : 'Skip This Meal'}
               </button>
             </div>
@@ -260,12 +260,11 @@ const Mess = () => {
 
           <div className="glass-card-premium" style={{ 
             padding: '2rem', 
-            background: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)', 
+            background: 'var(--accent-primary)', 
             color: 'white', 
             border: 'none',
             position: 'relative',
-            overflow: 'hidden',
-            boxShadow: '0 20px 40px rgba(14, 165, 233, 0.25)'
+            overflow: 'hidden'
           }}>
              <div style={{ position: 'absolute', right: '-20px', top: '-20px', opacity: 0.2 }}>
                 <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
@@ -279,8 +278,7 @@ const Mess = () => {
                   borderRadius: '18px', 
                   display: 'flex', 
                   alignItems: 'center', 
-                  justifyContent: 'center',
-                  boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
+                  justifyContent: 'center'
                 }}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
                 </div>
@@ -307,7 +305,7 @@ const Mess = () => {
           </span>
         </div>
 
-        <div className="glass-card-premium" style={{ padding: '2rem', background: 'white' }}>
+        <div className="glass-card-premium" style={{ padding: '2rem', background: 'var(--bg-secondary)' }}>
           <div style={{ overflowX: 'auto' }}>
             <table className="mess-table">
               <thead>

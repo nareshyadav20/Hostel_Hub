@@ -155,7 +155,7 @@ const Listing = () => {
     fetchHostelDetails();
   }, [id]);
 
-  if (loading) return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', color: '#3B82F6', fontWeight: '800' }}>Crafting your premium stay...</div>;
+  if (loading) return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-primary)', fontWeight: '800' }}>Crafting your premium stay...</div>;
   if (!hostel) return <div style={{ textAlign: 'center', padding: '5rem' }}>Property not found.</div>;
 
   const selectedRoom = hostel.roomTypes[selectedRoomIdx] || hostel.roomTypes[0];
@@ -197,7 +197,7 @@ const Listing = () => {
   };
 
   return (
-    <div className="listing-premium" style={{ background: '#F8FAFC', minHeight: '100vh', paddingBottom: '5rem' }}>
+    <div className="listing-premium" style={{ background: 'var(--bg-primary)', minHeight: '100vh', paddingBottom: '5rem' }}>
       {/* HEADER NAV */}
       <nav style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.5rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button 
@@ -208,7 +208,7 @@ const Listing = () => {
             gap: '0.6rem', 
             background: 'none', 
             border: 'none', 
-            color: '#64748B', 
+            color: 'var(--text-secondary)', 
             fontWeight: '700', 
             fontSize: '0.9rem', 
             cursor: 'pointer',
@@ -219,7 +219,7 @@ const Listing = () => {
           Go Back
         </button>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button style={{ background: 'white', border: '1px solid #E2E8F0', padding: '0.6rem 1.5rem', borderRadius: '12px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#64748B' }}>
+          <button style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '0.6rem 1.5rem', borderRadius: '12px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             Share
           </button>
@@ -227,8 +227,8 @@ const Listing = () => {
             onClick={handleToggleWishlist}
             disabled={isSaving}
             style={{ 
-              background: wishlistId ? '#fef2f2' : 'white', 
-              border: `1px solid ${wishlistId ? '#fecaca' : '#E2E8F0'}`, 
+              background: wishlistId ? 'var(--accent-error)' : 'var(--bg-secondary)', 
+              border: `1px solid ${wishlistId ? 'var(--accent-error)' : 'var(--border-color)'}`, 
               padding: '0.6rem 1.5rem', 
               borderRadius: '12px', 
               fontWeight: '800', 
@@ -236,7 +236,7 @@ const Listing = () => {
               display: 'flex', 
               alignItems: 'center', 
               gap: '0.5rem', 
-              color: wishlistId ? '#ef4444' : '#64748B',
+              color: wishlistId ? 'white' : 'var(--text-secondary)',
               transition: 'all 0.3s ease'
             }}
           >
@@ -248,7 +248,7 @@ const Listing = () => {
 
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem' }}>
         {/* HERO SECTION */}
-        <section className="hero-card" style={{ background: 'white', borderRadius: '32px', padding: '2.5rem', boxShadow: '0 10px 40px rgba(0,0,0,0.04)', border: '1px solid #E2E8F0', marginBottom: '2rem' }}>
+        <section className="hero-card" style={{ background: 'var(--bg-secondary)', borderRadius: '32px', padding: '2.5rem', boxShadow: '0 10px 40px rgba(0,0,0,0.04)', border: '1px solid var(--border-color)', marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '2rem' }}>
             <div style={{ flex: 1, minWidth: '300px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.8rem' }}>
@@ -256,9 +256,9 @@ const Listing = () => {
                 <span style={{ background: '#F0FDF4', color: '#10B981', padding: '0.4rem 1rem', borderRadius: '30px', fontSize: '0.8rem', fontWeight: '800', border: '1px solid #DCFCE7' }}>{hostel.category}</span>
                 {hostel.fillingFast && <span style={{ background: '#FFF7ED', color: '#F59E0B', padding: '0.4rem 1rem', borderRadius: '30px', fontSize: '0.8rem', fontWeight: '800', border: '1px solid #FFEDD5' }}>⚡ Filling Fast</span>}
               </div>
-              <h1 style={{ fontSize: '3.5rem', fontWeight: '950', letterSpacing: '-2px', margin: '0 0 0.5rem 0', color: '#0F172A' }}>{hostel.name}</h1>
-              <p style={{ fontSize: '1.2rem', color: '#64748B', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}>
-                <ICONS.Location /> {hostel.location} • <span style={{ color: '#3B82F6', fontWeight: '700' }}>{hostel.distance}</span>
+              <h1 style={{ fontSize: '3.5rem', fontWeight: '950', letterSpacing: '-2px', margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>{hostel.name}</h1>
+              <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}>
+                <ICONS.Location /> {hostel.location} • <span style={{ color: 'var(--accent-primary)', fontWeight: '700' }}>{hostel.distance}</span>
               </p>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
@@ -271,12 +271,12 @@ const Listing = () => {
               </div>
             </div>
 
-            <div style={{ background: '#F8FAFC', padding: '2rem', borderRadius: '24px', border: '1px solid #E2E8F0', textAlign: 'right' }}>
-              <p style={{ margin: 0, color: '#64748B', fontWeight: '700', fontSize: '0.9rem' }}>Starting from</p>
-              <div style={{ fontSize: '3rem', fontWeight: '950', color: '#0F172A', lineHeight: '1' }}>₹{hostel.price.toLocaleString()}<span style={{ fontSize: '1.2rem', color: '#64748B', fontWeight: '600' }}>/mo</span></div>
-              <p style={{ margin: '0.5rem 0 1.5rem', color: '#10B981', fontWeight: '800', fontSize: '0.85rem' }}>✓ Includes WiFi + Food + Cleaning</p>
-              <div style={{ color: '#EF4444', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '1.5rem' }}>No hidden charges</div>
-              <Link to={`/booking/${hostel.id}`} style={{ display: 'block', background: '#3B82F6', color: 'white', textDecoration: 'none', padding: '1.2rem 2.5rem', borderRadius: '16px', fontWeight: '900', fontSize: '1.1rem', boxShadow: '0 10px 25px rgba(59, 130, 246, 0.4)', transition: 'all 0.3s ease' }}>Book Now</Link>
+            <div style={{ background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', textAlign: 'right' }}>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', fontWeight: '700', fontSize: '0.9rem' }}>Starting from</p>
+              <div style={{ fontSize: '3rem', fontWeight: '950', color: 'var(--text-primary)', lineHeight: '1' }}>₹{hostel.price.toLocaleString()}<span style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', fontWeight: '600' }}>/mo</span></div>
+              <p style={{ margin: '0.5rem 0 1.5rem', color: 'var(--accent-success)', fontWeight: '800', fontSize: '0.85rem' }}>✓ Includes WiFi + Food + Cleaning</p>
+              <div style={{ color: 'var(--accent-error)', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '1.5rem' }}>No hidden charges</div>
+              <Link to={`/booking/${hostel.id}`} style={{ display: 'block', background: 'var(--accent-primary)', color: 'white', textDecoration: 'none', padding: '1.2rem 2.5rem', borderRadius: '16px', fontWeight: '900', fontSize: '1.1rem', boxShadow: '0 10px 25px rgba(var(--accent-primary-rgb), 0.4)', transition: 'all 0.3s ease' }}>Book Now</Link>
             </div>
           </div>
 
@@ -288,8 +288,8 @@ const Listing = () => {
               { label: "Daily Cleaning", icon: <ICONS.Cleaning /> },
               { label: "Power Backup", icon: <ICONS.Power /> }
             ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#475569', fontWeight: '700', fontSize: '0.95rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6' }}>{item.icon}</div>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', color: 'var(--text-secondary)', fontWeight: '700', fontSize: '0.95rem' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-primary)' }}>{item.icon}</div>
                 {item.label}
               </div>
             ))}
@@ -317,46 +317,41 @@ const Listing = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
             
             {/* ROOM SELECTION */}
-            <section style={{ background: 'white', borderRadius: '24px', padding: '2rem', border: '1px solid #E2E8F0' }}>
-              <h2 style={{ fontSize: '1.8rem', fontWeight: '900', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <section style={{ background: 'var(--bg-secondary)', borderRadius: '24px', padding: '2rem', border: '1px solid var(--border-color)' }}>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: '900', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem', color: 'var(--text-primary)' }}>
                 🛏️ Room & Bed Selection
               </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.2rem' }}>
-                {hostel.roomTypes.map((room, i) => (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                {hostel.roomTypes.map((room, idx) => (
                   <div 
-                    key={i} 
-                    onClick={() => setSelectedRoomIdx(i)}
+                    key={idx} 
+                    onClick={() => setSelectedRoomIdx(idx)}
                     style={{ 
-                      padding: '1.5rem', 
-                      borderRadius: '20px', 
-                      border: selectedRoomIdx === i ? '2px solid #3B82F6' : '1px solid #E2E8F0',
-                      background: selectedRoomIdx === i ? '#EFF6FF' : 'white',
+                      padding: '2rem', 
+                      borderRadius: '24px', 
+                      background: selectedRoomIdx === idx ? 'var(--bg-primary)' : 'var(--bg-secondary)', 
+                      border: `2px solid ${selectedRoomIdx === idx ? 'var(--accent-primary)' : 'var(--border-color)'}`, 
                       cursor: 'pointer',
-                      transition: 'all 0.2s'
+                      transition: 'all 0.3s ease',
+                      position: 'relative'
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '900', color: room.color, textTransform: 'uppercase' }}>{room.status}</span>
-                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: room.color }}></div>
-                    </div>
-                    <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', fontWeight: '800' }}>{room.type}</h3>
-                    <p style={{ fontSize: '1.4rem', fontWeight: '900', color: '#0F172A' }}>₹{room.price.toLocaleString()}<span style={{ fontSize: '0.8rem', color: '#64748B' }}>/mo</span></p>
-                    <div style={{ marginTop: '1rem', fontSize: '0.85rem', color: '#64748B', fontWeight: '600' }}>
-                      {room.availableBeds} of {room.totalBeds} beds available
-                    </div>
+                    <h4 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>{room.type}</h4>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem', fontWeight: '600' }}>Starting from</p>
+                    <div style={{ fontSize: '1.8rem', fontWeight: '950', color: 'var(--accent-primary)' }}>₹{room.price.toLocaleString()}<span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>/mo</span></div>
                   </div>
                 ))}
               </div>
-              <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#F8FAFC', borderRadius: '16px', display: 'flex', gap: '2rem' }}>
+              <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--bg-primary)', borderRadius: '16px', display: 'flex', gap: '2rem', border: '1px solid var(--border-color)' }}>
                 <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: '800' }}>Selected: {selectedRoom.name}</h4>
-                  <p style={{ fontSize: '0.9rem', color: '#64748B', margin: 0 }}>Spacious rooms with study desk, wardrobe and attached balcony. Premium furniture included.</p>
+                  <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: '800', color: 'var(--text-primary)' }}>Selected: {selectedRoom.name}</h4>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0 }}>Spacious rooms with study desk, wardrobe and attached balcony. Premium furniture included.</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.7rem', fontWeight: '800', color: '#64748B', marginBottom: '0.4rem' }}>BED AVAILABILITY</div>
+                  <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>BED AVAILABILITY</div>
                   <div style={{ display: 'flex', gap: '0.4rem' }}>
                     {[...Array(selectedRoom.totalBeds)].map((_, i) => (
-                      <div key={i} style={{ width: '30px', height: '10px', borderRadius: '4px', background: i < (selectedRoom.totalBeds - selectedRoom.availableBeds) ? '#EF4444' : '#10B981' }}></div>
+                      <div key={i} style={{ width: '30px', height: '10px', borderRadius: '4px', background: i < (selectedRoom.totalBeds - selectedRoom.availableBeds) ? 'var(--accent-error)' : 'var(--accent-success)' }}></div>
                     ))}
                   </div>
                 </div>
@@ -463,21 +458,24 @@ const Listing = () => {
             </div>
 
             {/* POLICIES ACCORDION */}
-            <div style={{ background: 'white', borderRadius: '24px', padding: '2rem', border: '1px solid #E2E8F0' }}>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: '900', marginBottom: '1.5rem' }}>Policies</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {hostel.policies.map((p, idx) => (
-                  <div key={idx} style={{ borderBottom: idx === hostel.policies.length - 1 ? 'none' : '1px solid #F1F5F9' }}>
-                    <button 
-                      onClick={() => setOpenPolicy(openPolicy === idx ? -1 : idx)}
-                      style={{ width: '100%', padding: '1rem 0', background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', textAlign: 'left', fontWeight: '800', color: '#0F172A' }}
+            <div style={{ background: 'var(--bg-secondary)', borderRadius: '24px', padding: '2.5rem', border: '1px solid var(--border-color)' }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '2rem', color: 'var(--text-primary)' }}>Policy Details</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {[
+                  { q: "Security Deposit", a: "One month's rent (Refundable)" },
+                  { q: "Notice Period", a: "30 days before vacating" },
+                  { q: "Electricity", a: "Prepaid meter/actual usage" },
+                  { q: "Gate Timings", a: "No entry after 11:30 PM" }
+                ].map((item, i) => (
+                  <div key={i} style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+                    <div 
+                      onClick={() => setOpenPolicy(openPolicy === i ? -1 : i)}
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', fontWeight: '800', color: 'var(--text-primary)' }}
                     >
-                      {p.title}
-                      <span style={{ fontSize: '1.2rem' }}>{openPolicy === idx ? '−' : '+'}</span>
-                    </button>
-                    {openPolicy === idx && (
-                      <div style={{ paddingBottom: '1rem', fontSize: '0.9rem', color: '#64748B', lineHeight: '1.6', fontWeight: '500' }}>{p.content}</div>
-                    )}
+                      {item.q}
+                      <span>{openPolicy === i ? '−' : '+'}</span>
+                    </div>
+                    {openPolicy === i && <p style={{ marginTop: '0.8rem', color: 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: '500' }}>{item.a}</p>}
                   </div>
                 ))}
               </div>

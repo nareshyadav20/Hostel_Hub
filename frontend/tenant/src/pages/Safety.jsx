@@ -127,7 +127,7 @@ const Safety = () => {
       <header style={{ marginBottom: '3.5rem', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
           <div style={{ padding: '1rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '24px', color: '#f43f5e' }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
           </div>
         </div>
         <h1 style={{ fontSize: '2.8rem', fontWeight: '950', letterSpacing: '-2px', marginBottom: '0.8rem', background: 'linear-gradient(to right, #1e293b, #475569)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Safety & SOS Center</h1>
@@ -136,13 +136,13 @@ const Safety = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '3.5rem', marginBottom: '4.5rem' }}>
         {/* ── SOS Action Card ── */}
-        <div className="glass-card-premium" style={{ 
-          textAlign: 'center', 
-          padding: '4rem 2rem', 
+        <div className="glass-card-premium" style={{
+          textAlign: 'center',
+          padding: '4rem 2rem',
           background: 'linear-gradient(180deg, rgba(244, 63, 94, 0.05) 0%, rgba(255, 255, 255, 0.8) 100%)',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center', 
+          alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
           overflow: 'hidden'
@@ -151,16 +151,16 @@ const Safety = () => {
             <div style={{ width: `${sosProgress}%`, height: '100%', background: '#f43f5e', transition: 'width 0.05s linear', boxShadow: '0 0 10px #f43f5e' }}></div>
           </div>
 
-          <div 
+          <div
             className={isHolding ? "" : "sos-pulse"}
-            style={{ 
-              width: '160px', 
-              height: '160px', 
-              background: isHolding ? '#be123c' : 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)', 
-              borderRadius: '50%', 
-              display: 'flex', 
+            style={{
+              width: '160px',
+              height: '160px',
+              background: isHolding ? '#be123c' : 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
+              borderRadius: '50%',
+              display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center', 
+              alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
               cursor: 'pointer',
@@ -188,7 +188,7 @@ const Safety = () => {
               </div>
             )}
           </div>
-          
+
           <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#e11d48', marginBottom: '1rem' }}>Emergency SOS</h2>
           <p style={{ color: '#475569', fontSize: '1rem', maxWidth: '320px', lineHeight: '1.6', fontWeight: '500' }}>
             Hold the button to instantly alert the Warden, On-site Security, and local Emergency services.
@@ -204,7 +204,7 @@ const Safety = () => {
               </div>
               <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#1e293b' }}>Emergency Directory</h3>
             </div>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               {[
                 { label: 'Warden', phone: '+91 98765 43210', icon: '👤' },
@@ -234,11 +234,11 @@ const Safety = () => {
               <h3 style={{ color: 'white', fontSize: '1.4rem', fontWeight: '900' }}>Live Support</h3>
             </div>
             <p style={{ opacity: 0.9, marginBottom: '2rem', fontSize: '1rem', lineHeight: '1.6', fontWeight: '500' }}>Need assistance with a non-emergency safety concern? Our team is online 24/7.</p>
-            <a 
-              href="https://wa.me/919876543210?text=I%20need%20safety%20assistance" 
-              target="_blank" 
+            <a
+              href="https://wa.me/919876543210?text=I%20need%20safety%20assistance"
+              target="_blank"
               rel="noopener noreferrer"
-              className="btn" 
+              className="btn"
               style={{ display: 'block', textDecoration: 'none', textAlign: 'center', background: 'white', color: '#2563eb', padding: '1.2rem', width: '100%', fontWeight: '900', borderRadius: '18px', border: 'none', fontSize: '1rem', transition: 'all 0.3s ease', cursor: 'pointer', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}
             >
               Start WhatsApp Support
@@ -251,7 +251,7 @@ const Safety = () => {
       <div className="glass-card-premium" style={{ padding: '3rem', border: '1px solid rgba(0, 176, 240, 0.1)' }}>
         <div style={{ marginBottom: '3.5rem', display: 'flex', alignItems: 'flex-start', gap: '2rem' }}>
           <div style={{ padding: '1rem', background: 'rgba(0, 176, 240, 0.1)', color: '#00b0f0', borderRadius: '20px' }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /></svg>
           </div>
           <div>
             <h3 style={{ fontSize: '2.2rem', fontWeight: '950', letterSpacing: '-1.5px', marginBottom: '0.6rem', color: '#1e293b' }}>Confidential Reporting</h3>
@@ -263,10 +263,10 @@ const Safety = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2.2rem' }}>
             <div className="input-group">
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.8rem', letterSpacing: '1px' }}>Classification</label>
-              <select 
+              <select
                 className="input-premium"
                 value={formData.type}
-                onChange={(e) => setFormData({...formData, type: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
               >
                 <option>Theft / Missing Item</option>
                 <option>Harassment</option>
@@ -277,12 +277,12 @@ const Safety = () => {
             </div>
             <div className="input-group">
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.8rem', letterSpacing: '1px' }}>Location</label>
-              <input 
+              <input
                 className="input-premium"
-                type="text" 
-                placeholder="e.g. Block B, 4th Floor" 
+                type="text"
+                placeholder="e.g. Block B, 4th Floor"
                 value={formData.location}
-                onChange={(e) => setFormData({...formData, location: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 required
               />
             </div>
@@ -291,26 +291,26 @@ const Safety = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2.2rem' }}>
             <div className="input-group">
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.8rem', letterSpacing: '1px' }}>Detailed Report</label>
-              <textarea 
+              <textarea
                 className="input-premium"
-                rows="5" 
+                rows="5"
                 placeholder="Please provide as much detail as possible..."
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 required
                 style={{ resize: 'none' }}
               ></textarea>
             </div>
-            
-            <button 
-              type="submit" 
-              className="btn-gradient-primary" 
+
+            <button
+              type="submit"
+              className="btn-gradient-primary"
               disabled={incidentSubmitted}
               style={{ padding: '1.4rem', fontWeight: '950', borderRadius: '20px', fontSize: '1.1rem', letterSpacing: '1px', marginTop: 'auto' }}
             >
               {incidentSubmitted ? (
                 <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-                  <svg className="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+                  <svg className="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" /></svg>
                   SECURING...
                 </span>
               ) : 'SUBMIT REPORT'}

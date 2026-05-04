@@ -402,7 +402,7 @@ const Search = () => {
           justify-content: center;
           cursor: pointer;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+          box-shadow: var(--shadow-sm);
         }
 
         .pro-close-btn:hover {
@@ -443,7 +443,7 @@ const Search = () => {
           border: 1px solid var(--border-color);
           border-radius: 28px;
           padding: 2.2rem;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+          box-shadow: var(--shadow-xl);
         }
 
         .filter-header {
@@ -511,7 +511,7 @@ const Search = () => {
           background: var(--accent-primary);
           color: white;
           border-color: var(--accent-primary);
-          box-shadow: 0 4px 15px rgba(14, 165, 233, 0.25);
+          box-shadow: 0 4px 15px rgba(var(--accent-primary-rgb), 0.25);
         }
 
         .apply-btn {
@@ -525,6 +525,7 @@ const Search = () => {
           cursor: pointer;
           transition: all 0.3s ease;
           margin-top: 1rem;
+          box-shadow: var(--shadow-md);
         }
 
         .apply-btn:hover {
@@ -579,7 +580,7 @@ const Search = () => {
         }
 
         .pro-table-row input:checked + .row-content {
-          background: rgba(14, 165, 233, 0.05);
+          background: rgba(var(--accent-primary-rgb), 0.05);
         }
 
         .pro-table-row input:checked + .row-content .row-radio-custom {
@@ -662,7 +663,7 @@ const Search = () => {
           background: var(--accent-primary);
           color: white;
           border-color: var(--accent-primary);
-          box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+          box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb), 0.2);
         }
 
         .results-professional {
@@ -683,7 +684,7 @@ const Search = () => {
 
         .pro-hostel-card:hover {
           transform: translateY(-8px);
-          box-shadow: 0 25px 60px rgba(0,0,0,0.08);
+          box-shadow: var(--shadow-2xl);
           border-color: var(--accent-primary);
         }
 
@@ -726,7 +727,7 @@ const Search = () => {
         }
 
         .wishlist-icon.active {
-          background: #ef4444;
+          background: var(--accent-error);
           color: white;
         }
 
@@ -860,12 +861,12 @@ const Search = () => {
           border-radius: 14px;
           font-weight: 800;
           transition: all 0.3s ease;
-          box-shadow: 0 8px 20px rgba(14, 165, 233, 0.2);
+          box-shadow: 0 8px 20px rgba(var(--accent-primary-rgb), 0.2);
         }
 
         .btn-details:hover {
           transform: translateY(-3px);
-          box-shadow: 0 12px 30px rgba(14, 165, 233, 0.3);
+          box-shadow: 0 12px 30px rgba(var(--accent-primary-rgb), 0.3);
         }
 
         .card-badge-row {
@@ -899,14 +900,14 @@ const Search = () => {
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.5px;
-          box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+          box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb), 0.3);
         }
 
         .occupancy-tag {
           font-size: 0.7rem;
           font-weight: 900;
           color: var(--accent-success);
-          background: rgba(16, 185, 129, 0.1);
+          background: rgba(var(--accent-success-rgb), 0.1);
           padding: 0.4rem 0.8rem;
           border-radius: 8px;
           text-transform: uppercase;

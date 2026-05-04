@@ -134,10 +134,10 @@ const Services = () => {
         {`
           .glass-card-premium {
             backdrop-filter: blur(16px);
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
             border-radius: 32px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            box-shadow: var(--shadow-lg);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           }
           .service-tab-btn {
@@ -163,24 +163,24 @@ const Services = () => {
           .input-premium {
             width: 100%;
             padding: 1.1rem;
-            background: #f8fafc;
+            background: var(--bg-tertiary);
             border: 2px solid transparent;
             border-radius: 16px;
-            color: #1e293b;
+            color: var(--text-primary);
             font-weight: 600;
             transition: all 0.3s ease;
             outline: none;
           }
           .input-premium:focus {
-            background: white;
+            background: var(--bg-secondary);
             border-color: var(--accent-primary);
-            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+            box-shadow: 0 0 0 4px rgba(var(--accent-primary-rgb), 0.1);
           }
           .history-item {
             padding: 1.5rem;
-            background: white;
+            background: var(--bg-secondary);
             border-radius: 20px;
-            border: 1px solid #f1f5f9;
+            border: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -203,9 +203,9 @@ const Services = () => {
             width: 36px;
             height: 36px;
             border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            background: white;
-            color: #1e293b;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
             font-weight: 900;
             cursor: pointer;
             transition: all 0.2s;
@@ -213,7 +213,7 @@ const Services = () => {
             align-items: center;
             justify-content: center;
           }
-          .counter-btn:hover { background: #f1f5f9; border-color: var(--accent-primary); }
+          .counter-btn:hover { background: var(--bg-secondary); border-color: var(--accent-primary); }
           .spinner {
             width: 30px;
             height: 30px;
@@ -261,8 +261,8 @@ const Services = () => {
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {Object.entries(laundryItems).map(([item, count]) => (
-                  <div key={item} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', background: '#f8fafc', borderRadius: '16px' }}>
-                    <span style={{ fontWeight: '800', textTransform: 'capitalize', color: '#475569' }}>{item}</span>
+                  <div key={item} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', background: 'var(--bg-primary)', borderRadius: '16px' }}>
+                    <span style={{ fontWeight: '800', textTransform: 'capitalize', color: 'var(--text-secondary)' }}>{item}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
                       <button type="button" className="counter-btn" onClick={() => setLaundryItems({...laundryItems, [item]: Math.max(0, count - 1)})}>-</button>
                       <span style={{ minWidth: '20px', textAlign: 'center', fontWeight: '900', fontSize: '1.1rem' }}>{count}</span>
@@ -289,7 +289,7 @@ const Services = () => {
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 <div className="input-group">
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Preferred Date</label>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Preferred Date</label>
                   <input type="date" className="input-premium" value={cleaningForm.date} onChange={e => setCleaningForm({...cleaningForm, date: e.target.value})} required />
                 </div>
                 <div className="input-group">
@@ -314,7 +314,7 @@ const Services = () => {
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
                 <div className="input-group">
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Visitor Name</label>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Visitor Name</label>
                   <input type="text" className="input-premium" placeholder="John Doe" value={visitorForm.name} onChange={e => setVisitorForm({...visitorForm, name: e.target.value})} required />
                 </div>
                 <div className="input-group">
@@ -350,7 +350,7 @@ const Services = () => {
                   </div>
                 </div>
                 <div className="input-group">
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Reason</label>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Reason</label>
                   <textarea rows="4" className="input-premium" placeholder="Going home..." style={{ resize: 'none' }} value={leaveForm.reason} onChange={e => setLeaveForm({...leaveForm, reason: e.target.value})} required></textarea>
                 </div>
                 <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ padding: '1.2rem', fontWeight: '950', borderRadius: '18px', fontSize: '1.1rem', marginTop: '1rem' }}>
@@ -364,7 +364,7 @@ const Services = () => {
         {/* ── History Section ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <div className="glass-card-premium" style={{ padding: '2.5rem', flex: 1 }}>
-            <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#1e293b', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               Recent History
             </h3>
@@ -385,8 +385,8 @@ const Services = () => {
                   {activeTab === 'laundry' && laundryHistory.map(item => (
                     <div key={item._id} className="history-item">
                       <div>
-                        <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#1e293b' }}>Order {item.orderNumber}</h4>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>
+                        <h4 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-primary)' }}>Order {item.orderNumber}</h4>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
                           {new Date(item.pickupDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} • {item.items?.reduce((acc, curr) => acc + curr.count, 0) || 0} items
                         </p>
                       </div>
@@ -400,8 +400,8 @@ const Services = () => {
                   {activeTab === 'cleaning' && cleaningHistory.map(item => (
                     <div key={item._id} className="history-item">
                       <div>
-                        <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#1e293b' }}>Room Cleaning</h4>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>
+                        <h4 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-primary)' }}>Room Cleaning</h4>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
                           {new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} • {item.slot}
                         </p>
                       </div>
@@ -412,10 +412,10 @@ const Services = () => {
                   {activeTab === 'visitor' && visitorHistory.map(item => (
                     <div key={item._id} className="history-item">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <div style={{ width: '40px', height: '40px', background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', color: 'var(--accent-primary)' }}>{item.name ? item.name[0] : 'V'}</div>
+                        <div style={{ width: '40px', height: '40px', background: 'var(--bg-tertiary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', color: 'var(--accent-primary)' }}>{item.name ? item.name[0] : 'V'}</div>
                         <div>
-                          <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#1e293b' }}>{item.name}</h4>
-                          <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>
+                          <h4 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-primary)' }}>{item.name}</h4>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
                             {item.relation} • {new Date(item.arrivalDate).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
@@ -427,8 +427,8 @@ const Services = () => {
                   {activeTab === 'leave' && leaveHistory.map(item => (
                     <div key={item._id} className="history-item">
                       <div>
-                        <h4 style={{ fontSize: '1rem', fontWeight: '800', color: '#1e293b' }}>{item.reason}</h4>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>
+                        <h4 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-primary)' }}>{item.reason}</h4>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
                           {new Date(item.fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} to {new Date(item.toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                         </p>
                       </div>

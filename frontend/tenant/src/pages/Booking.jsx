@@ -130,18 +130,25 @@ const Booking = () => {
                   </div>
                 </div>
               </div>
-              <div style={{ background: 'var(--bg-tertiary)', padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '1rem' }}>Financial Overview</h3>
+              <div style={{ background: 'var(--bg-tertiary)', padding: '2.5rem', borderRadius: '28px', border: '1px solid var(--border-color)' }}>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '2rem', color: 'var(--text-primary)' }}>Booking Summary</h3>
+                <div className="summary-row">
+                  <span>Room Type</span>
+                  <strong>{currentRoom.name}</strong>
+                </div>
                 <div className="summary-row">
                   <span>Monthly Rent</span>
-                  <strong>₹{user.rent || '6,500'}</strong>
+                  <strong style={{ color: 'var(--accent-primary)' }}>₹{parseInt(currentRoom.price).toLocaleString()}</strong>
                 </div>
                 <div className="summary-row">
-                  <span>Due Date</span>
-                  <strong>05-May-2026</strong>
+                  <span>Security Deposit</span>
+                  <strong>₹{parseInt(currentRoom.price).toLocaleString()}</strong>
                 </div>
                 <div className="summary-divider"></div>
-                <Link to="/payments" className="btn btn-primary" style={{ textAlign: 'center', textDecoration: 'none', display: 'block', marginTop: '1rem' }}>View Full History</Link>
+                <div className="summary-row total">
+                  <span>Total Payable Now</span>
+                  <strong style={{ fontSize: '1.5rem' }}>₹{(parseInt(currentRoom.price) * 2).toLocaleString()}</strong>
+                </div>
               </div>
             </div>
           ) : bookings && bookings.length > 0 ? (
@@ -202,16 +209,15 @@ const Booking = () => {
 
   return (
     <div className="booking-page fade-in dashboard-container" style={{ position: 'relative', paddingBottom: '8rem' }}>
-      {/* ── Close/Back Button ── */}
       <button 
         onClick={() => navigate(-1)} 
         style={{ 
           position: 'absolute', 
           top: '2rem', 
           right: '2rem', 
-          background: 'rgba(255, 255, 255, 0.8)', 
+          background: 'var(--bg-secondary)', 
           backdropFilter: 'blur(10px)',
-          border: '1px solid #e2e8f0', 
+          border: '1px solid var(--border-color)', 
           width: '52px', 
           height: '52px', 
           borderRadius: '50%', 
@@ -219,25 +225,22 @@ const Booking = () => {
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center', 
-          color: '#64748b',
+          color: 'var(--text-secondary)',
           zIndex: 100,
-          boxShadow: '0 8px 20px rgba(0,0,0,0.05)',
+          boxShadow: 'var(--shadow-md)',
           transition: 'all 0.3s ease'
         }}
         title="Cancel Booking / Go Back"
-        onMouseOver={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.borderColor = '#fee2e2'; }}
-        onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.8)'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
       <header style={{ marginBottom: '4.5rem', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '3.5rem', fontWeight: '950', letterSpacing: '-3px', marginBottom: '1rem', background: 'linear-gradient(to right, #1e293b, #64748b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        <h1 style={{ fontSize: '3.5rem', fontWeight: '950', letterSpacing: '-3px', marginBottom: '1rem', color: 'var(--text-primary)' }}>
           Finalize Your Stay
         </h1>
-        <p style={{ fontSize: '1.2rem', color: '#64748b', fontWeight: '500' }}>Your premium co-living experience is just a few steps away.</p>
+        <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Your premium co-living experience is just a few steps away.</p>
       </header>
 
-      {/* ── Progress Tracker ── */}
       <div className="progress-track">
         <div className="progress-bar-active" style={{ width: `${(step - 1) * 50}%` }}></div>
         {[
@@ -263,9 +266,9 @@ const Booking = () => {
                 {roomOptions.map(room => (
                   <div key={room.id} className={`room-option ${formData.roomType === room.id ? 'active' : ''}`} onClick={() => setFormData({...formData, roomType: room.id})}>
                     <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>{room.icon}</div>
-                    <h4 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1e293b' }}>{room.name}</h4>
-                    <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '1.5rem' }}>{room.desc}</p>
-                    <div className="room-price">₹{parseInt(room.price).toLocaleString()}<span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '600' }}> / month</span></div>
+                    <h4 style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-primary)' }}>{room.name}</h4>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>{room.desc}</p>
+                    <div className="room-price">₹{parseInt(room.price).toLocaleString()}<span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}> / month</span></div>
                     {formData.roomType === room.id && (
                       <div style={{ position: 'absolute', top: '1rem', right: '1rem', color: 'var(--accent-primary)' }}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
@@ -278,11 +281,11 @@ const Booking = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
               <div className="input-group">
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1rem' }}>Move-In Date</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '1rem' }}>Move-In Date</label>
                 <input type="date" className="input-elite" name="moveInDate" value={formData.moveInDate} onChange={handleChange} />
               </div>
               <div className="input-group">
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '1rem' }}>Stay Duration</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '1rem' }}>Stay Duration</label>
                 <select className="input-elite" name="duration" value={formData.duration} onChange={handleChange}>
                   <option value="3">3 Months</option>
                   <option value="6">6 Months (Popular)</option>
@@ -301,46 +304,32 @@ const Booking = () => {
           <div className="fade-in">
             <h2 style={{ fontSize: '2.2rem', fontWeight: '900', letterSpacing: '-1px', marginBottom: '2.5rem' }}>Identity Verification</h2>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
-              <input type="file" ref={idUploadRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload('idProof', e)} />
-              <div className={`upload-card ${formData.idProof ? 'uploaded' : ''}`} onClick={() => !isUploading && idUploadRef.current.click()} style={{ position: 'relative' }}>
-                {isUploading === 'idProof' && (
-                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.8)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '32px' }}>
-                    <div className="spinner-mini" style={{ width: '30px', height: '30px', border: '3px solid #f3f3f3', borderTop: '3px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                  </div>
-                )}
-                <div style={{ width: '64px', height: '64px', background: formData.idProof ? 'rgba(16, 185, 129, 0.1)' : 'rgba(14, 165, 233, 0.1)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: formData.idProof ? '#10b981' : 'var(--accent-primary)' }}>
-                   {formData.idProof ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> : <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line></svg>}
-                </div>
-                <h4 style={{ fontWeight: '800', marginBottom: '0.5rem' }}>{formData.idProof ? 'ID Proof Secured' : 'Upload ID Proof'}</h4>
-                <p style={{ fontSize: '0.85rem', color: formData.idProof ? '#10b981' : '#94a3b8', fontWeight: formData.idProof ? '700' : '500' }}>
-                  {formData.idProof ? `File: ${formData.idProof}` : 'Aadhar, PAN or Passport'}
-                </p>
-              </div>
-
-              <input type="file" ref={photoUploadRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload('profilePhoto', e)} />
-              <div className={`upload-card ${formData.profilePhoto ? 'uploaded' : ''}`} onClick={() => !isUploading && photoUploadRef.current.click()} style={{ position: 'relative' }}>
-                {isUploading === 'profilePhoto' && (
-                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.8)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '32px' }}>
-                    <div className="spinner-mini" style={{ width: '30px', height: '30px', border: '3px solid #f3f3f3', borderTop: '3px solid var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                  </div>
-                )}
-                <div style={{ width: '64px', height: '64px', background: formData.profilePhoto ? 'rgba(16, 185, 129, 0.1)' : 'rgba(14, 165, 233, 0.1)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: formData.profilePhoto ? '#10b981' : 'var(--accent-primary)' }}>
-                   {formData.profilePhoto ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> : <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>}
-                </div>
-                <h4 style={{ fontWeight: '800', marginBottom: '0.5rem' }}>{formData.profilePhoto ? 'Photo Verified' : 'Profile Photo'}</h4>
-                <p style={{ fontSize: '0.85rem', color: formData.profilePhoto ? '#10b981' : '#94a3b8', fontWeight: formData.profilePhoto ? '700' : '500' }}>
-                  {formData.profilePhoto ? `File: ${formData.profilePhoto}` : 'Clear portrait for gate pass'}
-                </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem', marginBottom: '3rem' }}>
+              <div className="input-group" style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '1rem' }}>ID Proof Number</label>
+                <input type="text" className="input-elite" placeholder="Aadhar / PAN / Passport" />
               </div>
             </div>
 
-            <div style={{ background: '#f8fafc', padding: '2.5rem', borderRadius: '32px', border: '1px solid #e2e8f0', marginBottom: '3rem' }}>
-              <h4 style={{ fontWeight: '900', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
+              <div onClick={() => idUploadRef.current.click()} style={{ flex: 1, border: '2px dashed var(--border-color)', borderRadius: '20px', padding: '2rem', textAlign: 'center', cursor: 'pointer', background: formData.idProof ? 'var(--accent-success)' : 'transparent', color: formData.idProof ? 'white' : 'inherit' }}>
+                <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🪪</div>
+                <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>{formData.idProof || 'Upload ID Proof'}</div>
+                <input type="file" ref={idUploadRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload('idProof', e)} />
+              </div>
+              <div onClick={() => photoUploadRef.current.click()} style={{ flex: 1, border: '2px dashed var(--border-color)', borderRadius: '20px', padding: '2rem', textAlign: 'center', cursor: 'pointer', background: formData.profilePhoto ? 'var(--accent-success)' : 'transparent', color: formData.profilePhoto ? 'white' : 'inherit' }}>
+                <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📸</div>
+                <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>{formData.profilePhoto || 'Upload Profile Photo'}</div>
+                <input type="file" ref={photoUploadRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload('profilePhoto', e)} />
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--bg-tertiary)', padding: '2.5rem', borderRadius: '32px', border: '1px solid var(--border-color)', marginBottom: '3rem' }}>
+              <h4 style={{ fontWeight: '900', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem', color: 'var(--text-primary)' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 Rental Agreement Summary
               </h4>
-              <div style={{ maxHeight: '120px', overflowY: 'auto', fontSize: '0.9rem', color: '#64748b', lineHeight: '1.6', paddingRight: '1rem' }}>
+              <div style={{ maxHeight: '120px', overflowY: 'auto', fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.6', paddingRight: '1rem' }}>
                 <p>• Standard move-out notice period is 30 days.</p>
                 <p>• Security deposit is equivalent to 1 month's rent.</p>
                 <p>• Electricity charges are calculated based on sub-meter usage.</p>
@@ -348,7 +337,7 @@ const Booking = () => {
               </div>
               <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '2rem', cursor: 'pointer' }}>
                 <input type="checkbox" checked={formData.agreementSigned} onChange={e => setFormData({...formData, agreementSigned: e.target.checked})} style={{ width: '20px', height: '20px' }} />
-                <span style={{ fontWeight: '700', color: '#1e293b' }}>I have read and agree to the Digital Rental Agreement</span>
+                <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>I have read and agree to the Digital Rental Agreement</span>
               </label>
             </div>
 
@@ -363,32 +352,32 @@ const Booking = () => {
           <div className="fade-in">
             <h2 style={{ fontSize: '2.2rem', fontWeight: '900', letterSpacing: '-1px', marginBottom: '2.5rem' }}>Booking Summary</h2>
             
-            <div style={{ background: 'white', border: '1px solid #e2e8f0', color: '#1e293b', borderRadius: '32px', padding: '3.5rem', position: 'relative', overflow: 'hidden', marginBottom: '3rem', boxShadow: '0 15px 40px rgba(0,0,0,0.03)' }}>
+            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '32px', padding: '3.5rem', position: 'relative', overflow: 'hidden', marginBottom: '3rem', boxShadow: '0 15px 40px rgba(0,0,0,0.03)' }}>
               <div style={{ position: 'absolute', right: '-30px', top: '-30px', width: '200px', height: '200px', background: 'var(--accent-primary)', opacity: 0.05, borderRadius: '50%', filter: 'blur(60px)' }}></div>
               
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem', borderBottom: '1px dashed #e2e8f0', paddingBottom: '2.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem', borderBottom: '1px dashed var(--border-color)', paddingBottom: '2.5rem' }}>
                 <div>
-                  <p style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Selected Category</p>
-                  <h3 style={{ fontSize: '2rem', fontWeight: '950', color: '#1e293b' }}>{currentRoom.name}</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Selected Category</p>
+                  <h3 style={{ fontSize: '2rem', fontWeight: '950', color: 'var(--text-primary)' }}>{currentRoom.name}</h3>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                   <p style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Move-in Date</p>
+                   <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Move-in Date</p>
                    <h3 style={{ fontSize: '2rem', fontWeight: '950', color: 'var(--accent-primary)' }}>{formData.moveInDate || 'TBD'}</h3>
                 </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', color: '#64748b' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', color: 'var(--text-secondary)' }}>
                   <span>Security Deposit (Refundable)</span>
-                  <span style={{ color: '#1e293b' }}>₹{parseInt(currentRoom.price).toLocaleString()}</span>
+                  <span style={{ color: 'var(--text-primary)' }}>₹{parseInt(currentRoom.price).toLocaleString()}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', color: '#64748b' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', color: 'var(--text-secondary)' }}>
                   <span>Onboarding & Service Fee</span>
-                  <span style={{ color: '#1e293b' }}>₹2,000</span>
+                  <span style={{ color: 'var(--text-primary)' }}>₹2,000</span>
                 </div>
-                <div style={{ height: '2px', background: '#f1f5f9', margin: '1rem 0' }}></div>
+                <div style={{ height: '2px', background: 'var(--border-color)', margin: '1rem 0' }}></div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#1e293b' }}>Total Payable</span>
+                  <span style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>Total Payable</span>
                   <div style={{ textAlign: 'right' }}>
                     <span style={{ fontSize: '3rem', fontWeight: '950', color: 'var(--accent-primary)' }}>₹{(parseInt(currentRoom.price) + 2000).toLocaleString()}</span>
                   </div>
@@ -437,10 +426,10 @@ const Booking = () => {
       <style>{`
         .glass-card-premium {
           backdrop-filter: blur(20px);
-          background: rgba(255, 255, 255, 0.9);
-          border: 1px solid rgba(255, 255, 255, 0.5);
+          background: var(--glass-bg);
+          border: 1px solid var(--glass-border);
           border-radius: 40px;
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+          box-shadow: var(--shadow-xl);
         }
         .progress-track {
           display: flex;
@@ -456,7 +445,7 @@ const Booking = () => {
           left: 5rem;
           right: 5rem;
           height: 4px;
-          background: #f1f5f9;
+          background: var(--bg-tertiary);
           z-index: 0;
         }
         .progress-bar-active {

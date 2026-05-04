@@ -95,17 +95,17 @@ const Community = () => {
           <div className="fade-in">
             <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '2rem' }}>Critical Updates</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-              <div style={{ padding: '1.5rem', background: 'rgba(244,63,94,0.05)', borderLeft: '4px solid var(--accent-error)', borderRadius: '16px' }}>
+              <div style={{ padding: '1.5rem', background: 'rgba(var(--accent-error-rgb), 0.05)', borderLeft: '4px solid var(--accent-error)', borderRadius: '16px' }}>
                 <h4 style={{ color: 'var(--accent-error)', fontSize: '1.1rem', fontWeight: '800' }}>Water Supply Interruption</h4>
-                <p style={{ fontSize: '0.95rem', marginTop: '0.5rem' }}>Scheduled maintenance on main tank today from 2 PM to 4 PM.</p>
+                <p style={{ fontSize: '0.95rem', marginTop: '0.5rem', color: 'var(--text-primary)' }}>Scheduled maintenance on main tank today from 2 PM to 4 PM.</p>
                 <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between' }}>
                   <small style={{ color: 'var(--text-muted)', fontWeight: '600' }}>High Priority</small>
                   <small style={{ color: 'var(--text-muted)' }}>2 hours ago</small>
                 </div>
               </div>
-              <div style={{ padding: '1.5rem', background: 'rgba(14,165,233,0.05)', borderLeft: '4px solid var(--accent-primary)', borderRadius: '16px' }}>
+              <div style={{ padding: '1.5rem', background: 'rgba(var(--accent-primary-rgb), 0.05)', borderLeft: '4px solid var(--accent-primary)', borderRadius: '16px' }}>
                 <h4 style={{ color: 'var(--accent-primary)', fontSize: '1.1rem', fontWeight: '800' }}>Rent Cycle Reminder</h4>
-                <p style={{ fontSize: '0.95rem', marginTop: '0.5rem' }}>Kindly clear all dues by tomorrow to enjoy uninterrupted services.</p>
+                <p style={{ fontSize: '0.95rem', marginTop: '0.5rem', color: 'var(--text-primary)' }}>Kindly clear all dues by tomorrow to enjoy uninterrupted services.</p>
                 <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between' }}>
                   <small style={{ color: 'var(--text-muted)', fontWeight: '600' }}>General Notice</small>
                   <small style={{ color: 'var(--text-muted)' }}>Yesterday</small>
@@ -185,19 +185,18 @@ const Community = () => {
         {activeTab === 'lostfound' && (
           <div className="fade-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: '800' }}>Lost & Found</h3>
-              <button onClick={() => setShowReportModal(true)} className="btn btn-primary" style={{ padding: '0.8rem 1.5rem', fontWeight: '800', borderRadius: '14px', boxShadow: '0 8px 16px rgba(14, 165, 233, 0.2)' }}>+ Report Item</button>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-primary)' }}>Lost & Found</h3>
+              <button onClick={() => setShowReportModal(true)} className="btn btn-primary" style={{ padding: '0.8rem 1.5rem', fontWeight: '800', borderRadius: '14px', boxShadow: '0 8px 16px rgba(var(--accent-primary-rgb), 0.2)' }}>+ Report Item</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               {items.map(item => {
-                const itemColor = item.type === 'Lost' ? '#f43f5e' : '#f59e0b';
                 const displayDate = new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
                 return (
-                  <div key={item._id} className="glass-card fade-in" style={{ padding: '1.8rem', background: `${itemColor}05`, borderLeft: `6px solid ${itemColor}`, borderRadius: '20px', transition: 'all 0.3s ease' }}>
+                  <div key={item._id} className="glass-card fade-in" style={{ padding: '1.8rem', background: item.type === 'Lost' ? 'rgba(var(--accent-error-rgb), 0.05)' : 'rgba(var(--accent-warning-rgb), 0.05)', borderLeft: `6px solid ${item.type === 'Lost' ? 'var(--accent-error)' : 'var(--accent-warning)'}`, borderRadius: '20px', transition: 'all 0.3s ease' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-                          <span style={{ padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '900', background: `${itemColor}15`, color: itemColor, textTransform: 'uppercase' }}>{item.type}</span>
+                          <span style={{ padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '900', background: item.type === 'Lost' ? 'rgba(var(--accent-error-rgb), 0.15)' : 'rgba(var(--accent-warning-rgb), 0.15)', color: item.type === 'Lost' ? 'var(--accent-error)' : 'var(--accent-warning)', textTransform: 'uppercase' }}>{item.type}</span>
                           <h4 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{item.title}</h4>
                         </div>
                         <p style={{ fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: '500' }}>{item.description}</p>
@@ -224,16 +223,16 @@ const Community = () => {
       {/* ── Report Item Modal ── */}
       {showReportModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', padding: '1rem' }}>
-          <div className="glass-card fade-in" style={{ width: '100%', maxWidth: '600px', padding: '3rem', background: 'var(--bg-secondary)', borderRadius: '32px', border: '1px solid var(--accent-primary)', position: 'relative', boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}>
+          <div className="glass-card-premium fade-in" style={{ width: '100%', maxWidth: '600px', padding: '3rem', background: 'var(--bg-secondary)', borderRadius: '32px', border: '1px solid var(--accent-primary)', position: 'relative', boxShadow: 'var(--shadow-2xl)' }}>
             <button onClick={() => setShowReportModal(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
 
             <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-              <div style={{ width: '70px', height: '70px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.2rem', color: 'var(--accent-primary)' }}>
+              <div style={{ width: '70px', height: '70px', background: 'var(--bg-tertiary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.2rem', color: 'var(--accent-primary)' }}>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               </div>
-              <h2 style={{ fontSize: '2rem', fontWeight: '950', letterSpacing: '-1px' }}>Report Item</h2>
+              <h2 style={{ fontSize: '2rem', fontWeight: '950', letterSpacing: '-1px', color: 'var(--text-primary)' }}>Report Item</h2>
               <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontWeight: '500' }}>Help others find their belongings or find yours.</p>
             </div>
 
@@ -277,7 +276,7 @@ const Community = () => {
                 ></textarea>
               </div>
 
-              <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ padding: '1.2rem', fontWeight: '950', borderRadius: '16px', fontSize: '1.1rem', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.3)', marginTop: '1rem' }}>
+              <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ padding: '1.2rem', fontWeight: '950', borderRadius: '16px', fontSize: '1.1rem', boxShadow: '0 10px 20px rgba(var(--accent-primary-rgb), 0.3)', marginTop: '1rem' }}>
                 {isSubmitting ? '📢 Notifying Community...' : 'Post Report'}
               </button>
             </form>

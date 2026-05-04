@@ -129,7 +129,7 @@ const Transfers = () => {
                   borderRadius: '100px', 
                   fontSize: '0.8rem', 
                   fontWeight: '800',
-                  background: t.status === 'Approved' ? 'rgba(16, 185, 129, 0.1)' : t.status === 'Rejected' ? 'rgba(244, 63, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                  background: t.status === 'Approved' ? 'rgba(var(--accent-success-rgb), 0.1)' : t.status === 'Rejected' ? 'rgba(var(--accent-error-rgb), 0.1)' : 'rgba(var(--accent-warning-rgb), 0.1)',
                   color: t.status === 'Approved' ? 'var(--accent-success)' : t.status === 'Rejected' ? 'var(--accent-error)' : 'var(--accent-warning)'
                 }}>
                   {t.status.toUpperCase()}
@@ -143,7 +143,7 @@ const Transfers = () => {
       {/* ── Transfer Request Modal ── */}
       {showForm && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '1.5rem' }}>
-          <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '3rem', borderRadius: '32px', position: 'relative', border: '1px solid rgba(255,255,255,0.1)', animation: 'authFadeIn 0.4s ease-out' }}>
+          <div className="glass-card-premium" style={{ width: '100%', maxWidth: '500px', padding: '3rem', borderRadius: '32px', position: 'relative', border: '1px solid var(--glass-border)', background: 'var(--bg-secondary)', animation: 'authFadeIn 0.4s ease-out' }}>
             <button onClick={() => setShowForm(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
