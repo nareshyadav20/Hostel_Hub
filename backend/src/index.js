@@ -28,6 +28,7 @@ const complaintRoutes = require('./routes/complaintRoutes');
 const roomTransferRoutes = require('./routes/roomTransferRoutes');
 const messRoutes = require('./routes/messRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const ownerRoutes = require('./routes/ownerRoutes');
 
 // Pre-load all models to ensure they are registered for population
 require('./models/User');
@@ -50,6 +51,7 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/room-transfers', roomTransferRoutes);
 app.use('/api/mess', messRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/owner', ownerRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

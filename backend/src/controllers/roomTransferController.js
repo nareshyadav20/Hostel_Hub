@@ -21,9 +21,28 @@ exports.createTransfer = async (req, res) => {
         });
     }
 
+    // Ensure buildingId is set. If missing on tenant, try to find it.
+    let buildingId = tenant.buildingId;
+    if (!buildingId && tenant.room) {
+      const Room = require('../models/Room');
+      const Floor = require('../models/Floor');
+      
+      const roomObj = await Room.findOne({ 
+        $or: [
+          { _id: require('mongoose').Types.ObjectId.isValid(tenant.room) ? tenant.room : null },
+          { roomNumber: tenant.room }
+        ]
+      }).populate('floor');
+      
+      if (roomObj && roomObj.floor) {
+        buildingId = roomObj.floor.building;
+      }
+    }
+
     const transfer = await RoomTransfer.create({
       tenant: tenant._id,
       user: req.user.id,
+      buildingId, // Inherit building
       oldRoom: tenant.room || 'N/A',
       newRoom,
       reason,

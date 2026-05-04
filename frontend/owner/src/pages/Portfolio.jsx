@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, Building, BedDouble, UsersRound, DollarSign, AlertCircle, 
@@ -10,7 +12,7 @@ import {
   ShieldCheck, BookOpen, Coffee, Gamepad, Fingerprint, Droplets,
   Armchair, ClipboardList, Star, ChevronRight, ChevronLeft,
   Smartphone, UserCheck, Briefcase, FileText, Calendar, Clock,
-  Heart, Home, ArrowLeft, Settings
+  Heart, Home, ArrowLeft, Settings, Trash2
 } from 'lucide-react';
 import { api } from '../mockData';
 
@@ -79,6 +81,10 @@ const Portfolio = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
+  const [drafts, setDrafts] = useState([]);
+  const [activeDraftId, setActiveDraftId] = useState(null);
+  const [draftMsg, setDraftMsg] = useState('');
+  const [showDrafts, setShowDrafts] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [occupancyFilter, setOccupancyFilter] = useState('All');
@@ -124,25 +130,102 @@ const Portfolio = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Load drafts from backend buildings with status: 'Draft'
+  const loadDrafts = useCallback(async () => {
+    try {
+      const res = await axios.get('http://localhost:5001/api/buildings');
+      const allBuildings = res.data || [];
+      setDrafts(allBuildings.filter(b => b.status === 'Draft').map(b => ({ ...b, id: b._id })));
+    } catch { /* offline, no drafts */ }
+  }, []);
+
+  useEffect(() => { loadDrafts(); }, [loadDrafts]);
+
+  // Auto-save draft when form data or step changes (debounced)
+  useEffect(() => {
+    if (!isAddModalOpen) return;
+    // Only trigger if user has typed something meaningful
+    const hasData = formData.name || formData.addr1 || formData.city || formData.gender || formData.rentBed;
+    if (!hasData) return;
+    const t = setTimeout(() => {
+      saveDraftToBackend(formData, currentStep, activeDraftId);
+    }, 1200);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, formData, isAddModalOpen]);
+
+  const saveDraftToBackend = useCallback(async (data, step, draftId = null) => {
+    const payload = {
+      name: data.name || 'Untitled Draft',
+      address: `${data.addr1 || ''}, ${data.city || ''}, ${data.state || ''}`.trim().replace(/^,\s*|,\s*$/g, '') || 'Draft',
+      locationCity: data.city || 'Bengaluru',
+      genderType: data.gender === 'Co-living (Both)' ? 'Mixed' : data.gender || 'Mixed',
+      status: 'Draft',
+      lastStep: step,
+      draftData: data,
+    };
+    try {
+      let res;
+      if (draftId) {
+        res = await axios.patch(`http://localhost:5001/api/buildings/${draftId}`, payload);
+        setActiveDraftId(draftId);
+      } else {
+        res = await axios.post('http://localhost:5001/api/buildings', payload);
+        setActiveDraftId(res.data._id);
+      }
+      setDraftMsg('✅ Draft saved!');
+      loadDrafts();
+      setTimeout(() => setDraftMsg(''), 2500);
+      return res.data._id;
+    } catch (err) { 
+      console.error('Draft save failed:', err);
+      setDraftMsg('⚠️ Save failed'); 
+      setTimeout(() => setDraftMsg(''), 2500); 
+    }
+  }, [loadDrafts]);
+
+  const openFreshForm = () => {
+    setFormData(INITIAL_FORM_STATE);
+    setCurrentStep(1);
+    setActiveDraftId(null);
+    setDraftMsg('');
+    setIsAddModalOpen(true);
+  };
+
+  const resumeDraft = (draft) => {
+    const data = draft.draftData || INITIAL_FORM_STATE;
+    setFormData({ ...INITIAL_FORM_STATE, ...data });
+    setCurrentStep(draft.lastStep || 1);
+    setActiveDraftId(draft._id || draft.id);
+    setDraftMsg('🔄 Resuming your draft...');
+    setShowDrafts(false);
+    setIsAddModalOpen(true);
+    setTimeout(() => setDraftMsg(''), 2500);
+  };
+
+  const deleteDraft = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5001/api/buildings/${id}`);
+      loadDrafts();
+      if (activeDraftId === id) {
+        setActiveDraftId(null);
+        setIsAddModalOpen(false);
+      }
+    } catch { alert('Could not delete draft.'); }
+  };
+
   const handleCreateHostel = async (e) => {
     e.preventDefault();
     if (currentStep < 11) {
+      // Auto-save as draft when advancing steps
+      saveDraftToBackend(formData, currentStep + 1, activeDraftId);
       setCurrentStep(s => s + 1);
       return;
     }
     
     setIsSubmitting(true);
     try {
-      const extendedDesc = `
-# Property Overview
-**Type:** ${formData.propertyType} | **Gender:** ${formData.gender}
-**Capacity:** ${formData.totalRooms} Rooms, ${formData.totalBeds} Beds
-# Pricing
-- Rent: ₹${formData.rentBed}/bed, ₹${formData.rentRoom}/room
-- Deposit: ₹${formData.deposit}
-# Contact: ${formData.ownerName} (${formData.phone})
----
-${formData.longDesc || formData.shortDesc || ''}`;
+      const extendedDesc = `# Property Overview\n**Type:** ${formData.propertyType} | **Gender:** ${formData.gender}\n**Capacity:** ${formData.totalRooms} Rooms, ${formData.totalBeds} Beds\n# Pricing\n- Rent: ₹${formData.rentBed}/bed, ₹${formData.rentRoom}/room\n- Deposit: ₹${formData.deposit}\n# Contact: ${formData.ownerName} (${formData.phone})\n---\n${formData.longDesc || formData.shortDesc || ''}`;
 
       const payload = {
         name: formData.name || 'New Hostel',
@@ -156,23 +239,27 @@ ${formData.longDesc || formData.shortDesc || ''}`;
         category: formData.propertyType === 'Co-living' ? 'Luxury' : (formData.propertyType === 'PG' ? 'Student' : 'Professional'),
         rating: 4.5,
         popularityLabel: 'New Property',
+        status: 'Active',
         policies: {
           smoking: formData.smokingPolicy || 'Not Allowed',
           alcohol: formData.alcoholPolicy || 'Not Allowed',
           pets: formData.petsAllowed || 'No',
           visitors: formData.visitorPolicy || 'Till 8 PM'
         },
-        staffInfo: {
-          name: formData.staffName,
-          role: formData.staffRole,
-          contact: formData.staffContact
-        }
+        staffInfo: { name: formData.staffName, role: formData.staffRole, contact: formData.staffContact }
       };
 
-      await api.addBuilding(payload);
+      if (activeDraftId) {
+        // Upgrade existing draft to Active
+        await api.updateBuilding(activeDraftId, payload);
+      } else {
+        await api.addBuilding(payload);
+      }
       setFormData(INITIAL_FORM_STATE);
       setCurrentStep(1);
+      setActiveDraftId(null);
       setIsAddModalOpen(false);
+      loadDrafts();
       fetchData();
     } catch (err) {
       console.error("Submission error", err);
@@ -480,7 +567,15 @@ ${formData.longDesc || formData.shortDesc || ''}`;
             <Search size={18} style={{ position: 'absolute', left: '1rem', color: 'var(--text-secondary)' }} />
             <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', width: '220px' }} />
           </div>
-          <button onClick={() => { setFormData(INITIAL_FORM_STATE); setCurrentStep(1); setIsAddModalOpen(true); }} className="btn-primary" style={{ padding: '0.8rem 1.4rem' }}>
+          <button onClick={() => setShowDrafts(s => !s)} className="btn-outline" style={{ padding: '0.8rem 1.2rem', position: 'relative', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            📂 Saved Hostels
+            {(drafts.length + (isAddModalOpen ? 1 : 0)) > 0 && (
+              <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#EF4444', color: 'white', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.65rem', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {drafts.length + (isAddModalOpen ? 1 : 0)}
+              </span>
+            )}
+          </button>
+          <button onClick={openFreshForm} className="btn-primary" style={{ padding: '0.8rem 1.4rem' }}>
             <Plus size={18} /> Create Hostel
           </button>
           <button onClick={handleLogout} className="btn-outline" style={{ width: '45px', height: '45px' }}><LogOut size={20} /></button>
@@ -498,6 +593,85 @@ ${formData.longDesc || formData.shortDesc || ''}`;
           </motion.div>
         ))}
       </div>
+
+      {/* DRAFTS PANEL */}
+      <AnimatePresence>
+        {showDrafts && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} style={{ marginBottom: '2rem' }}>
+            <div className="card" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.2rem' }}>
+                <span style={{ fontSize: '1.2rem' }}>📂</span>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>Saved Hostel Drafts</h3>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{drafts.length + (isAddModalOpen ? 1 : 0)} pending</span>
+              </div>
+
+              {/* IN-PROGRESS CARD — shown when form is currently open */}
+              {isAddModalOpen && (
+                <div style={{ marginBottom: '1rem', padding: '1.2rem', borderRadius: '12px', border: '2px solid #3B82F6', background: 'linear-gradient(135deg, #EFF6FF, #F0FDF4)', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#1D4ED8' }}>{formData.name || '✍️ Untitled — Currently Editing'}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '0.2rem' }}>Currently being filled</div>
+                    </div>
+                    <span style={{ padding: '0.25rem 0.6rem', borderRadius: '20px', background: '#DBEAFE', color: '#1D4ED8', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      ⏳ In Progress
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#475569', fontWeight: '600' }}>📍 Step: {STEP_CONFIG[currentStep - 1]?.title}</div>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '4px', fontWeight: '700' }}>
+                      <span>Progress</span>
+                      <span style={{ color: '#3B82F6' }}>{Math.round((currentStep / 11) * 100)}%</span>
+                    </div>
+                    <div style={{ height: '6px', background: '#DBEAFE', borderRadius: '100px', overflow: 'hidden' }}>
+                      <div style={{ width: `${Math.round((currentStep / 11) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #6366F1)', borderRadius: '100px', transition: 'width 0.6s ease' }} />
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowDrafts(false)}
+                    style={{ padding: '0.55rem', borderRadius: '8px', background: '#3B82F6', color: 'white', border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.8rem' }}
+                  >
+                    → Continue Editing
+                  </button>
+                </div>
+              )}
+              {drafts.length === 0 ? (
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem', fontSize: '0.9rem' }}>No saved drafts yet. Start creating a hostel and save your progress.</p>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
+                  {drafts.map(draft => {
+                    const progress = Math.round(((draft.lastStep || 1) / 11) * 100);
+                    const stepLabel = STEP_CONFIG[(draft.lastStep || 1) - 1]?.title || 'Basic Info';
+                    const ago = draft.updatedAt ? (() => { const d = (Date.now() - new Date(draft.updatedAt)) / 60000; return d < 60 ? `${Math.round(d)}m ago` : `${Math.round(d/60)}h ago`; })() : 'Recently';
+                    return (
+                      <div key={draft._id} style={{ padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div>
+                            <div style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-primary)' }}>{draft.name || 'Untitled Draft'}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Last: {ago}</div>
+                          </div>
+                          <span style={{ padding: '0.25rem 0.6rem', borderRadius: '20px', background: '#FEF3C7', color: '#D97706', fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase' }}>Draft</span>
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: '600' }}>📍 Step: {stepLabel}</div>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '4px', fontWeight: '700' }}><span>Progress</span><span style={{ color: 'var(--accent-primary)' }}>{progress}%</span></div>
+                          <div style={{ height: '6px', background: 'var(--bg-secondary)', borderRadius: '100px', overflow: 'hidden' }}>
+                            <div style={{ width: `${progress}%`, height: '100%', background: 'linear-gradient(90deg, #6366F1, #3B82F6)', borderRadius: '100px', transition: 'width 0.6s ease' }} />
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.6rem', marginTop: '0.2rem' }}>
+                          <button onClick={() => resumeDraft(draft)} style={{ flex: 2, padding: '0.55rem', borderRadius: '8px', background: 'var(--accent-primary)', color: 'white', border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.8rem' }}>▶ Resume</button>
+                          <button onClick={() => deleteDraft(draft._id)} style={{ flex: 1, padding: '0.55rem', borderRadius: '8px', background: '#FEE2E2', color: '#EF4444', border: 'none', fontWeight: '700', cursor: 'pointer', fontSize: '0.8rem' }}>🗑 Delete</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -568,28 +742,15 @@ ${formData.longDesc || formData.shortDesc || ''}`;
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-                {localStorage.getItem('hostel_draft') && (
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      const draft = JSON.parse(localStorage.getItem('hostel_draft'));
-                      setFormData(draft);
-                    }}
-                    className="btn-outline"
-                    style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', background: '#F1F5F9', color: '#475569' }}
-                  >
-                    📂 Saved Hostel
-                  </button>
+                {draftMsg && (
+                  <span style={{ fontSize: '0.8rem', fontWeight: '700', color: draftMsg.includes('✅') ? '#059669' : draftMsg.includes('🔄') ? '#3B82F6' : '#EF4444', background: draftMsg.includes('✅') ? '#DCFCE7' : draftMsg.includes('🔄') ? '#EFF6FF' : '#FEE2E2', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>{draftMsg}</span>
                 )}
-                <button 
-                  type="button" 
-                  className={formData.name ? 'btn-primary' : 'btn-outline'}
-                  onClick={() => { 
-                    localStorage.setItem('hostel_draft', JSON.stringify(formData)); 
-                  }} 
-                  style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem' }}
+                <button
+                  type="button"
+                  onClick={() => saveDraftToBackend(formData, currentStep, activeDraftId)}
+                  style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', background: '#F1F5F9', color: '#475569', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                 >
-                  {formData.name ? '✅ Draft Saved' : '💾 Save Draft'}
+                  💾 Save Draft
                 </button>
                 <button onClick={() => setIsAddModalOpen(false)} style={{ background: '#F1F5F9', border: 'none', color: '#64748B', cursor: 'pointer', padding: '0.6rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
               </div>
@@ -619,8 +780,12 @@ ${formData.longDesc || formData.shortDesc || ''}`;
             {/* CONTENT AREA */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '2rem', display: 'flex', justifyContent: 'center' }}>
               <div style={{ width: '100%', maxWidth: '700px' }}>
-                {/* Step Header */}
                 <div style={{ marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid #E2E8F0' }}>
+                  {activeDraftId && (
+                    <div style={{ marginBottom: '1rem', padding: '0.7rem 1rem', background: '#EFF6FF', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: '700', color: '#1D4ED8', borderLeft: '3px solid #3B82F6' }}>
+                      📝 Editing saved draft &mdash; changes auto-saved
+                    </div>
+                  )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.3rem' }}>
                     <span style={{ fontSize: '1.8rem' }}>{STEP_CONFIG[currentStep - 1]?.icon}</span>
                     <h3 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{STEP_CONFIG[currentStep - 1]?.title}</h3>
@@ -633,12 +798,15 @@ ${formData.longDesc || formData.shortDesc || ''}`;
                   {/* FOOTER BUTTONS */}
                   <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #E2E8F0' }}>
                     {currentStep > 1 && (
-                      <button type="button" onClick={() => setCurrentStep(s => s - 1)} style={{ flex: 1, padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#475569', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
-                        <ChevronLeft size={18}/> Back
+                      <button type="button" onClick={() => setCurrentStep(s => s - 1)} style={{ width: '80px', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#475569', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <ChevronLeft size={18}/>
                       </button>
                     )}
+                    <button type="button" onClick={() => saveDraftToBackend(formData, currentStep, activeDraftId)} style={{ flex: 1, padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#3B82F6', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
+                      <FileText size={16}/> Save Draft
+                    </button>
                     <button disabled={isSubmitting} type="submit" style={{ flex: 2, padding: '1rem', borderRadius: '12px', border: 'none', background: currentStep === 11 ? '#10B981' : '#3B82F6', color: 'white', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
-                      {isSubmitting ? 'Processing...' : currentStep === 11 ? '🚀 Finalize & Publish' : `Continue to ${STEP_CONFIG[currentStep]?.title || 'Next'}`} <ChevronRight size={18}/>
+                      {isSubmitting ? 'Processing...' : currentStep === 11 ? '🚀 Finalize & Publish' : 'Continue'} <ChevronRight size={18}/>
                     </button>
                   </div>
                 </form>
@@ -668,6 +836,9 @@ ${formData.longDesc || formData.shortDesc || ''}`;
 
 const BuildingCard = ({ building, onNavigate }) => {
   const [imgIdx, setImgIdx] = useState(0);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const images = useMemo(() => [
     building.images?.[0] || 'https://images.unsplash.com/photo-1555854817-5b2260d19dca?auto=format&fit=crop&q=80&w=800',
     'https://images.unsplash.com/photo-1522770179533-24471fcdba45?auto=format&fit=crop&q=80&w=800',
@@ -682,6 +853,7 @@ const BuildingCard = ({ building, onNavigate }) => {
   }, [images.length]);
 
   return (
+    <>
     <motion.div 
       initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }} 
@@ -780,15 +952,97 @@ const BuildingCard = ({ building, onNavigate }) => {
           </button>
           <button 
             className="btn" 
-            style={{ flex: 1, padding: '0.6rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', fontSize: '0.85rem' }}
-            onClick={(e) => { e.stopPropagation(); navigate(`/owner/building/${building.id}/buildings`); }}
-            title="Manage Infrastructure"
+            style={{ padding: '0.6rem 0.9rem', borderRadius: '12px', background: '#FEE2E2', border: '1px solid #FECACA', color: '#EF4444', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '800' }}
+            onClick={(e) => { e.stopPropagation(); setShowDeleteModal(true); }}
+            title="Delete Property"
           >
-            <Settings size={18} />
+            <Trash2 size={16} />
           </button>
         </div>
       </div>
     </motion.div>
+
+    {/* Delete Confirmation Modal — rendered via Portal to escape card's stacking context */}
+    {showDeleteModal && createPortal(
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '1rem'
+        }}
+      >
+        {/* Blurred Backdrop */}
+        <div
+          onClick={() => setShowDeleteModal(false)}
+          style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+        />
+
+        {/* Modal Card */}
+        <div style={{
+          position: 'relative', zIndex: 1,
+          background: 'var(--bg-primary, #ffffff)',
+          borderRadius: '24px',
+          padding: 'clamp(1.5rem, 5vw, 2.5rem)',
+          width: '100%', maxWidth: '440px',
+          border: '1px solid rgba(239,68,68,0.2)',
+          boxShadow: '0 32px 64px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)'
+        }}>
+
+          {/* Red icon circle */}
+          <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg, #FEE2E2, #FECACA)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', boxShadow: '0 8px 20px rgba(239,68,68,0.25)' }}>
+            <Trash2 size={30} color="#EF4444" />
+          </div>
+
+          <h2 style={{ textAlign: 'center', fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', fontWeight: '900', margin: '0 0 0.4rem', color: 'var(--text-primary, #111)' }}>
+            Delete Property?
+          </h2>
+          <p style={{ textAlign: 'center', color: 'var(--text-secondary, #555)', fontSize: '0.9rem', margin: '0 0 1rem' }}>
+            You are about to permanently delete
+          </p>
+
+          {/* Building name badge */}
+          <p style={{ textAlign: 'center', fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary, #111)', margin: '0 0 1.2rem', background: 'var(--bg-tertiary, #f5f5f5)', padding: '0.6rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color, #e5e7eb)' }}>
+            🏢 {building.name}
+          </p>
+
+          {/* Warning */}
+          <p style={{ textAlign: 'center', color: '#DC2626', fontSize: '0.8rem', fontWeight: '700', margin: '0 0 2rem', padding: '0.75rem 1rem', background: '#FFF1F2', borderRadius: '10px', border: '1px solid #FECACA', lineHeight: 1.6 }}>
+            ⚠️ This action is <strong>irreversible</strong>. All associated rooms, beds, and tenant records will be permanently removed.
+          </p>
+
+          {/* Action buttons */}
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              style={{ flex: 1, minWidth: '120px', padding: '0.9rem', borderRadius: '12px', background: 'var(--bg-tertiary, #f5f5f5)', border: '1px solid var(--border-color, #e5e7eb)', color: 'var(--text-primary, #111)', fontWeight: '800', cursor: 'pointer', fontSize: '0.95rem', transition: 'all 0.2s' }}
+            >
+              Cancel
+            </button>
+            <button
+              disabled={isDeleting}
+              onClick={async () => {
+                setIsDeleting(true);
+                try {
+                  await api.deleteBuilding(building.id);
+                  setShowDeleteModal(false);
+                  window.location.reload();
+                } catch (err) {
+                  console.error('Delete failed:', err);
+                  alert('Failed to delete property. Please try again.');
+                  setIsDeleting(false);
+                }
+              }}
+              style={{ flex: 1, minWidth: '120px', padding: '0.9rem', borderRadius: '12px', background: isDeleting ? '#FCA5A5' : 'linear-gradient(135deg, #EF4444, #DC2626)', border: 'none', color: 'white', fontWeight: '900', cursor: isDeleting ? 'not-allowed' : 'pointer', fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: isDeleting ? 'none' : '0 4px 14px rgba(239,68,68,0.4)', transition: 'all 0.2s' }}
+            >
+              {isDeleting ? 'Deleting...' : <><Trash2 size={16} /> Delete Forever</>}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 };
 

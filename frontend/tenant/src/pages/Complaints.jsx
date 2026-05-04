@@ -143,11 +143,11 @@ const Complaints = () => {
             </div>
 
             <form onSubmit={handleRaiseComplaint} style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                 <div className="input-group">
                   <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Issue Title</label>
                   <input 
-                    type="text" placeholder="e.g. Broken Light Bulb" value={formData.title} 
+                    type="text" placeholder="e.g. Broken Light" value={formData.title} 
                     onChange={e => setFormData({...formData, title: e.target.value})} required 
                     style={{ background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%', fontSize: '1rem', fontWeight: '700' }} 
                   />
@@ -164,6 +164,17 @@ const Complaints = () => {
                     <option value="Leave">Leave Request</option>
                     <option value="Visitor">Visitor Permission</option>
                     <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="input-group">
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Priority</label>
+                  <select 
+                    value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})}
+                    style={{ background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%', fontSize: '1rem', fontWeight: '700' }}
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
                   </select>
                 </div>
               </div>

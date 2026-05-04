@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const roomTransferSchema = new mongoose.Schema({
   tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   oldRoom: { type: String, required: true },
   newRoom: { type: String, required: true },
   reason: { type: String },

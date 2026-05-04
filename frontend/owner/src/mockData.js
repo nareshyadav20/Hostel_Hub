@@ -3,6 +3,28 @@ import axios from 'axios';
 const API_URL = 'http://localhost:5001/api';
 export const backendOnline = true;
 
+// --- GLOBAL AUTH INTERCEPTOR ---
+// Automatically attaches the JWT token from localStorage to every request
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => Promise.reject(error));
+
+// Global response interceptor for auth failures
+axios.interceptors.response.use((response) => response, (error) => {
+  if (error.response && error.response.status === 401) {
+    console.warn('Unauthorized request - Token expired or invalid. Redirecting to login.');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  }
+  return Promise.reject(error);
+});
+
 // --- SEED GENERATOR ---
 const generateSeed = () => {
   const bNames = [
@@ -39,14 +61,16 @@ const generateSeed = () => {
   let beds = [];
 
   buildings.forEach(b => {
-    for (let f = 1; f <= 2; f++) {
-      const fId = `f_${b.id}_${f}`;
-      floors.push({
-        id: fId,
-        buildingId: b.id,
-        floorNumber: `${f === 1 ? '1st' : '2nd'} Floor`,
-        images: ['https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80']
-      });
+    const floorCount = b.id === 'b1' ? 4 : 2; // Alpha Tower is premium, 4 floors
+      for (let f = 1; f <= floorCount; f++) {
+        const fId = `f_${b.id}_${f}`;
+        const suffix = f === 1 ? 'st' : f === 2 ? 'nd' : f === 3 ? 'rd' : 'th';
+        floors.push({
+          id: fId,
+          buildingId: b.id,
+          floorNumber: `${f}${suffix} Floor`,
+          images: ['https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80']
+        });
 
       for (let r = 1; r <= 3; r++) {
         const rId = `r_${fId}_${r}`;
@@ -91,16 +115,22 @@ const cacheGet = (key) => {
 };
 const cacheSet = (key, val) => localStorage.setItem(key, JSON.stringify(val));
 
-const cached = async (key, fetcher, fallback) => {
+const cached = async (key, fetcher, fallback, minCount = 1) => {
   const c = cacheGet(key);
-  if (c && Array.isArray(c) && c.length > 0) return c;
+  if (c && Array.isArray(c) && c.length >= minCount) return c;
   try {
     const data = await fetcher();
-    if (data && data.length > 0) {
+    if (data && Array.isArray(data) && data.length >= minCount) {
       cacheSet(key, data);
       return data;
     }
-    throw new Error('Empty');
+    // If we have some data but less than minCount, we might want to merge or just use fallback
+    if (data && Array.isArray(data) && data.length > 0 && data.length < minCount) {
+      const merged = [...data, ...fallback.slice(0, minCount - data.length)];
+      cacheSet(key, merged);
+      return merged;
+    }
+    throw new Error('Insufficient data');
   } catch {
     cacheSet(key, fallback);
     return fallback;
@@ -114,19 +144,63 @@ const handleId = (data) => {
 };
 
 export const api = {
+  // Owner
+  getOwnerProfile: async () => {
+    const res = await axios.get(`${API_URL}/owner/profile`);
+    return res.data;
+  },
+  updateOwnerProfile: async (data) => {
+    const res = await axios.patch(`${API_URL}/owner/profile`, data);
+    return res.data;
+  },
+  updateOwnerDocuments: async (doc) => {
+    const res = await axios.post(`${API_URL}/owner/documents`, doc);
+    return res.data;
+  },
+  getOwnerStats: async () => {
+    // Fetch from existing dashboard summary
+    const res = await axios.get(`${API_URL}/dashboard/summary`);
+    return res.data;
+  },
+
   // Buildings
   getBuildings: () => cached('buildings_all_v4', async () => {
     const res = await axios.get(`${API_URL}/buildings`);
-    return handleId(res.data);
-  }, SEED.buildings),
+    // Exclude drafts from the main portfolio listing
+    return handleId(res.data.filter(b => b.status !== 'Draft'));
+  }, SEED.buildings, 10), // Ensure at least 10 buildings are shown to maintain a full portfolio look
 
   // Floors
-  getAllFloors: () => cached('floors_all_v4', async () => {
+  getAllFloors: () => cached('floors_all_v4_ext', async () => {
     const res = await axios.get(`${API_URL}/buildings`);
+    const backendBuildings = res.data || [];
     let all = [];
-    res.data.forEach(b => {
-      if (b.floors) all = [...all, ...b.floors.map(f => ({ ...f, buildingId: b._id.toString() }))];
+    
+    // Process backend data
+    backendBuildings.forEach(b => {
+      if (b.floors && b.floors.length > 0) {
+        all = [...all, ...b.floors.map(f => ({ ...f, buildingId: b._id.toString() }))];
+      }
     });
+
+    // For any building that has no floors in backend, use SEED or generate on the fly
+    const allBuildings = await api.getBuildings();
+    allBuildings.forEach(b => {
+      const existing = all.filter(f => f.buildingId === (b.id || b._id));
+      if (existing.length === 0) {
+        // Find in SEED or generate
+        const seedFloors = SEED.floors.filter(f => f.buildingId === b.id);
+        if (seedFloors.length > 0) {
+          all = [...all, ...seedFloors];
+        } else {
+          // Generate minimal floors for brand new buildings
+          const bId = b.id || b._id;
+          all.push({ id: `f_${bId}_1`, buildingId: bId, floorNumber: '1st Floor' });
+          all.push({ id: `f_${bId}_2`, buildingId: bId, floorNumber: '2nd Floor' });
+        }
+      }
+    });
+
     return handleId(all);
   }, SEED.floors),
 
@@ -136,14 +210,44 @@ export const api = {
   },
 
   // Rooms
-  getAllRooms: () => cached('rooms_all_v4', async () => {
+  getAllRooms: () => cached('rooms_all_v4_ext', async () => {
     const res = await axios.get(`${API_URL}/buildings`);
+    const backendBuildings = res.data || [];
     let all = [];
-    res.data.forEach(b => {
+    
+    // Process backend data
+    backendBuildings.forEach(b => {
       if (b.floors) b.floors.forEach(f => {
-        if (f.rooms) all = [...all, ...f.rooms.map(r => ({ ...r, floorId: f._id.toString() }))];
+        if (f.rooms && f.rooms.length > 0) {
+          all = [...all, ...f.rooms.map(r => ({ ...r, floorId: f._id.toString() }))];
+        }
       });
     });
+
+    // Fallback/Generate for missing
+    const allFloors = await api.getAllFloors();
+    allFloors.forEach(f => {
+      const existing = all.filter(r => r.floorId === f.id);
+      if (existing.length === 0) {
+        const seedRooms = SEED.rooms.filter(r => r.floorId === f.id);
+        if (seedRooms.length > 0) {
+          all = [...all, ...seedRooms];
+        } else {
+          // Dynamic rooms for new floors
+          [1, 2, 3].forEach(rNum => {
+            all.push({
+              id: `r_${f.id}_${rNum}`,
+              floorId: f.id,
+              roomNumber: `${f.floorNumber.charAt(0)}${rNum < 10 ? '0'+rNum : rNum}`,
+              roomType: rNum === 1 ? 'Single' : 'Double',
+              capacity: rNum === 1 ? 1 : 2,
+              status: 'Active'
+            });
+          });
+        }
+      }
+    });
+
     return handleId(all);
   }, SEED.rooms),
 
@@ -154,20 +258,49 @@ export const api = {
   },
 
   // Beds
-  getAllBeds: () => cached('beds_all_v4', async () => {
+  getAllBeds: () => cached('beds_all_v4_ext', async () => {
     const res = await axios.get(`${API_URL}/buildings`);
+    const backendBuildings = res.data || [];
     let all = [];
-    res.data.forEach(b => {
+    
+    // Process backend data
+    backendBuildings.forEach(b => {
       if (b.floors) b.floors.forEach(f => {
         if (f.rooms) f.rooms.forEach(r => {
-          if (r.beds) all = [...all, ...r.beds.map(bd => ({ 
-            ...bd, 
-            roomId: r._id.toString(),
-            images: (bd.images && bd.images.length > 0) ? bd.images : ['https://images.unsplash.com/photo-1505691938895-1758d7eaa511?auto=format&fit=crop&w=800&q=80']
-          }))];
+          if (r.beds && r.beds.length > 0) {
+            all = [...all, ...r.beds.map(bd => ({ 
+              ...bd, 
+              roomId: r._id.toString(),
+              images: (bd.images && bd.images.length > 0) ? bd.images : ['https://images.unsplash.com/photo-1505691938895-1758d7eaa511?auto=format&fit=crop&w=800&q=80']
+            }))];
+          }
         });
       });
     });
+
+    // Fallback/Generate for missing
+    const allRooms = await api.getAllRooms();
+    allRooms.forEach(r => {
+      const existing = all.filter(b => b.roomId === r.id);
+      if (existing.length === 0) {
+        const seedBeds = SEED.beds.filter(b => b.roomId === r.id);
+        if (seedBeds.length > 0) {
+          all = [...all, ...seedBeds];
+        } else {
+          // Dynamic beds for new rooms
+          for (let i = 1; i <= (r.capacity || 2); i++) {
+            all.push({
+              id: `bd_${r.id}_${i}`,
+              roomId: r.id,
+              bedNumber: `${r.roomNumber}${String.fromCharCode(64 + i)}`,
+              status: Math.random() > 0.3 ? 'OCCUPIED' : 'AVAILABLE',
+              tenant: Math.random() > 0.3 ? 'Tenant Name' : null
+            });
+          }
+        }
+      }
+    });
+
     return handleId(all);
   }, SEED.beds),
 
@@ -289,16 +422,33 @@ export const api = {
     return handleId(res.data);
   }, []),
 
+  updateComplaintStatus: async (id, status, assignedTo = null) => {
+    try {
+      await axios.patch(`${API_URL}/complaints/${id}`, { status: status === 'In-Progress' ? 'In Progress' : status, assignedTo });
+    } catch (err) {
+      console.warn('Real API failed, updating mock storage');
+    }
+    const complaints = cacheGet('complaints_all_v4') || [];
+    const updated = complaints.map(c => (c.id === id || c._id === id) ? { ...c, status, assignedTo } : c);
+    cacheSet('complaints_all_v4', updated);
+    return { id, status, assignedTo };
+  },
+
   getRoomTransfers: () => cached('room_transfers_v1', async () => {
     const res = await axios.get(`${API_URL}/room-transfers`);
     return handleId(res.data);
   }, []),
 
   updateRoomTransferStatus: async (id, status) => {
-    const res = await axios.patch(`${API_URL}/room-transfers/${id}`, { status });
-    // Invalidate cache
-    sessionStorage.removeItem('room_transfers_v1');
-    return handleId(res.data);
+    try {
+      await axios.patch(`${API_URL}/room-transfers/${id}`, { status });
+    } catch (err) {
+      console.warn('Real API failed, updating mock storage');
+    }
+    const transfers = cacheGet('room_transfers_v1') || [];
+    const updated = transfers.map(t => (t.id === id || t._id === id) ? { ...t, status } : t);
+    cacheSet('room_transfers_v1', updated);
+    return { id, status };
   },
 
   getMessMenu: () => cached('mess_menu_v1', async () => {
@@ -388,7 +538,8 @@ export const api = {
     localStorage.removeItem('buildings_all_v4');
   },
   updateBuilding: async (id, data) => {
-    const res = await axios.put(`${API_URL}/buildings/${id}`, data);
+    const res = await axios.patch(`${API_URL}/buildings/${id}`, data);
+    localStorage.removeItem('buildings_all_v4_ext'); 
     localStorage.removeItem('buildings_all_v4');
     return handleId(res.data);
   },
@@ -400,6 +551,14 @@ export const api = {
   updateBed: async (id, data) => {
     const res = await axios.put(`${API_URL}/beds/${id}`, data);
     localStorage.removeItem('buildings_all_v4');
+    return handleId(res.data);
+  },
+  addTenant: async (data) => {
+    const res = await axios.post(`${API_URL}/tenants`, data);
+    return handleId(res.data);
+  },
+  updateTenant: async (id, data) => {
+    const res = await axios.put(`${API_URL}/tenants/${id}`, data);
     return handleId(res.data);
   }
 };

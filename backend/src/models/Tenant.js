@@ -6,6 +6,7 @@ const tenantSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   emergencyContact: { type: String, required: true },
   room: { type: String }, // Can be roomId or room Number string for legacy
+  buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   rent: { type: Number },
   checkInDate: { type: Date, default: Date.now },
   status: { 

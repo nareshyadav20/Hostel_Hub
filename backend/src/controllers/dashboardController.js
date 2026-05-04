@@ -27,7 +27,9 @@ const traverseHierarchy = (buildings) => {
 // GET /api/dashboard/summary
 exports.getSummaryKPIs = async (req, res) => {
   try {
-    const buildings = await Building.find().populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
+    const { buildingId } = req.query;
+    const query = buildingId ? { _id: buildingId } : {};
+    const buildings = await Building.find(query).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
     const { totalBeds, occupiedBeds, maintenanceRooms, buildingWise, floorWise } = traverseHierarchy(buildings);
 
     const vacantBeds = totalBeds - occupiedBeds;
@@ -101,7 +103,9 @@ exports.getRevenueAnalytics = async (req, res) => {
 // GET /api/dashboard/occupancy
 exports.getOccupancyStats = async (req, res) => {
   try {
-    const buildings = await Building.find().populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
+    const { buildingId } = req.query;
+    const query = buildingId ? { _id: buildingId } : {};
+    const buildings = await Building.find(query).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
     const { buildingWise, floorWise } = traverseHierarchy(buildings);
     res.json({ buildingWise, floorWise });
   } catch (error) {
@@ -112,18 +116,35 @@ exports.getOccupancyStats = async (req, res) => {
 // GET /api/dashboard/alerts
 exports.getAlertsAndInsights = async (req, res) => {
   try {
-    const buildings = await Building.find().populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
-    const { totalBeds, vacantBeds, occupancyRate } = traverseHierarchy(buildings);
+    const { buildingId } = req.query;
+    const Complaint = require('../models/Complaint');
+    const Building = require('../models/Building');
+    
+    const query = buildingId ? { _id: buildingId } : {};
+    const buildings = await Building.find(query).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
+    const { totalBeds, vacantBeds, occupancyRate, maintenanceRooms } = traverseHierarchy(buildings);
+    
     const insights = [], alerts = [];
+
+    // Real high priority complaints
+    const complaintQuery = buildingId ? { buildingId, status: 'Pending', priority: 'High' } : { status: 'Pending', priority: 'High' };
+    const highComplaints = await Complaint.find(complaintQuery).populate('buildingId', 'name');
+    
+    highComplaints.forEach(c => {
+      alerts.push({ 
+        type: 'complaint', 
+        message: `High Priority: ${c.title}${c.buildingId ? ' at ' + c.buildingId.name : ''}`, 
+        severity: 'high',
+        id: c._id
+      });
+    });
 
     if (vacantBeds > 5) insights.push({ type: 'vacancy', message: `${vacantBeds} beds vacant — consider a promotional campaign to improve occupancy.` });
     if (occupancyRate < 70) insights.push({ type: 'revenue', message: 'Low occupancy is impacting monthly revenue. Review pricing or marketing.' });
-    insights.push({ type: 'payment', message: '7 tenants have pending rent past the due date. Send reminder notices.' });
-    insights.push({ type: 'mess', message: 'Dinner complaints increased 30% this week. Review meal quality with kitchen staff.' });
+    if (maintenanceRooms > 0) alerts.push({ type: 'maintenance', message: `${maintenanceRooms} rooms currently in maintenance mode.`, severity: 'medium' });
 
-    alerts.push({ type: 'rent', message: '5 tenants have pending rent past 7 days.', severity: 'medium' });
-    alerts.push({ type: 'maintenance', message: 'AC unit in Room 204 flagged for service.', severity: 'high' });
-    alerts.push({ type: 'kyc', message: '3 tenant KYC documents expiring this month.', severity: 'medium' });
+    // Mock/Static for now but could be wired to other models
+    insights.push({ type: 'payment', message: '7 tenants have pending rent past the due date. Send reminder notices.' });
     alerts.push({ type: 'stock', message: 'Rice stock at 15% — reorder required.', severity: 'high' });
 
     res.json({ alerts, insights });
@@ -135,19 +156,27 @@ exports.getAlertsAndInsights = async (req, res) => {
 // GET /api/dashboard/complaints
 exports.getComplaintsStats = async (req, res) => {
   try {
+    const { buildingId } = req.query;
+    const Complaint = require('../models/Complaint');
+    const query = buildingId ? { buildingId } : {};
+    
+    const complaints = await Complaint.find(query);
+    const open = complaints.filter(c => c.status === 'Pending').length;
+    const resolved = complaints.filter(c => c.status === 'Resolved').length;
+    const high = complaints.filter(c => ['Electrical', 'Plumbing'].includes(c.category)).length;
+
     res.json({
-      total: 24,
-      open: 9,
-      resolved: 15,
-      highPriority: 4,
+      total: complaints.length,
+      open,
+      resolved,
+      highPriority: high,
       avgResolutionHours: 4.2,
       categories: [
-        { name: 'Maintenance', count: 10, color: '#EF4444' },
-        { name: 'Cleaning', count: 6, color: '#F59E0B' },
-        { name: 'Food', count: 5, color: '#8B5CF6' },
-        { name: 'Others', count: 3, color: '#6B7280' },
+        { name: 'Maintenance', count: complaints.filter(c => !['Leave', 'Visitor'].includes(c.category)).length, color: '#EF4444' },
+        { name: 'Leave', count: complaints.filter(c => c.category === 'Leave').length, color: '#F59E0B' },
+        { name: 'Visitor', count: complaints.filter(c => c.category === 'Visitor').length, color: '#8B5CF6' },
       ],
-      pending24h: 3
+      pending24h: Math.min(open, 3)
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

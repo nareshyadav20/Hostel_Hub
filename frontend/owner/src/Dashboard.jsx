@@ -235,40 +235,79 @@ function Dashboard() {
       {/* 4. OCCUPANCY + TENANT + COMPLAINTS */}
       <div style={{ ...grid3, marginBottom:'2rem' }}>
         {/* Occupancy */}
-        <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)' }}>
-          <h3 style={{ fontSize:'1rem', fontWeight:'800', margin:'0 0 1rem' }}>Occupancy Breakdown</h3>
-          <div style={{ marginBottom:'1rem' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.3rem', fontSize:'0.8rem' }}>
-              <span style={{ fontWeight:'600' }}>Overall</span><span style={{ fontWeight:'800', color:'#10B981' }}>{summary.occupancyRate}%</span>
-            </div>
-            <div style={{ height:'8px', background:'var(--bg-tertiary)', borderRadius:'4px', overflow:'hidden' }}>
-              <motion.div initial={{ width:0 }} animate={{ width:`${summary.occupancyRate}%` }} transition={{ duration:1 }} style={{ height:'100%', background:'#10B981', borderRadius:'4px' }}/>
-            </div>
-          </div>
-          <div style={{ height:'160px' }}>
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={1}>
-              <PieChart>
-                <Pie data={occupancy.buildingWise.length ? occupancy.buildingWise : [{name:'Occupied',occupied:summary.occupiedBeds},{name:'Vacant',occupied:summary.vacantBeds}]} innerRadius={45} outerRadius={65} paddingAngle={4} dataKey="occupied" nameKey="name">
-                  {(occupancy.buildingWise.length ? occupancy.buildingWise : [{},{},{}]).map((_,i) => (
-                    <Cell key={i} fill={['#2563EB','#10B981','#F59E0B','#8B5CF6','#EF4444'][i%5]}/>
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ background:'var(--bg-secondary)', border:'none', borderRadius:'8px', fontSize:'0.78rem' }}/>
-                <Legend iconType="circle" wrapperStyle={{ fontSize:'0.75rem' }}/>
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          {(occupancy.buildingWise||[]).map((b,i) => (
-            <div key={i} style={{ marginBottom:'0.5rem' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.78rem', marginBottom:'2px' }}>
-                <span style={{ fontWeight:'600', color:'var(--text-secondary)' }}>{b.name}</span>
-                <span style={{ fontWeight:'700' }}>{b.total ? Math.round((b.occupied/b.total)*100) : 0}%</span>
-              </div>
-              <div style={{ height:'5px', background:'var(--bg-tertiary)', borderRadius:'4px' }}>
-                <div style={{ width:`${b.total?Math.round((b.occupied/b.total)*100):0}%`, height:'100%', background:['#2563EB','#10B981','#F59E0B'][i%3], borderRadius:'4px' }}/>
+        <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)', display: 'flex', flexDirection: 'column' }}>
+          <h3 style={{ fontSize:'1rem', fontWeight:'800', margin:'0 0 1.2rem' }}>Occupancy Breakdown</h3>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1', minWidth: '140px', height:'160px', position: 'relative' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie 
+                    data={occupancy.buildingWise.length ? occupancy.buildingWise : [{name:'Occupied',occupied:summary.occupiedBeds},{name:'Vacant',occupied:summary.vacantBeds}]} 
+                    innerRadius={40} 
+                    outerRadius={60} 
+                    paddingAngle={5} 
+                    dataKey="occupied" 
+                    nameKey="name"
+                    stroke="none"
+                  >
+                    {(occupancy.buildingWise.length ? occupancy.buildingWise : [{},{},{}]).map((_,i) => (
+                      <Cell key={i} fill={['#2563EB','#10B981','#F59E0B','#8B5CF6','#EF4444'][i%5]}/>
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ background:'var(--bg-secondary)', border:'none', borderRadius:'12px', fontSize:'0.75rem', boxShadow: 'var(--shadow-lg)' }}/>
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: '900', color: 'var(--text-primary)' }}>{summary.occupancyRate}%</div>
+                <div style={{ fontSize: '0.6rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Full</div>
               </div>
             </div>
-          ))}
+
+            <div style={{ flex: '1.2', minWidth: '180px', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+              {(occupancy.buildingWise || [])
+                .sort((a, b) => ((b.occupied / (b.total || 1)) - (a.occupied / (a.total || 1))))
+                .map((b, i) => {
+                  const rate = b.total ? Math.round((b.occupied / b.total) * 100) : 0;
+                  return (
+                    <div key={i}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '4px', fontWeight: '700' }}>
+                        <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: ['#2563EB','#10B981','#F59E0B','#8B5CF6','#EF4444'][i%5] }} />
+                          {b.name}
+                        </span>
+                        <span style={{ color: 'var(--text-primary)' }}>{rate}%</span>
+                      </div>
+                      <div style={{ height: '6px', background: 'var(--bg-tertiary)', borderRadius: '100px', overflow: 'hidden' }}>
+                        <motion.div 
+                          initial={{ width: 0 }} 
+                          animate={{ width: `${rate}%` }} 
+                          transition={{ duration: 1, delay: i * 0.1 }} 
+                          style={{ height: '100%', background: ['#2563EB','#10B981','#F59E0B','#8B5CF6','#EF4444'][i%5], borderRadius: '100px' }} 
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+
+          <div style={{ marginTop: '1.2rem', padding: '0.8rem', background: 'var(--bg-tertiary)', borderRadius: '10px', display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+             <div style={{ textAlign: 'center' }}>
+               <div style={{ fontSize: '0.9rem', fontWeight: '800' }}>{summary.occupiedBeds}</div>
+               <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '700' }}>OCCUPIED</div>
+             </div>
+             <div style={{ width: '1px', height: '20px', background: 'var(--border-color)' }} />
+             <div style={{ textAlign: 'center' }}>
+               <div style={{ fontSize: '0.9rem', fontWeight: '800' }}>{summary.vacantBeds}</div>
+               <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '700' }}>VACANT</div>
+             </div>
+             <div style={{ width: '1px', height: '20px', background: 'var(--border-color)' }} />
+             <div style={{ textAlign: 'center' }}>
+               <div style={{ fontSize: '0.9rem', fontWeight: '800' }}>{summary.totalBeds}</div>
+               <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '700' }}>TOTAL</div>
+             </div>
+          </div>
         </div>
 
         <TenantOverviewPanel summary={summary}/>

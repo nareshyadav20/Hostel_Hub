@@ -23,6 +23,9 @@ const buildingSchema = new mongoose.Schema({
     role: { type: String },
     contact: { type: String }
   },
+  status: { type: String, enum: ['Active', 'Draft'], default: 'Active' },
+  lastStep: { type: Number, default: 1 },
+  draftData: { type: mongoose.Schema.Types.Mixed },
   floors:      [{ type: mongoose.Schema.Types.ObjectId, ref: 'Floor' }]
 }, { timestamps: true, collection: 'buildings' });
 
