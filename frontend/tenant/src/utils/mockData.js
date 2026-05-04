@@ -44,3 +44,4 @@ export const MOCK_HOSTELS = [
     ],
     amenities: ['WiFi', 'Mess', 'Security']
   }
+];
