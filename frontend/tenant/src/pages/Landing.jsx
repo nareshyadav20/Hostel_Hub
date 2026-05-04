@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
 import SearchOverlay from '../components/SearchOverlay';
 import './Landing.css';
+import API from '../api/axios';
 import { MOCK_HOSTELS } from '../utils/mockData';
 
 // Import images
@@ -33,8 +34,8 @@ const Landing = () => {
   useEffect(() => {
     const fetchHostels = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/buildings');
-        const data = await response.json();
+        const response = await API.get('/buildings');
+        const data = response.data;
         const mapped = data.map(h => ({
           id: h._id,
           city: h.locationCity || 'Bengaluru',
