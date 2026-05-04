@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import API from '../api/axios';
 
 const Community = () => {
   const [activeTab, setActiveTab] = useState('notice');
   const [showReportModal, setShowReportModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [items, setItems] = useState([
-    { id: 1, title: 'Black Wallet', type: 'Found', location: 'Near gym entrance', description: 'Handed over to the warden.', date: 'Today, 10 AM', color: '#f59e0b' }
-  ]);
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const res = await API.get('/tenant-portal/community-reports');
+        setItems(res.data);
+      } catch (err) {
+        console.error('Error fetching items:', err);
+      }
+    };
+    fetchItems();
+  }, []);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -15,27 +26,22 @@ const Community = () => {
     description: ''
   });
 
-  const handleReportSubmit = (e) => {
+  const handleReportSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const newItem = {
-        id: items.length + 1,
-        title: formData.title,
-        type: formData.type,
-        location: formData.location,
-        description: formData.description,
-        date: 'Just now',
-        color: formData.type === 'Lost' ? '#f43f5e' : '#f59e0b'
-      };
-
-      setItems([newItem, ...items]);
-      setIsSubmitting(false);
+    try {
+      const res = await API.post('/tenant-portal/community-reports', formData);
+      setItems([res.data, ...items]);
       setShowReportModal(false);
       setFormData({ title: '', type: 'Lost', location: '', description: '' });
       alert('Item reported successfully! The community has been notified.');
-    }, 1500);
+    } catch (err) {
+      console.error('Error reporting item:', err);
+      alert('Failed to report item. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -183,29 +189,33 @@ const Community = () => {
               <button onClick={() => setShowReportModal(true)} className="btn btn-primary" style={{ padding: '0.8rem 1.5rem', fontWeight: '800', borderRadius: '14px', boxShadow: '0 8px 16px rgba(14, 165, 233, 0.2)' }}>+ Report Item</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-              {items.map(item => (
-                <div key={item.id} className="glass-card fade-in" style={{ padding: '1.8rem', background: `${item.color}05`, borderLeft: `6px solid ${item.color}`, borderRadius: '20px', transition: 'all 0.3s ease' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-                        <span style={{ padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '900', background: `${item.color}15`, color: item.color, textTransform: 'uppercase' }}>{item.type}</span>
-                        <h4 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{item.title}</h4>
-                      </div>
-                      <p style={{ fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: '500' }}>{item.description}</p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginTop: '1rem' }}>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '600' }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                          {item.location}
-                        </span>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '600' }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                          {item.date}
-                        </span>
+              {items.map(item => {
+                const itemColor = item.type === 'Lost' ? '#f43f5e' : '#f59e0b';
+                const displayDate = new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                return (
+                  <div key={item._id} className="glass-card fade-in" style={{ padding: '1.8rem', background: `${itemColor}05`, borderLeft: `6px solid ${itemColor}`, borderRadius: '20px', transition: 'all 0.3s ease' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                          <span style={{ padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '900', background: `${itemColor}15`, color: itemColor, textTransform: 'uppercase' }}>{item.type}</span>
+                          <h4 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{item.title}</h4>
+                        </div>
+                        <p style={{ fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: '500' }}>{item.description}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginTop: '1rem' }}>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '600' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            {item.location}
+                          </span>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '600' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            {displayDate}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

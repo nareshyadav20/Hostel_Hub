@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 
 const ICONS = {
@@ -41,29 +41,32 @@ const MOCK_SEED_DETAILS = [
 ];
 
 const Listing = () => {
+  const navigate = useNavigate();
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('photos');
   const [selectedRoomIdx, setSelectedRoomIdx] = useState(0);
   const [hostel, setHostel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [openPolicy, setOpenPolicy] = useState(0);
-
+  const [wishlistId, setWishlistId] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   useEffect(() => {
-      const fetchHostelDetails = async () => {
-        if (!id || id === 'undefined' || id === 'null') {
-          setLoading(false);
-          return;
-        }
-        try {
-          console.log("Listing Page - Fetching details for ID:", id);
-          let b;
-          // Check if ID is a mock ID (e.g., b1, b2, etc.)
-          if (id.startsWith('b') && id.length <= 4) {
-            console.log("Detected Mock ID");
-            const mock = MOCK_SEED_DETAILS.find(m => m.id === id);
-            if (mock) {
-              console.log("Found in MOCK_SEED_DETAILS");
-              b = {
+    const fetchHostelDetails = async () => {
+      if (!id || id === 'undefined' || id === 'null') {
+        setLoading(false);
+        return;
+      }
+      try {
+        const [response, wishRes] = await Promise.all([
+          id.startsWith('b') && id.length <= 4 ? null : API.get(`/buildings/${id}`),
+          API.get('/tenant-portal/wishlist')
+        ]);
+
+        let b;
+        if (id.startsWith('b') && id.length <= 4) {
+          const mock = MOCK_SEED_DETAILS.find(m => m.id === id);
+          if (mock) {
+            b = {
               _id: mock.id,
               name: mock.name,
               address: mock.location,
@@ -78,12 +81,15 @@ const Listing = () => {
             };
           }
         } else {
-          const response = await API.get(`/buildings/${id}`);
           b = response.data;
         }
+
+        // Check wishlist status
+        const wishItem = wishRes.data.find(h => h.hostelId === id || h.id === id);
+        if (wishItem) setWishlistId(wishItem._id);
         
         if (!b) throw new Error('Property not found');
-
+        
         const mapped = {
           id: b._id,
           name: b.name,
@@ -163,17 +169,80 @@ const Listing = () => {
     }
   };
 
+  const handleToggleWishlist = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      if (wishlistId) {
+        await API.delete(`/tenant-portal/wishlist/${wishlistId}`);
+        setWishlistId(null);
+      } else {
+        const res = await API.post('/tenant-portal/wishlist', {
+          hostelId: hostel.id,
+          hostelName: hostel.name,
+          hostelLocation: hostel.location,
+          hostelPrice: hostel.price,
+          hostelImage: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80',
+          hostelRating: hostel.rating,
+          gender: hostel.gender,
+          type: hostel.category
+        });
+        setWishlistId(res.data._id);
+      }
+    } catch (err) {
+      console.error('Error toggling wishlist:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="listing-premium" style={{ background: '#F8FAFC', minHeight: '100vh', paddingBottom: '5rem' }}>
       {/* HEADER NAV */}
       <nav style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.5rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link to="/search" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none', color: '#64748B', fontWeight: '700', fontSize: '0.9rem' }}>
+        <button 
+          onClick={() => navigate(-1)} 
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.6rem', 
+            background: 'none', 
+            border: 'none', 
+            color: '#64748B', 
+            fontWeight: '700', 
+            fontSize: '0.9rem', 
+            cursor: 'pointer',
+            padding: 0
+          }}
+        >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-          Back to Search
-        </Link>
+          Go Back
+        </button>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button style={{ background: 'white', border: '1px solid #E2E8F0', padding: '0.6rem 1rem', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}>Share</button>
-          <button style={{ background: 'white', border: '1px solid #E2E8F0', padding: '0.6rem 1rem', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}>Save</button>
+          <button style={{ background: 'white', border: '1px solid #E2E8F0', padding: '0.6rem 1.5rem', borderRadius: '12px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#64748B' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            Share
+          </button>
+          <button 
+            onClick={handleToggleWishlist}
+            disabled={isSaving}
+            style={{ 
+              background: wishlistId ? '#fef2f2' : 'white', 
+              border: `1px solid ${wishlistId ? '#fecaca' : '#E2E8F0'}`, 
+              padding: '0.6rem 1.5rem', 
+              borderRadius: '12px', 
+              fontWeight: '800', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem', 
+              color: wishlistId ? '#ef4444' : '#64748B',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill={wishlistId ? '#ef4444' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            {wishlistId ? 'Saved' : 'Save'}
+          </button>
         </div>
       </nav>
 

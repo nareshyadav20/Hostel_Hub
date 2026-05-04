@@ -40,7 +40,7 @@ const HOSTELS = MOCK_HOSTELS.map(h => ({
 const Search = () => {
   const navigate = useNavigate();
   const [filters, setFilters] = useState({ location: 'bengaluru', budget: 10000, gender: 'All', categories: [], amenities: [] });
-  const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
+  const [wishlist, setWishlist] = useState([]);
   const [allHostels, setAllHostels] = useState([]);
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +48,11 @@ const Search = () => {
   useEffect(() => {
     const fetchHostels = async () => {
       try {
-        const response = await API.get('/buildings');
+        const [response, wishRes] = await Promise.all([
+          API.get('/buildings'),
+          API.get('/tenant-portal/wishlist')
+        ]);
+        setWishlist(wishRes.data);
         let mapped = response.data.map(b => {
           const totalBeds = b.floors?.reduce((acc, f) => acc + (f.rooms?.reduce((rAcc, r) => rAcc + (r.beds?.length || 0), 0) || 0), 0) || 0;
           const occupiedBeds = b.floors?.reduce((acc, f) => acc + (f.rooms?.reduce((rAcc, r) => rAcc + (r.beds?.filter(bd => bd.status === 'OCCUPIED').length || 0), 0) || 0), 0) || 0;
@@ -148,12 +152,31 @@ const Search = () => {
     }));
   };
 
-  const isWishlisted = (id) => wishlist.some((h) => h.id === id);
+  const isWishlisted = (id) => wishlist.some((h) => (h.hostelId === id || h.id === id));
 
-  const toggleWishlist = (hostel) => {
-    const next = isWishlisted(hostel.id) ? wishlist.filter((h) => h.id !== hostel.id) : [...wishlist, hostel];
-    setWishlist(next);
-    localStorage.setItem('wishlist', JSON.stringify(next));
+  const toggleWishlist = async (hostel) => {
+    try {
+      const existing = wishlist.find(h => h.hostelId === hostel.id || h.id === hostel.id);
+      if (existing) {
+        await API.delete(`/tenant-portal/wishlist/${existing._id}`);
+        setWishlist(prev => prev.filter(h => h._id !== existing._id));
+      } else {
+        const res = await API.post('/tenant-portal/wishlist', {
+          hostelId: hostel.id,
+          hostelName: hostel.name,
+          hostelLocation: hostel.location,
+          hostelPrice: hostel.price,
+          hostelImage: hostel.image,
+          hostelRating: hostel.rating,
+          gender: hostel.gender,
+          type: hostel.type
+        });
+        setWishlist(prev => [...prev, res.data]);
+      }
+    } catch (err) {
+      console.error('Error toggling wishlist:', err);
+      alert('Failed to update wishlist. Please try again.');
+    }
   };
 
 

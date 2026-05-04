@@ -202,6 +202,34 @@ const Booking = () => {
 
   return (
     <div className="booking-page fade-in dashboard-container" style={{ position: 'relative', paddingBottom: '8rem' }}>
+      {/* ── Close/Back Button ── */}
+      <button 
+        onClick={() => navigate(-1)} 
+        style={{ 
+          position: 'absolute', 
+          top: '2rem', 
+          right: '2rem', 
+          background: 'rgba(255, 255, 255, 0.8)', 
+          backdropFilter: 'blur(10px)',
+          border: '1px solid #e2e8f0', 
+          width: '52px', 
+          height: '52px', 
+          borderRadius: '50%', 
+          cursor: 'pointer', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          color: '#64748b',
+          zIndex: 100,
+          boxShadow: '0 8px 20px rgba(0,0,0,0.05)',
+          transition: 'all 0.3s ease'
+        }}
+        title="Cancel Booking / Go Back"
+        onMouseOver={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.borderColor = '#fee2e2'; }}
+        onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.8)'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
       <header style={{ marginBottom: '4.5rem', textAlign: 'center' }}>
         <h1 style={{ fontSize: '3.5rem', fontWeight: '950', letterSpacing: '-3px', marginBottom: '1rem', background: 'linear-gradient(to right, #1e293b, #64748b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           Finalize Your Stay

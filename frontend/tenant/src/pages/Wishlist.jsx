@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import API from '../api/axios';
 
 /* ─── icons (SVG constants) ─── */
 const ICONS = {
@@ -10,15 +11,43 @@ const ICONS = {
 };
 
 const Wishlist = () => {
-  const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
+  const [wishlist, setWishlist] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem('wishlist', JSON.stringify(wishlist));
-  }, [wishlist]);
+    const fetchWishlist = async () => {
+      try {
+        const res = await API.get('/tenant-portal/wishlist');
+        const mapped = res.data.map(item => ({
+          ...item,
+          id: item.hostelId,
+          name: item.hostelName,
+          location: item.hostelLocation,
+          price: item.hostelPrice,
+          image: item.hostelImage,
+          rating: item.hostelRating
+        }));
+        setWishlist(mapped);
+      } catch (err) {
+        console.error('Error fetching wishlist:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWishlist();
+  }, []);
 
-  const handleRemove = (id) => {
-    setWishlist((prev) => prev.filter((item) => (item.id || item._id) !== id));
+  const handleRemove = async (id) => {
+    try {
+      await API.delete(`/tenant-portal/wishlist/${id}`);
+      setWishlist((prev) => prev.filter((item) => (item.id || item._id) !== id));
+    } catch (err) {
+      console.error('Error removing from wishlist:', err);
+      alert('Failed to remove item. Please try again.');
+    }
   };
+
+  if (loading) return <div className="dashboard-container"><div className="loading-spinner">Fetching your wishlist...</div></div>;
 
   return (
     <div className="wishlist-page-professional fade-in">
@@ -51,7 +80,7 @@ const Wishlist = () => {
               <div key={hostelId} className="pro-wishlist-card">
                 <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image || 'https://images.unsplash.com/photo-1555854817-5b27344481c7?auto=format&fit=crop&q=80&w=1000'})` }}>
                   <div className="rating-tag">{hostel.rating} ★</div>
-                  <button className="remove-btn" onClick={() => handleRemove(hostelId)} title="Remove from Wishlist">
+                  <button className="remove-btn" onClick={() => handleRemove(hostel._id)} title="Remove from Wishlist">
                     <ICONS.Trash />
                   </button>
                 </div>
