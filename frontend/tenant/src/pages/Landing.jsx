@@ -22,10 +22,12 @@ const Landing = () => {
   const [searchLocality, setSearchLocality] = useState('');
   const [searchProperty, setSearchProperty] = useState('');
   const [userDetails, setUserDetails] = useState({ name: '', contact: '' });
+  const [isLocalityExpanded, setIsLocalityExpanded] = useState(false);
 
   const [sortBy, setSortBy] = useState('');
   const [sharingTypes, setSharingTypes] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 60000]);
+  const [loading, setLoading] = useState(false);
 
   const hostels = [
     { id: 1, city: 'Bengaluru', name: 'Livora Elite - Koramangala', locality: 'Koramangala', rating: 4.8, price: 12500, img: 'https://images.unsplash.com/photo-1599933023673-c2484c81013a?auto=format&fit=crop&q=80&w=800', amenities: ['Free WiFi', 'A/C', 'Mess', 'Gym'], gender: 'Unisex', category: 'Professional' },

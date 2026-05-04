@@ -1,7 +1,17 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import { MOCK_HOSTELS } from '../utils/mockData';
+
+const ICONS = {
+  Location: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+  Security: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+  WiFi: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>,
+  Meals: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
+  Cleaning: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 12h-4l-3-9L9 3l-3 9H2"/><path d="M4.5 12v6a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-6"/><line x1="9" y1="12" x2="9" y2="20"/><line x1="15" y1="12" x2="15" y2="20"/></svg>,
+  Power: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+  Check: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+};
 
 const Listing = () => {
   const navigate = useNavigate();
@@ -41,6 +51,7 @@ const Listing = () => {
           price: b.startingPrice || 6500,
           deposit: (b.startingPrice || 6500) * 2,
           amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['WiFi', 'Mess', 'Laundry'],
+          facilities: b.facilities && b.facilities.length > 0 ? b.facilities : ['Gym', 'Cafeteria', 'Gaming Zone', 'Study Room'],
           roomTypes: b.floors?.[0]?.rooms?.slice(0, 4).map(r => ({
             type: r.roomNumber,
             price: b.startingPrice || 6500,
@@ -86,6 +97,11 @@ const Listing = () => {
             id: mockHostel.id,
             name: mockHostel.name,
             location: mockHostel.locality + ', ' + mockHostel.city,
+            distance: "500m from transit",
+            gender: mockHostel.gender || 'Unisex',
+            category: mockHostel.category || 'Professional',
+            fillingFast: true,
+            description: mockHostel.description || "A premium stay for students and professionals featuring state-of-the-art facilities and a vibrant community.",
             rating: mockHostel.rating || 4.5,
             reviews: 120,
             safetyScore: 9.5,
@@ -94,14 +110,29 @@ const Listing = () => {
             price: mockHostel.price,
             deposit: mockHostel.price * 2,
             amenities: mockHostel.amenities || ['WiFi', 'AC', 'Laundry'],
+            facilities: ['Gym', 'Cafeteria', 'Gaming Zone', 'Study Room'],
             roomTypes: [
-              { type: 'Private Room', price: mockHostel.price + 2000, deposit: (mockHostel.price + 2000) * 2, status: 'Available', color: 'var(--accent-success)' },
-              { type: '2 Sharing', price: mockHostel.price, deposit: mockHostel.price * 2, status: 'Available', color: 'var(--accent-success)' },
-              { type: '3 Sharing', price: mockHostel.price - 1500, deposit: (mockHostel.price - 1500) * 2, status: 'Few Left', color: 'var(--accent-warning)' }
+              { type: 'Private Room', name: 'Premium Single', price: mockHostel.price + 2000, deposit: (mockHostel.price + 2000) * 2, totalBeds: 1, availableBeds: 1, status: 'Available', color: 'var(--accent-success)' },
+              { type: '2 Sharing', name: 'Standard Double', price: mockHostel.price, deposit: mockHostel.price * 2, totalBeds: 2, availableBeds: 2, status: 'Available', color: 'var(--accent-success)' },
+              { type: '3 Sharing', name: 'Economy Triple', price: mockHostel.price - 1500, deposit: (mockHostel.price - 1500) * 2, totalBeds: 3, availableBeds: 0, status: 'Few Left', color: 'var(--accent-warning)' }
             ],
+            staff: { name: 'Admin', role: 'Warden', contact: '+91 00000 00000' },
             landmarks: [{ name: 'Nearby Station', distance: '500m' }, { name: 'Tech Park', distance: '1.2km' }],
             rules: ['No smoking indoors', 'Quiet hours 11 PM', 'Visitors allowed until 8 PM'],
-            menu: { breakfast: 'Idli/Dosa', lunch: 'Rice, Dal, Curry', dinner: 'Roti, Paneer' }
+            menu: { breakfast: 'Idli/Dosa', lunch: 'Rice, Dal, Curry', dinner: 'Roti, Paneer' },
+            plans: [
+              { name: 'Basic', price: 500, desc: 'Breakfast only' },
+              { name: 'Standard', price: 1000, desc: 'Breakfast & Dinner' },
+              { name: 'Premium', price: 1500, desc: 'All 3 Meals + Weekend Special' }
+            ],
+            policies: [
+              { title: "Rent & Deposit", content: "Rent is due by the 5th of every month. Security deposit is refundable at the time of checkout." },
+              { title: "Refund Policy", content: "Full refund if cancelled 15 days before move-in. Pro-rata basis after move-in." }
+            ],
+            testimonials: [
+              { name: "Rahul S.", text: "Best hostel in the city. The food is actually homely!", rating: 5 },
+              { name: "Priya M.", text: "Very safe for girls, security is top-notch.", rating: 5 }
+            ]
           };
           setHostel(mappedMock);
         }

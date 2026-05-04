@@ -107,7 +107,7 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => {
         </div>
 
         <div className="card-actions-footer">
-          <Link to={`/listing/${hostel.id}`} className="btn-primary-action">Book Now</Link>
+          <Link to={`/booking/${hostel.id}`} className="btn-primary-action">Book Now</Link>
         </div>
       </div>
     </div>
