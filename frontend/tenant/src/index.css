@@ -1,19 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
 @import "@packages/ui-kit/globals.css";
 
-html {
-  font-size: 16px;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
 :root {
-  --sidebar-width: 260px;
-  --content-padding: clamp(1.5rem, 5vw, 3rem);
-  --content-padding-mobile: 1rem;
+  --accent-primary-rgb: 37, 99, 235;
+  --accent-secondary-rgb: 139, 92, 246;
+  --text-secondary-rgb: 107, 114, 128;
+
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+
+  --card-border-radius: 28px;
+  --transition-premium: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme='dark'] {
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.05);
 }
 
 /* Portal Specific Styles */

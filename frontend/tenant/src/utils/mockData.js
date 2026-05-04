@@ -1,24 +1,46 @@
 export const MOCK_HOSTELS = [
-  { id: 'b1', city: 'Bengaluru', name: 'Alpha Tower', locality: 'North Campus', rating: 4.9, price: 8500, gender: 'Boys', category: 'Professional', amenities: ['WiFi', 'AC', 'Mess', 'Gym'] },
-  { id: 'b2', city: 'Hyderabad', name: 'Beta Block', locality: 'South Campus', rating: 4.8, price: 6500, gender: 'Girls', category: 'Student', amenities: ['Laundry', 'Mess', 'Security'] },
-  { id: 'b3', city: 'Hyderabad', name: 'Zenith Living', locality: 'Gachibowli', rating: 4.9, price: 15500, gender: 'Unisex', category: 'Professional', amenities: ['Gym', 'AC', 'Food', 'WiFi'] },
-  { id: 'b4', city: 'Hyderabad', name: 'Cyber Hub Stay', locality: 'HITEC City', rating: 4.6, price: 11500, gender: 'Men', category: 'Professional', amenities: ['WiFi', 'Cafe', 'Gym'] },
-  { id: 'b5', city: 'Hyderabad', name: 'Kondapur Komfort', locality: 'Kondapur', rating: 4.4, price: 9500, gender: 'Women', category: 'Student', amenities: ['Mess', 'Laundry', 'Security'] },
-  { id: 'b6', city: 'Bengaluru', name: 'Zeta Zone', locality: 'Sector 12', rating: 4.6, price: 7500, gender: 'Girls', category: 'Student', amenities: ['WiFi', 'Study Room'] },
-  { id: 'b7', city: 'Hyderabad', name: 'Eta Heights', locality: 'Main Market', rating: 4.7, price: 9000, gender: 'Unisex', category: 'Professional', amenities: ['AC', 'Parking'] },
-  { id: 'b8', city: 'Mumbai', name: 'Theta Terraces', locality: 'Lake View', rating: 4.8, price: 11000, gender: 'Girls', category: 'Professional', amenities: ['WiFi', 'Security'] },
-  { id: 'b9', city: 'Bengaluru', name: 'Iota Inn', locality: 'Central Hub', rating: 4.5, price: 5500, gender: 'Boys', category: 'Student', amenities: ['Food', 'WiFi'] },
-  { id: 'b10', city: 'Hyderabad', name: 'Kappa Korner', locality: 'East Side', rating: 4.4, price: 4500, gender: 'Unisex', category: 'Student', amenities: ['Budget', 'WiFi'] },
-  { id: 'b11', city: 'Mumbai', name: 'Lambda Lodge', locality: 'Science Park', rating: 4.7, price: 8000, gender: 'Girls', category: 'Professional', amenities: ['WiFi', 'AC'] },
-  { id: 'b12', city: 'Bengaluru', name: 'Mu Mansion', locality: 'Royal Lane', rating: 5.0, price: 18000, gender: 'Unisex', category: 'Professional', amenities: ['Luxury', 'Gym', 'Chef'] },
-  { id: 'b13', city: 'Hyderabad', name: 'Gowlidoddy Grand', locality: 'Gowlidoddy', rating: 4.5, price: 10000, gender: 'Unisex', category: 'Professional', amenities: ['AC', 'Power Backup'] },
-  { id: 'b14', city: 'Hyderabad', name: 'KPHB Residency', locality: 'KPHB', rating: 4.3, price: 8000, gender: 'Men', category: 'Student', amenities: ['Food', 'Clean Rooms'] },
-  { id: 'b15', city: 'Mumbai', name: 'Metro Hub Mumbai', locality: 'Powai', rating: 4.5, price: 17000, gender: 'Unisex', category: 'Professional', amenities: ['Pool', 'Gym'] },
-  { id: 'b16', city: 'Bengaluru', name: 'Serene Stays', locality: 'Whitefield', rating: 4.7, price: 14500, gender: 'Unisex', category: 'Professional', amenities: ['Garden', 'WiFi'] },
-  { id: 'b17', city: 'Hyderabad', name: 'Lanco Hills Living', locality: 'Manikonda', rating: 4.6, price: 13500, gender: 'Women', category: 'Student', amenities: ['Scenic View', 'Gym'] },
-  { id: 'b18', city: 'Mumbai', name: 'Urban Den', locality: 'Andheri', rating: 4.4, price: 18000, gender: 'Men', category: 'Professional', amenities: ['Work Pods', 'Gym'] },
-  { id: 'b19', city: 'Hyderabad', name: 'Madhapur Metro View', locality: 'Madhapur', rating: 4.7, price: 12500, gender: 'Unisex', category: 'Professional', amenities: ['Metro Access', 'Fridge'] },
-  { id: 'b20', city: 'Bengaluru', name: 'Campus Core', locality: 'Manipal', rating: 4.5, price: 7500, gender: 'Men', category: 'Student', amenities: ['Shuttle', 'Mess'] },
-  { id: 'b21', city: 'Hyderabad', name: 'Journalist Colony Suites', locality: 'Journalist colony', rating: 4.7, price: 14500, gender: 'Unisex', category: 'Professional', amenities: ['Premium', 'AC'] },
-  { id: 'b22', city: 'Hyderabad', name: 'Kukatpally Komfort', locality: 'Kukatpally', rating: 4.4, price: 9000, gender: 'Women', category: 'Student', amenities: ['Food', 'Security'] }
-];
+  {
+    id: 'm1',
+    name: 'Livora Alpha Hub',
+    locality: 'Koramangala 4th Block',
+    city: 'Bengaluru',
+    price: 8500,
+    gender: 'Boys',
+    category: 'Student',
+    rating: 4.8,
+    images: [
+      'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=800'
+    ],
+    amenities: ['WiFi', 'AC', 'Mess', 'Gym']
+  },
+  {
+    id: 'm2',
+    name: 'Zenith Living',
+    locality: 'Whitefield',
+    city: 'Bengaluru',
+    price: 12000,
+    gender: 'Girls',
+    category: 'Luxury',
+    rating: 4.9,
+    images: [
+      'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800'
+    ],
+    amenities: ['WiFi', 'AC', 'Security', 'Laundry']
+  },
+  {
+    id: 'm3',
+    name: 'Cyber Hub Stay',
+    locality: 'Hitech City',
+    city: 'Hyderabad',
+    price: 9500,
+    gender: 'Mixed',
+    category: 'Work',
+    rating: 4.7,
+    images: [
+      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&q=80&w=800'
+    ],
+    amenities: ['WiFi', 'Mess', 'Security']
+  }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import API from '../api/axios';
 import { MOCK_HOSTELS } from '../utils/mockData';
 
@@ -33,13 +33,105 @@ const HOSTELS = MOCK_HOSTELS.map(h => ({
   occupancy: '85%',
   totalRooms: 10,
   totalBeds: 40,
-  image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
+  image: h.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
+  images: h.images || ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'],
   amenities: h.amenities || []
 }));
 
+/* ─── Hostel Card Sub-component with Carousel ─── */
+const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const images = hostel.images && hostel.images.length > 0 ? hostel.images : [hostel.image];
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    }, 3000 + Math.random() * 2000);
+    return () => clearInterval(interval);
+  }, [images]);
+
+  return (
+    <div key={hostel.id} className="pro-hostel-card-vertical fade-in">
+      <div className="card-image-area">
+        <div className="image-overlay-gradient"></div>
+        <img 
+          src={images[currentImageIndex]} 
+          alt={hostel.name} 
+          className="carousel-image"
+        />
+        
+        <div className="card-top-badges">
+          {hostel.popularityLabel && <span className="badge-featured">{hostel.popularityLabel}</span>}
+          <span className="badge-status-pill">Active</span>
+        </div>
+
+        <div className="name-overlay">
+          <h2 className="hostel-title">{hostel.name}</h2>
+        </div>
+
+        <button className={`wish-pill ${isWishlisted ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); toggleWishlist(hostel); }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+      </div>
+
+      <div className="card-info-area">
+        <div className="loc-rating-row">
+          <div className="loc-info">
+            <ICONS.Location style={{width: '14px', height: '14px', color: 'var(--accent-primary)'}} />
+            <span>{hostel.location?.split(',')[0] || 'City'}</span>
+          </div>
+          <div className="rating-pill">
+            <span>★ {hostel.rating}</span>
+          </div>
+        </div>
+
+        <div className="stats-box-row">
+          <div className="stat-box">
+            <span className="stat-label">STARTING</span>
+            <span className="stat-value">₹{hostel.price >= 1000 ? (hostel.price/1000).toFixed(1) + 'k' : hostel.price}</span>
+          </div>
+          <div className="stat-box">
+            <span className="stat-label">AVAILABILITY</span>
+            <span className="stat-value">{hostel.totalBeds || 10} Beds</span>
+          </div>
+        </div>
+
+        <div className="amenities-row">
+          <div className="amenity-icons">
+            <ICONS.WiFi style={{width: '16px'}} />
+            <ICONS.AC style={{width: '16px'}} />
+            <ICONS.Security style={{width: '16px'}} />
+            <span className="more-amenities">+3 more</span>
+          </div>
+        </div>
+
+        <div className="card-actions-footer">
+          <Link to={`/listing/${hostel.id}`} className="btn-primary-action">Book Now</Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Search = () => {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({ location: 'bengaluru', budget: 10000, gender: 'All', categories: [], amenities: [] });
+  const location = useLocation();
+
+  // Parse query params from URL
+  const queryParams = new URLSearchParams(location.search);
+  const qLocation = queryParams.get('location') || 'all';
+  const qBudget = queryParams.get('budget') || 'all';
+  const qType = queryParams.get('type') || 'all';
+
+  const [filters, setFilters] = useState({ 
+    location: qLocation.toLowerCase(), 
+    budget: qBudget, 
+    gender: 'All', 
+    categories: qType !== 'all' ? [qType.toLowerCase()] : [], 
+    amenities: [] 
+  });
+
   const [wishlist, setWishlist] = useState([]);
   const [allHostels, setAllHostels] = useState([]);
   const [hostels, setHostels] = useState([]);
@@ -57,7 +149,7 @@ const Search = () => {
           const totalBeds = b.floors?.reduce((acc, f) => acc + (f.rooms?.reduce((rAcc, r) => rAcc + (r.beds?.length || 0), 0) || 0), 0) || 0;
           const occupiedBeds = b.floors?.reduce((acc, f) => acc + (f.rooms?.reduce((rAcc, r) => rAcc + (r.beds?.filter(bd => bd.status === 'OCCUPIED').length || 0), 0) || 0), 0) || 0;
           const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
-          
+
           return {
             id: b._id,
             name: b.name,
@@ -73,6 +165,7 @@ const Search = () => {
             totalRooms: b.floors?.reduce((acc, f) => acc + (f.rooms?.length || 0), 0) || 0,
             totalBeds: totalBeds,
             image: b.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
+            images: b.images || [],
             amenities: b.amenities || []
           };
         });
@@ -99,7 +192,11 @@ const Search = () => {
 
     // Location filter
     if (filters.location !== 'all') {
-      filtered = filtered.filter(h => (h.city || 'bengaluru').toLowerCase() === filters.location.toLowerCase());
+      filtered = filtered.filter(h => 
+        (h.city || '').toLowerCase().includes(filters.location.toLowerCase()) || 
+        (h.location || '').toLowerCase().includes(filters.location.toLowerCase()) ||
+        (h.name || '').toLowerCase().includes(filters.location.toLowerCase())
+      );
     }
 
     // Gender filter
@@ -111,9 +208,9 @@ const Search = () => {
     if (filters.budget !== 'all') {
       filtered = filtered.filter(h => {
         const price = h.price;
-        if (filters.budget === 'budget-1') return price <= 5000;
-        if (filters.budget === 'budget-2') return price > 5000 && price <= 10000;
-        if (filters.budget === 'budget-3') return price > 10000 && price <= 15000;
+        if (filters.budget === 'budget-1' || filters.budget.includes('5k')) return price <= 5000;
+        if (filters.budget === 'budget-2' || filters.budget.includes('10k')) return price > 5000 && price <= 10000;
+        if (filters.budget === 'budget-3' || filters.budget.includes('15k')) return price > 10000 && price <= 15000;
         if (filters.budget === 'budget-4') return price > 15000;
         return true;
       });
@@ -126,7 +223,7 @@ const Search = () => {
 
     // Amenities filter
     if (filters.amenities.length > 0) {
-      filtered = filtered.filter(h => 
+      filtered = filtered.filter(h =>
         filters.amenities.every(amn => (h.amenities || []).some(a => a.toLowerCase().includes(amn.toLowerCase())))
       );
     }
@@ -137,7 +234,7 @@ const Search = () => {
   const toggleCategory = (cat) => {
     setFilters(prev => ({
       ...prev,
-      categories: prev.categories.includes(cat) 
+      categories: prev.categories.includes(cat)
         ? prev.categories.filter(c => c !== cat)
         : [...prev.categories, cat]
     }));
@@ -211,9 +308,13 @@ const Search = () => {
                   <ICONS.Location /> <span>Location</span>
                 </div>
                 <select value={filters.location} onChange={(e) => setFilters({ ...filters, location: e.target.value })} className="pro-select">
+                  <option value="all">All Cities</option>
                   <option value="bengaluru">Bengaluru</option>
                   <option value="hyderabad">Hyderabad</option>
                   <option value="mumbai">Mumbai</option>
+                  <option value="pune">Pune</option>
+                  <option value="chennai">Chennai</option>
+                  <option value="delhi">Delhi</option>
                 </select>
               </div>
 
@@ -243,9 +344,9 @@ const Search = () => {
                     { label: '₹15k+', value: 'budget-4' }
                   ].map(item => (
                     <label key={item.value} className="pro-table-row">
-                      <input 
-                        type="radio" 
-                        name="budget-seg" 
+                      <input
+                        type="radio"
+                        name="budget-seg"
                         checked={filters.budget === item.value}
                         onChange={() => setFilters({ ...filters, budget: item.value })}
                       />
@@ -270,8 +371,8 @@ const Search = () => {
                     { label: 'Luxury Suites', icon: <ICONS.Luxury />, value: 'luxury' }
                   ].map(item => (
                     <label key={item.value} className="pro-table-row">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={filters.categories.includes(item.value)}
                         onChange={() => toggleCategory(item.value)}
                       />
@@ -300,8 +401,8 @@ const Search = () => {
                     { id: 'security', label: 'Security', icon: <ICONS.Security /> }
                   ].map(amenity => (
                     <label key={amenity.id} className="amenity-checkbox">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={filters.amenities.includes(amenity.id)}
                         onChange={() => toggleAmenity(amenity.id)}
                       />
@@ -331,42 +432,12 @@ const Search = () => {
             </div>
           ) : (
             hostels.map(hostel => (
-              <div key={hostel.id} className="pro-hostel-card">
-                <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image})` }}>
-                  <div className="rating-tag">{hostel.rating} ★</div>
-                  <button className={`wishlist-icon ${isWishlisted(hostel.id) ? 'active' : ''}`} onClick={() => toggleWishlist(hostel)}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted(hostel.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                  </button>
-                </div>
-                <div className="pro-card-content">
-                  <div className="pro-card-header">
-                    <div>
-                      <h2 className="hostel-name">{hostel.name}</h2>
-                      <p className="hostel-loc"><ICONS.Location style={{width: '12px', height: '12px'}} /> {hostel.location}</p>
-                    </div>
-                    <div className="gender-tag">{hostel.gender}</div>
-                  </div>
-
-                  <div className="hostel-specs">
-                    <div className="spec-item">{hostel.type}</div>
-                    <div className="spec-item">Fully Managed</div>
-                    <div className="spec-item">Verified</div>
-                  </div>
-
-                  <div className="pro-card-footer">
-                    <div className="price-tag">
-                      <span className="price-val">₹{hostel.price.toLocaleString()}</span>
-                      <span className="price-period">/mo</span>
-                    </div>
-                    <div className="card-actions">
-                      <button className="btn-wish-outline" onClick={() => toggleWishlist(hostel)}>
-                        {isWishlisted(hostel.id) ? 'Saved' : 'Wishlist'}
-                      </button>
-                      <Link to={`/listing/${hostel.id}`} className="btn-details">Details</Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <HostelCard 
+                key={hostel.id} 
+                hostel={hostel} 
+                isWishlisted={isWishlisted(hostel.id)} 
+                toggleWishlist={toggleWishlist}
+              />
             ))
           )}
         </main>
@@ -413,36 +484,46 @@ const Search = () => {
           box-shadow: 0 8px 20px rgba(244, 63, 94, 0.3);
         }
 
+        .header-content {
+          text-align: center;
+        }
+
         .header-title {
-          font-size: 2.8rem;
-          font-weight: 900;
-          letter-spacing: -1.5px;
+          font-size: 3.5rem;
+          font-weight: 950;
+          background: linear-gradient(to right, #fff, var(--accent-primary));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
           margin-bottom: 0.5rem;
-          color: var(--text-primary);
+          letter-spacing: -2px;
         }
 
         .header-subtitle {
-          font-size: 1.1rem;
           color: var(--text-muted);
+          font-size: 1.2rem;
+          font-weight: 500;
         }
 
         .search-layout {
           display: grid;
-          grid-template-columns: 380px 1fr;
+          grid-template-columns: 320px 1fr;
           gap: 3rem;
-          align-items: start;
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 0 2rem;
         }
 
         .sidebar-professional {
           position: sticky;
-          top: 100px;
+          top: 2rem;
+          height: fit-content;
         }
 
         .filter-card {
           background: var(--bg-secondary);
           border: 1px solid var(--border-color);
-          border-radius: 28px;
-          padding: 2.2rem;
+          border-radius: 24px;
+          padding: 2rem;
           box-shadow: var(--shadow-xl);
         }
 
@@ -450,9 +531,9 @@ const Search = () => {
           display: flex;
           align-items: center;
           gap: 0.8rem;
-          margin-bottom: 2.5rem;
+          margin-bottom: 2rem;
+          padding-bottom: 1rem;
           border-bottom: 1px solid var(--border-color);
-          padding-bottom: 1.2rem;
         }
 
         .filter-header h3 {
@@ -462,31 +543,28 @@ const Search = () => {
         }
 
         .filter-group {
-          margin-bottom: 1.5rem;
+          margin-bottom: 2rem;
         }
 
         .group-label {
           display: flex;
           align-items: center;
-          gap: 0.8rem;
-          font-size: 0.75rem;
-          font-weight: 800;
-          color: var(--text-muted);
-          text-transform: uppercase;
-          letter-spacing: 1.5px;
+          gap: 0.6rem;
+          font-size: 0.9rem;
+          font-weight: 700;
+          color: var(--text-secondary);
           margin-bottom: 1rem;
         }
 
         .pro-select {
           width: 100%;
-          padding: 1rem 1.2rem;
+          padding: 1rem;
           background: var(--bg-tertiary);
           border: 1px solid var(--border-color);
-          border-radius: 16px;
+          border-radius: 12px;
           color: var(--text-primary);
           font-weight: 600;
           outline: none;
-          cursor: pointer;
         }
 
         .gender-toggle-group {
@@ -502,55 +580,36 @@ const Search = () => {
           border-radius: 12px;
           color: var(--text-secondary);
           font-weight: 700;
-          font-size: 0.85rem;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.3s;
         }
 
         .gender-btn.active {
           background: var(--accent-primary);
           color: white;
           border-color: var(--accent-primary);
-          box-shadow: 0 4px 15px rgba(var(--accent-primary-rgb), 0.25);
-        }
-
-        .apply-btn {
-          width: 100%;
-          padding: 1.2rem;
-          background: var(--text-primary);
-          color: var(--bg-primary);
-          border: none;
-          border-radius: 18px;
-          font-weight: 800;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          margin-top: 1rem;
-          box-shadow: var(--shadow-md);
-        }
-
-        .apply-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
 
         .pro-filter-table {
-          background: var(--bg-tertiary);
-          border: 1px solid var(--border-color);
-          border-radius: 20px;
-          overflow: hidden;
           display: flex;
           flex-direction: column;
+          gap: 0.5rem;
         }
 
         .pro-table-row {
-          display: block;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 0.8rem;
+          background: var(--bg-tertiary);
+          border: 1px solid var(--border-color);
+          border-radius: 12px;
           cursor: pointer;
-          border-bottom: 1px solid var(--border-color);
-          transition: all 0.2s ease;
+          transition: all 0.3s;
         }
 
-        .pro-table-row:last-child {
-          border-bottom: none;
+        .pro-table-row:hover {
+          border-color: var(--accent-primary);
         }
 
         .pro-table-row input {
@@ -561,30 +620,20 @@ const Search = () => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 0.6rem 1rem;
+          width: 100%;
         }
 
         .row-label {
-          font-size: 0.85rem;
+          font-size: 0.9rem;
           font-weight: 700;
-          color: var(--text-primary);
         }
 
         .row-radio-custom {
-          width: 16px;
-          height: 16px;
+          width: 18px;
+          height: 18px;
           border: 2px solid var(--border-color);
           border-radius: 50%;
           position: relative;
-          transition: all 0.2s ease;
-        }
-
-        .pro-table-row input:checked + .row-content {
-          background: rgba(var(--accent-primary-rgb), 0.05);
-        }
-
-        .pro-table-row input:checked + .row-content .row-radio-custom {
-          border-color: var(--accent-primary);
         }
 
         .pro-table-row input:checked + .row-content .row-radio-custom::after {
@@ -592,8 +641,8 @@ const Search = () => {
           position: absolute;
           top: 3px;
           left: 3px;
-          width: 6px;
-          height: 6px;
+          width: 8px;
+          height: 8px;
           background: var(--accent-primary);
           border-radius: 50%;
         }
@@ -602,21 +651,16 @@ const Search = () => {
           display: flex;
           align-items: center;
           gap: 0.8rem;
-          color: var(--text-secondary);
+          font-weight: 600;
+          font-size: 0.9rem;
         }
 
         .row-check-custom {
           width: 18px;
           height: 18px;
           border: 2px solid var(--border-color);
-          border-radius: 6px;
+          border-radius: 4px;
           position: relative;
-          transition: all 0.2s ease;
-        }
-
-        .pro-table-row input:checked + .row-content .row-check-custom {
-          background: var(--accent-primary);
-          border-color: var(--accent-primary);
         }
 
         .pro-table-row input:checked + .row-content .row-check-custom::after {
@@ -625,20 +669,18 @@ const Search = () => {
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          color: white;
-          font-size: 0.75rem;
-          font-weight: bold;
+          color: var(--accent-primary);
+          font-weight: 900;
         }
 
         .amenities-checklist {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 1rem;
+          gap: 0.8rem;
         }
 
         .amenity-checkbox {
           cursor: pointer;
-          display: block;
         }
 
         .amenity-checkbox input {
@@ -668,52 +710,106 @@ const Search = () => {
 
         .results-professional {
           display: grid;
-          grid-template-columns: 1fr;
-          gap: 2.2rem;
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+          gap: 2.5rem;
         }
 
-        .pro-hostel-card {
-          display: flex;
+        .pro-hostel-card-vertical {
           background: var(--bg-secondary);
           border: 1px solid var(--border-color);
           border-radius: 32px;
           overflow: hidden;
-          transition: all 0.4s ease;
-          height: 320px;
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          box-shadow: var(--shadow-md);
         }
 
-        .pro-hostel-card:hover {
-          transform: translateY(-8px);
+        .pro-hostel-card-vertical:hover {
+          transform: translateY(-10px);
           box-shadow: var(--shadow-2xl);
           border-color: var(--accent-primary);
         }
 
-        .pro-card-image {
-          width: 400px;
-          background-size: cover;
-          background-position: center;
+        .card-image-area {
+          height: 300px;
           position: relative;
-          transition: background-image 0.5s ease-in-out;
+          overflow: hidden;
         }
 
-        .rating-tag {
+        .carousel-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 1s ease;
+        }
+
+        .pro-hostel-card-vertical:hover .carousel-image {
+          transform: scale(1.1);
+        }
+
+        .image-overlay-gradient {
           position: absolute;
-          top: 1.5rem;
-          left: 1.5rem;
+          inset: 0;
+          background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%);
+          z-index: 2;
+        }
+
+        .card-top-badges {
+          position: absolute;
+          top: 1.2rem;
+          left: 1.2rem;
+          display: flex;
+          gap: 0.6rem;
+          z-index: 5;
+          width: calc(100% - 2.4rem);
+        }
+
+        .badge-featured {
+          padding: 0.4rem 0.8rem;
+          background: var(--accent-primary);
+          color: white;
+          border-radius: 8px;
+          font-size: 0.65rem;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .badge-status-pill {
+          padding: 0.4rem 0.8rem;
           background: #22c55e;
           color: white;
-          padding: 0.4rem 1rem;
-          border-radius: 10px;
-          font-weight: 800;
-          font-size: 0.9rem;
+          border-radius: 8px;
+          font-size: 0.65rem;
+          font-weight: 900;
+          text-transform: uppercase;
+          margin-left: auto;
         }
 
-        .wishlist-icon {
+        .name-overlay {
           position: absolute;
-          top: 1.5rem;
-          right: 1.5rem;
-          width: 44px;
-          height: 44px;
+          bottom: 1.5rem;
+          left: 1.5rem;
+          z-index: 5;
+        }
+
+        .hostel-title {
+          color: white;
+          font-size: 1.8rem;
+          font-weight: 950;
+          margin: 0;
+          letter-spacing: -1px;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .wish-pill {
+          position: absolute;
+          top: 1.2rem;
+          right: 1.2rem;
+          width: 40px;
+          height: 40px;
           border-radius: 50%;
           border: none;
           background: rgba(255,255,255,0.2);
@@ -724,200 +820,120 @@ const Search = () => {
           justify-content: center;
           cursor: pointer;
           transition: all 0.3s ease;
+          z-index: 10;
         }
 
-        .wishlist-icon.active {
+        .wish-pill.active {
           background: var(--accent-error);
           color: white;
         }
 
-        .carousel-dots {
-          position: absolute;
-          bottom: 1.5rem;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .dot {
-          width: 8px;
-          height: 8px;
-          background: rgba(255,255,255,0.4);
-          border-radius: 50%;
-          cursor: pointer;
-          transition: all 0.3s;
-        }
-
-        .dot.active {
-          background: white;
-          width: 20px;
-          border-radius: 10px;
-        }
-
-        .pro-card-content {
-          flex: 1;
-          padding: 2.5rem;
+        .card-info-area {
+          padding: 1.8rem;
           display: flex;
           flex-direction: column;
+          gap: 1.2rem;
+        }
+
+        .loc-rating-row {
+          display: flex;
           justify-content: space-between;
+          align-items: center;
         }
 
-        .hostel-name {
-          font-size: 2.2rem;
-          font-weight: 900;
-          margin: 0;
-          color: var(--text-primary);
-          letter-spacing: -1px;
-        }
-
-        .hostel-loc {
-          color: var(--text-muted);
-          font-size: 1rem;
-          margin: 0.5rem 0 0;
+        .loc-info {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-        }
-
-        .gender-tag {
-          padding: 0.5rem 1.2rem;
-          background: var(--bg-tertiary);
-          border-radius: 12px;
-          font-size: 0.85rem;
-          font-weight: 800;
-          color: var(--accent-primary);
-          text-transform: uppercase;
-        }
-
-        .pro-card-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-        }
-
-        .hostel-specs {
-          display: flex;
-          gap: 1.5rem;
-          margin: 1.5rem 0;
-        }
-
-        .spec-item {
+          color: var(--text-muted);
           font-size: 0.9rem;
-          color: var(--text-secondary);
           font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
         }
 
-        .spec-item::before {
-          content: '•';
-          color: var(--accent-primary);
-          font-size: 1.5rem;
+        .rating-pill {
+          background: rgba(251, 191, 36, 0.1);
+          color: #fbbf24;
+          padding: 0.3rem 0.6rem;
+          border-radius: 8px;
+          font-weight: 800;
+          font-size: 0.85rem;
         }
 
-        .pro-card-footer {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
-          border-top: 1px solid var(--border-color);
-          padding-top: 1.5rem;
-        }
-
-        .price-val {
-          font-size: 2.4rem;
-          font-weight: 950;
-          color: var(--text-primary);
-        }
-
-        .price-period {
-          color: var(--text-muted);
-          font-size: 1.1rem;
-          margin-left: 0.4rem;
-        }
-
-        .card-actions {
-          display: flex;
+        .stats-box-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
           gap: 1rem;
         }
 
-        .btn-wish-outline {
-          padding: 0.8rem 1.5rem;
-          background: transparent;
-          border: 1px solid var(--border-color);
-          border-radius: 14px;
-          color: var(--text-secondary);
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .btn-details {
-          padding: 0.8rem 2.2rem;
-          background: var(--accent-primary);
-          color: white;
-          text-decoration: none;
-          border-radius: 14px;
-          font-weight: 800;
-          transition: all 0.3s ease;
-          box-shadow: 0 8px 20px rgba(var(--accent-primary-rgb), 0.2);
-        }
-
-        .btn-details:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 12px 30px rgba(var(--accent-primary-rgb), 0.3);
-        }
-
-        .card-badge-row {
-          position: absolute;
-          top: 1.5rem;
-          left: 1.5rem;
+        .stat-box {
+          background: var(--bg-tertiary);
+          padding: 1rem;
+          border-radius: 16px;
           display: flex;
-          gap: 0.8rem;
-          z-index: 5;
-        }
-
-        .rating-tag {
-          padding: 0.5rem 1rem;
-          background: rgba(0,0,0,0.6);
-          backdrop-filter: blur(8px);
-          color: #fbbf24;
-          border-radius: 12px;
-          font-size: 0.9rem;
-          font-weight: 800;
-          display: flex;
-          align-items: center;
+          flex-direction: column;
           gap: 0.3rem;
         }
 
-        .popularity-badge {
-          padding: 0.5rem 1rem;
-          background: var(--accent-primary);
-          color: white;
-          border-radius: 12px;
-          font-size: 0.75rem;
+        .stat-label {
+          font-size: 0.65rem;
           font-weight: 800;
+          color: var(--text-muted);
           text-transform: uppercase;
-          letter-spacing: 0.5px;
-          box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb), 0.3);
+          letter-spacing: 1px;
         }
 
-        .occupancy-tag {
-          font-size: 0.7rem;
+        .stat-value {
+          font-size: 1.2rem;
           font-weight: 900;
           color: var(--accent-success);
-          background: rgba(var(--accent-success-rgb), 0.1);
-          padding: 0.4rem 0.8rem;
-          border-radius: 8px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
+        }
+
+        .amenities-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .amenity-icons {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          color: var(--text-muted);
+        }
+
+        .more-amenities {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: var(--accent-primary);
+        }
+
+        .card-actions-footer {
+          display: flex;
+          gap: 0.8rem;
+          margin-top: 0.5rem;
+        }
+
+        .btn-primary-action {
+          flex: 1;
+          padding: 1rem;
+          background: var(--accent-primary);
+          color: white;
+          text-align: center;
+          text-decoration: none;
+          border-radius: 14px;
+          font-weight: 800;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb), 0.2);
+        }
+
+        .btn-primary-action:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(var(--accent-primary-rgb), 0.3);
         }
 
         @media (max-width: 1024px) {
           .search-layout { grid-template-columns: 1fr; }
-          .pro-hostel-card { flex-direction: column; height: auto; }
-          .pro-card-image { width: 100%; height: 250px; }
         }
       `}</style>
     </div>

@@ -1,44 +1,7 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
-
-const ICONS = {
-  WiFi: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>,
-  Meals: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>,
-  Security: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-  Cleaning: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9a1 1 0 0 1 1.4 0l2.5 2.5a1 1 0 0 0 1.4 0l11.1-11.1a1 1 0 0 0 0-1.4l-2.5-2.5a1 1 0 0 0-1.4 0L4.3 18.7a1 1 0 0 0 0 1.4L6.1 22"/><path d="m11.6 15.8 1.8-1.8"/><path d="m13.8 13.6 1.8-1.8"/><path d="m15.8 11.6 1.8-1.8"/><path d="m11 11 2-2"/><path d="m5 5 2-2"/></svg>,
-  Power: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
-  Location: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-  Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
-  AC: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7h18"/><path d="M3 12h18"/><path d="M3 17h18"/><path d="M7 7v10"/><path d="M17 7v10"/></svg>,
-  Gym: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6.5 6.5 11 11"/><path d="m11.8 5.8 5.4 5.4"/><path d="m6.8 10.8 5.4 5.4"/><circle cx="5.5" cy="5.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
-  Laundry: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="13" r="5"/><path d="M4 12V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8"/><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/></svg>
-};
-
-const MOCK_SEED_DETAILS = [
-  { id: 'b1', name: 'Alpha Tower', location: 'North Campus, Bengaluru', city: 'bengaluru', price: 8500, gender: 'Boys', category: 'professional', rating: 4.9, description: "Premium hostel for students and professionals in the heart of Bengaluru's North Campus." },
-  { id: 'b2', name: 'Beta Block', location: 'South Campus, Hyderabad', city: 'hyderabad', price: 6500, gender: 'Girls', category: 'student', rating: 4.8, description: "Safe and secure girls-only hostel with 24/7 security and home-style food in Hyderabad." },
-  { id: 'b3', name: 'Zenith Living Hyderabad', location: 'Gachibowli, Hyderabad', city: 'hyderabad', price: 15500, gender: 'Mixed', category: 'professional', rating: 4.9, description: "Zenith Living offers a premium co-living experience in Gachibowli with high-end amenities." },
-  { id: 'b4', name: 'Cyber Hub Stay', location: 'HITEC City, Hyderabad', city: 'hyderabad', price: 11500, gender: 'Men', category: 'professional', rating: 4.6, description: "Modern stay located in the heart of Hyderabad's IT hub, perfect for young professionals." },
-  { id: 'b5', name: 'Kondapur Komfort', location: 'Kondapur, Hyderabad', city: 'hyderabad', price: 9500, gender: 'Women', category: 'student', rating: 4.4, description: "Safe and comfortable hostel for women in Kondapur with homely food and great community." },
-  { id: 'b6', name: 'Zeta Zone', location: 'Sector 12, Bengaluru', city: 'bengaluru', price: 7500, gender: 'Girls', category: 'student', rating: 4.6, description: "Quiet and peaceful study-focused hostel for female students in Bengaluru." },
-  { id: 'b7', name: 'Eta Heights', location: 'Main Market, Hyderabad', city: 'hyderabad', price: 9000, gender: 'Mixed', category: 'professional', rating: 4.7, description: "Centrally located property with easy access to public transport and IT parks." },
-  { id: 'b8', name: 'Theta Terraces', location: 'Lake View, Mumbai', city: 'mumbai', price: 11000, gender: 'Girls', category: 'luxury', rating: 4.8, description: "Lakeside views with premium safety and housekeeping services for girls." },
-  { id: 'b9', name: 'Iota Inn', location: 'Central Hub, Bengaluru', city: 'bengaluru', price: 5500, gender: 'Boys', category: 'student', rating: 4.5, description: "High-occupancy student stay with basic needs covered at an affordable price." },
-  { id: 'b10', name: 'Kappa Korner', location: 'East Side, Hyderabad', city: 'hyderabad', price: 4500, gender: 'Mixed', category: 'student', rating: 4.4, description: "Budget-friendly rooms for students looking for simplicity and community." },
-  { id: 'b11', name: 'Lambda Lodge', location: 'Science Park, Mumbai', city: 'mumbai', price: 8000, gender: 'Girls', category: 'professional', rating: 4.7, description: "Peaceful environment near Mumbai's research and education parks." },
-  { id: 'b12', name: 'Mu Mansion', location: 'Royal Lane, Bengaluru', city: 'bengaluru', price: 18000, gender: 'Mixed', category: 'luxury', rating: 5.0, description: "The pinnacle of royal student living with premium services and VIP dining." },
-  { id: 'b13', name: 'Gowlidoddy Grand', location: 'Gowlidoddy, Hyderabad', city: 'hyderabad', price: 10000, gender: 'Unisex', category: 'professional', rating: 4.5, description: "Spacious and modern living in Gowlidoddy with excellent connectivity." },
-  { id: 'b14', name: 'KPHB Residency', location: 'KPHB, Hyderabad', city: 'hyderabad', price: 8000, gender: 'Men', category: 'student', rating: 4.3, description: "Budget-friendly stay in KPHB with all essential facilities for students." },
-  { id: 'b15', name: 'Metro Hub Mumbai', location: 'Powai, Mumbai', city: 'mumbai', price: 17000, gender: 'Unisex', category: 'luxury', rating: 4.5, description: "Executive stay in Powai with premium amenities and gym access." },
-  { id: 'b16', name: 'Serene Stays', location: 'Whitefield, Bengaluru', city: 'bengaluru', price: 14500, gender: 'Unisex', category: 'professional', rating: 4.7, description: "Peaceful environment in Whitefield, ideal for IT professionals." },
-  { id: 'b17', name: 'Lanco Hills Living', location: 'Manikonda, Hyderabad', city: 'hyderabad', price: 13500, gender: 'Women', category: 'student', rating: 4.6, description: "Luxury living with a view in Lanco Hills, exclusively for women." },
-  { id: 'b18', name: 'Urban Den', location: 'Andheri, Mumbai', city: 'mumbai', price: 18000, gender: 'Men', category: 'professional', rating: 4.4, description: "Modern co-living space in Andheri with work-from-home facilities." },
-  { id: 'b19', name: 'Madhapur Metro View', location: 'Madhapur, Hyderabad', city: 'hyderabad', price: 12500, gender: 'Unisex', category: 'professional', rating: 4.7, description: "Stay right next to the metro in Madhapur with easy access to the city." },
-  { id: 'b20', name: 'Campus Core', location: 'Manipal, Bengaluru', city: 'bengaluru', price: 7500, gender: 'Men', category: 'student', rating: 4.5, description: "Student-focused stay near the campus with a vibrant community." },
-  { id: 'b21', name: 'Journalist Colony Suites', location: 'Journalist colony, Hyderabad', city: 'hyderabad', price: 14500, gender: 'Unisex', category: 'professional', rating: 4.7, description: "Premium suites in the quiet Journalist colony area of Hyderabad." },
-  { id: 'b22', name: 'Kukatpally Komfort', location: 'Kukatpally, Hyderabad', city: 'hyderabad', price: 9000, gender: 'Women', category: 'student', rating: 4.4, description: "Comfortable and secure stay in Kukatpally for female students and workers." }
-];
+import { MOCK_HOSTELS } from '../utils/mockData';
 
 const Listing = () => {
   const navigate = useNavigate();
@@ -57,38 +20,8 @@ const Listing = () => {
         return;
       }
       try {
-        const [response, wishRes] = await Promise.all([
-          id.startsWith('b') && id.length <= 4 ? null : API.get(`/buildings/${id}`),
-          API.get('/tenant-portal/wishlist')
-        ]);
-
-        let b;
-        if (id.startsWith('b') && id.length <= 4) {
-          const mock = MOCK_SEED_DETAILS.find(m => m.id === id);
-          if (mock) {
-            b = {
-              _id: mock.id,
-              name: mock.name,
-              address: mock.location,
-              locationCity: mock.city,
-              category: mock.category,
-              genderType: mock.gender,
-              description: mock.description,
-              rating: mock.rating,
-              startingPrice: mock.price,
-              amenities: ['WiFi', 'AC', 'Laundry', 'Security'],
-              staffInfo: { name: 'Rajesh Kumar', role: 'Chief Warden', contact: '+91 98765 43210' }
-            };
-          }
-        } else {
-          b = response.data;
-        }
-
-        // Check wishlist status
-        const wishItem = wishRes.data.find(h => h.hostelId === id || h.id === id);
-        if (wishItem) setWishlistId(wishItem._id);
-        
-        if (!b) throw new Error('Property not found');
+        const response = await API.get(`/buildings/${id}`);
+        const b = response.data;
         
         const mapped = {
           id: b._id,
@@ -107,11 +40,9 @@ const Listing = () => {
           verified: true,
           price: b.startingPrice || 6500,
           deposit: (b.startingPrice || 6500) * 2,
-          amenities: b.amenities?.length > 0 ? b.amenities : ['WiFi', 'Mess', 'Laundry', 'AC', 'Power Backup'],
-          facilities: ['Common Lounge', 'Study Room', 'Biometric Entry', 'CCTV', 'Parking', 'Dining Hall'],
-          roomTypes: b.floors?.flatMap(f => f.rooms).slice(0, 4).map(r => ({
-            type: r.roomNumber.toString().includes('1') ? 'Single Sharing' : 'Double Sharing',
-            name: `Room ${r.roomNumber}`,
+          amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['WiFi', 'Mess', 'Laundry'],
+          roomTypes: b.floors?.[0]?.rooms?.slice(0, 4).map(r => ({
+            type: r.roomNumber,
             price: b.startingPrice || 6500,
             deposit: (b.startingPrice || 6500) * 2,
             totalBeds: r.beds?.length || 2,
@@ -147,7 +78,33 @@ const Listing = () => {
         };
         setHostel(mapped);
       } catch (err) {
-        console.error('Error fetching building details:', err);
+        console.error('Error fetching building details, using mock data fallback:', err);
+        // Fallback to mock data
+        const mockHostel = MOCK_HOSTELS.find(h => h.id === id) || MOCK_HOSTELS[0];
+        if (mockHostel) {
+          const mappedMock = {
+            id: mockHostel.id,
+            name: mockHostel.name,
+            location: mockHostel.locality + ', ' + mockHostel.city,
+            rating: mockHostel.rating || 4.5,
+            reviews: 120,
+            safetyScore: 9.5,
+            occupancy: '85%',
+            verified: true,
+            price: mockHostel.price,
+            deposit: mockHostel.price * 2,
+            amenities: mockHostel.amenities || ['WiFi', 'AC', 'Laundry'],
+            roomTypes: [
+              { type: 'Private Room', price: mockHostel.price + 2000, deposit: (mockHostel.price + 2000) * 2, status: 'Available', color: 'var(--accent-success)' },
+              { type: '2 Sharing', price: mockHostel.price, deposit: mockHostel.price * 2, status: 'Available', color: 'var(--accent-success)' },
+              { type: '3 Sharing', price: mockHostel.price - 1500, deposit: (mockHostel.price - 1500) * 2, status: 'Few Left', color: 'var(--accent-warning)' }
+            ],
+            landmarks: [{ name: 'Nearby Station', distance: '500m' }, { name: 'Tech Park', distance: '1.2km' }],
+            rules: ['No smoking indoors', 'Quiet hours 11 PM', 'Visitors allowed until 8 PM'],
+            menu: { breakfast: 'Idli/Dosa', lunch: 'Rice, Dal, Curry', dinner: 'Roti, Paneer' }
+          };
+          setHostel(mappedMock);
+        }
       } finally {
         setLoading(false);
       }
