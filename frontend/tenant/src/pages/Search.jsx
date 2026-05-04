@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import API from '../api/axios';
 
 /* ─── icons (SVG constants) ─── */
@@ -20,14 +20,39 @@ const ICONS = {
 
 /* ─── hostel data ─── */
 const HOSTELS = [
-  { id: 1, name: 'Sunshine Residency', location: 'Near City College', price: 6500, gender: 'Boys', type: '2 Sharing', rating: 4.5, image: '/sunshine_residency_hostel.png' },
-  { id: 2, name: 'Elite Living', location: 'Tech Park Area', price: 8500, gender: 'Girls', type: 'Single', rating: 4.8, image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000' },
-  { id: 3, name: 'Green View Hostel', location: 'Green Valley', price: 5000, gender: 'Co-living', type: '4 Sharing', rating: 4.2, image: 'https://images.unsplash.com/photo-1623625434462-e5e42318ae49?auto=format&fit=crop&q=80&w=1000' },
+  // Bangalore Stays
+  { id: 'b1', name: 'Livora Premium Stay', location: 'Koramangala, Bangalore', price: 12999, gender: 'Boys', type: 'Private', rating: 4.9, image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000' },
+  { id: 'b2', name: 'Zenith Living', location: 'Whitefield, Bangalore', price: 10500, gender: 'Girls', type: '2 Sharing', rating: 4.7, image: 'https://images.unsplash.com/photo-1623625434462-e5e42318ae49?auto=format&fit=crop&q=80&w=1000' },
+  { id: 'b3', name: 'Elite Hub', location: 'Indiranagar, Bangalore', price: 15000, gender: 'Mixed', type: 'Studio', rating: 4.8, image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=1000' },
+  
+  // Hyderabad Stays
+  { id: 'h1', name: 'Stellar Suites', location: 'Gachibowli, Hyderabad', price: 16000, gender: 'Mixed', type: 'Private', rating: 4.7, image: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&q=80&w=1000' },
+  { id: 'h2', name: 'Cyber Hub Stay', location: 'Hitech City, Hyderabad', price: 11500, gender: 'Boys', type: '3 Sharing', rating: 4.6, image: 'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&q=80&w=1000' },
+  
+  // Mumbai Stays
+  { id: 'm1', name: 'Marine Drive Elite', location: 'Colaba, Mumbai', price: 25000, gender: 'Mixed', type: 'Studio', rating: 4.9, image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=1000' },
+  { id: 'm2', name: 'Skyline Heights', location: 'Andheri, Mumbai', price: 18000, gender: 'Girls', type: 'Private', rating: 4.5, image: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&q=80&w=1000' },
+  
+  // Chennai Stays
+  { id: 'c1', name: 'Marina Breeze', location: 'Adyar, Chennai', price: 9500, gender: 'Boys', type: '2 Sharing', rating: 4.4, image: 'https://images.unsplash.com/photo-1515263487990-61b07816b324?auto=format&fit=crop&q=80&w=1000' },
 ];
 
 const Search = () => {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({ location: 'bengaluru', budget: 10000, gender: 'All' });
+  const location = useLocation();
+  
+  // Parse query params
+  const queryParams = new URLSearchParams(location.search);
+  const initialLocation = queryParams.get('location') || '';
+  const initialBudget = queryParams.get('budget') || '';
+  const initialType = queryParams.get('type') || '';
+
+  const [filters, setFilters] = useState({ 
+    location: initialLocation, 
+    budget: initialBudget, 
+    type: initialType,
+    gender: 'All' 
+  });
   const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,26 +61,40 @@ const Search = () => {
     const fetchHostels = async () => {
       try {
         const response = await API.get('/buildings');
-        // Map backend building structure to frontend hostel structure if needed
-        const mapped = response.data.map(b => ({
+        const dbMapped = response.data.map(b => ({
           id: b._id,
           name: b.name,
           location: b.address,
-          price: b.startingPrice || 5000, // Fallback if not in DB
+          price: b.startingPrice || 5000,
           gender: b.type || 'Co-living',
           type: 'Premium',
           rating: 4.5,
-          image: b.images?.[0] || '/sunshine_residency_hostel.png'
+          image: b.images?.[0] || 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000'
         }));
-        setHostels(mapped);
+        setHostels([...HOSTELS, ...dbMapped]);
       } catch (err) {
         console.error('Error fetching hostels:', err);
+        setHostels(HOSTELS); // Use mock data if API fails
       } finally {
         setLoading(false);
       }
     };
     fetchHostels();
   }, []);
+
+  const filteredHostels = hostels.filter(h => {
+    const locMatch = !filters.location || h.location.toLowerCase().includes(filters.location.toLowerCase()) || h.name.toLowerCase().includes(filters.location.toLowerCase());
+    const genderMatch = filters.gender === 'All' || h.gender === filters.gender;
+    
+    // Budget logic (simple mapping for demonstration)
+    let budgetMatch = true;
+    if (filters.budget) {
+       if (filters.budget.includes('8k') && h.price > 8000) budgetMatch = false;
+       if (filters.budget.includes('12k') && (h.price < 8000 || h.price > 12000)) budgetMatch = false;
+    }
+
+    return locMatch && genderMatch && budgetMatch;
+  });
 
   const isWishlisted = (id) => wishlist.some((h) => h.id === id);
 
@@ -202,13 +241,13 @@ const Search = () => {
             <div style={{ textAlign: 'center', gridColumn: '1/-1', padding: '5rem' }}>
               <div className="loading-spinner">Discovering stays...</div>
             </div>
-          ) : hostels.length === 0 ? (
+          ) : filteredHostels.length === 0 ? (
             <div style={{ textAlign: 'center', gridColumn: '1/-1', padding: '5rem' }}>
               <h2>No hostels found matching your criteria.</h2>
               <p>Try adjusting your filters or location.</p>
             </div>
           ) : (
-            hostels.map(hostel => (
+            filteredHostels.map(hostel => (
               <div key={hostel.id} className="pro-hostel-card">
                 <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image})` }}>
                   <div className="rating-tag">{hostel.rating} ★</div>

@@ -4,11 +4,11 @@
   --accent-primary-rgb: 37, 99, 235;
   --accent-secondary-rgb: 139, 92, 246;
   --text-secondary-rgb: 107, 114, 128;
-  
+
   --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-  
+
   --card-border-radius: 28px;
   --transition-premium: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -35,7 +35,8 @@
   padding: 2.5rem;
 }
 
-.dashboard-bg-blob, .dashboard-bg-blob-2 {
+.dashboard-bg-blob,
+.dashboard-bg-blob-2 {
   position: absolute;
   border-radius: 50%;
   filter: blur(120px);
@@ -45,8 +46,13 @@
 }
 
 @keyframes float {
-  0% { transform: translate(0, 0) rotate(0deg); }
-  100% { transform: translate(100px, 50px) rotate(30deg); }
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(100px, 50px) rotate(30deg);
+  }
 }
 
 .dashboard-bg-blob {
@@ -173,8 +179,15 @@
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .stat-title-group {
@@ -251,7 +264,9 @@
   box-shadow: var(--shadow-lg);
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   color: var(--text-primary);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -290,6 +305,7 @@ p {
   .main-content {
     margin-left: 80px;
   }
+
   .dashboard-container {
     padding: 1rem;
   }
@@ -304,6 +320,7 @@ p {
 
 .table-responsive table {
   width: 100%;
-  min-width: 600px; /* Ensures minimum width so columns don't squish too much */
+  min-width: 600px;
+  /* Ensures minimum width so columns don't squish too much */
   border-collapse: collapse;
 }

@@ -21,6 +21,10 @@ import Community from './pages/Community';
 import Safety from './pages/Safety';
 import Laundry from './pages/Laundry';
 import Profile from './pages/Profile';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -39,6 +43,10 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
 
         {/* Public browsing routes */}
         <Route path="/search"          element={<Layout><Search /></Layout>} />
