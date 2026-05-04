@@ -19,7 +19,6 @@ const ICONS = {
   Luxury: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
 };
 
-<<<<<<< HEAD
 const HOSTELS = MOCK_HOSTELS.map(h => ({
   id: h.id,
   name: h.name,
@@ -114,26 +113,6 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => {
     </div>
   );
 };
-=======
-/* ─── hostel data ─── */
-const HOSTELS = [
-  // Bangalore Stays
-  { id: 'b1', name: 'Livora Premium Stay', location: 'Koramangala, Bangalore', price: 12999, gender: 'Boys', type: 'Private', rating: 4.9, image: 'https://images.unsplash.com/photo-1598927480674-60527339003c?auto=format&fit=crop&q=80&w=1000' },
-  { id: 'b2', name: 'Zenith Living', location: 'Whitefield, Bangalore', price: 10500, gender: 'Girls', type: '2 Sharing', rating: 4.7, image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=1000' },
-  { id: 'b3', name: 'Elite Hub', location: 'Indiranagar, Bangalore', price: 15000, gender: 'Mixed', type: 'Studio', rating: 4.8, image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=1000' },
-  
-  // Hyderabad Stays
-  { id: 'h1', name: 'Stellar Suites', location: 'Gachibowli, Hyderabad', price: 16000, gender: 'Mixed', type: 'Private', rating: 4.7, image: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&q=80&w=1000' },
-  { id: 'h2', name: 'Cyber Hub Stay', location: 'Hitech City, Hyderabad', price: 11500, gender: 'Boys', type: '3 Sharing', rating: 4.6, image: 'https://images.unsplash.com/photo-1536376074432-cd4638d03491?auto=format&fit=crop&q=80&w=1000' },
-  
-  // Mumbai Stays
-  { id: 'm1', name: 'Marine Drive Elite', location: 'Colaba, Mumbai', price: 25000, gender: 'Mixed', type: 'Studio', rating: 4.9, image: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&q=80&w=1000' },
-  { id: 'm2', name: 'Skyline Heights', location: 'Andheri, Mumbai', price: 18000, gender: 'Girls', type: 'Private', rating: 4.5, image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=1000' },
-  
-  // Chennai Stays
-  { id: 'c1', name: 'Marina Breeze', location: 'Adyar, Chennai', price: 9500, gender: 'Boys', type: '2 Sharing', rating: 4.4, image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1000' },
-];
->>>>>>> d9dfb5e (added images in ui)
 
 const Search = () => {
   const navigate = useNavigate();

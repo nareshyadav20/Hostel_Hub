@@ -58,15 +58,6 @@ const Home = () => {
 
   const cities = [
     { name: 'Bangalore', props: 120, img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&q=80&w=800' },
-<<<<<<< HEAD
-    { name: 'Hyderabad', props: 85, img: 'https://images.unsplash.com/photo-1513682121497-80211f36a790?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Mumbai', props: 64, img: 'https://images.unsplash.com/photo-1529253355930-ddbe423a2ac7?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Chennai', props: 42, img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Delhi', props: 95, img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Pune', props: 58, img: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Noida', props: 37, img: 'https://images.unsplash.com/photo-1584988350325-1e0f05edebc2?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Gurgaon', props: 72, img: 'https://images.unsplash.com/photo-1611090001097-f58c7340b0ba?auto=format&fit=crop&q=80&w=800' },
-=======
     { name: 'Hyderabad', props: 85, img: 'https://upload.wikimedia.org/wikipedia/commons/8/88/Downtown_hyderabad_drone.png' },
     { name: 'Mumbai', props: 64, img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&q=80&w=800' },
     { name: 'Chennai', props: 42, img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80&w=800' },
@@ -74,7 +65,6 @@ const Home = () => {
     { name: 'Pune', props: 58, img: 'https://images.unsplash.com/photo-1564507004663-b6dfb3c824d5?auto=format&fit=crop&q=80&w=800' },
     { name: 'Noida', props: 37, img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR7_3JvufedjEFqBXXm7mUfumsQTlz-dhPh2Q&s' },
     { name: 'Gurgaon', props: 72, img: 'https://riseinfraventures.com/assets/gurgaon-new.webp' },
->>>>>>> d9dfb5e (added images in ui)
   ];
 
   const displayedCities = showAllCities ? cities : cities.slice(0, 4);
