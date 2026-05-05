@@ -133,10 +133,9 @@ const Portfolio = () => {
   // Load drafts from backend buildings with status: 'Draft'
   const loadDrafts = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/buildings');
-      const allBuildings = res.data || [];
-      setDrafts(allBuildings.filter(b => b.status === 'Draft').map(b => ({ ...b, id: b._id })));
-    } catch { /* offline, no drafts */ }
+      const allBuildings = await api.getBuildings();
+      setDrafts(allBuildings.filter(b => b.status === 'Draft').map(b => ({ ...b, id: b._id || b.id })));
+    } catch (err) { console.error('Draft load error', err); }
   }, []);
 
   useEffect(() => { loadDrafts(); }, [loadDrafts]);
@@ -165,18 +164,19 @@ const Portfolio = () => {
       draftData: data,
     };
     try {
-      let res;
+      let bId;
       if (draftId) {
-        res = await axios.patch(`http://localhost:5000/api/buildings/${draftId}`, payload);
-        setActiveDraftId(draftId);
+        await api.updateBuilding(draftId, payload);
+        bId = draftId;
       } else {
-        res = await axios.post('http://localhost:5000/api/buildings', payload);
-        setActiveDraftId(res.data._id);
+        const res = await api.addBuilding(payload);
+        bId = res._id || res.id;
       }
+      setActiveDraftId(bId);
       setDraftMsg('✅ Draft saved!');
       loadDrafts();
       setTimeout(() => setDraftMsg(''), 2500);
-      return res.data._id;
+      return bId;
     } catch (err) { 
       console.error('Draft save failed:', err);
       setDraftMsg('⚠️ Save failed'); 
@@ -205,7 +205,7 @@ const Portfolio = () => {
 
   const deleteDraft = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/buildings/${id}`);
+      await api.deleteBuilding(id);
       loadDrafts();
       if (activeDraftId === id) {
         setActiveDraftId(null);

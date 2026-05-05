@@ -26,7 +26,8 @@ const createBuilding = async (req, res) => {
       staffInfo,
       status: status || 'Active',
       lastStep: lastStep || 1,
-      draftData
+      draftData,
+      owner: req.user.id
     });
     res.status(201).json(building);
   } catch (error) { res.status(500).json({ error: error.message }); }
@@ -34,7 +35,10 @@ const createBuilding = async (req, res) => {
 
 const getBuildings = async (req, res) => {
   try {
-    const buildings = await Building.find().populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
+    const buildings = await Building.find({ owner: req.user.id }).populate({ 
+      path: 'floors', 
+      populate: { path: 'rooms', populate: { path: 'beds' } } 
+    });
     res.status(200).json(buildings);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };

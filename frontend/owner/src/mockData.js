@@ -47,7 +47,18 @@ export const api = {
   // Buildings & Infrastructure
   getBuildings: async () => {
     const res = await axios.get(`${API_URL}/buildings`);
-    return handleId(res.data.filter(b => b.status !== 'Draft'));
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data.filter(b => b.status !== 'Draft'));
+  },
+  getHostels: async () => {
+    const res = await axios.get(`${API_URL}/hostels`);
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data);
+  },
+  getAssignedFloors: async (hId) => {
+    const res = await axios.get(`${API_URL}/hostel-floor-mapping`, { params: { hostelId: hId } });
+    const data = Array.isArray(res.data) ? res.data : [];
+    return data.map(m => m.floor?._id || m.floor?.id);
   },
   getAllFloors: async () => {
     const res = await axios.get(`${API_URL}/floors`);
@@ -67,10 +78,24 @@ export const api = {
   },
   getAllBeds: async () => {
     const res = await axios.get(`${API_URL}/beds`);
-    return handleId(res.data);
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data);
   },
   getBedsByBuilding: async (bId) => {
     const res = await axios.get(`${API_URL}/beds`, { params: { buildingId: bId } });
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data);
+  },
+  getFloors: async (bId) => {
+    const res = await axios.get(`${API_URL}/floors/${bId}`);
+    return handleId(res.data);
+  },
+  getRooms: async (fId) => {
+    const res = await axios.get(`${API_URL}/rooms/${fId}`);
+    return handleId(res.data);
+  },
+  getBeds: async (rId) => {
+    const res = await axios.get(`${API_URL}/beds/${rId}`);
     return handleId(res.data);
   },
 
@@ -181,6 +206,10 @@ export const api = {
     const res = await axios.patch(`${API_URL}/rooms/${id}`, { status });
     return handleId(res.data);
   },
+  updateRoom: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/rooms/${id}`, data);
+    return handleId(res.data);
+  },
   deleteRoom: async (id) => {
     await axios.delete(`${API_URL}/rooms/${id}`);
   },
@@ -190,6 +219,10 @@ export const api = {
   },
   updateBedStatus: async (id, status) => {
     const res = await axios.patch(`${API_URL}/beds/${id}`, { status });
+    return handleId(res.data);
+  },
+  updateBed: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/beds/${id}`, data);
     return handleId(res.data);
   },
   deleteBed: async (id) => {
