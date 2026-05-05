@@ -1,34 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import API from '../api/axios';
-
-/* ─── icons (SVG constants) ─── */
-const ICONS = {
-  Preferences: (props) => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
-  Verification: (props) => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
-  Confirmation: (props) => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>,
-  Check: (props) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="20 6 9 17 4 12"/></svg>,
-  Alert: (props) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
-  Shield: (props) => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-};
 
 const Booking = () => {
   const navigate = useNavigate();
   const { buildingId } = useParams();
+  const idUploadRef = useRef(null);
+  const photoUploadRef = useRef(null);
+  
   const [user, setUser] = useState({});
   const [step, setStep] = useState(1);
   const [hostel, setHostel] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(null);
   const [formData, setFormData] = useState({
-    roomType: 'Single', bed: 'A', duration: '6', moveInDate: '',
-    aadhar: null, agreementSigned: false
+    roomType: 'Double',
+    bed: 'A',
+    duration: '6',
+    moveInDate: '',
+    agreementSigned: false,
+    idProof: null,
+    profilePhoto: null
   });
+  const [bookings, setBookings] = useState([]);
 
-  const isFull = formData.roomType === 'Single';
+  const roomOptions = [
+    { id: 'Single', name: 'Single Elite', price: '18000', desc: 'Maximum Privacy & Luxury', icon: '💎', color: '#8b5cf6' },
+    { id: 'Double', name: 'Luxury 2 Sharing', price: '12000', desc: 'Balanced Comfort & Community', icon: '✨', color: '#0ea5e9' },
+    { id: 'Triple', name: 'Comfort 3 Sharing', price: '9000', desc: 'Social & Budget-Friendly', icon: '🤝', color: '#10b981' }
+  ];
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-    if (!storedUser.email) navigate('/login');
     setUser(storedUser);
 
     const fetchHostel = async () => {
@@ -46,37 +49,65 @@ const Booking = () => {
       }
     };
     if (buildingId) fetchHostel();
+    else {
+      // Fetch bookings for "My Bookings" view
+      const fetchBookings = async () => {
+        try {
+          let tId = storedUser.id || storedUser._id;
+          try {
+            const profileRes = await API.get('/tenants/me');
+            if (profileRes.data) {
+              if (profileRes.data._id) tId = profileRes.data._id;
+              setUser(prev => ({ ...prev, ...profileRes.data }));
+            }
+          } catch (e) { console.warn("Fallback to stored user ID"); }
+
+          if (tId) {
+            console.log("Fetching bookings for tenant:", tId);
+            const res = await API.get(`/bookings/me?tenantId=${tId}`);
+            console.log("Bookings found:", res.data.length);
+            setBookings(res.data);
+          }
+        } catch (err) {
+          console.error('Error fetching bookings:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchBookings();
+    }
   }, [navigate, buildingId]);
 
-  const updateUserCompletion = (newCompletion) => {
-    if (user.profileCompletion >= newCompletion) return;
-    const updatedUser = { ...user, profileCompletion: newCompletion };
-    setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-  };
-
   const handleChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setFormData({ ...formData, [e.target.name]: value });
+    const { name, value, type, checked } = e.target;
+    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
   };
 
-  const steps = [
-    { id: 1, label: 'Preferences', icon: <ICONS.Preferences /> },
-    { id: 2, label: 'Verification', icon: <ICONS.Verification /> },
-    { id: 3, label: 'Confirmation', icon: <ICONS.Confirmation /> }
-  ];
+  const handleFileUpload = (type, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setIsUploading(type);
+    setTimeout(() => {
+      setFormData(prev => ({ ...prev, [type]: file.name }));
+      setIsUploading(null);
+    }, 1500);
+  };
+
+  const currentRoom = roomOptions.find(r => r.id === formData.roomType) || roomOptions[1];
+
+  if (loading) return <div className="dashboard-container"><div className="loading-spinner">Initializing booking...</div></div>;
 
   if (!buildingId) {
     return (
-      <div className="booking-page-premium fade-in">
-        <div className="booking-overlay"></div>
-        <header className="booking-header">
-          <h1 className="booking-title">My Bookings</h1>
-          <p className="booking-subtitle">Manage your active stays and upcoming reservations.</p>
+      <div className="booking-page-premium fade-in dashboard-container">
+        <header style={{ marginBottom: '3rem' }}>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-1.5px' }}>My Bookings</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Manage your active stays and upcoming reservations.</p>
         </header>
 
         <div className="glass-card" style={{ padding: '3rem', borderRadius: '32px' }}>
-          {user.room ? (
+          {user.room && user.room !== '' ? (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
               <div>
                 <h2 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '1.5rem' }}>Active Stay</h2>
@@ -99,18 +130,62 @@ const Booking = () => {
                   </div>
                 </div>
               </div>
-              <div style={{ background: 'var(--bg-tertiary)', padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '1rem' }}>Financial Overview</h3>
+              <div style={{ background: 'var(--bg-tertiary)', padding: '2.5rem', borderRadius: '28px', border: '1px solid var(--border-color)' }}>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '2rem', color: 'var(--text-primary)' }}>Booking Summary</h3>
+                <div className="summary-row">
+                  <span>Room Type</span>
+                  <strong>{currentRoom.name}</strong>
+                </div>
                 <div className="summary-row">
                   <span>Monthly Rent</span>
-                  <strong>₹{user.rent || '6,500'}</strong>
+                  <strong style={{ color: 'var(--accent-primary)' }}>₹{parseInt(currentRoom.price).toLocaleString()}</strong>
                 </div>
                 <div className="summary-row">
-                  <span>Due Date</span>
-                  <strong>05-May-2026</strong>
+                  <span>Security Deposit</span>
+                  <strong>₹{parseInt(currentRoom.price).toLocaleString()}</strong>
                 </div>
                 <div className="summary-divider"></div>
-                <Link to="/payments" className="pro-btn-next" style={{ textAlign: 'center', textDecoration: 'none', display: 'block', marginTop: '1rem' }}>View Full History</Link>
+                <div className="summary-row total">
+                  <span>Total Payable Now</span>
+                  <strong style={{ fontSize: '1.5rem' }}>₹{(parseInt(currentRoom.price) * 2).toLocaleString()}</strong>
+                </div>
+              </div>
+            </div>
+          ) : bookings && bookings.length > 0 ? (
+            <div className="fade-in">
+              <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                <h2 style={{ fontSize: '2.5rem', fontWeight: '950', letterSpacing: '-1.5px', marginBottom: '0.5rem' }}>Upcoming Reservations</h2>
+                <p style={{ color: 'var(--text-muted)' }}>Your booked slots are listed below. Our team is preparing your room!</p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2.5rem' }}>
+                {bookings.map(b => (
+                  <div key={b._id} className="glass-card" style={{ padding: '2.5rem', borderRadius: '32px', border: '1px solid var(--border-color)', position: 'relative', overflow: 'hidden', background: 'white', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+                    <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
+                      <span className="badge" style={{ background: b.status === 'Confirmed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)', color: b.status === 'Confirmed' ? '#22c55e' : '#f59e0b', padding: '0.5rem 1.2rem', borderRadius: '12px', fontWeight: '800', fontSize: '0.75rem' }}>
+                        {b.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div style={{ width: '60px', height: '60px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', marginBottom: '1.5rem' }}>🏨</div>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1e293b', marginBottom: '0.5rem' }}>{b.buildingId?.name || 'HostelHub Residence'}</h3>
+                    <p style={{ color: 'var(--accent-primary)', fontWeight: '700', fontSize: '0.95rem', marginBottom: '2rem' }}>{b.category}</p>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div className="summary-row" style={{ margin: 0 }}>
+                        <span>Move-in Date</span>
+                        <strong style={{ color: '#1e293b' }}>{b.moveInDate}</strong>
+                      </div>
+                      <div className="summary-row" style={{ margin: 0 }}>
+                        <span>Booking ID</span>
+                        <strong style={{ color: '#64748b', fontSize: '0.85rem' }}>#{b._id.slice(-8).toUpperCase()}</strong>
+                      </div>
+                      <div className="summary-divider" style={{ margin: '1rem 0' }}></div>
+                      <div className="summary-row" style={{ margin: 0, alignItems: 'baseline' }}>
+                        <span>Total Paid</span>
+                        <strong style={{ color: 'var(--accent-primary)', fontSize: '1.8rem', fontWeight: '950' }}>₹{b.totalAmount.toLocaleString()}</strong>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
@@ -118,7 +193,7 @@ const Booking = () => {
               <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>🏠</div>
               <h2 style={{ fontSize: '1.8rem', fontWeight: '900' }}>No Active Booking</h2>
               <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>You haven't booked any hostel yet or your booking is pending approval.</p>
-              <Link to="/search" className="pro-btn-next" style={{ display: 'inline-block', width: 'auto', padding: '1rem 3rem', textDecoration: 'none' }}>Find a Hostel</Link>
+              <Link to="/search" className="btn btn-primary" style={{ display: 'inline-block', width: 'auto', padding: '1rem 3rem', textDecoration: 'none' }}>Find a Hostel</Link>
             </div>
           )}
         </div>
@@ -132,591 +207,328 @@ const Booking = () => {
     );
   }
 
-  if (loading) return <div className="booking-page-premium"><div className="loading-spinner">Initializing booking...</div></div>;
-
   return (
-    <div className="booking-page-premium fade-in">
-      <div className="booking-overlay"></div>
-      
-      <header className="booking-header">
-        <h1 className="booking-title">Secure Your Stay</h1>
-        <p className="booking-subtitle">Experience premium co-living. Complete your booking in three secure steps.</p>
+    <div className="booking-page fade-in dashboard-container" style={{ position: 'relative', paddingBottom: '8rem' }}>
+      <button 
+        onClick={() => navigate(-1)} 
+        style={{ 
+          position: 'absolute', 
+          top: '2rem', 
+          right: '2rem', 
+          background: 'var(--bg-secondary)', 
+          backdropFilter: 'blur(10px)',
+          border: '1px solid var(--border-color)', 
+          width: '52px', 
+          height: '52px', 
+          borderRadius: '50%', 
+          cursor: 'pointer', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          color: 'var(--text-secondary)',
+          zIndex: 100,
+          boxShadow: 'var(--shadow-md)',
+          transition: 'all 0.3s ease'
+        }}
+        title="Cancel Booking / Go Back"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      <header style={{ marginBottom: '4.5rem', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '3.5rem', fontWeight: '950', letterSpacing: '-3px', marginBottom: '1rem', color: 'var(--text-primary)' }}>
+          Finalize Your Stay
+        </h1>
+        <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Your premium co-living experience is just a few steps away.</p>
       </header>
 
-      <div className="booking-grid">
-        {/* Progress Tracker Sidebar */}
-        <aside className="booking-sidebar">
-          <div className="steps-container glass-card">
-            <h3 className="sidebar-title">Booking Progress</h3>
-            <div className="steps-list">
-              {steps.map(s => (
-                <div key={s.id} className={`step-item ${step === s.id ? 'active' : ''} ${step > s.id ? 'completed' : ''}`}>
-                  <div className="step-icon-wrapper">
-                    {step > s.id ? <ICONS.Check /> : s.icon}
+      <div className="progress-track">
+        <div className="progress-bar-active" style={{ width: `${(step - 1) * 50}%` }}></div>
+        {[
+          { id: 1, label: 'Preferences' },
+          { id: 2, label: 'Verification' },
+          { id: 3, label: 'Payment' }
+        ].map(s => (
+          <div key={s.id} className={`step-node ${step === s.id ? 'active' : ''} ${step > s.id ? 'done' : ''}`}>
+            <div className="node-circle">
+              {step > s.id ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> : s.id}
+            </div>
+            <span className="node-label">{s.label}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="glass-card-premium" style={{ padding: '4rem', maxWidth: '1000px', margin: '0 auto' }}>
+        {step === 1 && (
+          <div className="fade-in">
+            <div style={{ marginBottom: '3.5rem' }}>
+              <h2 style={{ fontSize: '2.2rem', fontWeight: '900', letterSpacing: '-1px', marginBottom: '1.5rem' }}>Choose Your Sanctuary</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                {roomOptions.map(room => (
+                  <div key={room.id} className={`room-option ${formData.roomType === room.id ? 'active' : ''}`} onClick={() => setFormData({...formData, roomType: room.id})}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>{room.icon}</div>
+                    <h4 style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-primary)' }}>{room.name}</h4>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>{room.desc}</p>
+                    <div className="room-price">₹{parseInt(room.price).toLocaleString()}<span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}> / month</span></div>
+                    {formData.roomType === room.id && (
+                      <div style={{ position: 'absolute', top: '1rem', right: '1rem', color: 'var(--accent-primary)' }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                      </div>
+                    )}
                   </div>
-                  <div className="step-content">
-                    <p className="step-label">{s.label}</p>
-                    <p className="step-status">{step === s.id ? 'In Progress' : step > s.id ? 'Completed' : 'Upcoming'}</p>
-                  </div>
-                  {s.id < 3 && <div className="step-line"></div>}
-                </div>
-              ))}
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
+              <div className="input-group">
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '1rem' }}>Move-In Date</label>
+                <input type="date" className="input-elite" name="moveInDate" value={formData.moveInDate} onChange={handleChange} />
+              </div>
+              <div className="input-group">
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '1rem' }}>Stay Duration</label>
+                <select className="input-elite" name="duration" value={formData.duration} onChange={handleChange}>
+                  <option value="3">3 Months</option>
+                  <option value="6">6 Months (Popular)</option>
+                  <option value="12">1 Year</option>
+                </select>
+              </div>
+            </div>
+
+            <button onClick={() => setStep(2)} className="btn btn-primary" style={{ width: '100%', marginTop: '4rem', padding: '1.5rem', fontWeight: '950', borderRadius: '22px', fontSize: '1.2rem', boxShadow: '0 15px 30px rgba(14, 165, 233, 0.2)' }}>
+              Continue to Verification
+            </button>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="fade-in">
+            <h2 style={{ fontSize: '2.2rem', fontWeight: '900', letterSpacing: '-1px', marginBottom: '2.5rem' }}>Identity Verification</h2>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem', marginBottom: '3rem' }}>
+              <div className="input-group" style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '1rem' }}>ID Proof Number</label>
+                <input type="text" className="input-elite" placeholder="Aadhar / PAN / Passport" />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
+              <div onClick={() => idUploadRef.current.click()} style={{ flex: 1, border: '2px dashed var(--border-color)', borderRadius: '20px', padding: '2rem', textAlign: 'center', cursor: 'pointer', background: formData.idProof ? 'var(--accent-success)' : 'transparent', color: formData.idProof ? 'white' : 'inherit' }}>
+                <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🪪</div>
+                <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>{formData.idProof || 'Upload ID Proof'}</div>
+                <input type="file" ref={idUploadRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload('idProof', e)} />
+              </div>
+              <div onClick={() => photoUploadRef.current.click()} style={{ flex: 1, border: '2px dashed var(--border-color)', borderRadius: '20px', padding: '2rem', textAlign: 'center', cursor: 'pointer', background: formData.profilePhoto ? 'var(--accent-success)' : 'transparent', color: formData.profilePhoto ? 'white' : 'inherit' }}>
+                <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📸</div>
+                <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>{formData.profilePhoto || 'Upload Profile Photo'}</div>
+                <input type="file" ref={photoUploadRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload('profilePhoto', e)} />
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--bg-tertiary)', padding: '2.5rem', borderRadius: '32px', border: '1px solid var(--border-color)', marginBottom: '3rem' }}>
+              <h4 style={{ fontWeight: '900', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem', color: 'var(--text-primary)' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Rental Agreement Summary
+              </h4>
+              <div style={{ maxHeight: '120px', overflowY: 'auto', fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.6', paddingRight: '1rem' }}>
+                <p>• Standard move-out notice period is 30 days.</p>
+                <p>• Security deposit is equivalent to 1 month's rent.</p>
+                <p>• Electricity charges are calculated based on sub-meter usage.</p>
+                <p>• House rules regarding visitors and quiet hours apply.</p>
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '2rem', cursor: 'pointer' }}>
+                <input type="checkbox" checked={formData.agreementSigned} onChange={e => setFormData({...formData, agreementSigned: e.target.checked})} style={{ width: '20px', height: '20px' }} />
+                <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>I have read and agree to the Digital Rental Agreement</span>
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1.5rem' }}>
+              <button onClick={() => setStep(1)} className="btn btn-secondary" style={{ flex: 1, padding: '1.2rem', borderRadius: '18px', fontWeight: '800' }}>Back</button>
+              <button onClick={() => setStep(3)} disabled={!formData.agreementSigned || !formData.idProof || !formData.profilePhoto} className="btn btn-primary" style={{ flex: 2, padding: '1.2rem', borderRadius: '18px', fontWeight: '900' }}>Proceed to Payment</button>
             </div>
           </div>
-        </aside>
+        )}
 
-        {/* Main Content Area */}
-        <main className="booking-content-area">
-          <div className="form-wrapper glass-card">
+        {step === 3 && (
+          <div className="fade-in">
+            <h2 style={{ fontSize: '2.2rem', fontWeight: '900', letterSpacing: '-1px', marginBottom: '2.5rem' }}>Booking Summary</h2>
             
-            {step === 1 && (
-              <div className="form-step fade-in">
-                <div className="step-header">
-                  <span className="step-badge">Step 01</span>
-                  <h2 className="step-title">Room & Stay Details</h2>
+            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '32px', padding: '3.5rem', position: 'relative', overflow: 'hidden', marginBottom: '3rem', boxShadow: '0 15px 40px rgba(0,0,0,0.03)' }}>
+              <div style={{ position: 'absolute', right: '-30px', top: '-30px', width: '200px', height: '200px', background: 'var(--accent-primary)', opacity: 0.05, borderRadius: '50%', filter: 'blur(60px)' }}></div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem', borderBottom: '1px dashed var(--border-color)', paddingBottom: '2.5rem' }}>
+                <div>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Selected Category</p>
+                  <h3 style={{ fontSize: '2rem', fontWeight: '950', color: 'var(--text-primary)' }}>{currentRoom.name}</h3>
                 </div>
-
-                <div className="pro-input-grid">
-                  <div className="pro-input-group">
-                    <label>Room Category</label>
-                    <select name="roomType" value={formData.roomType} onChange={handleChange}>
-                      {hostel?.floors?.flatMap(f => f.rooms).map(r => (
-                        <option key={r._id} value={r.roomNumber}>{r.roomNumber}</option>
-                      )) || (
-                        <>
-                          <option value="Single">Single Elite (Waitlist)</option>
-                          <option value="Double">Luxury 2 Sharing</option>
-                        </>
-                      )}
-                    </select>
-                  </div>
-
-                  <div className="pro-input-group">
-                    <label>Bed Preference</label>
-                    <select name="bed" value={formData.bed} onChange={handleChange} disabled={isFull}>
-                      <option value="A">Bed A (Premium Window)</option>
-                      <option value="B">Bed B (Standard)</option>
-                    </select>
-                  </div>
-
-                  <div className="pro-input-group">
-                    <label>Duration (Months)</label>
-                    <input type="number" name="duration" value={formData.duration} onChange={handleChange} min="1" max="12" />
-                  </div>
-
-                  <div className="pro-input-group">
-                    <label>Move-In Date</label>
-                    <input type="date" name="moveInDate" value={formData.moveInDate} onChange={handleChange} />
-                  </div>
-                </div>
-                
-                {isFull && (
-                  <div className="waitlist-alert">
-                    <ICONS.Alert />
-                    <div>
-                      <p className="alert-title">High Demand Alert</p>
-                      <p className="alert-desc">This category is currently full. You will be added to our high-priority waitlist.</p>
-                    </div>
-                  </div>
-                )}
-
-                <button className="pro-btn-next" onClick={() => setStep(2)}>
-                  {isFull ? 'Join Waitlist & Proceed' : 'Continue to Verification'}
-                </button>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="form-step fade-in">
-                <div className="step-header">
-                  <span className="step-badge">Step 02</span>
-                  <h2 className="step-title">Verification & Agreements</h2>
-                </div>
-
-                <div className="pro-upload-grid">
-                  <div className="upload-box">
-                    <div className="upload-icon">📁</div>
-                    <label>ID Proof (Aadhar/PAN)</label>
-                    <p>Click to upload document</p>
-                  </div>
-                  <div className="upload-box">
-                    <div className="upload-icon">📸</div>
-                    <label>Passport Photo</label>
-                    <p>Capture from webcam</p>
-                  </div>
-                </div>
-                
-                <div className="agreement-section">
-                  <div className="agreement-header">
-                    <ICONS.Verification />
-                    <h3>Digital Rental Agreement</h3>
-                  </div>
-                  <div className="agreement-body">
-                    <p>1. The tenant agrees to adhere to all house rules and scheduled timings.</p>
-                    <p>2. Rent must be paid by the 5th of each month via the portal.</p>
-                    <p>3. Security deposit is refundable subject to property inspection.</p>
-                    <p>4. Noise levels must be kept minimum during quiet hours.</p>
-                    <p>5. Guests are allowed in common areas until 9 PM.</p>
-                  </div>
-                  <label className="agreement-checkbox">
-                    <input type="checkbox" name="agreementSigned" checked={formData.agreementSigned} onChange={handleChange} />
-                    <span className="checkmark"></span>
-                    <span className="checkbox-text">I accept the terms and conditions of the rental agreement.</span>
-                  </label>
-                </div>
-
-                <div className="step-actions">
-                  <button className="pro-btn-back" onClick={() => setStep(1)}>Back</button>
-                  <button className="pro-btn-next" onClick={() => { updateUserCompletion(75); setStep(3); }} disabled={!formData.agreementSigned}>
-                    Proceed to Payment
-                  </button>
+                <div style={{ textAlign: 'right' }}>
+                   <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Move-in Date</p>
+                   <h3 style={{ fontSize: '2rem', fontWeight: '950', color: 'var(--accent-primary)' }}>{formData.moveInDate || 'TBD'}</h3>
                 </div>
               </div>
-            )}
 
-            {step === 3 && (
-              <div className="form-step fade-in">
-                <div className="step-header">
-                  <span className="step-badge">Step 03</span>
-                  <h2 className="step-title">Reservation Payment</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                  <span>Security Deposit (Refundable)</span>
+                  <span style={{ color: 'var(--text-primary)' }}>₹{parseInt(currentRoom.price).toLocaleString()}</span>
                 </div>
-
-                <div className="payment-summary-card">
-                  <div className="summary-row">
-                    <span>Token Advance</span>
-                    <span>₹2,000</span>
-                  </div>
-                  <div className="summary-row">
-                    <span>Service Fee</span>
-                    <span>₹50</span>
-                  </div>
-                  <div className="summary-divider"></div>
-                  <div className="total-row">
-                    <span>Total Amount</span>
-                    <span className="total-val">₹2,050</span>
-                  </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                  <span>Onboarding & Service Fee</span>
+                  <span style={{ color: 'var(--text-primary)' }}>₹2,000</span>
                 </div>
-                
-                <div className="security-guarantee">
-                  <ICONS.Shield />
-                  <p>Your payment is secured with 256-bit encryption. The token amount is fully adjustable against your first rent.</p>
-                </div>
-
-                <div className="step-actions">
-                  <button className="pro-btn-back" onClick={() => setStep(2)}>Back</button>
-                  <button className="pro-btn-confirm" onClick={async () => {
-                    try {
-                      // 1. Get Tenant Profile ID
-                      let tId = user.id || user._id;
-                      try {
-                        const profileRes = await API.get('/tenants/me');
-                        if (profileRes.data && profileRes.data._id) {
-                          tId = profileRes.data._id;
-                        }
-                      } catch (e) {
-                        console.warn("Could not fetch tenant profile, using user ID as fallback");
-                      }
-
-                      // 2. Record Payment
-                      await API.post('/payments', {
-                        tenantId: tId,
-                        amount: 2050,
-                        type: 'Booking',
-                        buildingId: buildingId,
-                        category: formData.roomType,
-                        method: 'UPI'
-                      });
-
-                      updateUserCompletion(100);
-                      alert('Booking Confirmed! Your payment has been recorded and reflected in the Owner Portal.');
-                      navigate('/dashboard');
-                    } catch (err) {
-                      console.error('Booking/Payment Error:', err);
-                      alert('Booking confirmation failed. Please check your connection and try again.');
-                    }
-                  }}>Pay & Confirm Booking</button>
+                <div style={{ height: '2px', background: 'var(--border-color)', margin: '1rem 0' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <span style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>Total Payable</span>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: '3rem', fontWeight: '950', color: 'var(--accent-primary)' }}>₹{(parseInt(currentRoom.price) + 2000).toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
 
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', padding: '1.5rem', background: '#f0fdf4', borderRadius: '24px', border: '1px solid #bbf7d0', marginBottom: '3rem', color: '#166534' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <p style={{ fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>Secured Booking: Your payment is protected by 256-bit encryption.</p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1.5rem' }}>
+              <button onClick={() => setStep(2)} className="btn btn-secondary" style={{ flex: 1, padding: '1.2rem', borderRadius: '18px', fontWeight: '800' }}>Back</button>
+              <button onClick={async () => {
+                try {
+                  let tId = user.id || user._id;
+                  try {
+                    const profileRes = await API.get('/tenants/me');
+                    if (profileRes.data && profileRes.data._id) tId = profileRes.data._id;
+                  } catch (e) { console.warn("Fallback to user ID"); }
+
+                  await API.post('/bookings', {
+                    tenantId: tId,
+                    buildingId: buildingId,
+                    category: currentRoom.name,
+                    moveInDate: formData.moveInDate || 'TBD',
+                    securityDeposit: parseInt(currentRoom.price),
+                    onboardingFee: 2000,
+                    totalAmount: parseInt(currentRoom.price) + 2000,
+                    method: 'UPI'
+                  });
+
+                  alert('Congratulations! Your stay at Livora is confirmed.');
+                  navigate('/dashboard');
+                } catch (err) {
+                  console.error('Booking Error:', err);
+                  alert('Booking failed. Please try again.');
+                }
+              }} className="btn btn-primary" style={{ flex: 2, padding: '1.2rem', borderRadius: '18px', fontWeight: '950', background: '#10b981', border: 'none', boxShadow: '0 10px 25px rgba(16, 185, 129, 0.2)' }}>Pay & Confirm Booking</button>
+            </div>
           </div>
-        </main>
+        )}
       </div>
 
       <style>{`
-        .booking-page-premium {
+        .glass-card-premium {
+          backdrop-filter: blur(20px);
+          background: var(--glass-bg);
+          border: 1px solid var(--glass-border);
+          border-radius: 40px;
+          box-shadow: var(--shadow-xl);
+        }
+        .progress-track {
+          display: flex;
+          justify-content: space-between;
           position: relative;
-          min-height: 100vh;
-          padding: 2rem 0;
-          color: var(--text-primary);
+          margin-bottom: 5rem;
+          padding: 0 5rem;
         }
-
-        .booking-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.03) 0%, transparent 40%),
-                      radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.03) 0%, transparent 40%);
-          z-index: -1;
+        .progress-track::before {
+          content: '';
+          position: absolute;
+          top: 24px;
+          left: 5rem;
+          right: 5rem;
+          height: 4px;
+          background: var(--bg-tertiary);
+          z-index: 0;
         }
-
-        .booking-header {
-          margin-bottom: 4rem;
+        .progress-bar-active {
+          position: absolute;
+          top: 24px;
+          left: 5rem;
+          height: 4px;
+          background: var(--accent-primary);
+          z-index: 0;
+          transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .booking-title {
-          font-size: 3.2rem;
-          font-weight: 950;
-          letter-spacing: -2px;
-          margin-bottom: 0.5rem;
-          background: linear-gradient(to right, var(--text-primary), var(--text-secondary));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .booking-subtitle {
-          font-size: 1.2rem;
-          color: var(--text-muted);
-          max-width: 600px;
-        }
-
-        .booking-grid {
-          display: grid;
-          grid-template-columns: 300px 1fr;
-          gap: 4rem;
-          align-items: start;
-        }
-
-        .sidebar-title {
-          font-size: 1.1rem;
-          font-weight: 800;
-          margin-bottom: 2.5rem;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          color: var(--text-muted);
-        }
-
-        .steps-list {
+        .step-node {
+          position: relative;
+          z-index: 1;
           display: flex;
           flex-direction: column;
-          gap: 2rem;
-        }
-
-        .step-item {
-          position: relative;
-          display: flex;
           align-items: center;
-          gap: 1.5rem;
-          opacity: 0.4;
-          transition: all 0.4s ease;
+          gap: 1rem;
         }
-
-        .step-item.active { opacity: 1; transform: translateX(5px); }
-        .step-item.completed { opacity: 0.8; }
-
-        .step-icon-wrapper {
-          width: 48px;
-          height: 48px;
-          background: var(--bg-tertiary);
-          border: 1px solid var(--border-color);
-          border-radius: 16px;
+        .node-circle {
+          width: 52px;
+          height: 52px;
+          border-radius: 50%;
+          background: white;
+          border: 4px solid #f1f5f9;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--text-muted);
-          transition: all 0.3s ease;
-          z-index: 2;
-        }
-
-        .step-item.active .step-icon-wrapper {
-          background: var(--accent-primary);
-          color: white;
-          border-color: var(--accent-primary);
-          box-shadow: 0 10px 25px rgba(14, 165, 233, 0.3);
-        }
-
-        .step-item.completed .step-icon-wrapper {
-          background: #22c55e;
-          color: white;
-          border-color: #22c55e;
-        }
-
-        .step-label {
-          font-weight: 800;
-          font-size: 1rem;
-          margin: 0;
-        }
-
-        .step-status {
-          font-size: 0.75rem;
-          color: var(--text-muted);
-          margin: 0;
-          font-weight: 600;
-        }
-
-        .step-line {
-          position: absolute;
-          left: 24px;
-          top: 48px;
-          width: 2px;
-          height: 32px;
-          background: var(--border-color);
-        }
-
-        .step-item.completed .step-line {
-          background: #22c55e;
-        }
-
-        .form-wrapper {
-          padding: 4rem;
-          border-radius: 40px;
-          min-height: 500px;
-        }
-
-        .step-header {
-          margin-bottom: 3rem;
-        }
-
-        .step-badge {
-          display: inline-block;
-          padding: 0.4rem 1rem;
-          background: rgba(14, 165, 233, 0.1);
-          color: var(--accent-primary);
-          border-radius: 10px;
-          font-weight: 800;
-          font-size: 0.75rem;
-          margin-bottom: 1rem;
-        }
-
-        .step-title {
-          font-size: 2.2rem;
           font-weight: 900;
-          margin: 0;
-          letter-spacing: -1px;
+          transition: all 0.4s ease;
+          color: #94a3b8;
         }
-
-        .pro-input-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 2.5rem;
-        }
-
-        .pro-input-group label {
-          display: block;
-          font-size: 0.75rem;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          color: var(--text-muted);
-          margin-bottom: 0.8rem;
-        }
-
-        .pro-input-group select, .pro-input-group input {
-          width: 100%;
-          padding: 1.2rem;
-          background: var(--bg-tertiary);
-          border: 1px solid var(--border-color);
-          border-radius: 18px;
-          color: var(--text-primary);
-          font-weight: 600;
-          font-size: 1rem;
-          outline: none;
-          transition: all 0.3s ease;
-        }
-
-        .pro-input-group select:focus, .pro-input-group input:focus {
+        .step-node.active .node-circle {
           border-color: var(--accent-primary);
-          box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+          color: var(--accent-primary);
+          transform: scale(1.1);
+          box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
         }
-
-        .waitlist-alert {
-          margin-top: 3rem;
-          padding: 2rem;
-          background: linear-gradient(135deg, rgba(251, 191, 36, 0.08) 0%, rgba(251, 191, 36, 0.02) 100%);
-          border: 1px solid rgba(251, 191, 36, 0.2);
-          border-radius: 24px;
-          display: flex;
-          gap: 1.5rem;
-          align-items: center;
-          color: #f59e0b;
-        }
-
-        .alert-title { font-weight: 800; font-size: 1.1rem; margin: 0; }
-        .alert-desc { font-size: 0.95rem; margin: 0.2rem 0 0; opacity: 0.8; font-weight: 500; }
-
-        .pro-btn-next {
-          width: 100%;
-          margin-top: 4rem;
-          padding: 1.4rem;
+        .step-node.done .node-circle {
           background: var(--accent-primary);
+          border-color: var(--accent-primary);
           color: white;
-          border: none;
-          border-radius: 20px;
-          font-size: 1.1rem;
-          font-weight: 800;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 15px 35px rgba(14, 165, 233, 0.2);
         }
-
-        .pro-btn-next:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 20px 45px rgba(14, 165, 233, 0.3);
-        }
-
-        .pro-upload-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 2rem;
-          margin-bottom: 3rem;
-        }
-
-        .upload-box {
-          background: var(--bg-tertiary);
-          border: 2px dashed var(--border-color);
+        .node-label { font-size: 0.9rem; font-weight: 800; color: #64748b; }
+        .room-option {
+          padding: 2rem;
           border-radius: 24px;
-          padding: 3rem 2rem;
-          text-align: center;
+          border: 2px solid #f1f5f9;
           cursor: pointer;
           transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+          background: white;
         }
-
-        .upload-box:hover {
+        .room-option.active {
           border-color: var(--accent-primary);
           background: rgba(14, 165, 233, 0.02);
+          box-shadow: 0 10px 25px rgba(14, 165, 233, 0.1);
         }
-
-        .upload-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-        .upload-box label { display: block; font-weight: 800; margin-bottom: 0.3rem; }
-        .upload-box p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
-
-        .agreement-section {
-          background: var(--bg-tertiary);
-          border: 1px solid var(--border-color);
-          border-radius: 28px;
-          padding: 2.5rem;
-        }
-
-        .agreement-header {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          margin-bottom: 1.5rem;
-          color: var(--accent-primary);
-        }
-
-        .agreement-header h3 { font-size: 1.2rem; font-weight: 800; margin: 0; }
-
-        .agreement-body {
-          height: 150px;
-          overflow-y: auto;
-          padding-right: 1rem;
-          font-size: 0.9rem;
-          color: var(--text-secondary);
-          line-height: 1.7;
-          margin-bottom: 2rem;
-        }
-
-        .agreement-checkbox {
-          display: flex;
-          align-items: flex-start;
-          gap: 1.2rem;
-          cursor: pointer;
-          padding: 1.5rem;
-          background: rgba(255,255,255,0.03);
-          border-radius: 18px;
-          border: 1px solid var(--border-color);
-        }
-
-        .checkbox-text { font-size: 0.95rem; font-weight: 600; line-height: 1.4; }
-
-        .step-actions {
-          display: flex;
-          gap: 1.5rem;
-          margin-top: 4rem;
-        }
-
-        .pro-btn-back {
-          flex: 1;
-          padding: 1.4rem;
-          background: transparent;
-          border: 1px solid var(--border-color);
+        .room-price { font-size: 1.5rem; font-weight: 950; color: var(--accent-primary); }
+        .input-elite {
+          width: 100%;
+          padding: 1.2rem;
+          background: #f8fafc;
+          border: 2px solid transparent;
           border-radius: 20px;
-          color: var(--text-secondary);
-          font-weight: 700;
-          cursor: pointer;
+          font-weight: 600;
+          transition: all 0.3s;
+          outline: none;
         }
-
-        .payment-summary-card {
-          background: var(--bg-tertiary);
-          border: 1px solid var(--border-color);
+        .input-elite:focus { background: white; border-color: var(--accent-primary); box-shadow: 0 0 0 5px rgba(14, 165, 233, 0.08); }
+        .upload-card {
+          border: 2px dashed #e2e8f0;
           border-radius: 32px;
-          padding: 3rem;
-        }
-
-        .summary-row {
-          display: flex;
-          justify-content: space-between;
-          font-size: 1.2rem;
-          margin-bottom: 1.5rem;
-          color: var(--text-secondary);
-          font-weight: 500;
-        }
-
-        .summary-divider {
-          height: 1px;
-          background: var(--border-color);
-          margin: 2.5rem 0;
-        }
-
-        .total-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-size: 1.5rem;
-          font-weight: 800;
-        }
-
-        .total-val {
-          font-size: 3rem;
-          font-weight: 950;
-          color: var(--accent-primary);
-        }
-
-        .security-guarantee {
-          margin-top: 3rem;
-          display: flex;
-          gap: 1.5rem;
-          align-items: center;
-          padding: 2rem;
-          background: rgba(34, 197, 94, 0.05);
-          border-radius: 24px;
-          color: #22c55e;
-        }
-
-        .security-guarantee p { font-size: 0.95rem; line-height: 1.6; margin: 0; font-weight: 500; }
-
-        .pro-btn-confirm {
-          flex: 2;
-          padding: 1.4rem;
-          background: #22c55e;
-          color: white;
-          border: none;
-          border-radius: 20px;
-          font-size: 1.1rem;
-          font-weight: 800;
+          padding: 3.5rem 2rem;
+          text-align: center;
+          background: #fbfcfd;
+          transition: all 0.3s;
           cursor: pointer;
-          box-shadow: 0 15px 35px rgba(34, 197, 94, 0.2);
+          position: relative;
         }
-
-        @media (max-width: 1024px) {
-          .booking-grid { grid-template-columns: 1fr; }
-          .booking-sidebar { order: 2; }
-          .pro-input-grid { grid-template-columns: 1fr; }
-          .form-wrapper { padding: 2rem; }
-        }
+        .upload-card.uploaded { border-color: #10b981; background: #f0fdf4; }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );

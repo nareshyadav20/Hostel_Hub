@@ -46,7 +46,7 @@ const Discounts = () => {
         <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', fontWeight: '500' }}>Premium perks curated specifically for the Livora student community.</p>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '4rem' }}>
         {offers.map((offer, idx) => (
           <div key={idx} className="glass-card reward-tile" style={{ 
             display: 'flex', 

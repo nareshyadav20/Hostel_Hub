@@ -92,7 +92,7 @@ const Complaints = () => {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
                 <div style={{ 
-                  width: '64px', height: '64px', background: item.status === 'Resolved' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)', 
+                  width: '64px', height: '64px', background: item.status === 'Resolved' ? 'rgba(var(--accent-success-rgb), 0.08)' : 'rgba(var(--accent-warning-rgb), 0.08)', 
                   borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: item.status === 'Resolved' ? 'var(--accent-success)' : 'var(--accent-warning)' 
                 }}>
@@ -112,7 +112,7 @@ const Complaints = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
                 <span style={{ 
                   padding: '0.6rem 1.4rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '900',
-                  background: item.status === 'Resolved' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)',
+                  background: item.status === 'Resolved' ? 'rgba(var(--accent-success-rgb), 0.08)' : 'rgba(var(--accent-warning-rgb), 0.08)',
                   color: item.status === 'Resolved' ? 'var(--accent-success)' : 'var(--accent-warning)',
                   display: 'inline-flex', alignItems: 'center', gap: '0.6rem'
                 }}>
@@ -129,7 +129,7 @@ const Complaints = () => {
       {/* ── New Ticket Modal ── */}
       {showForm && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>
-          <div className="glass-card fade-in" style={{ width: '100%', maxWidth: '600px', padding: '3.5rem', background: 'var(--bg-secondary)', borderRadius: '40px', border: '1px solid var(--accent-primary)', position: 'relative', boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.6)' }}>
+          <div className="glass-card-premium fade-in" style={{ width: '100%', maxWidth: '600px', padding: '3.5rem', background: 'var(--bg-secondary)', borderRadius: '40px', border: '1px solid var(--accent-primary)', position: 'relative', boxShadow: 'var(--shadow-2xl)' }}>
             <button onClick={() => setShowForm(false)} style={{ position: 'absolute', top: '2rem', right: '2rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
@@ -207,7 +207,7 @@ const Complaints = () => {
           bottom: '2rem',
           left: '50%',
           transform: 'translateX(-50%)',
-          background: toastMsg.type === 'success' ? '#10B981' : '#EF4444',
+          background: toastMsg.type === 'success' ? 'var(--accent-success)' : 'var(--accent-error)',
           color: 'white',
           padding: '1rem 2rem',
           borderRadius: '50px',

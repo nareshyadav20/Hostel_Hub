@@ -1,29 +1,16 @@
-const Complaint = require('../models/Complaint');
-const Tenant = require('../models/Tenant');
+const Complaint = require('../models/tenant/Complaint');
+const Tenant = require('../models/tenant/Tenant');
 const Hostel = require('../models/Hostel');
 const Bed = require('../models/Bed');
 const Room = require('../models/Room');
 const mongoose = require('mongoose');
+const { getOrCreateTenant } = require('../utils/tenantHelper');
 
 exports.createComplaint = async (req, res) => {
   try {
     const { title, description, category, priority } = req.body;
-    let tenant = await Tenant.findOne({ email: req.user.email });
-    
-    // If tenant profile is missing, create it
-    if (!tenant) {
-      const User = require('../models/User');
-      const user = await User.findById(req.user.id);
-      if (!user) return res.status(404).json({ message: 'User not found' });
-      
-      tenant = await Tenant.create({
-        name: user.name,
-        email: user.email,
-        phone: user.phone || 'N/A',
-        emergencyContact: 'N/A',
-        status: 'PENDING'
-      });
-    }
+    const tenant = await getOrCreateTenant(req.user);
+    if (!tenant) return res.status(404).json({ message: 'Tenant profile not found' });
 
     // Robust hierarchy mapping
     let buildingId = tenant.buildingId;

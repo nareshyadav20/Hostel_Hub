@@ -25,6 +25,6 @@ const complaintSchema = new mongoose.Schema({
   roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
   bedId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bed' },
   date: { type: Date, default: Date.now }
-}, { timestamps: true });
+}, { timestamps: true, collection: 'complaints' });
 
 module.exports = mongoose.model('Complaint', complaintSchema);

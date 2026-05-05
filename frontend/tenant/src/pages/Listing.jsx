@@ -1,72 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
+import { MOCK_HOSTELS } from '../utils/mockData';
 
 const ICONS = {
-  WiFi: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>,
-  Meals: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>,
-  Security: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-  Cleaning: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-1.9a1 1 0 0 1 1.4 0l2.5 2.5a1 1 0 0 0 1.4 0l11.1-11.1a1 1 0 0 0 0-1.4l-2.5-2.5a1 1 0 0 0-1.4 0L4.3 18.7a1 1 0 0 0 0 1.4L6.1 22"/><path d="m11.6 15.8 1.8-1.8"/><path d="m13.8 13.6 1.8-1.8"/><path d="m15.8 11.6 1.8-1.8"/><path d="m11 11 2-2"/><path d="m5 5 2-2"/></svg>,
-  Power: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
-  Location: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-  Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
-  AC: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7h18"/><path d="M3 12h18"/><path d="M3 17h18"/><path d="M7 7v10"/><path d="M17 7v10"/></svg>,
-  Gym: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6.5 6.5 11 11"/><path d="m11.8 5.8 5.4 5.4"/><path d="m6.8 10.8 5.4 5.4"/><circle cx="5.5" cy="5.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
-  Laundry: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="13" r="5"/><path d="M4 12V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8"/><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/></svg>
+  Location: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+  Security: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+  WiFi: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>,
+  Meals: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
+  Cleaning: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 12h-4l-3-9L9 3l-3 9H2"/><path d="M4.5 12v6a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-6"/><line x1="9" y1="12" x2="9" y2="20"/><line x1="15" y1="12" x2="15" y2="20"/></svg>,
+  Power: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+  Check: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
 };
 
-const MOCK_SEED_DETAILS = [
-  { id: 'b1', name: 'Alpha Tower', location: 'North Campus, Bengaluru', city: 'bengaluru', price: 8500, gender: 'Boys', category: 'professional', rating: 4.9, description: "Premium hostel for students and professionals in the heart of Bengaluru's North Campus." },
-  { id: 'b2', name: 'Beta Block', location: 'South Campus, Hyderabad', city: 'hyderabad', price: 6500, gender: 'Girls', category: 'student', rating: 4.8, description: "Safe and secure girls-only hostel with 24/7 security and home-style food in Hyderabad." },
-  { id: 'b3', name: 'Gamma Guesthouse', location: 'West University, Mumbai', city: 'mumbai', price: 5000, gender: 'Mixed', category: 'student', rating: 4.7, description: "Affordable student guesthouse near Mumbai University with all basic amenities." },
-  { id: 'b4', name: 'Delta Dorms', location: 'Technical Hub, Bengaluru', city: 'bengaluru', price: 12000, gender: 'Mixed', category: 'luxury', rating: 5.0, description: "Luxury co-living space with high-end furniture, private gym, and high-speed internet." },
-  { id: 'b5', name: 'Epsilon Enclave', location: 'Down Town, Mumbai', city: 'mumbai', price: 15000, gender: 'Boys', category: 'luxury', rating: 4.9, description: "Executive stay for working professionals in Mumbai's premium business district." },
-  { id: 'b6', name: 'Zeta Zone', location: 'Sector 12, Bengaluru', city: 'bengaluru', price: 7500, gender: 'Girls', category: 'student', rating: 4.6, description: "Quiet and peaceful study-focused hostel for female students in Bengaluru." },
-  { id: 'b7', name: 'Eta Heights', location: 'Main Market, Hyderabad', city: 'hyderabad', price: 9000, gender: 'Mixed', category: 'professional', rating: 4.7, description: "Centrally located property with easy access to public transport and IT parks." },
-  { id: 'b8', name: 'Theta Terraces', location: 'Lake View, Mumbai', city: 'mumbai', price: 11000, gender: 'Girls', category: 'luxury', rating: 4.8, description: "Lakeside views with premium safety and housekeeping services for girls." },
-  { id: 'b9', name: 'Iota Inn', location: 'Central Hub, Bengaluru', city: 'bengaluru', price: 5500, gender: 'Boys', category: 'student', rating: 4.5, description: "High-occupancy student stay with basic needs covered at an affordable price." },
-  { id: 'b10', name: 'Kappa Korner', location: 'East Side, Hyderabad', city: 'hyderabad', price: 4500, gender: 'Mixed', category: 'student', rating: 4.4, description: "Budget-friendly rooms for students looking for simplicity and community." },
-  { id: 'b11', name: 'Lambda Lodge', location: 'Science Park, Mumbai', city: 'mumbai', price: 8000, gender: 'Girls', category: 'professional', rating: 4.7, description: "Peaceful environment near Mumbai's research and education parks." },
-  { id: 'b12', name: 'Mu Mansion', location: 'Royal Lane, Bengaluru', city: 'bengaluru', price: 18000, gender: 'Mixed', category: 'luxury', rating: 5.0, description: "The pinnacle of royal student living with premium services and VIP dining." }
-];
-
 const Listing = () => {
+  const navigate = useNavigate();
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('photos');
   const [selectedRoomIdx, setSelectedRoomIdx] = useState(0);
   const [hostel, setHostel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [openPolicy, setOpenPolicy] = useState(0);
-
+  const [wishlistId, setWishlistId] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   useEffect(() => {
     const fetchHostelDetails = async () => {
+      if (!id || id === 'undefined' || id === 'null') {
+        setLoading(false);
+        return;
+      }
       try {
-        let b;
-        // Check if ID is a mock ID (e.g., b1, b2, etc.)
-        if (id.startsWith('b') && id.length <= 3) {
-          const mock = MOCK_SEED_DETAILS.find(m => m.id === id);
-          if (mock) {
-            b = {
-              _id: mock.id,
-              name: mock.name,
-              address: mock.location,
-              locationCity: mock.city,
-              category: mock.category,
-              genderType: mock.gender,
-              description: mock.description,
-              rating: mock.rating,
-              startingPrice: mock.price,
-              amenities: ['WiFi', 'AC', 'Laundry', 'Security'],
-              staffInfo: { name: 'Rajesh Kumar', role: 'Chief Warden', contact: '+91 98765 43210' }
-            };
-          }
-        } else {
-          const response = await API.get(`/buildings/${id}`);
-          b = response.data;
-        }
+        const response = await API.get(`/buildings/${id}`);
+        const b = response.data;
         
-        if (!b) throw new Error('Property not found');
-
         const mapped = {
           id: b._id,
           name: b.name,
@@ -84,11 +50,10 @@ const Listing = () => {
           verified: true,
           price: b.startingPrice || 6500,
           deposit: (b.startingPrice || 6500) * 2,
-          amenities: b.amenities?.length > 0 ? b.amenities : ['WiFi', 'Mess', 'Laundry', 'AC', 'Power Backup'],
-          facilities: ['Common Lounge', 'Study Room', 'Biometric Entry', 'CCTV', 'Parking', 'Dining Hall'],
-          roomTypes: b.floors?.flatMap(f => f.rooms).slice(0, 4).map(r => ({
-            type: r.roomNumber.toString().includes('1') ? 'Single Sharing' : 'Double Sharing',
-            name: `Room ${r.roomNumber}`,
+          amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['WiFi', 'Mess', 'Laundry'],
+          facilities: b.facilities && b.facilities.length > 0 ? b.facilities : ['Gym', 'Cafeteria', 'Gaming Zone', 'Study Room'],
+          roomTypes: b.floors?.[0]?.rooms?.slice(0, 4).map(r => ({
+            type: r.roomNumber,
             price: b.startingPrice || 6500,
             deposit: (b.startingPrice || 6500) * 2,
             totalBeds: r.beds?.length || 2,
@@ -124,7 +89,53 @@ const Listing = () => {
         };
         setHostel(mapped);
       } catch (err) {
-        console.error('Error fetching building details:', err);
+        console.error('Error fetching building details, using mock data fallback:', err);
+        // Fallback to mock data
+        const mockHostel = MOCK_HOSTELS.find(h => h.id === id) || MOCK_HOSTELS[0];
+        if (mockHostel) {
+          const mappedMock = {
+            id: mockHostel.id,
+            name: mockHostel.name,
+            location: mockHostel.locality + ', ' + mockHostel.city,
+            distance: "500m from transit",
+            gender: mockHostel.gender || 'Unisex',
+            category: mockHostel.category || 'Professional',
+            fillingFast: true,
+            description: mockHostel.description || "A premium stay for students and professionals featuring state-of-the-art facilities and a vibrant community.",
+            rating: mockHostel.rating || 4.5,
+            reviews: 120,
+            safetyScore: 9.5,
+            occupancy: '85%',
+            verified: true,
+            price: mockHostel.price,
+            deposit: mockHostel.price * 2,
+            amenities: mockHostel.amenities || ['WiFi', 'AC', 'Laundry'],
+            facilities: ['Gym', 'Cafeteria', 'Gaming Zone', 'Study Room'],
+            roomTypes: [
+              { type: 'Private Room', name: 'Premium Single', price: mockHostel.price + 2000, deposit: (mockHostel.price + 2000) * 2, totalBeds: 1, availableBeds: 1, status: 'Available', color: 'var(--accent-success)' },
+              { type: '2 Sharing', name: 'Standard Double', price: mockHostel.price, deposit: mockHostel.price * 2, totalBeds: 2, availableBeds: 2, status: 'Available', color: 'var(--accent-success)' },
+              { type: '3 Sharing', name: 'Economy Triple', price: mockHostel.price - 1500, deposit: (mockHostel.price - 1500) * 2, totalBeds: 3, availableBeds: 0, status: 'Few Left', color: 'var(--accent-warning)' }
+            ],
+            staff: { name: 'Admin', role: 'Warden', contact: '+91 00000 00000' },
+            landmarks: [{ name: 'Nearby Station', distance: '500m' }, { name: 'Tech Park', distance: '1.2km' }],
+            rules: ['No smoking indoors', 'Quiet hours 11 PM', 'Visitors allowed until 8 PM'],
+            menu: { breakfast: 'Idli/Dosa', lunch: 'Rice, Dal, Curry', dinner: 'Roti, Paneer' },
+            plans: [
+              { name: 'Basic', price: 500, desc: 'Breakfast only' },
+              { name: 'Standard', price: 1000, desc: 'Breakfast & Dinner' },
+              { name: 'Premium', price: 1500, desc: 'All 3 Meals + Weekend Special' }
+            ],
+            policies: [
+              { title: "Rent & Deposit", content: "Rent is due by the 5th of every month. Security deposit is refundable at the time of checkout." },
+              { title: "Refund Policy", content: "Full refund if cancelled 15 days before move-in. Pro-rata basis after move-in." }
+            ],
+            testimonials: [
+              { name: "Rahul S.", text: "Best hostel in the city. The food is actually homely!", rating: 5 },
+              { name: "Priya M.", text: "Very safe for girls, security is top-notch.", rating: 5 }
+            ]
+          };
+          setHostel(mappedMock);
+        }
       } finally {
         setLoading(false);
       }
@@ -132,7 +143,7 @@ const Listing = () => {
     fetchHostelDetails();
   }, [id]);
 
-  if (loading) return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', color: '#3B82F6', fontWeight: '800' }}>Crafting your premium stay...</div>;
+  if (loading) return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-primary)', fontWeight: '800' }}>Crafting your premium stay...</div>;
   if (!hostel) return <div style={{ textAlign: 'center', padding: '5rem' }}>Property not found.</div>;
 
   const selectedRoom = hostel.roomTypes[selectedRoomIdx] || hostel.roomTypes[0];
@@ -146,23 +157,86 @@ const Listing = () => {
     }
   };
 
+  const handleToggleWishlist = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      if (wishlistId) {
+        await API.delete(`/tenant-portal/wishlist/${wishlistId}`);
+        setWishlistId(null);
+      } else {
+        const res = await API.post('/tenant-portal/wishlist', {
+          hostelId: hostel.id,
+          hostelName: hostel.name,
+          hostelLocation: hostel.location,
+          hostelPrice: hostel.price,
+          hostelImage: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80',
+          hostelRating: hostel.rating,
+          gender: hostel.gender,
+          type: hostel.category
+        });
+        setWishlistId(res.data._id);
+      }
+    } catch (err) {
+      console.error('Error toggling wishlist:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
-    <div className="listing-premium" style={{ background: '#F8FAFC', minHeight: '100vh', paddingBottom: '5rem' }}>
+    <div className="listing-premium" style={{ background: 'var(--bg-primary)', minHeight: '100vh', paddingBottom: '5rem' }}>
       {/* HEADER NAV */}
       <nav style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.5rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link to="/search" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', textDecoration: 'none', color: '#64748B', fontWeight: '700', fontSize: '0.9rem' }}>
+        <button 
+          onClick={() => navigate(-1)} 
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.6rem', 
+            background: 'none', 
+            border: 'none', 
+            color: 'var(--text-secondary)', 
+            fontWeight: '700', 
+            fontSize: '0.9rem', 
+            cursor: 'pointer',
+            padding: 0
+          }}
+        >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-          Back to Search
-        </Link>
+          Go Back
+        </button>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button style={{ background: 'white', border: '1px solid #E2E8F0', padding: '0.6rem 1rem', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}>Share</button>
-          <button style={{ background: 'white', border: '1px solid #E2E8F0', padding: '0.6rem 1rem', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}>Save</button>
+          <button style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '0.6rem 1.5rem', borderRadius: '12px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            Share
+          </button>
+          <button 
+            onClick={handleToggleWishlist}
+            disabled={isSaving}
+            style={{ 
+              background: wishlistId ? 'var(--accent-error)' : 'var(--bg-secondary)', 
+              border: `1px solid ${wishlistId ? 'var(--accent-error)' : 'var(--border-color)'}`, 
+              padding: '0.6rem 1.5rem', 
+              borderRadius: '12px', 
+              fontWeight: '800', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem', 
+              color: wishlistId ? 'white' : 'var(--text-secondary)',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill={wishlistId ? '#ef4444' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            {wishlistId ? 'Saved' : 'Save'}
+          </button>
         </div>
       </nav>
 
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem' }}>
         {/* HERO SECTION */}
-        <section className="hero-card" style={{ background: 'white', borderRadius: '32px', padding: '2.5rem', boxShadow: '0 10px 40px rgba(0,0,0,0.04)', border: '1px solid #E2E8F0', marginBottom: '2rem' }}>
+        <section className="hero-card" style={{ background: 'var(--bg-secondary)', borderRadius: '32px', padding: '2.5rem', boxShadow: '0 10px 40px rgba(0,0,0,0.04)', border: '1px solid var(--border-color)', marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '2rem' }}>
             <div style={{ flex: 1, minWidth: '300px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.8rem' }}>
@@ -170,9 +244,9 @@ const Listing = () => {
                 <span style={{ background: '#F0FDF4', color: '#10B981', padding: '0.4rem 1rem', borderRadius: '30px', fontSize: '0.8rem', fontWeight: '800', border: '1px solid #DCFCE7' }}>{hostel.category}</span>
                 {hostel.fillingFast && <span style={{ background: '#FFF7ED', color: '#F59E0B', padding: '0.4rem 1rem', borderRadius: '30px', fontSize: '0.8rem', fontWeight: '800', border: '1px solid #FFEDD5' }}>⚡ Filling Fast</span>}
               </div>
-              <h1 style={{ fontSize: '3.5rem', fontWeight: '950', letterSpacing: '-2px', margin: '0 0 0.5rem 0', color: '#0F172A' }}>{hostel.name}</h1>
-              <p style={{ fontSize: '1.2rem', color: '#64748B', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}>
-                <ICONS.Location /> {hostel.location} • <span style={{ color: '#3B82F6', fontWeight: '700' }}>{hostel.distance}</span>
+              <h1 style={{ fontSize: '3.5rem', fontWeight: '950', letterSpacing: '-2px', margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>{hostel.name}</h1>
+              <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '500' }}>
+                <ICONS.Location /> {hostel.location} • <span style={{ color: 'var(--accent-primary)', fontWeight: '700' }}>{hostel.distance}</span>
               </p>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
@@ -185,12 +259,12 @@ const Listing = () => {
               </div>
             </div>
 
-            <div style={{ background: '#F8FAFC', padding: '2rem', borderRadius: '24px', border: '1px solid #E2E8F0', textAlign: 'right' }}>
-              <p style={{ margin: 0, color: '#64748B', fontWeight: '700', fontSize: '0.9rem' }}>Starting from</p>
-              <div style={{ fontSize: '3rem', fontWeight: '950', color: '#0F172A', lineHeight: '1' }}>₹{hostel.price.toLocaleString()}<span style={{ fontSize: '1.2rem', color: '#64748B', fontWeight: '600' }}>/mo</span></div>
-              <p style={{ margin: '0.5rem 0 1.5rem', color: '#10B981', fontWeight: '800', fontSize: '0.85rem' }}>✓ Includes WiFi + Food + Cleaning</p>
-              <div style={{ color: '#EF4444', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '1.5rem' }}>No hidden charges</div>
-              <Link to={`/booking/${hostel.id}`} style={{ display: 'block', background: '#3B82F6', color: 'white', textDecoration: 'none', padding: '1.2rem 2.5rem', borderRadius: '16px', fontWeight: '900', fontSize: '1.1rem', boxShadow: '0 10px 25px rgba(59, 130, 246, 0.4)', transition: 'all 0.3s ease' }}>Book Now</Link>
+            <div style={{ background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', textAlign: 'right' }}>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', fontWeight: '700', fontSize: '0.9rem' }}>Starting from</p>
+              <div style={{ fontSize: '3rem', fontWeight: '950', color: 'var(--text-primary)', lineHeight: '1' }}>₹{hostel.price.toLocaleString()}<span style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', fontWeight: '600' }}>/mo</span></div>
+              <p style={{ margin: '0.5rem 0 1.5rem', color: 'var(--accent-success)', fontWeight: '800', fontSize: '0.85rem' }}>✓ Includes WiFi + Food + Cleaning</p>
+              <div style={{ color: 'var(--accent-error)', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '1.5rem' }}>No hidden charges</div>
+              <Link to={`/booking/${hostel.id}`} style={{ display: 'block', background: 'var(--accent-primary)', color: 'white', textDecoration: 'none', padding: '1.2rem 2.5rem', borderRadius: '16px', fontWeight: '900', fontSize: '1.1rem', boxShadow: '0 10px 25px rgba(var(--accent-primary-rgb), 0.4)', transition: 'all 0.3s ease' }}>Book Now</Link>
             </div>
           </div>
 
@@ -202,8 +276,8 @@ const Listing = () => {
               { label: "Daily Cleaning", icon: <ICONS.Cleaning /> },
               { label: "Power Backup", icon: <ICONS.Power /> }
             ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#475569', fontWeight: '700', fontSize: '0.95rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6' }}>{item.icon}</div>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', color: 'var(--text-secondary)', fontWeight: '700', fontSize: '0.95rem' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-primary)' }}>{item.icon}</div>
                 {item.label}
               </div>
             ))}
@@ -231,46 +305,41 @@ const Listing = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
             
             {/* ROOM SELECTION */}
-            <section style={{ background: 'white', borderRadius: '24px', padding: '2rem', border: '1px solid #E2E8F0' }}>
-              <h2 style={{ fontSize: '1.8rem', fontWeight: '900', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <section style={{ background: 'var(--bg-secondary)', borderRadius: '24px', padding: '2rem', border: '1px solid var(--border-color)' }}>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: '900', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem', color: 'var(--text-primary)' }}>
                 🛏️ Room & Bed Selection
               </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.2rem' }}>
-                {hostel.roomTypes.map((room, i) => (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                {hostel.roomTypes.map((room, idx) => (
                   <div 
-                    key={i} 
-                    onClick={() => setSelectedRoomIdx(i)}
+                    key={idx} 
+                    onClick={() => setSelectedRoomIdx(idx)}
                     style={{ 
-                      padding: '1.5rem', 
-                      borderRadius: '20px', 
-                      border: selectedRoomIdx === i ? '2px solid #3B82F6' : '1px solid #E2E8F0',
-                      background: selectedRoomIdx === i ? '#EFF6FF' : 'white',
+                      padding: '2rem', 
+                      borderRadius: '24px', 
+                      background: selectedRoomIdx === idx ? 'var(--bg-primary)' : 'var(--bg-secondary)', 
+                      border: `2px solid ${selectedRoomIdx === idx ? 'var(--accent-primary)' : 'var(--border-color)'}`, 
                       cursor: 'pointer',
-                      transition: 'all 0.2s'
+                      transition: 'all 0.3s ease',
+                      position: 'relative'
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '900', color: room.color, textTransform: 'uppercase' }}>{room.status}</span>
-                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: room.color }}></div>
-                    </div>
-                    <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', fontWeight: '800' }}>{room.type}</h3>
-                    <p style={{ fontSize: '1.4rem', fontWeight: '900', color: '#0F172A' }}>₹{room.price.toLocaleString()}<span style={{ fontSize: '0.8rem', color: '#64748B' }}>/mo</span></p>
-                    <div style={{ marginTop: '1rem', fontSize: '0.85rem', color: '#64748B', fontWeight: '600' }}>
-                      {room.availableBeds} of {room.totalBeds} beds available
-                    </div>
+                    <h4 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>{room.type}</h4>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem', fontWeight: '600' }}>Starting from</p>
+                    <div style={{ fontSize: '1.8rem', fontWeight: '950', color: 'var(--accent-primary)' }}>₹{room.price.toLocaleString()}<span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>/mo</span></div>
                   </div>
                 ))}
               </div>
-              <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#F8FAFC', borderRadius: '16px', display: 'flex', gap: '2rem' }}>
+              <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--bg-primary)', borderRadius: '16px', display: 'flex', gap: '2rem', border: '1px solid var(--border-color)' }}>
                 <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: '800' }}>Selected: {selectedRoom.name}</h4>
-                  <p style={{ fontSize: '0.9rem', color: '#64748B', margin: 0 }}>Spacious rooms with study desk, wardrobe and attached balcony. Premium furniture included.</p>
+                  <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: '800', color: 'var(--text-primary)' }}>Selected: {selectedRoom.name}</h4>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0 }}>Spacious rooms with study desk, wardrobe and attached balcony. Premium furniture included.</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.7rem', fontWeight: '800', color: '#64748B', marginBottom: '0.4rem' }}>BED AVAILABILITY</div>
+                  <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>BED AVAILABILITY</div>
                   <div style={{ display: 'flex', gap: '0.4rem' }}>
                     {[...Array(selectedRoom.totalBeds)].map((_, i) => (
-                      <div key={i} style={{ width: '30px', height: '10px', borderRadius: '4px', background: i < (selectedRoom.totalBeds - selectedRoom.availableBeds) ? '#EF4444' : '#10B981' }}></div>
+                      <div key={i} style={{ width: '30px', height: '10px', borderRadius: '4px', background: i < (selectedRoom.totalBeds - selectedRoom.availableBeds) ? 'var(--accent-error)' : 'var(--accent-success)' }}></div>
                     ))}
                   </div>
                 </div>
@@ -377,21 +446,24 @@ const Listing = () => {
             </div>
 
             {/* POLICIES ACCORDION */}
-            <div style={{ background: 'white', borderRadius: '24px', padding: '2rem', border: '1px solid #E2E8F0' }}>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: '900', marginBottom: '1.5rem' }}>Policies</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {hostel.policies.map((p, idx) => (
-                  <div key={idx} style={{ borderBottom: idx === hostel.policies.length - 1 ? 'none' : '1px solid #F1F5F9' }}>
-                    <button 
-                      onClick={() => setOpenPolicy(openPolicy === idx ? -1 : idx)}
-                      style={{ width: '100%', padding: '1rem 0', background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', textAlign: 'left', fontWeight: '800', color: '#0F172A' }}
+            <div style={{ background: 'var(--bg-secondary)', borderRadius: '24px', padding: '2.5rem', border: '1px solid var(--border-color)' }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '2rem', color: 'var(--text-primary)' }}>Policy Details</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {[
+                  { q: "Security Deposit", a: "One month's rent (Refundable)" },
+                  { q: "Notice Period", a: "30 days before vacating" },
+                  { q: "Electricity", a: "Prepaid meter/actual usage" },
+                  { q: "Gate Timings", a: "No entry after 11:30 PM" }
+                ].map((item, i) => (
+                  <div key={i} style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+                    <div 
+                      onClick={() => setOpenPolicy(openPolicy === i ? -1 : i)}
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', fontWeight: '800', color: 'var(--text-primary)' }}
                     >
-                      {p.title}
-                      <span style={{ fontSize: '1.2rem' }}>{openPolicy === idx ? '−' : '+'}</span>
-                    </button>
-                    {openPolicy === idx && (
-                      <div style={{ paddingBottom: '1rem', fontSize: '0.9rem', color: '#64748B', lineHeight: '1.6', fontWeight: '500' }}>{p.content}</div>
-                    )}
+                      {item.q}
+                      <span>{openPolicy === i ? '−' : '+'}</span>
+                    </div>
+                    {openPolicy === i && <p style={{ marginTop: '0.8rem', color: 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: '500' }}>{item.a}</p>}
                   </div>
                 ))}
               </div>

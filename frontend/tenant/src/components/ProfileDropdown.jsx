@@ -7,7 +7,7 @@ const ProfileDropdown = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   
-  const user = JSON.parse(localStorage.getItem('user') || '{"name": "Resident", "email": "resident@staynest.com"}');
+  const user = JSON.parse(localStorage.getItem('user') || '{"name": "Resident", "email": "resident@livora.com"}');
 
   useEffect(() => {
     const handleClickOutside = (event) => {

@@ -16,6 +16,7 @@ import Inventory from './pages/Inventory';
 import Notifications from './pages/Notifications';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import Transfers from './pages/Transfers';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -40,6 +41,7 @@ function App() {
         <Route path="/owner/building/:buildingId/staff" element={<Layout><Staff /></Layout>} />
         <Route path="/owner/building/:buildingId/mess" element={<Layout><Mess /></Layout>} />
         <Route path="/owner/building/:buildingId/complaints" element={<Layout><Complaints /></Layout>} />
+        <Route path="/owner/building/:buildingId/transfers" element={<Layout><Transfers /></Layout>} />
         <Route path="/owner/building/:buildingId/inventory" element={<Layout><Inventory /></Layout>} />
         <Route path="/owner/building/:buildingId/notifications" element={<Layout><Notifications /></Layout>} />
         <Route path="/owner/building/:buildingId/reports" element={<Layout><Reports /></Layout>} />

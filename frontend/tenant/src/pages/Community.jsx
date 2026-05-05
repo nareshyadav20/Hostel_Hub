@@ -1,10 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import API from '../api/axios';
 
 const Community = () => {
   const [activeTab, setActiveTab] = useState('notice');
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const res = await API.get('/tenant-portal/community-reports');
+        setItems(res.data);
+      } catch (err) {
+        console.error('Error fetching items:', err);
+      }
+    };
+    fetchItems();
+  }, []);
+
+  const [formData, setFormData] = useState({
+    title: '',
+    type: 'Lost',
+    location: '',
+    description: ''
+  });
+
+  const handleReportSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const res = await API.post('/tenant-portal/community-reports', formData);
+      setItems([res.data, ...items]);
+      setShowReportModal(false);
+      setFormData({ title: '', type: 'Lost', location: '', description: '' });
+      alert('Item reported successfully! The community has been notified.');
+    } catch (err) {
+      console.error('Error reporting item:', err);
+      alert('Failed to report item. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="community-page fade-in dashboard-container">
+    <div className="community-page fade-in dashboard-container" style={{ position: 'relative' }}>
       <header style={{ marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '2.2rem', fontWeight: '900', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -28,7 +69,20 @@ const Community = () => {
           <button key={tab.id}
             className={`btn ${activeTab === tab.id ? 'btn-primary' : ''}`}
             onClick={() => setActiveTab(tab.id)}
-            style={{ padding: '0.8rem 1.5rem', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.6rem', background: activeTab === tab.id ? 'var(--accent-primary)' : 'transparent', color: activeTab === tab.id ? 'white' : 'var(--text-muted)', border: 'none' }}>
+            style={{ 
+              padding: '0.8rem 1.5rem', 
+              borderRadius: '12px', 
+              fontSize: '0.9rem', 
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              background: activeTab === tab.id ? 'var(--accent-primary)' : 'transparent',
+              color: activeTab === tab.id ? 'white' : 'var(--text-muted)',
+              border: 'none',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
             <span>{tab.icon}</span> {tab.label}
           </button>
         ))}
@@ -41,17 +95,17 @@ const Community = () => {
           <div className="fade-in">
             <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '2rem' }}>Critical Updates</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-              <div style={{ padding: '1.5rem', background: 'rgba(244,63,94,0.05)', borderLeft: '4px solid var(--accent-error)', borderRadius: '16px' }}>
+              <div style={{ padding: '1.5rem', background: 'rgba(var(--accent-error-rgb), 0.05)', borderLeft: '4px solid var(--accent-error)', borderRadius: '16px' }}>
                 <h4 style={{ color: 'var(--accent-error)', fontSize: '1.1rem', fontWeight: '800' }}>Water Supply Interruption</h4>
-                <p style={{ fontSize: '0.95rem', marginTop: '0.5rem' }}>Scheduled maintenance on main tank today from 2 PM to 4 PM.</p>
+                <p style={{ fontSize: '0.95rem', marginTop: '0.5rem', color: 'var(--text-primary)' }}>Scheduled maintenance on main tank today from 2 PM to 4 PM.</p>
                 <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between' }}>
                   <small style={{ color: 'var(--text-muted)', fontWeight: '600' }}>High Priority</small>
                   <small style={{ color: 'var(--text-muted)' }}>2 hours ago</small>
                 </div>
               </div>
-              <div style={{ padding: '1.5rem', background: 'rgba(14,165,233,0.05)', borderLeft: '4px solid var(--accent-primary)', borderRadius: '16px' }}>
+              <div style={{ padding: '1.5rem', background: 'rgba(var(--accent-primary-rgb), 0.05)', borderLeft: '4px solid var(--accent-primary)', borderRadius: '16px' }}>
                 <h4 style={{ color: 'var(--accent-primary)', fontSize: '1.1rem', fontWeight: '800' }}>Rent Cycle Reminder</h4>
-                <p style={{ fontSize: '0.95rem', marginTop: '0.5rem' }}>Kindly clear all dues by tomorrow to enjoy uninterrupted services.</p>
+                <p style={{ fontSize: '0.95rem', marginTop: '0.5rem', color: 'var(--text-primary)' }}>Kindly clear all dues by tomorrow to enjoy uninterrupted services.</p>
                 <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between' }}>
                   <small style={{ color: 'var(--text-muted)', fontWeight: '600' }}>General Notice</small>
                   <small style={{ color: 'var(--text-muted)' }}>Yesterday</small>
@@ -105,7 +159,6 @@ const Community = () => {
           </div>
         )}
 
-        {/* ── Marketplace ── */}
         {activeTab === 'buysell' && (
           <div className="fade-in">
             <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '2rem' }}>Hostel Marketplace</h3>
@@ -132,21 +185,104 @@ const Community = () => {
         {activeTab === 'lostfound' && (
           <div className="fade-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: '800' }}>Lost & Found</h3>
-              <button className="btn btn-primary" style={{ padding: '0.8rem 1.5rem' }}>+ Report Item</button>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-primary)' }}>Lost & Found</h3>
+              <button onClick={() => setShowReportModal(true)} className="btn btn-primary" style={{ padding: '0.8rem 1.5rem', fontWeight: '800', borderRadius: '14px', boxShadow: '0 8px 16px rgba(var(--accent-primary-rgb), 0.2)' }}>+ Report Item</button>
             </div>
-            <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(251,191,36,0.05)', borderLeft: '4px solid var(--accent-warning)', borderRadius: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--accent-warning)' }}>Found: Black Wallet</h4>
-                  <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>Found near the gym entrance. Handed over to the warden.</p>
-                </div>
-                <small style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Today, 10 AM</small>
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              {items.map(item => {
+                const displayDate = new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                return (
+                  <div key={item._id} className="glass-card fade-in" style={{ padding: '1.8rem', background: item.type === 'Lost' ? 'rgba(var(--accent-error-rgb), 0.05)' : 'rgba(var(--accent-warning-rgb), 0.05)', borderLeft: `6px solid ${item.type === 'Lost' ? 'var(--accent-error)' : 'var(--accent-warning)'}`, borderRadius: '20px', transition: 'all 0.3s ease' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                          <span style={{ padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '900', background: item.type === 'Lost' ? 'rgba(var(--accent-error-rgb), 0.15)' : 'rgba(var(--accent-warning-rgb), 0.15)', color: item.type === 'Lost' ? 'var(--accent-error)' : 'var(--accent-warning)', textTransform: 'uppercase' }}>{item.type}</span>
+                          <h4 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{item.title}</h4>
+                        </div>
+                        <p style={{ fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: '500' }}>{item.description}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginTop: '1rem' }}>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '600' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            {item.location}
+                          </span>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '600' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            {displayDate}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
       </div>
+
+      {/* ── Report Item Modal ── */}
+      {showReportModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', padding: '1rem' }}>
+          <div className="glass-card-premium fade-in" style={{ width: '100%', maxWidth: '600px', padding: '3rem', background: 'var(--bg-secondary)', borderRadius: '32px', border: '1px solid var(--accent-primary)', position: 'relative', boxShadow: 'var(--shadow-2xl)' }}>
+            <button onClick={() => setShowReportModal(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+              <div style={{ width: '70px', height: '70px', background: 'var(--bg-tertiary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.2rem', color: 'var(--accent-primary)' }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </div>
+              <h2 style={{ fontSize: '2rem', fontWeight: '950', letterSpacing: '-1px', color: 'var(--text-primary)' }}>Report Item</h2>
+              <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontWeight: '500' }}>Help others find their belongings or find yours.</p>
+            </div>
+
+            <form onSubmit={handleReportSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.2rem' }}>
+                <div className="input-group">
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.6rem' }}>Item Name</label>
+                  <input 
+                    type="text" placeholder="e.g. Blue Umbrella" 
+                    value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required 
+                    style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '14px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%', fontSize: '0.95rem', fontWeight: '700', outline: 'none' }}
+                  />
+                </div>
+                <div className="input-group">
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.6rem' }}>Type</label>
+                  <select 
+                    value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}
+                    style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '14px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%', fontSize: '0.95rem', fontWeight: '700', outline: 'none' }}
+                  >
+                    <option value="Lost">Lost</option>
+                    <option value="Found">Found</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.6rem' }}>Location Lost/Found</label>
+                <input 
+                  type="text" placeholder="e.g. Dining Hall, Table 4" 
+                  value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} required 
+                  style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '14px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%', fontSize: '0.95rem', fontWeight: '700', outline: 'none' }}
+                />
+              </div>
+
+              <div className="input-group">
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.6rem' }}>Description</label>
+                <textarea 
+                  rows="3" placeholder="Provide color, brand, or any distinguishing features..." 
+                  value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} required 
+                  style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '14px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%', fontSize: '0.95rem', fontWeight: '600', resize: 'none', outline: 'none' }}
+                ></textarea>
+              </div>
+
+              <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ padding: '1.2rem', fontWeight: '950', borderRadius: '16px', fontSize: '1.1rem', boxShadow: '0 10px 20px rgba(var(--accent-primary-rgb), 0.3)', marginTop: '1rem' }}>
+                {isSubmitting ? '📢 Notifying Community...' : 'Post Report'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

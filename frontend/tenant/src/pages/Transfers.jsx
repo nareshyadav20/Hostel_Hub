@@ -1,26 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import API from '../api/axios';
 
 const Transfers = () => {
-  const [tenantData, setTenantData] = useState(null);
-  const [transfers, setTransfers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({ newRoom: '', reason: '' });
+  const currentRoom = {
+    hostel: 'Green View Hostel',
+    room: '201',
+    type: '2 Sharing'
+  };
 
-  useEffect(() => {
+  const requestStatus = 'No Active Requests';
+
+  const [showForm, setShowForm] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+  const [transfers, setTransfers] = React.useState([]);
+  const [tenantData, setTenantData] = React.useState(null);
+  const [formData, setFormData] = React.useState({
+    name: '',
+    oldRoom: '',
+    newRoom: '',
+    reason: ''
+  });
+
+  React.useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
     try {
-      const [tenantRes, transferRes] = await Promise.all([
+      const [profileRes, transfersRes] = await Promise.all([
         API.get('/tenants/me'),
-        API.get('/room-transfers/me')
+        API.get('/transfers/me')
       ]);
-      setTenantData(tenantRes.data);
-      setTransfers(transferRes.data);
+      setTenantData(profileRes.data);
+      setTransfers(transfersRes.data);
+      setFormData(prev => ({
+        ...prev,
+        name: profileRes.data.name || '',
+        oldRoom: profileRes.data.room || 'Not Assigned'
+      }));
     } catch (err) {
       console.error('Error fetching transfer data:', err);
     } finally {
@@ -34,34 +52,24 @@ const Transfers = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const response = await API.post('/room-transfers', formData);
+      const response = await API.post('/transfers', formData);
       setTransfers([response.data, ...transfers]);
       setShowForm(false);
-      setFormData({ newRoom: '', reason: '' });
+      setFormData(prev => ({ ...prev, newRoom: '', reason: '' }));
       alert('Transfer Request Submitted Successfully!');
     } catch (err) {
       console.error('Error submitting transfer:', err);
-      alert('Failed to submit request. Please try again.');
+      alert('Failed to submit transfer request.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case 'ACCEPTED': return { background: 'rgba(16, 185, 129, 0.1)', color: '#10B981' };
-      case 'REJECTED': return { background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' };
-      default: return { background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B' };
-    }
-  };
-
-  if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
-
   return (
     <div className="transfers-page fade-in" style={{ maxWidth: '1000px', margin: '0 auto', paddingBottom: '4rem' }}>
       <header style={{ marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-1px' }}>🔄 Room Transfer</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Request to move to a different room or building within the StayNest network.</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Request to move to a different room or building within the Livora network.</p>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
@@ -97,22 +105,35 @@ const Transfers = () => {
         </div>
       </div>
 
-      {/* ── Request History ── */}
-      <div className="card" style={{ padding: '2rem', borderRadius: '24px' }}>
-        <h3 style={{ marginBottom: '1.5rem', fontSize: '1.4rem', fontWeight: '800' }}>Transfer History</h3>
-        {transfers.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No transfer requests found.</p>
+      {/* ── Recent History ── */}
+      <div style={{ marginTop: '4rem' }}>
+        <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '1.5rem' }}>Recent History</h3>
+        {loading ? (
+          <p style={{ color: 'var(--text-muted)' }}>Loading history...</p>
+        ) : transfers.length === 0 ? (
+          <div className="card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', borderRadius: '20px' }}>
+            No previous transfer requests found.
+          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {transfers.map(t => (
-              <div key={t._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem', background: 'var(--bg-tertiary)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+              <div key={t._id} className="card" style={{ padding: '1.5rem 2rem', borderRadius: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <p style={{ fontWeight: '800', fontSize: '1rem' }}>Shift to: {t.newRoom}</p>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>From: {t.oldRoom} • {new Date(t.createdAt).toLocaleDateString()}</p>
+                  <p style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase', marginBottom: '0.3rem' }}>{new Date(t.createdAt).toLocaleDateString()}</p>
+                  <p style={{ fontSize: '1.1rem', fontWeight: '700' }}>
+                    {t.oldRoom} <span style={{ color: 'var(--text-muted)', margin: '0 0.5rem' }}>→</span> {t.newRoom}
+                  </p>
                 </div>
-                <span style={{ padding: '0.4rem 1rem', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '900', ...getStatusStyle(t.status) }}>
-                  {t.status}
-                </span>
+                <div style={{ 
+                  padding: '0.5rem 1rem', 
+                  borderRadius: '100px', 
+                  fontSize: '0.8rem', 
+                  fontWeight: '800',
+                  background: t.status === 'Approved' ? 'rgba(var(--accent-success-rgb), 0.1)' : t.status === 'Rejected' ? 'rgba(var(--accent-error-rgb), 0.1)' : 'rgba(var(--accent-warning-rgb), 0.1)',
+                  color: t.status === 'Approved' ? 'var(--accent-success)' : t.status === 'Rejected' ? 'var(--accent-error)' : 'var(--accent-warning)'
+                }}>
+                  {t.status.toUpperCase()}
+                </div>
               </div>
             ))}
           </div>
@@ -122,7 +143,7 @@ const Transfers = () => {
       {/* ── Transfer Request Modal ── */}
       {showForm && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '1.5rem' }}>
-          <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '3rem', borderRadius: '32px', position: 'relative', border: '1px solid rgba(255,255,255,0.1)', animation: 'authFadeIn 0.4s ease-out' }}>
+          <div className="glass-card-premium" style={{ width: '100%', maxWidth: '500px', padding: '3rem', borderRadius: '32px', position: 'relative', border: '1px solid var(--glass-border)', background: 'var(--bg-secondary)', animation: 'authFadeIn 0.4s ease-out' }}>
             <button onClick={() => setShowForm(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
@@ -136,8 +157,8 @@ const Transfers = () => {
                 <input
                   type="text"
                   placeholder="e.g. 402-B or Premium Single"
-                  value={formData.newRoom}
-                  onChange={(e) => setFormData({ ...formData, newRoom: e.target.value })}
+                  value={formData.newRoom || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, newRoom: e.target.value }))}
                   style={{ width: '100%', padding: '1rem 1.2rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-primary)', fontWeight: '600' }}
                   required
                 />
@@ -146,9 +167,9 @@ const Transfers = () => {
               <div className="input-group">
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.6rem' }}>Reason for Transfer</label>
                 <textarea
-                  placeholder="e.g. Need more space, moving with friend, etc."
-                  value={formData.reason}
-                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                  placeholder="e.g. Need more space, current room has issues..."
+                  value={formData.reason || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
                   style={{ width: '100%', padding: '1rem 1.2rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '12px', color: 'var(--text-primary)', fontWeight: '600', minHeight: '100px', resize: 'none' }}
                   required
                 />

@@ -5,9 +5,10 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 
-dotenv.config();
+const path = require('path');
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-// Connect to MongoDB
+// Connect to MongoDB (retries automatically if Atlas rejects — server stays alive)
 connectDB();
 
 const app = express();
@@ -26,17 +27,14 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
 const roomTransferRoutes = require('./routes/roomTransferRoutes');
+const transferRoutes = require('./routes/transferRoutes');
 const messRoutes = require('./routes/messRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const ownerRoutes = require('./routes/ownerRoutes');
-
-// Pre-load all models to ensure they are registered for population
-require('./models/User');
-require('./models/Tenant');
-require('./models/RoomTransfer');
-require('./models/Complaint');
-require('./models/MessMenu');
-require('./models/Payment');
+const serviceRoutes = require('./routes/serviceRoutes');
+const confidentialReportRoutes = require('./routes/confidentialReportRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+const tenantPortalRoutes = require('./routes/tenantPortalRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -49,9 +47,14 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/room-transfers', roomTransferRoutes);
+app.use('/api/transfers', transferRoutes);
 app.use('/api/mess', messRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/confidential-reports', confidentialReportRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/owner', ownerRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/tenant-portal', tenantPortalRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

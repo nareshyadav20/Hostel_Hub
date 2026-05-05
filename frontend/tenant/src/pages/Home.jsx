@@ -1,307 +1,428 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Home.css';
+import SearchOverlay from '../components/SearchOverlay';
 import heroCouple from '../assets/hero_couple.png';
-import stayEasy from '../assets/stay_easy.png';
+import extReal from '../assets/ext_real.png';
+import chairsReal from '../assets/chairs_real.png';
+import roomStanza from '../assets/room_stanza.png';
 import bondEasy from '../assets/bond_easy.png';
+import stayEasy from '../assets/stay_easy.png';
 import studentCat from '../assets/student_cat.png';
 import professionalCat from '../assets/professional_cat.png';
 
 const Home = () => {
   const navigate = useNavigate();
-  const [searchValue, setSearchValue] = useState('');
-  const [scrolled, setScrolled] = useState(false);
-  const [currentBadgeIndex, setCurrentBadgeIndex] = useState(0);
+  const [activeNav, setActiveNav] = useState('Home');
+  const [searchLocation, setSearchLocation] = useState('');
+  const [budget, setBudget] = useState('');
+  const [roomType, setRoomType] = useState('');
+  const [wishlist, setWishlist] = useState([]);
 
-  const badgeOptions = [
-    { text: "Choose a shared space or pick a private room", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 10V21M21 10V21M3 14H21M7 10V7A2 2 0 0 1 9 5H15A2 2 0 0 1 17 7V10M3 10L21 10"></path></svg> },
-    { text: "Stay for a few nights or move in for a few months", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> },
-    { text: "Make your own food or take a subscription", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg> }
+  const navItems = ['Home', 'Explore', 'About Us', 'Contact'];
+
+  const stats = [
+    { icon: '👥', value: '10,000+', label: 'Happy Tenants' },
+    { icon: '🏢', value: '500+', label: 'Verified Properties' },
+    { icon: '📍', value: '8+', label: 'Cities' },
+    { icon: '⭐', value: '4.8/5', label: 'Average Rating' },
   ];
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const steps = [
+    { num: 1, icon: '🔍', title: 'Search Location', desc: 'Choose your city and preferred location' },
+    { num: 2, icon: '🏠', title: 'Compare Rooms', desc: 'Explore verified rooms and compare amenities & prices' },
+    { num: 3, icon: '📅', title: 'Book Instantly', desc: 'Select your room and move in hassle-free' },
+  ];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentBadgeIndex(prev => (prev + 1) % badgeOptions.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+  const rooms = [
+    { id: 1, badge: 'Premium', badgeColor: '#4F46E5', img: extReal, name: 'Livora Premium Stay', loc: 'Koramangala, Bangalore', price: '₹12,999', amenities: ['WiFi', 'Meals', 'AC', 'Laundry'] },
+    { id: 2, badge: 'Popular', badgeColor: '#10B981', img: chairsReal, name: 'Livora Comfort Home', loc: 'Whitefield, Bangalore', price: '₹10,999', amenities: ['WiFi', 'Meals', 'AC', 'Housekeeping'] },
+    { id: 3, badge: 'New', badgeColor: '#F59E0B', img: roomStanza, name: 'Livora Elite Stay', loc: 'HSR Layout, Bangalore', price: '₹13,999', amenities: ['WiFi', 'Meals', 'AC', 'Spa'] },
+  ];
+
+  const features = [
+    { icon: '🛋️', title: 'Fully Furnished', desc: 'Move-in with just your suitcase' },
+    { icon: '🍽️', title: 'Daily Meals', desc: 'Nutritious & hygienic meals everyday' },
+    { icon: '📶', title: 'High-Speed WiFi', desc: 'Work, study & stream without limits' },
+    { icon: '🎉', title: 'Community Events', desc: 'Make friends & create memories' },
+    { icon: '🛟', title: '24/7 Support', desc: "We're always here for you" },
+    { icon: '💰', title: 'No Hidden Charges', desc: 'Transparent pricing, no surprises' },
+  ];
+
+  const testimonials = [
+    { name: 'Ananya R.', role: 'Resident, Koramangala', text: '"Livora is not just a place to stay — it\'s a place to belong. The community, amenities and support are truly amazing!"', rating: 5 },
+    { name: 'Aarav M.', role: 'Software Engineer, Bengaluru', text: '"I\'ve lived across 3 Livora properties. The quality and community vibe is absolutely unmatched across cities."', rating: 5 },
+    { name: 'Priya S.', role: 'Product Manager, Hyderabad', text: '"Raised a maintenance request at 11pm — fixed by morning. Never had this experience in any PG before Livora!"', rating: 5 },
+  ];
+
+  const [showAllCities, setShowAllCities] = useState(false);
 
   const cities = [
-    { name: 'Bangalore', img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v2H6v4h12V7h-3V5a3 3 0 0 0-3-3z"/><path d="M4 11v10h16V11"/><path d="M8 11v10"/><path d="M16 11v10"/><path d="M12 11v10"/><path d="M2 21h20"/></svg> },
-    { name: 'Chennai', img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l-6 19h12L12 2z"/><path d="M8 8h8"/><path d="M7 13h10"/><path d="M6 18h12"/><path d="M2 21h20"/><path d="M11 21v-4h2v4"/></svg> },
-    { name: 'Coimbatore', img: 'https://images.unsplash.com/photo-1621539203666-41ea87d3a824?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20"/><path d="M3 21l6-10 4 6 5-8 4 12"/><circle cx="16" cy="7" r="3"/></svg> },
-    { name: 'Pune', img: 'https://images.unsplash.com/photo-1605368940860-249ee416c117?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 21V9l2-2h12l2 2v12"/><path d="M4 12h16"/><path d="M4 17h16"/><path d="M9 21v-6a3 3 0 0 1 6 0v6"/><path d="M2 21h20"/><path d="M4 7V4h2v3"/><path d="M18 7V4h2v3"/></svg> },
-    { name: 'Hyderabad', active: true, img: 'https://images.unsplash.com/photo-1566509426917-8e682d334dd1?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20"/><path d="M6 21V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v16"/><path d="M14 21V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v16"/><path d="M10 21v-6a2 2 0 0 1 4 0v6"/><path d="M6 10h12"/><path d="M6 14h12"/></svg> },
-    { name: 'Noida', img: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20"/><path d="M4 21V7h4v14"/><path d="M8 21V3h8v18"/><path d="M16 21v-9h4v9"/><path d="M10 7h4"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M5 11h2"/><path d="M5 15h2"/></svg> },
-    { name: 'Delhi', img: 'https://images.unsplash.com/photo-1587474260580-5a3d078bd431?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20"/><path d="M6 21V7h12v14"/><path d="M8 21v-8a4 4 0 0 1 8 0v8"/><path d="M6 7L12 3l6 4"/></svg> },
-    { name: 'Mumbai', img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20"/><path d="M5 21V9h14v12"/><path d="M9 21v-6a3 3 0 0 1 6 0v6"/><path d="M5 9V6a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M8 5a2 2 0 0 1-4 0"/><path d="M20 5a2 2 0 0 1-4 0"/><path d="M15 5a3 3 0 0 0-6 0"/></svg> },
-    { name: 'Gurugram', img: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?auto=format&fit=crop&w=300&q=80', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 21h20"/><path d="M4 21V5h5v16"/><path d="M15 21V3h5v18"/><path d="M9 21v-8h6v8"/><path d="M9 13l6-4"/><path d="M6 9h1"/><path d="M6 13h1"/><path d="M6 17h1"/><path d="M17 7h1"/><path d="M17 11h1"/><path d="M17 15h1"/></svg> }
+    { name: 'Bangalore', props: 120, img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Hyderabad', props: 85, img: 'https://upload.wikimedia.org/wikipedia/commons/8/88/Downtown_hyderabad_drone.png' },
+    { name: 'Mumbai', props: 64, img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Chennai', props: 42, img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Delhi', props: 95, img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Pune', props: 58, img: 'https://images.unsplash.com/photo-1564507004663-b6dfb3c824d5?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Noida', props: 37, img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR7_3JvufedjEFqBXXm7mUfumsQTlz-dhPh2Q&s' },
+    { name: 'Gurgaon', props: 72, img: 'https://riseinfraventures.com/assets/gurgaon-new.webp' },
   ];
 
-  const localities = [
-    { name: 'Koramangala', img: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=500&q=80' },
-    { name: 'HSR Layout', img: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=500&q=80' },
-    { name: 'Indiranagar', img: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=500&q=80' },
-    { name: 'Whitefield', img: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=500&q=80' },
-    { name: 'Gachibowli', img: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=500&q=80' },
-    { name: 'HITEC City', img: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=500&q=80' }
-  ];
+  const displayedCities = showAllCities ? cities : cities.slice(0, 4);
 
-  const handleCityClick = (cityName) => {
-    navigate(`/explore?city=${cityName}`);
-  };
+  const toggleWishlist = (id) => setWishlist(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const handleSearch = () => {
-    if (searchValue.trim()) {
-      navigate(`/search?q=${searchValue}`);
-    } else {
-      navigate('/search');
-    }
+    const params = new URLSearchParams();
+    if (searchLocation) params.append('location', searchLocation);
+    if (budget) params.append('budget', budget);
+    if (roomType) params.append('type', roomType);
+    navigate(`/search?${params.toString()}`);
   };
 
   return (
-    <div className="home-container">
-      {/* Header aligned exactly to Image 1 */}
-      <header className={`home-header ${scrolled ? 'scrolled' : ''}`}>
-        <div className="home-logo" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-          <svg width="35" height="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L3 9V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V9L12 2Z" fill="url(#home_logo_gradient)" stroke="#00b0f0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <defs>
-              <linearGradient id="home_logo_gradient" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#00b0f0" />
-                <stop offset="1" stopColor="#0080c0" />
-              </linearGradient>
-            </defs>
+    <div className="hv2-root">
+
+      {/* ── HEADER ── */}
+      <header className="hv2-header">
+        <div className="hv2-logo" onClick={() => navigate('/')}>
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L3 9V20C3 20.55 3.21 21.04 3.59 21.41 3.96 21.79 4.47 22 5 22H19C19.53 22 20.04 21.79 20.41 21.41 20.79 21.04 21 20.55 21 20V9L12 2Z" fill="#4F46E5" />
+            <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round" />
           </svg>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: '950', letterSpacing: '-1.5px', color: '#00b0f0', margin: 0 }}>livora</h1>
+          <span className="hv2-logo-text">Livora</span>
         </div>
-        <nav className="header-nav">
-          <span onClick={() => navigate('/explore')} className="nav-item" style={{cursor: 'pointer'}}>LIVORA SCHOLAR</span>
-          <span onClick={() => navigate('/explore')} className="nav-item" style={{cursor: 'pointer'}}>LIST YOUR PROPERTY</span>
-          <div className="contact-info">
-            <span onClick={() => navigate('/explore')} className="contact-item" style={{cursor: 'pointer'}}>📞 +91 7569383323</span>
-            <span onClick={() => navigate('/explore')} className="contact-item" style={{cursor: 'pointer'}}>✉️ info@livora.com</span>
-          </div>
-          <button className="btn-signin-home" onClick={() => navigate('/login')}>SIGN IN</button>
+        <nav className="hv2-nav">
+          {navItems.map(item => (
+            <span key={item} className={`hv2-nav-item ${activeNav === item ? 'active' : ''}`}
+              onClick={() => {
+                setActiveNav(item);
+                if (item === 'Explore') navigate('/explore');
+                if (item === 'About Us') navigate('/about');
+                if (item === 'Contact') navigate('/contact');
+                if (item === 'Home') navigate('/');
+              }}>
+              {item}
+            </span>
+          ))}
         </nav>
+        <div className="hv2-header-actions">
+          <button className="hv2-login-btn" onClick={() => navigate('/login')}>Log In</button>
+          <button className="hv2-signup-btn" onClick={() => navigate('/signup')}>Sign Up</button>
+        </div>
       </header>
 
-      <main className="home-main">
-        {/* Hero Section exactly like Image 1 */}
-        <section className="hero-section">
-          <div className="hero-content">
-            <h1 className="hero-title">
-              Your Stay. <span className="highlight">Your Way.</span>
-            </h1>
+      {/* ── HERO ── */}
+      <section className="hv2-hero">
+        <div className="hv2-hero-left">
+          <div className="hv2-hero-tag">🏆 India’s #1 Hostel & PG Network</div>
+          <h1 className="hv2-hero-h1">
+            Find Your Perfect Stay<br />
+            <span className="hv2-hero-accent">That Fits Your Lifestyle<span className="hv2-dot">.</span></span>
+          </h1>
+          <p className="hv2-hero-desc">Premium spaces for students & professionals. Quality living, zero hassle.</p>
 
-            <div className="hero-badge" style={{ transition: 'all 0.5s ease-in-out' }}>
-              <span className="badge-icon" style={{marginRight: '8px'}}>
-                {badgeOptions[currentBadgeIndex].icon}
-              </span>
-              {badgeOptions[currentBadgeIndex].text}
+          {/* Search Bar */}
+          <div className="hv2-search-bar">
+            <div className="hv2-search-field">
+              <span className="hv2-field-icon">📍</span>
+              <input placeholder="Location" value={searchLocation} onChange={e => setSearchLocation(e.target.value)} />
             </div>
-
-            <div className="home-search-container">
-              <div className="search-input-wrapper">
-                <input
-                  type="text"
-                  placeholder="Find a Livora near your place of Work/Study"
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                />
-                <div className="search-icon-btn" onClick={handleSearch}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00b0f0" strokeWidth="2.5">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                  </svg>
-                </div>
-              </div>
-              <button className="btn-near-me" onClick={() => navigate('/search?near=true')}>
-                <span className="near-me-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg></span> Near Me
-              </button>
+            <div className="hv2-search-sep" />
+            <div className="hv2-search-field">
+              <span className="hv2-field-icon">💰</span>
+              <select value={budget} onChange={e => setBudget(e.target.value)}>
+                <option value="">Budget</option>
+                <option>Under ₹8k</option><option>₹8k–₹12k</option>
+                <option>₹12k–₹18k</option><option>Above ₹18k</option>
+              </select>
             </div>
+            <div className="hv2-search-sep" />
+            <div className="hv2-search-field">
+              <span className="hv2-field-icon">🏠</span>
+              <select value={roomType} onChange={e => setRoomType(e.target.value)}>
+                <option value="">Stay Type</option>
+                <option>Private</option><option>2 Sharing</option>
+                <option>3 Sharing</option><option>Studio</option>
+              </select>
+            </div>
+            <button className="hv2-search-btn" onClick={handleSearch}>
+              🔍 Search
+            </button>
           </div>
 
-          <div className="hero-image-container">
-            <img src={heroCouple} alt="" className="hero-main-img" />
+          {/* Hero CTAs */}
+          <div className="hv2-hero-btns">
+            <button className="hv2-btn-primary" onClick={() => navigate('/explore')}>Explore Rooms</button>
+            <button className="hv2-btn-secondary" onClick={() => navigate('/login')}>Book a Visit</button>
           </div>
-        </section>
 
-        {/* City Selection exactly like Image 1 */}
-        <section className="city-section">
-          <div className="city-list-container">
-            {cities.map((city) => (
-              <div
-                key={city.name}
-                className={`city-item ${city.active ? 'active' : ''}`}
-                onClick={() => handleCityClick(city.name)}
-              >
-                <div className="city-svg-view">
-                  <div className="city-icon-box">
-                    {city.icon}
-                  </div>
-                  <span className="city-name">{city.name}</span>
-                </div>
-                <div className="city-img-view" style={{ backgroundImage: `url(${city.img})` }}>
-                  <div className="city-img-overlay"></div>
-                  <span className="city-name-hover">{city.name}</span>
-                </div>
-              </div>
+          {/* Trust badges */}
+          <div className="hv2-trust-row">
+            {['✔ Verified', '✔ Zero Brokerage', '✔ Flexible Rent', '✔ 24/7 Support'].map(b => (
+              <span key={b} className="hv2-trust-badge">{b}</span>
             ))}
-          </div>
-        </section>
-
-        {/* Features Grid exactly like Image 3 */}
-        <section className="features-section">
-          <div className="section-header-centered">
-            <h2>Perfect for working, <span className="highlight">More so for unwinding after.</span></h2>
-          </div>
-          <div className="features-grid-classic">
-            <div className="feat-col">24x7<br />Assistance</div>
-            <div className="feat-col">App Based Issue<br />Resolution</div>
-            <div className="feat-col">Thoughtful<br />Facilities</div>
-            <div className="feat-col">WhatsApp<br />Video Tour</div>
-            <div className="feat-col">Zero Brokerage<br />One Month Deposit</div>
-          </div>
-        </section>
-
-        {/* Stay Easy Section exactly like Image 3 */}
-        <section className="stay-easy-section">
-          <div className="stay-easy-grid">
-            <div className="stay-easy-img-container">
-              <img src={professionalCat} alt="Professional Co-Living" />
-            </div>
-            <div className="stay-easy-img-container">
-              <img src={stayEasy} alt="Peaceful Living" />
-            </div>
-            <div className="stay-easy-img-container">
-              <img src={studentCat} alt="Student Accommodation" />
-            </div>
-          </div>
-        </section>
-
-        {/* Bond Easy Section */}
-        <section className="bond-easy-section">
-          <div className="bond-easy-content">
-            <h3 className="bond-title">Join & vibe <span className="highlight">with a vibrant colourful community.</span></h3>
-            <div className="bond-features-grid">
-              <div className="bond-feat-item">Choose Your<br />Coliving Mates</div>
-              <div className="bond-feat-item">Social<br />Calendar</div>
-              <div className="bond-feat-item">Events, Celebrations<br />& Pop Ups</div>
-              <div className="bond-feat-item">Network &<br />Collaborate</div>
-              <div className="bond-feat-item">Get Mentored</div>
-            </div>
-          </div>
-          <div className="bond-easy-images-wrapper">
-            <div className="bond-easy-img-container">
-              <img src={bondEasy} alt="Community" />
-            </div>
-            <div className="bond-easy-img-container">
-              <img src={heroCouple} alt="Lifestyle" />
-            </div>
-          </div>
-        </section>
-
-        {/* Stats Section exactly like Image 4 */}
-        <section className="stats-section">
-          <h2 className="stats-heading">We are India's Most Celebrated <span className="highlight">Coliving</span> Spaces</h2>
-          <div className="stats-container">
-            <div className="stat-card">
-              <span className="stat-val">50k+</span>
-              <span className="stat-desc">Delighted Customers</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-val">450+</span>
-              <span className="stat-desc">Livora Habitats</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-val">10+</span>
-              <span className="stat-desc">Cities & Counting</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Localities exactly like Image 4 */}
-        <section className="localities-section">
-          <h2 className="localities-heading">Find your Livora, <span className="highlight">your way</span></h2>
-          <div className="localities-scroll">
-            {localities.map((loc, idx) => (
-              <div key={idx} className="loc-card-classic" onClick={() => navigate('/explore')}>
-                <img src={loc.img} alt="" />
-                <div className="loc-overlay-gradient">
-                  <span className="loc-name">{loc.name}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </main>
-
-      {/* Footer exactly like Image 5 */}
-      <footer className="classic-footer">
-        <div className="footer-grid">
-          <div className="footer-col-brand">
-            <div className="footer-logo">livora</div>
-            <p className="footer-address">
-              <strong>Corporate Office</strong><br />
-              Cyber Towers, HITEC City,<br />
-              Hyderabad, Telangana<br />
-              India - 500081
-            </p>
-          </div>
-          <div className="footer-col-links">
-            <h4>Product</h4>
-            <ul>
-              <li>FAQs</li>
-              <li>Scholar FAQs</li>
-              <li>How It Works</li>
-              <li>List Your Property</li>
-              <li>Livora Club</li>
-              <li>Amenities</li>
-              <li>Testimonials</li>
-            </ul>
-          </div>
-          <div className="footer-col-links">
-            <h4>Company</h4>
-            <ul>
-              <li>About Us</li>
-              <li>Careers</li>
-              <li>Contact Us</li>
-              <li>Blog</li>
-              <li>Privacy Policy</li>
-              <li>T&C</li>
-              <li>Disclaimer</li>
-              <li>Sitemap</li>
-            </ul>
-          </div>
-          <div className="footer-col-contact">
-            <h4>Contact Us</h4>
-            <p>📞 +91 7569383323</p>
-            <p>✉️ info@livorastays.com</p>
-            <h4 className="stay-touch">Stay In Touch</h4>
-            <div className="social-tray">
-              <span className="social-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></span>
-              <span className="social-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg></span>
-              <span className="social-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></span>
-              <span className="social-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg></span>
-            </div>
-          </div>
-          <div className="footer-col-qr">
-            <h4>Scan the QR<br />to install the app!</h4>
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://livora.com" alt="" className="qr-img" />
           </div>
         </div>
+
+        <div className="hv2-hero-right">
+          <div className="hv2-hero-img-wrap">
+            <img src={heroCouple} alt="Livora residents" className="hv2-hero-img" />
+            <div className="hv2-float-badge">
+              <div className="hv2-float-info">
+                <div className="hv2-float-num">⭐ 4.9/5</div>
+                <div className="hv2-float-label">Top Rated in India</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CATEGORY SELECTION ── */}
+      <section className="hv2-categories">
+        <div className="hv2-section-head">
+          <span className="hv2-tag">Explore by Type</span>
+          <h2 className="hv2-section-title">Choose Your Category</h2>
+          <p className="hv2-section-sub">Tailored living experiences for every need</p>
+        </div>
+        <div className="hv2-cat-grid">
+          {[
+            { name: "Men's Hostel", count: '200+ Properties', icon: '♂️', img: extReal },
+            { name: "Women's Hostel", count: '150+ Properties', icon: '♀️', img: stayEasy },
+            { name: "Student Living", count: '100+ Properties', icon: '🎓', img: studentCat },
+            { name: "Professional Stay", count: '120+ Properties', icon: '💼', img: professionalCat },
+            { name: "Co-Living", count: '80+ Properties', icon: '🏡', img: chairsReal },
+          ].map((cat, i) => (
+            <div key={i} className="hv2-cat-card" onClick={() => navigate('/explore')}>
+              <div className="hv2-cat-img-box">
+                <img src={cat.img} alt={cat.name} className="hv2-cat-img" />
+                <div className="hv2-cat-overlay">
+                  <div className="hv2-cat-icon">{cat.icon}</div>
+                  <h3 className="hv2-cat-name">{cat.name}</h3>
+                  <p className="hv2-cat-count">{cat.count}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── STATS BAR ── */}
+      <div className="hv2-stats-wrap">
+        <div className="hv2-stats-bar">
+          {stats.map((s, i) => (
+            <React.Fragment key={i}>
+              <div className="hv2-stat">
+                <div className="hv2-stat-icon-wrap">{s.icon}</div>
+                <div>
+                  <div className="hv2-stat-val">{s.value}</div>
+                  <div className="hv2-stat-lbl">{s.label}</div>
+                </div>
+              </div>
+              {i < stats.length - 1 && <div className="hv2-stat-sep" />}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* ── HOW IT WORKS ── */}
+      <section className="hv2-how">
+        <div className="hv2-section-head">
+          <span className="hv2-tag">Simple Process</span>
+          <h2 className="hv2-section-title">How It Works</h2>
+          <p className="hv2-section-sub">Find your perfect home in 3 simple steps</p>
+        </div>
+        <div className="hv2-steps">
+          {steps.map((s, i) => (
+            <React.Fragment key={i}>
+              <div className="hv2-step-card">
+                <div className="hv2-step-num">{s.num}</div>
+                <div className="hv2-step-icon">{s.icon}</div>
+                <h4 className="hv2-step-title">{s.title}</h4>
+                <p className="hv2-step-desc">{s.desc}</p>
+              </div>
+              {i < steps.length - 1 && <div className="hv2-step-connector"><div className="hv2-connector-line" /></div>}
+            </React.Fragment>
+          ))}
+        </div>
+      </section>
+
+      {/* ── FEATURED ROOMS ── */}
+      <section className="hv2-section hv2-rooms-section">
+        <div className="hv2-section-topbar">
+          <div>
+            <h2 className="hv2-section-title" style={{ textAlign: 'left', marginBottom: '6px' }}>Featured Rooms</h2>
+            <div className="hv2-accent-line" />
+            <p className="hv2-section-sub" style={{ textAlign: 'left', margin: 0 }}>Handpicked spaces you'll love</p>
+          </div>
+          <button className="hv2-outline-btn" onClick={() => navigate('/explore')}>View all rooms →</button>
+        </div>
+        <div className="hv2-rooms-grid">
+          {rooms.map(room => (
+            <div key={room.id} className="hv2-room-card">
+              <div className="hv2-room-img-box">
+                <img src={room.img} alt={room.name} className="hv2-room-img" />
+                <span className="hv2-room-badge" style={{ background: room.badgeColor }}>{room.badge}</span>
+                <span className="hv2-trending-badge">🔥 Trending</span>
+                <button className={`hv2-heart ${wishlist.includes(room.id) ? 'liked' : ''}`} onClick={() => toggleWishlist(room.id)}>
+                  {wishlist.includes(room.id) ? '❤️' : '🤍'}
+                </button>
+              </div>
+              <div className="hv2-room-body">
+                <h4 className="hv2-room-name">{room.name}</h4>
+                <p className="hv2-room-loc">📍 {room.loc}</p>
+                <div className="hv2-amenity-row">
+                  {room.amenities.map(a => <span key={a} className="hv2-amenity">{a}</span>)}
+                </div>
+                <div className="hv2-room-footer">
+                  <div className="hv2-price-wrap"><span className="hv2-price">{room.price}</span><span className="hv2-per">/mo</span></div>
+                  <button className="hv2-details-btn-wide" onClick={() => navigate(`/listing/${room.id}`)}>View Details</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── WHY CHOOSE LIVORA ── */}
+      <section className="hv2-why">
+        <div className="hv2-why-inner">
+          <div className="hv2-why-left">
+            <span className="hv2-tag hv2-tag-light">Our Benefits</span>
+            <h2 className="hv2-why-title">Why Choose Livora?</h2>
+            <p className="hv2-why-sub">More than just a room — it's a complete lifestyle experience.</p>
+            <div className="hv2-features-grid">
+              {features.map((f, i) => (
+                <div key={i} className="hv2-feat-item">
+                  <div className="hv2-feat-icon">{f.icon}</div>
+                  <div>
+                    <div className="hv2-feat-title">{f.title}</div>
+                    <div className="hv2-feat-desc">{f.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="hv2-why-right">
+            <img src={bondEasy} alt="Community" className="hv2-why-img" />
+          </div>
+        </div>
+      </section>
+
+      {/* ── LIFESTYLE SECTION ── */}
+      <section className="hv2-lifestyle">
+        <div className="hv2-section-head">
+          <span className="hv2-tag">Our Philosophy</span>
+          <h2 className="hv2-section-title">Not Just a Room.<br /><span style={{ color: '#4F46E5' }}>A Lifestyle.</span></h2>
+          <p className="hv2-section-sub">Work. Relax. Connect.</p>
+        </div>
+        <div className="hv2-lifestyle-grid">
+          <img src={stayEasy} alt="" className="hv2-ls-img hv2-ls-tall" />
+          <img src={extReal} alt="" className="hv2-ls-img" />
+          <img src={studentCat} alt="" className="hv2-ls-img" />
+          <img src={professionalCat} alt="" className="hv2-ls-img hv2-ls-wide" />
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ── */}
+      <section className="hv2-section hv2-testi-section">
+        <div className="hv2-section-head">
+          <span className="hv2-tag">Resident Stories</span>
+          <h2 className="hv2-section-title">What Our Residents Say</h2>
+          <p className="hv2-section-sub">Loved by thousands who call it home</p>
+        </div>
+        <div className="hv2-testi-grid">
+          {testimonials.map((t, i) => (
+            <div key={i} className={`hv2-testi-card ${i === 1 ? 'hv2-testi-featured' : ''}`}>
+              <div className="hv2-testi-stars">{'★'.repeat(t.rating)}</div>
+              <p className="hv2-testi-text">{t.text}</p>
+              <div className="hv2-testi-author">
+                <div className="hv2-testi-avatar">{t.name[0]}</div>
+                <div>
+                  <div className="hv2-testi-name">{t.name}</div>
+                  <div className="hv2-testi-role">{t.role}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── TOP LOCATIONS ── */}
+      <section className="hv2-section hv2-cities-section">
+        <div className="hv2-section-topbar">
+          <div>
+            <h2 className="hv2-section-title" style={{ textAlign: 'left', marginBottom: '6px' }}>Our Top Locations</h2>
+            <div className="hv2-accent-line" />
+            <p className="hv2-section-sub" style={{ textAlign: 'left', margin: 0 }}>Explore spaces in the most happening cities</p>
+          </div>
+          <button className="hv2-outline-btn" onClick={() => setShowAllCities(!showAllCities)}>
+            {showAllCities ? 'Show less cities ↑' : 'View all cities →'}
+          </button>
+        </div>
+        <div className="hv2-cities-grid">
+          {displayedCities.map((c, i) => (
+            <div key={i} className="hv2-city-card" onClick={() => navigate(`/search?location=${c.name}`)}>
+              <img src={c.img} alt={c.name} className="hv2-city-img" />
+              <div className="hv2-city-overlay">
+                <div className="hv2-city-name">{c.name}</div>
+                <div className="hv2-city-props">{c.props} Properties</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <footer className="hv2-footer">
+        <div className="hv2-footer-main">
+          <div className="hv2-footer-brand-side">
+            <div className="hv2-footer-logo" onClick={() => navigate('/')}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 9V20C3 20.55 3.21 21.04 3.59 21.41 3.96 21.79 4.47 22 5 22H19C19.53 22 20.04 21.79 20.41 21.41 20.79 21.04 21 20.55 21 20V9L12 2Z" fill="#818CF8" /><path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round" /></svg>
+              <span>Livora</span>
+            </div>
+            <p className="hv2-footer-tagline">
+              Making living simple, safe, and hassle-free. We provide premium co-living spaces designed for comfort, community, and convenience. Experience a new standard of living with top-notch amenities, 24/7 security, and a vibrant community of professionals and students.
+            </p>
+          </div>
+
+          <div className="hv2-footer-links-side">
+            <div className="hv2-footer-column">
+              <h4>Explore</h4>
+              <span onClick={() => navigate('/about')}>About Us</span>
+              <span onClick={() => navigate('/contact')}>Contact Us</span>
+            </div>
+            <div className="hv2-footer-column">
+              <h4>Legal</h4>
+              <span onClick={() => navigate('/terms')}>Terms of Service</span>
+              <span onClick={() => navigate('/privacy')}>Privacy Policy</span>
+            </div>
+            <div className="hv2-footer-column">
+              <h4>Contact Info</h4>
+              <div className="hv2-contact-item" style={{ display: 'flex', gap: '0.8rem', alignItems: 'flex-start', color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.95rem', marginBottom: '0.8rem' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px', color: '#818CF8' }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <p style={{ margin: 0, lineHeight: 1.5 }}>Cyber Towers, Hitech City, Hyderabad</p>
+              </div>
+              <div className="hv2-contact-item" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.95rem', marginBottom: '0.8rem' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: '#818CF8' }}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                <p style={{ margin: 0 }}>+91 7569383323</p>
+              </div>
+              <div className="hv2-contact-item" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.95rem', marginBottom: '0.8rem' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: '#818CF8' }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <p style={{ margin: 0 }}>support@livora.com</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="hv2-footer-bottom-line">
+          <p>© 2026 Livora. All rights reserved.</p>
+        </div>
       </footer>
+
+      {/* ── WHATSAPP FLOATING BUTTON ── */}
+      <a href="https://wa.me/919876543213" target="_blank" rel="noreferrer" className="hv2-whatsapp-fab" title="Chat with us on WhatsApp">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+      </a>
+
     </div>
   );
 };

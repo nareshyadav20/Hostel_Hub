@@ -123,6 +123,10 @@ const bulkCreateBuildings = async (req, res) => {
 
 const getBuildingById = async (req, res) => {
   try {
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ error: 'Invalid building ID format' });
+    }
     const building = await Building.findById(req.params.id).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
     if (!building) return res.status(404).json({ error: 'Building not found' });
     res.status(200).json(building);

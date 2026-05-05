@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import '@packages/ui-kit/auth.css';
+import API from '../api/axios';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -10,13 +11,13 @@ const Login = () => {
   const [email, setEmail] = React.useState('owner@hostelhub.com');
   const [password, setPassword] = React.useState('owner123');
   const [error, setError] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
   
   const performLogin = async (loginEmail, loginPass) => {
-    setIsLoading(true);
+    setLoading(true);
     setError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { email: loginEmail, password: loginPass });
+      const res = await API.post('/auth/login', { email: loginEmail, password: loginPass });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/owner/portfolio');
@@ -24,7 +25,7 @@ const Login = () => {
       // Auto-register the demo owner if they don't exist in the DB yet
       if (err.response?.status === 404 && loginEmail === 'owner@hostelhub.com') {
         try {
-          const regRes = await axios.post('http://localhost:5000/api/auth/register', {
+          const regRes = await API.post('/auth/register', {
             email: loginEmail, password: loginPass, name: 'System Owner', role: 'OWNER'
           });
           localStorage.setItem('token', regRes.data.token);
@@ -38,7 +39,7 @@ const Login = () => {
         setError(err.response?.data?.message || 'Invalid credentials');
       }
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -62,7 +63,7 @@ const Login = () => {
         </div>
         
         {error && (
-          <div style={{ background: '#FEE2E2', color: '#EF4444', padding: '0.8rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold' }}>
+          <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', padding: '0.8rem', borderRadius: '12px', marginBottom: '1.5rem', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
             {error}
           </div>
         )}
@@ -86,8 +87,8 @@ const Login = () => {
               required 
             />
           </div>
-          <button type="submit" className="auth-btn" disabled={isLoading}>
-            {isLoading ? 'Authenticating...' : 'Access Dashboard'}
+          <button type="submit" className="auth-btn" disabled={loading}>
+            {loading ? 'Authenticating...' : 'Access Dashboard'}
           </button>
         </form>
 

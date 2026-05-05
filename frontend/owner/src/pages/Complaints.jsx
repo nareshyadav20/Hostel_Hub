@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown } from 'lucide-react';
 import { api } from '../mockData';
+import API from '../api/axios';
 
 const MOCK_COMPLAINTS = [
   { id: 'mc1', room: '101 - Bed A', issue: 'Ceiling fan not working', category: 'Maintenance', urgency: 'High',   status: 'Pending',     reportedBy: 'Amit Kumar',   timeElapsed: '2 hours ago',   description: 'The fan has been broken for 2 days. Room gets very hot at night.', buildingName: 'Alpha Tower' },
@@ -19,7 +20,6 @@ const Complaints = () => {
   const { buildingId: urlBuildingId } = useParams();
   const navigate = useNavigate();
   
-  // Step 1: Restore context
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
 
   const [complaints, setComplaints] = useState([]);
@@ -34,7 +34,6 @@ const Complaints = () => {
     else setIsRefreshing(true);
     
     try {
-      // Invalidate cache to get fresh data
       localStorage.removeItem('complaints_all_v4');
       const data = await api.getComplaints();
       const buildingsData = await api.getBuildings();
@@ -57,13 +56,13 @@ const Complaints = () => {
             reportedBy: c.tenant?.name || 'Unknown User',
             timeElapsed,
             description: c.description,
-            buildingName: c.buildingId?.name || 'Unknown Building'
+            buildingName: c.buildingId?.name || 'Unknown Building',
+            assignedTo: c.assignedTo
           };
         });
-      // Fall back to mock data if API returns empty
       setComplaints(formatted.length > 0 ? formatted : MOCK_COMPLAINTS);
     } catch (err) {
-      console.error('Failed to fetch complaints:', err);
+      console.error('Error fetching complaints:', err);
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -72,7 +71,6 @@ const Complaints = () => {
 
   useEffect(() => {
     fetchComplaints();
-    // Auto-refresh every 30 seconds
     const interval = setInterval(() => fetchComplaints(false), 30000);
     return () => clearInterval(interval);
   }, [fetchComplaints]);
@@ -88,13 +86,6 @@ const Complaints = () => {
     else navigate(`/owner/complaints/${bId}`);
   };
 
-  const filteredComplaints = complaints.filter(c => {
-    if (activeTab === 'Maintenance') return !['Leave', 'Visitor'].includes(c.category);
-    if (activeTab === 'Leave') return c.category === 'Leave';
-    if (activeTab === 'Visitor') return c.category === 'Visitor';
-    return true;
-  });
-
   const [expandedId, setExpandedId] = useState(null);
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
   const [broadcastMessage, setBroadcastMessage] = useState('');
@@ -109,14 +100,21 @@ const Complaints = () => {
     { id: 4, name: 'Anita Devi', role: 'Mess Manager', active: false, avatar: 'AD' }
   ];
 
+  const filteredComplaints = complaints.filter(c => {
+    if (activeTab === 'Maintenance') return ['Plumbing', 'Electrical', 'WiFi / IT', 'Cleaning', 'Maintenance', 'Food'].includes(c.category);
+    if (activeTab === 'Leave') return c.category === 'Leave';
+    if (activeTab === 'Visitor') return c.category === 'Visitor';
+    return true;
+  });
+
   const totalComplaints = filteredComplaints.length;
   const pendingCount = filteredComplaints.filter(c => c.status === 'Pending').length;
-  const resolvedCount = filteredComplaints.filter(c => c.status === 'Resolved').length;
+  const resolvedCount = filteredComplaints.filter(c => c.status === 'Resolved' || c.status === 'Approved').length;
   
   const handleStatusChange = async (id, newStatus, assignedTo = null) => {
     try {
       await api.updateComplaintStatus(id, newStatus, assignedTo);
-      setComplaints(complaints.map(c => c.id === id ? { ...c, status: newStatus, assignedTo } : c));
+      setComplaints(complaints.map(c => (c.id === id || c._id === id) ? { ...c, status: newStatus, assignedTo } : c));
       setIsAssignModalOpen(false);
     } catch (err) {
       console.error('Update failed:', err);
@@ -125,7 +123,7 @@ const Complaints = () => {
 
   const handleArchive = (id) => {
     if (window.confirm('Archive this complaint?')) {
-      setComplaints(complaints.filter(c => c.id !== id));
+      setComplaints(complaints.filter(c => (c.id !== id && c._id !== id)));
     }
   };
 
@@ -253,7 +251,7 @@ const Complaints = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
-                    style={{ borderBottom: '1px solid var(--border-color)', background: c.status === 'Resolved' ? 'var(--bg-tertiary)' : 'transparent', cursor: 'pointer', transition: 'background 0.2s' }}
+                    style={{ borderBottom: '1px solid var(--border-color)', background: (c.status === 'Resolved' || c.status === 'Approved') ? 'var(--bg-tertiary)' : 'transparent', cursor: 'pointer', transition: 'background 0.2s' }}
                     className="table-row-hover"
                   >
                     <td style={{ padding: '1.2rem 1.5rem' }}>
@@ -274,8 +272,8 @@ const Complaints = () => {
                           <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{c.issue}</span>
                         </div>
                         <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
-                          {getUrgencyBadge(c.urgency)}
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{c.timeElapsed}</span>
+                           {getUrgencyBadge(c.urgency)}
+                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{c.timeElapsed}</span>
                         </div>
                       </div>
                     </td>
@@ -320,7 +318,7 @@ const Complaints = () => {
                               <CheckCircle2 size={14} style={{ marginRight: '0.4rem' }}/> Resolve
                             </button>
                           )}
-                          {(c.status === 'Resolved' || c.status === 'Rejected') && (
+                          {(c.status === 'Resolved' || c.status === 'Rejected' || c.status === 'Approved') && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleArchive(c.id); }}
                               className="btn" 
@@ -364,6 +362,7 @@ const Complaints = () => {
                   )}
                 </React.Fragment>
               ))}
+
             </AnimatePresence>
           </tbody>
         </table>

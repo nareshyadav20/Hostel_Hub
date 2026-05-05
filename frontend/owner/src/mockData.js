@@ -435,7 +435,7 @@ export const api = {
   },
 
   getRoomTransfers: () => cached('room_transfers_v1', async () => {
-    const res = await axios.get(`${API_URL}/room-transfers`);
+    const res = await axios.get(`${API_URL}/transfers`);
     return handleId(res.data);
   }, []),
 
