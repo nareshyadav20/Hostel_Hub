@@ -833,7 +833,7 @@ const Portfolio = () => {
             <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem' }}><div className="loader"></div></div>
           ) : processedBuildings.length > 0 ? (
             processedBuildings.map((b) => (
-              <BuildingCard key={b.id} building={b} onNavigate={() => navigate(`/owner/building/${b.id}/dashboard`)} />
+              <BuildingCard key={b.id} building={b} onNavigate={() => { localStorage.setItem('selectedBuildingId', b.id); navigate(`/owner/building/${b.id}/dashboard`); }} />
             ))
           ) : (
             <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem' }}><h3>No Property Records Found</h3></div>
@@ -1063,7 +1063,7 @@ const BuildingCard = ({ building, onNavigate }) => {
           <button 
             className="btn btn-primary" 
             style={{ flex: 2, padding: '0.6rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '800' }}
-            onClick={(e) => { e.stopPropagation(); navigate(`/owner/building/${building.id}/dashboard`); }}
+            onClick={(e) => { e.stopPropagation(); localStorage.setItem('selectedBuildingId', building.id); navigate(`/owner/building/${building.id}/dashboard`); }}
           >
             Go to Dashboard
           </button>

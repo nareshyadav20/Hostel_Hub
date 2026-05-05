@@ -34,7 +34,52 @@ const Staff = () => {
   const [loading, setLoading] = useState(true);
   const [filterRole, setFilterRole] = useState('All');
   const [uploading, setUploading] = useState(false);
+  const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 7;
   const fileInputRef = useRef(null);
+  // Add Staff form refs
+  const addNameRef = useRef(null);
+  const addRoleRef = useRef(null);
+  const addPhoneRef = useRef(null);
+  const addBuildingRef = useRef(null);
+
+  const handleExport = () => {
+    const allStaffLocal = staffData.staffList || [];
+    if (!allStaffLocal.length) { alert('No staff data to export.'); return; }
+    const headers = ['Name','Role','Phone','Building','Status','Attendance %','Rating'];
+    const rows = allStaffLocal.map(s => [
+      s.name || '', s.role || '', s.phone || '', s.building || '',
+      s.status || '', s.attendance?.percentage || 0, s.performance || ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'staff_export.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleAddStaffSubmit = (e) => {
+    e.preventDefault();
+    const newMember = {
+      id: 'new_' + Date.now(),
+      name: addNameRef.current?.value || 'New Staff',
+      role: addRoleRef.current?.value || 'Warden',
+      phone: addPhoneRef.current?.value || '',
+      building: addBuildingRef.current?.value || 'Alpha Tower',
+      status: 'Active',
+      performance: '4.0',
+      attendance: { percentage: 100 },
+      tasks: [], documents: [], salaryHistory: [], activityLog: [],
+      salary: 0,
+      metrics: { efficiencyScore: 80, completionRate: 80, satisfaction: 4.0, avgResolutionTime: '2h' },
+    };
+    setStaffData(prev => ({ ...prev, staffList: [...(prev.staffList || []), newMember] }));
+    setIsAddStaffModalOpen(false);
+    setCurrentPage(1);
+  };
 
   async function fetchStaff() {
     console.log("Staff module fetching for ID:", activeBuildingId);
@@ -337,8 +382,14 @@ const Staff = () => {
   const onLeave = allStaff.filter(s => s.status === 'On Leave');
   const lowPerf = allStaff.filter(s => parseFloat(s.performance) < 4.0);
   const roles = ['All', ...Array.from(new Set(allStaff.map(s => s.role)))];
-  const filteredStaff = allStaff.filter(s => filterRole === 'All' || s.role === filterRole);
-  const absentToday = allStaff.filter(s => s.status === 'On Leave');
+  const filteredStaff = allStaff.filter(s => {
+    const matchesRole = filterRole === 'All' || s.role === filterRole;
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = !q || (s.name || '').toLowerCase().includes(q) || (s.role || '').toLowerCase().includes(q) || (s.building || '').toLowerCase().includes(q);
+    return matchesRole && matchesSearch;
+  });
+  const totalPages = Math.max(1, Math.ceil(filteredStaff.length / PAGE_SIZE));
+  const pagedStaff = filteredStaff.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div style={{ animation: 'fadeIn 0.5s ease-out', minHeight: '100vh', background: '#F8FAFC', padding: '0.5rem', position: 'relative' }}>
@@ -351,8 +402,8 @@ const Staff = () => {
           <p style={{ color: '#64748B', fontSize: '1rem', fontWeight: '500', margin: 0 }}>Workforce tracking, performance analytics, and payroll management.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button className="btn" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#475569', padding: '0.8rem 1.2rem', borderRadius: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Download size={18}/> Export</button>
-          <button className="btn btn-primary" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#3B82F6', border: 'none' }}><UserPlus size={18}/> Add Staff</button>
+          <button className="btn" onClick={handleExport} style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#475569', padding: '0.8rem 1.2rem', borderRadius: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}><Download size={18}/> Export</button>
+          <button className="btn btn-primary" onClick={() => setIsAddStaffModalOpen(true)} style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#3B82F6', border: 'none', cursor: 'pointer' }}><UserPlus size={18}/> Add Staff</button>
         </div>
       </header>
 
@@ -374,85 +425,119 @@ const Staff = () => {
         ))}
       </div>
 
-      {/* ALERT BANNER */}
-      {absentToday.length > 0 && (
-        <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '1rem 1.5rem', borderRadius: '12px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <AlertCircle size={20} color="#D97706"/>
-          <p style={{ color: '#92400E', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>
-            {absentToday.map(s => s.name).join(', ')} {absentToday.length === 1 ? 'is' : 'are'} on leave today — consider reassigning their tasks.
-          </p>
+      {/* ROLE FILTER TABS + SEARCH */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {roles.map(role => (
+            <button key={role} onClick={() => { setFilterRole(role); setCurrentPage(1); }} style={{ padding: '0.5rem 1.2rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.9rem', cursor: 'pointer', border: filterRole === role ? 'none' : '1px solid #E2E8F0', background: filterRole === role ? '#3B82F6' : '#FFFFFF', color: filterRole === role ? '#FFF' : '#475569', transition: 'all 0.15s' }}>
+              {role === 'All' ? `All (${allStaff.length})` : `${role}s`}
+            </button>
+          ))}
         </div>
-      )}
-      {lowPerf.length > 0 && (
-        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', padding: '1rem 1.5rem', borderRadius: '12px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <AlertCircle size={20} color="#DC2626"/>
-          <p style={{ color: '#991B1B', fontWeight: '700', margin: 0, fontSize: '0.95rem' }}>
-            {lowPerf.map(s => s.name).join(', ')} {lowPerf.length === 1 ? 'has' : 'have'} a performance rating below 4.0 — review needed.
-          </p>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <svg style={{ position: 'absolute', left: '0.8rem', color: '#94A3B8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            type="text"
+            placeholder="Search staff by name, role..."
+            value={searchQuery}
+            onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+            style={{ paddingLeft: '2.4rem', paddingRight: '1rem', paddingTop: '0.55rem', paddingBottom: '0.55rem', borderRadius: '10px', border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#0F172A', fontSize: '0.9rem', outline: 'none', width: '260px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}
+          />
         </div>
-      )}
-
-      {/* ROLE FILTER TABS */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        {roles.map(role => (
-          <button key={role} onClick={() => setFilterRole(role)} style={{ padding: '0.5rem 1.2rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.9rem', cursor: 'pointer', border: filterRole === role ? 'none' : '1px solid #E2E8F0', background: filterRole === role ? '#3B82F6' : '#FFFFFF', color: filterRole === role ? '#FFF' : '#475569', transition: 'all 0.15s' }}>
-            {role === 'All' ? `All (${allStaff.length})` : `${role}s`}
-          </button>
-        ))}
       </div>
 
-      {/* STAFF GRID */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-        {filteredStaff.map((s, idx) => {
-          const status = getStatusStyle(s.status);
-          const roleStyle = ROLE_COLORS[s.role] || ROLE_COLORS['Cleaner'];
-          const initials = s.name ? s.name.split(' ').map(n => n[0]).join('') : '??';
-          const tasksDue = (s.tasks || []).filter(t => t.status !== 'COMPLETED').length;
-          return (
-            <motion.div
-              key={s.id || idx}
-              whileHover={{ y: -4, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
-              onClick={() => { setSelectedStaff(s); setActiveTab('Overview'); }}
-              style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.2s ease', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-            >
-              {/* Card Top */}
-              <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: roleStyle.bg, border: `2px solid ${roleStyle.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: roleStyle.color, fontWeight: '900', fontSize: '1.2rem' }}>
-                    {initials}
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0F172A', margin: '0 0 0.2rem 0' }}>{s.name}</h3>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '800', padding: '0.15rem 0.6rem', borderRadius: '6px', background: roleStyle.bg, color: roleStyle.color, border: `1px solid ${roleStyle.border}` }}>{s.role}</span>
-                  </div>
-                </div>
-                <span style={{ fontSize: '0.65rem', fontWeight: '900', padding: '0.3rem 0.8rem', borderRadius: '100px', background: status.bg, color: status.color }}>{status.label}</span>
-              </div>
-
-              {/* Stats Row */}
-              <div style={{ padding: '0 1.5rem 1.2rem', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', borderBottom: '1px solid #F1F5F9' }}>
-                <div>
-                  <p style={{ fontSize: '0.65rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: '700', margin: '0 0 0.2rem' }}>Attendance</p>
-                  <p style={{ fontSize: '1rem', fontWeight: '800', color: '#0F172A', margin: 0 }}>{s.attendance?.percentage || 0}%</p>
-                </div>
-                <div>
-                  <p style={{ fontSize: '0.65rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: '700', margin: '0 0 0.2rem' }}>Rating</p>
-                  <p style={{ fontSize: '1rem', fontWeight: '800', color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.2rem' }}><Star size={12} fill="#F59E0B" color="#F59E0B"/> {s.performance || '0.0'}</p>
-                </div>
-                <div>
-                  <p style={{ fontSize: '0.65rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: '700', margin: '0 0 0.2rem' }}>Tasks Due</p>
-                  <p style={{ fontSize: '1rem', fontWeight: '800', color: tasksDue > 0 ? '#EF4444' : '#10B981', margin: 0 }}>{tasksDue}</p>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div style={{ padding: '0.9rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><MapPin size={13}/> {s.building || 'Unassigned'}</span>
-                <span style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Clock size={13}/> {s.shift || 'Full Time'}</span>
-              </div>
-            </motion.div>
-          );
-        })}
+      {/* STAFF TABLE */}
+      <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+              <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontSize: '0.8rem', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Staff Member</th>
+              <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontSize: '0.8rem', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Role & Building</th>
+              <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontSize: '0.8rem', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Status</th>
+              <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontSize: '0.8rem', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Attendance</th>
+              <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontSize: '0.8rem', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Rating</th>
+              <th style={{ padding: '1rem 1.5rem', textAlign: 'center', fontSize: '0.8rem', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pagedStaff.map((s, idx) => {
+              const status = getStatusStyle(s.status);
+              const roleStyle = ROLE_COLORS[s.role] || ROLE_COLORS['Cleaner'];
+              const initials = s.name ? s.name.split(' ').map(n => n[0]).join('') : '??';
+              return (
+                <motion.tr 
+                  key={s.id || idx}
+                  whileHover={{ backgroundColor: '#F8FAFC' }}
+                  style={{ borderBottom: '1px solid #E2E8F0', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                  onClick={() => { setSelectedStaff(s); setActiveTab('Overview'); }}
+                >
+                  <td style={{ padding: '1rem 1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: roleStyle.bg, border: `1px solid ${roleStyle.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: roleStyle.color, fontWeight: '800', fontSize: '1rem' }}>
+                        {initials}
+                      </div>
+                      <div>
+                        <h3 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#0F172A', margin: '0 0 0.2rem 0' }}>{s.name}</h3>
+                        <span style={{ fontSize: '0.75rem', color: '#64748B' }}>{s.phone || 'N/A'}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{ padding: '1rem 1.5rem' }}>
+                    <p style={{ fontSize: '0.9rem', fontWeight: '600', color: '#0F172A', margin: '0 0 0.2rem 0' }}>{s.role}</p>
+                    <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0 }}><MapPin size={10} style={{ display: 'inline', marginRight: '2px' }}/> {s.building || 'Unassigned'}</p>
+                  </td>
+                  <td style={{ padding: '1rem 1.5rem' }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: '800', padding: '0.3rem 0.8rem', borderRadius: '100px', background: status.bg, color: status.color, border: `1px solid ${status.color}30` }}>
+                      {status.label}
+                    </span>
+                  </td>
+                  <td style={{ padding: '1rem 1.5rem' }}>
+                    <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0F172A' }}>{s.attendance?.percentage || 0}%</span>
+                  </td>
+                  <td style={{ padding: '1rem 1.5rem' }}>
+                    <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Star size={14} fill="#F59E0B" color="#F59E0B"/> {s.performance || '0.0'}</span>
+                  </td>
+                  <td style={{ padding: '1rem 1.5rem', textAlign: 'center' }}>
+                    <ChevronRight size={18} color="#94A3B8" />
+                  </td>
+                </motion.tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {filteredStaff.length === 0 && (
+          <div style={{ padding: '3rem', textAlign: 'center', color: '#64748B' }}>
+            <User size={32} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+            <p>No staff members found matching this criteria.</p>
+          </div>
+        )}
+        {/* PAGINATION */}
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', borderTop: '1px solid #E2E8F0', background: '#F8FAFC' }}>
+            <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '600' }}>
+              Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredStaff.length)} of {filteredStaff.length} staff
+            </span>
+            <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                style={{ padding: '0.4rem 0.9rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: currentPage === 1 ? '#F1F5F9' : '#FFFFFF', color: currentPage === 1 ? '#CBD5E1' : '#475569', fontWeight: '700', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontSize: '0.85rem' }}
+              >← Prev</button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  style={{ padding: '0.4rem 0.75rem', borderRadius: '8px', border: 'none', background: currentPage === page ? '#3B82F6' : '#FFFFFF', color: currentPage === page ? '#FFF' : '#475569', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', border: '1px solid #E2E8F0' }}
+                >{page}</button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                style={{ padding: '0.4rem 0.9rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: currentPage === totalPages ? '#F1F5F9' : '#FFFFFF', color: currentPage === totalPages ? '#CBD5E1' : '#475569', fontWeight: '700', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', fontSize: '0.85rem' }}
+              >Next →</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Staff Detail Drawer / Modal */}
@@ -598,6 +683,72 @@ const Staff = () => {
                   </div>
                 </div>
               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ADD STAFF MODAL */}
+      <AnimatePresence>
+        {isAddStaffModalOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1000 }}
+              onClick={() => setIsAddStaffModalOpen(false)}
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, x: '-50%', y: '-40%' }} 
+              animate={{ scale: 1, opacity: 1, x: '-50%', y: '-50%' }} 
+              exit={{ scale: 0.9, opacity: 0, x: '-50%', y: '-60%' }}
+              style={{ 
+                position: 'fixed', top: '50%', left: '50%', 
+                width: '95%', maxWidth: '500px', 
+                background: '#FFFFFF', borderRadius: '24px', 
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', zIndex: 1001,
+                overflow: 'hidden', border: '1px solid #E2E8F0',
+                padding: '2rem'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: '#0F172A', margin: 0 }}>Add New Staff</h2>
+                <button onClick={() => setIsAddStaffModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}>
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleAddStaffSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#475569', marginBottom: '0.4rem' }}>Full Name *</label>
+                  <input ref={addNameRef} required placeholder="e.g. Rahul Sharma" style={{ width: '100%', padding: '0.8rem', borderRadius: '10px', border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#475569', marginBottom: '0.4rem' }}>Role *</label>
+                    <select ref={addRoleRef} required style={{ width: '100%', padding: '0.8rem', borderRadius: '10px', border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#0F172A', outline: 'none' }}>
+                      <option value="">Select Role</option>
+                      <option value="Warden">Warden</option>
+                      <option value="Security">Security</option>
+                      <option value="Cleaner">Cleaner</option>
+                      <option value="Cook">Cook</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#475569', marginBottom: '0.4rem' }}>Phone *</label>
+                    <input ref={addPhoneRef} required placeholder="10-digit number" style={{ width: '100%', padding: '0.8rem', borderRadius: '10px', border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }} />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#475569', marginBottom: '0.4rem' }}>Building Assignment</label>
+                  <select ref={addBuildingRef} style={{ width: '100%', padding: '0.8rem', borderRadius: '10px', border: '1px solid #E2E8F0', background: '#F8FAFC', color: '#0F172A', outline: 'none' }}>
+                    <option value="Alpha Tower">Alpha Tower</option>
+                    <option value="Beta Block">Beta Block</option>
+                    <option value="Gamma House">Gamma House</option>
+                  </select>
+                </div>
+                <button type="submit" className="btn btn-primary" style={{ padding: '0.9rem', borderRadius: '12px', fontWeight: '800', background: '#3B82F6', color: '#FFF', border: 'none', cursor: 'pointer', marginTop: '1rem' }}>
+                  Save Staff Member
+                </button>
+              </form>
             </motion.div>
           </>
         )}
