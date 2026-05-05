@@ -40,7 +40,7 @@ const login = async (req, res) => {
     // For tenant users: ensure a Tenant profile exists and return it
     let tenantProfile = null;
     if (user.role === 'TENANT') {
-      const Tenant = require('../models/Tenant');
+      const Tenant = require('../models/tenant/Tenant');
       tenantProfile = await Tenant.findOne({ email: user.email });
       if (!tenantProfile) {
         // Auto-create a stub profile so the portal has something to show

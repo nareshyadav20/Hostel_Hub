@@ -1,5 +1,5 @@
 const RoomTransfer = require('../models/RoomTransfer');
-const Tenant = require('../models/Tenant');
+const Tenant = require('../models/tenant/Tenant');
 
 exports.createTransfer = async (req, res) => {
   try {

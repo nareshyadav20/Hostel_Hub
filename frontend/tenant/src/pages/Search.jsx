@@ -55,12 +55,12 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => {
     <div key={hostel.id} className="pro-hostel-card-vertical fade-in">
       <div className="card-image-area">
         <div className="image-overlay-gradient"></div>
-        <img 
-          src={images[currentImageIndex]} 
-          alt={hostel.name} 
+        <img
+          src={images[currentImageIndex]}
+          alt={hostel.name}
           className="carousel-image"
         />
-        
+
         <div className="card-top-badges">
           {hostel.popularityLabel && <span className="badge-featured">{hostel.popularityLabel}</span>}
           <span className="badge-status-pill">Active</span>
@@ -71,14 +71,14 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => {
         </div>
 
         <button className={`wish-pill ${isWishlisted ? 'active' : ''}`} onClick={(e) => { e.preventDefault(); toggleWishlist(hostel); }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
         </button>
       </div>
 
       <div className="card-info-area">
         <div className="loc-rating-row">
           <div className="loc-info">
-            <ICONS.Location style={{width: '14px', height: '14px', color: 'var(--accent-primary)'}} />
+            <ICONS.Location style={{ width: '14px', height: '14px', color: 'var(--accent-primary)' }} />
             <span>{hostel.location?.split(',')[0] || 'City'}</span>
           </div>
           <div className="rating-pill">
@@ -89,7 +89,7 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => {
         <div className="stats-box-row">
           <div className="stat-box">
             <span className="stat-label">STARTING</span>
-            <span className="stat-value">₹{hostel.price >= 1000 ? (hostel.price/1000).toFixed(1) + 'k' : hostel.price}</span>
+            <span className="stat-value">₹{hostel.price >= 1000 ? (hostel.price / 1000).toFixed(1) + 'k' : hostel.price}</span>
           </div>
           <div className="stat-box">
             <span className="stat-label">AVAILABILITY</span>
@@ -99,14 +99,15 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => {
 
         <div className="amenities-row">
           <div className="amenity-icons">
-            <ICONS.WiFi style={{width: '16px'}} />
-            <ICONS.AC style={{width: '16px'}} />
-            <ICONS.Security style={{width: '16px'}} />
+            <ICONS.WiFi style={{ width: '16px' }} />
+            <ICONS.AC style={{ width: '16px' }} />
+            <ICONS.Security style={{ width: '16px' }} />
             <span className="more-amenities">+3 more</span>
           </div>
         </div>
 
         <div className="card-actions-footer">
+          <Link to={`/listing/${hostel.id}`} className="btn-secondary-action">View Details</Link>
           <Link to={`/booking/${hostel.id}`} className="btn-primary-action">Book Now</Link>
         </div>
       </div>
@@ -124,12 +125,12 @@ const Search = () => {
   const qBudget = queryParams.get('budget') || 'all';
   const qType = queryParams.get('type') || 'all';
 
-  const [filters, setFilters] = useState({ 
-    location: qLocation.toLowerCase(), 
-    budget: qBudget, 
-    gender: 'All', 
-    categories: qType !== 'all' ? [qType.toLowerCase()] : [], 
-    amenities: [] 
+  const [filters, setFilters] = useState({
+    location: qLocation.toLowerCase(),
+    budget: qBudget,
+    gender: 'All',
+    categories: qType !== 'all' ? [qType.toLowerCase()] : [],
+    amenities: []
   });
 
   const [wishlist, setWishlist] = useState([]);
@@ -192,8 +193,8 @@ const Search = () => {
 
     // Location filter
     if (filters.location !== 'all') {
-      filtered = filtered.filter(h => 
-        (h.city || '').toLowerCase().includes(filters.location.toLowerCase()) || 
+      filtered = filtered.filter(h =>
+        (h.city || '').toLowerCase().includes(filters.location.toLowerCase()) ||
         (h.location || '').toLowerCase().includes(filters.location.toLowerCase()) ||
         (h.name || '').toLowerCase().includes(filters.location.toLowerCase())
       );
@@ -432,10 +433,10 @@ const Search = () => {
             </div>
           ) : (
             hostels.map(hostel => (
-              <HostelCard 
-                key={hostel.id} 
-                hostel={hostel} 
-                isWishlisted={isWishlisted(hostel.id)} 
+              <HostelCard
+                key={hostel.id}
+                hostel={hostel}
+                isWishlisted={isWishlisted(hostel.id)}
                 toggleWishlist={toggleWishlist}
               />
             ))
@@ -930,6 +931,27 @@ const Search = () => {
         .btn-primary-action:hover {
           transform: translateY(-2px);
           box-shadow: 0 8px 20px rgba(var(--accent-primary-rgb), 0.3);
+        }
+
+        .btn-secondary-action {
+          flex: 1;
+          padding: 1rem;
+          background: transparent;
+          color: var(--accent-primary);
+          text-align: center;
+          text-decoration: none;
+          border-radius: 14px;
+          font-weight: 800;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+          border: 2px solid var(--accent-primary);
+        }
+
+        .btn-secondary-action:hover {
+          background: var(--accent-primary);
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(var(--accent-primary-rgb), 0.25);
         }
 
         @media (max-width: 1024px) {
