@@ -22,10 +22,6 @@ const Transfers = () => {
     reason: ''
   });
 
-  React.useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     try {
       const [profileRes, transfersRes] = await Promise.all([
@@ -45,6 +41,10 @@ const Transfers = () => {
       setLoading(false);
     }
   };
+
+  React.useEffect(() => {
+    fetchData();
+  }, []);
 
   const handleRequestTransfer = () => setShowForm(true);
 
