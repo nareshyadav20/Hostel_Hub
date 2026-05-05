@@ -6,20 +6,34 @@ import {
 } from 'lucide-react';
 import './Sidebar.css';
 
-const menuItems = [
-  { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
-  { name: 'Hostels', path: '/hostels', icon: <Building2 size={20} /> },
-  { name: 'Owners', path: '/owners', icon: <UserCog size={20} /> },
-  { name: 'Tenants', path: '/tenants', icon: <Users size={20} /> },
-  { name: 'Staff', path: '/staff', icon: <UserCheck size={20} /> },
-  { name: 'KYC Verification', path: '/users', icon: <ClipboardList size={20} /> },
-  { name: 'Analytics', path: '/analytics', icon: <BarChart3 size={20} /> },
-  { name: 'Notifications', path: '/notifications', icon: <Bell size={20} /> },
-  { name: 'CMS', path: '/cms', icon: <Globe size={20} /> },
-  { name: 'Offers & Promo', path: '/offers', icon: <Tags size={20} /> },
-  { name: 'Surveys', path: '/surveys', icon: <ClipboardList size={20} /> },
-  { name: 'Cities', path: '/cities', icon: <Map size={20} /> },
-  { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
+const navGroups = [
+  {
+    title: 'MANAGEMENT',
+    items: [
+      { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
+      { name: 'Hostels', path: '/hostels', icon: <Building2 size={18} /> },
+      { name: 'Owners', path: '/owners', icon: <UserCog size={18} /> },
+      { name: 'Tenants', path: '/tenants', icon: <Users size={18} /> },
+      { name: 'Staff', path: '/staff', icon: <UserCheck size={18} /> },
+      { name: 'KYC & Audit', path: '/users', icon: <ShieldCheck size={18} /> },
+    ]
+  },
+  {
+    title: 'OPERATIONS',
+    items: [
+      { name: 'Analytics', path: '/analytics', icon: <BarChart3 size={18} /> },
+      { name: 'Notifications', path: '/notifications', icon: <Bell size={18} /> },
+      { name: 'CMS & Content', path: '/cms', icon: <Globe size={18} /> },
+      { name: 'Offers & Promo', path: '/offers', icon: <Tags size={18} /> },
+    ]
+  },
+  {
+    title: 'SYSTEM',
+    items: [
+      { name: 'Cities', path: '/cities', icon: <Map size={18} /> },
+      { name: 'Settings', path: '/settings', icon: <Settings size={18} /> },
+    ]
+  }
 ];
 
 const Sidebar = () => {
@@ -33,15 +47,20 @@ const Sidebar = () => {
       </div>
 
       <nav className="sidebar-nav">
-        {menuItems.map((item) => (
-          <NavLink
-            key={item.name}
-            to={item.path}
-            className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}
-          >
-            <span className="icon">{item.icon}</span>
-            <span className="label">{item.name}</span>
-          </NavLink>
+        {navGroups.map((group) => (
+          <div key={group.title} className="nav-group">
+            <h3 className="group-title">{group.title}</h3>
+            {group.items.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.path}
+                className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}
+              >
+                <span className="icon">{item.icon}</span>
+                <span className="label">{item.name}</span>
+              </NavLink>
+            ))}
+          </div>
         ))}
       </nav>
 

@@ -6,51 +6,52 @@
 }
 
 body {
-  background-color: #080b14;
-  color: #f8fafc;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 #root {
   min-height: 100vh;
 }
-
 :root {
-  --bg-primary: #080b14;
-  --bg-secondary: #0f172a;
-  --bg-tertiary: #1e293b;
-  --bg-card: #111827;
-  --accent-primary: #7c3aed;
-  --accent-secondary: #38bdf8;
-  --accent-glow: rgba(124, 58, 237, 0.3);
-  --accent-primary-rgb: 124, 58, 237;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #475569;
-  --border-color: rgba(255, 255, 255, 0.07);
-  --border-light: rgba(255, 255, 255, 0.04);
-  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-fast: all 0.15s ease;
+  /* LIGHT MODE - Standardized */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --bg-card: #ffffff;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --border-color: #e5e7eb;
+  --border-light: #f3f4f6;
+  --accent-primary: #6366f1;
+  --accent-secondary: #0ea5e9;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   --success: #10b981;
   --danger: #ef4444;
   --warning: #f59e0b;
-  --info: #38bdf8;
 }
 
-/* ── Light Theme ─────────────────────────────────── */
-[data-theme='light'] {
-  --bg-primary: #f1f5f9;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #e2e8f0;
-  --bg-card: #ffffff;
-  --accent-primary: #6d28d9;
-  --accent-secondary: #0ea5e9;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --border-color: rgba(0, 0, 0, 0.08);
-  --border-light: rgba(0, 0, 0, 0.04);
+[data-theme='dark'] {
+  /* DARK MODE - Optimized for readability */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-card: #1e293b;
+  --text-primary: #f9fafb;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-color: #334155;
+  --border-light: #1e293b;
+  --accent-primary: #818cf8; /* Slightly brighter for dark mode */
+  --accent-secondary: #38bdf8;
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme='light'] body {
@@ -211,7 +212,7 @@ body {
 
 .main-content {
   flex: 1;
-  margin-left: 270px;
+  margin-left: 240px; /* Reduced from 270px */
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -219,20 +220,22 @@ body {
 
 .content-body {
   flex: 1;
-  padding: 2.5rem;
+  padding: 1.75rem; /* Reduced from 2.5rem */
 }
 
 /* Cards */
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 1.5rem;
-  transition: var(--transition-fast);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-smooth);
 }
 
 .card:hover {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow-md);
 }
 
 /* Page layout */
@@ -244,18 +247,20 @@ body {
 }
 
 .page-header h1 {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.1;
+  color: var(--text-primary);
 }
 
 .page-header p {
   color: var(--text-secondary);
-  font-size: 1rem;
-  margin-top: 0.5rem;
+  font-size: 0.875rem; /* Reduced for professional density */
+  margin-top: 0.4rem;
   line-height: 1.6;
   max-width: 600px;
+  font-weight: 500;
 }
 
 /* Buttons */
@@ -319,26 +324,27 @@ table {
 }
 
 th {
-  padding: 0.9rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   text-align: left;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-weight: 800;
-  letter-spacing: 0.07em;
-  background: rgba(255, 255, 255, 0.02);
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.01);
   border-bottom: 1px solid var(--border-color);
 }
 
 td {
-  padding: 1rem 1.5rem;
+  padding: 0.85rem 1.25rem;
   border-top: 1px solid var(--border-light);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: var(--text-primary);
+  font-weight: 600;
 }
 
 tr:hover td {
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--bg-tertiary);
 }
 
 /* Badges */
