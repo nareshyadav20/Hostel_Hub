@@ -30,6 +30,6 @@ const tenantSchema = new mongoose.Schema({
     url: String,
     verified: { type: Boolean, default: false }
   }]
-}, { timestamps: true });
+}, { timestamps: true, collection: 'owner_tenants' });
 
 module.exports = mongoose.model('Tenant', tenantSchema);

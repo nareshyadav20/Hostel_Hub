@@ -251,7 +251,7 @@ const Buildings = () => {
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Advanced hierarchical management of buildings, floors, rooms, and beds.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.8rem' }}>
+        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <Search size={18} style={{ position: 'absolute', left: '1rem', color: 'var(--text-muted)' }} />
             <input 
@@ -271,6 +271,9 @@ const Buildings = () => {
           </button>
           <button className="btn" onClick={() => setShowFilters(!showFilters)} style={{ background: showFilters ? 'var(--accent-primary)' : 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: showFilters ? 'white' : 'var(--text-primary)' }}>
             <Filter size={16} /> Filters
+          </button>
+          <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={20} />
           </button>
         </div>
       </header>

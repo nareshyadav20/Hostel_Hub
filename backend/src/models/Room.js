@@ -10,6 +10,6 @@ const roomSchema = new mongoose.Schema({
   images:     [{ type: String }],
   floor:      { type: mongoose.Schema.Types.ObjectId, ref: 'Floor' },
   beds:       [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bed' }]
-}, { timestamps: true, collection: 'rooms' });
+}, { timestamps: true, collection: 'owner_rooms' });
 
 module.exports = mongoose.model('Room', roomSchema);

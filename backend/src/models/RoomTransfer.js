@@ -13,6 +13,6 @@ const roomTransferSchema = new mongoose.Schema({
     default: 'PENDING'
   },
   requestDate: { type: Date, default: Date.now }
-}, { timestamps: true });
+}, { timestamps: true, collection: 'owner_roomtransfers' });
 
 module.exports = mongoose.model('RoomTransfer', roomTransferSchema);

@@ -189,6 +189,9 @@ const Complaints = () => {
           <button onClick={() => setIsBroadcastModalOpen(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800', borderRadius: '12px', padding: '0.8rem 1.5rem' }}>
               <MessageSquare size={16} /> Broadcast
           </button>
+          <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={20} />
+          </button>
         </div>
       </header>
 

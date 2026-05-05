@@ -6,6 +6,6 @@ const bedSchema = new mongoose.Schema({
   images:    [{ type: String }],
   tenant:    { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
   room:      { type: mongoose.Schema.Types.ObjectId, ref: 'Room' }
-}, { timestamps: true, collection: 'beds' });
+}, { timestamps: true, collection: 'owner_beds' });
 
 module.exports = mongoose.model('Bed', bedSchema);

@@ -56,6 +56,6 @@ const systemSettingsSchema = new mongoose.Schema({
   themeSettings: {
     mode: { type: String, enum: ['LIGHT', 'DARK'], default: 'DARK' }
   }
-}, { timestamps: true });
+}, { timestamps: true, collection: 'owner_systemsettingss' });
 
 module.exports = mongoose.model('SystemSettings', systemSettingsSchema);

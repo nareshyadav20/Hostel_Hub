@@ -24,6 +24,6 @@ const paymentSchema = new mongoose.Schema({
     default: 'UPI'
   },
   transactionId: { type: String }
-}, { timestamps: true });
+}, { timestamps: true, collection: 'owner_payments' });
 
 module.exports = mongoose.model('Payment', paymentSchema);

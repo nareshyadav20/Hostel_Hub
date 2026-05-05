@@ -299,41 +299,8 @@ const Portfolio = () => {
         if (occupancyRate < 50) status = 'Low Occupancy';
         if (bComplaints.filter(c => c?.urgency === 'High').length > 0) status = 'Attention Needed';
 
-        // DERIVE RATINGS AND POPULARITY (FRONTEND SIMULATION)
-        const bName = (b?.name || '').toLowerCase();
-        let rating = (4.0 + (Math.random() * 0.9)).toFixed(1);
-        let popularityLabel = null;
-
-        if (bName.includes('alpha')) {
-          rating = "4.9";
-          popularityLabel = "Student's Favorite";
-        } else if (bName.includes('beta')) {
-          rating = "4.8";
-          popularityLabel = "Most Booked";
-        } else if (bName.includes('gamma')) {
-          rating = "4.7";
-          popularityLabel = "Budget Friendly";
-        } else if (bName.includes('delta')) {
-          rating = "4.8";
-          popularityLabel = "Tech Hub Choice";
-        } else if (bName.includes('epsilon')) {
-          rating = "5.0";
-          popularityLabel = "Luxury Stay";
-        } else if (bName.includes('iota')) {
-          rating = "4.9";
-          popularityLabel = "Modern Minimalist";
-        } else if (bName.includes('kappa')) {
-          rating = "4.6";
-          popularityLabel = "Cozy Corner";
-        } else if (bName.includes('lambda')) {
-          rating = "4.9";
-          popularityLabel = "Academic Choice";
-        } else if (bName.includes('mu')) {
-          rating = "5.0";
-          popularityLabel = "Heritage Premium";
-        } else if (occupancyRate >= 90) {
-          popularityLabel = "Best Seller";
-        }
+        const rating = b?.rating || "4.5";
+        const popularityLabel = b?.popularityLabel || null;
 
         return {
           ...b,

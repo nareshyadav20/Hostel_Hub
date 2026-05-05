@@ -27,6 +27,6 @@ const buildingSchema = new mongoose.Schema({
   lastStep: { type: Number, default: 1 },
   draftData: { type: mongoose.Schema.Types.Mixed },
   floors:      [{ type: mongoose.Schema.Types.ObjectId, ref: 'Floor' }]
-}, { timestamps: true, collection: 'buildings' });
+}, { timestamps: true, collection: 'owner_buildings' });
 
 module.exports = mongoose.model('Building', buildingSchema);

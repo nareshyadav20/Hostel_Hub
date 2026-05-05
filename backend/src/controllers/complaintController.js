@@ -7,8 +7,14 @@ const mongoose = require('mongoose');
 
 exports.createComplaint = async (req, res) => {
   try {
-    const { title, description, category, priority } = req.body;
-    let tenant = await Tenant.findOne({ email: req.user.email });
+    const { title, description, category, priority, tenantId, buildingId: bodyBuildingId } = req.body;
+    let tenant;
+    
+    if (tenantId) {
+      tenant = await Tenant.findById(tenantId);
+    } else {
+      tenant = await Tenant.findOne({ email: req.user.email });
+    }
     
     // If tenant profile is missing, create it
     if (!tenant) {
@@ -26,7 +32,7 @@ exports.createComplaint = async (req, res) => {
     }
 
     // Robust hierarchy mapping
-    let buildingId = tenant.buildingId;
+    let buildingId = bodyBuildingId || tenant.buildingId;
     let roomId = null;
     let bedId = null;
     let hostelId = null;
