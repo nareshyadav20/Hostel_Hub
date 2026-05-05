@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import API from '../api/axios';
 import '@packages/ui-kit/auth.css';
 
 const Login = () => {
@@ -14,20 +15,18 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    // Mock Login Logic
-    setTimeout(() => {
-      const storedUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
-      const user = storedUsers.find(u => u.email === email && u.password === password);
-
-      if (user || (email === 'tenant@example.com' && password === 'password')) {
-        localStorage.setItem('token', 'mock_token_' + Date.now());
-        localStorage.setItem('user', JSON.stringify(user || { name: 'Demo Tenant', email }));
-        navigate('/dashboard');
-      } else {
-        setError('Invalid email or password. (Try tenant@example.com / password)');
-      }
+    try {
+      const response = await API.post('/auth/login', { email, password });
+      const { user, token } = response.data;
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid email or password');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   return (
@@ -40,12 +39,12 @@ const Login = () => {
           </svg>
         </button>
         <div className="auth-header">
-          <h1>StayNest</h1>
+          <h1>Livora</h1>
           <p>Sign in to your digital hostel home</p>
         </div>
-        
+
         {error && <div className="error-message" style={{ color: 'var(--accent-error)', textAlign: 'center', marginBottom: '1.5rem', padding: '0.8rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px', fontSize: '0.9rem' }}>{error}</div>}
-        
+
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="input-group">
             <label>Email Address</label>
@@ -56,17 +55,17 @@ const Login = () => {
                   <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
               </span>
-              <input 
-                type="email" 
-                placeholder="name@example.com" 
+              <input
+                type="email"
+                placeholder="name@example.com"
                 style={{ paddingLeft: '3rem' }}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required 
+                required
               />
             </div>
           </div>
-          
+
           <div className="input-group">
             <label>Password</label>
             <div style={{ position: 'relative' }}>
@@ -76,26 +75,26 @@ const Login = () => {
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
               </span>
-              <input 
-                type="password" 
-                placeholder="••••••••" 
+              <input
+                type="password"
+                placeholder="••••••••"
                 style={{ paddingLeft: '3rem' }}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required 
+                required
               />
             </div>
           </div>
-          
+
           <div style={{ textAlign: 'right' }}>
             <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: 'var(--accent-primary)', fontWeight: '600' }}>Forgot Password?</Link>
           </div>
-          
+
           <button type="submit" className="auth-btn" disabled={loading}>
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
-        
+
         <div className="auth-footer">
           Don't have an account? <Link to="/signup">Create account</Link>
         </div>

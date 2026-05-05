@@ -1,30 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets } from 'lucide-react';
+import API from '../api/axios';
 
 const Complaints = () => {
-  const [complaints, setComplaints] = useState([
-    { id: 1, room: '201-A', issue: 'Water Leakage in Bathroom', category: 'Plumbing', urgency: 'High', status: 'Pending', reportedBy: 'Rahul Sharma', timeElapsed: '2 hours ago', description: 'Water is dripping from the ceiling in the attached bathroom. Possible pipe burst in floor above.' },
-    { id: 2, room: '202-B', issue: 'AC Not Cooling properly', category: 'Electrical', urgency: 'Medium', status: 'In-Progress', reportedBy: 'Priya Verma', timeElapsed: '1 day ago', description: 'The AC unit makes a loud noise and does not cool the room even at 16 degrees.' },
-    { id: 3, room: '101-A', issue: 'WiFi Connection dropping', category: 'Internet', urgency: 'Low', status: 'Resolved', reportedBy: 'Amit Singh', timeElapsed: '3 days ago', description: 'Frequent disconnections every 15 minutes. Signal strength is weak.' },
-    { id: 4, room: '305-C', issue: 'Deep Cleaning Required', category: 'Cleaning', urgency: 'Medium', status: 'Pending', reportedBy: 'Sneha Kapur', timeElapsed: '4 hours ago', description: 'Dust accumulation in corners and under the bed. Need thorough cleaning.' },
-  ]);
+  const [complaints, setComplaints] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchComplaints = async () => {
+    try {
+      const response = await API.get('/complaints'); // Admin route or general route
+      setComplaints(response.data);
+    } catch (err) {
+      console.error('Error fetching complaints:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useState(() => {
+    fetchComplaints();
+  }, []);
 
   const [expandedId, setExpandedId] = useState(null);
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
   const [broadcastMessage, setBroadcastMessage] = useState('');
+  
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedComplaintId, setSelectedComplaintId] = useState(null);
+  
+  const staffMembers = [
+    { id: 1, name: 'Ramesh Kumar', role: 'Plumber', active: true, avatar: 'RK' },
+    { id: 2, name: 'Suresh Babu', role: 'Electrician', active: true, avatar: 'SB' },
+    { id: 3, name: 'Pradeep Singh', role: 'Cleaning Lead', active: true, avatar: 'PS' },
+    { id: 4, name: 'Anita Devi', role: 'Mess Manager', active: false, avatar: 'AD' }
+  ];
 
   const totalComplaints = complaints.length;
   const pendingCount = complaints.filter(c => c.status === 'Pending').length;
-  const inProgressCount = complaints.filter(c => c.status === 'In-Progress').length;
+  const inProgressCount = complaints.filter(c => c.status === 'In Progress' || c.status === 'In-Progress').length;
   
-  const handleStatusChange = (id, newStatus) => {
-    setComplaints(complaints.map(c => c.id === id ? { ...c, status: newStatus } : c));
+  const handleStatusChange = async (id, newStatus, assignedTo = null) => {
+    try {
+      await API.patch(`/complaints/${id}`, { status: newStatus });
+      setComplaints(complaints.map(c => c._id === id ? { ...c, status: newStatus, assignedTo } : c));
+      setIsAssignModalOpen(false);
+    } catch (err) {
+      console.error('Error updating complaint status:', err);
+      alert('Failed to update status.');
+    }
   };
 
   const handleArchive = (id) => {
     if (window.confirm('Archive this complaint?')) {
-      setComplaints(complaints.filter(c => c.id !== id));
+      // Logic for archiving if needed, for now just local filter
+      setComplaints(complaints.filter(c => c._id !== id));
     }
   };
 
@@ -40,15 +70,16 @@ const Complaints = () => {
        case 'High': return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--accent-error)', color: '#fff', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
        case 'Medium': return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--accent-warning)', color: '#fff', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
        case 'Low': return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
-       default: return null;
+       default: return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--bg-tertiary)', color: 'var(--text-muted)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
     }
   };
 
   const getStatusDisplay = (status) => {
     switch(status) {
-      case 'Resolved': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)' }}><CheckCircle2 size={12}/> RESOLVED</span>;
+      case 'Resolved': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)' }}><CheckCircle2 size={12}/> {activeTab === 'Maintenance' ? 'RESOLVED' : 'APPROVED'}</span>;
       case 'In-Progress': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(56, 189, 248, 0.1)', color: 'var(--accent-primary)' }}><Activity size={12}/> IN PROGRESS</span>;
       case 'Pending': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--accent-warning)' }}><Clock size={12}/> PENDING</span>;
+      case 'Rejected': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-error)' }}><Clock size={12}/> REJECTED</span>;
       default: return null;
     }
   };
@@ -58,6 +89,8 @@ const Complaints = () => {
       case 'Plumbing': return <Droplets size={16} color="var(--accent-primary)" />;
       case 'Electrical': return <Zap size={16} color="var(--accent-warning)" />;
       case 'Internet': return <Activity size={16} color="var(--accent-success)" />;
+      case 'Leave': return <Clock size={16} color="#8B5CF6" />;
+      case 'Visitor': return <MessageSquare size={16} color="#EC4899" />;
       default: return <Wrench size={16} color="var(--text-secondary)" />;
     }
   };
@@ -69,27 +102,45 @@ const Complaints = () => {
       <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Wrench size={32} color="var(--accent-primary)" /> Complaint Management
+            <Wrench size={32} color="var(--accent-primary)" /> Service Requests Hub
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Track, prioritize, and resolve maintenance issues reported by tenants.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Manage maintenance tickets, leave applications, and visitor permissions.</p>
         </div>
         <button onClick={() => setIsBroadcastModalOpen(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
             <MessageSquare size={16} /> Broadcast Update
         </button>
       </header>
 
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', width: 'fit-content' }}>
+        {['Maintenance', 'Leave', 'Visitor'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => { setActiveTab(tab); setExpandedId(null); }}
+            style={{ 
+              padding: '0.8rem 1.8rem', borderRadius: '12px', border: 'none', 
+              background: activeTab === tab ? 'var(--bg-primary)' : 'transparent',
+              color: activeTab === tab ? 'var(--accent-primary)' : 'var(--text-secondary)',
+              fontWeight: '800', fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.3s',
+              boxShadow: activeTab === tab ? 'var(--shadow-sm)' : 'none'
+            }}
+          >
+            {tab} {tab === 'Maintenance' ? 'Tickets' : 'Requests'}
+          </button>
+        ))}
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
         <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--text-primary)' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Total Open</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Total {activeTab}</p>
           <h2 style={{ fontSize: '2.4rem', fontWeight: '800' }}>{totalComplaints}</h2>
         </div>
         <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-warning)' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Pending Assignment</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Pending {activeTab === 'Maintenance' ? 'Tickets' : 'Requests'}</p>
           <h2 style={{ fontSize: '2.4rem', fontWeight: '800', color: 'var(--accent-warning)' }}>{pendingCount}</h2>
         </div>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>In Progress</p>
-          <h2 style={{ fontSize: '2.4rem', fontWeight: '800', color: 'var(--accent-primary)' }}>{inProgressCount}</h2>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-success)' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>{activeTab === 'Maintenance' ? 'Resolved' : 'Approved'}</p>
+          <h2 style={{ fontSize: '2.4rem', fontWeight: '800', color: 'var(--accent-success)' }}>{resolvedCount}</h2>
         </div>
       </div>
 
@@ -98,30 +149,30 @@ const Complaints = () => {
           <thead>
             <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
               <th style={{ padding: '1.2rem' }}>Ticket Info</th>
-              <th style={{ padding: '1.2rem' }}>Issue Description</th>
+              <th style={{ padding: '1.2rem' }}>{activeTab} Details</th>
               <th style={{ padding: '1.2rem' }}>Status</th>
               <th style={{ padding: '1.2rem', textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             <AnimatePresence>
-              {complaints.map(c => (
-                <React.Fragment key={c.id}>
+              {complaints.map((c, index) => (
+                <React.Fragment key={c._id}>
                   <motion.tr 
                     layout
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
+                    onClick={() => setExpandedId(expandedId === c._id ? null : c._id)}
                     style={{ borderBottom: '1px solid var(--border-color)', background: c.status === 'Resolved' ? 'var(--bg-tertiary)' : 'transparent', opacity: c.status === 'Resolved' ? 0.7 : 1, cursor: 'pointer' }}
                     className="table-row-hover"
                   >
                     <td style={{ padding: '1.2rem' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                        <span style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>Room {c.room}</span>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ticket #{1000 + c.id} • {c.timeElapsed}</span>
+                        <span style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>{c.tenant?.room || 'N/A'}</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ticket #{index + 1001} • {new Date(c.createdAt).toLocaleDateString()}</span>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
-                          By: <span style={{ fontWeight: '600' }}>{c.reportedBy}</span>
+                          By: <span style={{ fontWeight: '600' }}>{c.tenant?.name || 'Unknown'}</span>
                         </span>
                       </div>
                     </td>
@@ -131,10 +182,10 @@ const Complaints = () => {
                           <span style={{ padding: '0.3rem', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
                             {getCategoryIcon(c.category)}
                           </span>
-                          <span style={{ fontWeight: '600' }}>{c.issue}</span>
+                          <span style={{ fontWeight: '600' }}>{c.title}</span>
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.3rem' }}>
-                          {getUrgencyBadge(c.urgency)}
+                          {getUrgencyBadge(c.priority || 'Medium')}
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.category}</span>
                         </div>
                       </div>
@@ -144,27 +195,27 @@ const Complaints = () => {
                     </td>
                     <td style={{ padding: '1.2rem', textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                          {c.status === 'Pending' && (
+                          {c.status === 'Pending' && activeTab === 'Maintenance' && (
                             <button 
-                              onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'In-Progress'); }}
+                              onClick={(e) => { e.stopPropagation(); setSelectedComplaintId(c._id); setIsAssignModalOpen(true); }}
                               className="btn btn-primary" 
                               style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
                             >
                               Assign Task
                             </button>
                           )}
-                          {c.status === 'In-Progress' && (
+                          {c.status === 'In Progress' && (
                             <button 
-                              onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'Resolved'); }}
+                              onClick={(e) => { e.stopPropagation(); handleStatusChange(c._id, 'Resolved'); }}
                               className="btn" 
                               style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', border: '1px solid var(--accent-success)' }}
                             >
                               <CheckCircle2 size={14} style={{ marginRight: '0.4rem' }}/> Mark Resolved
                             </button>
                           )}
-                          {c.status === 'Resolved' && (
+                          {(c.status === 'Resolved' || c.status === 'Rejected') && (
                             <button 
-                              onClick={(e) => { e.stopPropagation(); handleArchive(c.id); }}
+                              onClick={(e) => { e.stopPropagation(); handleArchive(c._id); }}
                               className="btn" 
                               style={{ padding: '0.5rem', fontSize: '0.8rem', border: '1px solid var(--border-color)', color: 'var(--text-muted)' }}
                             >
@@ -174,7 +225,7 @@ const Complaints = () => {
                       </div>
                     </td>
                   </motion.tr>
-                  {expandedId === c.id && (
+                  {expandedId === c._id && (
                     <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: 'var(--bg-tertiary)' }}>
                       <td colSpan="4" style={{ padding: '1.5rem 2.5rem' }}>
                         <div style={{ borderLeft: '4px solid var(--accent-primary)', paddingLeft: '1.5rem' }}>
@@ -183,12 +234,18 @@ const Complaints = () => {
                           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '2rem' }}>
                              <div>
                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>REPORTED BY</p>
-                               <p style={{ fontWeight: '600' }}>{c.reportedBy} (Room {c.room})</p>
+                               <p style={{ fontWeight: '600' }}>{c.tenant?.name || 'Unknown'} (Room {c.tenant?.room || 'N/A'})</p>
                              </div>
-                             <div>
-                               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>URGENCY LEVEL</p>
-                               <p style={{ fontWeight: '600' }}>{c.urgency}</p>
+                            <div>
+                               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>CATEGORY</p>
+                               <p style={{ fontWeight: '600' }}>{c.category}</p>
                              </div>
+                             {c.assignedTo && (
+                               <div>
+                                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>ASSIGNED TO</p>
+                                 <p style={{ fontWeight: '600', color: 'var(--accent-primary)' }}>{c.assignedTo}</p>
+                               </div>
+                             )}
                           </div>
                         </div>
                       </td>
@@ -196,6 +253,7 @@ const Complaints = () => {
                   )}
                 </React.Fragment>
               ))}
+
             </AnimatePresence>
           </tbody>
         </table>
@@ -215,6 +273,37 @@ const Complaints = () => {
                   <button className="btn" type="button" onClick={() => setIsBroadcastModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Cancel</button>
                 </div>
               </form>
+            </motion.div>
+          </>
+        )}
+
+        {isAssignModalOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsAssignModalOpen(false)} />
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '20%', left: '50%', x: '-50%', width: '90%', maxWidth: '400px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem' }}>Assign Staff</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                {staffMembers.filter(s => s.active).map(s => (
+                  <button 
+                    key={s.id} 
+                    onClick={() => handleStatusChange(selectedComplaintId, 'In-Progress', s.name)}
+                    style={{ 
+                      display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', 
+                      borderRadius: '12px', border: '1px solid var(--border-color)', 
+                      background: 'var(--bg-tertiary)', cursor: 'pointer', transition: 'all 0.2s' 
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                  >
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>{s.avatar}</div>
+                    <div style={{ textAlign: 'left' }}>
+                      <p style={{ fontWeight: '700', fontSize: '0.95rem' }}>{s.name}</p>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{s.role}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <button className="btn" onClick={() => setIsAssignModalOpen(false)} style={{ width: '100%', marginTop: '1.5rem', border: '1px solid var(--border-color)' }}>Cancel</button>
             </motion.div>
           </>
         )}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import API from '../api/axios';
 import '@packages/ui-kit/auth.css';
 
 const Signup = () => {
@@ -14,31 +15,29 @@ const Signup = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
-    // Mock Signup Logic
-    setTimeout(() => {
-      const storedUsers = JSON.parse(localStorage.getItem('mock_users') || '[]');
-      
-      if (storedUsers.some(u => u.email === formData.email)) {
-        setError('Email already registered.');
-        setLoading(false);
-        return;
-      }
+    try {
+      const response = await API.post('/auth/register', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.mobile,
+        role: 'TENANT'
+      });
 
-      // Step 1 Output: profileCompletion = 25
-      const newUser = { ...formData, id: Date.now(), profileCompletion: 25 };
-      storedUsers.push(newUser);
-      localStorage.setItem('mock_users', JSON.stringify(storedUsers));
-      
-      localStorage.setItem('token', 'mock_token_' + Date.now());
-      localStorage.setItem('user', JSON.stringify(newUser));
-      
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+
       navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   return (
@@ -51,15 +50,15 @@ const Signup = () => {
           </svg>
         </button>
         <div className="auth-header">
-          <h1>StayNest</h1>
+          <h1>Livora</h1>
           <p>Join the community and find your perfect room</p>
         </div>
 
         {error && <div className="error-message" style={{ color: 'var(--accent-error)', textAlign: 'center', marginBottom: '1.5rem', padding: '0.8rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px' }}>{error}</div>}
-        
+
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-            
+
             <div className="input-group">
               <label>Full Name</label>
               <div style={{ position: 'relative' }}>
@@ -102,13 +101,13 @@ const Signup = () => {
                 <input type="password" name="password" placeholder="••••••••" value={formData.password} onChange={handleChange} required style={{ paddingLeft: '3rem', width: '100%' }} />
               </div>
             </div>
-            
+
             <button type="submit" className="auth-btn" disabled={loading} style={{ marginTop: '1rem' }}>
               {loading ? 'Creating Account...' : 'Continue'}
             </button>
           </div>
         </form>
-        
+
         <div className="auth-footer">
           Already have an account? <Link to="/login">Sign In</Link>
         </div>

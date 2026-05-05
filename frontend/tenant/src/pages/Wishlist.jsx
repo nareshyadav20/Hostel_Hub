@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import API from '../api/axios';
 
 /* ─── icons (SVG constants) ─── */
 const ICONS = {
@@ -10,15 +11,43 @@ const ICONS = {
 };
 
 const Wishlist = () => {
-  const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
+  const [wishlist, setWishlist] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem('wishlist', JSON.stringify(wishlist));
-  }, [wishlist]);
+    const fetchWishlist = async () => {
+      try {
+        const res = await API.get('/tenant-portal/wishlist');
+        const mapped = res.data.map(item => ({
+          ...item,
+          id: item.hostelId,
+          name: item.hostelName,
+          location: item.hostelLocation,
+          price: item.hostelPrice,
+          image: item.hostelImage,
+          rating: item.hostelRating
+        }));
+        setWishlist(mapped);
+      } catch (err) {
+        console.error('Error fetching wishlist:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWishlist();
+  }, []);
 
-  const handleRemove = (id) => {
-    setWishlist((prev) => prev.filter((item) => item.id !== id));
+  const handleRemove = async (id) => {
+    try {
+      await API.delete(`/tenant-portal/wishlist/${id}`);
+      setWishlist((prev) => prev.filter((item) => (item.id || item._id) !== id));
+    } catch (err) {
+      console.error('Error removing from wishlist:', err);
+      alert('Failed to remove item. Please try again.');
+    }
   };
+
+  if (loading) return <div className="dashboard-container"><div className="loading-spinner">Fetching your wishlist...</div></div>;
 
   return (
     <div className="wishlist-page-professional fade-in">
@@ -45,43 +74,46 @@ const Wishlist = () => {
         </div>
       ) : (
         <div className="wishlist-results">
-          {wishlist.map((hostel) => (
-            <div key={hostel.id} className="pro-wishlist-card">
-              <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image || 'https://images.unsplash.com/photo-1555854817-5b27344481c7?auto=format&fit=crop&q=80&w=1000'})` }}>
-                <div className="rating-tag">{hostel.rating} ★</div>
-                <button className="remove-btn" onClick={() => handleRemove(hostel.id)} title="Remove from Wishlist">
-                  <ICONS.Trash />
-                </button>
+          {wishlist.map((hostel) => {
+            const hostelId = hostel.id || hostel._id;
+            return (
+              <div key={hostelId} className="pro-wishlist-card">
+                <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image || 'https://images.unsplash.com/photo-1555854817-5b27344481c7?auto=format&fit=crop&q=80&w=1000'})` }}>
+                  <div className="rating-tag">{hostel.rating} ★</div>
+                  <button className="remove-btn" onClick={() => handleRemove(hostel._id)} title="Remove from Wishlist">
+                    <ICONS.Trash />
+                  </button>
+                </div>
+
+                <div className="pro-card-content">
+                  <div className="pro-card-header">
+                    <div>
+                      <h2 className="hostel-name">{hostel.name}</h2>
+                      <p className="hostel-loc"><ICONS.Location /> {hostel.location}</p>
+                    </div>
+                    <div className="status-badge">Ready to Book</div>
+                  </div>
+
+                  <div className="hostel-specs">
+                    <div className="spec-item">{hostel.gender}</div>
+                    <div className="spec-item">{hostel.type}</div>
+                    <div className="spec-item">Instant Confirmation</div>
+                  </div>
+
+                  <div className="pro-card-footer">
+                    <div className="price-tag">
+                      <span className="price-val">₹{hostel.price.toLocaleString()}</span>
+                      <span className="price-period">/mo</span>
+                    </div>
+                    <div className="card-actions">
+                      <Link to={`/booking/${hostelId}`} className="btn-book-now">Book Now</Link>
+                      <Link to={`/listing/${hostelId}`} className="btn-details-outline">View Details</Link>
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              <div className="pro-card-content">
-                <div className="pro-card-header">
-                  <div>
-                    <h2 className="hostel-name">{hostel.name}</h2>
-                    <p className="hostel-loc"><ICONS.Location /> {hostel.location}</p>
-                  </div>
-                  <div className="status-badge">Ready to Book</div>
-                </div>
-
-                <div className="hostel-specs">
-                  <div className="spec-item">{hostel.gender}</div>
-                  <div className="spec-item">{hostel.type}</div>
-                  <div className="spec-item">Instant Confirmation</div>
-                </div>
-
-                <div className="pro-card-footer">
-                  <div className="price-tag">
-                    <span className="price-val">₹{hostel.price.toLocaleString()}</span>
-                    <span className="price-period">/mo</span>
-                  </div>
-                  <div className="card-actions">
-                    <Link to="/booking" className="btn-book-now">Book Now</Link>
-                    <Link to={`/listing/${hostel.id}`} className="btn-details-outline">View Details</Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -129,7 +161,7 @@ const Wishlist = () => {
           border-radius: 32px;
           padding: 6rem 2rem;
           text-align: center;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+          box-shadow: var(--shadow-sm);
         }
 
         .empty-icon {
@@ -182,7 +214,7 @@ const Wishlist = () => {
 
         .pro-wishlist-card:hover {
           transform: translateY(-8px);
-          box-shadow: 0 25px 60px rgba(0,0,0,0.08);
+          box-shadow: var(--shadow-2xl);
           border-color: var(--accent-primary);
         }
 
@@ -201,9 +233,9 @@ const Wishlist = () => {
           height: 44px;
           border-radius: 50%;
           border: none;
-          background: rgba(239, 68, 68, 0.1);
+          background: rgba(var(--accent-error-rgb), 0.1);
           backdrop-filter: blur(10px);
-          color: #ef4444;
+          color: var(--accent-error);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -212,7 +244,7 @@ const Wishlist = () => {
         }
 
         .remove-btn:hover {
-          background: #ef4444;
+          background: var(--accent-error);
           color: white;
         }
 
@@ -244,8 +276,8 @@ const Wishlist = () => {
 
         .status-badge {
           padding: 0.4rem 1rem;
-          background: rgba(34, 197, 94, 0.1);
-          color: #16a34a;
+          background: rgba(var(--accent-success-rgb), 0.1);
+          color: var(--accent-success);
           border-radius: 10px;
           font-size: 0.75rem;
           font-weight: 800;
@@ -313,7 +345,7 @@ const Wishlist = () => {
           border-radius: 14px;
           font-weight: 800;
           transition: all 0.3s ease;
-          box-shadow: 0 8px 20px rgba(14, 165, 233, 0.2);
+          box-shadow: 0 8px 20px rgba(var(--accent-primary-rgb), 0.2);
         }
 
         .btn-details-outline {

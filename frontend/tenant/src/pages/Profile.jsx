@@ -1,7 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import API from '../api/axios';
 
 const Profile = () => {
-  const user = JSON.parse(localStorage.getItem('user') || '{"name": "User", "email": "user@example.com"}');
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{"name": "User"}'));
+  const [tenantData, setTenantData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await API.get('/tenants/me');
+        setTenantData(response.data);
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  if (loading) return <div className="dashboard-container"><div className="loading-spinner">Loading Profile...</div></div>;
+
+  const displayUser = tenantData || user;
 
   return (
     <div className="dashboard-container">
@@ -20,25 +41,25 @@ const Profile = () => {
               margin: '0 auto 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '2.5rem', color: 'white', fontWeight: '800'
             }}>
-              {user.name?.charAt(0)}
+              {displayUser.name?.charAt(0)}
             </div>
-            <h2>{user.name}</h2>
-            <p>{user.occupation || 'Tenant'}</p>
+            <h2>{displayUser.name}</h2>
+            <p>{displayUser.occupation || 'Active Resident'}</p>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className="input-group">
               <label>Email</label>
-              <input type="text" value={user.email} readOnly />
+              <input type="text" value={displayUser.email} readOnly />
             </div>
             <div className="input-group">
-              <label>Occupation</label>
-              <input type="text" value={user.occupation || 'Not Set'} readOnly />
+              <label>Phone</label>
+              <input type="text" value={displayUser.phone || 'Not Set'} readOnly />
             </div>
-            {user.organization && (
+            {displayUser.organization && (
               <div className="input-group">
                 <label>Institution</label>
-                <input type="text" value={user.organization} readOnly />
+                <input type="text" value={displayUser.organization} readOnly />
               </div>
             )}
           </div>

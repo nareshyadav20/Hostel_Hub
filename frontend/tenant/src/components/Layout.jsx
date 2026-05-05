@@ -30,7 +30,7 @@ const Layout = ({ children }) => {
     e.preventDefault();
     const updatedUser = { ...user, ...modalData, profileCompletion: 50 };
     localStorage.setItem('user', JSON.stringify(updatedUser));
-    
+
     const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
     const userIndex = users.findIndex(u => u.email === user.email);
     if (userIndex > -1) {
@@ -38,7 +38,7 @@ const Layout = ({ children }) => {
       localStorage.setItem('mock_users', JSON.stringify(users));
     }
     setShowProfileModal(false);
-    window.location.reload(); 
+    window.location.reload();
   };
 
   return (
@@ -57,12 +57,12 @@ const Layout = ({ children }) => {
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                   </svg>
                 </div>
-                
+
                 <div className="avatar-container">
                   <div className="avatar" onClick={() => setShowDropdown(!showDropdown)}>
                     {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </div>
-                  
+
                   {showDropdown && (
                     <div className="profile-dropdown glass-card">
                       <div className="dropdown-header">
@@ -75,7 +75,7 @@ const Layout = ({ children }) => {
                         </div>
                       </div>
                       <div className="dropdown-divider"></div>
-                      
+
                       {user.profileCompletion && user.profileCompletion < 100 && (
                         <div style={{ padding: '0.8rem 1.2rem', background: 'rgba(255,255,255,0.02)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -85,7 +85,7 @@ const Layout = ({ children }) => {
                           <div style={{ width: '100%', height: '6px', background: 'var(--bg-tertiary)', borderRadius: '3px', overflow: 'hidden', marginBottom: '0.8rem' }}>
                             <div style={{ width: `${user.profileCompletion}%`, height: '100%', background: 'linear-gradient(90deg, var(--accent-warning), var(--accent-success))' }}></div>
                           </div>
-                          
+
                           {user.profileCompletion < 50 && (
                             <button className="btn btn-primary" style={{ width: '100%', padding: '0.5rem', fontSize: '0.8rem', fontWeight: '700', borderRadius: '6px' }} onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
                               Complete Profile
@@ -98,7 +98,7 @@ const Layout = ({ children }) => {
                           )}
                         </div>
                       )}
-                      
+
                       <div className="dropdown-divider"></div>
                       <button className="dropdown-item" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -140,11 +140,11 @@ const Layout = ({ children }) => {
 
         {showProfileModal && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(5px)' }}>
-            <div className="glass-card fade-in" style={{ width: '100%', maxWidth: '500px', padding: '2.5rem', background: 'var(--bg-secondary)', borderRadius: '24px', border: '1px solid var(--accent-primary)', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+            <div className="glass-card fade-in" style={{ width: '100%', maxWidth: '500px', padding: '2.5rem', background: 'var(--bg-secondary)', borderRadius: '24px', border: '1px solid var(--accent-primary)', position: 'relative', boxShadow: 'var(--shadow-premium)' }}>
               <button onClick={() => setShowProfileModal(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
-              
+
               <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
                 <div style={{ width: '64px', height: '64px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: 'var(--accent-primary)' }}>
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -157,11 +157,11 @@ const Layout = ({ children }) => {
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <div className="input-group" style={{ flex: 1 }}>
                     <label>Age</label>
-                    <input type="number" placeholder="e.g. 22" value={modalData.age} onChange={e => setModalData({...modalData, age: e.target.value})} required style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'white', width: '100%' }} />
+                    <input type="number" placeholder="e.g. 22" value={modalData.age} onChange={e => setModalData({ ...modalData, age: e.target.value })} required style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%' }} />
                   </div>
                   <div className="input-group" style={{ flex: 1 }}>
                     <label>Gender</label>
-                    <select value={modalData.gender} onChange={e => setModalData({...modalData, gender: e.target.value})} style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'white', width: '100%' }}>
+                    <select value={modalData.gender} onChange={e => setModalData({ ...modalData, gender: e.target.value })} style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%' }}>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                       <option value="Other">Other</option>
@@ -171,7 +171,7 @@ const Layout = ({ children }) => {
 
                 <div className="input-group">
                   <label>Occupation</label>
-                  <select value={modalData.occupation} onChange={e => setModalData({...modalData, occupation: e.target.value})} required style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'white', width: '100%' }}>
+                  <select value={modalData.occupation} onChange={e => setModalData({ ...modalData, occupation: e.target.value })} required style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%' }}>
                     <option value="">Select Occupation</option>
                     <option value="Student">Student</option>
                     <option value="Professional">Working Professional</option>
@@ -180,12 +180,12 @@ const Layout = ({ children }) => {
 
                 <div className="input-group">
                   <label>Preferred Location</label>
-                  <input type="text" placeholder="e.g. Koramangala, Bengaluru" value={modalData.locationPref} onChange={e => setModalData({...modalData, locationPref: e.target.value})} required style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'white', width: '100%' }} />
+                  <input type="text" placeholder="e.g. Koramangala, Bengaluru" value={modalData.locationPref} onChange={e => setModalData({ ...modalData, locationPref: e.target.value })} required style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%' }} />
                 </div>
 
                 <div className="input-group">
                   <label>Room Preference</label>
-                  <select value={modalData.roomPref} onChange={e => setModalData({...modalData, roomPref: e.target.value})} style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'white', width: '100%' }}>
+                  <select value={modalData.roomPref} onChange={e => setModalData({ ...modalData, roomPref: e.target.value })} style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%' }}>
                     <option value="Single">Single Room</option>
                     <option value="Double">2 Sharing</option>
                     <option value="Triple">3 Sharing</option>

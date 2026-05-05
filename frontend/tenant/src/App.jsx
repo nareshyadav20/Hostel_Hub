@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Landing from './pages/Landing';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
@@ -18,6 +19,11 @@ import Discounts from './pages/Discounts';
 import Services from './pages/Services';
 import Community from './pages/Community';
 import Safety from './pages/Safety';
+import Profile from './pages/Profile';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -31,11 +37,15 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Landing & Auth */}
-        <Route path="/"                element={<Landing />} />
-        <Route path="/login"           element={<Login />} />
-        <Route path="/signup"          element={<Signup />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/explore" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
 
         {/* Public browsing routes */}
         <Route path="/search"          element={<Layout><Search /></Layout>} />
@@ -44,7 +54,8 @@ function App() {
         {/* Protected portal routes */}
         <Route path="/dashboard"  element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
         <Route path="/wishlist"   element={<ProtectedRoute><Layout><Wishlist /></Layout></ProtectedRoute>} />
-        <Route path="/booking"    element={<ProtectedRoute><Layout><Booking /></Layout></ProtectedRoute>} />
+        <Route path="/booking"            element={<ProtectedRoute><Layout><Booking /></Layout></ProtectedRoute>} />
+        <Route path="/booking/:buildingId" element={<ProtectedRoute><Layout><Booking /></Layout></ProtectedRoute>} />
         <Route path="/payments"   element={<ProtectedRoute><Layout><Payments /></Layout></ProtectedRoute>} />
         <Route path="/mess"       element={<ProtectedRoute><Layout><Mess /></Layout></ProtectedRoute>} />
         <Route path="/rewards"    element={<ProtectedRoute><Layout><Rewards /></Layout></ProtectedRoute>} />
@@ -54,6 +65,7 @@ function App() {
         <Route path="/services"   element={<ProtectedRoute><Layout><Services /></Layout></ProtectedRoute>} />
         <Route path="/community"  element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />
         <Route path="/safety"     element={<ProtectedRoute><Layout><Safety /></Layout></ProtectedRoute>} />
+        <Route path="/profile"    element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

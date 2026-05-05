@@ -1,4 +1,4 @@
-const Tenant = require('../models/Tenant');
+const Tenant = require('../models/tenant/Tenant');
 
 const createTenant = async (req, res) => {
   try {
@@ -47,4 +47,14 @@ const deleteTenant = async (req, res) => {
   }
 };
 
-module.exports = { createTenant, getTenants, bulkCreateTenants, updateTenant, deleteTenant };
+const getTenantProfile = async (req, res) => {
+  try {
+    const tenant = await Tenant.findOne({ email: req.user.email }); // Simplified for now, linking by email
+    if (!tenant) return res.status(404).json({ message: 'Tenant profile not found' });
+    res.status(200).json(tenant);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = { createTenant, getTenants, bulkCreateTenants, updateTenant, deleteTenant, getTenantProfile };
