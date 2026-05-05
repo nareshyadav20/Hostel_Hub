@@ -6,14 +6,15 @@
 
 .main-content {
   flex: 1;
-  margin-left: 260px; /* Same as sidebar width */
+  margin-left: 280px;
   display: flex;
   flex-direction: column;
+  transition: var(--transition-premium);
 }
 
 .content-header {
-  height: 70px;
-  padding: 0 2rem;
+  height: 80px;
+  padding: 0 2.5rem;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   display: flex;
@@ -22,17 +23,25 @@
   position: sticky;
   top: 0;
   z-index: 90;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
 }
 
 .search-bar {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.5rem 1rem;
-  border-radius: 12px;
+  background: var(--bg-tertiary);
+  padding: 0.8rem 1.2rem;
+  border-radius: 14px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  width: 300px;
+  gap: 0.8rem;
+  width: 340px;
   border: 1px solid var(--border-color);
+  transition: var(--transition-premium);
+}
+
+.search-bar:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  width: 400px;
 }
 
 .search-bar input {
@@ -40,6 +49,8 @@
   border: none;
   color: var(--text-primary);
   width: 100%;
+  font-weight: 500;
+  font-size: 0.9rem;
 }
 
 .search-bar input:focus {
@@ -49,35 +60,53 @@
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
-.notifications {
-  font-size: 1.2rem;
-  cursor: pointer;
+.notifications-btn {
+  position: relative;
   color: var(--text-secondary);
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  background: var(--accent-primary);
-  color: var(--bg-primary);
-  border-radius: 50%;
+  cursor: pointer;
+  transition: var(--transition-premium);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  cursor: pointer;
+}
+
+.notifications-btn:hover {
+  color: var(--accent-primary);
+  transform: scale(1.1);
+}
+
+.notification-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  background: var(--accent-error);
+  border: 2px solid var(--bg-secondary);
+  border-radius: 50%;
 }
 
 .content-body {
-  padding: 2rem;
+  padding: 2.5rem;
   flex: 1;
+  background: var(--bg-primary);
 }
 
 @media (max-width: 768px) {
   .main-content {
     margin-left: 80px;
   }
+  .content-header {
+    padding: 0 1.5rem;
+  }
+  .search-bar {
+    width: 200px;
+  }
+  .search-bar:focus-within {
+    width: 240px;
+  }
 }
+
