@@ -133,7 +133,7 @@ const Portfolio = () => {
   // Load drafts from backend buildings with status: 'Draft'
   const loadDrafts = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:5001/api/buildings');
+      const res = await axios.get('http://localhost:5000/api/buildings');
       const allBuildings = res.data || [];
       setDrafts(allBuildings.filter(b => b.status === 'Draft').map(b => ({ ...b, id: b._id })));
     } catch { /* offline, no drafts */ }
@@ -167,10 +167,10 @@ const Portfolio = () => {
     try {
       let res;
       if (draftId) {
-        res = await axios.patch(`http://localhost:5001/api/buildings/${draftId}`, payload);
+        res = await axios.patch(`http://localhost:5000/api/buildings/${draftId}`, payload);
         setActiveDraftId(draftId);
       } else {
-        res = await axios.post('http://localhost:5001/api/buildings', payload);
+        res = await axios.post('http://localhost:5000/api/buildings', payload);
         setActiveDraftId(res.data._id);
       }
       setDraftMsg('✅ Draft saved!');
@@ -205,7 +205,7 @@ const Portfolio = () => {
 
   const deleteDraft = async (id) => {
     try {
-      await axios.delete(`http://localhost:5001/api/buildings/${id}`);
+      await axios.delete(`http://localhost:5000/api/buildings/${id}`);
       loadDrafts();
       if (activeDraftId === id) {
         setActiveDraftId(null);
