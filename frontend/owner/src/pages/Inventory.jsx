@@ -9,23 +9,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => (
   <AnimatePresence>
     {isOpen && (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        style={{ 
-          position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', 
-          display: 'flex', alignItems: 'center', justifyContent: 'center', 
-          zIndex: 2000, backdropFilter: 'blur(8px)', padding: '1rem' 
+        style={{
+          position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 2000, backdropFilter: 'blur(8px)', padding: '1rem'
         }}
         onClick={onClose}
       >
-        <motion.div 
-          initial={{ y: 50, opacity: 0, scale: 0.95 }} 
-          animate={{ y: 0, opacity: 1, scale: 1 }} 
+        <motion.div
+          initial={{ y: 50, opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: 50, opacity: 0, scale: 0.95 }}
           className="card"
           onClick={e => e.stopPropagation()}
-          style={{ 
-            width: '100%', maxWidth, padding: '0', 
+          style={{
+            width: '100%', maxWidth, padding: '0',
             maxHeight: '94vh', overflowY: 'auto', background: '#F8FAFC',
             borderRadius: '20px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
             border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column'
@@ -77,7 +77,7 @@ const Inventory = () => {
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [restockOpen, setRestockOpen] = useState(false);
-  
+
   const [selectedItem, setSelectedItem] = useState(null);
   const [restockItems, setRestockItems] = useState([]);
   const [restockSent, setRestockSent] = useState(false);
@@ -88,25 +88,25 @@ const Inventory = () => {
   const handleIssueSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.updateInventoryItem(selectedItem.id, { 
-        stock: selectedItem.stock - actionQuantity, 
-        inUse: selectedItem.inUse + actionQuantity 
+      await api.updateInventoryItem(selectedItem.id, {
+        stock: selectedItem.stock - actionQuantity,
+        inUse: selectedItem.inUse + actionQuantity
       });
       fetchInventory();
       setIsIssueModalOpen(false);
       setActionQuantity(1);
       setActionLocation('');
     } catch (err) {
-       console.error(err);
+      console.error(err);
     }
   };
 
   const handleReturnSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.updateInventoryItem(selectedItem.id, { 
-        stock: selectedItem.stock + actionQuantity, 
-        inUse: Math.max(0, selectedItem.inUse - actionQuantity) 
+      await api.updateInventoryItem(selectedItem.id, {
+        stock: selectedItem.stock + actionQuantity,
+        inUse: Math.max(0, selectedItem.inUse - actionQuantity)
       });
       fetchInventory();
       setIsReturnModalOpen(false);
@@ -133,7 +133,7 @@ const Inventory = () => {
 
   return (
     <div style={{ animation: 'fadeIn 0.5s ease-out', minHeight: '100vh', background: '#F8FAFC', padding: '0.5rem' }}>
-      
+
       {/* HEADER */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
@@ -144,12 +144,12 @@ const Inventory = () => {
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button className="btn" onClick={() => {
-             const prefill = lowStockItems.map(i => ({ name: i.name, needed: i.minThreshold - i.stock + 10, unit: i.unit }));
-             setRestockItems(prefill);
-             setRestockSent(false);
-             setRestockOpen(true);
-           }} style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#3B82F6', fontWeight: '700', padding: '0.8rem 1.2rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-             <ShoppingCart size={18} /> Launch Restock P.O.
+            const prefill = lowStockItems.map(i => ({ name: i.name, needed: i.minThreshold - i.stock + 10, unit: i.unit }));
+            setRestockItems(prefill);
+            setRestockSent(false);
+            setRestockOpen(true);
+          }} style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#3B82F6', fontWeight: '700', padding: '0.8rem 1.2rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <ShoppingCart size={18} /> Launch Restock P.O.
           </button>
           <button onClick={() => alert('Add Item flow triggered!')} className="btn btn-primary" style={{ background: '#3B82F6', border: 'none', padding: '0.8rem 1.2rem', borderRadius: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Plus size={18} /> Add Item
@@ -160,19 +160,19 @@ const Inventory = () => {
       {/* KPI DASHBOARD */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
         <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Package size={14}/> Total Unique Items</p>
+          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Package size={14} /> Total Unique Items</p>
           <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{totalItems}</h2>
         </div>
         <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderBottom: '4px solid #3B82F6' }}>
-          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Zap size={14}/> Assets In Use</p>
+          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Zap size={14} /> Assets In Use</p>
           <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{totalInUse}</h2>
         </div>
         <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderBottom: '4px solid #10B981' }}>
-          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><CheckCircle size={14}/> Healthy Stock</p>
+          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><CheckCircle size={14} /> Healthy Stock</p>
           <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{totalItems - lowStockItems.length}</h2>
         </div>
         <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderBottom: '4px solid #EF4444' }}>
-          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><AlertTriangle size={14}/> Low / Critical Alerts</p>
+          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><AlertTriangle size={14} /> Low / Critical Alerts</p>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
             <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#EF4444', margin: 0 }}>{lowStockItems.length + damagedAssets.length}</h2>
             <span style={{ color: '#EF4444', fontSize: '0.85rem', fontWeight: '700' }}>Requires Action</span>
@@ -185,20 +185,20 @@ const Inventory = () => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2.5rem' }}>
           {lowStockItems.length > 0 && (
             <div style={{ background: '#FFF1F2', border: '1px solid #FECDD3', padding: '1.2rem 1.5rem', borderRadius: '16px', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-               <div style={{ padding: '0.6rem', background: '#FFE4E6', color: '#E11D48', borderRadius: '12px' }}><AlertTriangle size={20} /></div>
-               <div>
-                  <h3 style={{ fontSize: '1rem', color: '#9F1239', fontWeight: '800', margin: '0 0 0.2rem 0' }}>Low Stock Warning</h3>
-                  <p style={{ color: '#BE123C', fontSize: '0.85rem', margin: 0, fontWeight: '500' }}>{lowStockItems.length} items have fallen below threshold.</p>
-               </div>
+              <div style={{ padding: '0.6rem', background: '#FFE4E6', color: '#E11D48', borderRadius: '12px' }}><AlertTriangle size={20} /></div>
+              <div>
+                <h3 style={{ fontSize: '1rem', color: '#9F1239', fontWeight: '800', margin: '0 0 0.2rem 0' }}>Low Stock Warning</h3>
+                <p style={{ color: '#BE123C', fontSize: '0.85rem', margin: 0, fontWeight: '500' }}>{lowStockItems.length} items have fallen below threshold.</p>
+              </div>
             </div>
           )}
           {damagedAssets.length > 0 && (
             <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '1.2rem 1.5rem', borderRadius: '16px', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-               <div style={{ padding: '0.6rem', background: '#FEF3C7', color: '#D97706', borderRadius: '12px' }}><Info size={20} /></div>
-               <div>
-                  <h3 style={{ fontSize: '1rem', color: '#92400E', fontWeight: '800', margin: '0 0 0.2rem 0' }}>Damaged Assets</h3>
-                  <p style={{ color: '#B45309', fontSize: '0.85rem', margin: 0, fontWeight: '500' }}>{damagedAssets.length} asset types have items reported damaged.</p>
-               </div>
+              <div style={{ padding: '0.6rem', background: '#FEF3C7', color: '#D97706', borderRadius: '12px' }}><Info size={20} /></div>
+              <div>
+                <h3 style={{ fontSize: '1rem', color: '#92400E', fontWeight: '800', margin: '0 0 0.2rem 0' }}>Damaged Assets</h3>
+                <p style={{ color: '#B45309', fontSize: '0.85rem', margin: 0, fontWeight: '500' }}>{damagedAssets.length} asset types have items reported damaged.</p>
+              </div>
             </div>
           )}
         </div>
@@ -206,32 +206,32 @@ const Inventory = () => {
 
       {/* MAIN LIST VIEW */}
       <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-        
+
         {/* Toolbar & Tabs */}
         <div style={{ padding: '1.2rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
-           <div style={{ display: 'flex', gap: '0.5rem' }}>
-             {['All', 'Asset', 'Consumable'].map(tab => (
-               <button 
-                 key={tab}
-                 onClick={() => setActiveTab(tab)}
-                 style={{ 
-                   fontSize: '0.9rem', padding: '0.6rem 1.2rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer',
-                   background: activeTab === tab ? '#3B82F6' : '#FFFFFF',
-                   color: activeTab === tab ? '#FFFFFF' : '#475569',
-                   border: activeTab === tab ? 'none' : '1px solid #E2E8F0',
-                   transition: 'all 0.2s'
-                 }}
-               >
-                 {tab === 'All' ? 'All Inventory' : tab + 's'}
-               </button>
-             ))}
-           </div>
-           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-             <input type="text" placeholder="Search item..." value={search} onChange={e=>setSearch(e.target.value)} style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.9rem' }}/>
-             <button className="btn" style={{ border: '1px solid #E2E8F0', background: '#FFFFFF', padding: '0.6rem 1rem', borderRadius: '8px', color: '#475569', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Filter size={16} /> Filters
-             </button>
-           </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {['All', 'Asset', 'Consumable'].map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  fontSize: '0.9rem', padding: '0.6rem 1.2rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer',
+                  background: activeTab === tab ? '#3B82F6' : '#FFFFFF',
+                  color: activeTab === tab ? '#FFFFFF' : '#475569',
+                  border: activeTab === tab ? 'none' : '1px solid #E2E8F0',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {tab === 'All' ? 'All Inventory' : tab + 's'}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <input type="text" placeholder="Search item..." value={search} onChange={e => setSearch(e.target.value)} style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.9rem' }} />
+            <button className="btn" style={{ border: '1px solid #E2E8F0', background: '#FFFFFF', padding: '0.6rem 1rem', borderRadius: '8px', color: '#475569', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Filter size={16} /> Filters
+            </button>
+          </div>
         </div>
 
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
@@ -248,18 +248,18 @@ const Inventory = () => {
               {filteredItems.map(item => {
                 const isLow = item.stock < item.minThreshold;
                 const stockPercent = Math.min(100, Math.max(0, (item.stock / item.maxStock) * 100));
-                
+
                 return (
-                  <motion.tr 
+                  <motion.tr
                     layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    key={item.id} 
+                    key={item.id}
                     className="inv-row"
                     style={{ borderBottom: '1px solid #E2E8F0', background: isLow ? '#FFF1F2' : 'transparent', transition: 'all 0.2s' }}
                   >
                     <td style={{ padding: '1.2rem 1.5rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: item.type === 'Asset' ? '#EFF6FF' : '#F0FDF4', color: item.type === 'Asset' ? '#3B82F6' : '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {item.type === 'Asset' ? <BedDouble size={20}/> : <Coffee size={20}/>}
+                          {item.type === 'Asset' ? <BedDouble size={20} /> : <Coffee size={20} />}
                         </div>
                         <div>
                           <p style={{ fontWeight: '800', fontSize: '1.05rem', color: '#0F172A', margin: '0 0 0.2rem 0' }}>{item.name}</p>
@@ -271,45 +271,45 @@ const Inventory = () => {
                       </div>
                     </td>
                     <td style={{ padding: '1.2rem 1.5rem' }}>
-                      <p style={{ fontWeight: '700', fontSize: '0.9rem', color: '#1E293B', margin: '0 0 0.3rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><MapPin size={14} color="#64748B"/> {item.location}</p>
+                      <p style={{ fontWeight: '700', fontSize: '0.9rem', color: '#1E293B', margin: '0 0 0.3rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><MapPin size={14} color="#64748B" /> {item.location}</p>
                       {item.type === 'Asset' && (
                         <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0, fontWeight: '600' }}>{item.inUse} In Use • <span style={{ color: item.damaged > 0 ? '#EF4444' : '#64748B' }}>{item.damaged} Damaged</span></p>
                       )}
                     </td>
                     <td style={{ padding: '1.2rem 1.5rem' }}>
-                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.85rem' }}>
-                         <span style={{ fontWeight: '800', color: isLow ? '#E11D48' : '#0F172A' }}>{item.stock} {item.unit} available</span>
-                         <span style={{ color: '#64748B', fontWeight: '600' }}>/ {item.maxStock}</span>
-                       </div>
-                       <div style={{ height: '6px', background: isLow ? '#FECDD3' : '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
-                         <div style={{ height: '100%', background: isLow ? '#E11D48' : '#3B82F6', width: `${stockPercent}%`, borderRadius: '4px' }} />
-                       </div>
-                       {isLow && <span style={{ fontSize: '0.7rem', color: '#E11D48', fontWeight: '700', marginTop: '0.4rem', display: 'block' }}>Below threshold ({item.minThreshold})</span>}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.85rem' }}>
+                        <span style={{ fontWeight: '800', color: isLow ? '#E11D48' : '#0F172A' }}>{item.stock} {item.unit} available</span>
+                        <span style={{ color: '#64748B', fontWeight: '600' }}>/ {item.maxStock}</span>
+                      </div>
+                      <div style={{ height: '6px', background: isLow ? '#FECDD3' : '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', background: isLow ? '#E11D48' : '#3B82F6', width: `${stockPercent}%`, borderRadius: '4px' }} />
+                      </div>
+                      {isLow && <span style={{ fontSize: '0.7rem', color: '#E11D48', fontWeight: '700', marginTop: '0.4rem', display: 'block' }}>Below threshold ({item.minThreshold})</span>}
                     </td>
                     <td style={{ padding: '1.2rem 1.5rem', textAlign: 'right' }}>
-                       <div className="row-actions" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', opacity: 0.4, transition: 'opacity 0.2s' }}>
-                          {item.type === 'Asset' ? (
-                            <>
-                              <button onClick={() => { setSelectedItem(item); setIsIssueModalOpen(true); }} className="btn" style={{ background: '#FFFFFF', border: '1px solid #3B82F6', color: '#3B82F6', padding: '0.5rem 0.8rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.8rem' }} title="Issue Asset">
-                                Issue
-                              </button>
-                              <button onClick={() => { setSelectedItem(item); setIsReturnModalOpen(true); }} className="btn" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#475569', padding: '0.5rem 0.8rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.8rem' }} title="Return Asset">
-                                Return
-                              </button>
-                            </>
-                          ) : (
-                            <button onClick={() => { setSelectedItem(item); setIsIssueModalOpen(true); }} className="btn" style={{ background: '#FFFFFF', border: '1px solid #3B82F6', color: '#3B82F6', padding: '0.5rem 0.8rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.8rem' }} title="Update Stock">
-                              Update
+                      <div className="row-actions" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', opacity: 0.4, transition: 'opacity 0.2s' }}>
+                        {item.type === 'Asset' ? (
+                          <>
+                            <button onClick={() => { setSelectedItem(item); setIsIssueModalOpen(true); }} className="btn" style={{ background: '#FFFFFF', border: '1px solid #3B82F6', color: '#3B82F6', padding: '0.5rem 0.8rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.8rem' }} title="Issue Asset">
+                              Issue
                             </button>
-                          )}
-                       </div>
+                            <button onClick={() => { setSelectedItem(item); setIsReturnModalOpen(true); }} className="btn" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#475569', padding: '0.5rem 0.8rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.8rem' }} title="Return Asset">
+                              Return
+                            </button>
+                          </>
+                        ) : (
+                          <button onClick={() => { setSelectedItem(item); setIsIssueModalOpen(true); }} className="btn" style={{ background: '#FFFFFF', border: '1px solid #3B82F6', color: '#3B82F6', padding: '0.5rem 0.8rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.8rem' }} title="Update Stock">
+                            Update
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </motion.tr>
                 );
               })}
             </AnimatePresence>
             {filteredItems.length === 0 && (
-               <tr><td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: '#64748B', fontWeight: '600' }}>No items found.</td></tr>
+              <tr><td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: '#64748B', fontWeight: '600' }}>No items found.</td></tr>
             )}
           </tbody>
         </table>
@@ -329,7 +329,7 @@ const Inventory = () => {
                 <p style={{ color: '#1D4ED8', fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>{selectedItem.stock} {selectedItem.unit}</p>
               </div>
             </div>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Quantity to Issue</label>
               <input type="number" min="1" max={selectedItem.stock} value={actionQuantity} onChange={e => setActionQuantity(parseInt(e.target.value) || 1)} style={inputStyle} required />
@@ -362,7 +362,7 @@ const Inventory = () => {
                 <p style={{ color: '#0F172A', fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>{selectedItem.inUse} {selectedItem.unit}</p>
               </div>
             </div>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Quantity to Return</label>
               <input type="number" min="1" max={selectedItem.inUse || 1} value={actionQuantity} onChange={e => setActionQuantity(parseInt(e.target.value) || 1)} style={inputStyle} required />
@@ -388,29 +388,29 @@ const Inventory = () => {
       {/* RESTOCK PO MODAL (PRESERVED LOGIC) */}
       <Modal isOpen={restockOpen} onClose={() => { if (!restockSent) setRestockOpen(false); }} title="🛒 Launch Restock P.O." maxWidth="650px">
         {restockSent ? (
-          <div style={{ textAlign:'center', padding:'3rem 0' }}>
-            <div style={{ fontSize:'4rem', marginBottom:'1.5rem' }}>📦</div>
-            <h2 style={{ fontSize:'1.8rem', fontWeight:'900', color:'#10B981', marginBottom:'0.5rem' }}>Purchase Order Launched!</h2>
-            <p style={{ color:'#64748B', marginBottom:'2rem', fontWeight:'500' }}>Your restock PO has been generated and sent to the supplier automatically.</p>
-            <button className="btn btn-primary" onClick={() => setRestockOpen(false)} style={{ padding:'1rem 3rem', borderRadius:'12px', background:'#10B981', border:'none', fontWeight:'800', fontSize:'1rem' }}>Done</button>
+          <div style={{ textAlign: 'center', padding: '3rem 0' }}>
+            <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>📦</div>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#10B981', marginBottom: '0.5rem' }}>Purchase Order Launched!</h2>
+            <p style={{ color: '#64748B', marginBottom: '2rem', fontWeight: '500' }}>Your restock PO has been generated and sent to the supplier automatically.</p>
+            <button className="btn btn-primary" onClick={() => setRestockOpen(false)} style={{ padding: '1rem 3rem', borderRadius: '12px', background: '#10B981', border: 'none', fontWeight: '800', fontSize: '1rem' }}>Done</button>
           </div>
         ) : (
           <>
-            <p style={{ color:'#64748B', fontSize:'0.9rem', marginBottom:'1.5rem', fontWeight:'500' }}>Review and adjust quantities for low stock items. Add extra items if needed.</p>
-            <div style={{ display:'flex', flexDirection:'column', gap:'0.8rem', marginBottom:'1.5rem' }}>
+            <p style={{ color: '#64748B', fontSize: '0.9rem', marginBottom: '1.5rem', fontWeight: '500' }}>Review and adjust quantities for low stock items. Add extra items if needed.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '1.5rem' }}>
               {restockItems.map((ri, idx) => (
-                <div key={idx} style={{ display:'flex', gap:'1rem', alignItems:'center', padding:'1rem', background:'#F8FAFC', borderRadius:'12px', border:'1px solid #E2E8F0' }}>
-                  <span style={{ flex:1, fontWeight:'800', fontSize:'1rem', color:'#0F172A' }}>{ri.name}</span>
-                  <input type="number" value={ri.needed} onChange={e => setRestockItems(prev => prev.map((r,i) => i===idx ? {...r, needed: e.target.value} : r))}
-                    style={{ width:'80px', padding:'0.6rem', borderRadius:'8px', border:'1px solid #CBD5E1', background:'#FFFFFF', color:'#0F172A', textAlign:'center', fontWeight:'800', outline:'none' }}/>
-                  <span style={{ fontSize:'0.85rem', color:'#64748B', minWidth:'45px', fontWeight:'600' }}>{ri.unit}</span>
-                  <button onClick={() => setRestockItems(prev => prev.filter((_,i) => i!==idx))} style={{ background:'none', border:'none', cursor:'pointer', color:'#EF4444', padding:'0.4rem', borderRadius:'6px' }}><X size={18}/></button>
+                <div key={idx} style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                  <span style={{ flex: 1, fontWeight: '800', fontSize: '1rem', color: '#0F172A' }}>{ri.name}</span>
+                  <input type="number" value={ri.needed} onChange={e => setRestockItems(prev => prev.map((r, i) => i === idx ? { ...r, needed: e.target.value } : r))}
+                    style={{ width: '80px', padding: '0.6rem', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFFFFF', color: '#0F172A', textAlign: 'center', fontWeight: '800', outline: 'none' }} />
+                  <span style={{ fontSize: '0.85rem', color: '#64748B', minWidth: '45px', fontWeight: '600' }}>{ri.unit}</span>
+                  <button onClick={() => setRestockItems(prev => prev.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '0.4rem', borderRadius: '6px' }}><X size={18} /></button>
                 </div>
               ))}
             </div>
-            <button onClick={() => setRestockItems(prev => [...prev, { name:'', needed:1, unit:'Units' }])} className="btn" style={{ width:'100%', border:'2px dashed #CBD5E1', background:'transparent', marginBottom:'2rem', padding:'1rem', color:'#64748B', fontWeight:'800', borderRadius:'12px' }}>+ Add Extra Item</button>
+            <button onClick={() => setRestockItems(prev => [...prev, { name: '', needed: 1, unit: 'Units' }])} className="btn" style={{ width: '100%', border: '2px dashed #CBD5E1', background: 'transparent', marginBottom: '2rem', padding: '1rem', color: '#64748B', fontWeight: '800', borderRadius: '12px' }}>+ Add Extra Item</button>
             {restockItems.length > 0 && restockItems.some(r => r.name) && (
-              <button className="btn btn-primary" onClick={() => setRestockSent(true)} style={{ width:'100%', padding:'1.2rem', fontSize:'1.1rem', fontWeight:'900', borderRadius:'12px', background:'#3B82F6', border:'none' }}>✅ Confirm & Launch P.O.</button>
+              <button className="btn btn-primary" onClick={() => setRestockSent(true)} style={{ width: '100%', padding: '1.2rem', fontSize: '1.1rem', fontWeight: '900', borderRadius: '12px', background: '#3B82F6', border: 'none' }}>✅ Confirm & Launch P.O.</button>
             )}
           </>
         )}

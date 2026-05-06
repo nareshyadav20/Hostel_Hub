@@ -5,12 +5,12 @@ const complaintSchema = new mongoose.Schema({
   description: { type: String, required: true },
   category: { 
     type: String, 
-    enum: ['Maintenance', 'Housekeeping', 'WiFi / IT', 'Leave', 'Visitor', 'Other'],
+    enum: ['Maintenance', 'Housekeeping', 'WiFi / IT', 'Leave', 'Visitor', 'Plumbing', 'Electrical', 'Other'],
     default: 'Maintenance'
   },
   status: { 
     type: String, 
-    enum: ['Pending', 'Resolved', 'In Progress'],
+    enum: ['Pending', 'Resolved', 'In Progress', 'Rejected'],
     default: 'Pending'
   },
   priority: {
@@ -18,6 +18,7 @@ const complaintSchema = new mongoose.Schema({
     enum: ['Low', 'Medium', 'High'],
     default: 'Medium'
   },
+  assignedTo: { type: String }, // Staff name or ID
   tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   hostelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hostel' },

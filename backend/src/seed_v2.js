@@ -30,7 +30,8 @@ const seedData = async () => {
       Complaint.deleteMany({}),
       Payment.deleteMany({}),
       MessMenu.deleteMany({}),
-      Inventory.deleteMany({})
+      Inventory.deleteMany({}),
+      require('./models/Staff').deleteMany({})
     ]);
 
     // 2. Create Owner
@@ -153,7 +154,69 @@ const seedData = async () => {
       }
     }
 
-    console.log('Seed v2.2: Balanced Global Production Seeding completed successfully!');
+    // 12. Mess Menu
+    const messDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const plans = ['basic', 'standard', 'premium'];
+    const sampleMenus = {
+        Monday: { breakfast: 'Idli, Sambar', lunch: 'Rice, Dal, Veg Fry', dinner: 'Roti, Paneer Masala' },
+        Tuesday: { breakfast: 'Poha, Jalebi', lunch: 'Rajma Chawal, Papad', dinner: 'Aloo Gobi, Roti' },
+        Wednesday: { breakfast: 'Aloo Paratha', lunch: 'Veg Biryani, Raita', dinner: 'Chole Bhature' },
+        Thursday: { breakfast: 'Upma, Chutney', lunch: 'Kadi Pakoda, Rice', dinner: 'Mushroom Peas' },
+        Friday: { breakfast: 'Masala Dosa', lunch: 'Dal Makhani, Rice', dinner: 'Egg Curry' },
+        Saturday: { breakfast: 'Puri Sabzi', lunch: 'Mix Veg, Roti', dinner: 'Veg Pulao' },
+        Sunday: { breakfast: 'Chole Poori', lunch: 'Special Thali', dinner: 'Light Khichdi' }
+    };
+
+    for (const b of buildings) {
+      for (const plan of plans) {
+        for (const day of messDays) {
+          await MessMenu.create({
+            buildingId: b._id,
+            plan,
+            day,
+            ...sampleMenus[day]
+          });
+        }
+      }
+    }
+
+    // 13. Staff
+    const Staff = require('./models/Staff');
+    for (const b of buildings) {
+      await Staff.create([
+        {
+          name: 'Ramesh Kumar', role: 'Warden', phone: '9876543210', buildingId: b._id, salary: 25000,
+          attendance: { percentage: 98, monthly: [{ name: 'Week 1', present: 6 }, { name: 'Week 2', present: 7 }] }
+        },
+        {
+          name: 'Sita Devi', role: 'Cook', phone: '9876543211', buildingId: b._id, salary: 18000,
+          attendance: { percentage: 95, monthly: [{ name: 'Week 1', present: 5 }, { name: 'Week 2', present: 6 }] }
+        },
+        {
+          name: 'Arjun Singh', role: 'Security', phone: '9876543212', buildingId: b._id, salary: 15000,
+          attendance: { percentage: 100, monthly: [{ name: 'Week 1', present: 7 }, { name: 'Week 2', present: 7 }] }
+        }
+      ]);
+    }
+
+    // 14. Complaints
+    for (const b of buildings) {
+      const tenantsInBuilding = await Tenant.find({ buildingId: b._id }).limit(3);
+      for (const [idx, t] of tenantsInBuilding.entries()) {
+        await Complaint.create({
+          title: idx === 0 ? 'Leaking Tap' : idx === 1 ? 'WiFi Not Working' : 'Light Flickering',
+          description: idx === 0 ? 'The tap in my bathroom is leaking since morning.' : idx === 1 ? 'I cannot connect to the WiFi on the 2nd floor.' : 'The main light in the room is flickering.',
+          category: idx === 0 ? 'Plumbing' : idx === 1 ? 'WiFi / IT' : 'Electrical',
+          priority: idx === 0 ? 'Medium' : idx === 1 ? 'High' : 'Low',
+          tenant: t._id,
+          user: t.user || owner._id, // Fallback to owner if no user linked
+          buildingId: b._id,
+          status: idx === 0 ? 'Pending' : 'Resolved'
+        });
+      }
+    }
+
+    console.log('Seed v2.4: Complaints System Primed!');
     process.exit();
   } catch (error) {
     console.error('Seeding failed:', error);

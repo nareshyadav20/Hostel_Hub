@@ -12,11 +12,13 @@ const Login = () => {
   const [error, setError] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  
   const performLogin = async (loginEmail, loginPass) => {
     setIsLoading(true);
     setError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { email: loginEmail, password: loginPass });
+      const res = await axios.post(`${API_URL}/auth/login`, { email: loginEmail, password: loginPass });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/owner/portfolio');
@@ -24,7 +26,7 @@ const Login = () => {
       // Auto-register the demo owner if they don't exist in the DB yet
       if (err.response?.status === 404 && loginEmail === 'owner@hostelhub.com') {
         try {
-          const regRes = await axios.post('http://localhost:5000/api/auth/register', {
+          const regRes = await axios.post(`${API_URL}/auth/register`, {
             email: loginEmail, password: loginPass, name: 'System Owner', role: 'OWNER'
           });
           localStorage.setItem('token', regRes.data.token);

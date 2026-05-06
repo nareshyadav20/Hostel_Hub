@@ -29,6 +29,7 @@ const traverseHierarchy = (buildings) => {
 };
 
 const MessMenu = require('../models/MessMenu');
+const MessAttendance = require('../models/MessAttendance');
 
 // GET /api/dashboard/summary
 exports.getSummaryKPIs = async (req, res) => {
@@ -212,15 +213,27 @@ exports.getComplaintsStats = async (req, res) => {
 // GET /api/dashboard/mess
 exports.getMessStats = async (req, res) => {
   try {
+    const { buildingId } = req.query;
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const day = days[new Date().getDay()];
-    const menu = await MessMenu.findOne({ day, plan: 'standard' });
+    const todayISO = new Date().toISOString().split('T')[0];
+
+    const menu = await MessMenu.findOne({ buildingId, day, plan: 'standard' });
     
+    // Calculate real attendance stats
+    const attendance = await MessAttendance.find({ buildingId, date: todayISO });
+    let mealsServedToday = 0;
+    attendance.forEach(att => {
+      if (att.breakfast) mealsServedToday++;
+      if (att.lunch) mealsServedToday++;
+      if (att.dinner) mealsServedToday++;
+    });
+
     res.json({
-      mealsServedToday: 0,
+      mealsServedToday,
       avgFoodRating: 4.5,
-      dailyMessCost: 0,
-      monthlyMessCost: 0,
+      dailyMessCost: mealsServedToday * 60, // Dummy cost calculation
+      monthlyMessCost: mealsServedToday * 1800, // Dummy
       menuToday: {
         breakfast: menu?.breakfast || 'N/A',
         lunch: menu?.lunch || 'N/A',

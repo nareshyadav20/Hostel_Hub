@@ -139,11 +139,11 @@ const Rooms = () => {
       // Find tenant info (handle populated tenant object)
       const tName = typeof bed.tenant === 'object' ? bed.tenant.name : bed.tenant;
       const tId = typeof bed.tenant === 'object' ? bed.tenant._id : (bed.tenantId || bed.tenant);
-      
-      const tenantInfo = tenants.find(t => t.id === tId || t.name === tName) || { 
-        name: tName || 'Unknown Tenant', 
-        status: 'Active', 
-        room: `Room ${room.roomNumber} - Bed ${bed.bedNumber}` 
+
+      const tenantInfo = tenants.find(t => t.id === tId || t.name === tName) || {
+        name: tName || 'Unknown Tenant',
+        status: 'Active',
+        room: `Room ${room.roomNumber} - Bed ${bed.bedNumber}`
       };
       setSelectedTenantInfo({ ...tenantInfo, roomId: room.id || room._id, bedId: bed.id || bed._id });
     } else {
@@ -158,33 +158,19 @@ const Rooms = () => {
 
   const totalRooms = selectedBuildingId
     ? rooms.filter(r => {
-        const rFloorId = typeof r.floor === 'object' ? r.floor._id : r.floor;
-        return floors.some(f => {
-          const fId = f.id || f._id;
-          const fBldgId = typeof f.building === 'object' ? f.building._id : f.building;
-          return fId === rFloorId && fBldgId === selectedBuildingId;
-        });
-      }).length
+      const rFloorId = typeof r.floor === 'object' ? r.floor._id : r.floor;
+      return floors.some(f => {
+        const fId = f.id || f._id;
+        const fBldgId = typeof f.building === 'object' ? f.building._id : f.building;
+        return fId === rFloorId && fBldgId === selectedBuildingId;
+      });
+    }).length
     : rooms.length;
 
   const totalBedsCount = selectedBuildingId
     ? beds.filter(b => {
-        const bRoomId = typeof b.room === 'object' ? b.room._id : (b.room || b.roomId);
-        return rooms.some(r => {
-          const rId = r.id || r._id;
-          const rFloorId = typeof r.floor === 'object' ? r.floor._id : r.floor;
-          return rId === bRoomId && floors.some(f => {
-            const fId = f.id || f._id;
-            const fBldgId = typeof f.building === 'object' ? f.building._id : f.building;
-            return fId === rFloorId && fBldgId === selectedBuildingId;
-          });
-        });
-      }).length
-    : beds.length;
-
-  const occupiedBedsCount = selectedBuildingId
-    ? beds.filter(b => b.status === 'OCCUPIED' && rooms.some(r => {
-        const bRoomId = typeof b.room === 'object' ? b.room._id : (b.room || b.roomId);
+      const bRoomId = typeof b.room === 'object' ? b.room._id : (b.room || b.roomId);
+      return rooms.some(r => {
         const rId = r.id || r._id;
         const rFloorId = typeof r.floor === 'object' ? r.floor._id : r.floor;
         return rId === bRoomId && floors.some(f => {
@@ -192,7 +178,21 @@ const Rooms = () => {
           const fBldgId = typeof f.building === 'object' ? f.building._id : f.building;
           return fId === rFloorId && fBldgId === selectedBuildingId;
         });
-      })).length
+      });
+    }).length
+    : beds.length;
+
+  const occupiedBedsCount = selectedBuildingId
+    ? beds.filter(b => b.status === 'OCCUPIED' && rooms.some(r => {
+      const bRoomId = typeof b.room === 'object' ? b.room._id : (b.room || b.roomId);
+      const rId = r.id || r._id;
+      const rFloorId = typeof r.floor === 'object' ? r.floor._id : r.floor;
+      return rId === bRoomId && floors.some(f => {
+        const fId = f.id || f._id;
+        const fBldgId = typeof f.building === 'object' ? f.building._id : f.building;
+        return fId === rFloorId && fBldgId === selectedBuildingId;
+      });
+    })).length
     : beds.filter(b => b.status === 'OCCUPIED').length;
   const occupancyRate = totalBedsCount > 0 ? Math.round((occupiedBedsCount / totalBedsCount) * 100) : 0;
 
@@ -227,15 +227,15 @@ const Rooms = () => {
 
       <AnimatePresence>
         {showFilters && (
-          <motion.div 
-            initial={{ height: 0, opacity: 0 }} 
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             style={{ overflow: 'hidden', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}
           >
             <span style={{ fontSize: '0.8rem', fontWeight: '950', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filter Infrastructure:</span>
             {['All', 'AC', 'Non-AC', 'Available', 'Occupied'].map(f => (
-              <button 
+              <button
                 key={f}
                 onClick={() => setFilterType(f)}
                 style={{
@@ -366,11 +366,11 @@ const Rooms = () => {
               const floorRooms = rooms.filter(r => {
                 const rFloorId = typeof r.floor === 'object' ? r.floor._id : r.floor;
                 if (rFloorId !== floorId) return false;
-                
+
                 if (filterType === 'All') return true;
                 if (filterType === 'AC') return r.isAC;
                 if (filterType === 'Non-AC') return !r.isAC;
-                
+
                 const roomBeds = beds.filter(b => {
                   const bRoomId = typeof b.room === 'object' ? b.room._id : (b.room || b.roomId);
                   const targetRoomId = r.id || r._id;
@@ -379,7 +379,7 @@ const Rooms = () => {
 
                 if (filterType === 'Available') return roomBeds.some(b => b.status === 'AVAILABLE') || r.status === 'AVAILABLE';
                 if (filterType === 'Occupied') return roomBeds.length > 0 && !roomBeds.some(b => b.status === 'AVAILABLE');
-                
+
                 return r.roomType === filterType;
               });
               if (floorRooms.length === 0) return null;

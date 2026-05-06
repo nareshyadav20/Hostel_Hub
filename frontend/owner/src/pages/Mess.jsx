@@ -7,42 +7,45 @@ import { api } from '../mockData';
 const Mess = () => {
   const { buildingId: urlBuildingId } = useParams();
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+  const todayDay = new Date().toLocaleDateString('en-GB', { weekday: 'long' });
+  const todayISO = new Date().toISOString().split('T')[0];
 
-  const [activeTab, setActiveTab] = useState('dashboard'); 
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [menuView, setMenuView] = useState('daily'); // 'daily' | 'weekly'
   const [loading, setLoading] = useState(true);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [plans, setPlans] = useState([
-    { 
-      id: 'basic', 
-      name: 'Basic Plan', 
-      price: 500, 
+    {
+      id: 'basic',
+      name: 'Basic Plan',
+      price: 500,
       description: 'Simple meals with a fixed weekly menu for standard nourishment.',
-      features: ['Simple Meals', 'Fixed Weekly Menu', 'Limited Variety', 'No Customization', 'Fixed Portion'], 
+      features: ['Simple Meals', 'Fixed Weekly Menu', 'Limited Variety', 'No Customization', 'Fixed Portion'],
       menu: ['Steamed Rice', 'Arhar Dal', 'Seasonal Dry Veg', 'Phulka Roti', 'Pickle'],
-      active: true, 
-      color: '#94a3b8' 
+      active: true,
+      color: '#94a3b8'
     },
-    { 
-      id: 'standard', 
-      name: 'Standard Plan', 
-      price: 1000, 
+    {
+      id: 'standard',
+      name: 'Standard Plan',
+      price: 1000,
       description: 'Improved meal quality with rotating weekly menu and limited customization.',
-      features: ['Improved Meal Quality', 'Rotating Weekly Menu', 'Moderate Variety', 'Limited Customization', '1 Refill Allowed'], 
+      features: ['Improved Meal Quality', 'Rotating Weekly Menu', 'Moderate Variety', 'Limited Customization', '1 Refill Allowed'],
       menu: ['Jeera Rice / Pulao', 'Paneer / Egg Curry', 'Mixed Veg Fry', 'Roti / Paratha', 'Sweet Bowl'],
-      active: true, 
-      color: '#3b82f6' 
+      active: true,
+      color: '#3b82f6'
     },
-    { 
-      id: 'premium', 
-      name: 'Premium Plan', 
-      price: 1500, 
+    {
+      id: 'premium',
+      name: 'Premium Plan',
+      price: 1500,
       description: 'High-quality meals with fully customizable menu and premium add-ons.',
-      features: ['High-Quality Meals', 'Fully Customizable Menu', 'Rich Variety (Veg + Non-Veg)', 'Unlimited/Refill Option', 'Special Weekend Meals', 'Fruits, Juice, Dessert'], 
+      features: ['High-Quality Meals', 'Fully Customizable Menu', 'Rich Variety (Veg + Non-Veg)', 'Unlimited/Refill Option', 'Special Weekend Meals', 'Fruits, Juice, Dessert'],
       menu: ['Basmati Pulao / Biryani', 'Daily Premium Gravy', 'Cold Drink / Juice', 'Live Paratha / Dosa', 'Premium Desserts'],
-      active: true, 
-      color: '#8b5cf6', 
-      popular: true 
+      active: true,
+      color: '#8b5cf6',
+      popular: true
     },
   ]);
 
@@ -54,18 +57,23 @@ const Mess = () => {
 
   const [menuData, setMenuData] = useState({});
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchMenu = async () => {
+      setLoading(true);
       try {
-        const raw = await api.getMessMenu();
+        const raw = await api.getMessMenu(activeBuildingId);
         const structured = { basic: {}, standard: {}, premium: {} };
-        raw.forEach(item => {
-          structured[item.plan][item.day] = {
-            breakfast: item.breakfast,
-            lunch: item.lunch,
-            dinner: item.dinner
-          };
-        });
+        if (Array.isArray(raw)) {
+          raw.forEach(item => {
+            if (structured[item.plan]) {
+              structured[item.plan][item.day] = {
+                breakfast: item.breakfast,
+                lunch: item.lunch,
+                dinner: item.dinner
+              };
+            }
+          });
+        }
         setMenuData(structured);
       } catch (err) {
         console.error('Failed to fetch mess menu:', err);
@@ -74,7 +82,7 @@ const Mess = () => {
       }
     };
     fetchMenu();
-  }, []);
+  }, [activeBuildingId]);
 
   const [tenants, setTenants] = useState([]);
   const [attendance, setAttendance] = useState({});
@@ -83,13 +91,38 @@ const Mess = () => {
     const fetchData = async () => {
       try {
         const t = await api.getTenants();
-        setTenants(t.filter(x => x.buildingId === activeBuildingId || !activeBuildingId));
+        const filteredTenants = t.filter(x => x.buildingId === activeBuildingId || !activeBuildingId);
+        setTenants(filteredTenants);
       } catch (err) {
         console.error(err);
       }
     };
     fetchData();
   }, [activeBuildingId]);
+
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      if (activeTab !== 'attendance' && activeTab !== 'dashboard') return;
+      setAttendanceLoading(true);
+      try {
+        const data = await api.getMessAttendance(activeBuildingId, todayISO);
+        const attMap = {};
+        data.forEach(item => {
+          attMap[item.tenantId] = {
+            breakfast: item.breakfast,
+            lunch: item.lunch,
+            dinner: item.dinner
+          };
+        });
+        setAttendance({ [todayISO]: attMap });
+      } catch (err) {
+        console.error('Failed to fetch attendance:', err);
+      } finally {
+        setAttendanceLoading(false);
+      }
+    };
+    fetchAttendance();
+  }, [activeBuildingId, activeTab, todayISO]);
 
   const [editForm, setEditForm] = useState({ breakfast: '', lunch: '', dinner: '' });
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -106,15 +139,16 @@ const Mess = () => {
       await api.updateMessMenu({
         plan: selectedMenuPlan,
         day: selectedDay,
+        buildingId: activeBuildingId,
         ...editForm
       });
 
-      setMenuData({ 
-        ...menuData, 
+      setMenuData({
+        ...menuData,
         [selectedMenuPlan]: {
           ...menuData[selectedMenuPlan],
           [selectedDay]: editForm
-        } 
+        }
       });
       setIsEditModalOpen(false);
     } catch (err) {
@@ -122,57 +156,86 @@ const Mess = () => {
     }
   };
 
-  const toggleAttendance = (tenantId, meal) => {
-    const dayAttendance = attendance[today] || {};
+  const toggleAttendance = async (tenantId, meal) => {
+    const dayAttendance = attendance[todayISO] || {};
     const tenantAttendance = dayAttendance[tenantId] || { breakfast: false, lunch: false, dinner: false };
-    
-    setAttendance({
-      ...attendance,
-      [today]: {
-        ...dayAttendance,
-        [tenantId]: {
-          ...tenantAttendance,
-          [meal]: !tenantAttendance[meal]
+    const newStatus = !tenantAttendance[meal];
+
+    try {
+      await api.updateMessAttendance({
+        tenantId,
+        buildingId: activeBuildingId,
+        date: todayISO,
+        meal,
+        status: newStatus
+      });
+
+      setAttendance({
+        ...attendance,
+        [todayISO]: {
+          ...dayAttendance,
+          [tenantId]: {
+            ...tenantAttendance,
+            [meal]: newStatus
+          }
         }
-      }
-    });
+      });
+    } catch (err) {
+      console.error('Failed to update attendance:', err);
+    }
   };
 
-  const markAllPresent = (meal) => {
-    const dayAttendance = attendance[today] || {};
-    const newDayAttendance = { ...dayAttendance };
-    
-    tenants.forEach(t => {
-      newDayAttendance[t.id] = {
-        ...(newDayAttendance[t.id] || { breakfast: false, lunch: false, dinner: false }),
-        [meal]: true
-      };
-    });
+  const markAllPresent = async (meal) => {
+    const tenantIds = tenants.map(t => t.id);
+    try {
+      await api.markAllMessAttendance({
+        buildingId: activeBuildingId,
+        date: todayISO,
+        meal,
+        tenantIds
+      });
 
-    setAttendance({
-      ...attendance,
-      [today]: newDayAttendance
-    });
+      const dayAttendance = attendance[todayISO] || {};
+      const newDayAttendance = { ...dayAttendance };
+
+      tenants.forEach(t => {
+        newDayAttendance[t.id] = {
+          ...(newDayAttendance[t.id] || { breakfast: false, lunch: false, dinner: false }),
+          [meal]: true
+        };
+      });
+
+      setAttendance({
+        ...attendance,
+        [todayISO]: newDayAttendance
+      });
+    } catch (err) {
+      console.error('Failed to mark all present:', err);
+    }
   };
 
   const getAttendanceStats = () => {
-    const dayAttendance = attendance[today] || {};
+    const dayAttendance = attendance[todayISO] || {};
     const stats = {
       breakfast: 0,
       lunch: 0,
       dinner: 0,
       total: tenants.length,
-      planUsage: { Premium: 0, Standard: 0, Basic: 0 }
+      planUsage: { premium: 0, standard: 0, basic: 0 }
     };
 
-    Object.keys(dayAttendance).forEach(tId => {
-      const att = dayAttendance[tId];
-      if (att.breakfast) stats.breakfast++;
-      if (att.lunch) stats.lunch++;
-      if (att.dinner) stats.dinner++;
-      
-      const tenant = tenants.find(t => t.id === tId);
-      if (tenant) stats.planUsage[tenant.plan]++;
+    tenants.forEach(tenant => {
+      const plan = (tenant.messPlan || 'basic').toLowerCase();
+      if (stats.planUsage.hasOwnProperty(plan)) {
+        stats.planUsage[plan]++;
+      }
+
+      const att = dayAttendance[tenant.id];
+      if (att) {
+        if (att.breakfast) stats.breakfast++;
+        if (att.lunch) stats.lunch++;
+        if (att.dinner) stats.dinner++;
+      }
     });
 
     return stats;
@@ -218,7 +281,7 @@ const Mess = () => {
             </div>
             <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #8b5cf6' }}>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Premium Usage</p>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{stats.planUsage.Premium}</h2>
+              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{stats.planUsage.premium}</h2>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Active premium subscribers</p>
             </div>
             <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #ef4444' }}>
@@ -277,7 +340,7 @@ const Mess = () => {
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
           <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
             <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-tertiary)' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>Resident Meal Attendance - {today}</h3>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>Resident Meal Attendance - {todayDay}</h3>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button onClick={() => markAllPresent('breakfast')} className="btn" style={{ fontSize: '0.75rem', background: '#f59e0b20', color: '#f59e0b', border: '1px solid #f59e0b40' }}>Mark All Breakfast</button>
                 <button onClick={() => markAllPresent('lunch')} className="btn" style={{ fontSize: '0.75rem', background: '#10b98120', color: '#10b981', border: '1px solid #10b98140' }}>Mark All Lunch</button>
@@ -297,17 +360,19 @@ const Mess = () => {
               </thead>
               <tbody>
                 {tenants.map(tenant => {
-                  const att = (attendance[today] && attendance[today][tenant.id]) || { breakfast: false, lunch: false, dinner: false };
+                  const att = (attendance[todayISO] && attendance[todayISO][tenant.id]) || { breakfast: false, lunch: false, dinner: false };
+                  const plan = (tenant.messPlan || 'basic');
+                  const planCapitalized = plan.charAt(0).toUpperCase() + plan.slice(1);
                   return (
-                    <tr key={tenant.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <tr key={tenant.id} style={{ borderBottom: '1px solid var(--border-color)', opacity: attendanceLoading ? 0.6 : 1 }}>
                       <td style={{ padding: '1.2rem', fontWeight: '700' }}>{tenant.name}</td>
                       <td style={{ padding: '1.2rem' }}>{tenant.room}</td>
                       <td style={{ padding: '1.2rem' }}>
-                        <span style={{ 
+                        <span style={{
                           padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '800',
-                          background: tenant.plan === 'Premium' ? '#8b5cf620' : tenant.plan === 'Standard' ? '#3b82f620' : '#94a3b820',
-                          color: tenant.plan === 'Premium' ? '#8b5cf6' : tenant.plan === 'Standard' ? '#3b82f6' : '#94a3b8'
-                        }}>{tenant.plan}</span>
+                          background: plan === 'premium' ? '#8b5cf620' : plan === 'standard' ? '#3b82f620' : '#94a3b820',
+                          color: plan === 'premium' ? '#8b5cf6' : plan === 'standard' ? '#3b82f6' : '#94a3b8'
+                        }}>{planCapitalized}</span>
                       </td>
                       <td style={{ padding: '1.2rem', textAlign: 'center' }}>
                         <button onClick={() => toggleAttendance(tenant.id, 'breakfast')} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: att.breakfast ? '#f59e0b' : 'var(--border-color)' }}>
@@ -337,22 +402,22 @@ const Mess = () => {
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
           {/* Sub-tabs for Daily/Weekly view */}
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-            <button 
-              onClick={() => setMenuView('daily')} 
-              style={{ 
-                display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.7rem 1.5rem', borderRadius: '12px', border: 'none', 
-                background: menuView === 'daily' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', 
-                color: menuView === 'daily' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer' 
+            <button
+              onClick={() => setMenuView('daily')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.7rem 1.5rem', borderRadius: '12px', border: 'none',
+                background: menuView === 'daily' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                color: menuView === 'daily' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer'
               }}
             >
               <List size={18} /> Daily Detail
             </button>
-            <button 
-              onClick={() => setMenuView('weekly')} 
-              style={{ 
-                display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.7rem 1.5rem', borderRadius: '12px', border: 'none', 
-                background: menuView === 'weekly' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', 
-                color: menuView === 'weekly' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer' 
+            <button
+              onClick={() => setMenuView('weekly')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.7rem 1.5rem', borderRadius: '12px', border: 'none',
+                background: menuView === 'weekly' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                color: menuView === 'weekly' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer'
               }}
             >
               <Grid size={18} /> Weekly Overview
@@ -404,10 +469,10 @@ const Mess = () => {
                   <h4 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem' }}>Select Plan</h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                     {plans.map(plan => (
-                      <button 
+                      <button
                         key={plan.id}
                         onClick={() => setSelectedMenuPlan(plan.id)}
-                        style={{ 
+                        style={{
                           padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)',
                           background: selectedMenuPlan === plan.id ? `${plan.color}15` : 'var(--bg-tertiary)',
                           borderColor: selectedMenuPlan === plan.id ? plan.color : 'var(--border-color)',
@@ -420,7 +485,7 @@ const Mess = () => {
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="card" style={{ padding: '1.5rem', background: 'var(--accent-primary)', color: 'white' }}>
                   <p style={{ fontSize: '0.85rem', fontWeight: '600', opacity: 0.8 }}>Active Menu</p>
                   <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginTop: '0.5rem' }}>{selectedDay}'s Menu</h3>
@@ -431,10 +496,10 @@ const Mess = () => {
               <div className="card" style={{ padding: '0', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
                   {days.map(day => (
-                    <button 
+                    <button
                       key={day}
                       onClick={() => setSelectedDay(day)}
-                      style={{ 
+                      style={{
                         padding: '1.2rem 2rem', background: 'transparent', border: 'none', borderBottom: selectedDay === day ? `3px solid var(--accent-primary)` : '3px solid transparent',
                         color: selectedDay === day ? 'var(--accent-primary)' : 'var(--text-secondary)',
                         fontWeight: selectedDay === day ? '800' : '600', fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s'
@@ -445,7 +510,7 @@ const Mess = () => {
                   ))}
                 </div>
 
-                <motion.div 
+                <motion.div
                   key={`${selectedMenuPlan}-${selectedDay}`}
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -485,7 +550,7 @@ const Mess = () => {
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
             {plans.map(plan => (
-              <motion.div key={plan.id} whileHover={{ y: -10 }} className="card" style={{ 
+              <motion.div key={plan.id} whileHover={{ y: -10 }} className="card" style={{
                 padding: '2.5rem', borderRadius: '32px', position: 'relative', overflow: 'hidden',
                 border: plan.popular ? `3px solid ${plan.color}` : '1px solid var(--border-color)',
                 background: plan.popular ? `linear-gradient(135deg, var(--bg-secondary) 0%, ${plan.color}05 100%)` : 'var(--bg-secondary)'
@@ -515,8 +580,8 @@ const Mess = () => {
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <button onClick={() => setSelectedPlan(plan)} className="btn" style={{ flex: 1, border: '1px solid var(--border-color)', fontWeight: '800', borderRadius: '16px' }}>Specs</button>
-                  <button 
-                    className="btn btn-primary" 
+                  <button
+                    className="btn btn-primary"
                     style={{ flex: 2, fontWeight: '800', borderRadius: '16px', background: plan.color }}
                     onClick={() => {
                       if (plan.active) {
@@ -531,7 +596,7 @@ const Mess = () => {
               </motion.div>
             ))}
           </div>
-          
+
           <div className="card" style={{ padding: '2.5rem', borderRadius: '24px' }}>
             <h3 style={{ fontSize: '1.4rem', fontWeight: '900', marginBottom: '2rem' }}>Administrative Controls</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
@@ -555,28 +620,28 @@ const Mess = () => {
       <AnimatePresence>
         {selectedPlan && (
           <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }} 
-              onClick={() => setSelectedPlan(null)} 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
+              onClick={() => setSelectedPlan(null)}
             />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
-              animate={{ opacity: 1, scale: 1, y: 0 }} 
-              exit={{ opacity: 0, scale: 0.95, y: 20 }} 
-              style={{ 
-                position: 'relative', 
-                width: '100%', 
-                maxWidth: '550px', 
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              style={{
+                position: 'relative',
+                width: '100%',
+                maxWidth: '550px',
                 maxHeight: '90vh',
                 overflowY: 'auto',
-                background: 'var(--bg-primary)', 
-                padding: '2.5rem', 
-                borderRadius: '28px', 
-                zIndex: 1001, 
-                boxShadow: 'var(--shadow-2xl)', 
+                background: 'var(--bg-primary)',
+                padding: '2.5rem',
+                borderRadius: '28px',
+                zIndex: 1001,
+                boxShadow: 'var(--shadow-2xl)',
                 border: '1px solid var(--border-color)',
                 scrollbarWidth: 'none', /* Firefox */
                 msOverflowStyle: 'none' /* IE/Edge */
@@ -597,7 +662,7 @@ const Mess = () => {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: '1.7', fontWeight: '500' }}>{selectedPlan.description}</p>
-                
+
                 <div style={{ background: 'rgba(99, 102, 241, 0.03)', padding: '1.5rem', borderRadius: '20px', border: '1px solid rgba(99, 102, 241, 0.1)' }}>
                   <h4 style={{ fontSize: '0.85rem', fontWeight: '800', marginBottom: '1.2rem', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <CheckCircle size={16} color="var(--accent-primary)" /> CORE BENEFITS
@@ -640,15 +705,15 @@ const Mess = () => {
               <form onSubmit={handleSaveMenu} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div>
                   <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Breakfast</label>
-                  <input value={editForm.breakfast} onChange={e => setEditForm({...editForm, breakfast: e.target.value})} style={inputStyle} required />
+                  <input value={editForm.breakfast} onChange={e => setEditForm({ ...editForm, breakfast: e.target.value })} style={inputStyle} required />
                 </div>
                 <div>
                   <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Lunch</label>
-                  <input value={editForm.lunch} onChange={e => setEditForm({...editForm, lunch: e.target.value})} style={inputStyle} required />
+                  <input value={editForm.lunch} onChange={e => setEditForm({ ...editForm, lunch: e.target.value })} style={inputStyle} required />
                 </div>
                 <div>
                   <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Dinner</label>
-                  <input value={editForm.dinner} onChange={e => setEditForm({...editForm, dinner: e.target.value})} style={inputStyle} required />
+                  <input value={editForm.dinner} onChange={e => setEditForm({ ...editForm, dinner: e.target.value })} style={inputStyle} required />
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                   <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem' }}>Save Menu</button>
@@ -668,8 +733,8 @@ const Mess = () => {
               <h2 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '1rem' }}>Confirm Deactivation</h2>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Are you sure you want to deactivate the <b>{planToDeactivate?.name}</b>? This will hide it from the tenant portal.</p>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <button 
-                  className="btn" 
+                <button
+                  className="btn"
                   style={{ flex: 1, background: '#EF4444', color: 'white' }}
                   onClick={() => {
                     setPlans(plans.map(p => p.id === planToDeactivate.id ? { ...p, active: false } : p));

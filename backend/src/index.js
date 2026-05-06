@@ -32,6 +32,7 @@ const messRoutes = require('./routes/messRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const ownerRoutes = require('./routes/ownerRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
+const staffRoutes = require('./routes/staffRoutes');
 
 // Pre-load all models to ensure they are registered for population
 require('./models/User');
@@ -39,7 +40,9 @@ require('./models/Tenant');
 require('./models/RoomTransfer');
 require('./models/Complaint');
 require('./models/MessMenu');
+require('./models/MessAttendance');
 require('./models/Payment');
+require('./models/Staff');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -57,6 +60,7 @@ app.use('/api/mess', messRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/owner', ownerRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/staff', staffRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

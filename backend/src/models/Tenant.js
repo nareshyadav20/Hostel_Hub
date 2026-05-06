@@ -5,8 +5,10 @@ const tenantSchema = new mongoose.Schema({
   email: { type: String, required: true },
   phone: { type: String, required: true },
   emergencyContact: { type: String, required: true },
-  room: { type: String }, // Can be roomId or room Number string for legacy
-  buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
+   room: { type: String }, // Room number/name
+   roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
+   bedId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bed' },
+   buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   rent: { type: Number },
   checkInDate: { type: Date, default: Date.now },
   status: { 

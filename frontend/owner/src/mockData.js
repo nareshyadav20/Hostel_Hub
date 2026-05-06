@@ -158,12 +158,49 @@ export const api = {
     const res = await axios.patch(`${API_URL}/room-transfers/${id}`, { status });
     return handleId(res.data);
   },
-  getMessMenu: async () => {
-    const res = await axios.get(`${API_URL}/mess/menu`);
+  getMessMenu: async (bId) => {
+    const res = await axios.get(`${API_URL}/mess/menu`, { params: { buildingId: bId } });
     return handleId(res.data);
   },
   updateMessMenu: async (data) => {
+    // data should include buildingId
     const res = await axios.put(`${API_URL}/mess/menu`, data);
+    return handleId(res.data);
+  },
+  getMessAttendance: async (bId, date) => {
+    const res = await axios.get(`${API_URL}/mess/attendance`, { params: { buildingId: bId, date } });
+    return res.data;
+  },
+  updateMessAttendance: async (data) => {
+    const res = await axios.put(`${API_URL}/mess/attendance`, data);
+    return res.data;
+  },
+  markAllMessAttendance: async (data) => {
+    const res = await axios.post(`${API_URL}/mess/attendance/mark-all`, data);
+    return res.data;
+  },
+  // Staff Management
+  getStaff: async (bId) => {
+    const res = await axios.get(`${API_URL}/staff`, { params: { buildingId: bId } });
+    if (res.data && res.data.staffList) {
+      res.data.staffList = res.data.staffList.map(s => ({ ...s, id: s._id }));
+    }
+    return res.data;
+  },
+  addStaff: async (data) => {
+    const res = await axios.post(`${API_URL}/staff`, data);
+    return handleId(res.data);
+  },
+  updateStaff: async (id, data) => {
+    const res = await axios.put(`${API_URL}/staff/${id}`, data);
+    return handleId(res.data);
+  },
+  deleteStaff: async (id) => {
+    const res = await axios.delete(`${API_URL}/staff/${id}`);
+    return res.data;
+  },
+  addStaffActivity: async (id, action) => {
+    const res = await axios.post(`${API_URL}/staff/${id}/activity`, { action });
     return handleId(res.data);
   },
   getSettings: async () => {
@@ -230,6 +267,10 @@ export const api = {
   },
   addTenant: async (data) => {
     const res = await axios.post(`${API_URL}/tenants`, data);
+    return handleId(res.data);
+  },
+  bulkAddTenants: async (tenants) => {
+    const res = await axios.post(`${API_URL}/tenants/bulk`, { tenants });
     return handleId(res.data);
   },
   updateTenant: async (id, data) => {

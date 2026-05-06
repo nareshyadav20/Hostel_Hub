@@ -63,4 +63,14 @@ const getMyPayments = async (req, res) => {
   }
 };
 
-module.exports = { createPayment, getAllPayments, getMyPayments };
+const updatePaymentStatus = async (req, res) => {
+  try {
+    const payment = await Payment.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }).populate('tenantId');
+    if (!payment) return res.status(404).json({ message: 'Payment not found' });
+    res.status(200).json(payment);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { createPayment, getAllPayments, getMyPayments, updatePaymentStatus };
