@@ -1,0 +1,38 @@
+/* ─── Listing Page Styles ─── */
+.listing-modern {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: #F8FAFC;
+  min-height: 100vh;
+  padding: 2rem 4rem 6rem;
+}
+
+.listing-modern button, 
+.listing-modern div[onClick] {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.listing-modern button:hover {
+  transform: translateY(-6px);
+}
+
+.listing-modern button:active {
+  transform: scale(0.94);
+}
+
+.listing-modern img {
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.listing-modern img:hover {
+  transform: scale(1.05);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.listing-modern main > section {
+  animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+}

@@ -42,9 +42,9 @@ const Login = () => {
           <h1>Livora</h1>
           <p>Sign in to your digital hostel home</p>
         </div>
-        
+
         {error && <div className="error-message" style={{ color: 'var(--accent-error)', textAlign: 'center', marginBottom: '1.5rem', padding: '0.8rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px', fontSize: '0.9rem' }}>{error}</div>}
-        
+
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="input-group">
             <label>Email Address</label>
@@ -55,17 +55,17 @@ const Login = () => {
                   <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
               </span>
-              <input 
-                type="email" 
-                placeholder="name@example.com" 
+              <input
+                type="email"
+                placeholder="name@example.com"
                 style={{ paddingLeft: '3rem' }}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required 
+                required
               />
             </div>
           </div>
-          
+
           <div className="input-group">
             <label>Password</label>
             <div style={{ position: 'relative' }}>
@@ -75,26 +75,26 @@ const Login = () => {
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
               </span>
-              <input 
-                type="password" 
-                placeholder="••••••••" 
+              <input
+                type="password"
+                placeholder="••••••••"
                 style={{ paddingLeft: '3rem' }}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required 
+                required
               />
             </div>
           </div>
-          
+
           <div style={{ textAlign: 'right' }}>
             <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: 'var(--accent-primary)', fontWeight: '600' }}>Forgot Password?</Link>
           </div>
-          
+
           <button type="submit" className="auth-btn" disabled={loading}>
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
-        
+
         <div className="auth-footer">
           Don't have an account? <Link to="/signup">Create account</Link>
         </div>

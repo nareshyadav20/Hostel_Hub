@@ -1,10 +1,10 @@
-const Complaint = require('../models/Complaint');
-const Tenant = require('../models/Tenant');
+const Complaint = require('../models/tenant/Complaint');
+const { getOrCreateTenant } = require('../utils/tenantHelper');
 
 exports.createComplaint = async (req, res) => {
   try {
     const { title, description, category } = req.body;
-    const tenant = await Tenant.findOne({ email: req.user.email });
+    const tenant = await getOrCreateTenant(req.user);
     if (!tenant) return res.status(404).json({ message: 'Tenant profile not found' });
 
     const complaint = await Complaint.create({
@@ -38,5 +38,17 @@ exports.updateComplaintStatus = async (req, res) => {
     res.status(200).json(complaint);
   } catch (error) {
     res.status(500).json({ message: 'Failed to update complaint', error: error.message });
+  }
+};
+
+exports.getAllComplaints = async (req, res) => {
+  try {
+    // Populate tenant info so owner can see details
+    const complaints = await Complaint.find()
+      .populate('tenant', 'name room email')
+      .sort({ createdAt: -1 });
+    res.status(200).json(complaints);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch all complaints', error: error.message });
   }
 };

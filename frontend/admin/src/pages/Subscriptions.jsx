@@ -1,10 +1,4 @@
 import React, { useState } from 'react';
-import { 
-  Check, Info, Zap, Shield, Crown, Edit, 
-  ArrowRight, Users, Settings, Database 
-} from 'lucide-react';
-import Modal from '../components/Modal';
-import './Subscriptions.css';
 
 const Subscriptions = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -17,8 +11,20 @@ const Subscriptions = () => {
       name: 'Basic',
       price: isAnnual ? 9500 : 999,
       limit: 'Up to 50 Beds',
-      icon: <Settings />,
-      features: ['Attendance Tracking', 'Cleaning Schedules', 'Member Directory', 'Complaint Portal'],
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      ),
+      features: [
+        '3 Full Meals / Day (Breakfast, Lunch & Dinner)',
+        'Attendance Tracking',
+        'Cleaning Schedules',
+        'Member Directory',
+        'Complaint Portal'
+      ],
+      addon: { label: '🍛 2 Customization Curries', price: 500 },
       color: 'var(--accent-primary)',
       badge: 'Starter'
     },
@@ -27,8 +33,14 @@ const Subscriptions = () => {
       name: 'Standard',
       price: isAnnual ? 23000 : 2499,
       limit: 'Up to 200 Beds',
-      icon: <Zap />,
-      features: ['Everything in Basic', 'Inventory Management', 'Staff Management Portal', 'Revenue Analytics'],
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+      ),
+      features: ['Everything in Basic', 'Full Meal Customization', 'Inventory Management', 'Staff Management Portal', 'Revenue Analytics', 'SMS / WhatsApp Alerts'],
       color: 'var(--accent-secondary)',
       popular: true,
       badge: 'Best Value'
@@ -38,10 +50,17 @@ const Subscriptions = () => {
       name: 'Enterprise',
       price: isAnnual ? 45000 : 4999,
       limit: 'Unlimited Beds',
-      icon: <Crown />,
-      features: ['Everything in Standard', 'Multi-property Support', 'Dedicated Support', 'API Access'],
-      color: '#8b5cf6',
-      badge: 'Custom'
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+          <path d="M2 17l10 5 10-5"></path>
+          <path d="M2 12l10 5 10-5"></path>
+        </svg>
+      ),
+      features: ['Everything in Standard', 'Multi-property Support', 'Dedicated Account Manager', 'API Access & Webhooks', 'Custom Meal Menus', 'Priority 24x7 Support'],
+      color: '#0f172a',
+      popular: false,
+      isEnterprise: true
     }
   ];
 
@@ -90,33 +109,46 @@ const Subscriptions = () => {
               <p className="limit-info">{plan.limit}</p>
             </div>
 
-            <div className="features-section">
-              <p className="features-title">Core Entitlements</p>
-              <ul className="premium-features-list">
-                {plan.features.map((feature, idx) => (
-                  <li key={idx}>
-                    <Check size={16} color="var(--accent-primary)" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <p className="plan-limit">{plan.limit}</p>
 
-            <div className="plan-actions">
-              <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => handleEditPlan(plan)}>
-                <Edit size={16} /> Edit Plan Details
-              </button>
-              <button className="btn btn-ghost" style={{ width: '100%', marginTop: '0.5rem' }}>
-                View Entitlement Logs
-              </button>
-            </div>
+            {plan.addon && (
+              <div style={{
+                background: `${plan.color}18`,
+                border: `1px dashed ${plan.color}`,
+                borderRadius: '10px',
+                padding: '0.55rem 0.9rem',
+                marginBottom: '1rem',
+                fontSize: '0.78rem',
+                fontWeight: '700',
+                color: plan.color,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span>{plan.addon.label}</span>
+                <span style={{ opacity: 0.8 }}>+₹{plan.addon.price}/mo</span>
+              </div>
+            )}
+
+            <ul className="plan-features">
+              {plan.features.map((feature, idx) => (
+                <li key={idx}>
+                  <CheckIcon />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+
+            <button className="plan-button">
+              {plan.isEnterprise ? 'Contact Sales' : 'Edit Plan Details'}
+            </button>
           </div>
         ))}
       </div>
 
       {/* Edit Plan Modal */}
-      <Modal 
-        isOpen={activeModal === 'edit-plan'} 
+      <Modal
+        isOpen={activeModal === 'edit-plan'}
         onClose={() => setActiveModal(null)}
         title={`Configure ${selectedPlan?.name} Tier`}
         footer={

@@ -21,18 +21,17 @@ const Signup = () => {
     setError('');
 
     try {
-      const response = await API.post('/auth/register', { 
-        name: formData.name, 
-        email: formData.email, 
+      const response = await API.post('/auth/register', {
+        name: formData.name,
+        email: formData.email,
         password: formData.password,
         phone: formData.mobile,
         role: 'TENANT'
       });
-      
-      const { user, token } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
+
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
@@ -56,10 +55,10 @@ const Signup = () => {
         </div>
 
         {error && <div className="error-message" style={{ color: 'var(--accent-error)', textAlign: 'center', marginBottom: '1.5rem', padding: '0.8rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px' }}>{error}</div>}
-        
+
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-            
+
             <div className="input-group">
               <label>Full Name</label>
               <div style={{ position: 'relative' }}>
@@ -102,13 +101,13 @@ const Signup = () => {
                 <input type="password" name="password" placeholder="••••••••" value={formData.password} onChange={handleChange} required style={{ paddingLeft: '3rem', width: '100%' }} />
               </div>
             </div>
-            
+
             <button type="submit" className="auth-btn" disabled={loading} style={{ marginTop: '1rem' }}>
               {loading ? 'Creating Account...' : 'Continue'}
             </button>
           </div>
         </form>
-        
+
         <div className="auth-footer">
           Already have an account? <Link to="/login">Sign In</Link>
         </div>

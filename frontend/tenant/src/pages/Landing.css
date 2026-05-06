@@ -4,6 +4,7 @@
   background: var(--bg-primary);
   position: relative;
   overflow-x: hidden;
+  padding-top: 90px;
 }
 
 .landing-header {
@@ -12,8 +13,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  width: 100%;
   background: var(--bg-primary);
   z-index: 1000;
   border-bottom: 1px solid var(--border-color);
@@ -57,8 +60,8 @@
 }
 
 .zolo-search-trigger {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1rem 1.5rem;
   display: flex;
@@ -82,7 +85,7 @@
 }
 
 .zolo-search-trigger span {
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 1rem;
 }
 
@@ -104,7 +107,7 @@
 }
 
 .search-overlay-content {
-  background: white;
+  background: var(--bg-secondary);
   width: 90%;
   max-width: 900px;
   max-height: 90vh;
@@ -114,6 +117,7 @@
   position: relative;
   animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   padding: 2.5rem;
+  border: 1px solid var(--border-color);
 }
 
 .overlay-header {
@@ -126,7 +130,7 @@
 .overlay-header h2 {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #333;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -150,7 +154,7 @@
 }
 
 .close-btn:hover {
-  background: #f3f4f6;
+  background: var(--bg-tertiary);
 }
 
 .filter-row {
@@ -173,39 +177,44 @@
 }
 
 .filter-chip.coliving {
-  background: #e0f7ff;
-  color: #0077a3;
+  background: rgba(0, 176, 240, 0.1);
+  color: #00b0f0;
 }
 
 .filter-chip.student {
-  background: #f3f4f6;
-  color: #4b5563;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
   position: relative;
 }
 
 .filter-chip.gender {
-  background: #ffeedd;
-  color: #9a5a00;
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
   flex: 1;
   min-width: 150px;
   justify-content: space-between;
 }
 
 .filter-chip.date {
-  background: #ffe0ed;
-  color: #a3004d;
+  background: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
   flex: 1;
   min-width: 150px;
   justify-content: space-between;
 }
 
 .filter-chip.amenities {
-  background: #e0d8ff;
-  color: #4d00a3;
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
   flex: 1;
   min-width: 150px;
   justify-content: space-between;
 }
+
+[data-theme='dark'] .filter-chip.coliving { background: rgba(0, 176, 240, 0.2); }
+[data-theme='dark'] .filter-chip.gender { background: rgba(245, 158, 11, 0.2); }
+[data-theme='dark'] .filter-chip.date { background: rgba(244, 63, 94, 0.2); }
+[data-theme='dark'] .filter-chip.amenities { background: rgba(139, 92, 246, 0.2); }
 
 .new-badge {
   background: #facc15;
@@ -226,7 +235,7 @@
 .input-section label {
   display: block;
   font-weight: 700;
-  color: #4b5563;
+  color: var(--text-secondary);
   margin-bottom: 0.8rem;
   font-size: 1rem;
 }
@@ -234,7 +243,9 @@
 .zolo-input {
   width: 100%;
   padding: 1rem 1.2rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   border-radius: 12px;
   font-size: 1rem;
   outline: none;
@@ -254,11 +265,11 @@
 
 .locality-chip {
   padding: 0.6rem 1.2rem;
-  background: #f3f4f6;
+  background: var(--bg-tertiary);
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #4b5563;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -336,7 +347,7 @@
 .filters-sidebar {
   width: 360px;
   flex-shrink: 0;
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 12px;
   border: 1px solid #eee;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
@@ -377,7 +388,7 @@
 .sidebar-header h3 {
   font-size: 1.1rem;
   font-weight: 800;
-  color: #333;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -393,7 +404,7 @@
 .filter-section h4 {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #4b5563;
+  color: var(--text-secondary);
   margin-bottom: 1rem;
   margin-top: 0;
 }
@@ -405,7 +416,7 @@
   gap: 0.8rem;
   margin-bottom: 0.8rem;
   font-size: 0.85rem;
-  color: #555;
+  color: var(--text-secondary);
   cursor: pointer;
   user-select: none;
 }
@@ -493,8 +504,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
   padding: 0.6rem 0.8rem;
   border-radius: 8px;
   margin-bottom: 1rem;

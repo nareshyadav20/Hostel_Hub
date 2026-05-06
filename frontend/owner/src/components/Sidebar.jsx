@@ -12,7 +12,8 @@ import {
   PackageOpen, 
   BarChart3, 
   Settings, 
-  BellRing 
+  BellRing,
+  RefreshCw
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -29,6 +30,7 @@ const Sidebar = () => {
     { name: 'Staff', path: `/owner/building/${buildingId}/staff`, icon: <Briefcase {...iconProps} /> },
     { name: 'Mess Menu', path: `/owner/building/${buildingId}/mess`, icon: <UtensilsCrossed {...iconProps} /> },
     { name: 'Complaints', path: `/owner/building/${buildingId}/complaints`, icon: <MessageSquareWarning {...iconProps} /> },
+    { name: 'Transfers', path: `/owner/building/${buildingId}/transfers`, icon: <RefreshCw {...iconProps} /> },
     { name: 'Inventory', path: `/owner/building/${buildingId}/inventory`, icon: <PackageOpen {...iconProps} /> },
     { name: 'Reports', path: `/owner/building/${buildingId}/reports`, icon: <BarChart3 {...iconProps} /> },
     { name: 'Settings', path: `/owner/building/${buildingId}/settings`, icon: <Settings {...iconProps} /> },

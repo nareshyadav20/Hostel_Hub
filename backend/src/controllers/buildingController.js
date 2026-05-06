@@ -5,8 +5,27 @@ const mongoose = require('mongoose');
 
 const createBuilding = async (req, res) => {
   try {
-    const { name, address, description, amenities, images } = req.body;
-    const building = await Building.create({ name, address, description, amenities: amenities||[], images: images||[] });
+    const { 
+      name, address, locationCity, description, amenities, images, 
+      startingPrice, genderType, category, rating, popularityLabel,
+      policies, staffInfo 
+    } = req.body;
+
+    const building = await Building.create({ 
+      name, 
+      address, 
+      locationCity: locationCity || 'Bengaluru',
+      description, 
+      amenities: amenities||[], 
+      images: images||[],
+      startingPrice: startingPrice || 5000,
+      genderType: genderType || 'Mixed',
+      category: category || 'Student',
+      rating: rating || 4.5,
+      popularityLabel,
+      policies: policies || { smoking: 'Not Allowed', alcohol: 'Not Allowed', pets: 'No', visitors: 'Till 8 PM' },
+      staffInfo
+    });
     res.status(201).json(building);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
@@ -104,7 +123,10 @@ const bulkCreateBuildings = async (req, res) => {
 
 const getBuildingById = async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(404).json({ error: 'Building not found' });
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ error: 'Invalid building ID format' });
+    }
     const building = await Building.findById(req.params.id).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
     if (!building) return res.status(404).json({ error: 'Building not found' });
     res.status(200).json(building);

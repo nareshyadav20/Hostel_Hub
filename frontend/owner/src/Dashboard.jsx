@@ -1,50 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { Building, Wallet, Users, ArrowUpRight, ArrowDownRight, Zap, X, UserPlus, CheckCircle, AlertCircle, TrendingUp, Download, LogIn, LogOut, Settings, Bell, Utensils } from 'lucide-react';
+import { Building, Wallet, Users, ArrowUpRight, ArrowDownRight, Zap, X, UserPlus, CheckCircle, AlertCircle, TrendingUp, Download, LogIn, LogOut, Settings, Bell, Utensils, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useParams, Link } from 'react-router-dom';
 import { api } from './mockData';
-import { HealthScoreCard, ComplaintsPanel, MessPanel, StaffPanel, InsightsPanel, ActivityFeed, DocumentTracker, TenantOverviewPanel, DashboardModal } from './DashboardPanels';
-
-const fallbacks = {
-  summary: { totalBeds:150, occupiedBeds:120, vacantBeds:30, occupancyRate:80, todayRevenue:15000, expectedMonthlyRevenue:450000, pendingPaymentsCount:5, pendingPaymentsAmount:32500, maintenanceRooms:2, healthScore:72, buildingCount:3, checkInsToday:3, checkOutsToday:1, rentDueToday:5, complaintsToday:2, newTenantsThisMonth:9, renewalsPending:4, tenantsLeavingSoon:2 },
-  revenue: { dailyRevenue:[{name:'Mon',expected:13000,actual:11500},{name:'Tue',expected:13000,actual:13000},{name:'Wed',expected:13000,actual:10000},{name:'Thu',expected:13000,actual:14000},{name:'Fri',expected:13000,actual:12500},{name:'Sat',expected:13000,actual:9000},{name:'Sun',expected:13000,actual:14500}], monthlyRevenue:[{name:'Jan',revenue:850000,expenses:300000},{name:'Feb',revenue:920000,expenses:320000},{name:'Mar',revenue:1050000,expenses:340000},{name:'Apr',revenue:1200000,expenses:360000},{name:'May',revenue:1350000,expenses:380000},{name:'Jun',revenue:1500000,expenses:400000}], rentMetrics:{ pendingRent:87500, collectedRent:1462500, securityDepositsHeld:3250000, totalIncome:1550000, totalExpenses:480000, netProfit:1070000 } },
-  occupancy: { buildingWise:[], floorWise:[] },
-  alerts: { alerts:[], insights:[] },
-  complaints: { total:24, open:9, resolved:15, highPriority:4, avgResolutionHours:4.2, categories:[{name:'Maintenance',count:10},{name:'Cleaning',count:6},{name:'Food',count:5},{name:'Others',count:3}], pending24h:3 },
-  mess: { mealsServedToday:187, avgFoodRating:3.8, dailyMessCost:14500, monthlyMessCost:435000, menuToday:{breakfast:'Idli Sambar, Tea',lunch:'Rice, Dal, Sabzi, Roti',dinner:'Chapati, Paneer Curry, Salad'}, mealTrend:[{name:'Mon',served:180},{name:'Tue',served:192},{name:'Wed',served:175},{name:'Thu',served:188},{name:'Fri',served:195},{name:'Sat',served:160},{name:'Sun',served:145}], inventory:[{item:'Rice',stock:15,unit:'kg',alert:true},{item:'Dal',stock:40,unit:'kg',alert:false},{item:'Cooking Oil',stock:8,unit:'L',alert:true}], foodComplaints:{total:12,quality:5,hygiene:3,quantity:2,delay:2} },
-  staff: { totalStaff:8, tasksAssigned:34, tasksCompleted:28, tasksPending:6, avgResolutionHours:3.1, efficiencyScore:82, staffList:[{name:'Ramesh Kumar',role:'Maintenance',score:95,tasks:10},{name:'Suresh Babu',role:'Cleaning',score:88,tasks:8},{name:'Pradeep Singh',role:'Security',score:72,tasks:7},{name:'Anitha Devi',role:'Mess',score:65,tasks:9}] },
-};
+import { HealthScoreCard, ComplaintsPanel, MessPanel, StaffPanel, InsightsPanel, ActivityFeed, DocumentTracker, TenantOverviewPanel, DashboardModal, InfrastructureOverview } from './DashboardPanels';
 
 const iStyle = { padding:'0.75rem', borderRadius:'10px', border:'1px solid var(--border-color)', background:'var(--bg-tertiary)', color:'var(--text-primary)', fontSize:'0.9rem', outline:'none', width:'100%', boxSizing:'border-box' };
 const lStyle = { fontSize:'0.82rem', fontWeight:'700', color:'var(--text-secondary)', marginBottom:'0.4rem', display:'block' };
 
 function Dashboard() {
+  const { buildingId } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const [modal, setModal] = useState(null); // 'addTenant' | 'assignBed' | 'markPaid' | 'complaint'
   const [formMsg, setFormMsg] = useState('');
+  const [settings, setSettings] = useState(null);
   const [d, setD] = useState({ summary:null, revenue:null, occupancy:null, alerts:null, complaints:null, mess:null, staff:null });
 
   useEffect(() => {
     (async () => {
+      setIsLoading(true);
       try {
-        const [summary, revenue, occupancy, alerts, complaints, mess, staff] = await Promise.all([
-          api.getDashboardSummary().catch(() => fallbacks.summary),
-          api.getDashboardRevenue().catch(() => fallbacks.revenue),
-          api.getDashboardOccupancy().catch(() => fallbacks.occupancy),
-          api.getDashboardAlerts().catch(() => fallbacks.alerts),
-          api.getDashboardComplaints().catch(() => fallbacks.complaints),
-          api.getDashboardMess().catch(() => fallbacks.mess),
-          api.getDashboardStaff().catch(() => fallbacks.staff),
+        const [summary, revenue, occupancy, alerts, complaints, mess, staff, sData] = await Promise.all([
+          api.getDashboardSummary(buildingId),
+          api.getDashboardRevenue(buildingId),
+          api.getDashboardOccupancy(buildingId),
+          api.getDashboardAlerts(buildingId),
+          api.getDashboardComplaints(buildingId),
+          api.getDashboardMess(buildingId),
+          api.getDashboardStaff(buildingId),
+          api.getSettings()
         ]);
         setD({ summary, revenue, occupancy, alerts, complaints, mess, staff });
+        setSettings(sData);
       } catch(e) {
-        console.error(e);
-        setD(fallbacks);
+        console.error('Dashboard Fetch Error:', e);
       } finally {
         setIsLoading(false);
       }
     })();
-  }, []);
+  }, [buildingId]);
 
   if (isLoading || !d.summary) return (
     <div className="dashboard-container">
@@ -73,11 +68,10 @@ function Dashboard() {
     { label:'Today Revenue', value:`₹${(summary.todayRevenue/1000).toFixed(1)}k`, sub:'Collected', color:'#10B981', bg:'#DCFCE7', icon:<Wallet size={18}/>, up:true },
     { label:'Monthly Est.', value:`₹${(summary.expectedMonthlyRevenue/100000).toFixed(1)}L`, sub:'Expected', color:'#F59E0B', bg:'#FEF3C7', icon:<Wallet size={18}/>, up:true },
     { label:'Pending Dues', value:summary.pendingPaymentsCount, sub:`₹${(summary.pendingPaymentsAmount/1000).toFixed(0)}k`, color:'#EF4444', bg:'#FEE2E2', icon:<AlertCircle size={18}/>, up:false },
-    { label:'Active Staff', value:staff?.totalStaff ?? 0, sub:`${staff?.tasksCompleted ?? 0} tasks done`, color:'#0EA5E9', bg:'#E0F2FE', icon:<Users size={18}/>, up:true },
-    { label:'Staff Efficiency', value:`${staff?.efficiencyScore ?? 0}%`, sub:`${staff?.tasksPending ?? 0} tasks pending`, color: (staff?.efficiencyScore ?? 0) >= 80 ? '#10B981' : '#F59E0B', bg: (staff?.efficiencyScore ?? 0) >= 80 ? '#DCFCE7' : '#FEF3C7', icon:<TrendingUp size={18}/>, up:(staff?.efficiencyScore ?? 0)>=80 },
-    { label:'Hostel Performance', value:`${summary.healthScore}/100`, sub: summary.healthScore>=75?'Healthy':summary.healthScore>=50?'Moderate':'At Risk', color: summary.healthScore>=75?'#10B981':summary.healthScore>=50?'#F59E0B':'#EF4444', bg: summary.healthScore>=75?'#DCFCE7':summary.healthScore>=50?'#FEF3C7':'#FEE2E2', icon:<TrendingUp size={18}/>, up:summary.healthScore>=60 },
-    { label:'Mess Stock Alert', value:lowStockCount, sub: lowStockCount>0?`${lowStockCount} items low`:'Stock OK', color: lowStockCount>0?'#EF4444':'#10B981', bg: lowStockCount>0?'#FEE2E2':'#DCFCE7', icon:<AlertCircle size={18}/>, up:lowStockCount===0 },
-    { label:'Staff Complaints', value:complaints?.open ?? 0, sub:`${complaints?.highPriority ?? 0} high priority`, color: (complaints?.open ?? 0) > 5 ? '#EF4444' : (complaints?.open ?? 0) > 2 ? '#F59E0B' : '#10B981', bg: (complaints?.open ?? 0) > 5 ? '#FEE2E2' : (complaints?.open ?? 0) > 2 ? '#FEF3C7' : '#DCFCE7', icon:<AlertCircle size={18}/>, up:(complaints?.open ?? 0)===0 },
+    { label:'Total Tenants', value:summary.totalTenants ?? 0, sub:'Active in portal', color:'#10B981', bg:'#DCFCE7', icon:<Users size={18}/>, up:true },
+    { label:'Staff Efficiency', value:`${staff?.efficiencyScore ?? 0}%`, sub:`${staff?.tasksCompleted ?? 0} tasks done`, color:'#0EA5E9', bg:'#E0F2FE', icon:<TrendingUp size={18}/>, up:(staff?.efficiencyScore ?? 0)>=80 },
+    { label:'Performance', value:`${summary.healthScore}/100`, sub: summary.healthScore>=75?'Healthy':summary.healthScore>=50?'Moderate':'At Risk', color: summary.healthScore>=75?'#10B981':summary.healthScore>=50?'#F59E0B':'#EF4444', bg: summary.healthScore>=75?'#DCFCE7':summary.healthScore>=50?'#FEF3C7':'#FEE2E2', icon:<TrendingUp size={18}/>, up:summary.healthScore>=60 },
+    { label:'Mess Alerts', value:lowStockCount, sub: lowStockCount>0?`${lowStockCount} items low`:'Stock OK', color: lowStockCount>0?'#EF4444':'#10B981', bg: lowStockCount>0?'#FEE2E2':'#DCFCE7', icon:<AlertCircle size={18}/>, up:lowStockCount===0 },
     { label:'Mess Subscriptions', value:142, sub:'₹1.8L monthly revenue', color:'#8B5CF6', bg:'#EDE9FE', icon:<Utensils size={18}/>, up:true, popular:'Premium' },
   ];
 
@@ -100,12 +94,22 @@ function Dashboard() {
       {/* HEADER */}
       <header style={{ marginBottom:'2rem', display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:'1rem' }}>
         <div>
-          <h1 style={{ fontSize:'2rem', fontWeight:'900', color:'var(--text-primary)', letterSpacing:'-0.03em', margin:0 }}>Command Center</h1>
-          <p style={{ color:'var(--text-secondary)', fontSize:'0.95rem', marginTop:'0.3rem' }}>Real-time business insights & operational control</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.5rem' }}>
+            {buildingId && (
+              <Link to="/owner/portfolio" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent-primary)', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '700' }}>
+                <ArrowLeft size={16} /> Back to Overview
+              </Link>
+            )}
+          </div>
+          <h1 style={{ fontSize:'2rem', fontWeight:'900', color:'var(--text-primary)', letterSpacing:'-0.03em', margin:0 }}>
+            {buildingId === 'b1' ? 'Alpha Tower' : buildingId === 'b2' ? 'Beta Block' : 'Command Center'}
+          </h1>
+          <p style={{ color:'var(--text-secondary)', fontSize:'0.95rem', marginTop:'0.3rem' }}>
+            {buildingId ? 'Real-time property performance & operational control' : 'Real-time business insights & operational control'}
+          </p>
         </div>
         <div style={{ display:'flex', gap:'0.7rem', flexWrap:'wrap' }}>
-          <button className="btn" style={{ background:'var(--bg-tertiary)', color:'var(--text-primary)', fontSize:'0.82rem', display:'flex', alignItems:'center', gap:'0.4rem' }}><Download size={14}/> Export Reports</button>
-          <button className="btn btn-primary" style={{ fontSize:'0.82rem', display:'flex', alignItems:'center', gap:'0.4rem' }}><Settings size={14}/> Settings</button>
+          {/* Settings and Export removed per request */}
         </div>
       </header>
 
@@ -157,7 +161,7 @@ function Dashboard() {
           </div>
         </div>
         {/* Health Score */}
-        <HealthScoreCard score={summary.healthScore} />
+        <HealthScoreCard score={summary.healthScore} threshold={settings?.hygieneSettings?.hygieneThreshold} />
       </div>
 
       {/* 3. REVENUE ANALYTICS */}
@@ -175,7 +179,7 @@ function Dashboard() {
             </div>
           </div>
           <div style={{ height:'200px' }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={1}>
               <BarChart data={revenue.dailyRevenue} margin={{ top:5, right:0, left:-20, bottom:0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" opacity={0.5}/>
                 <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false}/>
@@ -204,7 +208,7 @@ function Dashboard() {
         <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)' }}>
           <h3 style={{ fontSize:'1rem', fontWeight:'800', margin:'0 0 1rem' }}>Monthly Trend</h3>
           <div style={{ height:'220px' }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={1}>
               <AreaChart data={revenue.monthlyRevenue} margin={{ top:5, right:0, left:-20, bottom:0 }}>
                 <defs>
                   <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
@@ -242,7 +246,7 @@ function Dashboard() {
             </div>
           </div>
           <div style={{ height:'160px' }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={1}>
               <PieChart>
                 <Pie data={occupancy.buildingWise.length ? occupancy.buildingWise : [{name:'Occupied',occupied:summary.occupiedBeds},{name:'Vacant',occupied:summary.vacantBeds}]} innerRadius={45} outerRadius={65} paddingAngle={4} dataKey="occupied" nameKey="name">
                   {(occupancy.buildingWise.length ? occupancy.buildingWise : [{},{},{}]).map((_,i) => (
@@ -271,10 +275,11 @@ function Dashboard() {
         <ComplaintsPanel data={complaints}/>
       </div>
 
-      {/* 5. MESS + STAFF */}
-      <div style={{ ...grid2, marginBottom:'2rem' }}>
+      {/* 5. MESS + STAFF + INFRASTRUCTURE */}
+      <div style={{ ...grid3, marginBottom:'2rem' }}>
         <MessPanel data={mess}/>
         <StaffPanel data={staff}/>
+        <InfrastructureOverview buildingId={buildingId} />
       </div>
 
       {/* 6. INSIGHTS + ACTIVITY + DOCUMENTS */}
@@ -313,13 +318,13 @@ function Dashboard() {
           <div>
             <label style={lStyle}>Mess Plan</label>
             <select name="messPlan" style={iStyle}>
-              <option value="basic">Basic (Included)</option>
-              <option value="p1000">₹1000 Standard</option>
-              <option value="p1500">₹1500 Premium 🔥</option>
+              <option value="basic">Basic (₹500 - 3 Meals + Customization)</option>
+              <option value="p1000">Standard (₹1000 - Extra Variety)</option>
+              <option value="p1500">Premium (₹1500 - Executive Buffet)</option>
             </select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.2rem' }}>
-             <input type="checkbox" id="customization" />
+             <input type="checkbox" id="customization" name="allowCustom" />
              <label htmlFor="customization" style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)' }}>Allow Customization</label>
           </div>
         </div>

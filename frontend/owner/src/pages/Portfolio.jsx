@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Building2, BedDouble, UsersRound, DollarSign, AlertCircle, 
+  Building2, Building, BedDouble, UsersRound, DollarSign, AlertCircle, 
   Search, Filter, ArrowUpDown, Bell, Plus, LogOut, X, 
   LayoutDashboard, Users, CreditCard, ChevronDown, CheckCircle,
   TrendingUp, TrendingDown, MoreVertical, MapPin, Activity,
@@ -10,7 +10,7 @@ import {
   ShieldCheck, BookOpen, Coffee, Gamepad, Fingerprint, Droplets,
   Armchair, ClipboardList, Star, ChevronRight, ChevronLeft,
   Smartphone, UserCheck, Briefcase, FileText, Calendar, Clock,
-  Heart, Home, ArrowLeft
+  Heart, Home, ArrowLeft, Settings
 } from 'lucide-react';
 import { api } from '../mockData';
 
@@ -35,6 +35,20 @@ const AMENITY_ICONS = {
 
 const AVAILABLE_FILTER_FEATURES = [
   'WiFi', 'AC Rooms', 'Food Included', 'CCTV', 'Laundry', 'Parking', 'Power Backup', 'Gym'
+];
+
+const STEP_CONFIG = [
+  { step: 1,  title: 'Basic Info',      icon: '🏨', desc: 'Name, type, description' },
+  { step: 2,  title: 'Location',        icon: '📍', desc: 'Address & landmarks' },
+  { step: 3,  title: 'Structure',       icon: '🏗️',  desc: 'Buildings & rooms' },
+  { step: 4,  title: 'Pricing',         icon: '💰', desc: 'Rent & deposits' },
+  { step: 5,  title: 'Room Setup',      icon: '🛏️',  desc: 'Room configuration' },
+  { step: 6,  title: 'Food & Mess',     icon: '🍽️',  desc: 'Meals & plans' },
+  { step: 7,  title: 'Amenities',       icon: '✨', desc: 'Facilities & features' },
+  { step: 8,  title: 'Policies',        icon: '📋', desc: 'Rules & stay terms' },
+  { step: 9,  title: 'Staff',           icon: '👤', desc: 'Warden & contacts' },
+  { step: 10, title: 'Owner Details',   icon: '🔑', desc: 'Contact information' },
+  { step: 11, title: 'Review',          icon: '✅', desc: 'Final summary' },
 ];
 
 const INITIAL_FORM_STATE = {
@@ -133,9 +147,26 @@ ${formData.longDesc || formData.shortDesc || ''}`;
       const payload = {
         name: formData.name || 'New Hostel',
         address: `${formData.addr1 || ''}, ${formData.city || ''}, ${formData.state || ''}`,
+        locationCity: formData.city || 'Bengaluru',
         description: extendedDesc,
         amenities: formData.amenities || [],
-        images: formData.coverImage ? [formData.coverImage] : []
+        images: formData.coverImage ? [formData.coverImage] : [],
+        startingPrice: parseInt(formData.rentBed) || 5000,
+        genderType: formData.gender === 'Co-living (Both)' ? 'Mixed' : formData.gender || 'Mixed',
+        category: formData.propertyType === 'Co-living' ? 'Luxury' : (formData.propertyType === 'PG' ? 'Student' : 'Professional'),
+        rating: 4.5,
+        popularityLabel: 'New Property',
+        policies: {
+          smoking: formData.smokingPolicy || 'Not Allowed',
+          alcohol: formData.alcoholPolicy || 'Not Allowed',
+          pets: formData.petsAllowed || 'No',
+          visitors: formData.visitorPolicy || 'Till 8 PM'
+        },
+        staffInfo: {
+          name: formData.staffName,
+          role: formData.staffRole,
+          contact: formData.staffContact
+        }
       };
 
       await api.addBuilding(payload);
@@ -192,6 +223,27 @@ ${formData.longDesc || formData.shortDesc || ''}`;
         } else if (bName.includes('beta')) {
           rating = "4.8";
           popularityLabel = "Most Booked";
+        } else if (bName.includes('gamma')) {
+          rating = "4.7";
+          popularityLabel = "Budget Friendly";
+        } else if (bName.includes('delta')) {
+          rating = "4.8";
+          popularityLabel = "Tech Hub Choice";
+        } else if (bName.includes('epsilon')) {
+          rating = "5.0";
+          popularityLabel = "Luxury Stay";
+        } else if (bName.includes('iota')) {
+          rating = "4.9";
+          popularityLabel = "Modern Minimalist";
+        } else if (bName.includes('kappa')) {
+          rating = "4.6";
+          popularityLabel = "Cozy Corner";
+        } else if (bName.includes('lambda')) {
+          rating = "4.9";
+          popularityLabel = "Academic Choice";
+        } else if (bName.includes('mu')) {
+          rating = "5.0";
+          popularityLabel = "Heritage Premium";
         } else if (occupancyRate >= 90) {
           popularityLabel = "Best Seller";
         }
@@ -212,8 +264,8 @@ ${formData.longDesc || formData.shortDesc || ''}`;
           popularityLabel,
           features: amenities
         };
-      } catch (err) {
-        return { id: Math.random(), name: 'Error Loading', occupancyRate: 0, features: [], status: 'Error' };
+      } catch (_err) {
+        return { id: `err-${Date.now()}`, name: 'Error Loading', occupancyRate: 0, features: [], status: 'Error' };
       }
     });
   }, [data]);
@@ -232,7 +284,7 @@ ${formData.longDesc || formData.shortDesc || ''}`;
         totalDues: buildingStats.reduce((acc, b) => acc + (b.pendingDues || 0), 0),
         totalComplaints: buildingStats.reduce((acc, b) => acc + (b.complaintsCount || 0), 0)
       };
-    } catch (err) {
+    } catch (_err) {
       return { totalBuildings: 0, totalRooms: 0, totalBeds: 0, occupiedBeds: 0, occupancyRate: 0, totalRevenue: 0, totalDues: 0, totalComplaints: 0 };
     }
   }, [buildingStats]);
@@ -249,7 +301,7 @@ ${formData.longDesc || formData.shortDesc || ''}`;
           const matchesOccupancy = occupancyFilter === 'All' || (occupancyFilter === 'High' && b.occupancyRate >= 80) || (occupancyFilter === 'Medium' && b.occupancyRate >= 50 && b.occupancyRate < 80) || (occupancyFilter === 'Low' && b.occupancyRate < 50);
           const matchesFeatures = selectedFeatures.length === 0 || selectedFeatures.every(f => b.features?.includes(f));
           return matchesSearch && matchesOccupancy && matchesFeatures;
-        } catch (err) { return false; }
+        } catch (_err) { return false; }
       })
       .sort((a, b) => {
         try {
@@ -268,7 +320,8 @@ ${formData.longDesc || formData.shortDesc || ''}`;
     { label: 'Occupancy', value: `${globalStats.occupancyRate}%`, icon: <Activity size={20}/>, color: '#10B981' },
     { label: 'Revenue', value: `₹${(globalStats.totalRevenue / 100000).toFixed(1)}L`, icon: <DollarSign size={20}/>, color: '#10B981' },
     { label: 'Pending Dues', value: `₹${(globalStats.totalDues / 1000).toFixed(0)}k`, icon: <CreditCard size={20}/>, color: '#EF4444' },
-    { label: 'Complaints', value: globalStats.totalComplaints, icon: <AlertCircle size={20}/>, color: '#F59E0B' }
+    { label: 'Complaints', value: globalStats.totalComplaints, icon: <AlertCircle size={20}/>, color: '#F59E0B' },
+    { label: 'Total Staff', value: data.staffCount || 12, icon: <Users size={20}/>, color: '#8B5CF6' }
   ];
 
   const renderStep = () => {
@@ -420,7 +473,7 @@ ${formData.longDesc || formData.shortDesc || ''}`;
       <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
         <div>
           <h1 style={{ fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-0.04em', marginBottom: '0.2rem' }}>Hostels Overview</h1>
-          <p style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>Strategic portfolio performance.</p>
+          <p style={{ color: 'var(--text-secondary)', fontWeight: '500', margin: 0 }}>Strategic portfolio performance.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -434,7 +487,7 @@ ${formData.longDesc || formData.shortDesc || ''}`;
         </div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem', marginBottom: '3rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '3rem' }}>
         {kpis.map((kpi, idx) => (
           <motion.div key={idx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} className="card" style={{ padding: '1rem', borderRadius: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
@@ -449,111 +502,157 @@ ${formData.longDesc || formData.shortDesc || ''}`;
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {['All', 'High', 'Medium', 'Low'].map(f => (
-            <button key={f} onClick={() => setOccupancyFilter(f)} style={{ padding: '0.4rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', border: '1px solid var(--border-color)', background: occupancyFilter === f ? 'var(--accent-primary)' : 'var(--bg-secondary)', color: occupancyFilter === f ? 'white' : 'var(--text-secondary)', cursor: 'pointer' }}>{f}</button>
+            <button 
+              key={f} 
+              onClick={() => {
+                setOccupancyFilter(f);
+              }} 
+              style={{ padding: '0.4rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', border: '1px solid var(--border-color)', background: occupancyFilter === f ? 'var(--accent-primary)' : 'var(--bg-secondary)', color: occupancyFilter === f ? 'white' : 'var(--text-secondary)', cursor: 'pointer', transition: '0.2s' }}
+            >
+              {f}
+            </button>
           ))}
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', marginLeft: '0.5rem' }}>
+            Showing {processedBuildings.length} Properties
+          </span>
         </div>
         <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ padding: '0.5rem 1rem', borderRadius: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: '600' }}>
           <option value="name">Sort by Name</option><option value="revenue">Revenue</option><option value="occupancy">Occupancy</option>
         </select>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-        {loading ? (
-          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem' }}><div className="loader"></div></div>
-        ) : processedBuildings.length > 0 ? (
-          processedBuildings.map((b) => (
-            <motion.div key={b.id || `b-${Math.random()}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card" style={{ padding: 0, overflow: 'hidden', borderTop: `4px solid ${b.occupancyRate >= 80 ? '#10B981' : b.occupancyRate >= 50 ? '#F59E0B' : '#EF4444'}`, position: 'relative' }}>
-              <div style={{ height: '180px', position: 'relative', cursor: 'pointer' }} onClick={() => navigate(`/owner/building/${b.id}/dashboard`)}>
-                <div style={{ height: '100%', width: '100%', backgroundImage: `url("${b.images?.[0] || 'https://images.unsplash.com/photo-1555854817-5b2260d19dca?auto=format&fit=crop&q=80&w=800'}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.7))' }} />
-                <div style={{ position: 'absolute', top: '1rem', left: '1rem', display: 'flex', gap: '0.4rem' }}>
-                  {b.popularityLabel && (
-                    <div style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', background: 'var(--accent-primary)', color: 'white', fontSize: '0.75rem', fontWeight: '800', boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}>
-                      {b.popularityLabel}
-                    </div>
-                  )}
-                </div>
-                <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.4rem' }}>
-                  <div style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', color: 'white', fontSize: '0.7rem', fontWeight: '800' }}>{b.occupancyRate}%</div>
-                  <div style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', background: b.status === 'Active' ? '#10B981' : '#F59E0B', color: 'white', fontSize: '0.7rem', fontWeight: '800' }}>{b.status}</div>
-                </div>
-              </div>
-              <div style={{ padding: '1.2rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <h3 style={{ fontSize: '1.3rem', fontWeight: '800', flex: 1 }}>{b.name}</h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#FEF3C7', color: '#D97706', padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: '800' }}>
-                    <Star size={14} fill="#D97706" /> {b.rating}
-                  </div>
-                </div>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.4rem 0 1rem' }}><MapPin size={14} style={{ verticalAlign: 'text-bottom' }} /> {b.address || 'Address not set'}</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginBottom: '1rem' }}>
-                  <div style={{ padding: '0.6rem', borderRadius: '10px', background: 'var(--bg-secondary)' }}>
-                    <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '800' }}>REVENUE</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--accent-success)' }}>₹{(b.monthlyRevenue / 1000).toFixed(0)}k</p>
-                  </div>
-                  <div style={{ padding: '0.6rem', borderRadius: '10px', background: 'var(--bg-secondary)' }}>
-                    <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '800' }}>TENANTS</p>
-                    <p style={{ fontSize: '1rem', fontWeight: '800' }}>{b.occupiedBeds}</p>
-                  </div>
-                </div>
-                
-                {/* AMENITIES SECTION */}
-                <div style={{ marginTop: '0.5rem' }}>
-                  <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Amenities</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
-                    {(b.features || []).slice(0, 4).map((feat, fidx) => (
-                      <div 
-                        key={fidx} 
-                        style={{ 
-                          display: 'flex', alignItems: 'center', gap: '0.2rem', 
-                          padding: '0.2rem 0.4rem', borderRadius: '6px', 
-                          background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)',
-                          fontSize: '0.65rem', fontWeight: '600', color: 'var(--text-secondary)'
-                        }}
-                      >
-                        {AMENITY_ICONS[feat] || <Star size={10} />} {feat}
-                      </div>
-                    ))}
-                    {b.features && b.features.length > 4 && (
-                      <span style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--accent-primary)', alignSelf: 'center', marginLeft: '0.2rem' }}>
-                        +{b.features.length - 4}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))
-        ) : (
-          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem' }}><h3>No Property Records Found</h3></div>
-        )}
+      <div 
+        className="hostel-scroll-container" 
+        style={{ 
+          height: 'calc(100vh - 360px)', 
+          overflowY: 'auto', 
+          padding: '1.5rem', 
+          margin: '0 -1.5rem', 
+          borderRadius: '20px',
+          background: 'rgba(0,0,0,0.01)',
+          border: '1px solid var(--border-color)'
+        }}
+      >
+        <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <Building size={20} color="var(--accent-primary)" />
+          <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>Verified Hostel Properties</h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', paddingBottom: '6rem' }}>
+          {loading ? (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem' }}><div className="loader"></div></div>
+          ) : processedBuildings.length > 0 ? (
+            processedBuildings.map((b) => (
+              <BuildingCard key={b.id} building={b} onNavigate={() => navigate(`/owner/building/${b.id}/dashboard`)} />
+            ))
+          ) : (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem' }}><h3>No Property Records Found</h3></div>
+          )}
+        </div>
       </div>
 
       <AnimatePresence>
         {isAddModalOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '1rem' }} onClick={() => setIsAddModalOpen(false)}>
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="card" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '650px', padding: '2rem', borderRadius: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <div><h2 style={{ fontSize: '1.5rem', fontWeight: '900' }}>Register New Hostel</h2>
-                  <p style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>Step {currentStep} of 11</p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 2000, display: 'flex', flexDirection: 'column' }}
+          >
+            {/* TOP BAR */}
+            <div style={{ background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.1rem' }}>🏨</div>
+                <div>
+                  <h2 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>Register New Hostel</h2>
+                  <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0 }}>Complete all steps to publish your listing</p>
                 </div>
-                <button onClick={() => setIsAddModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={24} /></button>
               </div>
-              <form onSubmit={handleCreateHostel} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {renderStep()}
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  {currentStep > 1 && (<button type="button" onClick={() => setCurrentStep(s => s - 1)} className="btn-outline" style={{ flex: 1, padding: '0.8rem' }}><ChevronLeft size={18} /> Back</button>)}
-                  <button disabled={isSubmitting} type="submit" className="btn-primary" style={{ flex: 2, padding: '0.8rem', fontSize: '1rem' }}>
-                    {isSubmitting ? 'Processing...' : currentStep === 11 ? 'Finalize Registration' : 'Continue'} <ChevronRight size={18} />
+              <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                {localStorage.getItem('hostel_draft') && (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const draft = JSON.parse(localStorage.getItem('hostel_draft'));
+                      setFormData(draft);
+                    }}
+                    className="btn-outline"
+                    style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', background: '#F1F5F9', color: '#475569' }}
+                  >
+                    📂 Saved Hostel
                   </button>
+                )}
+                <button 
+                  type="button" 
+                  className={formData.name ? 'btn-primary' : 'btn-outline'}
+                  onClick={() => { 
+                    localStorage.setItem('hostel_draft', JSON.stringify(formData)); 
+                  }} 
+                  style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem' }}
+                >
+                  {formData.name ? '✅ Draft Saved' : '💾 Save Draft'}
+                </button>
+                <button onClick={() => setIsAddModalOpen(false)} style={{ background: '#F1F5F9', border: 'none', color: '#64748B', cursor: 'pointer', padding: '0.6rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
+              </div>
+            </div>
+
+            {/* PROGRESS BAR */}
+            <div style={{ background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '0.8rem 2rem', flexShrink: 0, overflowX: 'auto' }}>
+              <div style={{ display: 'flex', gap: 0, minWidth: 'max-content' }}>
+                {STEP_CONFIG.map((s, i) => {
+                  const done = currentStep > s.step;
+                  const active = currentStep === s.step;
+                  return (
+                    <div key={s.step} style={{ display: 'flex', alignItems: 'center' }}>
+                      <div onClick={() => done && setCurrentStep(s.step)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '8px', cursor: done ? 'pointer' : 'default', background: active ? '#EFF6FF' : 'transparent' }}>
+                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: done ? '#10B981' : active ? '#3B82F6' : '#E2E8F0', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '900', flexShrink: 0 }}>
+                          {done ? '✓' : s.step}
+                        </div>
+                        <span style={{ fontSize: '0.75rem', fontWeight: active ? '800' : '600', color: active ? '#1D4ED8' : done ? '#059669' : '#94A3B8', whiteSpace: 'nowrap' }}>{s.title}</span>
+                      </div>
+                      {i < STEP_CONFIG.length - 1 && <div style={{ width: '20px', height: '2px', background: done ? '#10B981' : '#E2E8F0', flexShrink: 0 }} />}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* CONTENT AREA */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '2rem', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: '100%', maxWidth: '700px' }}>
+                {/* Step Header */}
+                <div style={{ marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid #E2E8F0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.3rem' }}>
+                    <span style={{ fontSize: '1.8rem' }}>{STEP_CONFIG[currentStep - 1]?.icon}</span>
+                    <h3 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{STEP_CONFIG[currentStep - 1]?.title}</h3>
+                  </div>
+                  <p style={{ color: '#64748B', fontSize: '0.95rem', margin: 0 }}>{STEP_CONFIG[currentStep - 1]?.desc}</p>
                 </div>
-              </form>
-            </motion.div>
+
+                <form onSubmit={handleCreateHostel} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {renderStep()}
+                  {/* FOOTER BUTTONS */}
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #E2E8F0' }}>
+                    {currentStep > 1 && (
+                      <button type="button" onClick={() => setCurrentStep(s => s - 1)} style={{ flex: 1, padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#475569', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
+                        <ChevronLeft size={18}/> Back
+                      </button>
+                    )}
+                    <button disabled={isSubmitting} type="submit" style={{ flex: 2, padding: '1rem', borderRadius: '12px', border: 'none', background: currentStep === 11 ? '#10B981' : '#3B82F6', color: 'white', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
+                      {isSubmitting ? 'Processing...' : currentStep === 11 ? '🚀 Finalize & Publish' : `Continue to ${STEP_CONFIG[currentStep]?.title || 'Next'}`} <ChevronRight size={18}/>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <style>{`
+        .hostel-scroll-container::-webkit-scrollbar { width: 8px; }
+        .hostel-scroll-container::-webkit-scrollbar-track { background: transparent; }
+        .hostel-scroll-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; border: 2px solid var(--bg-primary); }
+        .hostel-scroll-container::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
         .input-group { display: flex; flex-direction: column; gap: 0.4rem; }
         .input-group label { font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); }
         .input-group input, .input-group select, .input-group textarea { padding: 0.8rem 1rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-tertiary); color: var(--text-primary); font-size: 0.9rem; }
@@ -564,6 +663,132 @@ ${formData.longDesc || formData.shortDesc || ''}`;
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       `}</style>
     </div>
+  );
+};
+
+const BuildingCard = ({ building, onNavigate }) => {
+  const [imgIdx, setImgIdx] = useState(0);
+  const images = useMemo(() => [
+    building.images?.[0] || 'https://images.unsplash.com/photo-1555854817-5b2260d19dca?auto=format&fit=crop&q=80&w=800',
+    'https://images.unsplash.com/photo-1522770179533-24471fcdba45?auto=format&fit=crop&q=80&w=800',
+    'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=800'
+  ], [building.images]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setImgIdx(prev => (prev + 1) % images.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [images.length]);
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      whileHover={{ y: -8, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className="card" 
+      style={{ 
+        padding: 0, 
+        overflow: 'hidden', 
+        borderTop: `4px solid ${building.occupancyRate >= 80 ? '#10B981' : building.occupancyRate >= 50 ? '#F59E0B' : '#EF4444'}`, 
+        position: 'relative',
+        borderRadius: '20px',
+        border: '1px solid var(--border-color)',
+        background: 'var(--bg-secondary)',
+        cursor: 'pointer'
+      }}
+      onClick={onNavigate}
+    >
+      <div style={{ height: '180px', position: 'relative', overflow: 'hidden' }}>
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={imgIdx}
+            initial={{ opacity: 0.8, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1 }}
+            style={{ height: '100%', width: '100%', backgroundImage: `url("${images[imgIdx]}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} 
+          />
+        </AnimatePresence>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.8))' }} />
+        <div style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 5 }}>
+          {building.popularityLabel && (
+            <div style={{ padding: '0.4rem 0.8rem', borderRadius: '100px', background: 'var(--accent-primary)', color: 'white', fontSize: '0.65rem', fontWeight: '900', boxShadow: '0 4px 12px rgba(99,102,241,0.5)', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+              {building.popularityLabel}
+            </div>
+          )}
+        </div>
+        <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.4rem', flexDirection: 'column', alignItems: 'flex-end', zIndex: 5 }}>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
+            <div style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', color: 'white', fontSize: '0.7rem', fontWeight: '800', border: '1px solid rgba(255,255,255,0.3)' }}>{building.occupancyRate}%</div>
+            <div style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', background: building.status === 'Active' ? '#10B981' : '#F59E0B', color: 'white', fontSize: '0.7rem', fontWeight: '800', border: '1px solid rgba(255,255,255,0.1)' }}>{building.status}</div>
+          </div>
+        </div>
+        <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', right: '1rem', zIndex: 5 }}>
+           <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.3)', margin: 0 }}>{building.name}</h3>
+        </div>
+      </div>
+      <div style={{ padding: '1.2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}><MapPin size={14} style={{ verticalAlign: 'text-bottom', marginRight: '4px' }} /> {building.address || 'Address not set'}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#FEF3C7', color: '#D97706', padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: '800' }}>
+            <Star size={14} fill="#D97706" /> {building.rating}
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginBottom: '1.2rem' }}>
+          <div style={{ padding: '0.7rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}>
+            <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '800', margin: '0 0 0.2rem 0' }}>REVENUE</p>
+            <p style={{ fontSize: '1.1rem', fontWeight: '900', color: 'var(--accent-success)', margin: 0 }}>₹{(building.monthlyRevenue / 1000).toFixed(0)}k</p>
+          </div>
+          <div style={{ padding: '0.7rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}>
+            <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '800', margin: '0 0 0.2rem 0' }}>TENANTS</p>
+            <p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>{building.occupiedBeds}</p>
+          </div>
+        </div>
+        
+        <div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+            {(building.features || []).slice(0, 3).map((feat, fidx) => (
+              <div 
+                key={fidx} 
+                style={{ 
+                  display: 'flex', alignItems: 'center', gap: '0.3rem', 
+                  padding: '0.3rem 0.6rem', borderRadius: '8px', 
+                  background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+                  fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-primary)'
+                }}
+              >
+                {AMENITY_ICONS[feat] || <Star size={10} />} {feat}
+              </div>
+            ))}
+            {building.features && building.features.length > 3 && (
+              <div style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem', fontWeight: '800', color: 'var(--accent-primary)', alignSelf: 'center' }}>
+                +{building.features.length - 3} more
+              </div>
+            )}
+          </div>
+        </div>
+        <div style={{ marginTop: '1.2rem', display: 'flex', gap: '0.8rem' }}>
+          <button 
+            className="btn btn-primary" 
+            style={{ flex: 2, padding: '0.6rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '800' }}
+            onClick={(e) => { e.stopPropagation(); navigate(`/owner/building/${building.id}/dashboard`); }}
+          >
+            Go to Dashboard
+          </button>
+          <button 
+            className="btn" 
+            style={{ flex: 1, padding: '0.6rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', fontSize: '0.85rem' }}
+            onClick={(e) => { e.stopPropagation(); navigate(`/owner/building/${building.id}/buildings`); }}
+            title="Manage Infrastructure"
+          >
+            <Settings size={18} />
+          </button>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
