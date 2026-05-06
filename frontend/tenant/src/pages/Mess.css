@@ -1,0 +1,240 @@
+/* ─── Dining & Mess Portal Styles ─── */
+.mess-page {
+  width: 100%;
+  animation: fadeIn 0.8s var(--transition-normal);
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.mess-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: var(--space-2);
+}
+
+.mess-header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.header-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.plan-badge-container {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.plan-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.plan-value.orange {
+  padding: 4px 12px;
+  background: #fff7ed;
+  color: #ea580c;
+  border-radius: 100px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  border: 1px solid #ffedd5;
+}
+
+.mess-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: var(--space-4);
+}
+
+/* Menu Card */
+.menu-card-main {
+  padding: 2.5rem !important;
+}
+
+.card-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.live-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 4px 12px;
+  background: #f0fdf4;
+  color: #16a34a;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border: 1px solid #bcf0da;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #16a34a;
+  border-radius: 50%;
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); }
+  70% { transform: scale(1.2); box-shadow: 0 0 0 8px rgba(22, 163, 74, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+}
+
+.meal-segments {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.meal-item-row {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  transition: var(--transition-fast);
+}
+
+.meal-item-row:hover {
+  transform: translateX(4px);
+  border-color: inherit;
+}
+
+.meal-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.meal-details { flex: 1; }
+.meal-meta { display: flex; justify-content: space-between; margin-bottom: 0.25rem; }
+.meal-label { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+.meal-time { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+.meal-dish { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
+
+/* Attendance Card */
+.attendance-card-premium {
+  padding: 2.5rem !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+  min-height: 400px;
+}
+
+.action-icon-bg {
+  width: 80px;
+  height: 80px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+
+.attendance-toggle-group {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.att-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 800;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border: 1.5px solid var(--border-color);
+  background: transparent;
+}
+
+.att-btn.dining { color: #16a34a; }
+.att-btn.dining.active { background: #f0fdf4; border-color: #16a34a; }
+
+.att-btn.skip { color: #ef4444; }
+.att-btn.skip.active { background: #fef2f2; border-color: #ef4444; }
+
+.sustainability-box {
+  margin-top: 2.5rem;
+  padding: 1.25rem;
+  background: #fdf2f8;
+  border-radius: var(--radius-sm);
+  display: flex;
+  gap: 1rem;
+  text-align: left;
+}
+
+.tip-icon-pro { color: #db2777; flex-shrink: 0; }
+.sustainability-box p { font-size: 0.85rem; color: #9d174d; line-height: 1.5; }
+
+/* Weekly Table */
+.schedule-table-card { padding: 2.5rem !important; }
+.icon-badge-green {
+  width: 44px;
+  height: 44px;
+  background: #f0fdf4;
+  color: #16a34a;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.weekly-table-premium {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+}
+
+.weekly-table-premium th {
+  padding: 1rem 1.5rem;
+  background: var(--bg-primary);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.weekly-table-premium td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.td-day { font-weight: 800; color: var(--text-primary); }
+.td-dish { color: var(--text-secondary); font-weight: 600; font-size: 0.95rem; }
+
+@media (max-width: 900px) {
+  .mess-grid { grid-template-columns: 1fr; }
+  .mess-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  .attendance-card-premium { min-height: auto; }
+}

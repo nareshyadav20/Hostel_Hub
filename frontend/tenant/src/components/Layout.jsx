@@ -1,9 +1,10 @@
-﻿import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import ThemeToggle from './ThemeToggle';
 import './Layout.css';
 
-const Layout = () => {
+const Layout = ({ children }) => {
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -16,6 +17,8 @@ const Layout = () => {
   };
 
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = React.useRef(null);
   const [modalData, setModalData] = useState({ gender: 'Male', age: '', occupation: '', locationPref: '', roomPref: 'Double' });
 
   useEffect(() => {
@@ -44,7 +47,6 @@ const Layout = () => {
       {isLoggedIn && <Sidebar />}
       <main className={isLoggedIn ? "main-content" : "main-content guest"}>
         <header className="content-header">
-          <div style={{ flex: 1 }}></div>
           <div className="user-profile">
             <ThemeToggle />
             {isLoggedIn ? (
@@ -56,9 +58,18 @@ const Layout = () => {
                   </svg>
                 </div>
                 
-                <div className="avatar-container">
-                  <div className="avatar" onClick={() => setShowDropdown(!showDropdown)}>
-                    {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                <div className="avatar-container" ref={dropdownRef}>
+                  <div className="profile-mini-box" onClick={() => setShowDropdown(!showDropdown)}>
+                    <div className="profile-text">
+                      <span className="p-name">{user.name || 'Guest User'}</span>
+                      <span className="p-role">Premium Resident</span>
+                    </div>
+                    <div className="profile-avatar">
+                      <img
+                        src={user.profileImage || `https://ui-avatars.com/api/?name=${user.name || 'User'}&background=10b981&color=fff`}
+                        alt="Profile"
+                      />
+                    </div>
                   </div>
                   
                   {showDropdown && (
@@ -75,22 +86,22 @@ const Layout = () => {
                       <div className="dropdown-divider"></div>
                       
                       {user.profileCompletion && user.profileCompletion < 100 && (
-                        <div style={{ padding: '0.8rem 1.2rem', background: 'rgba(255,255,255,0.02)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: '700' }}>Setup Progress</span>
-                            <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--accent-success)' }}>{user.profileCompletion}%</span>
+                        <div className="setup-progress-card">
+                          <div className="setup-progress-header">
+                            <span>Setup Progress</span>
+                            <span className="setup-percent">{user.profileCompletion}%</span>
                           </div>
-                          <div style={{ width: '100%', height: '6px', background: 'var(--bg-tertiary)', borderRadius: '3px', overflow: 'hidden', marginBottom: '0.8rem' }}>
-                            <div style={{ width: `${user.profileCompletion}%`, height: '100%', background: 'linear-gradient(90deg, var(--accent-warning), var(--accent-success))' }}></div>
+                          <div className="setup-progress-bar">
+                            <div className="setup-progress-fill" style={{ width: `${user.profileCompletion}%` }}></div>
                           </div>
                           
                           {user.profileCompletion < 50 && (
-                            <button className="btn btn-primary" style={{ width: '100%', padding: '0.5rem', fontSize: '0.8rem', fontWeight: '700', borderRadius: '6px' }} onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
+                            <button className="btn-primary-small" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
                               Complete Profile
                             </button>
                           )}
                           {user.profileCompletion === 50 && (
-                            <div style={{ fontSize: '0.75rem', color: 'var(--accent-warning)', textAlign: 'center', fontWeight: '600' }}>
+                            <div className="setup-next-step">
                               Next: Book a Room to Verify ID
                             </div>
                           )}
@@ -134,32 +145,50 @@ const Layout = () => {
           </div>
         </header>
 
-        <div className="content-body">{children}</div>
+        <div className="content-body">
+          <div className="content-wrapper">
+            {children}
+          </div>
+          
+          <footer className="layout-footer">
+            <p>© 2024 StayNest All rights reserved.</p>
+          </footer>
+        </div>
+
+        {isLoggedIn && (
+          <div className="floating-emergency-card">
+            <div className="emergency-icon">📞</div>
+            <div className="emergency-details">
+              <strong>Emergency Contact</strong>
+              <span>+91 98765 43210</span>
+            </div>
+          </div>
+        )}
 
         {showProfileModal && (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(5px)' }}>
-            <div className="glass-card fade-in" style={{ width: '100%', maxWidth: '500px', padding: '2.5rem', background: 'var(--bg-secondary)', borderRadius: '24px', border: '1px solid var(--accent-primary)', position: 'relative', boxShadow: 'var(--shadow-premium)' }}>
-              <button onClick={() => setShowProfileModal(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+          <div className="modal-overlay">
+            <div className="modal-content glass-card fade-in">
+              <button className="modal-close" onClick={() => setShowProfileModal(false)}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
               
-              <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-                <div style={{ width: '64px', height: '64px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: 'var(--accent-primary)' }}>
+              <div className="modal-header">
+                <div className="modal-icon-bg">
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
-                <h2 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0 }}>Step 2: Preferences</h2>
-                <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Complete your profile to see better matches.</p>
+                <h2>Step 2: Preferences</h2>
+                <p>Complete your profile to see better matches.</p>
               </div>
 
-              <form onSubmit={handleProfileSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <div className="input-group" style={{ flex: 1 }}>
+              <form onSubmit={handleProfileSubmit} className="modal-form">
+                <div className="form-row">
+                  <div className="input-group">
                     <label>Age</label>
-                    <input type="number" placeholder="e.g. 22" value={modalData.age} onChange={e => setModalData({...modalData, age: e.target.value})} required style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%' }} />
+                    <input type="number" placeholder="e.g. 22" value={modalData.age} onChange={e => setModalData({...modalData, age: e.target.value})} required />
                   </div>
-                  <div className="input-group" style={{ flex: 1 }}>
+                  <div className="input-group">
                     <label>Gender</label>
-                    <select value={modalData.gender} onChange={e => setModalData({...modalData, gender: e.target.value})} style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%' }}>
+                    <select value={modalData.gender} onChange={e => setModalData({...modalData, gender: e.target.value})}>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                       <option value="Other">Other</option>
@@ -169,7 +198,7 @@ const Layout = () => {
 
                 <div className="input-group">
                   <label>Occupation</label>
-                  <select value={modalData.occupation} onChange={e => setModalData({...modalData, occupation: e.target.value})} required style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%' }}>
+                  <select value={modalData.occupation} onChange={e => setModalData({...modalData, occupation: e.target.value})} required>
                     <option value="">Select Occupation</option>
                     <option value="Student">Student</option>
                     <option value="Professional">Working Professional</option>
@@ -178,21 +207,21 @@ const Layout = () => {
 
                 <div className="input-group">
                   <label>Preferred Location</label>
-                  <input type="text" placeholder="e.g. Koramangala, Bengaluru" value={modalData.locationPref} onChange={e => setModalData({...modalData, locationPref: e.target.value})} required style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%' }} />
+                  <input type="text" placeholder="e.g. Koramangala, Bengaluru" value={modalData.locationPref} onChange={e => setModalData({...modalData, locationPref: e.target.value})} required />
                 </div>
 
                 <div className="input-group">
                   <label>Room Preference</label>
-                  <select value={modalData.roomPref} onChange={e => setModalData({...modalData, roomPref: e.target.value})} style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%' }}>
+                  <select value={modalData.roomPref} onChange={e => setModalData({...modalData, roomPref: e.target.value})}>
                     <option value="Single">Single Room</option>
                     <option value="Double">2 Sharing</option>
                     <option value="Triple">3 Sharing</option>
                   </select>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  <button type="button" className="btn btn-secondary" style={{ flex: 1, padding: '1rem' }} onClick={() => setShowProfileModal(false)}>Save & Resume Later</button>
-                  <button type="submit" className="btn btn-primary" style={{ flex: 1, padding: '1rem', fontWeight: '800' }}>Complete Step 2</button>
+                <div className="modal-actions">
+                  <button type="button" className="btn-secondary" onClick={() => setShowProfileModal(false)}>Save & Resume Later</button>
+                  <button type="submit" className="btn-primary">Complete Step 2</button>
                 </div>
               </form>
             </div>
