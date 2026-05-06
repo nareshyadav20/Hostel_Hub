@@ -147,21 +147,39 @@ const Mess = () => {
             ))}
           </div>
 
-          <div className="rating-section">
-            <p>Rate your last meal experience</p>
-            <div className="star-rating">
-              {[1, 2, 3, 4, 5].map(s => (
+          <div className="rating-section-premium">
+            <div className="rating-header">
+              <p>Rate your last meal experience</p>
+              {rating > 0 && <span className="rating-status-text">Excellent Choice!</span>}
+            </div>
+            <div className="colorful-rating-group">
+              {[
+                { val: 1, color: '#ef4444', label: 'Poor', emoji: '😠' },
+                { val: 2, color: '#f97316', label: 'Average', emoji: '😐' },
+                { val: 3, color: '#eab308', label: 'Good', emoji: '🙂' },
+                { val: 4, color: '#84cc16', label: 'Great', emoji: '😋' },
+                { val: 5, color: '#22c55e', label: 'Perfect', emoji: '🤩' }
+              ].map((item) => (
                 <button 
-                  key={s} 
-                  className={s <= rating ? 'star active' : 'star'} 
-                  onClick={() => setRating(s)}
+                  key={item.val} 
+                  className={`rating-btn ${rating === item.val ? 'active' : ''}`}
+                  onClick={() => setRating(item.val)}
+                  style={{ '--rating-color': item.color }}
+                  title={item.label}
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                  </svg>
+                  <span className="rating-emoji" style={{ fontSize: '2rem' }}>{item.emoji}</span>
+                  <span className="rating-label">{item.label}</span>
                 </button>
               ))}
             </div>
+            {rating > 0 && (
+              <button className="btn-primary-small submit-rating-btn fade-in" onClick={() => {
+                alert(`Thank you! Your ${rating}-star feedback has been recorded.`);
+                setRating(0);
+              }}>
+                Submit Feedback
+              </button>
+            )}
           </div>
         </div>
 

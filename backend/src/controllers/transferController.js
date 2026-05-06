@@ -9,8 +9,8 @@ exports.createTransfer = async (req, res) => {
 
     console.log('🔄 Creating Transfer Request for:', tenant.email);
     const transfer = await Transfer.create({
-      name,
-      oldRoom,
+      name: name || tenant.name,
+      oldRoom: oldRoom || tenant.room || 'Not Assigned',
       newRoom,
       reason,
       tenant: tenant._id,

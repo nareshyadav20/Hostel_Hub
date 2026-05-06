@@ -32,9 +32,16 @@ const Rewards = () => {
 
   const handleGetReferralLink = () => {
     const referralLink = `${window.location.origin}/signup?ref=${tenantId || 'livora'}`;
+    const shareMessage = `Hey! I'm staying at Livora, and it's amazing. Join me using my referral link and we both get bonus points: ${referralLink}`;
+    
+    // Copy to clipboard
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 3000);
+
+    // Open WhatsApp
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   if (loading) return (
@@ -125,15 +132,23 @@ const Rewards = () => {
               <button 
                 className={`btn-secondary ${copied ? 'copied' : ''}`} 
                 onClick={handleGetReferralLink}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}
               >
                 {copied ? (
                   <>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    LINK COPIED!
+                    LINK COPIED & SHARED!
                   </>
-                ) : 'Get Referral Link'}
+                ) : (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12.031 6.172c-2.297 0-4.154 1.858-4.154 4.154 0 .727.191 1.41.523 2.003l-.554 2.023 2.07-.543c.563.307 1.208.484 1.896.484 2.297 0 4.154-1.858 4.154-4.154 0-2.296-1.857-4.154-4.154-4.154zm2.4 5.865c-.092.257-.54.502-.746.533-.206.03-.408.055-1.16-.245-.91-.365-1.498-1.29-1.543-1.352-.045-.06-.37-.493-.37-.95 0-.458.238-.682.324-.775.084-.093.185-.116.246-.116h.176c.054 0 .127-.02.197.147.073.176.248.605.27.65.022.045.037.097.007.157-.03.06-.045.097-.09.15-.045.052-.094.116-.135.157-.045.045-.09.094-.038.185.052.09.232.383.5.622.345.308.638.405.727.45.09.045.142.037.195-.022.052-.06.225-.262.285-.352.06-.09.12-.075.202-.045.082.03.525.248.615.293.09.045.15.067.172.105.023.037.023.217-.07.473z"/>
+                    </svg>
+                    Get Referral Link & Share
+                  </>
+                )}
               </button>
             </div>
           </div>

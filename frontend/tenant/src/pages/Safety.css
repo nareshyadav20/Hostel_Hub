@@ -34,9 +34,22 @@
   justify-content: center; 
   text-align: center;
   padding: 3rem !important;
-  background: #fff1f2 !important;
-  border-color: #fecdd3 !important;
+  background: linear-gradient(135deg, #fff1f2, #ffe4e6) !important;
+  border: 1px solid #fecdd3 !important;
   min-height: 400px;
+  position: relative;
+  overflow: hidden;
+}
+
+.sos-card::after {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 150px;
+  height: 150px;
+  background: rgba(225, 29, 72, 0.05);
+  border-radius: 50%;
 }
 
 .sos-visual-container {
@@ -228,7 +241,20 @@
 /* Premium Report Card */
 .premium-report {
   padding: 3rem !important;
-  background: linear-gradient(to bottom right, #ffffff, #f8fafc) !important;
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+}
+
+.report-card .sn-card-title {
+  color: var(--primary);
+  font-size: 1.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.sn-label {
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .report-form {
@@ -253,6 +279,31 @@
 
 .input-group label svg {
   color: var(--primary);
+}
+
+.input-group input, .input-group select, .input-group textarea {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all var(--transition-normal);
+  font-family: inherit;
+  outline: none;
+}
+
+.input-group textarea {
+  resize: none;
+  min-height: 150px;
+}
+
+.input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 4px var(--primary-light);
 }
 
 .form-footer-premium {

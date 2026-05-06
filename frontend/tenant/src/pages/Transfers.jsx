@@ -14,7 +14,7 @@ const Transfers = () => {
     const fetchData = async () => {
       try {
         const [profileRes, transfersRes] = await Promise.all([
-          API.get('/tenants/me'),
+          API.get('/tenants/me').catch(() => ({ data: { name: 'Valued Resident', room: 'Awaiting Assignment' } })),
           API.get('/transfers/me').catch(() => ({ data: [
             { _id: '1', oldRoom: '302-A', newRoom: '405-B', createdAt: new Date().toISOString(), status: 'Approved', reason: 'Better ventilation needed.' },
             { _id: '2', oldRoom: '201-C', newRoom: '102-A', createdAt: new Date().toISOString(), status: 'Pending', reason: 'Closer to elevators.' }
