@@ -6,6 +6,6 @@ const floorSchema = new mongoose.Schema({
   images:      [{ type: String }],
   building:    { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   rooms:       [{ type: mongoose.Schema.Types.ObjectId, ref: 'Room' }]
-}, { timestamps: true, collection: 'owner_floors' });
+}, { timestamps: true, collection: 'floors' });
 
 module.exports = mongoose.model('Floor', floorSchema);

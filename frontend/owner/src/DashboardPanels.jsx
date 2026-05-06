@@ -1,8 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { AlertCircle, Lightbulb, Bell, Users, Utensils, ShieldCheck, TrendingUp, FileText, ClipboardList, ChevronRight, Download, X, Building } from 'lucide-react';
+import { AlertCircle, Lightbulb, Bell, Users, Utensils, ShieldCheck, TrendingUp, FileText, ClipboardList, ChevronRight, Download, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useParams } from 'react-router-dom';
 
 const PIE_COLORS = ['#EF4444','#F59E0B','#8B5CF6','#6B7280'];
 
@@ -27,13 +26,45 @@ export function DashboardModal({ isOpen, onClose, title, children }) {
   );
 }
 
+// ── HEALTH SCORE ────────────────────────────────────────────
+export function HealthScoreCard({ score, threshold = 75 }) {
+  const status = score >= threshold ? { label:'Healthy', color:'#10B981', bg:'#DCFCE7' }
+    : score >= (threshold - 20) ? { label:'Moderate', color:'#F59E0B', bg:'#FEF3C7' }
+    : { label:'At Risk', color:'#EF4444', bg:'#FEE2E2' };
+  const r = 40, circ = 2 * Math.PI * r;
+  const dash = circ - (score / 100) * circ;
+  return (
+    <div className="card" style={{ padding:'1.5rem', borderRadius:'16px', border:'1px solid var(--border-color)', display:'flex', flexDirection:'column', gap:'1rem' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:'0.5rem' }}>
+        <ShieldCheck size={18} color={status.color} />
+        <h3 style={{ fontSize:'1rem', fontWeight:'800' }}>Property Health Score</h3>
+      </div>
+      <div style={{ display:'flex', alignItems:'center', gap:'1.5rem' }}>
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r={r} fill="none" stroke="var(--bg-tertiary)" strokeWidth="10"/>
+          <circle cx="50" cy="50" r={r} fill="none" stroke={status.color} strokeWidth="10"
+            strokeDasharray={circ} strokeDashoffset={dash} strokeLinecap="round"
+            transform="rotate(-90 50 50)" style={{ transition:'stroke-dashoffset 1s ease' }}/>
+          <text x="50" y="54" textAnchor="middle" fontSize="18" fontWeight="800" fill={status.color}>{score}</text>
+        </svg>
+        <div>
+          <span style={{ padding:'0.3rem 0.8rem', borderRadius:'100px', fontSize:'0.8rem', fontWeight:'700', background:status.bg, color:status.color }}>{status.label}</span>
+          <div style={{ marginTop:'0.8rem', display:'flex', flexDirection:'column', gap:'0.4rem' }}>
+            {score < threshold && <p style={{ fontSize:'0.78rem', color:'#EF4444' }}>⚠ Score below threshold ({threshold}%)</p>}
+            {score < 60 && <p style={{ fontSize:'0.78rem', color:'#EF4444' }}>⚠ High pending payments detected</p>}
+            <p style={{ fontSize:'0.78rem', color:'var(--text-muted)' }}>Managed by system threshold</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── COMPLAINTS PANEL ─────────────────────────────────────────
 export function ComplaintsPanel({ data }) {
-  const navigate = useNavigate();
-  const { buildingId } = useParams();
   if (!data) return null;
   return (
-    <div className="card" style={{ padding:'1.5rem', borderRadius:'16px', border:'1px solid var(--border-color)', height:'100%', display:'flex', flexDirection:'column' }}>
+    <div className="card" style={{ padding:'1.5rem', borderRadius:'16px', border:'1px solid var(--border-color)' }}>
       <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.2rem' }}>
         <AlertCircle size={18} color="#EF4444" />
         <h3 style={{ fontSize:'1rem', fontWeight:'800' }}>Complaints Overview</h3>
@@ -51,156 +82,122 @@ export function ComplaintsPanel({ data }) {
           </div>
         ))}
       </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ height:'140px', marginTop: '0.5rem' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie 
-                data={data.categories || []} 
-                dataKey="count" 
-                nameKey="name" 
-                innerRadius={35} 
-                outerRadius={55} 
-                paddingAngle={5}
-                stroke="none"
-              >
-                {(data.categories || []).map((c,i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-              </Pie>
-              <Tooltip 
-                contentStyle={{ background:'var(--bg-secondary)', border:'1px solid var(--border-color)', borderRadius:'12px', fontSize:'0.75rem' }}
-                itemStyle={{ fontWeight: '800' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div style={{ display:'flex', flexWrap:'wrap', gap:'0.5rem', marginTop:'0.5rem' }}>
-          {data.categories.map((c,i) => (
-            <span key={i} style={{ fontSize:'0.72rem', padding:'0.2rem 0.6rem', borderRadius:'100px', background:`${PIE_COLORS[i]}20`, color:PIE_COLORS[i], fontWeight:'700' }}>
-              {c.name}: {c.count}
-            </span>
-          ))}
-        </div>
-        {data.pending24h > 0 && (
-          <div style={{ marginTop:'1.2rem', padding:'0.6rem 0.8rem', background:'#FEE2E2', borderRadius:'8px', fontSize:'0.78rem', color:'#991B1B', fontWeight:'600' }}>
-            ⚠ {data.pending24h} complaints pending &gt; 24 hrs
-          </div>
-        )}
+      <div style={{ height:'130px' }}>
+        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={1}>
+          <PieChart>
+            <Pie data={data.categories} dataKey="count" nameKey="name" innerRadius={30} outerRadius={50} paddingAngle={3}>
+              {data.categories.map((c,i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
+            </Pie>
+            <Tooltip contentStyle={{ background:'var(--bg-secondary)', border:'none', borderRadius:'8px', fontSize:'0.8rem' }} />
+          </PieChart>
+        </ResponsiveContainer>
       </div>
-      <button onClick={() => navigate(`/owner/building/${buildingId}/complaints`)} className="btn" style={{ width:'100%', marginTop:'1.2rem', background:'var(--bg-tertiary)', fontSize:'0.82rem', padding:'0.6rem', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.4rem' }}>
-        Manage Complaints <ChevronRight size={14}/>
-      </button>
+      <div style={{ display:'flex', flexWrap:'wrap', gap:'0.5rem', marginTop:'0.5rem' }}>
+        {data.categories.map((c,i) => (
+          <span key={i} style={{ fontSize:'0.72rem', padding:'0.2rem 0.6rem', borderRadius:'100px', background:`${PIE_COLORS[i]}20`, color:PIE_COLORS[i], fontWeight:'700' }}>
+            {c.name}: {c.count}
+          </span>
+        ))}
+      </div>
+      {data.pending24h > 0 && (
+        <div style={{ marginTop:'0.8rem', padding:'0.6rem 0.8rem', background:'#FEE2E2', borderRadius:'8px', fontSize:'0.78rem', color:'#991B1B', fontWeight:'600' }}>
+          ⚠ {data.pending24h} complaints pending &gt; 24 hrs · Avg resolution: {data.avgResolutionHours}h
+        </div>
+      )}
     </div>
   );
 }
 
 // ── MESS PANEL ───────────────────────────────────────────────
 export function MessPanel({ data }) {
-  const navigate = useNavigate();
-  const { buildingId } = useParams();
   if (!data) return null;
   return (
-    <div className="card" style={{ padding:'1.5rem', borderRadius:'20px', border:'1px solid var(--border-color)', display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.5rem' }}>
+    <div className="card" style={{ padding:'1.5rem', borderRadius:'16px', border:'1px solid var(--border-color)' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.2rem' }}>
         <Utensils size={18} color="#8B5CF6" />
-        <h3 style={{ fontSize:'1rem', fontWeight:'900' }}>Mess Management</h3>
-        <span style={{ marginLeft:'auto', fontSize:'0.8rem', color:'#10B981', fontWeight:'800', background:'rgba(16, 185, 129, 0.1)', padding:'0.2rem 0.6rem', borderRadius:'100px' }}>
+        <h3 style={{ fontSize:'1rem', fontWeight:'800' }}>Mess Management</h3>
+        <span style={{ marginLeft:'auto', fontSize:'0.8rem', color:'#10B981', fontWeight:'700', background:'#DCFCE7', padding:'0.2rem 0.6rem', borderRadius:'100px' }}>
           ⭐ {data.avgFoodRating}/5
         </span>
       </div>
-      
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'0.8rem', marginBottom:'1.5rem' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'0.8rem', marginBottom:'1.2rem' }}>
         {[
-          { label:'Meals Today', value:data.mealsServedToday, color:'#8B5CF6', bg: 'rgba(139, 92, 246, 0.05)' },
-          { label:'Daily Cost', value:`₹${(data.dailyMessCost/1000).toFixed(1)}k`, color:'#F59E0B', bg: 'rgba(245, 158, 11, 0.05)' },
-          { label:'Monthly Cost', value:`₹${(data.monthlyMessCost/1000).toFixed(0)}k`, color:'#EF4444', bg: 'rgba(239, 68, 68, 0.05)' },
+          { label:'Meals Today', value:data.mealsServedToday, color:'#8B5CF6' },
+          { label:'Daily Cost', value:`₹${(data.dailyMessCost/1000).toFixed(1)}k`, color:'#F59E0B' },
+          { label:'Monthly Cost', value:`₹${(data.monthlyMessCost/1000).toFixed(0)}k`, color:'#EF4444' },
         ].map((s,i) => (
-          <div key={i} style={{ background:s.bg, padding:'1rem 0.5rem', borderRadius:'12px', textAlign:'center', border: '1px solid var(--border-color)' }}>
-            <p style={{ fontSize:'1.4rem', fontWeight:'1000', color:s.color, margin:0 }}>{s.value}</p>
-            <p style={{ fontSize:'0.7rem', color:'var(--text-muted)', fontWeight:'800', margin:'0.2rem 0 0', textTransform: 'uppercase' }}>{s.label}</p>
+          <div key={i} style={{ background:'var(--bg-tertiary)', padding:'0.8rem', borderRadius:'10px', textAlign:'center' }}>
+            <p style={{ fontSize:'1.2rem', fontWeight:'800', color:s.color, margin:0 }}>{s.value}</p>
+            <p style={{ fontSize:'0.7rem', color:'var(--text-muted)', fontWeight:'600', margin:0 }}>{s.label}</p>
           </div>
         ))}
       </div>
-
-      <div style={{ marginBottom:'1.5rem', padding:'1rem', background:'var(--bg-tertiary)', borderRadius:'16px', border: '1px solid var(--border-color)' }}>
-        <p style={{ fontSize:'0.75rem', fontWeight:'900', color:'var(--text-muted)', marginBottom:'0.8rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Today's Menu</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-          {Object.entries(data.menuToday).map(([meal, menu]) => (
-            <div key={meal} style={{ display:'grid', gridTemplateColumns: '80px 1fr', gap:'1rem', fontSize:'0.85rem', alignItems: 'center' }}>
-              <span style={{ fontWeight:'900', color:'var(--text-muted)', textTransform:'uppercase', fontSize: '0.7rem', letterSpacing: '0.02em' }}>{meal}</span>
-              <span style={{ color:'var(--text-primary)', fontWeight: '700', borderLeft: '2px solid var(--border-color)', paddingLeft: '0.8rem' }}>{menu}</span>
-            </div>
-          ))}
-        </div>
+      <div style={{ marginBottom:'1rem', padding:'0.8rem', background:'var(--bg-tertiary)', borderRadius:'10px' }}>
+        <p style={{ fontSize:'0.75rem', fontWeight:'700', color:'var(--text-secondary)', marginBottom:'0.4rem' }}>TODAY'S MENU</p>
+        {Object.entries(data.menuToday).map(([meal, menu]) => (
+          <div key={meal} style={{ display:'flex', gap:'0.5rem', fontSize:'0.82rem', marginBottom:'0.2rem' }}>
+            <span style={{ fontWeight:'700', color:'var(--text-secondary)', textTransform:'capitalize', minWidth:'70px' }}>{meal}:</span>
+            <span style={{ color:'var(--text-primary)' }}>{menu}</span>
+          </div>
+        ))}
       </div>
-
-      <div style={{ flex: 1 }}>
-        <p style={{ fontSize:'0.75rem', fontWeight:'900', color:'var(--text-muted)', marginBottom:'0.8rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Low Stock Alerts</p>
-        <div style={{ display:'flex', flexDirection:'column', gap:'0.6rem' }}>
-          {data.inventory.filter(i => i.alert).map((item,i) => (
-            <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'0.7rem 1rem', background:'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.1)', borderRadius:'12px', fontSize:'0.85rem' }}>
-              <span style={{ fontWeight:'800', color:'#EF4444' }}>⚠ {item.item}</span>
-              <span style={{ color:'var(--text-secondary)', fontWeight:'700' }}>{item.stock} {item.unit} left</span>
-            </div>
-          ))}
-        </div>
+      <p style={{ fontSize:'0.78rem', fontWeight:'700', color:'var(--text-secondary)', marginBottom:'0.5rem' }}>LOW STOCK ALERTS</p>
+      <div style={{ display:'flex', flexDirection:'column', gap:'0.4rem' }}>
+        {data.inventory.filter(i => i.alert).map((item,i) => (
+          <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'0.5rem 0.8rem', background:'#FEE2E2', borderRadius:'8px', fontSize:'0.8rem' }}>
+            <span style={{ fontWeight:'700', color:'#991B1B' }}>⚠ {item.item}</span>
+            <span style={{ color:'#EF4444', fontWeight:'600' }}>{item.stock} {item.unit} left</span>
+          </div>
+        ))}
       </div>
-
-      <button onClick={() => navigate(`/owner/building/${buildingId}/mess`)} className="btn" style={{ width:'100%', marginTop:'1.5rem', background:'var(--bg-tertiary)', padding:'0.8rem', borderRadius:'12px', fontSize:'0.85rem', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', color: 'var(--text-secondary)' }}>
-        View More Mess Details <ChevronRight size={14}/>
-      </button>
     </div>
   );
 }
 
 // ── STAFF PANEL ──────────────────────────────────────────────
 export function StaffPanel({ data }) {
-  const navigate = useNavigate();
-  const { buildingId } = useParams();
   if (!data) return null;
   const staffArray = Array.isArray(data.staffList) ? data.staffList : [];
+  const sorted = [...staffArray].sort((a,b) => (b.score || 0) - (a.score || 0));
   return (
-    <div className="card" style={{ padding:'1.5rem', borderRadius:'20px', border:'1px solid var(--border-color)', display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.5rem' }}>
+    <div className="card" style={{ padding:'1.5rem', borderRadius:'16px', border:'1px solid var(--border-color)' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.2rem' }}>
         <Users size={18} color="#2563EB" />
-        <h3 style={{ fontSize:'1rem', fontWeight:'900' }}>Staff Performance</h3>
-        <span style={{ marginLeft:'auto', fontSize:'0.8rem', color:'#2563EB', fontWeight:'800', background:'rgba(37, 99, 235, 0.1)', padding:'0.2rem 0.6rem', borderRadius:'100px' }}>
+        <h3 style={{ fontSize:'1rem', fontWeight:'800' }}>Staff Performance</h3>
+        <span style={{ marginLeft:'auto', fontSize:'0.8rem', color:'#2563EB', fontWeight:'700', background:'#DBEAFE', padding:'0.2rem 0.6rem', borderRadius:'100px' }}>
           Efficiency {data.efficiencyScore}%
         </span>
       </div>
-
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'0.8rem', marginBottom:'1.5rem' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'0.8rem', marginBottom:'1.2rem' }}>
         {[
-          { label:'Assigned', value:data.tasksAssigned, color:'var(--text-primary)', bg: 'var(--bg-tertiary)' },
-          { label:'Completed', value:data.tasksCompleted, color:'#10B981', bg: 'rgba(16, 185, 129, 0.05)' },
-          { label:'Pending', value:data.tasksPending, color:'#EF4444', bg: 'rgba(239, 68, 68, 0.05)' },
+          { label:'Assigned', value:data.tasksAssigned, color:'var(--text-primary)' },
+          { label:'Completed', value:data.tasksCompleted, color:'#10B981' },
+          { label:'Pending', value:data.tasksPending, color:'#EF4444' },
         ].map((s,i) => (
-          <div key={i} style={{ background:s.bg, padding:'1rem 0.5rem', borderRadius:'12px', textAlign:'center', border: '1px solid var(--border-color)' }}>
-            <p style={{ fontSize:'1.4rem', fontWeight:'1000', color:s.color, margin:0 }}>{s.value}</p>
-            <p style={{ fontSize:'0.7rem', color:'var(--text-muted)', fontWeight:'800', margin:'0.2rem 0 0', textTransform: 'uppercase' }}>{s.label}</p>
+          <div key={i} style={{ background:'var(--bg-tertiary)', padding:'0.8rem', borderRadius:'10px', textAlign:'center' }}>
+            <p style={{ fontSize:'1.2rem', fontWeight:'800', color:s.color, margin:0 }}>{s.value}</p>
+            <p style={{ fontSize:'0.7rem', color:'var(--text-muted)', fontWeight:'600', margin:0 }}>{s.label}</p>
           </div>
         ))}
       </div>
-
-      <div style={{ display:'flex', flexDirection:'column', gap:'0.4rem', flex: 1, maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
-        {staffArray.map((s,i) => (
-          <motion.div whileHover={{ backgroundColor: 'var(--bg-tertiary)', x: 4 }} key={i} style={{ display:'grid', gridTemplateColumns: '32px 1fr 45px', gap:'1rem', padding:'0.6rem 0.8rem', borderRadius:'12px', cursor:'pointer', alignItems: 'center' }}>
-            <div style={{ width:'32px', height:'32px', borderRadius:'10px', background: i===0?'rgba(245, 158, 11, 0.1)':'var(--bg-secondary)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.85rem', fontWeight:'900', color: i===0?'#F59E0B':'var(--text-muted)', border: '1px solid var(--border-color)' }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:'0.2rem' }}>
+        {sorted.map((s,i) => (
+          <motion.div whileHover={{ backgroundColor: 'var(--bg-tertiary)', x: 4 }} key={i} style={{ display:'flex', alignItems:'center', gap:'0.8rem', padding:'0.6rem 0.8rem', borderRadius:'8px', cursor:'pointer' }}>
+            <div style={{ width:'28px', height:'28px', borderRadius:'50%', background: i===0?'rgba(16,185,129,0.1)':i===sorted.length-1?'rgba(239,68,68,0.1)':'var(--bg-secondary)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.7rem', fontWeight:'800', color: i===0?'#10B981':i===sorted.length-1?'#EF4444':'var(--text-muted)', flexShrink:0, boxShadow:'var(--shadow-sm)' }}>
               {i===0?'🏆':i+1}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={{ fontSize:'0.85rem', fontWeight:'800', color: 'var(--text-primary)' }}>{s.name}</span>
-              <div style={{ height:'4px', background:'var(--bg-secondary)', borderRadius:'10px', overflow:'hidden', border: '1px solid var(--border-color)' }}>
-                <div style={{ width:`${s.score}%`, height:'100%', background: s.score>=90?'#10B981':s.score>=80?'#6366F1':'#F59E0B', borderRadius:'10px' }}/>
+            <div style={{ flex:1 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'4px' }}>
+                <span style={{ fontSize:'0.82rem', fontWeight:'700' }}>{s.name}</span>
+                <span style={{ fontSize:'0.75rem', color:'var(--text-muted)' }}>{s.score}%</span>
+              </div>
+              <div style={{ height:'4px', background:'var(--bg-secondary)', borderRadius:'4px', overflow:'hidden' }}>
+                <div style={{ width:`${s.score}%`, height:'100%', background: s.score>=80?'#10B981':s.score>=65?'#F59E0B':'#EF4444', borderRadius:'4px', transition:'width 1s ease' }}/>
               </div>
             </div>
-            <span style={{ fontSize:'0.8rem', color:'var(--text-primary)', fontWeight: '900', textAlign: 'right' }}>{s.score}%</span>
           </motion.div>
         ))}
       </div>
-
-      <button onClick={() => navigate(`/owner/building/${buildingId}/staff`)} className="btn" style={{ width:'100%', marginTop:'1.5rem', background:'var(--bg-tertiary)', padding:'0.8rem', borderRadius:'12px', fontSize:'0.85rem', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', color: 'var(--text-secondary)' }}>
-        View Performance Logs <ChevronRight size={14}/>
-      </button>
     </div>
   );
 }
@@ -256,53 +253,43 @@ export function InsightsPanel({ insights, alerts, summary }) {
 }
 
 // ── ACTIVITY FEED ─────────────────────────────────────────────
-export function ActivityFeed({ items = [] }) {
-  const navigate = useNavigate();
-  const { buildingId } = useParams();
-  const formatTime = (date) => {
-    if (!date) return 'Recently';
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return 'Recently';
-    const now = new Date();
-    const diff = Math.floor((now - d) / 60000); // minutes
-    if (diff < 1) return 'Just now';
-    if (diff < 60) return `${diff}m ago`;
-    if (diff < 1440) return `${Math.floor(diff/60)}h ago`;
-    return d.toLocaleDateString();
-  };
-
+export function ActivityFeed() {
+  const items = [
+    { icon:'💰', text:'Rahul Sharma paid ₹6,500 rent', time:'8m ago', color:'#10B981' },
+    { icon:'🔧', text:'Maintenance request in Room 204 resolved', time:'25m ago', color:'#2563EB' },
+    { icon:'🚪', text:'Priya Verma checked in to Room 301-B', time:'1h ago', color:'#8B5CF6' },
+    { icon:'⚠️', text:'AC complaint raised in Floor 2', time:'2h ago', color:'#EF4444' },
+    { icon:'📄', text:'Agreement renewed for Amit Singh', time:'3h ago', color:'#F59E0B' },
+    { icon:'🍽️', text:'Mess feedback: 4.2 stars for lunch', time:'4h ago', color:'#10B981' },
+  ];
   return (
-    <div className="card" style={{ padding:'1.5rem', borderRadius:'16px', border:'1px solid var(--border-color)', height:'100%', display:'flex', flexDirection:'column' }}>
+    <div className="card" style={{ padding:'1.5rem', borderRadius:'16px', border:'1px solid var(--border-color)' }}>
       <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.2rem' }}>
         <Bell size={18} color="#2563EB" />
         <h3 style={{ fontSize:'1rem', fontWeight:'800' }}>Live Activity Feed</h3>
         <span style={{ marginLeft:'auto', width:'8px', height:'8px', background:'#10B981', borderRadius:'50%', boxShadow:'0 0 6px #10B981' }}/>
       </div>
-      <div style={{ display:'flex', flexDirection:'column', gap:'0.2rem', flex: 1, overflowY: 'auto' }}>
-        {items.length === 0 && <p style={{ fontSize:'0.8rem', color:'var(--text-muted)', textAlign:'center', padding:'1rem' }}>No recent activity</p>}
+      <div style={{ display:'flex', flexDirection:'column', gap:'0.2rem' }}>
         {items.map((item,i) => (
           <motion.div whileHover={{ x: 4, backgroundColor: 'var(--bg-tertiary)' }} key={i} style={{ display:'flex', gap:'0.8rem', padding:'0.6rem 0.8rem', borderRadius:'8px', cursor:'pointer' }}>
             <span style={{ fontSize:'1.1rem', flexShrink:0 }}>{item.icon}</span>
             <div style={{ flex:1 }}>
               <p style={{ fontSize:'0.82rem', fontWeight:'600', color:'var(--text-primary)', margin:0 }}>{item.text}</p>
-              <span style={{ fontSize:'0.72rem', color:'var(--text-muted)' }}>{formatTime(item.time)}</span>
+              <span style={{ fontSize:'0.72rem', color:'var(--text-muted)' }}>{item.time}</span>
             </div>
           </motion.div>
         ))}
       </div>
-      <button onClick={() => navigate(`/owner/building/${buildingId}/notifications`)} className="btn" style={{ width:'100%', marginTop:'1.5rem', background:'var(--bg-tertiary)', padding:'0.8rem', borderRadius:'12px', fontSize:'0.85rem', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', color: 'var(--text-secondary)' }}>
-        View All History <ChevronRight size={14}/>
-      </button>
     </div>
   );
 }
 
 // ── DOCUMENT TRACKER ──────────────────────────────────────────
-export function DocumentTracker({ summary }) {
+export function DocumentTracker() {
   const docs = [
-    { label:'Expiring Agreements', count: summary?.renewalsPending || 0, color:'#EF4444', bg:'#FEE2E2' },
-    { label:'Pending KYC', count: summary?.pendingKYC || 0, color:'#F59E0B', bg:'#FEF3C7' },
-    { label:'Documents OK', count: (summary?.totalTenants || 0) - (summary?.pendingKYC || 0), color:'#10B981', bg:'#DCFCE7' },
+    { label:'Expiring Agreements', count:3, color:'#EF4444', bg:'#FEE2E2' },
+    { label:'Pending KYC', count:5, color:'#F59E0B', bg:'#FEF3C7' },
+    { label:'Documents OK', count:38, color:'#10B981', bg:'#DCFCE7' },
   ];
   return (
     <div className="card" style={{ padding:'1.5rem', borderRadius:'16px', border:'1px solid var(--border-color)' }}>
@@ -333,16 +320,14 @@ export function DocumentTracker({ summary }) {
 
 // ── TENANT OVERVIEW ───────────────────────────────────────────
 export function TenantOverviewPanel({ summary }) {
-  const navigate = useNavigate();
-  const { buildingId } = useParams();
   if (!summary) return null;
   return (
-    <div className="card" style={{ padding:'1.5rem', borderRadius:'16px', border:'1px solid var(--border-color)', height:'100%', display:'flex', flexDirection:'column' }}>
+    <div className="card" style={{ padding:'1.5rem', borderRadius:'16px', border:'1px solid var(--border-color)' }}>
       <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.2rem' }}>
         <Users size={18} color="#10B981" />
         <h3 style={{ fontSize:'1rem', fontWeight:'800' }}>Tenant Overview</h3>
       </div>
-      <div style={{ display:'flex', flexDirection:'column', gap:'0.2rem', flex: 1 }}>
+      <div style={{ display:'flex', flexDirection:'column', gap:'0.2rem' }}>
         {[
           { label:'Active Tenants', value:summary.occupiedBeds, color:'var(--text-primary)' },
           { label:'New This Month', value:`+${summary.newTenantsThisMonth}`, color:'#10B981' },
@@ -356,8 +341,8 @@ export function TenantOverviewPanel({ summary }) {
           </motion.div>
         ))}
       </div>
-      <button onClick={() => navigate(`/owner/building/${buildingId}/tenants`)} className="btn" style={{ width:'100%', marginTop:'1.2rem', background:'var(--bg-tertiary)', fontSize:'0.82rem', padding:'0.6rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.4rem', fontWeight:'800' }}>
-        <ClipboardList size={14}/> View Detailed List <ChevronRight size={14}/>
+      <button className="btn" style={{ width:'100%', marginTop:'1rem', background:'var(--bg-tertiary)', fontSize:'0.82rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.4rem' }}>
+        <ClipboardList size={14}/> View Defaulters List
       </button>
     </div>
   );
@@ -365,7 +350,6 @@ export function TenantOverviewPanel({ summary }) {
 
 // ── INFRASTRUCTURE OVERVIEW ───────────────────────────────────
 export function InfrastructureOverview({ buildingId }) {
-  const navigate = useNavigate();
   const [data, setData] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -386,61 +370,40 @@ export function InfrastructureOverview({ buildingId }) {
     })();
   }, [buildingId]);
 
-  if (loading || !data) return (
-    <div className="card" style={{ padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--border-color)', minHeight: '200px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-       <div style={{ display:'flex', gap:'1rem', alignItems:'center' }}>
-         <div style={{ width:'30px', height:'30px', background:'var(--bg-tertiary)', borderRadius:'8px' }}/>
-         <div style={{ width:'120px', height:'20px', background:'var(--bg-tertiary)', borderRadius:'4px' }}/>
-       </div>
-       {[1,2].map(i => (
-         <div key={i} style={{ height:'80px', width:'100%', background:'var(--bg-tertiary)', borderRadius:'12px', animation:'pulse 2s infinite' }}/>
-       ))}
-    </div>
-  );
+  if (loading || !data) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading Infrastructure...</div>;
 
   return (
-    <div className="card" style={{ padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-        <Building size={18} color="var(--accent-primary)" />
-        <h3 style={{ fontSize: '1rem', fontWeight: '900' }}>Property Infrastructure</h3>
-        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', padding: '0.2rem 0.6rem', borderRadius: '100px', border: '1px solid var(--border-color)' }}>
-          {data.floors.length} Floors · {data.rooms.length} Rooms
-        </span>
+    <div className="card" style={{ padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.2rem' }}>
+        <ChevronRight size={18} color="var(--accent-primary)" />
+        <h3 style={{ fontSize: '1rem', fontWeight: '800' }}>Property Infrastructure</h3>
+        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>{data.floors.length} Floors · {data.rooms.length} Rooms</span>
       </div>
       
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', maxHeight: '320px', overflowY: 'auto' }}>
         {data.floors.map(f => {
-          const fid = f.id || f._id;
-          const fRooms = data.rooms.filter(r => r.floorId === fid);
-          const fBeds = data.beds.filter(b => fRooms.some(r => r.id === b.roomId || r._id === b.roomId));
+          const fRooms = data.rooms.filter(r => r.floorId === f.id);
+          const fBeds = data.beds.filter(b => fRooms.some(r => r.id === b.roomId));
           const fOccupied = fBeds.filter(b => b.status === 'OCCUPIED').length;
           const fOccRate = fBeds.length > 0 ? Math.round((fOccupied / fBeds.length) * 100) : 0;
 
           return (
-            <div key={fid} style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--border-color)', position: 'relative' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                <span style={{ fontWeight: '900', fontSize: '1rem', color: 'var(--text-primary)' }}>{f.floorNumber}</span>
-                <span style={{ fontSize: '0.78rem', fontWeight: '800', color: fOccRate >= 85 ? '#EF4444' : (fOccRate >= 70 ? '#F59E0B' : '#10B981'), background: fOccRate >= 85 ? 'rgba(239, 68, 68, 0.05)' : 'rgba(16, 185, 129, 0.05)', padding: '0.2rem 0.6rem', borderRadius: '100px' }}>
-                  {fOccRate}% Occupied
-                </span>
+            <div key={f.id} style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ fontWeight: '800', fontSize: '0.9rem' }}>{f.floorNumber}</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: '700', color: fOccRate >= 80 ? '#EF4444' : '#10B981' }}>{fOccRate}% Occupied</span>
               </div>
-              <div style={{ height: '6px', background: 'var(--bg-tertiary)', borderRadius: '100px', marginBottom: '1rem', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-                <div style={{ width: `${fOccRate}%`, height: '100%', background: fOccRate >= 85 ? 'linear-gradient(90deg, #EF4444, #F87171)' : 'linear-gradient(90deg, #6366F1, #3B82F6)', borderRadius: '100px', transition: 'width 1s ease' }} />
+              <div style={{ height: '4px', background: 'var(--bg-secondary)', borderRadius: '2px', marginBottom: '0.5rem' }}>
+                <div style={{ width: `${fOccRate}%`, height: '100%', background: fOccRate >= 80 ? '#EF4444' : '#10B981', borderRadius: '2px' }} />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '1rem', fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: '800' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Building size={12}/> {fRooms.length} Rooms</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Users size={12}/> {fOccupied}/{fBeds.length} Beds</span>
-                </div>
-                <button onClick={() => navigate(`/owner/building/${buildingId}/rooms`)} className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.72rem', fontWeight: '800', background: 'var(--bg-tertiary)', borderRadius: '8px' }}>Manage Floor</button>
+              <div style={{ display: 'flex', gap: '0.8rem', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700' }}>
+                <span>{fRooms.length} Rooms</span>
+                <span>{fOccupied}/{fBeds.length} Beds</span>
               </div>
             </div>
           );
         })}
       </div>
-      <button onClick={() => navigate(`/owner/building/${buildingId}/rooms`)} className="btn" style={{ width:'100%', marginTop:'1.5rem', background:'var(--bg-tertiary)', padding:'0.8rem', borderRadius:'12px', fontSize:'0.85rem', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', color: 'var(--text-secondary)' }}>
-        Explore Complete Infrastructure <ChevronRight size={14}/>
-      </button>
     </div>
   );
 }

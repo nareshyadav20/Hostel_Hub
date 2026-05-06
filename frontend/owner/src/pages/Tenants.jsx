@@ -52,11 +52,8 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => (
 );
 
 const Tenants = () => {
-  const { buildingId: urlBuildingId } = useParams();
+  const { buildingId } = useParams();
   
-  // Step 1: Restore context
-  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
-
   // Base State
   const [tenants, setTenants] = useState([
     { 
@@ -102,11 +99,6 @@ const Tenants = () => {
   const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
-    console.log("Tenants module fetching for ID:", activeBuildingId);
-    fetchTenants();
-  }, [activeBuildingId]);
-
-  useEffect(() => {
     if (isBulkRegisterModalOpen) {
       const fetchInfra = async () => {
         setIsLoading(true);
@@ -117,7 +109,7 @@ const Tenants = () => {
             api.getAllRooms(),
             api.getAllBeds()
           ]);
-          const filteredB = activeBuildingId ? b.filter(x => (x.id || x._id) === activeBuildingId) : b;
+          const filteredB = buildingId ? b.filter(x => (x.id || x._id) === buildingId) : b;
           setInfrastructure({ buildings: filteredB, floors: f, rooms: r, beds: bd });
         } catch (err) {
           console.error("Failed to fetch infrastructure", err);
@@ -127,84 +119,37 @@ const Tenants = () => {
       };
       fetchInfra();
     }
-  }, [isBulkRegisterModalOpen, activeBuildingId]);
-
-  const fetchTenants = async () => {
-    setIsLoading(true);
-    try {
-      const data = await api.getTenants();
-      if (!data || data.length === 0) {
-        // Keep the existing hardcoded mock data — no-op
-        setIsLoading(false);
-        return;
-      }
-
-      // Normalize backend field names → UI field names
-      const normalized = data.map(t => ({
-        id:               t._id  || t.id,
-        name:             t.name || 'Unknown',
-        email:            t.email || '',
-        phone:            t.phone || t.contact || '',
-        room:             t.room  || t.roomNumber || 'Unassigned',
-        rent:             t.rent  || 0,
-        status:           t.status || 'ACTIVE',
-        rentStatus:       t.rentStatus || 'PENDING',
-        checkIn:          t.checkInDate
-                            ? new Date(t.checkInDate).toISOString().split('T')[0]
-                            : (t.checkIn || 'N/A'),
-        emergencyContact: t.emergencyContact || 'N/A',
-        buildingId:       t.buildingId?._id || t.buildingId || null,
-        score:            t.score  ?? 4.5,
-        plan:             t.messPlan || t.plan || 'Standard',
-        lastPayment:      t.lastPayment || 'N/A',
-        docs:             t.docs  || (t.aadhaar ? [{ name: 'Aadhar Card', verified: true }] : []),
-      }));
-
-      // Filter by activeBuildingId if we're on a specific building route
-      const filtered = activeBuildingId
-        ? normalized.filter(t => t.buildingId === activeBuildingId)
-        : normalized;
-
-      // Only replace state if we actually got records (never blank the list)
-      if (filtered.length > 0) setTenants(filtered);
-    } catch (err) {
-      console.error('Failed to fetch tenants:', err);
-      // Keep existing mock state on error
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [isBulkRegisterModalOpen, buildingId]);
 
   const [registerFormData, setRegisterFormData] = useState({
     name: '', email: '', phone: '', room: '', rent: '', checkIn: '', emergencyContact: '',
     aadhaar: '', document: null, messPlan: 'basic'
   });
 
-  const handleRegisterSubmit = async (e) => {
+  const handleRegisterSubmit = (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      if (modalMode === 'edit') {
-        const updated = await api.updateTenant(selectedTenant.id, registerFormData);
-        setTenants(tenants.map(t => t.id === updated.id ? updated : t));
-        setSelectedTenant(updated);
-      } else {
-        const payload = { 
-          ...registerFormData, 
-          buildingId: activeBuildingId, // IMPORTANT: Link to building
-          status: 'ACTIVE' 
-        };
-        const created = await api.addTenant(payload);
-        setTenants([...tenants, created]);
-      }
-      setIsRegisterModalOpen(false);
-      setRegisterFormData({ name: '', email: '', phone: '', room: '', rent: '', checkIn: '', emergencyContact: '', aadhaar: '', document: null });
-    } catch (err) {
-      console.error('Failed to save tenant:', err);
-      alert('Error saving tenant. Please check backend.');
-    } finally {
-      setIsSubmitting(false);
+    if (modalMode === 'edit') {
+      const updatedTenants = tenants.map(t => 
+        t.id === selectedTenant.id ? { ...t, ...registerFormData } : t
+      );
+      setTenants(updatedTenants);
+      setSelectedTenant({ ...selectedTenant, ...registerFormData });
+    } else {
+      const newTenant = {
+        ...registerFormData,
+        id: tenants.length + 1,
+        status: 'ACTIVE',
+        rentStatus: 'PENDING',
+        score: 5.0, plan: 'Single', lastPayment: 'N/A',
+        docs: [
+          ...(registerFormData.aadhaar ? [{ name: 'Aadhar Card', verified: false }] : []),
+          ...(registerFormData.document ? [{ name: 'ID Proof', verified: true, file: registerFormData.document.name }] : [])
+        ]
+      };
+      setTenants([...tenants, newTenant]);
     }
+    setIsRegisterModalOpen(false);
+    setRegisterFormData({ name: '', email: '', phone: '', room: '', rent: '', checkIn: '', emergencyContact: '', aadhaar: '', document: null });
   };
 
   const handleEditClick = () => {
@@ -337,10 +282,6 @@ const Tenants = () => {
           
           <button className="btn btn-primary" onClick={() => { setModalMode('add'); setIsRegisterModalOpen(true); }} style={{ background: '#3B82F6', border: 'none', padding: '0.75rem 1.2rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
             <Plus size={18} /> Add Tenant
-          </button>
-
-          <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '0.5rem' }}>
-            <X size={20} />
           </button>
         </div>
       </header>

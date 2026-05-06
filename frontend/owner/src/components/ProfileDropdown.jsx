@@ -52,33 +52,6 @@ const ProfileDropdown = () => {
             <p style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{user.name}</p>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{user.email}</p>
           </div>
-
-          <button 
-            onClick={() => { navigate('/owner/profile'); setIsOpen(false); }}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.8rem',
-              padding: '0.8rem',
-              borderRadius: '10px',
-              color: 'var(--text-primary)',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: '600',
-              marginBottom: '0.5rem',
-              transition: 'var(--transition-fast)'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            My Profile
-          </button>
           
           <button 
             onClick={handleLogout}

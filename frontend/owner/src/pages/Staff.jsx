@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -23,11 +22,6 @@ const ROLE_COLORS = {
 };
 
 const Staff = () => {
-  const { buildingId: urlBuildingId } = useParams();
-  
-  // Step 1: Restore context
-  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
-
   const [staffData, setStaffData] = useState({ staffList: [], totalStaff: 0 });
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [activeTab, setActiveTab] = useState('Overview');
@@ -37,7 +31,6 @@ const Staff = () => {
   const fileInputRef = useRef(null);
 
   async function fetchStaff() {
-    console.log("Staff module fetching for ID:", activeBuildingId);
     try {
       const data = await api.getDashboardStaff();
       setStaffData(data || { staffList: [] });
@@ -49,8 +42,9 @@ const Staff = () => {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStaff();
-  }, [activeBuildingId]);
+  }, []);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -350,12 +344,9 @@ const Staff = () => {
           </h1>
           <p style={{ color: '#64748B', fontSize: '1rem', fontWeight: '500', margin: 0 }}>Workforce tracking, performance analytics, and payroll management.</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '1rem' }}>
           <button className="btn" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#475569', padding: '0.8rem 1.2rem', borderRadius: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Download size={18}/> Export</button>
           <button className="btn btn-primary" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#3B82F6', border: 'none' }}><UserPlus size={18}/> Add Staff</button>
-          <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '0.5rem' }}>
-            <X size={20} />
-          </button>
         </div>
       </header>
 

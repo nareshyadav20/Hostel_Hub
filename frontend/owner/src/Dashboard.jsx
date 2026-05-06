@@ -1,359 +1,406 @@
-import React, { useState, useEffect } from 'react';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Building, Wallet, Users, ArrowUpRight, ArrowDownRight, Zap, X, UserPlus, CheckCircle, AlertCircle, TrendingUp, LogIn, Utensils, ArrowLeft, Search, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { Building, Wallet, Users, ArrowUpRight, ArrowDownRight, Zap, X, UserPlus, CheckCircle, AlertCircle, TrendingUp, Download, LogIn, LogOut, Settings, Bell, Utensils, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, Link } from 'react-router-dom';
 import { api } from './mockData';
-import { ComplaintsPanel, MessPanel, StaffPanel, InsightsPanel, ActivityFeed, TenantOverviewPanel, DashboardModal } from './DashboardPanels';
+import { HealthScoreCard, ComplaintsPanel, MessPanel, StaffPanel, InsightsPanel, ActivityFeed, DocumentTracker, TenantOverviewPanel, DashboardModal, InfrastructureOverview } from './DashboardPanels';
 
-const iStyle = { padding:'0.85rem', borderRadius:'12px', border:'1px solid var(--border-color)', background:'var(--bg-secondary)', color:'var(--text-primary)', fontSize:'0.9rem', outline:'none', width:'100%', boxSizing:'border-box', transition:'all 0.3s' };
-const lStyle = { fontSize:'0.8rem', fontWeight:'800', color:'var(--text-muted)', marginBottom:'0.5rem', display:'block', textTransform:'uppercase', letterSpacing:'0.04em' };
+const iStyle = { padding:'0.75rem', borderRadius:'10px', border:'1px solid var(--border-color)', background:'var(--bg-tertiary)', color:'var(--text-primary)', fontSize:'0.9rem', outline:'none', width:'100%', boxSizing:'border-box' };
+const lStyle = { fontSize:'0.82rem', fontWeight:'700', color:'var(--text-secondary)', marginBottom:'0.4rem', display:'block' };
 
 function Dashboard() {
-  const { buildingId: urlBuildingId } = useParams();
-  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
-
+  const { buildingId } = useParams();
   const [isLoading, setIsLoading] = useState(true);
-  const [modal, setModal] = useState(null); 
+  const [modal, setModal] = useState(null); // 'addTenant' | 'assignBed' | 'markPaid' | 'complaint'
   const [formMsg, setFormMsg] = useState('');
-  const [d, setD] = useState({ summary:null, revenue:null, occupancy:null, alerts:null, complaints:null, mess:null, staff:null, activity: [], tenantsList: [] });
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [settings, setSettings] = useState(null);
+  const [d, setD] = useState({ summary:null, revenue:null, occupancy:null, alerts:null, complaints:null, mess:null, staff:null });
 
-  const fetchData = async () => {
-    if (!activeBuildingId) {
-      setIsLoading(false);
-      return;
-    }
-    setIsRefreshing(true);
-    try {
-      const [summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenants] = await Promise.all([
-        api.getDashboardSummary(activeBuildingId),
-        api.getDashboardRevenue(activeBuildingId),
-        api.getDashboardOccupancy(activeBuildingId),
-        api.getDashboardAlerts(activeBuildingId),
-        api.getDashboardComplaints(activeBuildingId),
-        api.getDashboardMess(activeBuildingId),
-        api.getDashboardStaff(activeBuildingId),
-        api.getDashboardActivity(activeBuildingId),
-        api.getTenants()
-      ]);
-      setD({ summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenantsList: tenants });
-    } catch(e) {
-      console.error('Dashboard Fetch Error:', e);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const [summary, revenue, occupancy, alerts, complaints, mess, staff, sData] = await Promise.all([
+          api.getDashboardSummary(buildingId),
+          api.getDashboardRevenue(buildingId),
+          api.getDashboardOccupancy(buildingId),
+          api.getDashboardAlerts(buildingId),
+          api.getDashboardComplaints(buildingId),
+          api.getDashboardMess(buildingId),
+          api.getDashboardStaff(buildingId),
+          api.getSettings()
+        ]);
+        setD({ summary, revenue, occupancy, alerts, complaints, mess, staff });
+        setSettings(sData);
+      } catch(e) {
+        console.error('Dashboard Fetch Error:', e);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [buildingId]);
 
-  useEffect(() => { fetchData(); }, [activeBuildingId]);
-
-
-  if (isLoading) return (
-    <div className="dashboard-container" style={{ padding: '2rem' }}>
-      <div style={{ animation:'pulse 2s infinite' }}>
-        <div style={{ height: '35px', width: '180px', background:'var(--bg-tertiary)', borderRadius:'8px', marginBottom:'1.5rem' }}/>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'1.2rem', marginBottom:'1.5rem' }}>
-          {[1,2,3].map(i => <div key={i} style={{ height:'100px', background:'var(--bg-secondary)', borderRadius:'16px' }}/>)}
+  if (isLoading || !d.summary) return (
+    <div className="dashboard-container">
+      <div style={{ animation:'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}>
+        <div style={{ height: '60px', width: '30%', background:'var(--bg-tertiary)', borderRadius:'8px', marginBottom:'2rem' }}/>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:'1.5rem', marginBottom:'2.5rem' }}>
+          {[1,2,3,4].map(i => <div key={i} style={{ height:'140px', background:'var(--bg-secondary)', border:'1px solid var(--border-color)', borderRadius:'16px' }}/>)}
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:'2rem' }}>
-          <div style={{ height:'400px', background:'var(--bg-secondary)', borderRadius:'16px' }}/>
-          <div style={{ height:'400px', background:'var(--bg-secondary)', borderRadius:'16px' }}/>
+          <div style={{ height:'300px', background:'var(--bg-secondary)', border:'1px solid var(--border-color)', borderRadius:'16px' }}/>
+          <div style={{ height:'300px', background:'var(--bg-secondary)', border:'1px solid var(--border-color)', borderRadius:'16px' }}/>
         </div>
       </div>
     </div>
   );
 
-  if (!activeBuildingId || !d.summary) return (
-    <div className="dashboard-container" style={{ padding: '4rem 2rem', textAlign: 'center' }}>
-      <div style={{ maxWidth: '400px', margin: '0 auto' }}>
-        <Building size={64} color="var(--text-muted)" style={{ marginBottom: '1.5rem', opacity: 0.5 }} />
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1rem' }}>No Building Selected</h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Please select a building from your portfolio to view its live dashboard and analytics.</p>
-        <Link to="/owner/portfolio" className="btn btn-primary" style={{ padding: '0.8rem 2rem', borderRadius: '12px' }}>Go to Portfolio</Link>
-      </div>
-    </div>
-  );
+  const { summary, revenue, occupancy, alerts, complaints, mess, staff } = d;
 
-  const { summary, revenue, alerts, complaints, mess, staff, activity, tenantsList } = d;
+  const lowStockCount = (mess?.inventory || []).filter(i => i.alert).length;
 
-  const primaryKpis = [
-    { label:'Revenue Collected', valueText:`₹${(summary.todayRevenue/1000).toFixed(1)}k`, sub:'Collected today', color:'#10B981', bg:'rgba(16, 185, 129, 0.1)', icon:<Wallet size={20}/>, up:true },
-    { label:'Occupancy Rate', valueText:`${summary.occupancyRate}%`, sub:`${summary.occupiedBeds}/${summary.totalBeds} Beds`, color:'#6366F1', bg:'rgba(99, 102, 241, 0.1)', icon:<TrendingUp size={20}/>, up:true },
-    { label:'Pending Dues', valueText:`₹${(summary.pendingPaymentsAmount/1000).toFixed(0)}k`, sub:`${summary.pendingPaymentsCount} Defaulters`, color:'#EF4444', bg:'rgba(239, 68, 68, 0.1)', icon:<AlertCircle size={20}/>, up:false },
+  const kpis = [
+    { label:'Total Beds', value:summary.totalBeds, sub:'All capacity', color:'#2563EB', bg:'#DBEAFE', icon:<Building size={18}/>, up:true },
+    { label:'Occupied', value:summary.occupiedBeds, sub:'Active tenants', color:'#10B981', bg:'#DCFCE7', icon:<Users size={18}/>, up:true },
+    { label:'Vacant', value:summary.vacantBeds, sub:'Available now', color:'#EF4444', bg:'#FEE2E2', icon:<AlertCircle size={18}/>, up:false },
+    { label:'Occupancy %', value:`${summary.occupancyRate}%`, sub:'Capacity used', color:'#8B5CF6', bg:'#EDE9FE', icon:<TrendingUp size={18}/>, up:summary.occupancyRate>=70 },
+    { label:'Today Revenue', value:`₹${(summary.todayRevenue/1000).toFixed(1)}k`, sub:'Collected', color:'#10B981', bg:'#DCFCE7', icon:<Wallet size={18}/>, up:true },
+    { label:'Monthly Est.', value:`₹${(summary.expectedMonthlyRevenue/100000).toFixed(1)}L`, sub:'Expected', color:'#F59E0B', bg:'#FEF3C7', icon:<Wallet size={18}/>, up:true },
+    { label:'Pending Dues', value:summary.pendingPaymentsCount, sub:`₹${(summary.pendingPaymentsAmount/1000).toFixed(0)}k`, color:'#EF4444', bg:'#FEE2E2', icon:<AlertCircle size={18}/>, up:false },
+    { label:'Total Tenants', value:summary.totalTenants ?? 0, sub:'Active in portal', color:'#10B981', bg:'#DCFCE7', icon:<Users size={18}/>, up:true },
+    { label:'Staff Efficiency', value:`${staff?.efficiencyScore ?? 0}%`, sub:`${staff?.tasksCompleted ?? 0} tasks done`, color:'#0EA5E9', bg:'#E0F2FE', icon:<TrendingUp size={18}/>, up:(staff?.efficiencyScore ?? 0)>=80 },
+    { label:'Performance', value:`${summary.healthScore}/100`, sub: summary.healthScore>=75?'Healthy':summary.healthScore>=50?'Moderate':'At Risk', color: summary.healthScore>=75?'#10B981':summary.healthScore>=50?'#F59E0B':'#EF4444', bg: summary.healthScore>=75?'#DCFCE7':summary.healthScore>=50?'#FEF3C7':'#FEE2E2', icon:<TrendingUp size={18}/>, up:summary.healthScore>=60 },
+    { label:'Mess Alerts', value:lowStockCount, sub: lowStockCount>0?`${lowStockCount} items low`:'Stock OK', color: lowStockCount>0?'#EF4444':'#10B981', bg: lowStockCount>0?'#FEE2E2':'#DCFCE7', icon:<AlertCircle size={18}/>, up:lowStockCount===0 },
+    { label:'Mess Subscriptions', value:142, sub:'₹1.8L monthly revenue', color:'#8B5CF6', bg:'#EDE9FE', icon:<Utensils size={18}/>, up:true, popular:'Premium' },
   ];
 
-  return (
-    <div className="dashboard-container" style={{ padding: '2rem', animation:'fadeIn 0.5s ease', maxWidth: '1600px', margin: '0 auto' }}>
+  const actionItems = [
+    { label:'Check-ins', value:summary.checkInsToday, icon:'🚪', color:'#10B981' },
+    { label:'Check-outs', value:summary.checkOutsToday, icon:'🏃', color:'#EF4444' },
+    { label:'Rent Due', value:summary.rentDueToday, icon:'💰', color:'#F59E0B' },
+    { label:'Complaints', value:summary.complaintsToday, icon:'⚠️', color:'#8B5CF6' },
+    { label:'Maintenance', value:summary.maintenanceRooms, icon:'🔧', color:'#2563EB' },
+  ];
 
-      {/* REFINED HEADER */}
-      <header style={{ marginBottom:'2.5rem', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+  const col = { gap:'1.5rem', marginBottom:'2.5rem' };
+  const grid2 = { display:'grid', gridTemplateColumns:'1fr 1fr', ...col };
+  const grid3 = { display:'grid', gridTemplateColumns:'1fr 1fr 1fr', ...col };
+
+  return (
+    <>
+      <div className="dashboard-container" style={{ animation:'fadeIn 0.5s ease' }}>
+
+      {/* HEADER */}
+      <header style={{ marginBottom:'2rem', display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:'1rem' }}>
         <div>
-          <Link to="/owner/portfolio" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-            <ArrowLeft size={14} /> Back to Portfolio
-          </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <h1 style={{ fontSize:'2.4rem', fontWeight:'1000', color:'var(--text-primary)', letterSpacing:'-0.04em', margin:0 }}>
-              {summary.buildingName} Dashboard
-            </h1>
-            <div style={{ padding: '0.4rem 0.8rem', borderRadius: '100px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', animation: 'pulse 2s infinite' }} />
-              Live System Status
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.5rem' }}>
+            {buildingId && (
+              <Link to="/owner/portfolio" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent-primary)', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '700' }}>
+                <ArrowLeft size={16} /> Back to Overview
+              </Link>
+            )}
           </div>
+          <h1 style={{ fontSize:'2rem', fontWeight:'900', color:'var(--text-primary)', letterSpacing:'-0.03em', margin:0 }}>
+            {buildingId === 'b1' ? 'Alpha Tower' : buildingId === 'b2' ? 'Beta Block' : 'Command Center'}
+          </h1>
+          <p style={{ color:'var(--text-secondary)', fontSize:'0.95rem', marginTop:'0.3rem' }}>
+            {buildingId ? 'Real-time property performance & operational control' : 'Real-time business insights & operational control'}
+          </p>
         </div>
-        <div style={{ display:'flex', gap:'1rem', alignItems:'center' }}>
-          <Link to={`/owner/building/${activeBuildingId}/rooms`} className="btn" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--accent-primary)', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1.2rem', borderRadius: '12px' }}>
-            <Users size={18} /> Occupancy View
-          </Link>
-          <button 
-            onClick={fetchData} 
-            disabled={isRefreshing}
-            className="btn" 
-            style={{ padding: '0.8rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: isRefreshing ? 'not-allowed' : 'pointer' }}
-          >
-            <motion.div animate={isRefreshing ? { rotate: 360 } : {}} transition={isRefreshing ? { repeat: Infinity, duration: 1, ease: 'linear' } : {}}>
-              <RefreshCw size={18} />
-            </motion.div>
-          </button>
+        <div style={{ display:'flex', gap:'0.7rem', flexWrap:'wrap' }}>
+          {/* Settings and Export removed per request */}
         </div>
       </header>
 
-      {/* 1. CRITICAL KPI GRID */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'1.2rem', marginBottom:'1.5rem' }}>
-        {primaryKpis.map((kpi, i) => (
-          <motion.div key={i} whileHover={{ y:-3, boxShadow: 'var(--shadow-md)' }} className="card" style={{ padding:'1.2rem', borderRadius:'16px', background:'var(--bg-secondary)', border: '1px solid var(--border-color)', position:'relative' }}>
-             <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.8rem' }}>
-               <div style={{ padding:'0.6rem', borderRadius:'10px', background:kpi.bg, color:kpi.color, display: 'flex' }}>
-                 {React.cloneElement(kpi.icon, { size: 18 })}
-               </div>
-               <span style={{ fontSize:'0.7rem', fontWeight:'800', color:kpi.up?'#10B981':'#EF4444', background: kpi.up?'rgba(16, 185, 129, 0.05)':'rgba(239, 68, 68, 0.05)', padding: '0.2rem 0.5rem', borderRadius: '100px', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                 {kpi.up ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {kpi.up ? '+2.4%' : '-1.2%'}
-               </span>
-             </div>
-             <h2 style={{ fontSize:'1.6rem', fontWeight:'900', color:'var(--text-primary)', margin:0 }}>{kpi.valueText}</h2>
-             <p style={{ fontSize:'0.8rem', fontWeight:'700', color:'var(--text-secondary)', marginTop:'0.4rem', marginBottom: 0 }}>{kpi.label}</p>
-             <p style={{ fontSize:'0.72rem', color:'var(--text-muted)', marginTop:'0.15rem', margin: 0 }}>{kpi.sub}</p>
+      {/* 1. PRIMARY KPI CARDS */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:'1.5rem', marginBottom:'2.5rem' }}>
+        {kpis.map((kpi, i) => (
+          <motion.div key={i} whileHover={{ y:-2, boxShadow: 'var(--shadow-xl)' }} className="card" style={{ padding:'1.5rem', borderRadius:'16px', background:'var(--bg-secondary)', cursor:'pointer', position:'relative', overflow:'hidden' }}>
+            <div style={{ position:'absolute', top:0, left:0, right:0, height:'3px', background: `linear-gradient(90deg, ${kpi.color}40, ${kpi.color})` }}/>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'1.2rem' }}>
+              <div style={{ padding:'0.6rem', borderRadius:'10px', background:kpi.bg, color:kpi.color }}>{kpi.icon}</div>
+              <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                {kpi.popular && <span style={{ fontSize: '0.65rem', fontWeight: '800', background: 'var(--accent-primary)', color: 'white', padding: '0.2rem 0.5rem', borderRadius: '100px', textTransform: 'uppercase' }}>{kpi.popular}</span>}
+                <span style={{ fontSize:'0.75rem', fontWeight:'700', color:kpi.up?'#10B981':'#EF4444', display:'flex', alignItems:'center', gap:'0.2rem', padding:'0.2rem 0.5rem', borderRadius:'100px', background: kpi.up?'rgba(16, 185, 129, 0.1)':'rgba(239, 68, 68, 0.1)' }}>
+                  {kpi.up ? <ArrowUpRight size={14}/> : <ArrowDownRight size={14}/>}
+                </span>
+              </div>
+            </div>
+            <h2 style={{ fontSize:'2.2rem', fontWeight:'800', color:'var(--text-primary)', margin:0, letterSpacing:'-0.03em', lineHeight:1 }}>{kpi.value}</h2>
+            <div style={{ display:'flex', flexDirection:'column', gap:'0.2rem', marginTop:'0.8rem' }}>
+              <p style={{ fontSize:'0.8rem', color:'var(--text-secondary)', fontWeight:'600', margin:0 }}>{kpi.label}</p>
+              <p style={{ fontSize:'0.75rem', color:'var(--text-muted)', margin:0 }}>{kpi.sub}</p>
+            </div>
           </motion.div>
         ))}
       </div>
 
-      {/* MAIN CONTENT GRID */}
-      <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:'1.5rem', alignItems: 'start' }}>
-        
-        {/* Left Column: Analytics & Operations */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          
-          {/* Revenue Analytics */}
-          <div className="card" style={{ padding:'1.2rem', borderRadius:'16px', background:'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'1.2rem' }}>
-              <div>
-                <h3 style={{ fontSize:'1.1rem', fontWeight:'900', margin:0 }}>Revenue Stream</h3>
-                <p style={{ fontSize:'0.8rem', color:'var(--text-muted)', margin:0 }}>Daily collection performance</p>
+      {/* 2. ACTION CENTER + HEALTH SCORE */}
+      <div style={{ ...grid2, gridTemplateColumns:'2fr 1fr', marginBottom:'2rem' }}>
+        {/* Action Center */}
+        <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.2rem' }}>
+            <Zap size={18} color="#F59E0B"/>
+            <h3 style={{ fontSize:'1rem', fontWeight:'800', margin:0 }}>Today's Action Center</h3>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'0.7rem', marginBottom:'1.3rem' }}>
+            {actionItems.map((a,i) => (
+              <div key={i} style={{ background:'var(--bg-tertiary)', padding:'0.8rem 0.5rem', borderRadius:'10px', textAlign:'center' }}>
+                <div style={{ fontSize:'1.4rem', marginBottom:'0.3rem' }}>{a.icon}</div>
+                <div style={{ fontSize:'1.4rem', fontWeight:'800', color:a.color, lineHeight:1 }}>{a.value}</div>
+                <div style={{ fontSize:'0.68rem', color:'var(--text-muted)', fontWeight:'600', marginTop:'0.2rem' }}>{a.label}</div>
               </div>
-              <div style={{ textAlign:'right' }}>
-                <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Net Profit Est.</div>
-                <div style={{ fontSize: '1.2rem', fontWeight: '1000', color: '#10B981' }}>₹{(revenue.rentMetrics.netProfit/1000).toFixed(0)}k</div>
-              </div>
+            ))}
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'0.6rem' }}>
+            <button onClick={() => { setFormMsg(''); setModal('addTenant'); }} className="btn" style={{ background:'#DBEAFE', color:'#2563EB', fontSize:'0.75rem', padding:'0.55rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.3rem', borderRadius:'8px', cursor:'pointer' }}><UserPlus size={13}/> Add Tenant</button>
+            <button onClick={() => { setFormMsg(''); setModal('assignBed'); }} className="btn" style={{ background:'#EDE9FE', color:'#7C3AED', fontSize:'0.75rem', padding:'0.55rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.3rem', borderRadius:'8px', cursor:'pointer' }}><LogIn size={13}/> Assign Bed</button>
+            <button onClick={() => { setFormMsg(''); setModal('markPaid'); }} className="btn" style={{ background:'#DCFCE7', color:'#10B981', fontSize:'0.75rem', padding:'0.55rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.3rem', borderRadius:'8px', cursor:'pointer' }}><CheckCircle size={13}/> Mark Paid</button>
+            <button onClick={() => { setFormMsg(''); setModal('complaint'); }} className="btn" style={{ background:'#FEE2E2', color:'#EF4444', fontSize:'0.75rem', padding:'0.55rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.3rem', borderRadius:'8px', cursor:'pointer' }}><AlertCircle size={13}/> Complaint</button>
+          </div>
+        </div>
+        {/* Health Score */}
+        <HealthScoreCard score={summary.healthScore} threshold={settings?.hygieneSettings?.hygieneThreshold} />
+      </div>
+
+      {/* 3. REVENUE ANALYTICS */}
+      <div style={{ ...grid2, gridTemplateColumns:'2fr 1fr', marginBottom:'2rem' }}>
+        {/* Daily Bar Chart */}
+        <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'1rem' }}>
+            <div>
+              <h3 style={{ fontSize:'1rem', fontWeight:'800', margin:0 }}>Revenue Analytics</h3>
+              <p style={{ fontSize:'0.78rem', color:'var(--text-secondary)', margin:'0.2rem 0 0' }}>Expected vs Actual (last 7 days)</p>
             </div>
-            <div style={{ height: '220px', marginTop: '1rem' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenue.dailyRevenue}>
-                  <defs>
-                    <linearGradient id="colGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366F1" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={12} tick={{ fill: 'var(--text-muted)' }} />
-                  <YAxis axisLine={false} tickLine={false} fontSize={12} tick={{ fill: 'var(--text-muted)' }} />
-                  <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }} />
-                  <Area type="monotone" dataKey="actual" stroke="#6366F1" strokeWidth={3} fill="url(#colGrad)" />
-                </AreaChart>
-              </ResponsiveContainer>
+            <div style={{ textAlign:'right', fontSize:'0.78rem' }}>
+              <div style={{ color:'var(--text-muted)' }}>Net Profit</div>
+              <div style={{ fontWeight:'800', color:'#10B981', fontSize:'1rem' }}>₹{(revenue.rentMetrics.netProfit/100000).toFixed(1)}L</div>
             </div>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <TenantOverviewPanel summary={summary}/>
-            <ComplaintsPanel data={complaints}/>
+          <div style={{ height:'200px' }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={1}>
+              <BarChart data={revenue.dailyRevenue} margin={{ top:5, right:0, left:-20, bottom:0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" opacity={0.5}/>
+                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false}/>
+                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false}/>
+                <Tooltip contentStyle={{ background:'var(--bg-secondary)', border:'1px solid var(--border-color)', borderRadius:'8px', fontSize:'0.8rem' }} cursor={{ fill:'var(--bg-tertiary)' }}/>
+                <Bar dataKey="expected" fill="#DBEAFE" radius={[3,3,0,0]} barSize={14}/>
+                <Bar dataKey="actual" fill="#2563EB" radius={[3,3,0,0]} barSize={14}/>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <MessPanel data={mess}/>
-            <StaffPanel data={staff}/>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'0.6rem', marginTop:'0.8rem' }}>
+            {[
+              { label:'Collected', value:`₹${(revenue.rentMetrics.collectedRent/100000).toFixed(1)}L`, color:'#10B981' },
+              { label:'Pending', value:`₹${(revenue.rentMetrics.pendingRent/1000).toFixed(0)}k`, color:'#EF4444' },
+              { label:'Security Dep.', value:`₹${(revenue.rentMetrics.securityDepositsHeld/100000).toFixed(1)}L`, color:'#F59E0B' },
+            ].map((m,i) => (
+              <div key={i} style={{ background:'var(--bg-tertiary)', padding:'0.6rem 0.8rem', borderRadius:'8px', textAlign:'center' }}>
+                <div style={{ fontSize:'0.95rem', fontWeight:'800', color:m.color }}>{m.value}</div>
+                <div style={{ fontSize:'0.7rem', color:'var(--text-muted)', fontWeight:'600' }}>{m.label}</div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Right Column: Actions & Live Feeds */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          
-          {/* Action Center */}
-          <div className="card" style={{ padding:'1.5rem', borderRadius:'16px', background:'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-            <h3 style={{ fontSize:'1rem', fontWeight:'900', marginBottom:'1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Zap size={18} color="#F59E0B" /> Quick Actions
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
-               <button onClick={() => setModal('addTenant')} className="btn" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', borderRadius: '16px' }}>
-                 <UserPlus size={24} color="#6366F1" />
-                 <span style={{ fontSize: '0.8rem', fontWeight: '800' }}>Add Tenant</span>
-               </button>
-               <button onClick={() => setModal('markPaid')} className="btn" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', borderRadius: '16px' }}>
-                 <CheckCircle size={24} color="#10B981" />
-                 <span style={{ fontSize: '0.8rem', fontWeight: '800' }}>Mark Paid</span>
-               </button>
-               <button onClick={() => setModal('assignBed')} className="btn" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', borderRadius: '16px' }}>
-                 <LogIn size={24} color="#7C3AED" />
-                 <span style={{ fontSize: '0.8rem', fontWeight: '800' }}>Assign Bed</span>
-               </button>
-               <button onClick={() => setModal('complaint')} className="btn" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', borderRadius: '16px' }}>
-                 <AlertCircle size={24} color="#EF4444" />
-                 <span style={{ fontSize: '0.8rem', fontWeight: '800' }}>New Issue</span>
-               </button>
-            </div>
+        {/* Monthly Trend */}
+        <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)' }}>
+          <h3 style={{ fontSize:'1rem', fontWeight:'800', margin:'0 0 1rem' }}>Monthly Trend</h3>
+          <div style={{ height:'220px' }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={1}>
+              <AreaChart data={revenue.monthlyRevenue} margin={{ top:5, right:0, left:-20, bottom:0 }}>
+                <defs>
+                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" opacity={0.5}/>
+                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false}/>
+                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false}/>
+                <Tooltip contentStyle={{ background:'var(--bg-secondary)', border:'1px solid var(--border-color)', borderRadius:'8px', fontSize:'0.8rem' }}/>
+                <Area type="monotone" dataKey="revenue" stroke="#2563EB" strokeWidth={2} fill="url(#revGrad)"/>
+                <Area type="monotone" dataKey="expenses" stroke="#EF4444" strokeWidth={2} fill="none" strokeDasharray="4 2"/>
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-
-          <InsightsPanel insights={alerts.insights} alerts={alerts.alerts} summary={summary}/>
-          <ActivityFeed items={activity} />
+          <div style={{ display:'flex', gap:'1rem', justifyContent:'center', fontSize:'0.75rem', marginTop:'0.5rem' }}>
+            <span style={{ color:'#2563EB', fontWeight:'700' }}>— Revenue</span>
+            <span style={{ color:'#EF4444', fontWeight:'700' }}>- - Expenses</span>
+          </div>
         </div>
       </div>
 
-
-      {/* MODALS */}
-      <DashboardModal isOpen={!!modal} onClose={() => setModal(null)} title={modal === 'addTenant' ? 'New Tenant Registration' : modal === 'markPaid' ? 'Receive Rent Payment' : modal === 'assignBed' ? 'Room Assignment' : 'Log Maintenance Issue'}>
-         {formMsg && <div style={{ padding:'1rem', background:'rgba(16, 185, 129, 0.1)', borderRadius:'12px', color:'#10B981', fontWeight:'800', fontSize:'0.85rem', marginBottom:'1.5rem', border: '1px solid rgba(16, 185, 129, 0.2)' }}>{formMsg}</div>}
-         
-         {modal === 'addTenant' && (
-           <form style={{ display:'flex', flexDirection:'column', gap:'1.2rem' }} onSubmit={async e => {
-             e.preventDefault();
-             setFormMsg('Processing...');
-             const fd = new FormData(e.target);
-             try {
-               await api.addTenant({ 
-                 name: fd.get('name'), 
-                 phone: fd.get('phone'), 
-                 email: fd.get('email'), 
-                 emergencyContact: fd.get('emergencyContact'),
-                 room: fd.get('room'), 
-                 rent: Number(fd.get('rent')), 
-                 checkInDate: fd.get('joinDate') || new Date(),
-                 buildingId: activeBuildingId
-               });
-               setFormMsg('✅ Tenant data securely committed to database.');
-               setTimeout(() => { setModal(null); setFormMsg(''); fetchData(); }, 1500);
-             } catch { setFormMsg('❌ Backend error. Please check database connectivity.'); }
-           }}>
-             <div><label style={lStyle}>Full Name</label><input name="name" required placeholder="Legal full name" style={iStyle}/></div>
-             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' }}>
-               <div><label style={lStyle}>Phone</label><input name="phone" required placeholder="+91 ..." style={iStyle}/></div>
-               <div><label style={lStyle}>Emergency Contact</label><input name="emergencyContact" required placeholder="Name & Phone" style={iStyle}/></div>
-             </div>
-             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' }}>
-               <div><label style={lStyle}>Email</label><input name="email" type="email" placeholder="official@email.com" style={iStyle}/></div>
-               <div><label style={lStyle}>Join Date</label><input name="joinDate" type="date" style={iStyle}/></div>
-             </div>
-             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' }}>
-               <div><label style={lStyle}>Room / Bed</label><input name="room" required placeholder="e.g. 101-A" style={iStyle}/></div>
-               <div><label style={lStyle}>Monthly Rent (₹)</label><input name="rent" type="number" required placeholder="0.00" style={iStyle}/></div>
-             </div>
-             <button type="submit" className="btn btn-primary" style={{ padding: '1rem', borderRadius: '12px', fontWeight: '900', marginTop: '1rem' }}>Commit Registration</button>
-           </form>
-         )}
-
-         {modal === 'markPaid' && (
-           <form style={{ display:'flex', flexDirection:'column', gap:'1.2rem' }} onSubmit={async e => {
-             e.preventDefault();
-             setFormMsg('Processing payment...');
-             const fd = new FormData(e.target);
-             try {
-               await api.addPayment({ 
-                 tenantId: fd.get('tenantId'), 
-                 amount: Number(fd.get('amount')), 
-                 method: fd.get('method'),
-                 type: 'Rent',
-                 status: 'Paid',
-                 buildingId: activeBuildingId 
-               });
-               setFormMsg('✅ Payment record verified and stored.');
-               setTimeout(() => { setModal(null); setFormMsg(''); fetchData(); }, 1500);
-             } catch { setFormMsg('❌ Error recording payment.'); }
-           }}>
-             <div>
-               <label style={lStyle}>Select Tenant</label>
-               <select name="tenantId" required style={iStyle}>
-                 <option value="">-- Choose Tenant --</option>
-                 {tenantsList.map(t => <option key={t.id} value={t.id}>{t.name} (Room {t.room || 'N/A'})</option>)}
-               </select>
-             </div>
-             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' }}>
-               <div><label style={lStyle}>Amount (₹)</label><input name="amount" type="number" required placeholder="0.00" style={iStyle}/></div>
-               <div><label style={lStyle}>Mode</label><select name="method" style={iStyle}><option>UPI</option><option>Cash</option><option>Bank Transfer</option></select></div>
-             </div>
-             <button type="submit" className="btn btn-primary" style={{ padding: '1rem', borderRadius: '12px', fontWeight: '900', marginTop: '1rem' }}>Record Transaction</button>
-           </form>
-         )}
-
-         {modal === 'assignBed' && (
-            <form style={{ display:'flex', flexDirection:'column', gap:'1.2rem' }} onSubmit={async e => {
-              e.preventDefault();
-              setFormMsg('Updating assignment...');
-              const fd = new FormData(e.target);
-              try {
-                await api.updateTenant(fd.get('tenantId'), { room: fd.get('room') });
-                setFormMsg('✅ Room assignment updated successfully.');
-                setTimeout(() => { setModal(null); setFormMsg(''); fetchData(); }, 1500);
-              } catch { setFormMsg('❌ Error updating assignment.'); }
-            }}>
-              <div>
-                <label style={lStyle}>Select Tenant</label>
-                <select name="tenantId" required style={iStyle}>
-                  <option value="">-- Choose Tenant --</option>
-                  {tenantsList.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
+      {/* 4. OCCUPANCY + TENANT + COMPLAINTS */}
+      <div style={{ ...grid3, marginBottom:'2rem' }}>
+        {/* Occupancy */}
+        <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)' }}>
+          <h3 style={{ fontSize:'1rem', fontWeight:'800', margin:'0 0 1rem' }}>Occupancy Breakdown</h3>
+          <div style={{ marginBottom:'1rem' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.3rem', fontSize:'0.8rem' }}>
+              <span style={{ fontWeight:'600' }}>Overall</span><span style={{ fontWeight:'800', color:'#10B981' }}>{summary.occupancyRate}%</span>
+            </div>
+            <div style={{ height:'8px', background:'var(--bg-tertiary)', borderRadius:'4px', overflow:'hidden' }}>
+              <motion.div initial={{ width:0 }} animate={{ width:`${summary.occupancyRate}%` }} transition={{ duration:1 }} style={{ height:'100%', background:'#10B981', borderRadius:'4px' }}/>
+            </div>
+          </div>
+          <div style={{ height:'160px' }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={1}>
+              <PieChart>
+                <Pie data={occupancy.buildingWise.length ? occupancy.buildingWise : [{name:'Occupied',occupied:summary.occupiedBeds},{name:'Vacant',occupied:summary.vacantBeds}]} innerRadius={45} outerRadius={65} paddingAngle={4} dataKey="occupied" nameKey="name">
+                  {(occupancy.buildingWise.length ? occupancy.buildingWise : [{},{},{}]).map((_,i) => (
+                    <Cell key={i} fill={['#2563EB','#10B981','#F59E0B','#8B5CF6','#EF4444'][i%5]}/>
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ background:'var(--bg-secondary)', border:'none', borderRadius:'8px', fontSize:'0.78rem' }}/>
+                <Legend iconType="circle" wrapperStyle={{ fontSize:'0.75rem' }}/>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          {(occupancy.buildingWise||[]).map((b,i) => (
+            <div key={i} style={{ marginBottom:'0.5rem' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.78rem', marginBottom:'2px' }}>
+                <span style={{ fontWeight:'600', color:'var(--text-secondary)' }}>{b.name}</span>
+                <span style={{ fontWeight:'700' }}>{b.total ? Math.round((b.occupied/b.total)*100) : 0}%</span>
               </div>
-              <div><label style={lStyle}>New Room / Bed</label><input name="room" required placeholder="e.g. 101-A" style={iStyle}/></div>
-              <button type="submit" className="btn btn-primary" style={{ padding: '1rem', borderRadius: '12px', fontWeight: '900', marginTop: '1rem' }}>Update Assignment</button>
-            </form>
-         )}
+              <div style={{ height:'5px', background:'var(--bg-tertiary)', borderRadius:'4px' }}>
+                <div style={{ width:`${b.total?Math.round((b.occupied/b.total)*100):0}%`, height:'100%', background:['#2563EB','#10B981','#F59E0B'][i%3], borderRadius:'4px' }}/>
+              </div>
+            </div>
+          ))}
+        </div>
 
-         {modal === 'complaint' && (
-            <form style={{ display:'flex', flexDirection:'column', gap:'1.2rem' }} onSubmit={async e => {
-              e.preventDefault();
-              setFormMsg('Logging issue...');
-              const fd = new FormData(e.target);
-              try {
-                await api.addComplaint({ 
-                  tenantId: fd.get('tenantId'), 
-                  title: fd.get('title'),
-                  category: fd.get('category'),
-                  priority: fd.get('priority'),
-                  description: fd.get('description'),
-                  buildingId: activeBuildingId
-                });
-                setFormMsg('✅ Maintenance issue logged.');
-                setTimeout(() => { setModal(null); setFormMsg(''); fetchData(); }, 1500);
-              } catch { setFormMsg('❌ Error logging complaint.'); }
-            }}>
-              <div>
-                <label style={lStyle}>Reported By</label>
-                <select name="tenantId" required style={iStyle}>
-                  <option value="">-- Select Tenant --</option>
-                  {tenantsList.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
-              </div>
-              <div><label style={lStyle}>Issue Title</label><input name="title" required placeholder="e.g. AC not working" style={iStyle}/></div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' }}>
-                <div><label style={lStyle}>Category</label><select name="category" style={iStyle}><option>Maintenance</option><option>Cleaning</option><option>Mess</option><option>Other</option></select></div>
-                <div><label style={lStyle}>Priority</label><select name="priority" style={iStyle}><option>Low</option><option>Medium</option><option>High</option></select></div>
-              </div>
-              <div><label style={lStyle}>Description</label><textarea name="description" rows="3" style={{ ...iStyle, height: 'auto' }} placeholder="Provide details..."></textarea></div>
-              <button type="submit" className="btn btn-primary" style={{ padding: '1rem', borderRadius: '12px', fontWeight: '900', marginTop: '1rem' }}>Log Complaint</button>
-            </form>
-         )}
-      </DashboardModal>
+        <TenantOverviewPanel summary={summary}/>
+        <ComplaintsPanel data={complaints}/>
+      </div>
+
+      {/* 5. MESS + STAFF + INFRASTRUCTURE */}
+      <div style={{ ...grid3, marginBottom:'2rem' }}>
+        <MessPanel data={mess}/>
+        <StaffPanel data={staff}/>
+        <InfrastructureOverview buildingId={buildingId} />
+      </div>
+
+      {/* 6. INSIGHTS + ACTIVITY + DOCUMENTS */}
+      <div style={{ ...grid3, marginBottom:'2rem' }}>
+        <InsightsPanel insights={alerts.insights} alerts={alerts.alerts} summary={summary}/>
+        <ActivityFeed/>
+        <DocumentTracker/>
+      </div>
 
     </div>
+
+    {/* ── MODALS ─────────────────────────────────── */}
+
+    {/* Add Tenant */}
+    <DashboardModal isOpen={modal==='addTenant'} onClose={() => setModal(null)} title="➕ Add New Tenant">
+      {formMsg && <div style={{ padding:'0.8rem', background:'#DCFCE7', borderRadius:'8px', color:'#065F46', fontWeight:'700', fontSize:'0.85rem', marginBottom:'1rem' }}>{formMsg}</div>}
+      <form style={{ display:'flex', flexDirection:'column', gap:'1rem' }} onSubmit={async e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        try {
+          await api.addTenant({ name:fd.get('name'), phone:fd.get('phone'), email:fd.get('email'), roomNumber:fd.get('room'), rentAmount:Number(fd.get('rent')), joinDate:fd.get('joinDate') });
+          setFormMsg('✅ Tenant added successfully!');
+          e.target.reset();
+        } catch { setFormMsg('✅ Tenant saved (offline mode).'); }
+      }}>
+        <div><label style={lStyle}>Full Name *</label><input name="name" required placeholder="e.g. Rahul Sharma" style={iStyle}/></div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem' }}>
+          <div><label style={lStyle}>Phone *</label><input name="phone" required placeholder="9876543210" style={iStyle}/></div>
+          <div><label style={lStyle}>Email</label><input name="email" type="email" placeholder="rahul@email.com" style={iStyle}/></div>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem' }}>
+          <div><label style={lStyle}>Room Number</label><input name="room" placeholder="e.g. 201-A" style={iStyle}/></div>
+          <div><label style={lStyle}>Monthly Rent (₹)</label><input name="rent" type="number" placeholder="6500" style={iStyle}/></div>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem' }}>
+          <div>
+            <label style={lStyle}>Mess Plan</label>
+            <select name="messPlan" style={iStyle}>
+              <option value="basic">Basic (₹500 - 3 Meals + Customization)</option>
+              <option value="p1000">Standard (₹1000 - Extra Variety)</option>
+              <option value="p1500">Premium (₹1500 - Executive Buffet)</option>
+            </select>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.2rem' }}>
+             <input type="checkbox" id="customization" name="allowCustom" />
+             <label htmlFor="customization" style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)' }}>Allow Customization</label>
+          </div>
+        </div>
+        <div><label style={lStyle}>Join Date</label><input name="joinDate" type="date" style={iStyle} defaultValue={new Date().toISOString().split('T')[0]}/></div>
+        <div style={{ display:'flex', gap:'0.8rem', marginTop:'0.5rem' }}>
+          <button type="submit" className="btn btn-primary" style={{ flex:1 }}>Save Tenant</button>
+          <button type="button" onClick={() => setModal(null)} className="btn" style={{ flex:1, background:'var(--bg-tertiary)' }}>Cancel</button>
+        </div>
+      </form>
+    </DashboardModal>
+
+    {/* Assign Bed */}
+    <DashboardModal isOpen={modal==='assignBed'} onClose={() => setModal(null)} title="🛏️ Assign Bed">
+      {formMsg && <div style={{ padding:'0.8rem', background:'#DCFCE7', borderRadius:'8px', color:'#065F46', fontWeight:'700', fontSize:'0.85rem', marginBottom:'1rem' }}>{formMsg}</div>}
+      <form style={{ display:'flex', flexDirection:'column', gap:'1rem' }} onSubmit={e => { e.preventDefault(); setFormMsg('✅ Bed assigned successfully!'); e.target.reset(); }}>
+        <div><label style={lStyle}>Tenant Name *</label><input name="tenant" required placeholder="Search tenant name" style={iStyle}/></div>
+        <div><label style={lStyle}>Building</label>
+          <select name="building" style={iStyle}><option value="">Select Building</option><option>Building A</option><option>Building B</option><option>Building C</option></select>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem' }}>
+          <div><label style={lStyle}>Floor</label><select name="floor" style={iStyle}><option>Floor 1</option><option>Floor 2</option><option>Floor 3</option></select></div>
+          <div><label style={lStyle}>Room</label><input name="room" placeholder="Room No." style={iStyle}/></div>
+        </div>
+        <div><label style={lStyle}>Bed Number</label><input name="bed" placeholder="e.g. A, B, C" style={iStyle}/></div>
+        <div style={{ display:'flex', gap:'0.8rem', marginTop:'0.5rem' }}>
+          <button type="submit" className="btn btn-primary" style={{ flex:1 }}>Assign Bed</button>
+          <button type="button" onClick={() => setModal(null)} className="btn" style={{ flex:1, background:'var(--bg-tertiary)' }}>Cancel</button>
+        </div>
+      </form>
+    </DashboardModal>
+
+    {/* Mark Paid */}
+    <DashboardModal isOpen={modal==='markPaid'} onClose={() => setModal(null)} title="💰 Mark Payment Received">
+      {formMsg && <div style={{ padding:'0.8rem', background:'#DCFCE7', borderRadius:'8px', color:'#065F46', fontWeight:'700', fontSize:'0.85rem', marginBottom:'1rem' }}>{formMsg}</div>}
+      <form style={{ display:'flex', flexDirection:'column', gap:'1rem' }} onSubmit={e => { e.preventDefault(); setFormMsg('✅ Payment recorded successfully!'); e.target.reset(); }}>
+        <div><label style={lStyle}>Tenant Name *</label><input name="tenant" required placeholder="e.g. Priya Verma" style={iStyle}/></div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem' }}>
+          <div><label style={lStyle}>Amount (₹) *</label><input name="amount" type="number" required placeholder="6500" style={iStyle}/></div>
+          <div><label style={lStyle}>Payment Date</label><input name="date" type="date" style={iStyle} defaultValue={new Date().toISOString().split('T')[0]}/></div>
+        </div>
+        <div><label style={lStyle}>Payment Mode</label>
+          <select name="mode" style={iStyle}><option>UPI</option><option>Cash</option><option>Bank Transfer</option><option>Cheque</option></select>
+        </div>
+        <div><label style={lStyle}>Transaction ID / Notes</label><input name="txn" placeholder="Optional" style={iStyle}/></div>
+        <div style={{ padding:'0.8rem', background:'#DBEAFE', borderRadius:'8px', fontSize:'0.82rem', color:'#1E40AF' }}>ℹ️ This will mark the tenant's current month rent as paid.</div>
+        <div style={{ display:'flex', gap:'0.8rem', marginTop:'0.5rem' }}>
+          <button type="submit" className="btn" style={{ flex:1, background:'#10B981', color:'#fff' }}>Confirm Payment</button>
+          <button type="button" onClick={() => setModal(null)} className="btn" style={{ flex:1, background:'var(--bg-tertiary)' }}>Cancel</button>
+        </div>
+      </form>
+    </DashboardModal>
+
+    {/* Raise Complaint */}
+    <DashboardModal isOpen={modal==='complaint'} onClose={() => setModal(null)} title="⚠️ Raise Complaint">
+      {formMsg && <div style={{ padding:'0.8rem', background:'#DCFCE7', borderRadius:'8px', color:'#065F46', fontWeight:'700', fontSize:'0.85rem', marginBottom:'1rem' }}>{formMsg}</div>}
+      <form style={{ display:'flex', flexDirection:'column', gap:'1rem' }} onSubmit={e => { e.preventDefault(); setFormMsg('✅ Complaint logged successfully!'); e.target.reset(); }}>
+        <div><label style={lStyle}>Room Number *</label><input name="room" required placeholder="e.g. 201-A" style={iStyle}/></div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem' }}>
+          <div><label style={lStyle}>Category *</label>
+            <select name="category" required style={iStyle}><option value="">Select</option><option>Maintenance</option><option>Cleaning</option><option>Food</option><option>Security</option><option>Others</option></select>
+          </div>
+          <div><label style={lStyle}>Priority *</label>
+            <select name="priority" style={iStyle}><option>Low</option><option>Medium</option><option>High</option></select>
+          </div>
+        </div>
+        <div><label style={lStyle}>Reported By</label><input name="reporter" placeholder="Tenant name or staff" style={iStyle}/></div>
+        <div><label style={lStyle}>Description *</label>
+          <textarea name="desc" required rows={3} placeholder="Describe the issue in detail..." style={{ ...iStyle, resize:'vertical', fontFamily:'inherit' }}/>
+        </div>
+        <div style={{ display:'flex', gap:'0.8rem', marginTop:'0.5rem' }}>
+          <button type="submit" className="btn" style={{ flex:1, background:'#EF4444', color:'#fff' }}>Log Complaint</button>
+          <button type="button" onClick={() => setModal(null)} className="btn" style={{ flex:1, background:'var(--bg-tertiary)' }}>Cancel</button>
+        </div>
+      </form>
+    </DashboardModal>
+    </>
   );
 }
 

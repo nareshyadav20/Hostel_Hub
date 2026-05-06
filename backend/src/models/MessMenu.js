@@ -14,7 +14,7 @@ const messMenuSchema = new mongoose.Schema({
   breakfast: { type: String, required: true },
   lunch: { type: String, required: true },
   dinner: { type: String, required: true }
-}, { timestamps: true, collection: 'owner_messmenus' });
+}, { timestamps: true });
 
 // Ensure unique combination of plan and day
 messMenuSchema.index({ plan: 1, day: 1 }, { unique: true });

@@ -155,60 +155,30 @@ const Complaints = () => {
               </div>
               <button className="close-btn" onClick={() => setShowForm(false)}>✕</button>
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── New Ticket Modal ── */}
-      {showForm && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>
-          <div className="glass-card fade-in" style={{ width: '100%', maxWidth: '600px', padding: '3.5rem', background: 'var(--bg-secondary)', borderRadius: '40px', border: '1px solid var(--accent-primary)', position: 'relative', boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.6)' }}>
-            <button onClick={() => setShowForm(false)} style={{ position: 'absolute', top: '2rem', right: '2rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
             
-            <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
-              <div style={{ width: '80px', height: '80px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: 'var(--accent-primary)' }}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-              </div>
-              <h2 style={{ fontSize: '2.2rem', fontWeight: '950', letterSpacing: '-1.5px', margin: 0 }}>Raise New Ticket</h2>
-              <p style={{ color: 'var(--text-secondary)', marginTop: '0.8rem', fontSize: '1.1rem' }}>Describe the issue and our team will fix it ASAP.</p>
-            </div>
-
-            <form onSubmit={handleRaiseComplaint} style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+            <form onSubmit={handleRaiseComplaint} className="premium-form">
+              <div className="form-row">
                 <div className="input-group">
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Issue Title</label>
-                  <input 
-                    type="text" placeholder="e.g. Broken Light" value={formData.title} 
-                    onChange={e => setFormData({...formData, title: e.target.value})} required 
-                    style={{ background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%', fontSize: '1rem', fontWeight: '700' }} 
-                  />
+                  <label>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Ticket Title
+                  </label>
+                  <input type="text" placeholder="e.g. Broken Fan, Water Leakage" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
                 </div>
                 <div className="input-group">
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Category</label>
-                  <select 
-                    value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}
-                    style={{ background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%', fontSize: '1rem', fontWeight: '700' }}
-                  >
-                    <option value="Maintenance">Maintenance</option>
-                    <option value="Housekeeping">Housekeeping</option>
-                    <option value="WiFi / IT">WiFi / IT</option>
-                    <option value="Leave">Leave Request</option>
-                    <option value="Visitor">Visitor Permission</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div className="input-group">
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Priority</label>
-                  <select 
-                    value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})}
-                    style={{ background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%', fontSize: '1rem', fontWeight: '700' }}
-                  >
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                  </select>
+                  <label>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                    Category
+                  </label>
+                  <div className="select-wrapper">
+                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                      <option value="Maintenance">Maintenance</option>
+                      <option value="WiFi">WiFi / IT</option>
+                      <option value="Cleaning">Cleaning</option>
+                      <option value="Security">Security</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               <div className="input-group">

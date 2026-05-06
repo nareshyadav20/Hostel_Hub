@@ -1,18 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets } from 'lucide-react';
 import API from '../api/axios';
 
 const Complaints = () => {
-  const { buildingId: urlBuildingId } = useParams();
-  const navigate = useNavigate();
-  
-  // Step 1: Restore context
-  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
-
   const [complaints, setComplaints] = useState([]);
-  const [buildings, setBuildings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchComplaints = async () => {
@@ -75,8 +67,8 @@ const Complaints = () => {
 
   const getUrgencyBadge = (urgency) => {
     switch(urgency) {
-       case 'High': return <span style={{ padding: '0.2rem 0.5rem', background: '#EF4444', color: '#fff', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
-       case 'Medium': return <span style={{ padding: '0.2rem 0.5rem', background: '#F59E0B', color: '#fff', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
+       case 'High': return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--accent-error)', color: '#fff', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
+       case 'Medium': return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--accent-warning)', color: '#fff', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
        case 'Low': return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
        default: return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--bg-tertiary)', color: 'var(--text-muted)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
     }
@@ -84,19 +76,19 @@ const Complaints = () => {
 
   const getStatusDisplay = (status) => {
     switch(status) {
-      case 'Resolved': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981' }}><CheckCircle2 size={12}/> {activeTab === 'Maintenance' ? 'RESOLVED' : 'APPROVED'}</span>;
-      case 'In-Progress': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(56, 189, 248, 0.1)', color: '#0EA5E9' }}><Activity size={12}/> IN PROGRESS</span>;
-      case 'Pending': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B' }}><Clock size={12}/> PENDING</span>;
-      case 'Rejected': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' }}><Clock size={12}/> REJECTED</span>;
+      case 'Resolved': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)' }}><CheckCircle2 size={12}/> {activeTab === 'Maintenance' ? 'RESOLVED' : 'APPROVED'}</span>;
+      case 'In-Progress': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(56, 189, 248, 0.1)', color: 'var(--accent-primary)' }}><Activity size={12}/> IN PROGRESS</span>;
+      case 'Pending': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--accent-warning)' }}><Clock size={12}/> PENDING</span>;
+      case 'Rejected': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-error)' }}><Clock size={12}/> REJECTED</span>;
       default: return null;
     }
   };
 
   const getCategoryIcon = (category) => {
     switch(category) {
-      case 'Plumbing': return <Droplets size={16} color="#0EA5E9" />;
-      case 'Electrical': return <Zap size={16} color="#F59E0B" />;
-      case 'WiFi / IT': return <Activity size={16} color="#10B981" />;
+      case 'Plumbing': return <Droplets size={16} color="var(--accent-primary)" />;
+      case 'Electrical': return <Zap size={16} color="var(--accent-warning)" />;
+      case 'Internet': return <Activity size={16} color="var(--accent-success)" />;
       case 'Leave': return <Clock size={16} color="#8B5CF6" />;
       case 'Visitor': return <MessageSquare size={16} color="#EC4899" />;
       default: return <Wrench size={16} color="var(--text-secondary)" />;
@@ -107,36 +99,16 @@ const Complaints = () => {
 
   return (
     <div className="complaints-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
-      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: '900', marginBottom: '0.4rem', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-            <Wrench size={32} color="var(--accent-primary)" /> Service Hub
-            {isRefreshing && <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}><RefreshCw size={16} color="var(--text-muted)"/></motion.div>}
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Wrench size={32} color="var(--accent-primary)" /> Service Requests Hub
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: '500' }}>Operational control center for maintenance and requests.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Manage maintenance tickets, leave applications, and visitor permissions.</p>
         </div>
-        
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.2rem 0.8rem' }}>
-            <Filter size={16} color="var(--text-muted)" style={{ marginRight: '0.5rem' }} />
-            <select 
-              value={filterBuilding} 
-              onChange={handleBuildingFilterChange}
-              style={{ background: 'transparent', border: 'none', padding: '0.6rem 2rem 0.6rem 0.2rem', color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.9rem', outline: 'none', cursor: 'pointer', appearance: 'none' }}
-            >
-              <option value="all">All Buildings</option>
-              {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
-            <ChevronDown size={14} color="var(--text-muted)" style={{ position: 'absolute', right: '0.8rem', pointerEvents: 'none' }} />
-          </div>
-
-          <button onClick={() => setIsBroadcastModalOpen(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800', borderRadius: '12px', padding: '0.8rem 1.5rem' }}>
-              <MessageSquare size={16} /> Broadcast
-          </button>
-          <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={20} />
-          </button>
-        </div>
+        <button onClick={() => setIsBroadcastModalOpen(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
+            <MessageSquare size={16} /> Broadcast Update
+        </button>
       </header>
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', width: 'fit-content' }}>
@@ -145,7 +117,7 @@ const Complaints = () => {
             key={tab}
             onClick={() => { setActiveTab(tab); setExpandedId(null); }}
             style={{ 
-              padding: '0.8rem 2rem', borderRadius: '12px', border: 'none', 
+              padding: '0.8rem 1.8rem', borderRadius: '12px', border: 'none', 
               background: activeTab === tab ? 'var(--bg-primary)' : 'transparent',
               color: activeTab === tab ? 'var(--accent-primary)' : 'var(--text-secondary)',
               fontWeight: '800', fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.3s',
@@ -157,33 +129,29 @@ const Complaints = () => {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--text-primary)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', right: '-10px', top: '-10px', opacity: 0.05 }}><Wrench size={80}/></div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--text-primary)' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Total {activeTab}</p>
-          <h2 style={{ fontSize: '2.4rem', fontWeight: '900', margin: 0 }}>{totalComplaints}</h2>
+          <h2 style={{ fontSize: '2.4rem', fontWeight: '800' }}>{totalComplaints}</h2>
         </div>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #F59E0B', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', right: '-10px', top: '-10px', opacity: 0.05 }}><Clock size={80}/></div>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Pending</p>
-          <h2 style={{ fontSize: '2.4rem', fontWeight: '900', color: '#F59E0B', margin: 0 }}>{pendingCount}</h2>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-warning)' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Pending {activeTab === 'Maintenance' ? 'Tickets' : 'Requests'}</p>
+          <h2 style={{ fontSize: '2.4rem', fontWeight: '800', color: 'var(--accent-warning)' }}>{pendingCount}</h2>
         </div>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #10B981', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', right: '-10px', top: '-10px', opacity: 0.05 }}><CheckCircle2 size={80}/></div>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-success)' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>{activeTab === 'Maintenance' ? 'Resolved' : 'Approved'}</p>
-          <h2 style={{ fontSize: '2.4rem', fontWeight: '900', color: '#10B981', margin: 0 }}>{resolvedCount}</h2>
+          <h2 style={{ fontSize: '2.4rem', fontWeight: '800', color: 'var(--accent-success)' }}>{resolvedCount}</h2>
         </div>
       </div>
 
-      <div className="card" style={{ padding: '0', overflow: 'hidden', borderRadius: '20px' }}>
-        <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+      <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <th style={{ padding: '1.2rem 1.5rem' }}>TENANT & LOCATION</th>
-              <th style={{ padding: '1.2rem' }}>ISSUE DETAILS</th>
-              <th style={{ padding: '1.2rem' }}>STATUS</th>
-              <th style={{ padding: '1.2rem 1.5rem', textAlign: 'right' }}>ACTIONS</th>
+              <th style={{ padding: '1.2rem' }}>Ticket Info</th>
+              <th style={{ padding: '1.2rem' }}>{activeTab} Details</th>
+              <th style={{ padding: '1.2rem' }}>Status</th>
+              <th style={{ padding: '1.2rem', textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -199,7 +167,7 @@ const Complaints = () => {
                     style={{ borderBottom: '1px solid var(--border-color)', background: c.status === 'Resolved' ? 'var(--bg-tertiary)' : 'transparent', opacity: c.status === 'Resolved' ? 0.7 : 1, cursor: 'pointer' }}
                     className="table-row-hover"
                   >
-                    <td style={{ padding: '1.2rem 1.5rem' }}>
+                    <td style={{ padding: '1.2rem' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                         <span style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>{c.tenant?.room || 'N/A'}</span>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ticket #{index + 1001} • {new Date(c.createdAt).toLocaleDateString()}</span>
@@ -210,8 +178,8 @@ const Complaints = () => {
                     </td>
                     <td style={{ padding: '1.2rem' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-start' }}>
-                        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
-                          <span style={{ padding: '0.4rem', background: 'var(--bg-secondary)', borderRadius: '10px', boxShadow: 'var(--shadow-sm)' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <span style={{ padding: '0.3rem', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
                             {getCategoryIcon(c.category)}
                           </span>
                           <span style={{ fontWeight: '600' }}>{c.title}</span>
@@ -225,31 +193,31 @@ const Complaints = () => {
                     <td style={{ padding: '1.2rem' }}>
                       {getStatusDisplay(c.status)}
                     </td>
-                    <td style={{ padding: '1.2rem 1.5rem', textAlign: 'right' }}>
+                    <td style={{ padding: '1.2rem', textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                           {c.status === 'Pending' && activeTab === 'Maintenance' && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); setSelectedComplaintId(c._id); setIsAssignModalOpen(true); }}
                               className="btn btn-primary" 
-                              style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', fontWeight: '800', borderRadius: '10px' }}
+                              style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
                             >
-                              Assign Staff
+                              Assign Task
                             </button>
                           )}
                           {c.status === 'In Progress' && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleStatusChange(c._id, 'Resolved'); }}
                               className="btn" 
-                              style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', fontWeight: '800', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', border: '1px solid #10B981' }}
+                              style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', border: '1px solid var(--accent-success)' }}
                             >
-                              <CheckCircle2 size={14} style={{ marginRight: '0.4rem' }}/> Resolve
+                              <CheckCircle2 size={14} style={{ marginRight: '0.4rem' }}/> Mark Resolved
                             </button>
                           )}
                           {(c.status === 'Resolved' || c.status === 'Rejected') && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleArchive(c._id); }}
                               className="btn" 
-                              style={{ padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border-color)', color: 'var(--text-muted)', borderRadius: '10px' }}
+                              style={{ padding: '0.5rem', fontSize: '0.8rem', border: '1px solid var(--border-color)', color: 'var(--text-muted)' }}
                             >
                               Archive
                             </button>
@@ -289,24 +257,20 @@ const Complaints = () => {
             </AnimatePresence>
           </tbody>
         </table>
-        </div>
       </div>
 
       <AnimatePresence>
         {isBroadcastModalOpen && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, backdropFilter: 'blur(8px)' }} onClick={() => setIsBroadcastModalOpen(false)} />
-            <motion.div initial={{ y: 50, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.95 }} style={{ position: 'fixed', top: '20%', left: '50%', x: '-50%', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem' }}>
-                <div style={{ padding: '0.8rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '12px', color: 'var(--accent-primary)' }}><MessageSquare size={24}/></div>
-                <h2 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0 }}>Broadcast Update</h2>
-              </div>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.95rem', fontWeight: '500' }}>Notify all tenants about maintenance, events, or important notices.</p>
-              <form onSubmit={async e => { e.preventDefault(); alert('Broadcast sent!'); setIsBroadcastModalOpen(false); }} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <textarea placeholder="Write your update message here..." value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} style={{ ...inputStyle, minHeight: '150px', fontWeight: '500', fontSize: '1rem', resize: 'none' }} required />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsBroadcastModalOpen(false)} />
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '20%', left: '50%', x: '-50%', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem' }}>Broadcast Maintenance Update</h2>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Send a notification to all tenants regarding ongoing or upcoming maintenance work.</p>
+              <form onSubmit={handleBroadcast} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <textarea placeholder="Write your update message here..." value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} style={{ ...inputStyle, minHeight: '120px' }} required />
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem', fontWeight: '800', borderRadius: '14px' }}>Send Broadcast</button>
-                  <button className="btn" type="button" onClick={() => setIsBroadcastModalOpen(false)} style={{ flex: 1, padding: '1rem', fontWeight: '800', borderRadius: '14px', background: 'var(--bg-tertiary)', border: 'none' }}>Cancel</button>
+                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem' }}>Send Broadcast</button>
+                  <button className="btn" type="button" onClick={() => setIsBroadcastModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Cancel</button>
                 </div>
               </form>
             </motion.div>
@@ -315,33 +279,31 @@ const Complaints = () => {
 
         {isAssignModalOpen && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, backdropFilter: 'blur(8px)' }} onClick={() => setIsAssignModalOpen(false)} />
-            <motion.div initial={{ y: 50, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.95 }} style={{ position: 'fixed', top: '15%', left: '50%', x: '-50%', width: '90%', maxWidth: '450px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)' }}>
-              <h2 style={{ fontSize: '1.6rem', fontWeight: '900', marginBottom: '1.5rem', textAlign: 'center' }}>Assign Staff Member</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', maxHeight: '400px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsAssignModalOpen(false)} />
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '20%', left: '50%', x: '-50%', width: '90%', maxWidth: '400px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem' }}>Assign Staff</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 {staffMembers.filter(s => s.active).map(s => (
                   <button 
                     key={s.id} 
                     onClick={() => handleStatusChange(selectedComplaintId, 'In-Progress', s.name)}
                     style={{ 
-                      display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.2rem', 
-                      borderRadius: '16px', border: '1px solid var(--border-color)', 
-                      background: 'var(--bg-tertiary)', cursor: 'pointer', transition: 'all 0.3s',
-                      textAlign: 'left'
+                      display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', 
+                      borderRadius: '12px', border: '1px solid var(--border-color)', 
+                      background: 'var(--bg-tertiary)', cursor: 'pointer', transition: 'all 0.2s' 
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent-primary)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.transform = 'none'; }}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
                   >
-                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.1rem' }}>{s.avatar}</div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontWeight: '800', fontSize: '1rem', margin: 0 }}>{s.name}</p>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, fontWeight: '600' }}>{s.role}</p>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>{s.avatar}</div>
+                    <div style={{ textAlign: 'left' }}>
+                      <p style={{ fontWeight: '700', fontSize: '0.95rem' }}>{s.name}</p>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{s.role}</p>
                     </div>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }}></div>
                   </button>
                 ))}
               </div>
-              <button className="btn" onClick={() => setIsAssignModalOpen(false)} style={{ width: '100%', marginTop: '2rem', border: 'none', background: 'var(--bg-tertiary)', padding: '1rem', fontWeight: '800', borderRadius: '14px' }}>Close</button>
+              <button className="btn" onClick={() => setIsAssignModalOpen(false)} style={{ width: '100%', marginTop: '1.5rem', border: '1px solid var(--border-color)' }}>Cancel</button>
             </motion.div>
           </>
         )}
@@ -349,9 +311,8 @@ const Complaints = () => {
 
       <style>{`
         .table-row-hover:hover {
-          background: rgba(99, 102, 241, 0.03) !important;
+          background: rgba(0,0,0,0.02);
         }
-        select::-ms-expand { display: none; }
       `}</style>
     </div>
   );

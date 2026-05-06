@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Send, Users, Building, Shield, Trash2, CheckCircle, Info, AlertTriangle, X } from 'lucide-react';
+import { Bell, Send, Users, Building, Shield, Trash2, CheckCircle, Info, AlertTriangle } from 'lucide-react';
 
 const Notifications = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -81,15 +81,12 @@ const Notifications = () => {
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Send broadcasts, manage alerts, and track system logs.</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '1rem' }}>
           <button onClick={markAllAsRead} className="btn btn-secondary">
             Mark all as read
           </button>
           <button onClick={() => setIsComposerOpen(true)} className="btn btn-primary">
             <Send size={16} /> Compose Broadcast
-          </button>
-          <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={20} />
           </button>
         </div>
       </header>

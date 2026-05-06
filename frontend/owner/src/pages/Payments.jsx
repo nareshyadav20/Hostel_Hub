@@ -67,11 +67,6 @@ const generateReceipt = (p) => {
 };
 
 const Payments = () => {
-  const { buildingId: urlBuildingId } = useParams();
-  
-  // Step 1: Restore context
-  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
-
   const [payments, setPayments] = useState([]);
   const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,41 +78,29 @@ const Payments = () => {
 
   useEffect(() => {
     fetchData();
-  }, [activeBuildingId]);
+  }, []);
 
   async function fetchData() {
-    console.log("Payments module fetching for ID:", activeBuildingId);
     try {
       const [tData, pData] = await Promise.all([
         api.getTenants(),
         api.getPayments()
       ]);
-
-      // Filter by buildingId
-      const filteredTenants = activeBuildingId 
-        ? (tData || []).filter(t => (t.buildingId?._id || t.buildingId) === activeBuildingId)
-        : (tData || []);
-        
-      setTenants(filteredTenants);
+      setTenants(tData || []);
       
-      const tIds = new Set(filteredTenants.map(t => t.id || t._id));
-
-      // Enrich and filter payments
-      const enriched = (pData || [])
-        .filter(p => !activeBuildingId || tIds.has(p.tenantId))
-        .map(p => {
-          const t = (tData || []).find(t => (t.id || t._id) === p.tenantId) || {};
-          return {
-            ...p,
-            tenantName: t.name || 'Unknown Tenant',
-            room: t.room || 'N/A'
-          };
-        });
-
+      // Enrich payments with tenant data
+      const enriched = (pData || []).map(p => {
+        const t = (tData || []).find(t => t.id === p.tenantId) || {};
+        return {
+          ...p,
+          tenantName: t.name || 'Unknown Tenant',
+          room: t.room || 'N/A'
+        };
+      });
       // Sort by date desc
       setPayments(enriched.sort((a,b) => new Date(b.date) - new Date(a.date)));
     } catch (err) {
-      console.error("Fetch error in Payments:", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }

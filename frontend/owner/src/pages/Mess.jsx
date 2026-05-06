@@ -183,7 +183,7 @@ const Mess = () => {
 
   return (
     <div className="mess-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
-      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Utensils size={32} color="var(--accent-primary)" /> Premium Mess Control
@@ -195,16 +195,11 @@ const Mess = () => {
             <button onClick={() => setActiveTab('subscriptions')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'subscriptions' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'subscriptions' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}>Plans ⭐</button>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          {activeTab === 'menu' && (
-            <button onClick={handleEditClick} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700', borderRadius: '12px', padding: '0.8rem 1.5rem' }}>
-              <Edit3 size={16} /> Edit Menu
-            </button>
-          )}
-          <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={20} />
+        {activeTab === 'menu' && (
+          <button onClick={handleEditClick} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700', borderRadius: '12px', padding: '0.8rem 1.5rem' }}>
+            <Edit3 size={16} /> Edit Menu
           </button>
-        </div>
+        )}
       </header>
 
       {activeTab === 'dashboard' && (

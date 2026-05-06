@@ -1,10 +1,7 @@
 const express = require('express');
 const buildingController = require('../controllers/buildingController');
 
-const authMiddleware = require('../utils/authMiddleware');
 const router = express.Router();
-
-router.use(authMiddleware);
 
 router.get('/', buildingController.getBuildings);
 router.get('/:id', buildingController.getBuildingById);
