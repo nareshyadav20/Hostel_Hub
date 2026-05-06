@@ -29,6 +29,7 @@ function App() {
         
         {/* Protected Routes */}
         <Route path="/owner/portfolio" element={<Portfolio />} />
+        <Route path="/owner/profile" element={<Layout><Profile /></Layout>} />
         
         {/* Building specific routes */}
         <Route path="/owner/building/:buildingId/dashboard" element={<Layout><Dashboard /></Layout>} />

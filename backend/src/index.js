@@ -12,10 +12,11 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 connectDB();
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const buildingRoutes = require('./routes/buildingRoutes');
 const floorRoutes = require('./routes/floorRoutes');
@@ -23,6 +24,7 @@ const roomRoutes = require('./routes/roomRoutes');
 const bedRoutes = require('./routes/bedRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
 const hostelFloorMappingRoutes = require('./routes/hostelFloorMappingRoutes');
+const hostelRoutes = require('./routes/hostelRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 
@@ -31,9 +33,15 @@ const transferRoutes = require('./routes/transferRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const confidentialReportRoutes = require('./routes/confidentialReportRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
-const bookingRoutes = require('./routes/bookingRoutes');
-const tenantPortalRoutes = require('./routes/tenantPortalRoutes');
+const ownerRoutes = require('./routes/ownerRoutes');
 
+// Pre-load all models to ensure they are registered for population
+require('./models/User');
+require('./models/Tenant');
+require('./models/RoomTransfer');
+require('./models/Complaint');
+require('./models/MessMenu');
+require('./models/Payment');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -42,6 +50,7 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/beds', bedRoutes);
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/hostel-floor-mapping', hostelFloorMappingRoutes);
+app.use('/api/hostels', hostelRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/complaints', complaintRoutes);
@@ -49,9 +58,7 @@ app.use('/api/transfers', transferRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/confidential-reports', confidentialReportRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/tenant-portal', tenantPortalRoutes);
-
+app.use('/api/owner', ownerRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

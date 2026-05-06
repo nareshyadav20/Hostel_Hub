@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 import '@packages/ui-kit/auth.css';
 import API from '../api/axios';
 
@@ -9,28 +10,48 @@ const Login = () => {
   const [showVault, setShowVault] = React.useState(false);
   const [email, setEmail] = React.useState('owner@hostelhub.com');
   const [password, setPassword] = React.useState('owner123');
-  const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
   
-  const handleSubmit = async (e) => { 
-    e.preventDefault(); 
-    setLoading(true);
+  const performLogin = async (loginEmail, loginPass) => {
+    setIsLoading(true);
     setError('');
     try {
-      const response = await API.post('/auth/login', { email, password });
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      navigate('/owner/portfolio'); 
+      const res = await axios.post('http://localhost:5000/api/auth/login', { email: loginEmail, password: loginPass });
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      navigate('/owner/portfolio');
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials');
+      // Auto-register the demo owner if they don't exist in the DB yet
+      if (err.response?.status === 404 && loginEmail === 'owner@hostelhub.com') {
+        try {
+          const regRes = await axios.post('http://localhost:5000/api/auth/register', {
+            email: loginEmail, password: loginPass, name: 'System Owner', role: 'OWNER'
+          });
+          localStorage.setItem('token', regRes.data.token);
+          localStorage.setItem('user', JSON.stringify(regRes.data.user));
+          navigate('/owner/portfolio');
+          return;
+        } catch (regErr) {
+          setError('Failed to auto-create demo user. Please register.');
+        }
+      } else {
+        setError(err.response?.data?.message || 'Invalid credentials');
+      }
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
+  };
+
+  const handleSubmit = (e) => { 
+    e.preventDefault(); 
+    performLogin(email, password);
   };
 
   const handleQuickFill = () => {
     setEmail('owner@hostelhub.com');
     setPassword('owner123');
+    performLogin('owner@hostelhub.com', 'owner123');
   };
 
   return (
@@ -41,7 +62,11 @@ const Login = () => {
           <p>Sign in to manage your property</p>
         </div>
         
-        {error && <div className="error-message" style={{ color: 'var(--accent-error)', textAlign: 'center', marginBottom: '1.5rem', padding: '0.8rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px', fontSize: '0.9rem' }}>{error}</div>}
+        {error && (
+          <div style={{ background: '#FEE2E2', color: '#EF4444', padding: '0.8rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold' }}>
+            {error}
+          </div>
+        )}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="input-group">
@@ -62,8 +87,8 @@ const Login = () => {
               required 
             />
           </div>
-          <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? 'Accessing...' : 'Access Dashboard'}
+          <button type="submit" className="auth-btn" disabled={isLoading}>
+            {isLoading ? 'Authenticating...' : 'Access Dashboard'}
           </button>
         </form>
 
