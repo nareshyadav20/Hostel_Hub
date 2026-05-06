@@ -7,13 +7,6 @@ import {
 } from 'lucide-react';
 import { api } from '../mockData';
 
-const MOCK_TRANSFERS = [
-  { id: 'tr1', tenant: { name: 'Rahul Sharma' }, oldRoom: 'Room 101 - Bed A', newRoom: 'Room 202 - Bed B', reason: 'Need a quieter room for study', status: 'PENDING', date: '2026-05-01', buildingId: null },
-  { id: 'tr2', tenant: { name: 'Priya Singh' }, oldRoom: 'Room 102 - Bed B', newRoom: 'Room 103 - Bed A', reason: 'Roommate conflict', status: 'ACCEPTED', date: '2026-04-28', buildingId: null },
-  { id: 'tr3', tenant: { name: 'Arjun Mehta' }, oldRoom: 'Room 205 - Bed C', newRoom: 'Room 301 - Bed A', reason: 'Proximity to bathroom', status: 'PENDING', date: '2026-05-03', buildingId: null },
-  { id: 'tr4', tenant: { name: 'Sneha Reddy' }, oldRoom: 'Room 104 - Bed A', newRoom: 'Room 104 - Bed B', reason: 'Better ventilation on other side', status: 'REJECTED', date: '2026-04-25', buildingId: null },
-  { id: 'tr5', tenant: { name: 'Vikram Das' }, oldRoom: 'Room 201 - Bed B', newRoom: 'Room 401 - Bed A', reason: 'Floor preference', status: 'PENDING', date: '2026-05-04', buildingId: null },
-];
 
 const STATUS_STYLES = {
   PENDING: { bg: '#FEF3C7', color: '#D97706', label: 'Pending' },
@@ -68,7 +61,7 @@ const Rooms = () => {
         setTransferRequests((tr && tr.length > 0) ? tr.filter(t => {
           const tBldgId = typeof t.building === 'object' ? t.building._id : t.building;
           return tBldgId === activeBuildingId;
-        }) : MOCK_TRANSFERS.filter(t => !activeBuildingId || t.buildingId === activeBuildingId || !t.buildingId));
+        }) : []);
 
         const fExp = {}; f?.forEach(x => fExp[x.id || x._id] = true);
         setExpandedFloors(fExp);

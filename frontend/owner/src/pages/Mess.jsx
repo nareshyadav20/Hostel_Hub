@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Utensils, Calendar as CalendarIcon, Users, Edit3, ArrowRight, Sun, Coffee, Moon, CheckCircle, X, Grid, List } from 'lucide-react';
 import { api } from '../mockData';
 
 const Mess = () => {
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'attendance' | 'menu' | 'subscriptions'
+  const { buildingId: urlBuildingId } = useParams();
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
+  const [activeTab, setActiveTab] = useState('dashboard'); 
   const [menuView, setMenuView] = useState('daily'); // 'daily' | 'weekly'
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -72,23 +76,20 @@ const Mess = () => {
     fetchMenu();
   }, []);
 
-  const [tenants] = useState([
-    { id: 't1', name: 'Rahul Sharma', room: '101', plan: 'Premium' },
-    { id: 't2', name: 'Amit Patel', room: '102', plan: 'Standard' },
-    { id: 't3', name: 'Suresh Kumar', room: '103', plan: 'Basic' },
-    { id: 't4', name: 'Vikas Singh', room: '104', plan: 'Premium' },
-    { id: 't5', name: 'Neha Gupta', room: '201', plan: 'Standard' },
-  ]);
+  const [tenants, setTenants] = useState([]);
+  const [attendance, setAttendance] = useState({});
 
-  const [attendance, setAttendance] = useState({
-    '2026-04-29': {
-      't1': { breakfast: true, lunch: true, dinner: false },
-      't2': { breakfast: true, lunch: false, dinner: false },
-      't3': { breakfast: false, lunch: false, dinner: false },
-    }
-  });
-
-  const today = '2026-04-29'; // Mock today's date for logic
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const t = await api.getTenants();
+        setTenants(t.filter(x => x.buildingId === activeBuildingId || !activeBuildingId));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchData();
+  }, [activeBuildingId]);
 
   const [editForm, setEditForm] = useState({ breakfast: '', lunch: '', dinner: '' });
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

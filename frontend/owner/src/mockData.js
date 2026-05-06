@@ -243,6 +243,22 @@ export const api = {
   addComplaint: async (data) => {
     const res = await axios.post(`${API_URL}/complaints`, data);
     return handleId(res.data);
+  },
+  // Inventory
+  getInventory: async (bId) => {
+    const res = await axios.get(`${API_URL}/inventory`, { params: { buildingId: bId } });
+    return handleId(res.data);
+  },
+  addInventoryItem: async (data) => {
+    const res = await axios.post(`${API_URL}/inventory`, data);
+    return handleId(res.data);
+  },
+  updateInventoryItem: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/inventory/${id}`, data);
+    return handleId(res.data);
+  },
+  deleteInventoryItem: async (id) => {
+    await axios.delete(`${API_URL}/inventory/${id}`);
   }
 };
 

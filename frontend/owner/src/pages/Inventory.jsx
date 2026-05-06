@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { api } from '../mockData';
 import { Package, AlertTriangle, Filter, Plus, RefreshCw, Info, TrendingDown, X, CheckCircle, Upload, Download, BedDouble, Coffee, MapPin, Box, Zap, CreditCard, ShieldCheck, ShoppingCart } from 'lucide-react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
@@ -45,21 +47,32 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => (
 );
 
 const Inventory = () => {
-  // Enhanced Mock Data
-  const [items, setItems] = useState([
-    { id: 1, name: 'Premium Mattresses', type: 'Asset', category: 'Furniture', stock: 15, maxStock: 50, minThreshold: 10, unit: 'Beds', location: 'Storage A', status: 'Available', inUse: 120, damaged: 2, lastUpdated: 'Today' },
-    { id: 2, name: 'Study Desks', type: 'Asset', category: 'Furniture', stock: 8, maxStock: 20, minThreshold: 5, unit: 'Desks', location: 'Storage B', status: 'Available', inUse: 85, damaged: 1, lastUpdated: 'Yesterday' },
-    { id: 3, name: 'Ceiling Fans', type: 'Asset', category: 'Electronics', stock: 3, maxStock: 15, minThreshold: 5, unit: 'Units', location: 'Storage A', status: 'Low Stock', inUse: 110, damaged: 4, lastUpdated: '2 days ago' },
-    { id: 4, name: 'Rice (Sona Masoori)', type: 'Consumable', category: 'Grocery', stock: 45, maxStock: 100, minThreshold: 50, unit: 'Kg', location: 'Pantry 1', status: 'Low Stock', inUse: 0, damaged: 0, lastUpdated: 'Today' },
-    { id: 5, name: 'Floor Cleaner', type: 'Consumable', category: 'Hygiene', stock: 12, maxStock: 30, minThreshold: 5, unit: 'Bottles', location: 'Utility Room', status: 'Available', inUse: 0, damaged: 0, lastUpdated: '3 days ago' },
-    { id: 6, name: 'LED Bulbs (9W)', type: 'Consumable', category: 'Maintenance', stock: 2, maxStock: 50, minThreshold: 10, unit: 'Pieces', location: 'Maintenance Desk', status: 'Critical', inUse: 0, damaged: 0, lastUpdated: 'Today' },
-  ]);
+  const { buildingId: urlBuildingId } = useParams();
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchInventory();
+  }, [activeBuildingId]);
+
+  const fetchInventory = async () => {
+    setLoading(true);
+    try {
+      const data = await api.getInventory(activeBuildingId);
+      setItems(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [activeTab, setActiveTab] = useState('All');
   const [search, setSearch] = useState('');
 
   // Modals State
-  // eslint-disable-next-line no-unused-vars
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
@@ -71,41 +84,49 @@ const Inventory = () => {
   const [actionQuantity, setActionQuantity] = useState(1);
   const [actionLocation, setActionLocation] = useState('');
 
+  // Handlers
+  const handleIssueSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.updateInventoryItem(selectedItem.id, { 
+        stock: selectedItem.stock - actionQuantity, 
+        inUse: selectedItem.inUse + actionQuantity 
+      });
+      fetchInventory();
+      setIsIssueModalOpen(false);
+      setActionQuantity(1);
+      setActionLocation('');
+    } catch (err) {
+       console.error(err);
+    }
+  };
+
+  const handleReturnSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.updateInventoryItem(selectedItem.id, { 
+        stock: selectedItem.stock + actionQuantity, 
+        inUse: Math.max(0, selectedItem.inUse - actionQuantity) 
+      });
+      fetchInventory();
+      setIsReturnModalOpen(false);
+      setActionQuantity(1);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Derived Data
-  const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
+  const filteredItems = (items || []).filter(item => {
+    const matchesSearch = (item.name || '').toLowerCase().includes(search.toLowerCase());
     const matchesTab = activeTab === 'All' || item.type === activeTab;
     return matchesSearch && matchesTab;
   });
 
-  const totalItems = items.length;
-  const totalInUse = items.reduce((sum, item) => sum + (item.inUse || 0), 0);
-  const lowStockItems = items.filter(i => i.stock < i.minThreshold);
-  const damagedAssets = items.filter(i => i.damaged > 0);
-
-  // Handlers
-  const handleIssueSubmit = (e) => {
-    e.preventDefault();
-    setItems(items.map(item => 
-      item.id === selectedItem.id 
-        ? { ...item, stock: item.stock - actionQuantity, inUse: item.inUse + actionQuantity, lastUpdated: 'Just now' } 
-        : item
-    ));
-    setIsIssueModalOpen(false);
-    setActionQuantity(1);
-    setActionLocation('');
-  };
-
-  const handleReturnSubmit = (e) => {
-    e.preventDefault();
-    setItems(items.map(item => 
-      item.id === selectedItem.id 
-        ? { ...item, stock: item.stock + actionQuantity, inUse: Math.max(0, item.inUse - actionQuantity), lastUpdated: 'Just now' } 
-        : item
-    ));
-    setIsReturnModalOpen(false);
-    setActionQuantity(1);
-  };
+  const totalItems = items?.length || 0;
+  const totalInUse = (items || []).reduce((sum, item) => sum + (item.inUse || 0), 0);
+  const lowStockItems = (items || []).filter(i => i.stock < i.minThreshold);
+  const damagedAssets = (items || []).filter(i => i.damaged > 0);
 
   // UI Helpers
   const inputStyle = { padding: '0.8rem 1rem', borderRadius: '10px', border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#1E293B', width: '100%', fontSize: '0.95rem', outline: 'none' };

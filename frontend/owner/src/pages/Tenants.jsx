@@ -58,28 +58,7 @@ const Tenants = () => {
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
 
   // Base State
-  const [tenants, setTenants] = useState([
-    { 
-      id: 1, name: 'Rahul Sharma', email: 'rahul@example.com', room: '201-A', phone: '+91 98765 43210', 
-      status: 'ACTIVE', rentStatus: 'PAID', checkIn: '2023-08-12', rent: 6500, emergencyContact: '+91 99999 00000',
-      docs: [{ name: 'Aadhar Card', verified: true }], score: 4.8, plan: 'Single', lastPayment: '2024-03-05'
-    },
-    { 
-      id: 2, name: 'Priya Verma', email: 'priya@example.com', room: '202-B', phone: '+91 87654 32109', 
-      status: 'ACTIVE', rentStatus: 'PENDING', checkIn: '2024-01-05', rent: 8500, emergencyContact: '+91 88888 11111',
-      docs: [{ name: 'Aadhar Card', verified: false }], score: 3.5, plan: 'Double', lastPayment: '2024-02-05'
-    },
-    { 
-      id: 3, name: 'Amit Singh', email: 'amit@example.com', room: '101-A', phone: '+91 76543 21098', 
-      status: 'LEFT', rentStatus: 'PAID', checkIn: '2022-05-10', rent: 5000, emergencyContact: '+91 77777 22222',
-      docs: [{ name: 'Aadhar Card', verified: true }], score: 4.2, plan: 'Shared', lastPayment: '2023-12-01'
-    },
-    { 
-      id: 4, name: 'Neha Gupta', email: 'neha@example.com', room: 'Pending', phone: '+91 65432 10987', 
-      status: 'PENDING', rentStatus: 'PENDING', checkIn: 'TBD', rent: 7000, emergencyContact: '+91 66666 33333',
-      docs: [], score: 0, plan: 'Single', lastPayment: 'N/A'
-    },
-  ]);
+  const [tenants, setTenants] = useState([]);
 
   const [selectedTenant, setSelectedTenant] = useState(null);
   const [profileTab, setProfileTab] = useState('Overview');
@@ -133,8 +112,8 @@ const Tenants = () => {
     setIsLoading(true);
     try {
       const data = await api.getTenants();
-      if (!data || data.length === 0) {
-        // Keep the existing hardcoded mock data — no-op
+      if (!data) {
+        setTenants([]);
         setIsLoading(false);
         return;
       }
@@ -165,8 +144,7 @@ const Tenants = () => {
         ? normalized.filter(t => t.buildingId === activeBuildingId)
         : normalized;
 
-      // Only replace state if we actually got records (never blank the list)
-      if (filtered.length > 0) setTenants(filtered);
+      setTenants(filtered);
     } catch (err) {
       console.error('Failed to fetch tenants:', err);
       // Keep existing mock state on error
