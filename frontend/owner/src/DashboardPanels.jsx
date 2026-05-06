@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { AlertCircle, Lightbulb, Bell, Users, Utensils, ShieldCheck, TrendingUp, FileText, ClipboardList, ChevronRight, Download, X, Building } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
+import { api } from './mockData';
 
 const PIE_COLORS = ['#EF4444','#F59E0B','#8B5CF6','#6B7280'];
 
@@ -373,9 +374,9 @@ export function InfrastructureOverview({ buildingId }) {
     (async () => {
       try {
         const [floors, rooms, beds] = await Promise.all([
-          window.api.getFloorsByBuilding(buildingId),
-          window.api.getRoomsByBuilding(buildingId),
-          window.api.getBedsByBuilding(buildingId)
+          api.getFloorsByBuilding(buildingId),
+          api.getRoomsByBuilding(buildingId),
+          api.getBedsByBuilding(buildingId)
         ]);
         setData({ floors, rooms, beds });
       } catch (e) {

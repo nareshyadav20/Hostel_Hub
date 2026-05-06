@@ -112,10 +112,10 @@ const Tenants = () => {
         setIsLoading(true);
         try {
           const [b, f, r, bd] = await Promise.all([
-            api.getBuildings(),
-            api.getAllFloors(),
-            api.getAllRooms(),
-            api.getAllBeds()
+            api.getBuildings(activeBuildingId),
+            api.getFloorsByBuilding(activeBuildingId),
+            api.getRoomsByBuilding(activeBuildingId),
+            api.getBedsByBuilding(activeBuildingId)
           ]);
           const filteredB = activeBuildingId ? b.filter(x => (x.id || x._id) === activeBuildingId) : b;
           setInfrastructure({ buildings: filteredB, floors: f, rooms: r, beds: bd });
@@ -132,7 +132,7 @@ const Tenants = () => {
   const fetchTenants = async () => {
     setIsLoading(true);
     try {
-      const data = await api.getTenants();
+      const data = await api.getTenants(activeBuildingId);
       if (!data || data.length === 0) {
         // Keep the existing hardcoded mock data — no-op
         setIsLoading(false);
