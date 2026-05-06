@@ -41,11 +41,16 @@ const Payments = () => {
     fetchPaymentInfo();
   }, []);
 
-  if (loading) return <div className="dashboard-container"><div className="loading-spinner">Fetching Financials...</div></div>;
-  const totalPaid = invoices.filter(inv => inv.status === 'Paid' || inv.status === 'Success').reduce((acc, curr) => {
-    const amt = parseInt(curr.amount.replace(/[^0-9]/g, ''));
-    return acc + amt;
-  }, 0);
+  if (loading) return (
+    <div className="staynest-dashboard loading-state">
+      <div className="premium-spinner"></div>
+      <p>Synchronizing financial records...</p>
+    </div>
+  );
+
+  const totalPaid = invoices
+    .filter(inv => inv.status === 'Paid' || inv.status === 'Success')
+    .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
 
   const handleSendParentLink = () => {
     if (!parentNumber || parentNumber.length < 10) {
@@ -57,13 +62,6 @@ const Payments = () => {
     setShowParentModal(false);
     setParentNumber('');
   };
-
-  if (loading) return (
-    <div className="staynest-dashboard loading-state">
-      <div className="premium-spinner"></div>
-      <p>Synchronizing financial records...</p>
-    </div>
-  );
 
   return (
     <div className="payments-page">

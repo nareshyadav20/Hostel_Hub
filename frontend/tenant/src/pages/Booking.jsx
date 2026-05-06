@@ -125,8 +125,11 @@ const Booking = () => {
                   <div className="booking-item-header">
                     <div className="hostel-info-group">
                       <div className="hostel-icon-badge">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M3 21h18M3 7v14M21 7v14M12 3v18M7 8h2M7 12h2M7 16h2M15 8h2M15 12h2M15 16h2"></path>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 21h18"></path>
+                          <path d="M3 7v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"></path>
+                          <path d="M21 7H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h18a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2z"></path>
+                          <path d="M9 12h6"></path>
                         </svg>
                       </div>
                       <div>
@@ -151,8 +154,13 @@ const Booking = () => {
                   <div className="booking-footer-pro">
                     <div className="booking-id-tag">ID: {b._id.slice(-8).toUpperCase()}</div>
                     <div className="booking-actions-pro">
-                      <button className="btn-secondary-small">Download</button>
-                      <button className="btn-primary-small">Manage Stay</button>
+                      <button className="btn-secondary-small">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Invoice
+                      </button>
+                      <button className="btn-primary-small">
+                        Manage
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -243,12 +251,18 @@ const Booking = () => {
 
             <div className="flow-footer dual">
               <button className="btn-secondary-pro" onClick={() => navigate(-1)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
                 Go Back
               </button>
               <button className="btn-primary btn-large" onClick={() => setStep(2)}>
-                Next: Identity Verification
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                Next: Identity Check
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
               </button>
             </div>
           </div>
@@ -293,12 +307,18 @@ const Booking = () => {
 
             <div className="flow-footer dual">
               <button className="btn-secondary-pro" onClick={() => setStep(1)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
                 Go Back
               </button>
               <button className="btn-primary btn-large" disabled={!formData.agreementSigned || !formData.idProof} onClick={() => setStep(3)}>
                 Next: Payment Summary
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
               </button>
             </div>
           </div>
@@ -333,7 +353,10 @@ const Booking = () => {
 
             <div className="flow-footer dual">
               <button className="btn-secondary-pro" onClick={() => setStep(2)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
                 Go Back
               </button>
               <button className="btn-primary btn-large checkout-color" onClick={async () => {

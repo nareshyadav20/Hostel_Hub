@@ -117,8 +117,8 @@ const Wishlist = () => {
                   </div>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
     </div>
