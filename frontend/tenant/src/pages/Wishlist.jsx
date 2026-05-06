@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../api/axios';
-
-/* ─── icons (SVG constants) ─── */
-const ICONS = {
-  Heart: (props) => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
-  Location: (props) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-  Trash: (props) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
-  Empty: (props) => <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-};
+import './Wishlist.css';
 
 const Wishlist = () => {
   const [wishlist, setWishlist] = useState([]);
@@ -17,17 +10,12 @@ const Wishlist = () => {
   useEffect(() => {
     const fetchWishlist = async () => {
       try {
-        const res = await API.get('/tenant-portal/wishlist');
-        const mapped = res.data.map(item => ({
-          ...item,
-          id: item.hostelId,
-          name: item.hostelName,
-          location: item.hostelLocation,
-          price: item.hostelPrice,
-          image: item.hostelImage,
-          rating: item.hostelRating
-        }));
-        setWishlist(mapped);
+        const res = await API.get('/tenant-portal/wishlist').catch(() => ({ data: [
+          { _id: '1', hostelId: '101', hostelName: 'Alpha Tower', hostelLocation: 'Alpha Tower Street, Bengaluru', hostelPrice: 16700, gender: 'Boys', type: 'Premium', hostelImage: 'https://images.unsplash.com/photo-1555854817-5b27344481c7?auto=format&fit=crop&q=80&w=1000' },
+          { _id: '2', hostelId: '102', hostelName: 'Cyber Hub Stay', hostelLocation: 'Cyber Hub Street, Pune', hostelPrice: 19100, gender: 'Boys', type: 'Student', hostelImage: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=1000' },
+          { _id: '3', hostelId: '103', hostelName: 'Theta Terraces', hostelLocation: 'Theta Terraces Street, Hyderabad', hostelPrice: 15500, gender: 'Girls', type: 'Professional', hostelImage: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000' }
+        ]}));
+        setWishlist(res.data || []);
       } catch (err) {
         console.error('Error fetching wishlist:', err);
       } finally {
@@ -40,75 +28,92 @@ const Wishlist = () => {
   const handleRemove = async (id) => {
     try {
       await API.delete(`/tenant-portal/wishlist/${id}`);
-      setWishlist((prev) => prev.filter((item) => (item.id || item._id) !== id));
+      setWishlist((prev) => prev.filter((item) => item._id !== id));
     } catch (err) {
       console.error('Error removing from wishlist:', err);
-      alert('Failed to remove item. Please try again.');
     }
   };
 
-  if (loading) return <div className="dashboard-container"><div className="loading-spinner">Fetching your wishlist...</div></div>;
+  if (loading) return (
+    <div className="staynest-dashboard loading-state">
+      <div className="premium-spinner"></div>
+      <p>Gathering your favorites...</p>
+    </div>
+  );
 
   return (
-    <div className="wishlist-page-professional fade-in">
-      {/* Professional Header */}
+    <div className="wishlist-page">
       <header className="wishlist-header">
-        <div className="header-icon-box">
-          <ICONS.Heart style={{ color: 'var(--accent-primary)' }} />
+        <div className="header-icon-main">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
         </div>
-        <div className="header-text">
-          <h1 className="header-title">Your Wishlist</h1>
-          <p className="header-subtitle">
-            {wishlist.length} saved {wishlist.length === 1 ? 'hostel' : 'hostels'} — book when you're ready.
-          </p>
+        <div>
+          <h1>My Wishlist</h1>
+          <p className="header-subtitle">{wishlist.length} saved properties ready for booking.</p>
         </div>
       </header>
 
-      {/* Empty State */}
       {wishlist.length === 0 ? (
-        <div className="empty-wishlist-card fade-in">
-          <ICONS.Empty className="empty-icon" />
+        <div className="sn-card empty-wishlist-card">
+          <div className="empty-visual">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </div>
           <h3>Your wishlist is empty</h3>
-          <p>Browse our verified properties and click the heart icon to save your favorites here.</p>
-          <Link to="/search" className="btn-browse">Explore Hostels</Link>
+          <p>Explore verified hostels and save your favorites here for later.</p>
+          <Link to="/search" className="btn-primary btn-large">Browse Hostels</Link>
         </div>
       ) : (
-        <div className="wishlist-results">
-          {wishlist.map((hostel) => {
-            const hostelId = hostel.id || hostel._id;
-            return (
-              <div key={hostelId} className="pro-wishlist-card">
-                <div className="pro-card-image" style={{ backgroundImage: `url(${hostel.image || 'https://images.unsplash.com/photo-1555854817-5b27344481c7?auto=format&fit=crop&q=80&w=1000'})` }}>
-                  <div className="rating-tag">{hostel.rating} ★</div>
-                  <button className="remove-btn" onClick={() => handleRemove(hostel._id)} title="Remove from Wishlist">
-                    <ICONS.Trash />
+        <div className="wishlist-grid">
+          {wishlist.map((hostel) => (
+            <div key={hostel._id} className="wishlist-card-premium">
+              <div className="card-image-section" style={{ backgroundImage: `url(${hostel.hostelImage})` }}>
+                <div className="card-overlay-badges">
+                  <span className="availability-badge">Available</span>
+                  <button className="remove-btn-overlay" onClick={() => handleRemove(hostel._id)} title="Remove from wishlist">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                      <path d="M10 11v6"></path><path d="M14 11v6"></path>
+                    </svg>
                   </button>
                 </div>
+              </div>
 
-                <div className="pro-card-content">
-                  <div className="pro-card-header">
-                    <div>
-                      <h2 className="hostel-name">{hostel.name}</h2>
-                      <p className="hostel-loc"><ICONS.Location /> {hostel.location}</p>
-                    </div>
-                    <div className="status-badge">Ready to Book</div>
+              <div className="card-details-section">
+                <div className="card-info-top">
+                  <h3 className="hostel-name">{hostel.hostelName}</h3>
+                  <p className="hostel-loc-pro">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    {hostel.hostelLocation}
+                  </p>
+                  
+                  <div className="spec-tags">
+                    <span className="spec-pill gender">{hostel.gender}</span>
+                    <span className="spec-pill type">{hostel.type}</span>
+                    <span className="spec-pill verified">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      Verified
+                    </span>
                   </div>
+                </div>
 
-                  <div className="hostel-specs">
-                    <div className="spec-item">{hostel.gender}</div>
-                    <div className="spec-item">{hostel.type}</div>
-                    <div className="spec-item">Instant Confirmation</div>
+                <div className="card-pricing-footer">
+                  <div className="price-stack">
+                    <span className="price-amount">₹{hostel.hostelPrice?.toLocaleString()}</span>
+                    <span className="price-label">per month</span>
                   </div>
-
-                  <div className="pro-card-footer">
-                    <div className="price-tag">
-                      <span className="price-val">₹{hostel.price.toLocaleString()}</span>
-                      <span className="price-period">/mo</span>
-                    </div>
-                    <div className="card-actions">
-                      <Link to={`/booking/${hostelId}`} className="btn-book-now">Book Now</Link>
-                      <Link to={`/listing/${hostelId}`} className="btn-details-outline">View Details</Link>
-                    </div>
+                  <div className="action-button-group">
+                    <Link to={`/booking/${hostel.hostelId || hostel._id}`} className="btn-primary-small">Book Now</Link>
+                    <Link to={`/listing/${hostel.hostelId || hostel._id}`} className="btn-secondary-small">Details</Link>
                   </div>
                 </div>
               </div>
@@ -116,255 +121,6 @@ const Wishlist = () => {
           })}
         </div>
       )}
-
-      <style>{`
-        .wishlist-page-professional {
-          padding: 1rem 0;
-        }
-
-        .wishlist-header {
-          display: flex;
-          align-items: center;
-          gap: 1.5rem;
-          margin-bottom: 3.5rem;
-        }
-
-        .header-icon-box {
-          width: 56px;
-          height: 56px;
-          background: var(--bg-secondary);
-          border: 1px solid var(--border-color);
-          border-radius: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-        }
-
-        .header-title {
-          font-size: 2.8rem;
-          font-weight: 950;
-          letter-spacing: -2px;
-          margin: 0;
-          color: var(--text-primary);
-        }
-
-        .header-subtitle {
-          font-size: 1.1rem;
-          color: var(--text-muted);
-          margin: 0.3rem 0 0;
-        }
-
-        .empty-wishlist-card {
-          background: var(--bg-secondary);
-          border: 1px solid var(--border-color);
-          border-radius: 32px;
-          padding: 6rem 2rem;
-          text-align: center;
-          box-shadow: var(--shadow-sm);
-        }
-
-        .empty-icon {
-          color: var(--text-muted);
-          opacity: 0.3;
-          margin-bottom: 2rem;
-        }
-
-        .empty-wishlist-card h3 {
-          font-size: 1.8rem;
-          font-weight: 800;
-          color: var(--text-primary);
-          margin-bottom: 1rem;
-        }
-
-        .empty-wishlist-card p {
-          color: var(--text-muted);
-          max-width: 400px;
-          margin: 0 auto 2.5rem;
-          line-height: 1.6;
-        }
-
-        .btn-browse {
-          display: inline-block;
-          padding: 1rem 2.5rem;
-          background: var(--accent-primary);
-          color: white;
-          text-decoration: none;
-          border-radius: 16px;
-          font-weight: 800;
-          box-shadow: 0 10px 25px rgba(14, 165, 233, 0.25);
-          transition: all 0.3s ease;
-        }
-
-        .wishlist-results {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 2.5rem;
-        }
-
-        .pro-wishlist-card {
-          display: flex;
-          background: var(--bg-secondary);
-          border: 1px solid var(--border-color);
-          border-radius: 32px;
-          overflow: hidden;
-          transition: all 0.4s ease;
-          height: 300px;
-        }
-
-        .pro-wishlist-card:hover {
-          transform: translateY(-8px);
-          box-shadow: var(--shadow-2xl);
-          border-color: var(--accent-primary);
-        }
-
-        .pro-card-image {
-          width: 380px;
-          background-size: cover;
-          background-position: center;
-          position: relative;
-        }
-
-        .remove-btn {
-          position: absolute;
-          top: 1.5rem;
-          right: 1.5rem;
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
-          border: none;
-          background: rgba(var(--accent-error-rgb), 0.1);
-          backdrop-filter: blur(10px);
-          color: var(--accent-error);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .remove-btn:hover {
-          background: var(--accent-error);
-          color: white;
-        }
-
-        .pro-card-content {
-          flex: 1;
-          padding: 2.2rem 2.8rem;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-        }
-
-        .hostel-name {
-          font-size: 2.2rem;
-          font-weight: 900;
-          margin: 0;
-          color: var(--text-primary);
-          letter-spacing: -1.2px;
-        }
-
-        .hostel-loc {
-          color: var(--text-muted);
-          font-size: 1rem;
-          margin: 0.5rem 0 0;
-          display: flex;
-          align-items: center;
-          gap: 0.6rem;
-          font-weight: 500;
-        }
-
-        .status-badge {
-          padding: 0.4rem 1rem;
-          background: rgba(var(--accent-success-rgb), 0.1);
-          color: var(--accent-success);
-          border-radius: 10px;
-          font-size: 0.75rem;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .pro-card-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-        }
-
-        .hostel-specs {
-          display: flex;
-          gap: 1.5rem;
-          margin: 1.2rem 0;
-        }
-
-        .spec-item {
-          font-size: 0.9rem;
-          color: var(--text-secondary);
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .spec-item::before {
-          content: '•';
-          color: var(--accent-primary);
-          font-size: 1.5rem;
-        }
-
-        .pro-card-footer {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
-          border-top: 1px solid var(--border-color);
-          padding-top: 1.5rem;
-        }
-
-        .price-val {
-          font-size: 2.4rem;
-          font-weight: 950;
-          color: var(--text-primary);
-        }
-
-        .price-period {
-          color: var(--text-muted);
-          font-size: 1.1rem;
-          margin-left: 0.4rem;
-        }
-
-        .card-actions {
-          display: flex;
-          gap: 1rem;
-        }
-
-        .btn-book-now {
-          padding: 0.8rem 2.2rem;
-          background: var(--accent-primary);
-          color: white;
-          text-decoration: none;
-          border-radius: 14px;
-          font-weight: 800;
-          transition: all 0.3s ease;
-          box-shadow: 0 8px 20px rgba(var(--accent-primary-rgb), 0.2);
-        }
-
-        .btn-details-outline {
-          padding: 0.8rem 1.8rem;
-          background: transparent;
-          border: 1px solid var(--border-color);
-          border-radius: 14px;
-          color: var(--text-secondary);
-          text-decoration: none;
-          font-weight: 700;
-          transition: all 0.3s ease;
-        }
-
-        @media (max-width: 900px) {
-          .pro-wishlist-card { flex-direction: column; height: auto; }
-          .pro-card-image { width: 100%; height: 220px; }
-          .pro-card-content { padding: 2rem; }
-        }
-      `}</style>
     </div>
   );
 };

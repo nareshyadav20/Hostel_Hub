@@ -1,0 +1,141 @@
+/* ─── Help Desk & Complaints Styles ─── */
+.complaints-page {
+  width: 100%;
+  animation: fadeIn 0.8s var(--transition-normal);
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.complaints-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.header-icon-main {
+  width: 56px;
+  height: 56px;
+  background: var(--primary);
+  color: white;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.complaints-header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+/* Stat Grid */
+.tickets-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.stat-card-mini {
+  padding: 1.5rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-left: 5px solid var(--primary);
+}
+
+.stat-card-mini.success { border-left-color: #16a34a; background: #f0fdf4 !important; }
+.stat-card-mini.warning { border-left-color: #ea580c; background: #fff7ed !important; }
+
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+/* History Table */
+.ticket-history-card { padding: 2rem !important; }
+
+.icon-badge-history {
+  width: 44px;
+  height: 44px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tickets-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+}
+
+.tickets-table th {
+  padding: 1rem 1.5rem;
+  background: var(--bg-primary);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.tickets-table td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.td-date { font-weight: 700; color: var(--text-secondary); }
+
+.ticket-main { display: flex; flex-direction: column; }
+.ticket-title { font-weight: 800; color: var(--text-primary); font-size: 1.1rem; }
+.ticket-desc { font-size: 0.85rem; color: var(--text-muted); max-width: 400px; }
+
+.category-tag {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.status-pill {
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.status-pill.resolved { background: #f0fdf4; color: #16a34a; }
+.status-pill.pending { background: #fff7ed; color: #ea580c; }
+.status-pill.open { background: #f1f5f9; color: #64748b; }
+
+@media (max-width: 900px) {
+  .complaints-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  .btn-large { width: 100%; }
+}

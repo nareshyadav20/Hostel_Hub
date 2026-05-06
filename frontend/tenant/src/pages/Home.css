@@ -586,6 +586,7 @@ body {
   color: #4F46E5;
   line-height: 1
 }
+.city-item.active .city-icon-box { color: var(--primary); }
 
 .hv2-float-label {
   font-size: .9rem;

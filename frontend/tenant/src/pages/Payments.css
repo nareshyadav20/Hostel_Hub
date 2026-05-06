@@ -1,0 +1,201 @@
+/* ─── Financial Hub Styles ─── */
+.payments-page {
+  width: 100%;
+  animation: fadeIn 0.8s var(--transition-normal);
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.payments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.header-icon-main {
+  width: 56px;
+  height: 56px;
+  background: var(--primary);
+  color: white;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.payments-header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+/* Stats Grid */
+.financial-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+
+.stat-card-premium {
+  padding: 2.5rem !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition-normal);
+}
+
+.stat-card-premium.balance { border-left: 6px solid var(--primary); }
+.stat-card-premium.pending { border-left: 6px solid #ef4444; }
+
+.stat-card-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-content { z-index: 2; }
+.stat-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+.stat-value { font-size: 2.5rem; font-weight: 900; color: var(--text-primary); margin-top: 0.5rem; }
+
+.btn-pay-now {
+  margin-top: 1.25rem;
+  padding: 0.75rem 2rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-pay-now:hover { background: #dc2626; transform: scale(1.05); }
+
+.stat-icon-bg {
+  opacity: 0.1;
+  color: var(--text-primary);
+  transform: scale(1.5);
+}
+
+/* History Card */
+.history-card-main { padding: 2rem !important; }
+
+.icon-badge-history {
+  width: 44px;
+  height: 44px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.financial-table-premium {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.financial-table-premium th {
+  padding: 1rem 1.5rem;
+  background: var(--bg-primary);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.financial-table-premium td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-light);
+  background: white;
+}
+
+.financial-table-premium tr:last-child td { border-bottom: none; }
+
+.td-date { font-weight: 700; color: var(--text-secondary); }
+.invoice-id { font-family: monospace; font-weight: 800; color: var(--text-primary); background: #f1f5f9; padding: 4px 8px; border-radius: 6px; }
+.td-amount { font-weight: 900; color: var(--text-primary); font-size: 1.1rem; }
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.status-pill.paid { background: #f0fdf4; color: #16a34a; }
+.status-pill.pending { background: #fef2f2; color: #ef4444; }
+
+.btn-table-details {
+  padding: 0.6rem 1.2rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--primary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-table-details:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* Parent Modal */
+.phone-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.country-code { font-weight: 800; color: var(--text-muted); border-right: 1px solid var(--border-color); padding-right: 0.75rem; }
+.phone-input-wrapper input { background: transparent; border: none; font-weight: 700; font-size: 1rem; width: 100%; outline: none; }
+
+.whatsapp-color { background: #25d366 !important; border: none !important; }
+.whatsapp-color:hover { background: #128c7e !important; transform: translateY(-2px); }
+
+/* Modal Detail Grid */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.detail-item { display: flex; flex-direction: column; gap: 0.4rem; }
+.detail-label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+.detail-value { font-size: 1.1rem; font-weight: 800; color: var(--text-primary); }
+
+@media (max-width: 900px) {
+  .payments-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  .stat-card-premium { padding: 1.5rem !important; }
+  .detail-grid { grid-template-columns: 1fr; }
+}

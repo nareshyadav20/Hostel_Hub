@@ -1,0 +1,173 @@
+/* ─── Loyalty Rewards Page Styles ─── */
+.rewards-page {
+  width: 100%;
+  animation: fadeIn 0.8s var(--transition-normal);
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.rewards-header {
+  margin-bottom: var(--space-2);
+}
+
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.header-icon-main {
+  width: 48px;
+  height: 48px;
+  background: #f59e0b;
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rewards-header h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.header-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.points-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-3);
+}
+
+.point-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: var(--transition-normal);
+}
+
+.point-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+
+.point-icon-bg {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.point-card.balance .point-icon-bg { background: var(--primary-light); color: var(--primary); }
+.point-card.earned .point-icon-bg { background: #f0fdf4; color: #16a34a; }
+.point-card.used .point-icon-bg { background: #fff7ed; color: #ea580c; }
+
+.point-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.point-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.rewards-cta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.cta-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+  transition: var(--transition-normal);
+}
+
+.cta-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.cta-info {
+  flex: 1;
+  max-width: 65%;
+  z-index: 2;
+}
+
+.cta-info h2 {
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.cta-info p {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.cta-visual {
+  position: absolute;
+  right: -20px;
+  bottom: -20px;
+  opacity: 0.05;
+  color: var(--primary);
+  transform: rotate(-15deg);
+  transition: var(--transition-normal);
+}
+
+.cta-card:hover .cta-visual {
+  opacity: 0.1;
+  transform: rotate(0deg) scale(1.1);
+}
+
+.cta-card.redeem { border-left: 6px solid var(--primary); }
+.cta-card.referral { border-left: 6px solid #16a34a; }
+
+.btn-secondary.copied {
+  background: #f0fdf4;
+  color: #16a34a;
+  border-color: #16a34a;
+}
+
+.referral-action-wrapper {
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .rewards-cta-grid { grid-template-columns: 1fr; }
+  .cta-card { padding: 2rem; }
+  .cta-info { max-width: 100%; }
+}
