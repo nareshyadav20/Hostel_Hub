@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useParams } from 'react-router-dom';
 import { 
   FileBarChart, Download, Calendar, Filter, FileText, 
   PieChart as PieChartIcon, TrendingUp, Users, Info, 
@@ -14,6 +15,7 @@ import {
 import { api } from '../mockData';
 
 const Reports = () => {
+  const { buildingId } = useParams();
   const [selectedReport, setSelectedReport] = useState('revenue');
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState({
@@ -29,17 +31,17 @@ const Reports = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [buildingId]);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
       const [b, t, p, c, s] = await Promise.all([
         api.getBuildings(),
-        api.getTenants(),
-        api.getPayments(),
-        api.getComplaints(),
-        api.getSettings()
+        api.getTenants(buildingId),
+        api.getPayments(buildingId),
+        api.getComplaints(buildingId),
+        api.getSettings(buildingId)
       ]);
       setData({ buildings: b, tenants: t, payments: p, complaints: c, settings: s });
     } catch (err) {

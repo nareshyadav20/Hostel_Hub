@@ -14,32 +14,38 @@ function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [modal, setModal] = useState(null); // 'addTenant' | 'assignBed' | 'markPaid' | 'complaint'
   const [formMsg, setFormMsg] = useState('');
-  const [settings, setSettings] = useState(null);
-  const [d, setD] = useState({ summary:null, revenue:null, occupancy:null, alerts:null, complaints:null, mess:null, staff:null });
+  const [d, setD] = useState({ summary:null, revenue:null, occupancy:null, alerts:null, complaints:null, mess:null, staff:null, activity: [], tenantsList: [] });
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      setIsLoading(true);
-      try {
-        const [summary, revenue, occupancy, alerts, complaints, mess, staff, sData] = await Promise.all([
-          api.getDashboardSummary(buildingId),
-          api.getDashboardRevenue(buildingId),
-          api.getDashboardOccupancy(buildingId),
-          api.getDashboardAlerts(buildingId),
-          api.getDashboardComplaints(buildingId),
-          api.getDashboardMess(buildingId),
-          api.getDashboardStaff(buildingId),
-          api.getSettings()
-        ]);
-        setD({ summary, revenue, occupancy, alerts, complaints, mess, staff });
-        setSettings(sData);
-      } catch(e) {
-        console.error('Dashboard Fetch Error:', e);
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  }, [buildingId]);
+  const fetchData = async () => {
+    if (!activeBuildingId) {
+      setIsLoading(false);
+      return;
+    }
+    setIsRefreshing(true);
+    try {
+      const [summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenants] = await Promise.all([
+        api.getDashboardSummary(activeBuildingId),
+        api.getDashboardRevenue(activeBuildingId),
+        api.getDashboardOccupancy(activeBuildingId),
+        api.getDashboardAlerts(activeBuildingId),
+        api.getDashboardComplaints(activeBuildingId),
+        api.getDashboardMess(activeBuildingId),
+        api.getDashboardStaff(activeBuildingId),
+        api.getDashboardActivity(activeBuildingId),
+        api.getTenants(activeBuildingId)
+      ]);
+      setD({ summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenantsList: tenants });
+    } catch(e) {
+      console.error('Dashboard Fetch Error:', e);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => { fetchData(); }, [activeBuildingId]);
+
 
   if (isLoading || !d.summary) return (
     <div className="dashboard-container">

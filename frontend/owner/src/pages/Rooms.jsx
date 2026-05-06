@@ -33,11 +33,11 @@ const Rooms = () => {
       try {
         const [b, f, r, bd, t, tr] = await Promise.all([
           api.getBuildings(),
-          api.getAllFloors(),
-          api.getAllRooms(),
-          api.getAllBeds(),
-          api.getTenants(),
-          api.getRoomTransfers()
+          api.getFloorsByBuilding(activeBuildingId),
+          api.getRoomsByBuilding(activeBuildingId),
+          api.getBedsByBuilding(activeBuildingId),
+          api.getTenants(activeBuildingId),
+          api.getRoomTransfers(activeBuildingId)
         ]);
         
         setBuildings(b || []);

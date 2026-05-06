@@ -29,7 +29,11 @@ const createPayment = async (req, res) => {
 
 const getAllPayments = async (req, res) => {
   try {
-    const payments = await Payment.find().sort({ date: -1 });
+    const { buildingId } = req.query;
+    const query = {};
+    if (buildingId) query.buildingId = buildingId;
+
+    const payments = await Payment.find(query).sort({ date: -1 });
     res.status(200).json(payments);
   } catch (error) {
     res.status(500).json({ error: error.message });

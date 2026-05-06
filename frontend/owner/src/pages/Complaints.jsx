@@ -1,16 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets } from 'lucide-react';
-import API from '../api/axios';
+import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown, X } from 'lucide-react';
+import { api } from '../mockData';
+
+const MOCK_COMPLAINTS = [
+  { id: 'mc1', room: '101 - Bed A', issue: 'Ceiling fan not working', category: 'Maintenance', urgency: 'High',   status: 'Pending',     reportedBy: 'Amit Kumar',   timeElapsed: '2 hours ago',   description: 'The fan has been broken for 2 days. Room gets very hot at night.', buildingName: 'Alpha Tower' },
+  { id: 'mc2', room: '202 - Bed B', issue: 'Food quality is poor',  category: 'Food',        urgency: 'Medium', status: 'In-Progress', reportedBy: 'Sneha Reddy',  timeElapsed: '5 hours ago',   description: 'The dinner provided had very little vegetables and no protein.', buildingName: 'Beta Block' },
+  { id: 'mc3', room: '305 - Bed C', issue: 'Bathroom pipe leaking', category: 'Plumbing',   urgency: 'High',   status: 'Pending',     reportedBy: 'Rahul Mehta',  timeElapsed: '1 day ago',     description: 'Water leaking from under the sink continuously. Floor is wet.', buildingName: 'Alpha Tower' },
+  { id: 'mc4', room: '104 - Bed A', issue: 'AC not cooling',        category: 'Electrical',  urgency: 'High',   status: 'Resolved',    reportedBy: 'Priya Sharma', timeElapsed: '3 days ago',    description: 'Air conditioner runs but room temperature is not dropping below 28°C.', buildingName: 'Beta Block' },
+  { id: 'mc5', room: '203 - Bed B', issue: 'WiFi very slow',        category: 'Maintenance', urgency: 'Low',    status: 'In-Progress', reportedBy: 'Arjun Das',    timeElapsed: '6 hours ago',   description: 'Internet speed is below 1 Mbps during evenings. Streaming is impossible.', buildingName: 'Alpha Tower' },
+  { id: 'mc6', room: '401 - Bed A', issue: 'Leave request – home',  category: 'Leave',       urgency: 'Low',    status: 'Pending',     reportedBy: 'Kiran Patil',  timeElapsed: '1 hour ago',    description: 'Requesting 5-day leave from 10 May to 15 May for family function.', buildingName: 'Alpha Tower' },
+  { id: 'mc7', room: '302 - Bed C', issue: 'Guest visit request',   category: 'Visitor',     urgency: 'Low',    status: 'Pending',     reportedBy: 'Divya Nair',   timeElapsed: '30 minutes ago',description: 'Requesting permission for parent visit on Sunday 12 May, 10 AM–4 PM.', buildingName: 'Beta Block' },
+  { id: 'mc8', room: '105 - Bed B', issue: 'Room not cleaned',      category: 'Cleaning',    urgency: 'Medium', status: 'Pending',     reportedBy: 'Sanjay Rao',   timeElapsed: '4 hours ago',   description: 'Common bathroom has not been cleaned for 2 days. Unhygienic conditions.', buildingName: 'Alpha Tower' },
+];
 
 const Complaints = () => {
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('Maintenance');
+  const [filterBuilding, setFilterBuilding] = useState(activeBuildingId || 'all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchComplaints = async () => {
+  const fetchComplaints = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
+    else setIsRefreshing(true);
+    
     try {
-      const response = await API.get('/complaints'); // Admin route or general route
-      setComplaints(response.data);
+      // Invalidate cache to get fresh data
+      localStorage.removeItem('complaints_all_v4');
+      const data = await api.getComplaints(activeBuildingId);
+      const buildingsData = await api.getBuildings();
+      setBuildings(buildingsData);
+
+      const formatted = data
+        .filter(c => filterBuilding === 'all' || c.buildingId === filterBuilding || c.buildingId?._id === filterBuilding)
+        .map(c => {
+          const createdAt = c.createdAt || c.date;
+          const diffHours = Math.floor((new Date() - new Date(createdAt)) / (1000 * 60 * 60));
+          const timeElapsed = diffHours < 24 ? `${diffHours} hours ago` : `${Math.floor(diffHours/24)} days ago`;
+          
+          return {
+            id: c._id || c.id,
+            room: c.roomId?.roomNumber || c.tenant?.room || 'N/A',
+            issue: c.title,
+            category: c.category,
+            urgency: c.priority || (['Electrical', 'Plumbing'].includes(c.category) ? 'High' : 'Medium'),
+            status: c.status === 'In Progress' ? 'In-Progress' : c.status,
+            reportedBy: c.tenant?.name || 'Unknown User',
+            timeElapsed,
+            description: c.description,
+            buildingName: c.buildingId?.name || 'Unknown Building'
+          };
+        });
+      // Fall back to mock data if API returns empty
+      setComplaints(formatted.length > 0 ? formatted : MOCK_COMPLAINTS);
     } catch (err) {
       console.error('Error fetching complaints:', err);
     } finally {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { 
   Settings as SettingsIcon, Shield, Bell, User, Building, 
   CreditCard, PaintBucket, ToggleLeft, Save, HelpCircle, 
@@ -9,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../mockData';
 
 const Settings = () => {
+  const { buildingId } = useParams();
   const [activeTab, setActiveTab] = useState('general');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -17,11 +19,11 @@ const Settings = () => {
 
   useEffect(() => {
     fetchSettings();
-  }, []);
+  }, [buildingId]);
 
   const fetchSettings = async () => {
     try {
-      const data = await api.getSettings();
+      const data = await api.getSettings(buildingId);
       setSettings(data);
     } catch (err) {
       console.error(err);

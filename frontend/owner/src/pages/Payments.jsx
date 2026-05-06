@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useParams } from 'react-router-dom';
 import { 
   CreditCard, Download, Bell, AlertTriangle, CheckCircle, Search, X, 
   FileText, Smartphone, Banknote, Building2, TrendingUp, AlertCircle
@@ -83,8 +84,8 @@ const Payments = () => {
   async function fetchData() {
     try {
       const [tData, pData] = await Promise.all([
-        api.getTenants(),
-        api.getPayments()
+        api.getTenants(activeBuildingId),
+        api.getPayments(activeBuildingId)
       ]);
       setTenants(tData || []);
       
