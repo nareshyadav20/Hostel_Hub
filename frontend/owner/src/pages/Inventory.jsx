@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
+import { api } from '../mockData';
 
 // --- SHARED COMPONENTS ---
 const Modal = ({ isOpen, onClose, title, children, maxWidth = '700px' }) => (
@@ -88,7 +89,6 @@ const SUBCATEGORIES = [
 
 // --- EXTENDED DATASETS ---
 const INITIAL_INVENTORY = [
-  // --- FOOD (MEGA LIST) ---
   { id: 'F-RG-001', name: 'Basmati Rice', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 50, maxStock: 100, minThreshold: 20, unit: 'Kg', location: 'Dry Store A' },
   { id: 'F-RG-002', name: 'Sona Masoori Rice', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 100, maxStock: 150, minThreshold: 30, unit: 'Kg', location: 'Dry Store A' },
   { id: 'F-RG-004', name: 'Wheat Flour (Atta)', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 80, maxStock: 150, minThreshold: 40, unit: 'Kg', location: 'Dry Store B' },
@@ -96,7 +96,6 @@ const INITIAL_INVENTORY = [
   { id: 'F-VG-001', name: 'Potato', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-VEG', stock: 100, maxStock: 150, minThreshold: 40, unit: 'Kg', location: 'Cold Store' },
   { id: 'F-DY-001', name: 'Milk', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-DAIRY', stock: 100, maxStock: 150, minThreshold: 40, unit: 'L/Day', location: 'Dairy Cooler' },
   { id: 'F-KS-001', name: 'Gas Cylinder', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-KIT', stock: 10, maxStock: 15, minThreshold: 3, unit: 'Units', location: 'Gas Bank' },
-  // --- ASSETS ---
   { id: 'INV-G001', name: 'Single Bed (Steel)', categoryId: 'CAT-FURN', subCategoryId: 'SUB-BED', stock: 45, maxStock: 50, minThreshold: 5, unit: 'Units', location: 'Block A' },
   { id: 'INV-E001', name: 'Split AC (1.5 Ton)', categoryId: 'CAT-ELEC', subCategoryId: 'SUB-AC', stock: 24, maxStock: 30, minThreshold: 2, unit: 'Units', location: 'Room 101' },
   { id: 'INV-C001', name: 'Floor Cleaner', categoryId: 'CAT-CLEAN', subCategoryId: 'SUB-LIQ', stock: 5, maxStock: 25, minThreshold: 10, unit: 'Liters', location: 'Janitor Room' }
@@ -157,7 +156,8 @@ const INITIAL_BUDGETS = [
 ];
 
 const InventoryModule = () => {
-  const { buildingId } = useParams();
+  const { buildingId: urlBuildingId } = useParams();
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
   
   const [activeTab, setActiveTab] = useState('inventory');
   const [procSubTab, setProcSubTab] = useState('dashboard');
@@ -165,7 +165,8 @@ const InventoryModule = () => {
   const [notifications, setNotifications] = useState([]);
   
   // Data States
-  const [inventory, setInventory] = useState(INITIAL_INVENTORY);
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState(INITIAL_REQUESTS);
   const [pos, setPos] = useState(INITIAL_POS);
   const [assets, setAssets] = useState(INITIAL_ASSETS);
@@ -181,6 +182,24 @@ const InventoryModule = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isAssetModalOpen, setIsAssetModalOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
+
+  useEffect(() => {
+    fetchInventory();
+  }, [activeBuildingId]);
+
+  const fetchInventory = async () => {
+    setLoading(true);
+    try {
+      const data = await api.getInventory(activeBuildingId);
+      // Fallback to initial if mock is empty, but usually api should return data
+      setInventory(data || INITIAL_INVENTORY);
+    } catch (err) {
+      console.error(err);
+      setInventory(INITIAL_INVENTORY);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const triggerNotification = (msg, color = 'blue') => {
     setNotifications(prev => [{ msg, color, id: Date.now() }, ...prev]);
@@ -209,7 +228,7 @@ const InventoryModule = () => {
     <div style={{ width: '300px', background: '#FFFFFF', borderRight: '1px solid #E2E8F0', padding: '1.5rem', height: '100%', overflowY: 'auto' }}>
       <h3 style={{ fontSize: '0.8rem', fontWeight: '900', color: '#64748B', textTransform: 'uppercase', marginBottom: '1.5rem' }}>Inventory Explorer</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-        <button onClick={() => { setSelectedCategory(null); setSelectedSubCategory(null); }} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '1rem', borderRadius: '16px', border: 'none', cursor: 'pointer', background: !selectedCategory ? '#3B82F6' : 'transparent', color: !selectedCategory ? '#FFFFFF' : '#475569', fontWeight: '800', transition: '0.2s' }}>
+        <button onClick={() => { setSelectedCategory(null); setSelectedSubCategory(null); }} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '1rem', borderRadius: '16px', border: 'none', cursor: 'pointer', background: !selectedCategory ? '#3B82F6' : 'transparent', color: !selectedCategory ? '#FFFFFF' : '#475569', fontWeight: '800', transition: '0.2s', width: '100%', textAlign: 'left' }}>
           <Grid size={20} /> All Categories
         </button>
         {CATEGORIES.map(cat => (
@@ -275,10 +294,10 @@ const InventoryModule = () => {
           <div style={{ animation: 'fadeIn 0.3s ease' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
               {[
-                { l: 'MONTHLY SPEND', v: `₹${procStats.totalSpend.toLocaleString()}`, c: '#3B82F6', i: <DollarSign/> },
-                { l: 'PENDING APPROVALS', v: procStats.pendingApprovals, c: '#F59E0B', i: <Clock/> },
-                { l: 'ACTIVE ORDERS', v: procStats.activePOs, c: '#8B5CF6', i: <Package/> },
-                { l: 'DELAYED DELIVERIES', v: procStats.delayed, c: '#E11D48', i: <AlertTriangle/> }
+                { l: 'MONTHLY SPEND', v: `₹${procStats.totalSpend.toLocaleString()}`, c: '#3B82F6', i: <DollarSign size={20}/> },
+                { l: 'PENDING APPROVALS', v: procStats.pendingApprovals, c: '#F59E0B', i: <Clock size={20}/> },
+                { l: 'ACTIVE ORDERS', v: procStats.activePOs, c: '#8B5CF6', i: <Package size={20}/> },
+                { l: 'DELAYED DELIVERIES', v: procStats.delayed, c: '#E11D48', i: <AlertTriangle size={20}/> }
               ].map((s, idx) => (
                 <div key={idx} className="card" style={{ padding: '1.5rem', borderLeft: `5px solid ${s.c}` }}>
                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', marginBottom: '0.6rem' }}><span style={{ fontSize: '0.75rem', fontWeight: '900' }}>{s.l}</span>{s.i}</div>
@@ -348,10 +367,10 @@ const InventoryModule = () => {
           <div style={{ animation: 'fadeIn 0.3s ease' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
               {[
-                { l: 'TOTAL ASSETS', v: assetStats.total, c: '#3B82F6', i: <Layers/> },
-                { l: 'IN SERVICE', v: assetStats.active, c: '#10B981', i: <Zap/> },
-                { l: 'REPAIRING', v: assetStats.maintenance, c: '#F59E0B', i: <Hammer/> },
-                { l: 'PORTFOLIO VALUE', v: `₹${(assetStats.valuation/1000).toFixed(1)}K`, c: '#8B5CF6', i: <Wallet/> }
+                { l: 'TOTAL ASSETS', v: assetStats.total, c: '#3B82F6', i: <Layers size={20}/> },
+                { l: 'IN SERVICE', v: assetStats.active, c: '#10B981', i: <Zap size={20}/> },
+                { l: 'REPAIRING', v: assetStats.maintenance, c: '#F59E0B', i: <Hammer size={20}/> },
+                { l: 'PORTFOLIO VALUE', v: `₹${(assetStats.valuation/1000).toFixed(1)}K`, c: '#8B5CF6', i: <Wallet size={20}/> }
               ].map((s, idx) => (
                 <div key={idx} className="card" style={{ padding: '1.5rem', borderLeft: `5px solid ${s.c}` }}>
                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', marginBottom: '0.6rem' }}><span style={{ fontSize: '0.75rem', fontWeight: '900' }}>{s.l}</span>{s.i}</div>
@@ -454,9 +473,17 @@ const InventoryModule = () => {
         ))}
       </div>
       <div style={{ flex: 1, overflowY: 'hidden' }}>
-        {activeTab === 'inventory' && renderInventoryTab()}
-        {activeTab === 'procurement' && renderProcurementTab()}
-        {activeTab === 'assets' && renderAssetsTab()}
+        {loading ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <RefreshCcw className="animate-spin" size={40} color="#3B82F6" />
+          </div>
+        ) : (
+          <>
+            {activeTab === 'inventory' && renderInventoryTab()}
+            {activeTab === 'procurement' && renderProcurementTab()}
+            {activeTab === 'assets' && renderAssetsTab()}
+          </>
+        )}
       </div>
 
       {/* Asset Detail Modal */}
@@ -496,6 +523,8 @@ const InventoryModule = () => {
         .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         ::-webkit-scrollbar { height: 6px; width: 6px; }
         ::-webkit-scrollbar-track { background: #F1F5F9; }
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }

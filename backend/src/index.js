@@ -14,7 +14,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const buildingRoutes = require('./routes/buildingRoutes');
 const floorRoutes = require('./routes/floorRoutes');
@@ -22,6 +23,7 @@ const roomRoutes = require('./routes/roomRoutes');
 const bedRoutes = require('./routes/bedRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
 const hostelFloorMappingRoutes = require('./routes/hostelFloorMappingRoutes');
+const hostelRoutes = require('./routes/hostelRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
@@ -29,6 +31,7 @@ const roomTransferRoutes = require('./routes/roomTransferRoutes');
 const messRoutes = require('./routes/messRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const ownerRoutes = require('./routes/ownerRoutes');
+const inventoryRoutes = require('./routes/inventoryRoutes');
 
 // Pre-load all models to ensure they are registered for population
 require('./models/User');
@@ -45,6 +48,7 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/beds', bedRoutes);
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/hostel-floor-mapping', hostelFloorMappingRoutes);
+app.use('/api/hostels', hostelRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/complaints', complaintRoutes);
@@ -52,6 +56,7 @@ app.use('/api/room-transfers', roomTransferRoutes);
 app.use('/api/mess', messRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/owner', ownerRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

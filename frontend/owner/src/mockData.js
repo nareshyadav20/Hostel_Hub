@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 export const backendOnline = true;
 
 // --- GLOBAL AUTH INTERCEPTOR ---
@@ -38,15 +38,15 @@ export const api = {
   getOwnerStats: async () => {
     try {
       const blds = await api.getBuildings();
-      const stats = await Promise.all(blds.map(b => api.getDashboardSummary(b.id).catch(()=>null)));
+      const stats = await Promise.all(blds.map(b => api.getDashboardSummary(b.id).catch(() => null)));
       const validStats = stats.filter(Boolean);
       return {
         buildingCount: blds.length,
         totalBeds: validStats.reduce((sum, s) => sum + (s.totalBeds || 0), 0),
         occupiedBeds: validStats.reduce((sum, s) => sum + (s.occupiedBeds || 0), 0),
         expectedMonthlyRevenue: validStats.reduce((sum, s) => sum + (s.revenue?.expected || 0), 0),
-        occupancyRate: validStats.length > 0 
-          ? Math.round(validStats.reduce((sum, s) => sum + ((s.occupiedBeds || 0)/(s.totalBeds || 1)*100), 0) / validStats.length)
+        occupancyRate: validStats.length > 0
+          ? Math.round(validStats.reduce((sum, s) => sum + ((s.occupiedBeds || 0) / (s.totalBeds || 1) * 100), 0) / validStats.length)
           : 0
       };
     } catch (err) {
@@ -69,7 +69,7 @@ export const api = {
   },
   getAllFloors: async () => {
     const blds = await api.getBuildings();
-    const all = await Promise.all(blds.map(b => api.getFloorsByBuilding(b.id).catch(()=>[])));
+    const all = await Promise.all(blds.map(b => api.getFloorsByBuilding(b.id).catch(() => [])));
     return all.flat();
   },
   getFloors: async (bId) => {
@@ -81,7 +81,7 @@ export const api = {
   },
   getAllRooms: async () => {
     const blds = await api.getBuildings();
-    const all = await Promise.all(blds.map(b => api.getRoomsByBuilding(b.id).catch(()=>[])));
+    const all = await Promise.all(blds.map(b => api.getRoomsByBuilding(b.id).catch(() => [])));
     return all.flat();
   },
   getRooms: async (fId) => {
@@ -96,7 +96,7 @@ export const api = {
   },
   getAllBeds: async () => {
     const blds = await api.getBuildings();
-    const all = await Promise.all(blds.map(b => api.getBedsByBuilding(b.id).catch(()=>[])));
+    const all = await Promise.all(blds.map(b => api.getBedsByBuilding(b.id).catch(() => [])));
     return all.flat();
   },
   getBeds: async (rId) => {

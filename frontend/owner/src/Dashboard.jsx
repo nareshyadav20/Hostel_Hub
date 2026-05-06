@@ -20,10 +20,13 @@ function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchData = async () => {
-    if (!activeBuildingId) return;
+    if (!activeBuildingId) {
+      setIsLoading(false);
+      return;
+    }
     setIsRefreshing(true);
     try {
-      const [summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenants] = await Promise.all([
+      const results = await Promise.allSettled([
         api.getDashboardSummary(activeBuildingId),
         api.getDashboardRevenue(activeBuildingId),
         api.getDashboardOccupancy(activeBuildingId),
@@ -34,7 +37,20 @@ function Dashboard() {
         api.getDashboardActivity(activeBuildingId),
         api.getTenants(activeBuildingId)
       ]);
-      setD({ summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenantsList: tenants });
+
+      const [summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenants] = results.map(r => r.status === 'fulfilled' ? r.value : null);
+
+      setD({ 
+        summary: summary || d.summary || { buildingName: 'Property', totalBeds: 0, occupiedBeds: 0, occupancyRate: 0, todayRevenue: 0, pendingPaymentsAmount: 0, pendingPaymentsCount: 0 }, 
+        revenue: revenue || { rentMetrics: { netProfit: 0 }, dailyRevenue: [] }, 
+        occupancy: occupancy || { buildingWise: [], floorWise: [] }, 
+        alerts: alerts || { alerts: [], insights: [] }, 
+        complaints: complaints || { total: 0, open: 0, categories: [] }, 
+        mess: mess || { menuToday: { breakfast: 'N/A', lunch: 'N/A', dinner: 'N/A' } }, 
+        staff: staff || { totalStaff: 0, staffList: [] }, 
+        activity: activity || [], 
+        tenantsList: tenants || [] 
+      });
     } catch(e) {
       console.error('Dashboard Fetch Error:', e);
     } finally {
@@ -46,7 +62,7 @@ function Dashboard() {
   useEffect(() => { fetchData(); }, [activeBuildingId]);
 
 
-  if (isLoading || !d.summary) return (
+  if (isLoading) return (
     <div className="dashboard-container" style={{ padding: '2rem' }}>
       <div style={{ animation:'pulse 2s infinite' }}>
         <div style={{ height: '35px', width: '180px', background:'var(--bg-tertiary)', borderRadius:'8px', marginBottom:'1.5rem' }}/>
@@ -57,6 +73,17 @@ function Dashboard() {
           <div style={{ height:'400px', background:'var(--bg-secondary)', borderRadius:'16px' }}/>
           <div style={{ height:'400px', background:'var(--bg-secondary)', borderRadius:'16px' }}/>
         </div>
+      </div>
+    </div>
+  );
+
+  if (!activeBuildingId || !d.summary) return (
+    <div className="dashboard-container" style={{ padding: '4rem 2rem', textAlign: 'center' }}>
+      <div style={{ maxWidth: '400px', margin: '0 auto' }}>
+        <Building size={64} color="var(--text-muted)" style={{ marginBottom: '1.5rem', opacity: 0.5 }} />
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1rem' }}>No Building Selected</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Please select a building from your portfolio to view its live dashboard and analytics.</p>
+        <Link to="/owner/portfolio" className="btn btn-primary" style={{ padding: '0.8rem 2rem', borderRadius: '12px' }}>Go to Portfolio</Link>
       </div>
     </div>
   );
@@ -84,11 +111,14 @@ function Dashboard() {
             </h1>
             <div style={{ padding: '0.4rem 0.8rem', borderRadius: '100px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', animation: 'pulse 2s infinite' }} />
-              Live System
+              Live System Status
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display:'flex', gap:'1rem', alignItems:'center' }}>
+          <Link to={`/owner/building/${activeBuildingId}/rooms`} className="btn" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--accent-primary)', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1.2rem', borderRadius: '12px' }}>
+            <Users size={18} /> Occupancy View
+          </Link>
           <button 
             onClick={fetchData} 
             disabled={isRefreshing}

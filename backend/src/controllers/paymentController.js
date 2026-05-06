@@ -1,12 +1,11 @@
 const Payment = require('../models/Payment');
-const Tenant = require('../models/Tenant');
-
+const Building = require('../models/Building');
 const createPayment = async (req, res) => {
   try {
-    const { tenantId, amount, type, method, buildingId, category, status } = req.body;
+    const { tenantId, amount, type, method, buildingId, category, status, month } = req.body;
     
     // Generate simple invoice ID
-    const invoice = `${type.toUpperCase().substring(0,3)}-${Date.now().toString().slice(-6)}`;
+    const invoice = `INV-${Date.now().toString().slice(-6)}`;
     
     const payment = new Payment({
       tenantId,
@@ -17,11 +16,14 @@ const createPayment = async (req, res) => {
       category: category || 'Standard',
       status: status || 'Paid',
       invoice,
-      month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
+      month: month || new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
     });
 
     await payment.save();
-    res.status(201).json(payment);
+    
+    // Populate before sending back
+    const populated = await Payment.findById(payment._id).populate('tenantId');
+    res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -29,11 +31,28 @@ const createPayment = async (req, res) => {
 
 const getAllPayments = async (req, res) => {
   try {
+    const ownerId = req.user.id;
     const { buildingId } = req.query;
-    const query = {};
-    if (buildingId) query.buildingId = buildingId;
 
-    const payments = await Payment.find(query).sort({ date: -1 });
+    // Get all buildings owned by this user
+    const buildings = await Building.find({ owner: ownerId });
+    const ownerBuildingIds = buildings.map(b => b._id.toString());
+
+    let query = { buildingId: { $in: ownerBuildingIds } };
+
+    if (buildingId) {
+      if (!ownerBuildingIds.includes(buildingId)) {
+        return res.status(403).json({ message: "Access denied to this building's data" });
+      }
+      query.buildingId = buildingId;
+    }
+
+    const payments = await Payment.find(query)
+      .populate({
+        path: 'tenantId',
+        select: 'name room'
+      })
+      .sort({ date: -1 });
     res.status(200).json(payments);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -42,9 +61,7 @@ const getAllPayments = async (req, res) => {
 
 const getMyPayments = async (req, res) => {
   try {
-    // In a real app, we'd use req.user.id
-    // For now, we'll allow passing tenantId or use a dummy for demo if needed
-    const { tenantId } = req.query;
+    const tenantId = req.query.tenantId || req.user.id;
     const payments = await Payment.find({ tenantId }).sort({ date: -1 });
     res.status(200).json(payments);
   } catch (error) {

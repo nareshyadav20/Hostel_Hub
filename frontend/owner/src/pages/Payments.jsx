@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CreditCard, Download, Bell, AlertTriangle, CheckCircle, Search, X, 
   FileText, Smartphone, Banknote, Building2, TrendingUp, AlertCircle
@@ -96,27 +96,37 @@ const Payments = () => {
 
       // Filter by buildingId
       const filteredTenants = activeBuildingId 
-        ? (tData || []).filter(t => (t.buildingId?._id || t.buildingId) === activeBuildingId)
+        ? (tData || []).filter(t => {
+            const bId = typeof t.buildingId === 'object' ? t.buildingId._id : t.buildingId;
+            return bId === activeBuildingId;
+          })
         : (tData || []);
         
       setTenants(filteredTenants);
       
-      const tIds = new Set(filteredTenants.map(t => t.id || t._id));
-
       // Enrich and filter payments
       const enriched = (pData || [])
-        .filter(p => !activeBuildingId || tIds.has(p.tenantId))
         .map(p => {
-          const t = (tData || []).find(t => (t.id || t._id) === p.tenantId) || {};
+          // p.tenantId might be populated or an ID
+          const tObj = typeof p.tenantId === 'object' ? p.tenantId : ((tData || []).find(t => (t.id || t._id) === p.tenantId) || {});
           return {
             ...p,
-            tenantName: t.name || 'Unknown Tenant',
-            room: t.room || 'N/A'
+            id: p.id || p._id,
+            tenantName: tObj.name || 'Unknown Tenant',
+            room: tObj.room || 'N/A'
           };
         });
 
-      // Sort by date desc
-      setPayments(enriched.sort((a,b) => new Date(b.date) - new Date(a.date)));
+      // Filter enriched payments by those that belong to the active building's tenants
+      const tIds = new Set(filteredTenants.map(t => t.id || t._id));
+      const buildingPayments = activeBuildingId 
+        ? enriched.filter(p => {
+            const tId = typeof p.tenantId === 'object' ? p.tenantId._id : p.tenantId;
+            return tIds.has(tId);
+          })
+        : enriched;
+
+      setPayments(buildingPayments.sort((a,b) => new Date(b.date) - new Date(a.date)));
     } catch (err) {
       console.error("Fetch error in Payments:", err);
     } finally {
@@ -125,9 +135,9 @@ const Payments = () => {
   }
 
   const filtered = payments.filter(p =>
-    p.tenantName.toLowerCase().includes(search.toLowerCase()) ||
-    p.room.toLowerCase().includes(search.toLowerCase()) ||
-    p.invoice?.toLowerCase().includes(search.toLowerCase())
+    (p.tenantName || '').toLowerCase().includes(search.toLowerCase()) ||
+    (p.room || '').toLowerCase().includes(search.toLowerCase()) ||
+    (p.invoice || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const totalRevenue = payments.filter(p => p.status === 'Paid' && p.amount > 0).reduce((a,c) => a + c.amount, 0);
@@ -137,24 +147,31 @@ const Payments = () => {
 
   const handleRecord = async (e) => {
     e.preventDefault();
-    const t = tenants.find(t => t.id === form.tenantId) || {};
-    const np = {
-      id: `p_${Date.now()}`,
-      tenantId: form.tenantId,
-      tenantName: t.name || 'Unknown',
-      room: t.room || 'N/A',
-      amount: form.type === 'Refund' ? -Math.abs(Number(form.amount)) : Number(form.amount),
-      status: 'Paid',
-      date: new Date().toISOString().split('T')[0],
-      month: new Date().toLocaleString('default', { month: 'long' }),
-      type: form.type,
-      category: 'Manual',
-      invoice: `${form.type.toUpperCase().substring(0,3)}-${Math.floor(Math.random()*1000)}`,
-      method: form.method
-    };
-    setPayments([np, ...payments]);
-    setRecordOpen(false);
-    setForm({ tenantId: '', amount: '', type: 'Rent', method: 'UPI' });
+    try {
+      const tenant = tenants.find(t => (t.id || t._id) === form.tenantId) || {};
+      const payload = {
+        tenantId: form.tenantId,
+        amount: form.type === 'Refund' ? -Math.abs(Number(form.amount)) : Number(form.amount),
+        type: form.type,
+        method: form.method,
+        buildingId: activeBuildingId,
+        status: 'Paid',
+        month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
+      };
+
+      const newPayment = await api.addPayment(payload);
+      
+      setPayments(prev => [{
+        ...newPayment,
+        tenantName: tenant.name || 'Unknown',
+        room: tenant.room || 'N/A'
+      }, ...prev]);
+
+      setRecordOpen(false);
+      setForm({ tenantId: '', amount: '', type: 'Rent', method: 'UPI' });
+    } catch (err) {
+      alert("Failed to record payment: " + (err.response?.data?.error || err.message));
+    }
   };
 
   const iStyle = { padding:'0.8rem', borderRadius:'8px', border:'1px solid var(--border-color)', background:'var(--bg-tertiary)', color:'var(--text-primary)', width:'100%', outline:'none', fontSize:'0.9rem' };

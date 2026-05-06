@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Utensils, Calendar as CalendarIcon, Users, Edit3, ArrowRight, Sun, Coffee, Moon, CheckCircle, X, Grid, List } from 'lucide-react';
 import { api } from '../mockData';
 
 const Mess = () => {
-  const { buildingId } = useParams();
+  const { buildingId: urlBuildingId } = useParams();
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+  const buildingId = activeBuildingId;
+
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'attendance' | 'menu' | 'subscriptions'
   const [menuView, setMenuView] = useState('daily'); // 'daily' | 'weekly'
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  // ... rest of state stays the same
+  
   const [plans, setPlans] = useState([
     { 
       id: 'basic', 
@@ -52,9 +54,11 @@ const Mess = () => {
   const [planToDeactivate, setPlanToDeactivate] = useState(null);
 
   const [menuData, setMenuData] = useState({});
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchMenu = async () => {
+      if (!buildingId) return;
       try {
         const raw = await api.getMessMenu(buildingId);
         const structured = { basic: {}, standard: {}, premium: {} };
@@ -75,30 +79,30 @@ const Mess = () => {
     fetchMenu();
   }, [buildingId]);
 
-  const [tenants] = useState([
-    { id: 't1', name: 'Rahul Sharma', room: '101', plan: 'Premium' },
-    { id: 't2', name: 'Amit Patel', room: '102', plan: 'Standard' },
-    { id: 't3', name: 'Suresh Kumar', room: '103', plan: 'Basic' },
-    { id: 't4', name: 'Vikas Singh', room: '104', plan: 'Premium' },
-    { id: 't5', name: 'Neha Gupta', room: '201', plan: 'Standard' },
-  ]);
+  const [tenants, setTenants] = useState([]);
+  const [attendance, setAttendance] = useState({});
 
-  const [attendance, setAttendance] = useState({
-    '2026-04-29': {
-      't1': { breakfast: true, lunch: true, dinner: false },
-      't2': { breakfast: true, lunch: false, dinner: false },
-      't3': { breakfast: false, lunch: false, dinner: false },
-    }
-  });
-
-  const today = '2026-04-29'; // Mock today's date for logic
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const t = await api.getTenants();
+        setTenants(t.filter(x => x.buildingId === activeBuildingId || !activeBuildingId));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchData();
+  }, [activeBuildingId]);
 
   const [editForm, setEditForm] = useState({ breakfast: '', lunch: '', dinner: '' });
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const handleEditClick = () => {
-    if (!menuData[selectedMenuPlan] || !menuData[selectedMenuPlan][selectedDay]) return;
-    setEditForm(menuData[selectedMenuPlan][selectedDay]);
+    if (!menuData[selectedMenuPlan] || !menuData[selectedMenuPlan][selectedDay]) {
+      setEditForm({ breakfast: '', lunch: '', dinner: '' });
+    } else {
+      setEditForm(menuData[selectedMenuPlan][selectedDay]);
+    }
     setIsEditModalOpen(true);
   };
 
@@ -175,7 +179,7 @@ const Mess = () => {
       if (att.dinner) stats.dinner++;
       
       const tenant = tenants.find(t => t.id === tId);
-      if (tenant) stats.planUsage[tenant.plan]++;
+      if (tenant && tenant.plan) stats.planUsage[tenant.plan]++;
     });
 
     return stats;
@@ -246,7 +250,7 @@ const Mess = () => {
                   { label: 'Dinner', val: stats.dinner, color: '#6366f1' }
                 ].map(bar => (
                   <div key={bar.label} style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                    <div style={{ width: '100%', background: bar.color, borderRadius: '8px 8px 0 0', height: `${(bar.val / tenants.length) * 100}%`, minHeight: '10px', transition: 'height 0.5s ease' }} />
+                    <div style={{ width: '100%', background: bar.color, borderRadius: '8px 8px 0 0', height: tenants.length ? `${(bar.val / tenants.length) * 100}%` : '0%', minHeight: '10px', transition: 'height 0.5s ease' }} />
                     <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>{bar.label}</span>
                   </div>
                 ))}
@@ -338,7 +342,6 @@ const Mess = () => {
 
       {activeTab === 'menu' && (
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
-          {/* Sub-tabs for Daily/Weekly view */}
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
             <button 
               onClick={() => setMenuView('daily')} 
@@ -365,7 +368,6 @@ const Mess = () => {
           {loading ? (
             <div className="card" style={{ padding: '4rem', textAlign: 'center' }}>Loading menu data...</div>
           ) : menuView === 'weekly' ? (
-            /* Weekly Overview Grid */
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
               {days.map(day => (
                 <div key={day} className="card" style={{ padding: '1.5rem', position: 'relative' }}>
@@ -400,7 +402,6 @@ const Mess = () => {
               ))}
             </div>
           ) : (
-            /* Daily Detail View (Existing) */
             <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div className="card" style={{ padding: '1.5rem' }}>
@@ -687,6 +688,12 @@ const Mess = () => {
           </>
         )}
       </AnimatePresence>
+      <style>{`
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 24px; box-shadow: var(--shadow-sm); }
+        .btn { padding: 0.8rem 1.5rem; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--accent-primary); color: white; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
     </div>
   );
 };
