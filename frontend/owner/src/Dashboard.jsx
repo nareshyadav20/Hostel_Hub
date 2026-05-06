@@ -11,6 +11,7 @@ const lStyle = { fontSize:'0.82rem', fontWeight:'700', color:'var(--text-seconda
 
 function Dashboard() {
   const { buildingId } = useParams();
+  const activeBuildingId = buildingId || localStorage.getItem('selectedBuildingId');
   const [isLoading, setIsLoading] = useState(true);
   const [modal, setModal] = useState(null); // 'addTenant' | 'assignBed' | 'markPaid' | 'complaint'
   const [formMsg, setFormMsg] = useState('');
@@ -167,7 +168,7 @@ function Dashboard() {
           </div>
         </div>
         {/* Health Score */}
-        <HealthScoreCard score={summary.healthScore} threshold={settings?.hygieneSettings?.hygieneThreshold} />
+        <HealthScoreCard score={summary.healthScore} threshold={75} />
       </div>
 
       {/* 3. REVENUE ANALYTICS */}

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown, X } from 'lucide-react';
 import { api } from '../mockData';
@@ -15,7 +16,11 @@ const MOCK_COMPLAINTS = [
 ];
 
 const Complaints = () => {
+  const { buildingId: urlBuildingId } = useParams();
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
   const [complaints, setComplaints] = useState([]);
+  const [buildings, setBuildings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Maintenance');
   const [filterBuilding, setFilterBuilding] = useState(activeBuildingId || 'all');
@@ -59,11 +64,11 @@ const Complaints = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeBuildingId, filterBuilding]);
 
-  useState(() => {
+  useEffect(() => {
     fetchComplaints();
-  }, []);
+  }, [fetchComplaints]);
 
   const [expandedId, setExpandedId] = useState(null);
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
