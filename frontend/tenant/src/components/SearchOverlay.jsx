@@ -39,174 +39,83 @@ const SearchOverlay = ({ isOpen, onClose, initialCity = 'Hyderabad', onSearch })
   if (!isOpen) return null;
 
   return (
-    <div className="search-overlay-backdrop" onClick={onClose}>
-      <div className="search-overlay-content" onClick={e => e.stopPropagation()}>
-        {/* Header */}
-        <div className="overlay-header">
-          <h2 style={{ position: 'relative' }}>
-            Find Your Perfect Home, Your Way In{' '}
-            <span onClick={() => setShowCityDropdown(!showCityDropdown)} style={{ color: '#00b0f0', cursor: 'pointer' }}>
-              {selectedCity} ⌵
-            </span>
-            {showCityDropdown && (
-              <div className="city-dropdown" style={{ position: 'absolute', top: '100%', left: 0, background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', minWidth: '200px' }}>
-                {CITIES.map(city => (
-                  <div
-                    key={city}
-                    className="city-option"
-                    style={{ padding: '0.5rem', cursor: 'pointer', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-                    onClick={() => { setSelectedCity(city); setShowCityDropdown(false); }}
-                  >
-                    {city}
+    <div className="search-overlay-backdrop" onClick={onClose} style={{ 
+      position: 'fixed', inset: 0, zIndex: 1000,
+      background: 'rgba(15, 23, 42, 0.6)', 
+      backdropFilter: 'blur(12px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+    }}>
+      <div className="search-overlay-content" onClick={e => e.stopPropagation()} style={{
+        width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto',
+        background: 'white', borderRadius: '12px', padding: '40px',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        animation: 'overlaySlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+        position: 'relative'
+      }}>
+        <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: '950', letterSpacing: '-1px', margin: 0, color: '#0F172A' }}>
+              Where to next in{' '}
+              <span onClick={() => setShowCityDropdown(!showCityDropdown)} style={{ color: '#3B82F6', cursor: 'pointer', position: 'relative' }}>
+                {selectedCity} ⌵
+                {showCityDropdown && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, background: 'white', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '8px', zIndex: 100, boxShadow: '0 12px 32px rgba(0,0,0,0.1)', minWidth: '180px', marginTop: '10px' }}>
+                    {CITIES.map(city => (
+                      <div key={city} style={{ padding: '12px 16px', cursor: 'pointer', borderRadius: '8px', color: '#1E293B', fontWeight: '600' }} onClick={(e) => { e.stopPropagation(); setSelectedCity(city); setShowCityDropdown(false); }}>{city}</div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </h2>
-          <button className="close-btn" onClick={onClose}>✕</button>
+                )}
+              </span>
+            </h2>
+            <p style={{ color: '#64748B', fontWeight: '500', marginTop: '8px' }}>Personalize your stay with precision filters.</p>
+          </div>
+          <button onClick={onClose} style={{ background: '#F1F5F9', border: 'none', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', color: '#64748B', fontWeight: '900' }}>✕</button>
         </div>
 
-        {/* Filter Chips */}
-        <div className="filter-row">
-          <div
-            className={`filter-chip coliving ${activeTab === 'coliving' ? 'active' : ''}`}
-            onClick={() => setActiveTab('coliving')}
-            style={{ border: activeTab === 'coliving' ? '2px solid #00b0f0' : 'none' }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill={activeTab === 'coliving' ? '#00b0f0' : '#757575'}>
-              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
-            </svg>
-            Coliving
-          </div>
-
-          <div
-            className={`filter-chip student ${activeTab === 'student' ? 'active' : ''}`}
-            onClick={() => setActiveTab('student')}
-            style={{ border: activeTab === 'student' ? '2px solid #00b0f0' : 'none' }}
-          >
-            <span className="new-badge">NEW</span>
-            <div style={{ width: 18, height: 18, borderRadius: '50%', border: activeTab === 'student' ? '2px solid #00b0f0' : '2px solid #cbd5e1', marginRight: 8, background: activeTab === 'student' ? '#00b0f0' : 'transparent' }}></div>
-            Student Only
-          </div>
-
-          {/* Gender Dropdown */}
-          <div className="filter-chip gender" onClick={() => setShowGenderDropdown(!showGenderDropdown)} style={{ position: 'relative' }}>
-            {selectedGender || 'Gender'}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px', marginBottom: '32px' }}>
+          <div onClick={() => setActiveTab('coliving')} style={{ padding: '12px', borderRadius: '12px', border: `2px solid ${activeTab === 'coliving' ? '#3B82F6' : '#F1F5F9'}`, background: activeTab === 'coliving' ? '#EFF6FF' : 'white', cursor: 'pointer', textAlign: 'center', fontWeight: '800', fontSize: '0.9rem', color: activeTab === 'coliving' ? '#3B82F6' : '#64748B' }}>🏠 Coliving</div>
+          <div onClick={() => setActiveTab('student')} style={{ padding: '12px', borderRadius: '12px', border: `2px solid ${activeTab === 'student' ? '#3B82F6' : '#F1F5F9'}`, background: activeTab === 'student' ? '#EFF6FF' : 'white', cursor: 'pointer', textAlign: 'center', fontWeight: '800', fontSize: '0.9rem', color: activeTab === 'student' ? '#3B82F6' : '#64748B' }}>🎓 Students</div>
+          <div onClick={() => setShowGenderDropdown(!showGenderDropdown)} style={{ padding: '12px', borderRadius: '12px', border: '2px solid #F1F5F9', background: 'white', cursor: 'pointer', textAlign: 'center', fontWeight: '800', fontSize: '0.9rem', color: '#64748B', position: 'relative' }}>
+            {selectedGender || '👫 Gender'}
             {showGenderDropdown && (
-              <div className="glass-card dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, width: '140px', background: 'var(--bg-secondary)', zIndex: 20, marginTop: '5px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: 'white', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '8px', zIndex: 100, boxShadow: '0 12px 32px rgba(0,0,0,0.1)', marginTop: '8px' }}>
                 {['Men', 'Women', 'Unisex'].map(g => (
-                  <div key={g} style={{ padding: '0.8rem', cursor: 'pointer', color: 'var(--text-primary)' }} onClick={(e) => { e.stopPropagation(); setSelectedGender(g); setShowGenderDropdown(false); }}>{g}</div>
+                  <div key={g} style={{ padding: '10px', cursor: 'pointer', borderRadius: '8px', color: '#1E293B' }} onClick={(e) => { e.stopPropagation(); setSelectedGender(g); setShowGenderDropdown(false); }}>{g}</div>
                 ))}
               </div>
             )}
           </div>
-
-          {/* Joining Date */}
-          <div className="filter-chip date">
-            <input
-              type="date"
-              value={joiningDate}
-              onChange={(e) => setJoiningDate(e.target.value)}
-              style={{ background: 'transparent', border: 'none', color: 'inherit', font: 'inherit', outline: 'none', cursor: 'pointer', width: '100%' }}
-            />
-          </div>
-
-          {/* Amenities Dropdown */}
-          <div className="filter-chip amenities" onClick={() => setShowAmenitiesDropdown(!showAmenitiesDropdown)} style={{ position: 'relative' }}>
-            {selectedAmenities.length > 0 ? `${selectedAmenities.length} Selected` : 'Amenities'}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            {showAmenitiesDropdown && (
-              <div className="glass-card dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, width: '200px', background: 'var(--bg-secondary)', zIndex: 20, marginTop: '5px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '0.5rem' }}>
-                {['AC', 'Food', 'Fridge', 'Gym', 'Parking', 'Power Backup'].map(a => (
-                  <label key={a} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', cursor: 'pointer', color: 'var(--text-primary)' }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedAmenities.includes(a)}
-                      onChange={() => {
-                        if (selectedAmenities.includes(a)) setSelectedAmenities(selectedAmenities.filter(item => item !== a));
-                        else setSelectedAmenities([...selectedAmenities, a]);
-                      }}
-                    />
-                    {a}
-                  </label>
-                ))}
-              </div>
-            )}
+          <div style={{ padding: '12px', borderRadius: '12px', border: '2px solid #F1F5F9', background: 'white', display: 'flex' }}>
+            <input type="date" value={joiningDate} onChange={(e) => setJoiningDate(e.target.value)} style={{ border: 'none', fontWeight: '800', fontSize: '0.85rem', color: '#64748B', outline: 'none', cursor: 'pointer', width: '100%', background: 'transparent' }} />
           </div>
         </div>
 
-        {/* Locality Search */}
-        <div className="input-section">
-          <label>Where would you like to stay?</label>
-          <input
-            type="text"
-            className="zolo-input"
-            placeholder="Search for the Place, Locality or Landmark"
-            value={searchLocality}
-            onChange={(e) => setSearchLocality(e.target.value)}
-          />
-          <div className="locality-chips">
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', marginBottom: '12px' }}>Search Localities</label>
+          <input type="text" placeholder="Area, Landmark or Tech Park..." style={{ width: '100%', padding: '16px 20px', borderRadius: '12px', border: '2px solid #F1F5F9', background: '#F8FAFC', fontWeight: '600', fontSize: '1rem', outline: 'none' }} value={searchLocality} onChange={(e) => setSearchLocality(e.target.value)} />
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '16px' }}>
             {visibleLocalities.map(loc => (
-              <div key={loc} className="locality-chip" onClick={() => setSearchLocality(loc)}>{loc}</div>
+              <div key={loc} onClick={() => setSearchLocality(loc)} style={{ padding: '8px 16px', background: searchLocality === loc ? '#3B82F6' : '#F1F5F9', color: searchLocality === loc ? 'white' : '#64748B', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '800', cursor: 'pointer' }}>{loc}</div>
             ))}
-            <div className="locality-chip view-more" style={{ color: '#00b0f0' }} onClick={() => setIsLocalityExpanded(!isLocalityExpanded)}>
-              {isLocalityExpanded ? 'View Less' : 'View More'}
-            </div>
           </div>
         </div>
 
-        {/* College Search (Student tab only) */}
-        {activeTab === 'student' && (
-          <div className="input-section">
-            <label>Looking for an accommodation near your college/university?</label>
-            <input
-              type="text"
-              className="zolo-input"
-              placeholder="Search for College/University"
-              value={searchCollege}
-              onChange={(e) => setSearchCollege(e.target.value)}
-            />
-          </div>
-        )}
-
-        {/* Property Search */}
-        <div className="input-section">
-          <label>Looking for a specific property?</label>
-          <input
-            type="text"
-            className="zolo-input"
-            placeholder="Search for Properties"
-            value={searchProperty}
-            onChange={(e) => setSearchProperty(e.target.value)}
-          />
-        </div>
-
-        {/* User Details */}
-        <div className="input-section">
-          <label>Please share details below for us to help you better.</label>
-          <div className="details-row">
-            <input
-              type="text"
-              className="zolo-input"
-              placeholder="Name"
-              value={userDetails.name}
-              onChange={(e) => setUserDetails({ ...userDetails, name: e.target.value })}
-            />
-            <input
-              type="text"
-              className="zolo-input"
-              placeholder="Contact Number"
-              value={userDetails.contact}
-              onChange={(e) => setUserDetails({ ...userDetails, contact: e.target.value })}
-            />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
+          <input type="text" placeholder="Specific Property" style={{ width: '100%', padding: '14px', borderRadius: '10px', border: '2px solid #F1F5F9', background: '#F8FAFC', fontWeight: '600' }} value={searchProperty} onChange={(e) => setSearchProperty(e.target.value)} />
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <input type="text" placeholder="Name" style={{ flex: 1, padding: '14px', borderRadius: '10px', border: '2px solid #F1F5F9', background: '#F8FAFC', fontWeight: '600' }} onChange={(e) => setUserDetails({ ...userDetails, name: e.target.value })} />
+            <input type="text" placeholder="Mobile" style={{ flex: 1, padding: '14px', borderRadius: '10px', border: '2px solid #F1F5F9', background: '#F8FAFC', fontWeight: '600' }} onChange={(e) => setUserDetails({ ...userDetails, contact: e.target.value })} />
           </div>
         </div>
 
-        {/* Search Button */}
-        <div className="search-action">
-          <button className="zolo-search-btn" onClick={handleSearch}>Search</button>
-        </div>
+        <button onClick={handleSearch} style={{ width: '100%', background: '#3B82F6', color: 'white', border: 'none', padding: '1.2rem', borderRadius: '12px', fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer', boxShadow: '0 10px 25px rgba(59, 130, 246, 0.2)' }}>Apply Filters & Search</button>
+
+        <style>{`
+          @keyframes overlaySlideUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+          }
+        `}</style>
       </div>
     </div>
   );

@@ -21,6 +21,27 @@ const Home = () => {
 
   const navItems = ['Home', 'Explore', 'About Us', 'Contact'];
 
+  React.useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const sectionId = entry.target.id;
+          if (sectionId === 'home') setActiveNav('Home');
+          if (sectionId === 'explore') setActiveNav('Explore');
+          if (sectionId === 'about') setActiveNav('About Us');
+          if (sectionId === 'contact') setActiveNav('Contact');
+        }
+      });
+    }, { threshold: 0.3 });
+
+    ['home', 'explore', 'about', 'contact'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const stats = [
     { icon: '👥', value: '10,000+', label: 'Happy Tenants' },
     { icon: '🏢', value: '500+', label: 'Verified Properties' },
@@ -94,16 +115,17 @@ const Home = () => {
         </div>
         <nav className="hv2-nav">
           {navItems.map(item => (
-            <span key={item} className={`hv2-nav-item ${activeNav === item ? 'active' : ''}`}
-              onClick={() => {
-                setActiveNav(item);
-                if (item === 'Explore') navigate('/explore');
-                if (item === 'About Us') navigate('/about');
-                if (item === 'Contact') navigate('/contact');
-                if (item === 'Home') navigate('/');
-              }}>
+            <a key={item} 
+               href={`#${item.toLowerCase().replace(' ', '')}`}
+               className={`hv2-nav-item ${activeNav === item ? 'active' : ''}`}
+               onClick={(e) => {
+                 e.preventDefault();
+                 setActiveNav(item);
+                 const id = item.toLowerCase().replace(' ', '');
+                 document.getElementById(id === 'aboutus' ? 'about' : id)?.scrollIntoView({ behavior: 'smooth' });
+               }}>
               {item}
-            </span>
+            </a>
           ))}
         </nav>
         <div className="hv2-header-actions">
@@ -113,7 +135,7 @@ const Home = () => {
       </header>
 
       {/* ── HERO ── */}
-      <section className="hv2-hero">
+      <section id="home" className="hv2-hero">
         <div className="hv2-hero-left">
           <div className="hv2-hero-tag">🏆 India’s #1 Hostel & PG Network</div>
           <h1 className="hv2-hero-h1">
@@ -179,7 +201,7 @@ const Home = () => {
       </section>
 
       {/* ── CATEGORY SELECTION ── */}
-      <section className="hv2-categories">
+      <section id="explore" className="hv2-categories">
         <div className="hv2-section-head">
           <span className="hv2-tag">Explore by Type</span>
           <h2 className="hv2-section-title">Choose Your Category</h2>
@@ -285,7 +307,7 @@ const Home = () => {
       </section>
 
       {/* ── WHY CHOOSE LIVORA ── */}
-      <section className="hv2-why">
+      <section id="about" className="hv2-why">
         <div className="hv2-why-inner">
           <div className="hv2-why-left">
             <span className="hv2-tag hv2-tag-light">Our Benefits</span>
@@ -373,7 +395,41 @@ const Home = () => {
         </div>
       </section>
 
-      <footer className="hv2-footer">
+      {/* ── SAFETY FIRST SECTION ── */}
+      <section className="hv2-section" style={{ background: '#F8FAFC' }}>
+        <div className="hv2-section-head">
+          <span className="hv2-tag">Our Priority</span>
+          <h2 className="hv2-section-title">Safety is in Our DNA</h2>
+          <p className="hv2-section-sub">24/7 vigilance for your peace of mind</p>
+        </div>
+        <div className="hv2-rooms-grid" style={{ marginTop: '3rem' }}>
+          {[
+            { icon: '🛡️', title: 'Biometric Access', desc: 'Secure entry with fingerprint and facial recognition systems.' },
+            { icon: '📹', title: 'CCTV Surveillance', desc: '24/7 AI-powered monitoring of all common areas.' },
+            { icon: '👮', title: 'Round-the-clock Security', desc: 'Professional on-site security personnel at all times.' }
+          ].map((s, i) => (
+            <div key={i} style={{ background: 'white', padding: '2.5rem', borderRadius: '12px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1.5rem' }}>{s.icon}</div>
+              <h4 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '1rem' }}>{s.title}</h4>
+              <p style={{ color: '#64748B', fontSize: '0.95rem', lineHeight: '1.6' }}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── PARTNER SECTION ── */}
+      <section className="hv2-section">
+        <div style={{ background: 'linear-gradient(135deg, #4F46E5, #3B82F6)', borderRadius: '24px', padding: '4rem', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ maxWidth: '600px' }}>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: '950', marginBottom: '1.5rem', letterSpacing: '-1.5px' }}>Partner with Livora</h2>
+            <p style={{ fontSize: '1.2rem', opacity: 0.9, marginBottom: '2.5rem', lineHeight: '1.6' }}>Have a property? Let us manage it for you. Join India's fastest growing co-living network and enjoy guaranteed returns.</p>
+            <button style={{ background: 'white', color: '#4F46E5', border: 'none', padding: '1.2rem 2.5rem', borderRadius: '12px', fontWeight: '900', fontSize: '1.1rem', cursor: 'pointer' }}>Become a Partner</button>
+          </div>
+          <div style={{ fontSize: '10rem', opacity: 0.2 }}>🤝</div>
+        </div>
+      </section>
+
+      <footer id="contact" className="hv2-footer">
         <div className="hv2-footer-main">
           <div className="hv2-footer-brand-side">
             <div className="hv2-footer-logo" onClick={() => navigate('/')}>

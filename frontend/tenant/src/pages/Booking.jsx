@@ -241,16 +241,16 @@ const Booking = () => {
         <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Your premium co-living experience is just a few steps away.</p>
       </header>
 
-      <div className="progress-track">
+      <div className="progress-track" style={{ marginBottom: '3rem' }}>
         <div className="progress-bar-active" style={{ width: `${(step - 1) * 50}%` }}></div>
         {[
-          { id: 1, label: 'Preferences' },
-          { id: 2, label: 'Verification' },
-          { id: 3, label: 'Payment' }
+          { id: 1, label: 'Preferences', icon: '🛌' },
+          { id: 2, label: 'Verification', icon: '🪪' },
+          { id: 3, label: 'Payment', icon: '💳' }
         ].map(s => (
           <div key={s.id} className={`step-node ${step === s.id ? 'active' : ''} ${step > s.id ? 'done' : ''}`}>
             <div className="node-circle">
-              {step > s.id ? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> : s.id}
+              {step > s.id ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> : s.icon}
             </div>
             <span className="node-label">{s.label}</span>
           </div>
@@ -262,18 +262,16 @@ const Booking = () => {
           <div className="fade-in">
             <div style={{ marginBottom: '3.5rem' }}>
               <h2 style={{ fontSize: '2.2rem', fontWeight: '900', letterSpacing: '-1px', marginBottom: '1.5rem' }}>Choose Your Sanctuary</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
                 {roomOptions.map(room => (
-                  <div key={room.id} className={`room-option ${formData.roomType === room.id ? 'active' : ''}`} onClick={() => setFormData({...formData, roomType: room.id})}>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>{room.icon}</div>
-                    <h4 style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-primary)' }}>{room.name}</h4>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>{room.desc}</p>
-                    <div className="room-price">₹{parseInt(room.price).toLocaleString()}<span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}> / month</span></div>
-                    {formData.roomType === room.id && (
-                      <div style={{ position: 'absolute', top: '1rem', right: '1rem', color: 'var(--accent-primary)' }}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                      </div>
-                    )}
+                  <div key={room.id} className={`room-option ${formData.roomType === room.id ? 'active' : ''}`} onClick={() => setFormData({...formData, roomType: room.id})} style={{ borderRadius: '12px', padding: '20px', border: '1.5px solid #E2E8F0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                      <span style={{ fontSize: '2rem' }}>{room.icon}</span>
+                      {formData.roomType === room.id && <div style={{ color: '#3B82F6' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>}
+                    </div>
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: '900', margin: '0 0 4px' }}>{room.name}</h4>
+                    <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1rem' }}>{room.desc}</p>
+                    <div style={{ fontWeight: '900', fontSize: '1.2rem', color: '#0F172A' }}>₹{parseInt(room.price).toLocaleString()}<span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>/mo</span></div>
                   </div>
                 ))}
               </div>
@@ -294,8 +292,8 @@ const Booking = () => {
               </div>
             </div>
 
-            <button onClick={() => setStep(2)} className="btn btn-primary" style={{ width: '100%', marginTop: '4rem', padding: '1.5rem', fontWeight: '950', borderRadius: '22px', fontSize: '1.2rem', boxShadow: '0 15px 30px rgba(14, 165, 233, 0.2)' }}>
-              Continue to Verification
+            <button onClick={() => setStep(2)} className="btn btn-primary" style={{ width: '100%', marginTop: '3rem', padding: '1.2rem', fontWeight: '900', borderRadius: '12px', fontSize: '1.1rem', background: '#3B82F6', border: 'none', color: 'white', cursor: 'pointer' }}>
+              Confirm & Continue
             </button>
           </div>
         )}
@@ -352,35 +350,31 @@ const Booking = () => {
           <div className="fade-in">
             <h2 style={{ fontSize: '2.2rem', fontWeight: '900', letterSpacing: '-1px', marginBottom: '2.5rem' }}>Booking Summary</h2>
             
-            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '32px', padding: '3.5rem', position: 'relative', overflow: 'hidden', marginBottom: '3rem', boxShadow: '0 15px 40px rgba(0,0,0,0.03)' }}>
-              <div style={{ position: 'absolute', right: '-30px', top: '-30px', width: '200px', height: '200px', background: 'var(--accent-primary)', opacity: 0.05, borderRadius: '50%', filter: 'blur(60px)' }}></div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem', borderBottom: '1px dashed var(--border-color)', paddingBottom: '2.5rem' }}>
+            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '2.5rem', marginBottom: '2.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid #E2E8F0', paddingBottom: '1.5rem' }}>
                 <div>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Selected Category</p>
-                  <h3 style={{ fontSize: '2rem', fontWeight: '950', color: 'var(--text-primary)' }}>{currentRoom.name}</h3>
+                  <div style={{ fontSize: '0.75rem', fontWeight: '800', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Subscription Plan</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#0F172A' }}>{currentRoom.name}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                   <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Move-in Date</p>
-                   <h3 style={{ fontSize: '2rem', fontWeight: '950', color: 'var(--accent-primary)' }}>{formData.moveInDate || 'TBD'}</h3>
+                   <div style={{ fontSize: '0.75rem', fontWeight: '800', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Move-in Date</div>
+                   <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#3B82F6' }}>{formData.moveInDate || 'Not Set'}</div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                  <span>Security Deposit (Refundable)</span>
-                  <span style={{ color: 'var(--text-primary)' }}>₹{parseInt(currentRoom.price).toLocaleString()}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', color: '#475569', fontSize: '0.95rem' }}>
+                  <span>Security Deposit (Fully Refundable)</span>
+                  <span style={{ color: '#0F172A' }}>₹{parseInt(currentRoom.price).toLocaleString()}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                  <span>Onboarding & Service Fee</span>
-                  <span style={{ color: 'var(--text-primary)' }}>₹2,000</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', color: '#475569', fontSize: '0.95rem' }}>
+                  <span>Onboarding & Documentation Fee</span>
+                  <span style={{ color: '#0F172A' }}>₹2,000</span>
                 </div>
-                <div style={{ height: '2px', background: 'var(--border-color)', margin: '1rem 0' }}></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <span style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>Total Payable</span>
-                  <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '3rem', fontWeight: '950', color: 'var(--accent-primary)' }}>₹{(parseInt(currentRoom.price) + 2000).toLocaleString()}</span>
-                  </div>
+                <div style={{ height: '1px', background: '#E2E8F0', margin: '0.5rem 0' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '1.1rem', fontWeight: '900', color: '#0F172A' }}>Initial Payment</span>
+                  <span style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', letterSpacing: '-1px' }}>₹{(parseInt(currentRoom.price) + 2000).toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -425,11 +419,10 @@ const Booking = () => {
 
       <style>{`
         .glass-card-premium {
-          backdrop-filter: blur(20px);
-          background: var(--glass-bg);
-          border: 1px solid var(--glass-border);
-          border-radius: 40px;
-          box-shadow: var(--shadow-xl);
+          background: white;
+          border: 1px solid #E2E8F0;
+          border-radius: 20px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.04);
         }
         .progress-track {
           display: flex;

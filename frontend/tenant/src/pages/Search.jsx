@@ -108,7 +108,7 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => {
 
         <div className="card-actions-footer">
           <Link to={`/listing/${hostel.id}`} className="btn-secondary-action">View Details</Link>
-          <Link to={`/booking/${hostel.id}`} className="btn-primary-action">Book Now</Link>
+          <Link to={`/booking/${hostel.id}`} className="btn-primary-action">Quick Book</Link>
         </div>
       </div>
     </div>
@@ -281,17 +281,18 @@ const Search = () => {
   return (
     <div className="search-page-professional fade-in">
       <header className="professional-header">
-        <div className="header-nav-row" style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 2rem' }}>
+        <div className="header-nav-row">
           <button className="pro-close-btn" onClick={() => navigate('/')} aria-label="Close search">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
         </div>
         <div className="header-content">
-          <h1 className="header-title">Find Your Perfect Stay</h1>
-          <p className="header-subtitle">Browse verified, premium co-living spaces with real-time availability.</p>
+          <span className="premium-tag">PREMIUM SELECTION</span>
+          <h1 className="header-title">Discover Your Next Home</h1>
+          <p className="header-subtitle">Verified hostels with real-time occupancy tracking.</p>
         </div>
       </header>
 
@@ -712,19 +713,19 @@ const Search = () => {
         .results-professional {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-          gap: 2.5rem;
+          gap: 20px;
         }
 
         .pro-hostel-card-vertical {
-          background: var(--bg-secondary);
+          background: white;
           border: 1px solid var(--border-color);
-          border-radius: 32px;
+          border-radius: 12px;
           overflow: hidden;
           transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           display: flex;
           flex-direction: column;
           position: relative;
-          box-shadow: var(--shadow-md);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
 
         .pro-hostel-card-vertical:hover {
@@ -830,10 +831,10 @@ const Search = () => {
         }
 
         .card-info-area {
-          padding: 1.8rem;
+          padding: 24px;
           display: flex;
           flex-direction: column;
-          gap: 1.2rem;
+          gap: 20px;
         }
 
         .loc-rating-row {
@@ -869,7 +870,7 @@ const Search = () => {
         .stat-box {
           background: var(--bg-tertiary);
           padding: 1rem;
-          border-radius: 16px;
+          border-radius: 12px;
           display: flex;
           flex-direction: column;
           gap: 0.3rem;
