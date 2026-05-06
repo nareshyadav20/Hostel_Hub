@@ -63,14 +63,26 @@ export const api = {
   },
 
   // Buildings & Infrastructure
-  getBuildings: async () => {
-    const res = await axios.get(`${API_URL}/buildings`);
-    return handleId(res.data.filter(b => b.status !== 'Draft'));
+  getBuildings: async (id = null) => {
+    const url = id ? `${API_URL}/buildings/${id}` : `${API_URL}/buildings`;
+    const res = await axios.get(url);
+    const data = Array.isArray(res.data) ? res.data : (res.data ? [res.data] : []);
+    return handleId(data.filter(b => b.status !== 'Draft'));
+  },
+  getHostels: async () => {
+    const res = await axios.get(`${API_URL}/hostels`);
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data);
+  },
+  getAssignedFloors: async (hId) => {
+    const res = await axios.get(`${API_URL}/hostel-floor-mapping`, { params: { hostelId: hId } });
+    const data = Array.isArray(res.data) ? res.data : [];
+    return data.map(m => m.floor?._id || m.floor?.id);
   },
   getAllFloors: async () => {
-    const blds = await api.getBuildings();
-    const all = await Promise.all(blds.map(b => api.getFloorsByBuilding(b.id).catch(()=>[])));
-    return all.flat();
+    const res = await axios.get(`${API_URL}/floors`);
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data);
   },
   getFloors: async (bId) => {
     const res = await axios.get(`${API_URL}/floors/${bId}`);
@@ -80,9 +92,9 @@ export const api = {
     return await api.getFloors(bId);
   },
   getAllRooms: async () => {
-    const blds = await api.getBuildings();
-    const all = await Promise.all(blds.map(b => api.getRoomsByBuilding(b.id).catch(()=>[])));
-    return all.flat();
+    const res = await axios.get(`${API_URL}/rooms`);
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data);
   },
   getRooms: async (fId) => {
     const res = await axios.get(`${API_URL}/rooms/${fId}`);
@@ -95,19 +107,18 @@ export const api = {
     return handleId(rooms);
   },
   getAllBeds: async () => {
-    const blds = await api.getBuildings();
-    const all = await Promise.all(blds.map(b => api.getBedsByBuilding(b.id).catch(()=>[])));
-    return all.flat();
+    const res = await axios.get(`${API_URL}/beds`);
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data);
   },
   getBeds: async (rId) => {
     const res = await axios.get(`${API_URL}/beds/${rId}`);
     return handleId(res.data);
   },
   getBedsByBuilding: async (bId) => {
-    const res = await axios.get(`${API_URL}/floors/${bId}`);
-    const floors = res.data || [];
-    const beds = floors.flatMap(f => (f.rooms || []).flatMap(r => (r.beds || []).map(b => ({ ...b, roomId: r._id || r.id }))));
-    return handleId(beds);
+    const res = await axios.get(`${API_URL}/beds`, { params: { buildingId: bId } });
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data);
   },
 
   // Dashboard & Analytics (Live Backend)
@@ -217,6 +228,10 @@ export const api = {
     const res = await axios.patch(`${API_URL}/rooms/${id}`, { status });
     return handleId(res.data);
   },
+  updateRoom: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/rooms/${id}`, data);
+    return handleId(res.data);
+  },
   deleteRoom: async (id) => {
     await axios.delete(`${API_URL}/rooms/${id}`);
   },
@@ -226,6 +241,10 @@ export const api = {
   },
   updateBedStatus: async (id, status) => {
     const res = await axios.patch(`${API_URL}/beds/${id}`, { status });
+    return handleId(res.data);
+  },
+  updateBed: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/beds/${id}`, data);
     return handleId(res.data);
   },
   deleteBed: async (id) => {
