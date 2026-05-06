@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
+import { api } from '../mockData';
 import '@packages/ui-kit/auth.css';
 
 const Login = () => {
@@ -16,7 +17,7 @@ const Login = () => {
     setIsLoading(true);
     setError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { email: loginEmail, password: loginPass });
+      const res = await axios.post(`${window.api_url || 'http://localhost:5001/api'}/auth/login`, { email: loginEmail, password: loginPass });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/owner/portfolio');
@@ -24,7 +25,7 @@ const Login = () => {
       // Auto-register the demo owner if they don't exist in the DB yet
       if (err.response?.status === 404 && loginEmail === 'owner@hostelhub.com') {
         try {
-          const regRes = await axios.post('http://localhost:5000/api/auth/register', {
+          const regRes = await axios.post(`${window.api_url || 'http://localhost:5001/api'}/auth/register`, {
             email: loginEmail, password: loginPass, name: 'System Owner', role: 'OWNER'
           });
           localStorage.setItem('token', regRes.data.token);

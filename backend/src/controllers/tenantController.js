@@ -12,7 +12,11 @@ const createTenant = async (req, res) => {
 
 const getTenants = async (req, res) => {
   try {
-    const tenants = await Tenant.find();
+    const { buildingId } = req.query;
+    const query = {};
+    if (buildingId) query.buildingId = buildingId;
+    
+    const tenants = await Tenant.find(query);
     res.status(200).json(tenants);
   } catch (err) {
     res.status(500).json({ error: err.message });

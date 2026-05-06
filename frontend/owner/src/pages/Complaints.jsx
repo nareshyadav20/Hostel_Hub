@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown } from 'lucide-react';
+import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown, X } from 'lucide-react';
 import { api } from '../mockData';
 
 const MOCK_COMPLAINTS = [
@@ -36,7 +36,7 @@ const Complaints = () => {
     try {
       // Invalidate cache to get fresh data
       localStorage.removeItem('complaints_all_v4');
-      const data = await api.getComplaints();
+      const data = await api.getComplaints(activeBuildingId);
       const buildingsData = await api.getBuildings();
       setBuildings(buildingsData);
 

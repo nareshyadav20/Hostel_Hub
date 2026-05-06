@@ -32,7 +32,7 @@ function Dashboard() {
         api.getDashboardMess(activeBuildingId),
         api.getDashboardStaff(activeBuildingId),
         api.getDashboardActivity(activeBuildingId),
-        api.getTenants()
+        api.getTenants(activeBuildingId)
       ]);
       setD({ summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenantsList: tenants });
     } catch(e) {

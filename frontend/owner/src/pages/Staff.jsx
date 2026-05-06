@@ -39,7 +39,7 @@ const Staff = () => {
   async function fetchStaff() {
     console.log("Staff module fetching for ID:", activeBuildingId);
     try {
-      const data = await api.getDashboardStaff();
+      const data = await api.getDashboardStaff(activeBuildingId);
       setStaffData(data || { staffList: [] });
     } catch (err) {
       console.error(err);

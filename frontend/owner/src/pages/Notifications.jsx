@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useParams } from 'react-router-dom';
 import { Bell, Send, Users, Building, Shield, Trash2, CheckCircle, Info, AlertTriangle, X } from 'lucide-react';
 
 const Notifications = () => {
+  const { buildingId } = useParams();
   const [activeTab, setActiveTab] = useState('all');
   const [messages, setMessages] = useState([
     { id: 1, title: 'New Booking', message: 'Room 201-A booked by Rahul Sharma.', time: '10m ago', type: 'info', read: false, category: 'all' },

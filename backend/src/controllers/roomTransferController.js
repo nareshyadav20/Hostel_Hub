@@ -68,7 +68,11 @@ exports.getMyTransfers = async (req, res) => {
 
 exports.getAllTransfers = async (req, res) => {
   try {
-    const transfers = await RoomTransfer.find()
+    const { buildingId } = req.query;
+    const query = {};
+    if (buildingId) query.buildingId = buildingId;
+
+    const transfers = await RoomTransfer.find(query)
       .populate('tenant', 'name room email')
       .sort({ createdAt: -1 });
     res.json(transfers);

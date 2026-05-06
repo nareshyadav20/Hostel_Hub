@@ -99,7 +99,7 @@ const Buildings = () => {
   const fetchBuildings = async () => {
     console.log("Buildings module fetching for ID:", activeBuildingId);
     try {
-      const bData = await api.getBuildings() || [];
+      const bData = await api.getBuildings(activeBuildingId) || [];
       if (activeBuildingId) {
         const filtered = bData.filter(b => b.id === activeBuildingId || b._id === activeBuildingId);
         setBuildings(filtered);
