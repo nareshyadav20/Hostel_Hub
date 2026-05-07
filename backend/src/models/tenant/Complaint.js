@@ -20,6 +20,7 @@ const complaintSchema = new mongoose.Schema({
   },
   assignedTo: { type: String }, // Staff name or ID
   tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: true },
+  buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   date: { type: Date, default: Date.now }
 }, { timestamps: true, collection: 'complaints' });

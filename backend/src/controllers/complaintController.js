@@ -12,6 +12,7 @@ exports.createComplaint = async (req, res) => {
       description,
       category,
       tenant: tenant._id,
+      buildingId: tenant.buildingId,
       user: req.user.id
     });
 
@@ -46,8 +47,11 @@ exports.updateComplaintStatus = async (req, res) => {
 
 exports.getAllComplaints = async (req, res) => {
   try {
-    // Populate tenant info so owner can see details
-    const complaints = await Complaint.find()
+    const { buildingId } = req.query;
+    const query = {};
+    if (buildingId) query.buildingId = buildingId;
+
+    const complaints = await Complaint.find(query)
       .populate('tenant', 'name room email')
       .sort({ createdAt: -1 });
     res.status(200).json(complaints);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown, X } from 'lucide-react';
 import { api } from '../mockData';
@@ -79,12 +79,14 @@ const Complaints = () => {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedComplaintId, setSelectedComplaintId] = useState(null);
 
-  const staffMembers = [
-    { id: 1, name: 'Ramesh Kumar', role: 'Plumber', active: true, avatar: 'RK' },
-    { id: 2, name: 'Suresh Babu', role: 'Electrician', active: true, avatar: 'SB' },
-    { id: 3, name: 'Pradeep Singh', role: 'Cleaning Lead', active: true, avatar: 'PS' },
-    { id: 4, name: 'Anita Devi', role: 'Mess Manager', active: false, avatar: 'AD' }
-  ];
+  const filteredComplaints = complaints.filter(c => {
+    if (activeTab === 'Maintenance') return !['Leave', 'Visitor'].includes(c.category);
+    return c.category === activeTab;
+  });
+
+  const handleBuildingFilterChange = (e) => {
+    setFilterBuilding(e.target.value);
+  };
 
   const totalComplaints = filteredComplaints.length;
   const pendingCount = filteredComplaints.filter(c => c.status === 'Pending').length;
@@ -92,8 +94,8 @@ const Complaints = () => {
 
   const handleStatusChange = async (id, newStatus, assignedTo = null) => {
     try {
-      await API.patch(`/complaints/${id}`, { status: newStatus });
-      setComplaints(complaints.map(c => c._id === id ? { ...c, status: newStatus, assignedTo } : c));
+      await api.updateComplaintStatus(id, { status: newStatus, assignedTo });
+      setComplaints(complaints.map(c => (c.id === id) ? { ...c, status: newStatus, assignedTo } : c));
       setIsAssignModalOpen(false);
     } catch (err) {
       console.error('Error updating complaint status:', err);

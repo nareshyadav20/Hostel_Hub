@@ -1,4 +1,8 @@
 const Building = require('../models/Building');
+const Tenant = require('../models/tenant/Tenant');
+const Payment = require('../models/Payment');
+const Complaint = require('../models/tenant/Complaint');
+const User = require('../models/User');
 
 // Helper: traverse the nested property hierarchy
 const traverseHierarchy = (buildings) => {
@@ -36,6 +40,7 @@ exports.getSummaryKPIs = async (req, res) => {
     const vacantBeds = totalBeds - occupiedBeds;
     const occupancyRate = totalBeds > 0 ? parseFloat(((occupiedBeds / totalBeds) * 100).toFixed(1)) : 0;
 
+    const { buildingId } = req.query;
     // 2. Real Tenant Count
     const totalTenants = await Tenant.countDocuments(buildingId ? { buildingId } : {});
 
@@ -148,7 +153,7 @@ exports.getAlertsAndInsights = async (req, res) => {
     const highComplaints = await Complaint.find({
       status: 'Pending',
       priority: 'High',
-      ...(buildingId && { buildingId })
+      ...(req.query.buildingId && { buildingId: req.query.buildingId })
     });
 
     highComplaints.forEach(c => {
@@ -172,19 +177,24 @@ exports.getAlertsAndInsights = async (req, res) => {
 // GET /api/dashboard/complaints
 exports.getComplaintsStats = async (req, res) => {
   try {
+    const { buildingId } = req.query;
+    const complaints = await Complaint.find(buildingId ? { buildingId } : {});
+    const open = complaints.filter(c => c.status === 'Pending' || c.status === 'Open').length;
+    const resolved = complaints.filter(c => c.status === 'Resolved' || c.status === 'Closed').length;
+
     res.json({
       total: complaints.length,
       open,
       resolved,
       highPriority: complaints.filter(c => c.priority === 'High').length,
-      avgResolutionHours: 0,
+      avgResolutionHours: 24,
       categories: [
-        { name: 'Maintenance', count: 10, color: '#EF4444' },
-        { name: 'Cleaning', count: 6, color: '#F59E0B' },
-        { name: 'Food', count: 5, color: '#8B5CF6' },
-        { name: 'Others', count: 3, color: '#6B7280' },
+        { name: 'Maintenance', count: complaints.filter(c => c.category === 'Maintenance').length, color: '#EF4444' },
+        { name: 'Cleaning', count: complaints.filter(c => c.category === 'Cleaning').length, color: '#F59E0B' },
+        { name: 'Food', count: complaints.filter(c => c.category === 'Food').length, color: '#8B5CF6' },
+        { name: 'Others', count: complaints.filter(c => !['Maintenance', 'Cleaning', 'Food'].includes(c.category)).length, color: '#6B7280' },
       ],
-      pending24h: 3
+      pending24h: complaints.filter(c => c.status === 'Pending' && (new Date() - new Date(c.createdAt)) > 86400000).length
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

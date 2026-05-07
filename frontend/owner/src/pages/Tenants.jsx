@@ -96,7 +96,8 @@ const Tenants = () => {
             api.getRoomsByBuilding(activeBuildingId),
             api.getBedsByBuilding(activeBuildingId)
           ]);
-          const filteredB = buildingId ? b.filter(x => (x.id || x._id) === buildingId) : b;
+          const buildingsArray = Array.isArray(b) ? b : (b ? [b] : []);
+          const filteredB = urlBuildingId ? buildingsArray.filter(x => (x.id || x._id) === urlBuildingId) : buildingsArray;
           setInfrastructure({ buildings: filteredB, floors: f, rooms: r, beds: bd });
         } catch (err) {
           console.error("Failed to fetch infrastructure", err);
@@ -158,7 +159,7 @@ const Tenants = () => {
     aadhaar: '', document: null, messPlan: 'basic'
   });
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {

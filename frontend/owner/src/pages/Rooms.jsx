@@ -40,11 +40,11 @@ const Rooms = () => {
       try {
         const [b, f, r, bd, t, tr] = await Promise.all([
           api.getBuildings(),
-          api.getFloorsByBuilding(activeBuildingId),
-          api.getRoomsByBuilding(activeBuildingId),
-          api.getBedsByBuilding(activeBuildingId),
-          api.getTenants(activeBuildingId),
-          api.getRoomTransfers(activeBuildingId)
+          api.getFloorsByBuilding(selectedBuildingId),
+          api.getRoomsByBuilding(selectedBuildingId),
+          api.getBedsByBuilding(selectedBuildingId),
+          api.getTenants(selectedBuildingId),
+          api.getRoomTransfers(selectedBuildingId)
         ]);
 
         setBuildings(b || []);
@@ -54,7 +54,7 @@ const Rooms = () => {
         setTenants(t || []);
         setTransferRequests((tr && tr.length > 0) ? tr.filter(t => {
           const tBldgId = typeof t.building === 'object' ? t.building._id : t.building;
-          return tBldgId === activeBuildingId;
+          return tBldgId === selectedBuildingId;
         }) : []);
 
         const fExp = {}; f?.forEach(x => fExp[x.id] = true);
@@ -66,7 +66,7 @@ const Rooms = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [selectedBuildingId]);
 
   const handleTransferStatus = async (id, status) => {
     try {
@@ -387,13 +387,12 @@ const Rooms = () => {
                   );
                 })}
               </div>
-          )}
             </div>
           ) : (
             /* Level 2+: Floor -> Room -> Bed */
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {buildingFloors.map(floor => {
+                {floors.filter(f => (f.buildingId?._id || f.buildingId || f.building) === selectedBuildingId).map(floor => {
                   const floorId = floor.id || floor._id;
                   const floorRooms = rooms.filter(r => {
                     const rFloorId = typeof r.floor === 'object' ? r.floor._id : r.floor;
@@ -417,11 +416,11 @@ const Rooms = () => {
                   if (floorRooms.length === 0) return null;
 
                   return (
-                    <div key={floor.id} className="card" style={{ padding: '1.5rem', borderRadius: '16px' }}>
+                    <div key={floorId} className="card" style={{ padding: '1.5rem', borderRadius: '16px' }}>
                       {/* Floor Accordion Header */}
                       <div
-                        onClick={() => toggleFloorCollapse(floor.id)}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', paddingBottom: expandedFloors[floor.id] ? '1.5rem' : '0', borderBottom: expandedFloors[floor.id] ? '1px solid var(--border-color)' : 'none' }}
+                        onClick={() => toggleFloorCollapse(floorId)}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', paddingBottom: expandedFloors[floorId] ? '1.5rem' : '0', borderBottom: expandedFloors[floorId] ? '1px solid var(--border-color)' : 'none' }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                           <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '12px' }}>
@@ -433,13 +432,13 @@ const Rooms = () => {
                           </div>
                         </div>
                         <div style={{ padding: '0.5rem', background: 'var(--bg-tertiary)', borderRadius: '50%' }}>
-                          {expandedFloors[floor.id] ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                          {expandedFloors[floorId] ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                         </div>
                       </div>
 
                       {/* Room Grid */}
                       <AnimatePresence>
-                        {expandedFloors[floor.id] && (
+                        {expandedFloors[floorId] && (
                           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', paddingTop: '1.5rem' }}>
                               {floorRooms.map(room => {

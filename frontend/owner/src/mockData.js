@@ -351,6 +351,10 @@ export const api = {
     const res = await axios.get(`${API_URL}/complaints`, { params: { buildingId: bId } });
     return handleId(res.data);
   },
+  updateComplaintStatus: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/complaints/${id}`, data);
+    return handleId(res.data);
+  },
 
   getPayments: async (bId) => {
     const res = await axios.get(`${API_URL}/payments`, { params: { buildingId: bId } });

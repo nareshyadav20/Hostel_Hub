@@ -1,5 +1,6 @@
 const RoomTransfer = require('../models/RoomTransfer');
-const Tenant = require('../models/Tenant');
+const Tenant = require('../models/tenant/Tenant');
+const Building = require('../models/Building');
 
 exports.createTransfer = async (req, res) => {
   try {
@@ -24,6 +25,7 @@ exports.createTransfer = async (req, res) => {
     const transfer = await RoomTransfer.create({
       tenant: tenant._id,
       user: req.user.id,
+      buildingId: tenant.buildingId,
       oldRoom: tenant.room || 'N/A',
       newRoom,
       reason,

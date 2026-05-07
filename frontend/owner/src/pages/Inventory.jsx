@@ -315,21 +315,19 @@ const Inventory = () => {
           </tbody>
         </table>
       </div>
-      <div style={{ flex: 1, padding: '2.5rem', overflowY: 'auto' }}>
-        {assetSubTab === 'overview' && (
-          <div style={{ animation: 'fadeIn 0.3s ease' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-              {[
-                { l: 'TOTAL ASSETS', v: assetStats.total, c: '#3B82F6', i: <Layers /> },
-                { l: 'IN SERVICE', v: assetStats.active, c: '#10B981', i: <Zap /> },
-                { l: 'REPAIRING', v: assetStats.maintenance, c: '#F59E0B', i: <Hammer /> },
-                { l: 'PORTFOLIO VALUE', v: `₹${(assetStats.valuation / 1000).toFixed(1)}K`, c: '#8B5CF6', i: <Wallet /> }
-              ].map((s, idx) => (
-                <div key={idx} className="card" style={{ padding: '1.5rem', borderLeft: `5px solid ${s.c}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', marginBottom: '0.6rem' }}><span style={{ fontSize: '0.75rem', fontWeight: '900' }}>{s.l}</span>{s.i}</div>
-                  <h2 style={{ fontSize: '2rem', fontWeight: '900', margin: 0 }}>{s.v}</h2>
-                </div>
-              ))}
+      {/* ISSUE ITEM MODAL */}
+      <Modal isOpen={isIssueModalOpen} onClose={() => setIsIssueModalOpen(false)} title="Issue Item">
+        {selectedItem && (
+          <form onSubmit={handleIssueSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between' }}>
+              <div>
+                <p style={{ color: '#475569', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 0.2rem 0' }}>Item</p>
+                <p style={{ color: '#0F172A', fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>{selectedItem.name}</p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ color: '#475569', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 0.2rem 0' }}>Available Stock</p>
+                <p style={{ color: '#0F172A', fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>{selectedItem.stock} {selectedItem.unit}</p>
+              </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -339,12 +337,12 @@ const Inventory = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Target Location / Assignee</label>
-              <input type="text" placeholder="e.g. Room 201-A or 'Rahul Sharma'" value={actionLocation} onChange={e => setActionLocation(e.target.value)} style={inputStyle} required />
+              <input type="text" placeholder="e.g. Room 201-A or 'Staff Name'" value={actionLocation} onChange={e => setActionLocation(e.target.value)} style={inputStyle} required />
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-              <button className="btn" type="button" onClick={() => setIsIssueModalOpen(false)} style={{ flex: 1, padding: '1rem', background: '#F1F5F9', color: '#475569', fontWeight: '700' }}>Cancel</button>
-              <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem', background: '#3B82F6', fontWeight: '800' }}>Confirm Issuance</button>
+              <button className="btn" type="button" onClick={() => setIsIssueModalOpen(false)} style={{ flex: 1, padding: '1rem', background: '#F1F5F9', color: '#475569', fontWeight: '700', border: 'none', borderRadius: '12px' }}>Cancel</button>
+              <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem', background: '#3B82F6', fontWeight: '800', border: 'none', borderRadius: '12px', color: 'white' }}>Confirm Issuance</button>
             </div>
           </form>
         )}
@@ -431,4 +429,4 @@ const Inventory = () => {
   );
 };
 
-export default InventoryModule;
+export default Inventory;

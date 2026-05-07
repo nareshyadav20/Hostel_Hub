@@ -11,6 +11,7 @@ const roomTransferSchema = new mongoose.Schema({
     enum: ['PENDING', 'ACCEPTED', 'REJECTED'],
     default: 'PENDING'
   },
+  buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   requestDate: { type: Date, default: Date.now }
 }, { timestamps: true });
 

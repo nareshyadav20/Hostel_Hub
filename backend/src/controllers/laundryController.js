@@ -1,5 +1,5 @@
-const Laundry = require('../models/Laundry');
-const Tenant = require('../models/Tenant');
+const Laundry = require('../models/tenant/Laundry');
+const Tenant = require('../models/tenant/Tenant');
 
 exports.createLaundryOrder = async (req, res) => {
   try {

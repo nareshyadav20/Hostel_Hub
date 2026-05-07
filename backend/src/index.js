@@ -35,9 +35,9 @@ const ownerRoutes = require('./routes/ownerRoutes');
 
 // Pre-load all models to ensure they are registered for population
 require('./models/User');
-require('./models/Tenant');
+require('./models/tenant/Tenant');
 require('./models/RoomTransfer');
-require('./models/Complaint');
+require('./models/tenant/Complaint');
 require('./models/MessMenu');
 require('./models/Payment');
 

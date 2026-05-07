@@ -22,16 +22,16 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post(`${API_URL}/auth/login`, { email: loginEmail, password: loginPass });
+      const res = await axios.post(`${API_URL}/auth/login`, { email, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/owner/portfolio');
     } catch (err) {
       // Auto-register the demo owner if they don't exist in the DB yet
-      if (err.response?.status === 404 && loginEmail === 'owner@hostelhub.com') {
+      if (err.response?.status === 404 && email === 'owner@hostelhub.com') {
         try {
           const regRes = await axios.post(`${API_URL}/auth/register`, {
-            email: loginEmail, password: loginPass, name: 'System Owner', role: 'OWNER'
+            email, password, name: 'System Owner', role: 'OWNER'
           });
           localStorage.setItem('token', regRes.data.token);
           localStorage.setItem('user', JSON.stringify(regRes.data.user));
