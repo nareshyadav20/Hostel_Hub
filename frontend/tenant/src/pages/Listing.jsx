@@ -13,6 +13,7 @@ const Listing = () => {
   const [wishlistId, setWishlistId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [selectedBed, setSelectedBed] = useState(null);
 
   useEffect(() => {
     const fetchHostelDetails = async () => {
@@ -38,7 +39,7 @@ const Listing = () => {
   const mapBuilding = (b) => ({
     id: b._id || b.id,
     name: b.name || 'Alpha Tower',
-    location: b.address || b.locality || 'Street Address, City',
+    location: b.address || b.locality || 'Alpha Tower Street, Bengaluru',
     distance: '300m from college',
     category: b.category || 'Student',
     gender: b.genderType || b.gender || 'Boys',
@@ -46,9 +47,8 @@ const Listing = () => {
     reviews: 128,
     price: b.startingPrice || b.price || 16700,
     images: [
-      'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=600&q=80'
+      'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80'
     ]
   });
 
@@ -68,8 +68,31 @@ const Listing = () => {
     } catch (err) { console.error('Wishlist error:', err); } finally { setIsSaving(false); }
   };
 
-  if (loading) return <div className="staynest-dashboard loading-state"><div className="premium-spinner"></div><p>Loading property details...</p></div>;
-  if (!hostel) return <div className="staynest-dashboard"><p>Property not found.</p></div>;
+  const beds = Array.from({ length: selectedSharing }, (_, i) => ({
+    id: i + 1,
+    status: i === 0 ? 'Filled' : 'Available',
+    position: i === 0 ? 'Near Door' : i === 1 ? 'Window Side' : 'Center',
+    direction: i === 0 ? 'Head → North' : 'Head → South',
+    type: selectedSharing === 1 ? 'Single Bed' : 'Single Cot'
+  }));
+
+  // Auto-select the first available bed when sharing changes
+  useEffect(() => {
+    const firstAvailable = beds.find(b => b.status === 'Available');
+    setSelectedBed(firstAvailable ? firstAvailable.id : null);
+  }, [selectedSharing]);
+
+  if (loading) return (
+    <div className="lst-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', flexDirection: 'column', gap: '1rem' }}>
+      <div className="lst-spinner"></div>
+      <p style={{ fontWeight: '600', color: 'var(--lst-text-muted)' }}>Loading property details...</p>
+    </div>
+  );
+  if (!hostel) return (
+    <div className="lst-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+      <p style={{ fontWeight: '600', color: 'var(--lst-text-muted)', fontSize: '1.2rem' }}>Property not found.</p>
+    </div>
+  );
 
   // Dynamic data based on sharing
   const pricing = {
@@ -78,14 +101,6 @@ const Listing = () => {
     3: { rent: 9000, deposit: 18000, food: 2500, maintenance: 599 }
   };
   const currentPrice = pricing[selectedSharing];
-
-  const beds = Array.from({ length: selectedSharing }, (_, i) => ({
-    id: i + 1,
-    status: i === 0 ? 'Filled' : 'Available',
-    position: i === 0 ? 'Near Door' : i === 1 ? 'Window Side' : 'Center',
-    direction: i === 0 ? 'Head → North' : 'Head → South',
-    type: selectedSharing === 1 ? 'Single Bed' : 'Single Cot'
-  }));
 
   const roomSize = selectedSharing === 1 ? { l: 10, w: 12 } : selectedSharing === 2 ? { l: 12, w: 14 } : { l: 14, w: 16 };
 
@@ -121,7 +136,7 @@ const Listing = () => {
 
   return (
     <div className="lst-page">
-      {/* ── Top Bar ── */}
+      {/* Top Bar */}
       <div className="lst-topbar">
         <button className="lst-back-btn" onClick={() => navigate(-1)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -135,38 +150,35 @@ const Listing = () => {
         </div>
       </div>
 
-      {/* ── Header ── */}
+      {/* Header */}
       <header className="lst-header">
-        <div className="lst-header-info">
-          <div className="lst-badges">
-            <span className="lst-badge blue">{hostel.gender}</span>
-            <span className="lst-badge green">{hostel.category}</span>
-            <span className="lst-badge orange">⚡ Filling Fast</span>
-          </div>
-          <h1 className="lst-title">{hostel.name}</h1>
-          <p className="lst-location">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-            {hostel.location} • <span>{hostel.distance}</span>
-          </p>
-          <div className="lst-rating-row">
-            <div className="lst-rating-badge">⭐ {hostel.rating}</div>
-            <span className="lst-review-count">{hostel.reviews} reviews</span>
-          </div>
+        <div className="lst-badges">
+          <span className="lst-badge blue">{hostel.gender}</span>
+          <span className="lst-badge green">{hostel.category}</span>
+          <span className="lst-badge orange">⚡ Filling Fast</span>
+        </div>
+        <h1 className="lst-title">{hostel.name}</h1>
+        <p className="lst-location">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+          {hostel.location} • <span className="lst-dist">{hostel.distance}</span>
+        </p>
+        <div className="lst-rating-row">
+          <div className="lst-rating-badge">⭐ {hostel.rating}</div>
+          <span className="lst-review-count">{hostel.reviews} reviews</span>
         </div>
       </header>
 
-      {/* ── Gallery ── */}
+      {/* Gallery */}
       <section className="lst-gallery">
         <div className="lst-gallery-main">
           <img src={hostel.images[0]} alt="Main view" />
         </div>
         <div className="lst-gallery-side">
           <img src={hostel.images[1]} alt="Room view" />
-          <img src={hostel.images[2]} alt="Facility view" />
         </div>
       </section>
 
-      {/* ── Tab Navigation ── */}
+      {/* Tab Navigation */}
       <nav className="lst-tabs">
         {['overview', 'rooms', 'dining', 'pricing', 'rules'].map(tab => (
           <button key={tab} className={`lst-tab ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
@@ -175,14 +187,14 @@ const Listing = () => {
         ))}
       </nav>
 
-      {/* ── Content ── */}
+      {/* Content */}
       <div className="lst-content">
 
         {/* Left Column */}
         <div className="lst-main-col">
 
           {/* Sharing Selector */}
-          <div className="lst-sharing-selector">
+          <div className="lst-section lst-sharing-box">
             <span className="lst-selector-label">Select Room Type</span>
             <div className="lst-sharing-pills">
               {[1, 2, 3].map(n => (
@@ -199,7 +211,7 @@ const Listing = () => {
               {/* Room Dimensions */}
               <section className="lst-section">
                 <h3 className="lst-section-title">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+                  <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg></span>
                   Room Dimensions
                 </h3>
                 <div className="lst-dim-grid">
@@ -221,39 +233,62 @@ const Listing = () => {
               {/* Occupancy Info */}
               <section className="lst-section">
                 <h3 className="lst-section-title">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                  <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
                   Occupancy & Category
                 </h3>
-                <div className="lst-info-chips">
-                  <div className="lst-chip"><span className="lst-chip-label">Sharing</span><span className="lst-chip-value">{selectedSharing} Sharing</span></div>
-                  <div className="lst-chip"><span className="lst-chip-label">Category</span><span className="lst-chip-value">{hostel.category}s</span></div>
-                  <div className="lst-chip"><span className="lst-chip-label">Gender</span><span className="lst-chip-value">{hostel.gender}</span></div>
-                  <div className="lst-chip"><span className="lst-chip-label">Occupancy</span><span className="lst-chip-value">70%</span></div>
+                <div className="lst-table-grid">
+                  <div className="lst-table-cell">
+                    <span className="lst-tc-label">Sharing</span>
+                    <span className="lst-tc-value">{selectedSharing} Sharing</span>
+                  </div>
+                  <div className="lst-table-cell">
+                    <span className="lst-tc-label">Category</span>
+                    <span className="lst-tc-value">{hostel.category}s</span>
+                  </div>
+                  <div className="lst-table-cell">
+                    <span className="lst-tc-label">Gender</span>
+                    <span className="lst-tc-value">{hostel.gender}</span>
+                  </div>
+                  <div className="lst-table-cell">
+                    <span className="lst-tc-label">Occupancy</span>
+                    <span className="lst-tc-value">70%</span>
+                  </div>
                 </div>
               </section>
 
               {/* Bed Availability */}
               <section className="lst-section">
                 <h3 className="lst-section-title">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></svg>
+                  <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></svg></span>
                   Bed Availability
                 </h3>
                 <div className="lst-bed-summary">
-                  <div className="lst-bed-stat"><span className="lst-bed-num">{selectedSharing}</span><span>Total Beds</span></div>
+                  <div className="lst-bed-stat default-bg"><span className="lst-bed-num">{selectedSharing}</span><span>Total Beds</span></div>
                   <div className="lst-bed-stat available"><span className="lst-bed-num">{beds.filter(b => b.status === 'Available').length}</span><span>Available</span></div>
                   <div className="lst-bed-stat filled"><span className="lst-bed-num">{beds.filter(b => b.status === 'Filled').length}</span><span>Occupied</span></div>
                 </div>
                 <div className="lst-bed-cards">
                   {beds.map(bed => (
-                    <div key={bed.id} className={`lst-bed-card ${bed.status.toLowerCase()}`}>
+                    <div 
+                      key={bed.id} 
+                      className={`lst-bed-card ${bed.status.toLowerCase()} ${selectedBed === bed.id ? 'selected' : ''}`}
+                      onClick={() => {
+                        if (bed.status === 'Available') {
+                          setSelectedBed(bed.id);
+                        }
+                      }}
+                      style={{ cursor: bed.status === 'Available' ? 'pointer' : 'not-allowed' }}
+                    >
                       <div className="lst-bed-card-header">
                         <span className="lst-bed-label">Bed {bed.id}</span>
-                        <span className={`lst-bed-status ${bed.status.toLowerCase()}`}>{bed.status}</span>
+                        <span className={`lst-bed-status ${bed.status.toLowerCase()}`}>
+                          {selectedBed === bed.id ? 'SELECTED' : bed.status.toUpperCase()}
+                        </span>
                       </div>
                       <div className="lst-bed-details">
                         <div><span className="lst-bd-key">Type</span><span className="lst-bd-val">{bed.type}</span></div>
                         <div><span className="lst-bd-key">Position</span><span className="lst-bd-val">{bed.position}</span></div>
-                        <div><span className="lst-bd-key">Direction</span><span className="lst-bd-val">{bed.direction}</span></div>
+                        <div><span className="lst-bd-key">Direction</span><span className="lst-bd-val direction-highlight">{bed.direction}</span></div>
                       </div>
                     </div>
                   ))}
@@ -263,7 +298,7 @@ const Listing = () => {
               {/* Facilities */}
               <section className="lst-section">
                 <h3 className="lst-section-title">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
                   Room Facilities
                 </h3>
                 <div className="lst-fac-grid">
@@ -282,14 +317,26 @@ const Listing = () => {
               {/* Bathroom */}
               <section className="lst-section">
                 <h3 className="lst-section-title">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 6c0-1.1.9-2 2-2h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V6z"/><path d="M10 10h4"/></svg>
+                  <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 6c0-1.1.9-2 2-2h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V6z"/><path d="M10 10h4"/></svg></span>
                   Bathroom Details
                 </h3>
-                <div className="lst-info-chips">
-                  <div className="lst-chip"><span className="lst-chip-label">Type</span><span className="lst-chip-value">Attached</span></div>
-                  <div className="lst-chip"><span className="lst-chip-label">Count</span><span className="lst-chip-value">1 per room</span></div>
-                  <div className="lst-chip"><span className="lst-chip-label">Hot Water</span><span className="lst-chip-value">24/7 Geyser</span></div>
-                  <div className="lst-chip"><span className="lst-chip-label">Western Toilet</span><span className="lst-chip-value">Yes</span></div>
+                <div className="lst-table-grid">
+                  <div className="lst-table-cell">
+                    <span className="lst-tc-label">Type</span>
+                    <span className="lst-tc-value">Attached</span>
+                  </div>
+                  <div className="lst-table-cell">
+                    <span className="lst-tc-label">Count</span>
+                    <span className="lst-tc-value">1 per room</span>
+                  </div>
+                  <div className="lst-table-cell">
+                    <span className="lst-tc-label">Hot Water</span>
+                    <span className="lst-tc-value">24/7 Geyser</span>
+                  </div>
+                  <div className="lst-table-cell">
+                    <span className="lst-tc-label">Western Toilet</span>
+                    <span className="lst-tc-value">Yes</span>
+                  </div>
                 </div>
               </section>
             </>
@@ -299,30 +346,22 @@ const Listing = () => {
           {(activeTab === 'overview' || activeTab === 'dining') && (
             <section className="lst-section">
               <h3 className="lst-section-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg>
+                <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg></span>
                 Dining & Food
               </h3>
-              <div className="lst-info-chips" style={{ marginBottom: '1.5rem' }}>
-                <div className="lst-chip"><span className="lst-chip-label">Meal Type</span><span className="lst-chip-value">Veg + Non-Veg</span></div>
-                <div className="lst-chip"><span className="lst-chip-label">Weekly Menu</span><span className="lst-chip-value">7-day rotation</span></div>
-                <div className="lst-chip"><span className="lst-chip-label">Custom</span><span className="lst-chip-value">Available on request</span></div>
-              </div>
-              <div className="lst-meal-grid">
-                {[
-                  { name: 'Breakfast', time: '08:00 - 09:30', items: 'Poha / Omelette / Tea', color: '#3b82f6' },
-                  { name: 'Lunch', time: '12:30 - 14:00', items: 'Veg Thali / Curd / Salad', color: '#ef4444' },
-                  { name: 'Dinner', time: '20:00 - 21:30', items: 'Phulka / Mix Veg / Paneer', color: '#10b981' }
-                ].map(m => (
-                  <div key={m.name} className="lst-meal-card" style={{ borderLeftColor: m.color }}>
-                    <div className="lst-meal-icon" style={{ color: m.color, background: `${m.color}12` }}>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg>
-                    </div>
-                    <div>
-                      <div className="lst-meal-header"><strong>{m.name}</strong><span>{m.time}</span></div>
-                      <p className="lst-meal-items">{m.items}</p>
-                    </div>
-                  </div>
-                ))}
+              <div className="lst-table-grid">
+                <div className="lst-table-cell">
+                  <span className="lst-tc-label">Meal Type</span>
+                  <span className="lst-tc-value">Veg + Non-Veg</span>
+                </div>
+                <div className="lst-table-cell">
+                  <span className="lst-tc-label">Weekly Menu</span>
+                  <span className="lst-tc-value">7-day rotation</span>
+                </div>
+                <div className="lst-table-cell" style={{ gridColumn: 'span 2' }}>
+                  <span className="lst-tc-label">Custom</span>
+                  <span className="lst-tc-value">Available on request</span>
+                </div>
               </div>
             </section>
           )}
@@ -331,7 +370,7 @@ const Listing = () => {
           {(activeTab === 'overview' || activeTab === 'rooms') && (
             <section className="lst-section">
               <h3 className="lst-section-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg></span>
                 Building & Security
               </h3>
               <div className="lst-fac-grid">
@@ -352,13 +391,13 @@ const Listing = () => {
           {(activeTab === 'overview' || activeTab === 'rules') && (
             <section className="lst-section">
               <h3 className="lst-section-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg></span>
                 House Rules
               </h3>
               <div className="lst-rules-list">
                 {houseRules.map((rule, i) => (
                   <div key={i} className="lst-rule-item">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span className="lst-rule-dot"></span>
                     <span>{rule}</span>
                   </div>
                 ))}
@@ -370,10 +409,8 @@ const Listing = () => {
         {/* ── Right Sidebar: Pricing ── */}
         <aside className="lst-sidebar">
           <div className="lst-price-card">
-            <div className="lst-price-header">
-              <span className="lst-price-label">Monthly Rent</span>
-              <div className="lst-price-main">₹{currentPrice.rent.toLocaleString()}<span>/mo</span></div>
-            </div>
+            <span className="lst-price-label">MONTHLY RENT</span>
+            <div className="lst-price-main">₹{currentPrice.rent.toLocaleString()}<span>/mo</span></div>
 
             {(activeTab === 'overview' || activeTab === 'pricing') && (
               <div className="lst-price-breakdown">
@@ -386,12 +423,26 @@ const Listing = () => {
                   <span>Total Due (Move-in)</span>
                   <span>₹{(currentPrice.rent + currentPrice.deposit + currentPrice.food + currentPrice.maintenance).toLocaleString()}</span>
                 </div>
+                {selectedBed && (
+                  <div className="lst-price-row" style={{ marginTop: '0.5rem', color: 'var(--lst-accent)' }}>
+                    <span>Selected Bed</span><span>Bed {selectedBed}</span>
+                  </div>
+                )}
               </div>
             )}
 
-            <button className="lst-book-btn" onClick={() => navigate(`/booking/${hostel.id}`)}>
+            <button 
+              className={`lst-book-btn ${!selectedBed ? 'disabled' : ''}`} 
+              onClick={() => {
+                if (selectedBed) {
+                  navigate(`/booking/${hostel.id}?sharing=${selectedSharing}&bed=${selectedBed}`);
+                } else {
+                  alert('Please select an available bed to proceed.');
+                }
+              }}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              Reserve Your Room Now
+              {selectedBed ? 'Reserve Your Room Now' : 'No Beds Available'}
             </button>
             <p className="lst-price-footer">Secure payment powered by Livora Finance</p>
           </div>
