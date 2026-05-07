@@ -24,6 +24,9 @@ const traverseHierarchy = (buildings) => {
   return { totalBeds, occupiedBeds, maintenanceRooms, buildingWise, floorWise };
 };
 
+const MessMenu = require('../models/MessMenu');
+const MessAttendance = require('../models/MessAttendance');
+
 // GET /api/dashboard/summary
 exports.getSummaryKPIs = async (req, res) => {
   try {
@@ -32,27 +35,47 @@ exports.getSummaryKPIs = async (req, res) => {
 
     const vacantBeds = totalBeds - occupiedBeds;
     const occupancyRate = totalBeds > 0 ? parseFloat(((occupiedBeds / totalBeds) * 100).toFixed(1)) : 0;
-    const avgRent = 6500;
-    const expectedMonthlyRevenue = occupiedBeds * avgRent;
-    const todayRevenue = Math.round(expectedMonthlyRevenue / 30);
-    const pendingPaymentsCount = Math.max(0, Math.floor(occupiedBeds * 0.07));
-    const pendingPaymentsAmount = pendingPaymentsCount * avgRent;
+
+    // 2. Real Tenant Count
+    const totalTenants = await Tenant.countDocuments(buildingId ? { buildingId } : {});
+
+    // 3. Real Payment Stats
+    const payments = await Payment.find(buildingId ? { buildingId } : {});
+    const pendingPayments = payments.filter(p => p.status === 'Pending' || p.status === 'Due');
+    const todayRevenue = payments
+      .filter(p => new Date(p.date).toDateString() === new Date().toDateString() && p.status === 'Paid')
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+    const pendingPaymentsCount = pendingPayments.length;
+    const pendingPaymentsAmount = pendingPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
     // Health Score calculation
     const occupancyScore = Math.min(40, (occupancyRate / 100) * 40);
-    const paymentScore = Math.max(0, 30 - (pendingPaymentsCount * 2));
-    const maintenanceScore = Math.max(0, 20 - (maintenanceRooms * 3));
-    const vacancyScore = Math.min(10, ((totalBeds - vacantBeds) / (totalBeds || 1)) * 10);
-    const healthScore = Math.round(occupancyScore + paymentScore + maintenanceScore + vacancyScore);
+    const paymentScore = Math.max(0, 30 - (pendingPaymentsCount * 1.5));
+    const maintenanceScore = Math.max(0, 20 - (maintenanceRooms * 2));
+    const healthScore = Math.round(occupancyScore + paymentScore + maintenanceScore + 10);
+
+    // 5. Daily Activity Stats
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    const complaintsToday = await Complaint.countDocuments({
+      createdAt: { $gte: startOfDay },
+      ...(buildingId && { buildingId })
+    });
 
     res.json({
       totalBeds, occupiedBeds, vacantBeds, occupancyRate,
-      todayRevenue, expectedMonthlyRevenue,
+      todayRevenue,
+      expectedMonthlyRevenue: totalTenants * 8000,
       pendingPaymentsCount, pendingPaymentsAmount,
       maintenanceRooms, healthScore,
       buildingCount: buildings.length,
-      checkInsToday: Math.floor(Math.random() * 4) + 1,
-      checkOutsToday: Math.floor(Math.random() * 2) + 1,
+      totalTenants,
+      renewalsPending: 0,
+      pendingKYC: 0,
+      tenantsLeavingSoon: 0,
+      newTenantsThisMonth: 0,
+      checkInsToday: 0,
+      checkOutsToday: 0,
       rentDueToday: pendingPaymentsCount,
       complaintsToday: Math.floor(Math.random() * 3),
       newTenantsThisMonth: Math.floor(occupiedBeds * 0.08),
@@ -67,23 +90,29 @@ exports.getSummaryKPIs = async (req, res) => {
 // GET /api/dashboard/revenue
 exports.getRevenueAnalytics = async (req, res) => {
   try {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const dailyRevenue = days.map(name => ({
-      name,
-      expected: 13000,
-      actual: Math.round(9000 + Math.random() * 7000)
-    }));
+    const { buildingId } = req.query;
+    const payments = await Payment.find(buildingId ? { buildingId } : {});
 
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    const monthlyRevenue = months.map((name, i) => ({
-      name,
-      revenue: Math.round(750000 + i * 95000 + Math.random() * 50000),
-      expenses: Math.round(300000 + i * 20000)
-    }));
+    // Last 7 days daily revenue
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dailyRevenue = days.map((name, i) => {
+      const dayPayments = payments.filter(p => new Date(p.date).getDay() === i && p.status === 'Paid');
+      return {
+        name,
+        expected: 10000,
+        actual: dayPayments.reduce((sum, p) => sum + p.amount, 0)
+      };
+    });
+
+    const collectedRent = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + p.amount, 0);
+    const pendingRent = payments.filter(p => p.status === 'Pending' || p.status === 'Due').reduce((sum, p) => sum + p.amount, 0);
 
     res.json({
       dailyRevenue,
-      monthlyRevenue,
+      monthlyRevenue: [
+        { name: 'Prev', revenue: collectedRent * 0.8, expenses: collectedRent * 0.2 },
+        { name: 'Current', revenue: collectedRent, expenses: collectedRent * 0.25 }
+      ],
       rentMetrics: {
         pendingRent: 87500,
         collectedRent: 1462500,
@@ -116,15 +145,23 @@ exports.getAlertsAndInsights = async (req, res) => {
     const { totalBeds, vacantBeds, occupancyRate } = traverseHierarchy(buildings);
     const insights = [], alerts = [];
 
-    if (vacantBeds > 5) insights.push({ type: 'vacancy', message: `${vacantBeds} beds vacant — consider a promotional campaign to improve occupancy.` });
-    if (occupancyRate < 70) insights.push({ type: 'revenue', message: 'Low occupancy is impacting monthly revenue. Review pricing or marketing.' });
-    insights.push({ type: 'payment', message: '7 tenants have pending rent past the due date. Send reminder notices.' });
-    insights.push({ type: 'mess', message: 'Dinner complaints increased 30% this week. Review meal quality with kitchen staff.' });
+    const highComplaints = await Complaint.find({
+      status: 'Pending',
+      priority: 'High',
+      ...(buildingId && { buildingId })
+    });
 
-    alerts.push({ type: 'rent', message: '5 tenants have pending rent past 7 days.', severity: 'medium' });
-    alerts.push({ type: 'maintenance', message: 'AC unit in Room 204 flagged for service.', severity: 'high' });
-    alerts.push({ type: 'kyc', message: '3 tenant KYC documents expiring this month.', severity: 'medium' });
-    alerts.push({ type: 'stock', message: 'Rice stock at 15% — reorder required.', severity: 'high' });
+    highComplaints.forEach(c => {
+      alerts.push({
+        type: 'complaint',
+        message: `Critical: ${c.title}`,
+        severity: 'high',
+        id: c._id
+      });
+    });
+
+    const pendingPayments = await Payment.countDocuments({ status: { $in: ['Pending', 'Due'] } });
+    if (pendingPayments > 0) insights.push({ type: 'payment', message: `${pendingPayments} tenants have pending dues.` });
 
     res.json({ alerts, insights });
   } catch (error) {
@@ -136,11 +173,11 @@ exports.getAlertsAndInsights = async (req, res) => {
 exports.getComplaintsStats = async (req, res) => {
   try {
     res.json({
-      total: 24,
-      open: 9,
-      resolved: 15,
-      highPriority: 4,
-      avgResolutionHours: 4.2,
+      total: complaints.length,
+      open,
+      resolved,
+      highPriority: complaints.filter(c => c.priority === 'High').length,
+      avgResolutionHours: 0,
       categories: [
         { name: 'Maintenance', count: 10, color: '#EF4444' },
         { name: 'Cleaning', count: 6, color: '#F59E0B' },
@@ -157,29 +194,33 @@ exports.getComplaintsStats = async (req, res) => {
 // GET /api/dashboard/mess
 exports.getMessStats = async (req, res) => {
   try {
+    const { buildingId } = req.query;
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const day = days[new Date().getDay()];
+    const todayISO = new Date().toISOString().split('T')[0];
+
+    const menu = await MessMenu.findOne({ buildingId, day, plan: 'standard' });
+
+    // Calculate real attendance stats
+    const attendance = await MessAttendance.find({ buildingId, date: todayISO });
+    let mealsServedToday = 0;
+    attendance.forEach(att => {
+      if (att.breakfast) mealsServedToday++;
+      if (att.lunch) mealsServedToday++;
+      if (att.dinner) mealsServedToday++;
+    });
+
     res.json({
-      mealsServedToday: 187,
-      avgFoodRating: 3.8,
-      dailyMessCost: 14500,
-      monthlyMessCost: 435000,
+      mealsServedToday,
+      avgFoodRating: 4.5,
+      dailyMessCost: mealsServedToday * 60, // Dummy cost calculation
+      monthlyMessCost: mealsServedToday * 1800, // Dummy
       menuToday: {
-        breakfast: 'Idli Sambar, Tea',
-        lunch: 'Rice, Dal, Sabzi, Roti',
-        dinner: 'Chapati, Paneer Curry, Salad'
+        breakfast: menu?.breakfast || 'N/A',
+        lunch: menu?.lunch || 'N/A',
+        dinner: menu?.dinner || 'N/A'
       },
-      mealTrend: [
-        { name: 'Mon', served: 180 }, { name: 'Tue', served: 192 },
-        { name: 'Wed', served: 175 }, { name: 'Thu', served: 188 },
-        { name: 'Fri', served: 195 }, { name: 'Sat', served: 160 },
-        { name: 'Sun', served: 145 },
-      ],
-      inventory: [
-        { item: 'Rice', stock: 15, unit: 'kg', alert: true },
-        { item: 'Dal', stock: 40, unit: 'kg', alert: false },
-        { item: 'Vegetables', stock: 25, unit: 'kg', alert: false },
-        { item: 'Cooking Oil', stock: 8, unit: 'L', alert: true },
-      ],
-      foodComplaints: { total: 12, quality: 5, hygiene: 3, quantity: 2, delay: 2 }
+      inventory: []
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -189,19 +230,14 @@ exports.getMessStats = async (req, res) => {
 // GET /api/dashboard/staff
 exports.getStaffStats = async (req, res) => {
   try {
+    const staff = await User.find({ role: { $in: ['STAFF', 'WARDEN'] } }).select('name role');
     res.json({
-      totalStaff: 8,
-      tasksAssigned: 34,
-      tasksCompleted: 28,
-      tasksPending: 6,
-      avgResolutionHours: 3.1,
-      efficiencyScore: Math.round((28 / 34) * 100),
-      staffList: [
-        { name: 'Ramesh Kumar', role: 'Maintenance', score: 95, tasks: 10 },
-        { name: 'Suresh Babu', role: 'Cleaning', score: 88, tasks: 8 },
-        { name: 'Pradeep Singh', role: 'Security', score: 72, tasks: 7 },
-        { name: 'Anitha Devi', role: 'Mess', score: 65, tasks: 9 },
-      ]
+      totalStaff: staff.length,
+      tasksAssigned: 0,
+      tasksCompleted: 0,
+      tasksPending: 0,
+      efficiencyScore: 100,
+      staffList: staff.map(s => ({ name: s.name, role: s.role, score: 100 }))
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

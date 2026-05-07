@@ -11,12 +11,13 @@ const messMenuSchema = new mongoose.Schema({
     required: true,
     enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   },
+  buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   breakfast: { type: String, required: true },
   lunch: { type: String, required: true },
   dinner: { type: String, required: true }
 }, { timestamps: true });
 
-// Ensure unique combination of plan and day
-messMenuSchema.index({ plan: 1, day: 1 }, { unique: true });
+// Ensure unique combination of building, plan and day
+messMenuSchema.index({ buildingId: 1, plan: 1, day: 1 }, { unique: true });
 
 module.exports = mongoose.model('MessMenu', messMenuSchema);

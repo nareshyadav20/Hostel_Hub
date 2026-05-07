@@ -13,13 +13,16 @@ const Login = () => {
   const [password, setPassword] = React.useState('owner123');
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
-  
-  const handleSubmit = async (e) => { 
-    e.preventDefault(); 
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post(`${window.api_url || 'http://localhost:5000/api'}/auth/login`, { email: loginEmail, password: loginPass });
+      const res = await axios.post(`${API_URL}/auth/login`, { email: loginEmail, password: loginPass });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/owner/portfolio');
@@ -27,7 +30,7 @@ const Login = () => {
       // Auto-register the demo owner if they don't exist in the DB yet
       if (err.response?.status === 404 && loginEmail === 'owner@hostelhub.com') {
         try {
-          const regRes = await axios.post(`${window.api_url || 'http://localhost:5000/api'}/auth/register`, {
+          const regRes = await axios.post(`${API_URL}/auth/register`, {
             email: loginEmail, password: loginPass, name: 'System Owner', role: 'OWNER'
           });
           localStorage.setItem('token', regRes.data.token);
@@ -57,26 +60,26 @@ const Login = () => {
           <h1>Hostel Owner</h1>
           <p>Sign in to manage your property</p>
         </div>
-        
+
         {error && <div className="error-message" style={{ color: 'var(--accent-error)', textAlign: 'center', marginBottom: '1.5rem', padding: '0.8rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px', fontSize: '0.9rem' }}>{error}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="input-group">
             <label>Owner Email</label>
-            <input 
-              type="email" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              required 
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
           <div className="input-group">
             <label>Password</label>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required 
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
           </div>
           <button type="submit" className="auth-btn" disabled={loading}>
@@ -85,24 +88,24 @@ const Login = () => {
         </form>
 
         <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <button 
+          <button
             type="button"
             onClick={() => setShowVault(!showVault)}
-            style={{ 
-              background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)', 
-              color: '#818cf8', padding: '0.6rem', borderRadius: '8px', width: '100%', 
+            style={{
+              background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)',
+              color: '#818cf8', padding: '0.6rem', borderRadius: '8px', width: '100%',
               fontSize: '0.85rem', cursor: 'pointer', fontWeight: '600'
             }}
           >
             {showVault ? 'Hide Mock Credentials' : 'View Login Access Vault'}
           </button>
-          
+
           {showVault && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              style={{ 
-                marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', 
-                borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' 
+              style={{
+                marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)',
+                borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)'
               }}
             >
               <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.8rem', textAlign: 'center' }}>Demo Account (Owner Portal)</p>
@@ -115,12 +118,12 @@ const Login = () => {
                   <span style={{ color: '#64748b' }}>Pass:</span>
                   <code style={{ color: '#e2e8f0' }}>owner123</code>
                 </div>
-                <button 
+                <button
                   type="button"
                   onClick={handleQuickFill}
-                  style={{ 
-                    marginTop: '0.5rem', background: '#6366f1', color: 'white', border: 'none', 
-                    padding: '0.4rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700' 
+                  style={{
+                    marginTop: '0.5rem', background: '#6366f1', color: 'white', border: 'none',
+                    padding: '0.4rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700'
                   }}
                 >
                   Auto-Login Now

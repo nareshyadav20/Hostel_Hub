@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
-import { 
-  Users, FileText, X, AlertCircle, Calendar, Layers, Plus, 
+import {
+  Users, FileText, X, AlertCircle, Calendar, Layers, Plus,
   Trash2, Search, Check, ShieldCheck, AlertTriangle, TrendingUp,
-  TrendingDown, Star, ChevronRight, Download, Edit3, MessageSquare, 
+  TrendingDown, Star, ChevronRight, Download, Edit3, MessageSquare,
   Clock, MapPin, CheckCircle, CreditCard, Filter, ArrowRight
 } from 'lucide-react';
 import { api } from '../mockData';
@@ -14,23 +14,23 @@ import { api } from '../mockData';
 const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => (
   <AnimatePresence>
     {isOpen && (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        style={{ 
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', 
-          display: 'flex', alignItems: 'center', justifyContent: 'center', 
-          zIndex: 2000, backdropFilter: 'blur(10px)', padding: '1rem' 
+        style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 2000, backdropFilter: 'blur(10px)', padding: '1rem'
         }}
         onClick={onClose}
       >
-        <motion.div 
-          initial={{ y: 50, opacity: 0, scale: 0.95 }} 
-          animate={{ y: 0, opacity: 1, scale: 1 }} 
+        <motion.div
+          initial={{ y: 50, opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: 50, opacity: 0, scale: 0.95 }}
           className="card"
           onClick={e => e.stopPropagation()}
-          style={{ 
-            width: '94%', maxWidth, padding: '0', 
+          style={{
+            width: '94%', maxWidth, padding: '0',
             maxHeight: '94vh', overflowY: 'auto', background: '#F8FAFC',
             borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
             border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column'
@@ -52,31 +52,13 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => (
 );
 
 const Tenants = () => {
-  const { buildingId } = useParams();
-  
+  const { buildingId: urlBuildingId } = useParams();
+
+  // Step 1: Restore context
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
   // Base State
-  const [tenants, setTenants] = useState([
-    { 
-      id: 1, name: 'Rahul Sharma', email: 'rahul@example.com', room: '201-A', phone: '+91 98765 43210', 
-      status: 'ACTIVE', rentStatus: 'PAID', checkIn: '2023-08-12', rent: 6500, emergencyContact: '+91 99999 00000',
-      docs: [{ name: 'Aadhar Card', verified: true }], score: 4.8, plan: 'Single', lastPayment: '2024-03-05'
-    },
-    { 
-      id: 2, name: 'Priya Verma', email: 'priya@example.com', room: '202-B', phone: '+91 87654 32109', 
-      status: 'ACTIVE', rentStatus: 'PENDING', checkIn: '2024-01-05', rent: 8500, emergencyContact: '+91 88888 11111',
-      docs: [{ name: 'Aadhar Card', verified: false }], score: 3.5, plan: 'Double', lastPayment: '2024-02-05'
-    },
-    { 
-      id: 3, name: 'Amit Singh', email: 'amit@example.com', room: '101-A', phone: '+91 76543 21098', 
-      status: 'LEFT', rentStatus: 'PAID', checkIn: '2022-05-10', rent: 5000, emergencyContact: '+91 77777 22222',
-      docs: [{ name: 'Aadhar Card', verified: true }], score: 4.2, plan: 'Shared', lastPayment: '2023-12-01'
-    },
-    { 
-      id: 4, name: 'Neha Gupta', email: 'neha@example.com', room: 'Pending', phone: '+91 65432 10987', 
-      status: 'PENDING', rentStatus: 'PENDING', checkIn: 'TBD', rent: 7000, emergencyContact: '+91 66666 33333',
-      docs: [], score: 0, plan: 'Single', lastPayment: 'N/A'
-    },
-  ]);
+  const [tenants, setTenants] = useState([]);
 
   const [selectedTenant, setSelectedTenant] = useState(null);
   const [profileTab, setProfileTab] = useState('Overview');
@@ -89,7 +71,7 @@ const Tenants = () => {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isBulkRegisterModalOpen, setIsBulkRegisterModalOpen] = useState(false);
   const [manualRows, setManualRows] = useState([
-    { id: 'initial-row-01', name: '', phone: '', building: '', floor: '', room: '', bed: '', rent: '', deposit: '', doc: null }
+    { id: 'initial-row-01', name: '', phone: '', building: activeBuildingId || '', floor: '', room: '', bed: '', rent: '', deposit: '', doc: null }
   ]);
   const [infrastructure, setInfrastructure] = useState({ buildings: [], floors: [], rooms: [], beds: [] });
   const [isLoading, setIsLoading] = useState(false);
@@ -99,7 +81,12 @@ const Tenants = () => {
   const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
-    if (isBulkRegisterModalOpen) {
+    console.log("Tenants module fetching for ID:", activeBuildingId);
+    fetchTenants();
+  }, [activeBuildingId]);
+
+  useEffect(() => {
+    if (isBulkRegisterModalOpen || isRegisterModalOpen) {
       const fetchInfra = async () => {
         setIsLoading(true);
         try {
@@ -119,37 +106,37 @@ const Tenants = () => {
       };
       fetchInfra();
     }
-  }, [isBulkRegisterModalOpen, activeBuildingId]);
+  }, [isBulkRegisterModalOpen, isRegisterModalOpen, activeBuildingId]);
 
   const fetchTenants = async () => {
     setIsLoading(true);
     try {
-      const data = await api.getTenants(activeBuildingId);
-      if (!data || data.length === 0) {
-        // Keep the existing hardcoded mock data — no-op
+      const data = await api.getTenants();
+      if (!data) {
+        setTenants([]);
         setIsLoading(false);
         return;
       }
 
       // Normalize backend field names → UI field names
       const normalized = data.map(t => ({
-        id:               t._id  || t.id,
-        name:             t.name || 'Unknown',
-        email:            t.email || '',
-        phone:            t.phone || t.contact || '',
-        room:             t.room  || t.roomNumber || 'Unassigned',
-        rent:             t.rent  || 0,
-        status:           t.status || 'ACTIVE',
-        rentStatus:       t.rentStatus || 'PENDING',
-        checkIn:          t.checkInDate
-                            ? new Date(t.checkInDate).toISOString().split('T')[0]
-                            : (t.checkIn || 'N/A'),
+        id: t._id || t.id,
+        name: t.name || 'Unknown',
+        email: t.email || '',
+        phone: t.phone || t.contact || '',
+        room: t.room || t.roomNumber || 'Unassigned',
+        rent: t.rent || 0,
+        status: t.status || 'ACTIVE',
+        rentStatus: t.rentStatus || 'PENDING',
+        checkIn: t.checkInDate
+          ? new Date(t.checkInDate).toISOString().split('T')[0]
+          : (t.checkIn || 'N/A'),
         emergencyContact: t.emergencyContact || 'N/A',
-        buildingId:       t.buildingId?._id || t.buildingId || null,
-        score:            t.score  ?? 4.5,
-        plan:             t.messPlan || t.plan || 'Standard',
-        lastPayment:      t.lastPayment || 'N/A',
-        docs:             t.docs  || (t.aadhaar ? [{ name: 'Aadhar Card', verified: true }] : []),
+        buildingId: t.buildingId?._id || t.buildingId || null,
+        score: t.score ?? 4.5,
+        plan: t.messPlan || t.plan || 'Standard',
+        lastPayment: t.lastPayment || 'N/A',
+        docs: t.docs || (t.aadhaar ? [{ name: 'Aadhar Card', verified: true }] : []),
       }));
 
       // Filter by activeBuildingId if we're on a specific building route
@@ -157,8 +144,7 @@ const Tenants = () => {
         ? normalized.filter(t => t.buildingId === activeBuildingId)
         : normalized;
 
-      // Only replace state if we actually got records (never blank the list)
-      if (filtered.length > 0) setTenants(filtered);
+      setTenants(filtered);
     } catch (err) {
       console.error('Failed to fetch tenants:', err);
       // Keep existing mock state on error
@@ -174,28 +160,29 @@ const Tenants = () => {
 
   const handleRegisterSubmit = (e) => {
     e.preventDefault();
-    if (modalMode === 'edit') {
-      const updatedTenants = tenants.map(t => 
-        t.id === selectedTenant.id ? { ...t, ...registerFormData } : t
-      );
-      setTenants(updatedTenants);
-      setSelectedTenant({ ...selectedTenant, ...registerFormData });
-    } else {
-      const newTenant = {
-        ...registerFormData,
-        id: tenants.length + 1,
-        status: 'ACTIVE',
-        rentStatus: 'PENDING',
-        score: 5.0, plan: 'Single', lastPayment: 'N/A',
-        docs: [
-          ...(registerFormData.aadhaar ? [{ name: 'Aadhar Card', verified: false }] : []),
-          ...(registerFormData.document ? [{ name: 'ID Proof', verified: true, file: registerFormData.document.name }] : [])
-        ]
-      };
-      setTenants([...tenants, newTenant]);
+    setIsSubmitting(true);
+    try {
+      if (modalMode === 'edit') {
+        const updated = await api.updateTenant(selectedTenant.id, registerFormData);
+        setTenants(tenants.map(t => t.id === updated.id ? updated : t));
+        setSelectedTenant(updated);
+      } else {
+        const payload = {
+          ...registerFormData,
+          buildingId: activeBuildingId, // IMPORTANT: Link to building
+          status: 'ACTIVE'
+        };
+        const created = await api.addTenant(payload);
+        setTenants([...tenants, created]);
+      }
+      setIsRegisterModalOpen(false);
+      setRegisterFormData({ name: '', email: '', phone: '', room: '', rent: '', checkIn: '', emergencyContact: '', aadhaar: '', document: null });
+    } catch (err) {
+      console.error('Failed to save tenant:', err);
+      alert('Error saving tenant. Please check backend.');
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsRegisterModalOpen(false);
-    setRegisterFormData({ name: '', email: '', phone: '', room: '', rent: '', checkIn: '', emergencyContact: '', aadhaar: '', document: null });
   };
 
   const handleEditClick = () => {
@@ -230,37 +217,62 @@ const Tenants = () => {
     document.body.removeChild(a);
     setIsDownloading(false);
   };
-
   const handleBulkRegisterSubmit = async () => {
     setIsSubmitting(true);
-    await new Promise(r => setTimeout(r, 1500));
-    const tenantsToAdd = manualRows
-      .filter(row => row.name && row.phone)
-      .map((row, idx) => {
-        const b = infrastructure.buildings.find(b => b.id === row.building)?.name || 'N/A';
-        const r = infrastructure.rooms.find(r => r.id === row.room)?.roomNumber || 'TBD';
-        return {
-          id: tenants.length + idx + 1,
-          name: row.name, phone: row.phone, room: `${b}-${r}`,
-          rent: parseInt(row.rent) || 6500,
-          email: `${row.name.toLowerCase().replace(/\\s/g, '')}@example.com`,
-          status: 'ACTIVE', rentStatus: 'PENDING', checkIn: new Date().toISOString().split('T')[0],
-          emergencyContact: 'N/A', score: 5.0, plan: 'Standard', lastPayment: 'N/A',
-          docs: row.doc ? [{ name: 'ID Proof', verified: false }] : []
-        };
-      });
+    try {
+      const tenantsToCreate = manualRows
+        .filter(row => row.name && row.phone)
+        .map(row => {
+          const bName = infrastructure.buildings.find(b => b.id === row.building)?.name || 'N/A';
+          const rName = infrastructure.rooms.find(r => r.id === row.room)?.roomNumber || 'TBD';
+          const bedName = infrastructure.beds.find(b => b.id === row.bed)?.bedNumber || '';
 
-    if (tenantsToAdd.length > 0) {
-      setTenants([...tenants, ...tenantsToAdd]);
-      setIsBulkRegisterModalOpen(false);
-      setManualRows([{ id: 'new-row-' + Date.now(), name: '', phone: '', building: '', floor: '', room: '', bed: '', rent: '', deposit: '', doc: null }]);
+          return {
+            name: row.name,
+            email: `${row.name.toLowerCase().replace(/\s/g, '')}@example.com`,
+            phone: row.phone,
+            emergencyContact: 'N/A',
+            room: `${bName}-${rName}${bedName ? '-' + bedName : ''}`,
+            roomId: row.room || null,
+            bedId: row.bed || null,
+            buildingId: row.building || activeBuildingId,
+            rent: parseInt(row.rent) || 6500,
+            status: 'ACTIVE',
+            checkInDate: new Date(),
+            messPlan: 'standard'
+          };
+        });
+
+      if (tenantsToCreate.length > 0) {
+        const created = await api.bulkAddTenants(tenantsToCreate);
+        // Normalize the created tenants for local state
+        const normalized = created.map(t => ({
+          id: t._id || t.id,
+          name: t.name,
+          email: t.email,
+          phone: t.phone,
+          room: t.room,
+          rent: t.rent,
+          status: t.status,
+          rentStatus: t.rentStatus || 'PENDING',
+          checkIn: t.checkInDate ? new Date(t.checkInDate).toISOString().split('T')[0] : 'N/A',
+          buildingId: t.buildingId
+        }));
+        setTenants([...tenants, ...normalized]);
+        setIsBulkRegisterModalOpen(false);
+        setManualRows([{ id: 'new-row-' + Date.now(), name: '', phone: '', building: '', floor: '', room: '', bed: '', rent: '', deposit: '', doc: null }]);
+      }
+    } catch (err) {
+      console.error('Bulk registration failed:', err);
+      alert('Bulk registration failed. Please check your data and try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   // UI Helpers
   const getStatusBadge = (status) => {
-    switch(status) {
+    switch (status) {
       case 'ACTIVE': return <span style={{ padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '800', background: '#D1FAE5', color: '#10B981' }}>ACTIVE</span>;
       case 'LEFT': return <span style={{ padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '800', background: '#F1F5F9', color: '#64748B' }}>LEFT</span>;
       case 'PENDING': return <span style={{ padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '800', background: '#FEF3C7', color: '#F59E0B' }}>PENDING</span>;
@@ -270,12 +282,12 @@ const Tenants = () => {
   };
 
   const getRentBadge = (status) => {
-    if(status === 'PAID') return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', fontWeight: '800', background: '#D1FAE5', color: '#059669', display: 'flex', alignItems: 'center', gap: '0.2rem' }}><CheckCircle size={10}/> PAID</span>;
-    return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', fontWeight: '800', background: '#FEE2E2', color: '#DC2626', display: 'flex', alignItems: 'center', gap: '0.2rem' }}><AlertTriangle size={10}/> DUE</span>;
+    if (status === 'PAID') return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', fontWeight: '800', background: '#D1FAE5', color: '#059669', display: 'flex', alignItems: 'center', gap: '0.2rem' }}><CheckCircle size={10} /> PAID</span>;
+    return <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.65rem', fontWeight: '800', background: '#FEE2E2', color: '#DC2626', display: 'flex', alignItems: 'center', gap: '0.2rem' }}><AlertTriangle size={10} /> DUE</span>;
   };
 
   const inputStyle = {
-    padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid #E2E8F0', 
+    padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid #E2E8F0',
     background: '#FFFFFF', color: '#1E293B', width: '100%', fontSize: '0.9rem', outline: 'none', transition: 'border 0.2s'
   };
 
@@ -301,9 +313,9 @@ const Tenants = () => {
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
             <Search size={18} color="#94A3B8" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-            <input 
+            <input
               type="text" placeholder="Search tenants..." value={search} onChange={e => setSearch(e.target.value)}
-              style={{ padding: '0.75rem 1rem 0.75rem 2.5rem', borderRadius: '10px', border: '1px solid #E2E8F0', width: '250px', fontSize: '0.9rem', outline: 'none' }} 
+              style={{ padding: '0.75rem 1rem 0.75rem 2.5rem', borderRadius: '10px', border: '1px solid #E2E8F0', width: '250px', fontSize: '0.9rem', outline: 'none' }}
             />
           </div>
           <div style={{ position: 'relative' }}>
@@ -320,12 +332,12 @@ const Tenants = () => {
               </div>
             )}
           </div>
-          
+
           {/* PRESERVED BULK REGISTER BUTTON */}
           <button className="btn" onClick={() => setIsBulkRegisterModalOpen(true)} style={{ background: '#FFFFFF', border: '1px solid #3B82F6', color: '#3B82F6', padding: '0.75rem 1.2rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
             <Layers size={18} /> Bulk Register
           </button>
-          
+
           <button className="btn btn-primary" onClick={() => { setModalMode('add'); setIsRegisterModalOpen(true); }} style={{ background: '#3B82F6', border: 'none', padding: '0.75rem 1.2rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
             <Plus size={18} /> Add Tenant
           </button>
@@ -335,27 +347,27 @@ const Tenants = () => {
       {/* KPI Dashboard (Bento Grid) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
         <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Users size={14}/> Total Tenants</p>
+          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Users size={14} /> Total Tenants</p>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
             <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{tenants.length}</h2>
-            <span style={{ color: '#10B981', fontSize: '0.85rem', fontWeight: '700', display: 'flex', alignItems: 'center' }}><TrendingUp size={14}/> +12%</span>
+            <span style={{ color: '#10B981', fontSize: '0.85rem', fontWeight: '700', display: 'flex', alignItems: 'center' }}><TrendingUp size={14} /> +12%</span>
           </div>
         </div>
         <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderBottom: '4px solid #10B981' }}>
-          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><CheckCircle size={14}/> Active Occupants</p>
+          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><CheckCircle size={14} /> Active Occupants</p>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
             <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{totalActive}</h2>
           </div>
         </div>
         <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><TrendingDown size={14}/> Leaving Soon</p>
+          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><TrendingDown size={14} /> Leaving Soon</p>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
             <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>2</h2>
             <span style={{ color: '#F59E0B', fontSize: '0.85rem', fontWeight: '700' }}>In next 15 days</span>
           </div>
         </div>
         <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderBottom: '4px solid #EF4444' }}>
-          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><CreditCard size={14}/> Pending Dues</p>
+          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><CreditCard size={14} /> Pending Dues</p>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
             <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#EF4444', margin: 0 }}>{pendingPaymentsCount}</h2>
             <span style={{ color: '#EF4444', fontSize: '0.85rem', fontWeight: '700' }}>Action Req.</span>
@@ -377,8 +389,8 @@ const Tenants = () => {
           </thead>
           <tbody>
             {filteredTenants.map((tenant) => (
-              <tr 
-                key={tenant.id} 
+              <tr
+                key={tenant.id}
                 className="tenant-row-hover"
                 style={{ borderBottom: '1px solid #E2E8F0', transition: 'all 0.2s', cursor: 'pointer' }}
                 onClick={() => { setSelectedTenant(tenant); setProfileTab('Overview'); }}
@@ -442,14 +454,14 @@ const Tenants = () => {
             <div style={{ flex: '1' }}>
               <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', marginBottom: '2rem' }}>
                 <div style={{ width: '80px', height: '80px', borderRadius: '20px', background: '#EFF6FF', border: '2px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: '900', color: '#3B82F6', boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.2)' }}>
-                   {selectedTenant.name.split(' ').map(n=>n[0]).join('')}
+                  {selectedTenant.name.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div>
                   <h2 style={{ fontSize: '2rem', fontWeight: '900', color: '#0F172A', margin: 0, marginBottom: '0.4rem', letterSpacing: '-0.03em' }}>{selectedTenant.name}</h2>
                   <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                     <span style={{ fontWeight: '800', fontSize: '1rem', color: '#475569' }}>Room {selectedTenant.room}</span>
                     {getStatusBadge(selectedTenant.status)}
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem', fontWeight: '700', color: '#F59E0B' }}><Star size={14} fill="#F59E0B"/> {selectedTenant.score} / 5.0</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem', fontWeight: '700', color: '#F59E0B' }}><Star size={14} fill="#F59E0B" /> {selectedTenant.score} / 5.0</span>
                   </div>
                 </div>
               </div>
@@ -457,10 +469,10 @@ const Tenants = () => {
               {/* Tabs */}
               <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid #E2E8F0', marginBottom: '1.5rem' }}>
                 {['Overview', 'Payments', 'Stay Details', 'Documents'].map(tab => (
-                  <button 
-                    key={tab} 
+                  <button
+                    key={tab}
                     onClick={() => setProfileTab(tab)}
-                    style={{ 
+                    style={{
                       background: 'transparent', border: 'none', padding: '0.8rem 1rem', fontSize: '0.95rem', fontWeight: '700', cursor: 'pointer',
                       color: profileTab === tab ? '#3B82F6' : '#64748B',
                       borderBottom: profileTab === tab ? '3px solid #3B82F6' : '3px solid transparent',
@@ -487,7 +499,7 @@ const Tenants = () => {
                         <p style={{ fontWeight: '800', color: '#991B1B', margin: 0 }}>{selectedTenant.emergencyContact}</p>
                       </div>
                     </div>
-                    
+
                     {/* Lifecycle Pipeline */}
                     <div>
                       <h3 style={{ fontSize: '1rem', fontWeight: '800', color: '#0F172A', marginBottom: '1rem' }}>Lifecycle Pipeline</h3>
@@ -499,7 +511,7 @@ const Tenants = () => {
                             <React.Fragment key={step}>
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                                 <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isActive || isPast ? '#3B82F6' : '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                                  {isPast && !isActive ? <Check size={14} /> : <div style={{ width: '8px', height: '8px', background: 'white', borderRadius: '50%' }}/>}
+                                  {isPast && !isActive ? <Check size={14} /> : <div style={{ width: '8px', height: '8px', background: 'white', borderRadius: '50%' }} />}
                                 </div>
                                 <span style={{ fontSize: '0.75rem', fontWeight: isActive ? '800' : '600', color: isActive ? '#0F172A' : '#64748B' }}>{step}</span>
                               </div>
@@ -511,7 +523,7 @@ const Tenants = () => {
                     </div>
                   </div>
                 )}
-                
+
                 {profileTab === 'Payments' && (
                   <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
                     <div style={{ background: '#F8FAFC', padding: '1.5rem', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -526,19 +538,19 @@ const Tenants = () => {
                     </div>
                     {selectedTenant.rentStatus === 'PENDING' && (
                       <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                        <h3 style={{ fontSize: '0.9rem', fontWeight: '800', color: '#0F172A', textTransform: 'uppercase', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CreditCard size={16} color="#3B82F6"/> Record Payment</h3>
-                        
+                        <h3 style={{ fontSize: '0.9rem', fontWeight: '800', color: '#0F172A', textTransform: 'uppercase', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CreditCard size={16} color="#3B82F6" /> Record Payment</h3>
+
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.8rem', marginBottom: '1.2rem' }}>
                           {['UPI', 'Cash', 'Bank Transfer'].map(mode => (
-                            <button 
-                              key={mode} 
+                            <button
+                              key={mode}
                               onClick={() => setPaymentMode(mode)}
-                              style={{ 
-                                background: paymentMode === mode ? '#EFF6FF' : '#F8FAFC', 
-                                border: paymentMode === mode ? '2px solid #3B82F6' : '1px solid #E2E8F0', 
-                                padding: '0.8rem', borderRadius: '8px', fontWeight: '800', 
-                                color: paymentMode === mode ? '#3B82F6' : '#64748B', 
-                                cursor: 'pointer', transition: 'all 0.15s' 
+                              style={{
+                                background: paymentMode === mode ? '#EFF6FF' : '#F8FAFC',
+                                border: paymentMode === mode ? '2px solid #3B82F6' : '1px solid #E2E8F0',
+                                padding: '0.8rem', borderRadius: '8px', fontWeight: '800',
+                                color: paymentMode === mode ? '#3B82F6' : '#64748B',
+                                cursor: 'pointer', transition: 'all 0.15s'
                               }}
                             >
                               {mode}
@@ -558,8 +570,8 @@ const Tenants = () => {
                     )}
                     <h3 style={{ fontSize: '1rem', fontWeight: '800', color: '#0F172A', margin: '1.5rem 0 1rem 0' }}>Recent History</h3>
                     <div style={{ padding: '1rem', background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', color: '#475569', fontSize: '0.9rem', fontWeight: '600', display: 'flex', justifyContent: 'space-between' }}>
-                       <span>Rent Payment - {selectedTenant.lastPayment}</span>
-                       <span style={{ color: '#10B981', fontWeight: '800' }}>₹{selectedTenant.rent} PAID</span>
+                      <span>Rent Payment - {selectedTenant.lastPayment}</span>
+                      <span style={{ color: '#10B981', fontWeight: '800' }}>₹{selectedTenant.rent} PAID</span>
                     </div>
                   </div>
                 )}
@@ -569,7 +581,7 @@ const Tenants = () => {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                       <div style={{ background: '#F8FAFC', padding: '1.2rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                         <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Check-in Date</p>
-                        <p style={{ fontWeight: '800', color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Calendar size={16}/> {selectedTenant.checkIn}</p>
+                        <p style={{ fontWeight: '800', color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Calendar size={16} /> {selectedTenant.checkIn}</p>
                       </div>
                       <div style={{ background: '#F8FAFC', padding: '1.2rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                         <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Plan Details</p>
@@ -578,12 +590,12 @@ const Tenants = () => {
                     </div>
                     {/* Auto Room Suggestion widget */}
                     <div style={{ background: '#EFF6FF', padding: '1.5rem', borderRadius: '12px', border: '1px solid #BFDBFE' }}>
-                       <h3 style={{ fontSize: '0.9rem', fontWeight: '800', color: '#1E3A8A', margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><MapPin size={16}/> Auto Room Suggestion</h3>
-                       <p style={{ fontSize: '0.85rem', color: '#1E40AF', margin: '0 0 1rem 0', fontWeight: '500' }}>Based on preferences, if tenant needs to relocate:</p>
-                       <div style={{ display: 'flex', gap: '1rem' }}>
-                         <span style={{ padding: '0.5rem 1rem', background: 'white', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '700', color: '#3B82F6', border: '1px solid #BFDBFE' }}>Room 205-C (Vacant)</span>
-                         <span style={{ padding: '0.5rem 1rem', background: 'white', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '700', color: '#3B82F6', border: '1px solid #BFDBFE' }}>Room 102-B (Vacant)</span>
-                       </div>
+                      <h3 style={{ fontSize: '0.9rem', fontWeight: '800', color: '#1E3A8A', margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><MapPin size={16} /> Auto Room Suggestion</h3>
+                      <p style={{ fontSize: '0.85rem', color: '#1E40AF', margin: '0 0 1rem 0', fontWeight: '500' }}>Based on preferences, if tenant needs to relocate:</p>
+                      <div style={{ display: 'flex', gap: '1rem' }}>
+                        <span style={{ padding: '0.5rem 1rem', background: 'white', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '700', color: '#3B82F6', border: '1px solid #BFDBFE' }}>Room 205-C (Vacant)</span>
+                        <span style={{ padding: '0.5rem 1rem', background: 'white', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '700', color: '#3B82F6', border: '1px solid #BFDBFE' }}>Room 102-B (Vacant)</span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -649,50 +661,78 @@ const Tenants = () => {
       {/* REGISTRATION MODAL (SINGLE) */}
       <Modal isOpen={isRegisterModalOpen} onClose={() => setIsRegisterModalOpen(false)} title={modalMode === 'edit' ? "Update Resident Profile" : "Register New Tenant"} maxWidth="700px">
         <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Full Name</label>
-                <input style={inputStyle} value={registerFormData.name} onChange={e => setRegisterFormData({...registerFormData, name: e.target.value})} required />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Email Address</label>
-                <input type="email" style={inputStyle} value={registerFormData.email} onChange={e => setRegisterFormData({...registerFormData, email: e.target.value})} required />
-              </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Full Name</label>
+              <input style={inputStyle} value={registerFormData.name} onChange={e => setRegisterFormData({ ...registerFormData, name: e.target.value })} required />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Phone Number</label>
-                <input style={inputStyle} value={registerFormData.phone} onChange={e => setRegisterFormData({...registerFormData, phone: e.target.value})} required />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Emergency Contact</label>
-                <input style={inputStyle} value={registerFormData.emergencyContact} onChange={e => setRegisterFormData({...registerFormData, emergencyContact: e.target.value})} required />
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Email Address</label>
+              <input type="email" style={inputStyle} value={registerFormData.email} onChange={e => setRegisterFormData({ ...registerFormData, email: e.target.value })} required />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Assign Room</label>
-                <input placeholder="e.g. 201-A" style={inputStyle} value={registerFormData.room} onChange={e => setRegisterFormData({...registerFormData, room: e.target.value})} required />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Monthly Rent (₹)</label>
-                <input type="number" style={inputStyle} value={registerFormData.rent} onChange={e => setRegisterFormData({...registerFormData, rent: e.target.value})} required />
-              </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Phone Number</label>
+              <input style={inputStyle} value={registerFormData.phone} onChange={e => setRegisterFormData({ ...registerFormData, phone: e.target.value })} required />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Check-in Date</label>
-                <input type="date" style={inputStyle} value={registerFormData.checkIn} onChange={e => setRegisterFormData({...registerFormData, checkIn: e.target.value})} required />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Aadhaar Number</label>
-                <input style={inputStyle} value={registerFormData.aadhaar} onChange={e => setRegisterFormData({...registerFormData, aadhaar: e.target.value})} required />
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Emergency Contact</label>
+              <input style={inputStyle} value={registerFormData.emergencyContact} onChange={e => setRegisterFormData({ ...registerFormData, emergencyContact: e.target.value })} required />
             </div>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid #E2E8F0', paddingTop: '1.5rem' }}>
-              <button className="btn" type="button" onClick={() => setIsRegisterModalOpen(false)} style={{ flex: 1, padding: '1rem', background: '#F1F5F9', color: '#475569', fontWeight: '700' }}>Cancel</button>
-              <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem', background: '#3B82F6', fontWeight: '800' }}>{modalMode === 'edit' ? "Save Changes" : "Confirm Registration"}</button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Building</label>
+              <select style={inputStyle} value={registerFormData.buildingId || activeBuildingId} onChange={e => setRegisterFormData({ ...registerFormData, buildingId: e.target.value, floorId: '', roomId: '', bedId: '' })} required>
+                <option value="">Select Building</option>
+                {infrastructure.buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
             </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Floor</label>
+              <select style={inputStyle} value={registerFormData.floorId} onChange={e => setRegisterFormData({ ...registerFormData, floorId: e.target.value, roomId: '', bedId: '' })} required>
+                <option value="">Select Floor</option>
+                {infrastructure.floors.filter(f => f.buildingId === (registerFormData.buildingId || activeBuildingId)).map(f => <option key={f.id} value={f.id}>Floor {f.floorNumber}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Room</label>
+              <select style={inputStyle} value={registerFormData.roomId} onChange={e => setRegisterFormData({ ...registerFormData, roomId: e.target.value, bedId: '' })} required>
+                <option value="">Select Room</option>
+                {infrastructure.rooms.filter(r => r.floorId === registerFormData.floorId).map(r => <option key={r.id} value={r.id}>Room {r.roomNumber}</option>)}
+              </select>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Bed</label>
+              <select style={inputStyle} value={registerFormData.bedId} onChange={e => setRegisterFormData({ ...registerFormData, bedId: e.target.value })} required>
+                <option value="">Select Bed</option>
+                {infrastructure.beds.filter(b => b.roomId === registerFormData.roomId).map(b => <option key={b.id} value={b.id}>Bed {b.bedNumber}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Monthly Rent (₹)</label>
+              <input type="number" style={inputStyle} value={registerFormData.rent} onChange={e => setRegisterFormData({ ...registerFormData, rent: e.target.value })} required />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Check-in Date</label>
+              <input type="date" style={inputStyle} value={registerFormData.checkIn} onChange={e => setRegisterFormData({ ...registerFormData, checkIn: e.target.value })} required />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Aadhaar Number</label>
+              <input style={inputStyle} value={registerFormData.aadhaar} onChange={e => setRegisterFormData({ ...registerFormData, aadhaar: e.target.value })} required />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid #E2E8F0', paddingTop: '1.5rem' }}>
+            <button className="btn" type="button" onClick={() => setIsRegisterModalOpen(false)} style={{ flex: 1, padding: '1rem', background: '#F1F5F9', color: '#475569', fontWeight: '700' }}>Cancel</button>
+            <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem', background: '#3B82F6', fontWeight: '800' }}>{modalMode === 'edit' ? "Save Changes" : "Confirm Registration"}</button>
+          </div>
         </form>
       </Modal>
 
@@ -727,9 +767,9 @@ const Tenants = () => {
                         <td style={{ padding: '0.8rem' }}>
                           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                             <Users size={16} style={{ position: 'absolute', left: '0.8rem', color: '#94A3B8' }} />
-                            <input 
-                              style={{ ...inputStyle, paddingLeft: '2.5rem' }} 
-                              placeholder="Full Name" 
+                            <input
+                              style={{ ...inputStyle, paddingLeft: '2.5rem' }}
+                              placeholder="Full Name"
                               value={row.name}
                               onChange={e => { const newRows = [...manualRows]; newRows[idx].name = e.target.value; setManualRows(newRows); }}
                             />
@@ -759,7 +799,7 @@ const Tenants = () => {
                         <td style={{ padding: '0.8rem' }}>
                           <select style={inputStyle} value={row.bed} onChange={e => { const newRows = [...manualRows]; newRows[idx].bed = e.target.value; setManualRows(newRows); }} disabled={!row.room}>
                             <option value="">...</option>
-                            {infrastructure.beds?.filter(b => b.roomId === row.room).map(b => <option key={b.id || Math.random()} value={b.id}>{b.bedNumber}</option>)}
+                            {infrastructure.beds?.filter(b => (b.room?._id || b.room) === row.room).map(b => <option key={b.id || Math.random()} value={b.id}>{b.bedNumber}</option>)}
                           </select>
                         </td>
                         <td style={{ padding: '0.8rem' }}>
@@ -783,9 +823,9 @@ const Tenants = () => {
                   </tbody>
                 </table>
               </div>
-              <button 
-                onClick={() => setManualRows([...manualRows, { id: 'new-row-' + Date.now(), name: '', phone: '', building: '', floor: '', room: '', bed: '', rent: '', deposit: '', doc: null }])}
-                className="btn" 
+              <button
+                onClick={() => setManualRows([...manualRows, { id: 'new-row-' + Date.now(), name: '', phone: '', building: activeBuildingId || '', floor: '', room: '', bed: '', rent: '', deposit: '', doc: null }])}
+                className="btn"
                 style={{ border: '2px dashed #CBD5E1', color: '#64748B', background: 'transparent', width: '100%', padding: '1rem', borderRadius: '12px', fontWeight: '700' }}
               >
                 <Plus size={18} /> Add New Row
@@ -801,14 +841,14 @@ const Tenants = () => {
             </div>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button className="btn" onClick={() => {
-                  const errors = [];
-                  manualRows.forEach((row, i) => {
-                    if (row.name && !row.phone) errors.push(`Row ${i+1}: Missing phone`);
-                    if (row.phone && !row.name) errors.push(`Row ${i+1}: Missing name`);
-                  });
-                  setValidationErrors(errors);
-                  if (errors.length === 0) alert('Data is valid!');
-                }}
+                const errors = [];
+                manualRows.forEach((row, i) => {
+                  if (row.name && !row.phone) errors.push(`Row ${i + 1}: Missing phone`);
+                  if (row.phone && !row.name) errors.push(`Row ${i + 1}: Missing name`);
+                });
+                setValidationErrors(errors);
+                if (errors.length === 0) alert('Data is valid!');
+              }}
                 style={{ border: '1px solid #E2E8F0', background: 'white', color: '#475569', fontWeight: '700' }}
               >
                 Validate Data

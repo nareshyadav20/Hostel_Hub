@@ -31,9 +31,15 @@ const transferRoutes = require('./routes/transferRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const confidentialReportRoutes = require('./routes/confidentialReportRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
-const bookingRoutes = require('./routes/bookingRoutes');
-const tenantPortalRoutes = require('./routes/tenantPortalRoutes');
+const ownerRoutes = require('./routes/ownerRoutes');
 
+// Pre-load all models to ensure they are registered for population
+require('./models/User');
+require('./models/Tenant');
+require('./models/RoomTransfer');
+require('./models/Complaint');
+require('./models/MessMenu');
+require('./models/Payment');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -49,9 +55,7 @@ app.use('/api/transfers', transferRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/confidential-reports', confidentialReportRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/tenant-portal', tenantPortalRoutes);
-
+app.use('/api/owner', ownerRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

@@ -25,7 +25,7 @@ function Dashboard() {
     }
     setIsRefreshing(true);
     try {
-      const [summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenants] = await Promise.all([
+      const results = await Promise.allSettled([
         api.getDashboardSummary(activeBuildingId),
         api.getDashboardRevenue(activeBuildingId),
         api.getDashboardOccupancy(activeBuildingId),
@@ -36,7 +36,20 @@ function Dashboard() {
         api.getDashboardActivity(activeBuildingId),
         api.getTenants(activeBuildingId)
       ]);
-      setD({ summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenantsList: tenants });
+
+      const [summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenants] = results.map(r => r.status === 'fulfilled' ? r.value : null);
+
+      setD({ 
+        summary: summary || d.summary || { buildingName: 'Property', totalBeds: 0, occupiedBeds: 0, occupancyRate: 0, todayRevenue: 0, pendingPaymentsAmount: 0, pendingPaymentsCount: 0 }, 
+        revenue: revenue || { rentMetrics: { netProfit: 0 }, dailyRevenue: [] }, 
+        occupancy: occupancy || { buildingWise: [], floorWise: [] }, 
+        alerts: alerts || { alerts: [], insights: [] }, 
+        complaints: complaints || { total: 0, open: 0, categories: [] }, 
+        mess: mess || { menuToday: { breakfast: 'N/A', lunch: 'N/A', dinner: 'N/A' } }, 
+        staff: staff || { totalStaff: 0, staffList: [] }, 
+        activity: activity || [], 
+        tenantsList: tenants || [] 
+      });
     } catch(e) {
       console.error('Dashboard Fetch Error:', e);
     } finally {

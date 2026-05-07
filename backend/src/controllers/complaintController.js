@@ -33,8 +33,11 @@ exports.getMyComplaints = async (req, res) => {
 exports.updateComplaintStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
-    const complaint = await Complaint.findByIdAndUpdate(id, { status }, { new: true });
+    const { status, assignedTo } = req.body;
+    const update = { status };
+    if (assignedTo) update.assignedTo = assignedTo;
+    
+    const complaint = await Complaint.findByIdAndUpdate(id, update, { new: true });
     res.status(200).json(complaint);
   } catch (error) {
     res.status(500).json({ message: 'Failed to update complaint', error: error.message });

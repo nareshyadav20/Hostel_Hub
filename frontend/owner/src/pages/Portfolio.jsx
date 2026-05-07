@@ -188,9 +188,9 @@ ${formData.longDesc || formData.shortDesc || ''}`;
     return data.buildings.map(b => {
       try {
         const bId = b?.id || b?._id || `temp-${Math.random()}`;
-        const bFloors = (data.floors || []).filter(f => f?.buildingId === bId);
-        const bRooms = (data.rooms || []).filter(r => r && bFloors.some(f => f && (f.id === r.floorId || f._id === r.floorId)));
-        const bBeds = (data.beds || []).filter(bed => bed && bRooms.some(r => r && (r.id === bed.roomId || r._id === bed.roomId)));
+        const bFloors = (data.floors || []).filter(f => f?.building === bId || f?.buildingId === bId);
+        const bRooms = (data.rooms || []).filter(r => r && bFloors.some(f => f && (f._id === (r.floor?._id || r.floor) || f.id === (r.floorId || r.floor))));
+        const bBeds = (data.beds || []).filter(bed => bed && bRooms.some(r => r && (r._id === (bed.room?._id || bed.room) || r.id === (bed.roomId || bed.room))));
         
         const totalBeds = bBeds.length;
         const occupiedBeds = bBeds.filter(bed => bed?.status === 'OCCUPIED').length;

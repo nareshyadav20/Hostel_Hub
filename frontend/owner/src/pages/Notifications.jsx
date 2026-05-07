@@ -38,13 +38,13 @@ const Notifications = () => {
       read: false,
       category: composerData.target === 'Staff Members' ? 'staff' : 'all'
     };
-    
+
     if (newMessage.category === 'staff') {
       setStaffUpdates([newMessage, ...staffUpdates]);
     } else {
       setMessages([newMessage, ...messages]);
     }
-    
+
     setIsComposerOpen(false);
     setComposerData({ title: '', message: '', target: 'All Tenants' });
     setActiveTab(newMessage.category === 'staff' ? 'staff' : 'all');
@@ -65,7 +65,7 @@ const Notifications = () => {
   const currentData = activeTab === 'all' ? messages : activeTab === 'system' ? systemLogs : staffUpdates;
 
   const getTypeIcon = (type) => {
-    switch(type) {
+    switch (type) {
       case 'success': return <CheckCircle size={18} color="var(--accent-success)" />;
       case 'warning': return <AlertTriangle size={18} color="var(--accent-warning)" />;
       default: return <Info size={18} color="var(--accent-primary)" />;
@@ -95,36 +95,36 @@ const Notifications = () => {
 
       <div className="card" style={{ padding: '0', overflow: 'hidden', minHeight: '500px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', display: 'flex', gap: '2rem' }}>
-           <button onClick={() => setActiveTab('all')} className="btn" style={{ fontSize: '0.85rem', fontWeight: activeTab === 'all' ? '800' : '500', color: activeTab === 'all' ? 'var(--accent-primary)' : 'var(--text-muted)', padding: 0, background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
-             All Messages
-             {activeTab === 'all' && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1.5rem', left: 0, right: 0, height: '2px', background: 'var(--accent-primary)' }} />}
-           </button>
-           <button onClick={() => setActiveTab('system')} className="btn" style={{ fontSize: '0.85rem', fontWeight: activeTab === 'system' ? '800' : '500', color: activeTab === 'system' ? 'var(--accent-primary)' : 'var(--text-muted)', padding: 0, background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
-             System Logs
-             {activeTab === 'system' && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1.5rem', left: 0, right: 0, height: '2px', background: 'var(--accent-primary)' }} />}
-           </button>
-           <button onClick={() => setActiveTab('staff')} className="btn" style={{ fontSize: '0.85rem', fontWeight: activeTab === 'staff' ? '800' : '500', color: activeTab === 'staff' ? 'var(--accent-primary)' : 'var(--text-muted)', padding: 0, background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
-             Staff Updates
-             {activeTab === 'staff' && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1.5rem', left: 0, right: 0, height: '2px', background: 'var(--accent-primary)' }} />}
-           </button>
+          <button onClick={() => setActiveTab('all')} className="btn" style={{ fontSize: '0.85rem', fontWeight: activeTab === 'all' ? '800' : '500', color: activeTab === 'all' ? 'var(--accent-primary)' : 'var(--text-muted)', padding: 0, background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
+            All Messages
+            {activeTab === 'all' && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1.5rem', left: 0, right: 0, height: '2px', background: 'var(--accent-primary)' }} />}
+          </button>
+          <button onClick={() => setActiveTab('system')} className="btn" style={{ fontSize: '0.85rem', fontWeight: activeTab === 'system' ? '800' : '500', color: activeTab === 'system' ? 'var(--accent-primary)' : 'var(--text-muted)', padding: 0, background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
+            System Logs
+            {activeTab === 'system' && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1.5rem', left: 0, right: 0, height: '2px', background: 'var(--accent-primary)' }} />}
+          </button>
+          <button onClick={() => setActiveTab('staff')} className="btn" style={{ fontSize: '0.85rem', fontWeight: activeTab === 'staff' ? '800' : '500', color: activeTab === 'staff' ? 'var(--accent-primary)' : 'var(--text-muted)', padding: 0, background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
+            Staff Updates
+            {activeTab === 'staff' && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1.5rem', left: 0, right: 0, height: '2px', background: 'var(--accent-primary)' }} />}
+          </button>
         </div>
 
         <div style={{ flex: 1 }}>
           <AnimatePresence mode="wait">
-            <motion.div 
+            <motion.div
               key={activeTab}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
               {currentData.map((m, idx) => (
-                <motion.div 
+                <motion.div
                   key={m.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ delay: idx * 0.05 }}
-                  style={{ 
+                  style={{
                     padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '1.5rem', alignItems: 'flex-start',
                     background: m.read ? 'transparent' : 'rgba(14, 165, 233, 0.03)',
                     transition: 'var(--transition-fast)'
@@ -132,7 +132,7 @@ const Notifications = () => {
                   className="notification-item"
                 >
                   <div style={{ marginTop: '0.2rem' }}>
-                     {getTypeIcon(m.type)}
+                    {getTypeIcon(m.type)}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
@@ -141,7 +141,7 @@ const Notifications = () => {
                     </div>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>{m.message}</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => deleteNotification(m.id)}
                     style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}
                   >
@@ -151,11 +151,11 @@ const Notifications = () => {
               ))}
             </motion.div>
           </AnimatePresence>
-          
+
           {currentData.length === 0 && (
             <div style={{ padding: '5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-               <Bell size={48} opacity={0.1} style={{ marginBottom: '1rem' }} />
-               <p>No new notifications.</p>
+              <Bell size={48} opacity={0.1} style={{ marginBottom: '1rem' }} />
+              <p>No new notifications.</p>
             </div>
           )}
         </div>
@@ -171,21 +171,21 @@ const Notifications = () => {
               </h2>
               <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                 <div>
-                   <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Target Audience</label>
-                   <select value={composerData.target} onChange={e => setComposerData({...composerData, target: e.target.value})} style={inputStyle}>
-                      <option>All Tenants</option>
-                      <option>Building A Only</option>
-                      <option>Building B Only</option>
-                      <option>Staff Members</option>
-                   </select>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Target Audience</label>
+                  <select value={composerData.target} onChange={e => setComposerData({ ...composerData, target: e.target.value })} style={inputStyle}>
+                    <option>All Tenants</option>
+                    <option>Building A Only</option>
+                    <option>Building B Only</option>
+                    <option>Staff Members</option>
+                  </select>
                 </div>
                 <div>
-                   <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Message Title</label>
-                   <input placeholder="e.g. Water Supply Update" value={composerData.title} onChange={e => setComposerData({...composerData, title: e.target.value})} style={inputStyle} required />
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Message Title</label>
+                  <input placeholder="e.g. Water Supply Update" value={composerData.title} onChange={e => setComposerData({ ...composerData, title: e.target.value })} style={inputStyle} required />
                 </div>
                 <div>
-                   <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Content</label>
-                   <textarea placeholder="Type your message here..." value={composerData.message} onChange={e => setComposerData({...composerData, message: e.target.value})} style={{ ...inputStyle, minHeight: '150px' }} required />
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Content</label>
+                  <textarea placeholder="Type your message here..." value={composerData.message} onChange={e => setComposerData({ ...composerData, message: e.target.value })} style={{ ...inputStyle, minHeight: '150px' }} required />
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                   <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
