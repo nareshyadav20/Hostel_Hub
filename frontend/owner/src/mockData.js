@@ -167,17 +167,6 @@ export const api = {
     const data = Array.isArray(res.data) ? res.data : [];
     return data.map(m => m.floor?._id || m.floor?.id);
   },
-  getAllFloors: async () => {
-    const res = await axios.get(`${API_URL}/floors`);
-    const data = Array.isArray(res.data) ? res.data : [];
-    return handleId(data);
-  },
-  getFloors: async (bId) => {
-    const res = await axios.get(`${API_URL}/floors/${bId}`);
-    return handleId(res.data);
-  },
-
-  // Floors
   getAllFloors: () => cached('floors_all_v4', async () => {
     const res = await axios.get(`${API_URL}/buildings`);
     let all = [];
@@ -186,7 +175,10 @@ export const api = {
     });
     return handleId(all);
   }, SEED.floors),
-
+  getFloors: async (bId) => {
+    const res = await axios.get(`${API_URL}/floors/${bId}`);
+    return handleId(res.data);
+  },
   getFloorsByBuilding: async (bId) => {
     return await api.getFloors(bId);
   },
@@ -299,38 +291,9 @@ export const api = {
 
   getDashboardStaff: async () => ({
     efficiencyScore: 92, tasksAssigned: 124, tasksCompleted: 114, tasksPending: 10,
-    staffList: [
-      { id: 's1', name: 'Suresh Mani', role: 'Warden', status: 'Active', performance: '4.8', phone: '9876543210', email: 'suresh@hostel.com', building: 'Alpha Tower', shift: 'Day', salary: 25000, attendance: { percentage: 98, monthly: [{ name: 'W1', present: 6 }, { name: 'W2', present: 5 }, { name: 'W3', present: 6 }, { name: 'W4', present: 6 }] }, metrics: { efficiencyScore: 95, completionRate: 98, avgResolutionTime: '2h', satisfaction: 4.9, history: [{ date: 'Jan', rate: 90 }, { date: 'Feb', rate: 92 }, { date: 'Mar', rate: 95 }] }, tasks: [{ id: 't1', title: 'Monthly Audit', status: 'PENDING', date: '25 Mar' }, { id: 't2', title: 'Staff Meeting', status: 'COMPLETED', date: '20 Mar' }], documents: [{ name: 'Aadhar Card', type: 'PDF', date: '12 Jan 24' }, { name: 'Contract', type: 'PDF', date: '15 Jan 24' }], salaryHistory: [{ month: 'Mar', amount: 25000, status: 'PAID', date: '01 Mar' }, { month: 'Feb', amount: 25000, status: 'PAID', date: '01 Feb' }] },
-      { id: 's2', name: 'Meena Reddy', role: 'Cook', status: 'Active', performance: '4.5', phone: '9876543211', email: 'meena@hostel.com', building: 'Alpha Tower', shift: 'Morning', salary: 18000, attendance: { percentage: 95, monthly: [{ name: 'W1', present: 5 }, { name: 'W2', present: 5 }, { name: 'W3', present: 5 }, { name: 'W4', present: 6 }] }, metrics: { efficiencyScore: 88, completionRate: 92, avgResolutionTime: '1h', satisfaction: 4.6, history: [{ date: 'Jan', rate: 85 }, { date: 'Feb', rate: 86 }, { date: 'Mar', rate: 88 }] }, tasks: [{ id: 't3', title: 'Menu Planning', status: 'COMPLETED', date: '21 Mar' }], documents: [{ name: 'Health Cert', type: 'JPG', date: '10 Feb 24' }], salaryHistory: [{ month: 'Mar', amount: 18000, status: 'PAID', date: '01 Mar' }] },
-      { id: 's3', name: 'Rajesh Kumar', role: 'Security', status: 'Active', performance: '4.9', phone: '9876543212', email: 'rajesh@hostel.com', building: 'Beta Block', shift: 'Night', salary: 15000, attendance: { percentage: 100, monthly: [{ name: 'W1', present: 7 }, { name: 'W2', present: 7 }, { name: 'W3', present: 7 }, { name: 'W4', present: 7 }] }, metrics: { efficiencyScore: 99, completionRate: 100, avgResolutionTime: '30m', satisfaction: 5.0, history: [{ date: 'Jan', rate: 98 }, { date: 'Feb', rate: 99 }, { date: 'Mar', rate: 99 }] }, tasks: [], documents: [{ name: 'Police Verification', type: 'PDF', date: '05 Jan 24' }], salaryHistory: [{ month: 'Mar', amount: 15000, status: 'PAID', date: '01 Mar' }] },
-      { id: 's4', name: 'Anita Das', role: 'Cleaner', status: 'On Leave', performance: '3.8', phone: '9876543213', email: 'anita@hostel.com', building: 'Beta Block', shift: 'Day', salary: 12000, attendance: { percentage: 82, monthly: [{ name: 'W1', present: 4 }, { name: 'W2', present: 3 }, { name: 'W3', present: 4 }, { name: 'W4', present: 0 }] }, metrics: { efficiencyScore: 75, completionRate: 80, avgResolutionTime: '4h', satisfaction: 3.9, history: [{ date: 'Jan', rate: 80 }, { date: 'Feb', rate: 78 }, { date: 'Mar', rate: 75 }] }, tasks: [{ id: 't4', title: 'Floor 2 Deep Clean', status: 'PENDING', date: '24 Mar' }], documents: [{ name: 'ID Card', type: 'JPG', date: '20 Feb 24' }], salaryHistory: [{ month: 'Feb', amount: 12000, status: 'PAID', date: '01 Feb' }] },
-      { id: 's5', name: 'Vikram Singh', role: 'Warden', status: 'Active', performance: '4.2', phone: '9876543214', email: 'vikram@hostel.com', building: 'Gamma Guesthouse', shift: 'Day', salary: 22000, attendance: { percentage: 92, monthly: [{ name: 'W1', present: 5 }, { name: 'W2', present: 6 }, { name: 'W3', present: 5 }, { name: 'W4', present: 5 }] }, metrics: { efficiencyScore: 85, completionRate: 90, avgResolutionTime: '2.5h', satisfaction: 4.3, history: [{ date: 'Jan', rate: 82 }, { date: 'Feb', rate: 84 }, { date: 'Mar', rate: 85 }] }, tasks: [], documents: [], salaryHistory: [] },
-      { id: 's6', name: 'Sunita Rao', role: 'Cook', status: 'Active', performance: '4.6', phone: '9876543215', email: 'sunita@hostel.com', building: 'Gamma Guesthouse', shift: 'Evening', salary: 18000, attendance: { percentage: 96, monthly: [{ name: 'W1', present: 6 }, { name: 'W2', present: 6 }, { name: 'W3', present: 6 }, { name: 'W4', present: 6 }] }, metrics: { efficiencyScore: 90, completionRate: 94, avgResolutionTime: '1.2h', satisfaction: 4.7, history: [{ date: 'Jan', rate: 88 }, { date: 'Feb', rate: 89 }, { date: 'Mar', rate: 90 }] }, tasks: [], documents: [], salaryHistory: [] },
-      { id: 's7', name: 'Amitabh B.', role: 'Security', status: 'Active', performance: '4.7', phone: '9876543216', email: 'amitabh@hostel.com', building: 'Delta Dorms', shift: 'Night', salary: 15000, attendance: { percentage: 98, monthly: [{ name: 'W1', present: 7 }, { name: 'W2', present: 7 }, { name: 'W3', present: 6 }, { name: 'W4', present: 7 }] }, metrics: { efficiencyScore: 94, completionRate: 96, avgResolutionTime: '45m', satisfaction: 4.8, history: [{ date: 'Jan', rate: 92 }, { date: 'Feb', rate: 93 }, { date: 'Mar', rate: 94 }] }, tasks: [], documents: [], salaryHistory: [] },
-      { id: 's8', name: 'Pooja Hegde', role: 'Cleaner', status: 'Active', performance: '4.1', phone: '9876543217', email: 'pooja@hostel.com', building: 'Delta Dorms', shift: 'Day', salary: 12000, attendance: { percentage: 88, monthly: [{ name: 'W1', present: 5 }, { name: 'W2', present: 5 }, { name: 'W3', present: 5 }, { name: 'W4', present: 5 }] }, metrics: { efficiencyScore: 82, completionRate: 85, avgResolutionTime: '3.5h', satisfaction: 4.2, history: [{ date: 'Jan', rate: 80 }, { date: 'Feb', rate: 81 }, { date: 'Mar', rate: 82 }] }, tasks: [], documents: [], salaryHistory: [] }
-    ]
+    staffList: []
   }),
 
-  getSettings: async () => {
-    try {
-      const res = await axios.get(`${API_URL}/settings`);
-      return res.data;
-    } catch (err) {
-      console.error('Error fetching settings:', err);
-      return {
-        generalSettings: { hostelName: 'Hostel Hub', currency: '₹' },
-        rentSettings: { defaultRent: { single: 8000, double: 6000, shared: 4500 }, securityDeposit: 5000, paymentDueDate: 5, gracePeriod: 3, lateFeeRule: { type: 'FIXED', value: 100 } },
-        notificationSettings: { enablePaymentReminders: true, enableVacancyAlerts: true, enableComplaintAlerts: true, enableHygieneAlerts: true },
-        roomConfig: { roomTypes: ['Single', 'Double', 'Triple'], defaultBedCapacity: 2, autoCreateRooms: false },
-        hygieneSettings: { hygieneThreshold: 75, cleaningFrequency: 'DAILY' },
-        reportSettings: { defaultPeriod: 'MONTHLY', autoGenerateReports: true }
-      };
-    }
-  },
-  updateSettings: async (data) => {
-    const res = await axios.post(`${API_URL}/settings`, data);
-    return res.data;
-  },
   getDashboardActivity: async (bId) => {
     return axios.get(`${API_URL}/dashboard/activity`, { params: { buildingId: bId } })
       .then(res => res.data)
@@ -366,8 +329,6 @@ export const api = {
   },
   updateRoomTransferStatus: async (id, status) => {
     const res = await axios.patch(`${API_URL}/transfers/${id}`, { status });
-    // Invalidate cache
-    sessionStorage.removeItem('room_transfers_v1');
     return handleId(res.data);
   },
   getMessMenu: async (bId) => {
@@ -376,10 +337,7 @@ export const api = {
   },
 
   updateMessMenu: async (data) => {
-    // data should include buildingId
     const res = await axios.put(`${API_URL}/mess/menu`, data);
-    // Invalidate cache
-    localStorage.removeItem('mess_menu_v1');
     return handleId(res.data);
   },
   getMessAttendance: async (bId, date) => {
@@ -394,12 +352,10 @@ export const api = {
     const res = await axios.post(`${API_URL}/mess/attendance/mark-all`, data);
     return res.data;
   },
+  
   // Staff Management
   getStaff: async (bId) => {
     const res = await axios.get(`${API_URL}/staff`, { params: { buildingId: bId } });
-    if (res.data && res.data.staffList) {
-      res.data.staffList = res.data.staffList.map(s => ({ ...s, id: s._id }));
-    }
     return res.data;
   },
   addStaff: async (data) => {
@@ -414,13 +370,21 @@ export const api = {
     const res = await axios.delete(`${API_URL}/staff/${id}`);
     return res.data;
   },
-  addStaffActivity: async (id, action) => {
-    const res = await axios.post(`${API_URL}/staff/${id}/activity`, { action });
-    return handleId(res.data);
-  },
+  
   getSettings: async () => {
-    const res = await axios.get(`${API_URL}/settings`);
-    return res.data;
+    try {
+      const res = await axios.get(`${API_URL}/settings`);
+      return res.data;
+    } catch (err) {
+      return {
+        generalSettings: { hostelName: 'Hostel Hub', currency: '₹' },
+        rentSettings: { defaultRent: { single: 8000, double: 6000, shared: 4500 }, securityDeposit: 5000, paymentDueDate: 5, gracePeriod: 3, lateFeeRule: { type: 'FIXED', value: 100 } },
+        notificationSettings: { enablePaymentReminders: true, enableVacancyAlerts: true, enableComplaintAlerts: true, enableHygieneAlerts: true },
+        roomConfig: { roomTypes: ['Single', 'Double', 'Triple'], defaultBedCapacity: 2, autoCreateRooms: false },
+        hygieneSettings: { hygieneThreshold: 75, cleaningFrequency: 'DAILY' },
+        reportSettings: { defaultPeriod: 'MONTHLY', autoGenerateReports: true }
+      };
+    }
   },
   updateSettings: async (data) => {
     const res = await axios.post(`${API_URL}/settings`, data);
@@ -430,7 +394,7 @@ export const api = {
   // CRUD Operations
   addBuilding: async (data) => {
     const res = await axios.post(`${API_URL}/buildings`, data);
-    localStorage.removeItem('buildings_all_v4'); // Invalidate cache
+    localStorage.removeItem('buildings_all_v4');
     return handleId(res.data);
   },
   addFloor: async (data) => {
@@ -469,22 +433,7 @@ export const api = {
     localStorage.removeItem('buildings_all_v4');
     return handleId(res.data);
   },
-  bulkAddTenants: async (tenants) => {
-    const res = await axios.post(`${API_URL}/tenants/bulk`, { tenants });
-    return handleId(res.data);
-  },
-  updateTenant: async (id, data) => {
-    const res = await axios.put(`${API_URL}/tenants/${id}`, data);
-    return handleId(res.data);
-  },
-  addPayment: async (data) => {
-    const res = await axios.post(`${API_URL}/payments`, data);
-    return handleId(res.data);
-  },
-  addComplaint: async (data) => {
-    const res = await axios.post(`${API_URL}/complaints`, data);
-    return handleId(res.data);
-  },
+  
   // Inventory
   getInventory: async (bId) => {
     const res = await axios.get(`${API_URL}/inventory`, { params: { buildingId: bId } });

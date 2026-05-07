@@ -1,14 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../mockData';
-import { Package, AlertTriangle, Filter, Plus, RefreshCw, Info, TrendingDown, X, CheckCircle, Upload, Download, BedDouble, Coffee, MapPin, Box, Zap, CreditCard, ShieldCheck, ShoppingCart } from 'lucide-react';
-// eslint-disable-next-line no-unused-vars
+import { 
+  Package, AlertTriangle, Filter, Plus, RefreshCw, Info, TrendingDown, X, 
+  CheckCircle, Upload, Download, BedDouble, Coffee, MapPin, Box, Zap, 
+  CreditCard, ShieldCheck, ShoppingCart, Grid, ChevronDown, ChevronRight, 
+  Search, History, Edit, BarChart3, ClipboardList, Truck, Users, DollarSign, 
+  Clock, Layers, Hammer, Wallet, QrCode, Wrench, Mail, Eye 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
+  Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, BarChart as RechartsBarChart
 } from 'recharts';
 
 // --- SHARED COMPONENTS ---
+const Badge = ({ children, color = 'blue' }) => {
+  const colors = {
+    blue: { bg: '#EFF6FF', text: '#3B82F6' },
+    red: { bg: '#FFF1F2', text: '#E11D48' },
+    green: { bg: '#F0FDF4', text: '#10B981' },
+    amber: { bg: '#FFFBEB', text: '#D97706' },
+    slate: { bg: '#F8FAFC', text: '#64748B' },
+    indigo: { bg: '#EEF2FF', text: '#4F46E5' },
+    cyan: { bg: '#ECFEFF', text: '#0891B2' },
+    purple: { bg: '#F5F3FF', text: '#8B5CF6' }
+  };
+  const c = colors[color] || colors.blue;
+  return (
+    <span style={{ 
+      padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', 
+      fontWeight: '700', background: c.bg, color: c.text, display: 'inline-flex', 
+      alignItems: 'center', gap: '0.3rem' 
+    }}>
+      {children}
+    </span>
+  );
+};
+
 const Modal = ({ isOpen, onClose, title, children, maxWidth = '700px' }) => (
   <AnimatePresence>
     {isOpen && (
@@ -47,12 +76,122 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '700px' }) => (
   </AnimatePresence>
 );
 
+// --- EXTENDED DATASETS ---
+const CATEGORIES = [
+  { id: 'CAT-FOOD', name: 'Food & Supplies', icon: <Coffee size={18}/> },
+  { id: 'CAT-FURN', name: 'Furniture', icon: <BedDouble size={18}/> },
+  { id: 'CAT-ELEC', name: 'Electronics', icon: <Zap size={18}/> },
+  { id: 'CAT-CLEAN', name: 'Cleaning', icon: <ShieldCheck size={18}/> }
+];
+
+const SUBCATEGORIES = [
+  { id: 'SUB-GRAIN', categoryId: 'CAT-FOOD', name: 'Rice & Grains' },
+  { id: 'SUB-PULSE', categoryId: 'CAT-FOOD', name: 'Pulses' },
+  { id: 'SUB-VEG', categoryId: 'CAT-FOOD', name: 'Vegetables' },
+  { id: 'SUB-DAIRY', categoryId: 'CAT-FOOD', name: 'Dairy' },
+  { id: 'SUB-KIT', categoryId: 'CAT-FOOD', name: 'Kitchen Assets' },
+  { id: 'SUB-BED', categoryId: 'CAT-FURN', name: 'Beds & Bedding' },
+  { id: 'SUB-AC', categoryId: 'CAT-ELEC', name: 'ACs & Cooling' },
+  { id: 'SUB-LIQ', categoryId: 'CAT-CLEAN', name: 'Liquids & Chemicals' }
+];
+
+const INITIAL_INVENTORY = [
+  { id: 'F-RG-001', name: 'Basmati Rice', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 50, maxStock: 100, minThreshold: 20, unit: 'Kg', location: 'Dry Store A', type: 'Consumable' },
+  { id: 'F-RG-002', name: 'Sona Masoori Rice', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 100, maxStock: 150, minThreshold: 30, unit: 'Kg', location: 'Dry Store A', type: 'Consumable' },
+  { id: 'F-RG-004', name: 'Wheat Flour (Atta)', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 80, maxStock: 150, minThreshold: 40, unit: 'Kg', location: 'Dry Store B', type: 'Consumable' },
+  { id: 'F-PL-001', name: 'Toor Dal', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-PULSE', stock: 40, maxStock: 60, minThreshold: 15, unit: 'Kg', location: 'Pantry 1', type: 'Consumable' },
+  { id: 'F-VG-001', name: 'Potato', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-VEG', stock: 100, maxStock: 150, minThreshold: 40, unit: 'Kg', location: 'Cold Store', type: 'Consumable' },
+  { id: 'F-DY-001', name: 'Milk', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-DAIRY', stock: 100, maxStock: 150, minThreshold: 40, unit: 'L/Day', location: 'Dairy Cooler', type: 'Consumable' },
+  { id: 'F-KS-001', name: 'Gas Cylinder', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-KIT', stock: 10, maxStock: 15, minThreshold: 3, unit: 'Units', location: 'Gas Bank', type: 'Asset' },
+  { id: 'INV-G001', name: 'Single Bed (Steel)', categoryId: 'CAT-FURN', subCategoryId: 'SUB-BED', stock: 45, maxStock: 50, minThreshold: 5, unit: 'Units', location: 'Block A', type: 'Asset' },
+  { id: 'INV-E001', name: 'Split AC (1.5 Ton)', categoryId: 'CAT-ELEC', subCategoryId: 'SUB-AC', stock: 24, maxStock: 30, minThreshold: 2, unit: 'Units', location: 'Room 101', type: 'Asset' },
+  { id: 'INV-C001', name: 'Floor Cleaner', categoryId: 'CAT-CLEAN', subCategoryId: 'SUB-LIQ', stock: 5, maxStock: 25, minThreshold: 10, unit: 'Liters', location: 'Janitor Room', type: 'Consumable' }
+];
+
+const INITIAL_VENDORS = [
+  { id: 'V-001', name: 'Metro Wholesalers', contact: '+91 98765 43210', email: 'orders@metro.com', categories: ['Food & Supplies', 'Cleaning'], rating: 4.8, onTimeRate: '98%', suppliedCategories: ['Rice', 'Pulses', 'Liquids'] },
+  { id: 'V-002', name: 'Sleepwell Systems', contact: '+91 99887 76655', email: 'sales@sleepwell.in', categories: ['Furniture'], rating: 4.5, onTimeRate: '92%', suppliedCategories: ['Beds', 'Tables'] },
+  { id: 'V-003', name: 'Global Electronics', contact: '+91 91234 56789', email: 'support@globalelec.com', categories: ['Electronics'], rating: 4.2, onTimeRate: '85%', suppliedCategories: ['ACs', 'Fans'] }
+];
+
+const INITIAL_REQUESTS = [
+  { id: 'REQ-1001', requestId: 'PR-24-001', requestedBy: 'Chef Anand', category: 'Food & Supplies', subCategory: 'Rice & Grains', itemName: 'Sona Masoori Rice', quantity: 50, unit: 'Kg', requiredDate: '2024-05-25', priority: 'High', status: 'Approved', approvalStatus: 'Approved', approvedBy: 'Manager Rahul', approvalDate: '2024-05-20', approvalComments: 'Approved for monthly mess supply.' },
+  { id: 'REQ-1002', requestId: 'PR-24-002', requestedBy: 'Staff Kamal', category: 'Cleaning', subCategory: 'Liquids', itemName: 'Floor Cleaner', quantity: 20, unit: 'Liters', requiredDate: '2024-05-28', priority: 'Medium', status: 'Pending', approvalStatus: 'Pending' }
+];
+
+const INITIAL_POS = [
+  { 
+    id: 'PO-5001', poNumber: 'PO-2024-001', linkedRequestId: 'REQ-1001', vendorId: 'V-001', vendorName: 'Metro Wholesalers', 
+    items: [{ id: 'ITEM-1', name: 'Sona Masoori Rice', category: 'Food', quantity: 50, unitPrice: 85, tax: 5, discount: 0 }], 
+    totalAmount: 4250, orderDate: '2024-05-21', deliveryStatus: 'Completed', expectedDelivery: '2024-05-24', 
+    deliveryDate: '2024-05-24', receivedQty: 50, receivedBy: 'Chef Anand', grnNumber: 'GRN-001', qualityCheck: 'Pass', remarks: 'Good quality' 
+  },
+  { 
+    id: 'PO-5002', poNumber: 'PO-2024-002', vendorId: 'V-002', vendorName: 'Sleepwell Systems', 
+    items: [{ id: 'ITEM-2', name: 'Single Bed (Steel)', category: 'Furniture', quantity: 10, unitPrice: 4500, tax: 18, discount: 5 }], 
+    totalAmount: 45000, orderDate: '2024-05-22', deliveryStatus: 'Pending', expectedDelivery: '2024-05-30', grnStatus: 'Pending' 
+  }
+];
+
+const INITIAL_ASSETS = [
+  { 
+    id: 'AST-1001', name: 'Samsung Split AC', code: 'AC-B1-101', tag: 'HOSTEL-AC-001', category: 'Electronics', subCategory: 'ACs',
+    lifecycleStage: 'In Use', lifecycleStatus: 'Healthy', conditionScore: 9, conditionStatus: 'Excellent',
+    assignedTo: 'Room 101', buildingId: 'B1', floorId: 'F1', roomId: '101', bedId: 'N/A',
+    purchaseDate: '2023-04-15', purchaseCost: 45000, currentValue: 38000, depreciationRate: '10%', depreciationMethod: 'Straight Line',
+    maintenanceStatus: 'Good', maintenanceSchedule: 'Quarterly', lastMaintenance: '2024-03-10', nextMaintenance: '2024-06-10', 
+    warrantyExpiry: '2025-04-15', vendor: 'Global Electronics',
+    movementHistory: [{ from: 'Warehouse', to: 'Room 101', date: '2023-04-16', approvedBy: 'Manager' }],
+    maintenanceHistory: [{ date: '2024-03-10', type: 'Cleaning', cost: 1500, vendor: 'Rajesh Services' }]
+  },
+  { 
+    id: 'AST-1002', name: 'Steel Bunk Bed', code: 'BED-B2-205', tag: 'HOSTEL-BED-205', category: 'Furniture', subCategory: 'Beds',
+    lifecycleStage: 'Active', lifecycleStatus: 'Healthy', conditionScore: 7, conditionStatus: 'Good',
+    assignedTo: 'Room 205', buildingId: 'B2', floorId: 'F2', roomId: '205',
+    purchaseDate: '2022-08-10', purchaseCost: 8500, currentValue: 6200, depreciationRate: '15%', depreciationMethod: 'Straight Line',
+    maintenanceStatus: 'Good', maintenanceSchedule: 'Bi-Annual', lastMaintenance: '2023-12-05', nextMaintenance: '2024-06-05',
+    warrantyExpiry: '2024-08-10', vendor: 'Sleepwell Systems',
+    movementHistory: [], maintenanceHistory: []
+  }
+];
+
+const INITIAL_BUDGETS = [
+  { categoryId: 'CAT-FOOD', allocated: 150000, used: 85000 },
+  { categoryId: 'CAT-FURN', allocated: 200000, used: 120000 },
+  { categoryId: 'CAT-CLEAN', allocated: 15000, used: 4500 },
+  { categoryId: 'CAT-ELEC', allocated: 50000, used: 32000 }
+];
+
 const Inventory = () => {
   const { buildingId: urlBuildingId } = useParams();
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
-
-  const [items, setItems] = useState([]);
+  
+  const [activeTab, setActiveTab] = useState('inventory');
+  const [procSubTab, setProcSubTab] = useState('dashboard');
+  const [assetSubTab, setAssetSubTab] = useState('overview');
+  const [notifications, setNotifications] = useState([]);
+  
+  // Data States
+  const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [requests, setRequests] = useState(INITIAL_REQUESTS);
+  const [pos, setPos] = useState(INITIAL_POS);
+  const [assets, setAssets] = useState(INITIAL_ASSETS);
+  const [vendors] = useState(INITIAL_VENDORS);
+  const [budgets] = useState(INITIAL_BUDGETS);
+
+  // UI States
+  const [selectedCategory, setSelectedCategory] = useState('CAT-FOOD');
+  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
+  const [expandedCategories, setExpandedCategories] = useState({ 'CAT-FOOD': true });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [isAssetModalOpen, setIsAssetModalOpen] = useState(false);
+  const [restockItems, setRestockItems] = useState([]);
+  const [restockSent, setRestockSent] = useState(false);
+  const [restockOpen, setRestockOpen] = useState(false);
 
   useEffect(() => {
     fetchInventory();
@@ -62,75 +201,265 @@ const Inventory = () => {
     setLoading(true);
     try {
       const data = await api.getInventory(activeBuildingId);
-      setItems(data);
+      setInventory(data || INITIAL_INVENTORY);
     } catch (err) {
       console.error(err);
+      setInventory(INITIAL_INVENTORY);
     } finally {
       setLoading(false);
     }
   };
 
-  const [activeTab, setActiveTab] = useState('All');
-  const [search, setSearch] = useState('');
-
-  // Modals State
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
-  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
-  const [restockOpen, setRestockOpen] = useState(false);
-
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [restockItems, setRestockItems] = useState([]);
-  const [restockSent, setRestockSent] = useState(false);
-  const [actionQuantity, setActionQuantity] = useState(1);
-  const [actionLocation, setActionLocation] = useState('');
-
-  // Handlers
-  const handleIssueSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await api.updateInventoryItem(selectedItem.id, {
-        stock: selectedItem.stock - actionQuantity,
-        inUse: selectedItem.inUse + actionQuantity
-      });
-      fetchInventory();
-      setIsIssueModalOpen(false);
-      setActionQuantity(1);
-      setActionLocation('');
-    } catch (err) {
-      console.error(err);
-    }
+  const triggerNotification = (msg, color = 'blue') => {
+    setNotifications(prev => [{ msg, color, id: Date.now() }, ...prev]);
+    setTimeout(() => setNotifications(prev => prev.slice(0, -1)), 5000);
   };
 
-  const handleReturnSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await api.updateInventoryItem(selectedItem.id, {
-        stock: selectedItem.stock + actionQuantity,
-        inUse: Math.max(0, selectedItem.inUse - actionQuantity)
-      });
-      fetchInventory();
-      setIsReturnModalOpen(false);
-      setActionQuantity(1);
-    } catch (err) {
-      console.error(err);
-    }
+  const procStats = {
+    totalSpend: budgets.reduce((sum, b) => sum + b.used, 0),
+    pendingApprovals: requests.filter(r => r.status === 'Pending').length,
+    activePOs: pos.filter(p => p.deliveryStatus !== 'Completed').length,
+    delayed: 0
   };
 
-  // Derived Data
-  const filteredItems = (items || []).filter(item => {
-    const matchesSearch = (item.name || '').toLowerCase().includes(search.toLowerCase());
-    const matchesTab = activeTab === 'All' || item.type === activeTab;
-    return matchesSearch && matchesTab;
-  });
+  const assetStats = {
+    total: assets.length,
+    active: assets.filter(a => a.lifecycleStage === 'In Use' || a.lifecycleStage === 'Active').length,
+    maintenance: assets.filter(a => a.lifecycleStatus === 'Maintenance').length,
+    valuation: assets.reduce((sum, a) => sum + a.currentValue, 0)
+  };
 
-  const totalItems = items?.length || 0;
-  const totalInUse = (items || []).reduce((sum, item) => sum + (item.inUse || 0), 0);
-  const lowStockItems = (items || []).filter(i => i.stock < i.minThreshold);
-  const damagedAssets = (items || []).filter(i => i.damaged > 0);
+  const renderSidebar = () => (
+    <div style={{ width: '300px', background: '#FFFFFF', borderRight: '1px solid #E2E8F0', padding: '1.5rem', height: '100%', overflowY: 'auto' }}>
+      <h3 style={{ fontSize: '0.8rem', fontWeight: '900', color: '#64748B', textTransform: 'uppercase', marginBottom: '1.5rem' }}>Inventory Explorer</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+        <button onClick={() => { setSelectedCategory(null); setSelectedSubCategory(null); }} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '1rem', borderRadius: '16px', border: 'none', cursor: 'pointer', background: !selectedCategory ? '#3B82F6' : 'transparent', color: !selectedCategory ? '#FFFFFF' : '#475569', fontWeight: '800', transition: '0.2s', width: '100%', textAlign: 'left' }}>
+          <Grid size={20} /> All Categories
+        </button>
+        {CATEGORIES.map(cat => (
+          <div key={cat.id}>
+            <button onClick={() => { setExpandedCategories(p => ({ ...p, [cat.id]: !p[cat.id] })); setSelectedCategory(cat.id); setSelectedSubCategory(null); }} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '1rem', borderRadius: '16px', border: 'none', cursor: 'pointer', background: selectedCategory === cat.id ? '#F8FAFC' : 'transparent', color: selectedCategory === cat.id ? '#0F172A' : '#475569', fontWeight: '700', width: '100%', textAlign: 'left' }}>
+              {expandedCategories[cat.id] ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>{cat.icon} {cat.name}</span>
+            </button>
+            <AnimatePresence>
+              {expandedCategories[cat.id] && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden', paddingLeft: '2.8rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.4rem' }}>
+                  {SUBCATEGORIES.filter(s => s.categoryId === cat.id).map(sub => (
+                    <button key={sub.id} onClick={(e) => { e.stopPropagation(); setSelectedSubCategory(sub.id); }} style={{ fontSize: '0.9rem', padding: '0.6rem 0', background: 'transparent', border: 'none', cursor: 'pointer', color: selectedSubCategory === sub.id ? '#3B82F6' : '#64748B', fontWeight: selectedSubCategory === sub.id ? '900' : '600', textAlign: 'left' }}>
+                      {sub.name}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
-  // UI Helpers
-  const inputStyle = { padding: '0.8rem 1rem', borderRadius: '10px', border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#1E293B', width: '100%', fontSize: '0.95rem', outline: 'none' };
+  const renderInventoryTab = () => (
+    <div style={{ display: 'flex', height: '100%' }}>
+      {renderSidebar()}
+      <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: '300px' }}><Search size={20} style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} /><input type="text" placeholder="Search Materials..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ padding: '1rem 1rem 1rem 3.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', width: '100%', outline: 'none', background: '#FFFFFF', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} /></div>
+          <select style={{ padding: '1rem', borderRadius: '16px', border: '1px solid #E2E8F0', fontWeight: '800', outline: 'none', background: '#FFFFFF' }}><option>All Levels</option><option>Critical Only</option><option>Low Stock</option></select>
+          <button style={{ background: '#3B82F6', color: 'white', border: 'none', padding: '1rem 1.5rem', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><Plus size={20}/> Add Item</button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
+          {inventory.filter(i => (selectedCategory ? i.categoryId === selectedCategory : true) && (selectedSubCategory ? i.subCategoryId === selectedSubCategory : true) && i.name.toLowerCase().includes(searchQuery.toLowerCase())).map(item => (
+            <motion.div layout key={item.id} className="card" style={{ padding: '1.8rem', borderTop: `6px solid ${item.stock < item.minThreshold ? '#E11D48' : '#10B981'}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem' }}><Badge color="slate">{SUBCATEGORIES.find(s=>s.id===item.subCategoryId)?.name}</Badge><Badge color={item.stock < item.minThreshold ? 'red' : 'green'}>{item.stock < item.minThreshold ? 'Low Stock' : 'Stable'}</Badge></div>
+              <h3 style={{ margin: '0 0 0.4rem 0', fontWeight: '900', fontSize: '1.2rem' }}>{item.name}</h3>
+              <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#64748B', fontWeight: '700' }}><MapPin size={14} style={{ marginRight: '0.3rem' }}/> {item.location}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}><div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>AVAILABLE STOCK</p><span style={{ fontSize: '2rem', fontWeight: '900', color: '#0F172A' }}>{item.stock}</span><span style={{ fontSize: '1rem', color: '#64748B', marginLeft: '0.4rem', fontWeight: '800' }}>{item.unit}</span></div><div style={{ display: 'flex', gap: '0.6rem' }}><button onClick={() => { setSelectedItem(item); setIsModalOpen(true); }} style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#3B82F6' }}><Edit size={18}/></button><button style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#64748B' }}><History size={18}/></button></div></div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderProcurementTab = () => (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '0 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
+        {[
+          { id: 'dashboard', label: 'Dashboard', icon: <BarChart3 size={20}/> },
+          { id: 'requests', label: 'Purchase Requests', icon: <ClipboardList size={20}/> },
+          { id: 'orders', label: 'Active POs', icon: <Truck size={20}/> },
+          { id: 'vendors', label: 'Vendor Directory', icon: <Users size={20}/> }
+        ].map(sub => (
+          <button key={sub.id} onClick={() => setProcSubTab(sub.id)} style={{ padding: '1.2rem 0', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1rem', fontWeight: '900', color: procSubTab === sub.id ? '#3B82F6' : '#64748B', borderBottom: procSubTab === sub.id ? '4px solid #3B82F6' : '4px solid transparent', marginBottom: '-1px' }}>{sub.icon} {sub.label}</button>
+        ))}
+      </div>
+      <div style={{ flex: 1, padding: '2.5rem', overflowY: 'auto' }}>
+        {procSubTab === 'dashboard' && (
+          <div style={{ animation: 'fadeIn 0.3s ease' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+              {[
+                { l: 'MONTHLY SPEND', v: `₹${procStats.totalSpend.toLocaleString()}`, c: '#3B82F6', i: <DollarSign size={20}/> },
+                { l: 'PENDING APPROVALS', v: procStats.pendingApprovals, c: '#F59E0B', i: <Clock size={20}/> },
+                { l: 'ACTIVE ORDERS', v: procStats.activePOs, c: '#8B5CF6', i: <Package size={20}/> },
+                { l: 'DELAYED DELIVERIES', v: procStats.delayed, c: '#E11D48', i: <AlertTriangle size={20}/> }
+              ].map((s, idx) => (
+                <div key={idx} className="card" style={{ padding: '1.5rem', borderLeft: `5px solid ${s.c}` }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', marginBottom: '0.6rem' }}><span style={{ fontSize: '0.75rem', fontWeight: '900' }}>{s.l}</span>{s.i}</div>
+                   <h2 style={{ fontSize: '2rem', fontWeight: '900', margin: 0 }}>{s.v}</h2>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '1.5rem' }}>
+               <div className="card" style={{ padding: '2rem' }}><h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '2rem' }}>Category-wise Allocation</h3><div style={{ height: '300px' }}><ResponsiveContainer width="100%" height="100%"><AreaChart data={[{n:'Jan',v:45000},{n:'Feb',v:52000},{n:'Mar',v:48000},{n:'Apr',v:61000},{n:'May',v:55000}]}><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="n"/><YAxis/><RechartsTooltip/><Area type="monotone" dataKey="v" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.1}/></AreaChart></ResponsiveContainer></div></div>
+               <div className="card" style={{ padding: '2rem' }}><h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '2rem' }}>Budget Control</h3><div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>{budgets.map(b => (<div key={b.categoryId}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}><span style={{ fontWeight: '800', color: '#0F172A' }}>{CATEGORIES.find(c=>c.id===b.categoryId)?.name}</span><span style={{ fontWeight: '900', fontSize: '0.9rem' }}>₹{b.used.toLocaleString()} / ₹{b.allocated.toLocaleString()}</span></div><div style={{ height: '10px', background: '#F1F5F9', borderRadius: '10px', overflow: 'hidden' }}><div style={{ height: '100%', background: (b.used/b.allocated) > 0.8 ? '#E11D48' : '#3B82F6', width: `${(b.used/b.allocated)*100}%` }} /></div></div>))}</div></div>
+            </div>
+          </div>
+        )}
+        {procSubTab === 'requests' && (
+          <div className="card" style={{ overflowX: 'auto', animation: 'fadeIn 0.2s ease' }}>
+             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+                <thead style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}><tr style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: '900', textTransform: 'uppercase' }}><th style={{ padding: '1.5rem' }}>Request ID</th><th style={{ padding: '1.5rem' }}>Requested By</th><th style={{ padding: '1.5rem' }}>Item & Sub-Cat</th><th style={{ padding: '1.5rem' }}>Qty/Unit</th><th style={{ padding: '1.5rem' }}>Priority</th><th style={{ padding: '1.5rem' }}>Status</th></tr></thead>
+                <tbody>{requests.map(r => (<tr key={r.id} style={{ borderBottom: '1px solid #F1F5F9' }}><td style={{ padding: '1.5rem', fontWeight: '900' }}>{r.requestId}</td><td style={{ padding: '1.5rem', fontWeight: '700' }}>{r.requestedBy}</td><td style={{ padding: '1.5rem' }}><p style={{ fontWeight: '800', margin: 0 }}>{r.itemName}</p><p style={{ fontSize: '0.75rem', color: '#94A3B8', margin: 0 }}>{r.subCategory}</p></td><td style={{ padding: '1.5rem', fontWeight: '900' }}>{r.quantity} {r.unit}</td><td style={{ padding: '1.5rem' }}><Badge color={r.priority === 'High' ? 'red' : 'blue'}>{r.priority}</Badge></td><td style={{ padding: '1.5rem' }}><Badge color={r.status === 'Approved' ? 'green' : 'amber'}>{r.status}</Badge></td></tr>))}</tbody>
+             </table>
+          </div>
+        )}
+        {procSubTab === 'orders' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', gap: '2rem' }}>
+            {pos.map(po => (<div key={po.id} className="card" style={{ padding: '2rem', borderTop: `6px solid ${po.deliveryStatus === 'Completed' ? '#10B981' : '#3B82F6'}` }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><Badge color="slate">{po.poNumber}</Badge><Badge color={po.deliveryStatus === 'Completed' ? 'green' : 'blue'}>{po.deliveryStatus}</Badge></div><h3 style={{ margin: '0 0 1rem 0', fontWeight: '900', fontSize: '1.3rem' }}>{po.vendorName}</h3><div style={{ background: '#F8FAFC', padding: '1.2rem', borderRadius: '16px', marginBottom: '1.5rem' }}>{po.items.map((it, i) => (<div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: '700' }}><span>{it.name} x {it.quantity}</span><span>₹{(it.quantity * it.unitPrice).toLocaleString()}</span></div>))}</div><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>TOTAL PAYABLE</p><h2 style={{ margin: 0, color: '#0F172A' }}>₹{po.totalAmount.toLocaleString()}</h2></div><button style={{ background: '#3B82F6', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><Eye size={18}/> View PO</button></div></div>))}
+          </div>
+        )}
+        {procSubTab === 'vendors' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', animation: 'fadeIn 0.3s ease' }}>
+            {vendors.map(v => (
+              <div key={v.id} className="card" style={{ padding: '1.8rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                  <div style={{ background: '#EFF6FF', color: '#3B82F6', padding: '0.8rem', borderRadius: '14px' }}><Users size={24}/></div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontSize: '0.9rem', fontWeight: '900', margin: 0 }}>★ {v.rating}</p>
+                    <p style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: '800', margin: 0 }}>{v.onTimeRate} On-Time</p>
+                  </div>
+                </div>
+                <h3 style={{ margin: '0 0 0.4rem 0', fontWeight: '900', fontSize: '1.2rem' }}>{v.name}</h3>
+                <p style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '600', marginBottom: '1.5rem' }}>{v.suppliedCategories.join(', ')}</p>
+                <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', color: '#475569', fontWeight: '600' }}><Mail size={14}/> {v.email}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', color: '#475569', fontWeight: '600' }}><Clock size={14}/> Reliable Partner since 2022</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderAssetsTab = () => (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '0 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
+        {[
+          { id: 'overview', label: 'Insights', icon: <Grid size={20}/> },
+          { id: 'registry', label: 'Master Registry', icon: <Box size={20}/> },
+          { id: 'maintenance', label: 'Maintenance Hub', icon: <Wrench size={20}/> },
+          { id: 'financials', label: 'Depreciation', icon: <DollarSign size={20}/> }
+        ].map(sub => (
+          <button key={sub.id} onClick={() => setAssetSubTab(sub.id)} style={{ padding: '1.2rem 0', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1rem', fontWeight: '900', color: assetSubTab === sub.id ? '#3B82F6' : '#64748B', borderBottom: assetSubTab === sub.id ? '4px solid #3B82F6' : '4px solid transparent', marginBottom: '-1px' }}>{sub.icon} {sub.label}</button>
+        ))}
+      </div>
+      <div style={{ flex: 1, padding: '2.5rem', overflowY: 'auto' }}>
+        {assetSubTab === 'overview' && (
+          <div style={{ animation: 'fadeIn 0.3s ease' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+              {[
+                { l: 'TOTAL ASSETS', v: assetStats.total, c: '#3B82F6', i: <Layers size={20}/> },
+                { l: 'IN SERVICE', v: assetStats.active, c: '#10B981', i: <Zap size={20}/> },
+                { l: 'REPAIRING', v: assetStats.maintenance, c: '#F59E0B', i: <Hammer size={20}/> },
+                { l: 'PORTFOLIO VALUE', v: `₹${(assetStats.valuation/1000).toFixed(1)}K`, c: '#8B5CF6', i: <Wallet size={20}/> }
+              ].map((s, idx) => (
+                <div key={idx} className="card" style={{ padding: '1.5rem', borderLeft: `5px solid ${s.c}` }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', marginBottom: '0.6rem' }}><span style={{ fontSize: '0.75rem', fontWeight: '900' }}>{s.l}</span>{s.i}</div>
+                   <h2 style={{ fontSize: '2rem', fontWeight: '900', margin: 0 }}>{s.v}</h2>
+                </div>
+              ))}
+            </div>
+            <div className="card" style={{ padding: '2rem' }}><h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '2rem' }}>Condition Health Score</h3><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>{assets.map(a => (<div key={a.id} style={{ background: '#F8FAFC', padding: '1.5rem', borderRadius: '16px' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}><span style={{ fontWeight: '800' }}>{a.name}</span><Badge color={a.conditionScore > 7 ? 'green' : 'amber'}>{a.conditionScore}/10</Badge></div><div style={{ height: '6px', background: '#E2E8F0', borderRadius: '10px' }}><div style={{ height: '100%', background: a.conditionScore > 7 ? '#10B981' : '#F59E0B', width: `${a.conditionScore*10}%`, borderRadius: '10px' }} /></div></div>))}</div></div>
+          </div>
+        )}
+        {assetSubTab === 'registry' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.5rem' }}>
+            {assets.map(asset => (
+              <motion.div layout key={asset.id} className="card" onClick={() => { setSelectedAsset(asset); setIsAssetModalOpen(true); }} style={{ padding: '2rem', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><div style={{ display: 'flex', gap: '0.5rem' }}><Badge color="slate">{asset.tag}</Badge><Badge color="indigo">{asset.lifecycleStage}</Badge></div><QrCode size={20} color="#94A3B8"/></div>
+                <h3 style={{ margin: '0 0 0.5rem 0', fontWeight: '900', fontSize: '1.3rem' }}>{asset.name}</h3>
+                <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.95rem', color: '#64748B', fontWeight: '700' }}><MapPin size={16} style={{ marginRight: '0.4rem' }}/> {asset.buildingId} • Floor {asset.floorId} • Room {asset.roomId}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '1.2rem' }}><div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>CONDITION</p><p style={{ fontWeight: '900', margin: 0, color: '#10B981' }}>{asset.conditionStatus}</p></div><div style={{ textAlign: 'right' }}><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>WARRANTY</p><p style={{ fontWeight: '900', margin: 0 }}>{asset.warrantyExpiry}</p></div></div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {assetSubTab === 'maintenance' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: '1.5rem', animation: 'fadeIn 0.3s ease' }}>
+            {assets.filter(a => a.maintenanceSchedule).map(asset => (
+              <div key={asset.id} className="card" style={{ padding: '1.8rem', display: 'flex', gap: '1.5rem' }}>
+                <div style={{ width: '70px', height: '70px', background: '#F5F3FF', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6' }}>
+                  <Wrench size={32}/>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.8rem', alignItems: 'flex-start' }}>
+                    <h4 style={{ margin: 0, fontWeight: '900', fontSize: '1.1rem' }}>{asset.name}</h4>
+                    <Badge color={new Date(asset.nextMaintenance) < new Date() ? 'red' : 'amber'}>Due: {asset.nextMaintenance}</Badge>
+                  </div>
+                  <p style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '700', margin: '0 0 1.2rem 0' }}>Cycle: {asset.maintenanceSchedule} • Last: {asset.lastMaintenance}</p>
+                  <div style={{ display: 'flex', gap: '0.8rem' }}>
+                    <button onClick={() => triggerNotification('Service Call Initiated', 'purple')} style={{ padding: '0.6rem 1.2rem', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '0.8rem' }}>Schedule Now</button>
+                    <button style={{ padding: '0.6rem 1.2rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '0.8rem', color: '#475569' }}>Full History</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {assetSubTab === 'financials' && (
+          <div className="card" style={{ padding: '2rem', animation: 'fadeIn 0.3s ease' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '2rem' }}>Asset Depreciation & Financials</h3>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+                <thead>
+                  <tr style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '900', textTransform: 'uppercase', borderBottom: '1px solid #E2E8F0' }}>
+                    <th style={{ padding: '1rem' }}>Asset Details</th>
+                    <th style={{ padding: '1rem' }}>Purchase Cost</th>
+                    <th style={{ padding: '1rem' }}>Depreciation</th>
+                    <th style={{ padding: '1rem' }}>Current Value</th>
+                    <th style={{ padding: '1rem' }}>Warranty Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assets.map(a => (
+                    <tr key={a.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                      <td style={{ padding: '1.2rem 1rem' }}>
+                        <p style={{ fontWeight: '900', margin: 0 }}>{a.name}</p>
+                        <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0 }}>{a.tag}</p>
+                      </td>
+                      <td style={{ padding: '1.2rem 1rem', fontWeight: '800' }}>₹{a.purchaseCost.toLocaleString()}</td>
+                      <td style={{ padding: '1.2rem 1rem' }}>
+                        <Badge color="cyan">{a.depreciationRate} / Year</Badge>
+                      </td>
+                      <td style={{ padding: '1.2rem 1rem', fontWeight: '900', color: '#3B82F6' }}>₹{a.currentValue.toLocaleString()}</td>
+                      <td style={{ padding: '1.2rem 1rem' }}>
+                        <Badge color={new Date(a.warrantyExpiry) < new Date() ? 'red' : 'green'}>{a.warrantyExpiry}</Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ animation: 'fadeIn 0.5s ease-out', minHeight: '100vh', background: '#F8FAFC', padding: '0.5rem' }}>
@@ -145,254 +474,50 @@ const Inventory = () => {
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button className="btn" onClick={() => {
-            const prefill = lowStockItems.map(i => ({ name: i.name, needed: i.minThreshold - i.stock + 10, unit: i.unit }));
+            const prefill = inventory.filter(i => i.stock < i.minThreshold).map(i => ({ name: i.name, needed: i.minThreshold - i.stock + 10, unit: i.unit }));
             setRestockItems(prefill);
             setRestockSent(false);
             setRestockOpen(true);
           }} style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#3B82F6', fontWeight: '700', padding: '0.8rem 1.2rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <ShoppingCart size={18} /> Launch Restock P.O.
           </button>
-          <button onClick={() => alert('Add Item flow triggered!')} className="btn btn-primary" style={{ background: '#3B82F6', border: 'none', padding: '0.8rem 1.2rem', borderRadius: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button onClick={() => alert('Add Item flow triggered!')} className="btn" style={{ background: '#3B82F6', border: 'none', color: 'white', padding: '0.8rem 1.2rem', borderRadius: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Plus size={18} /> Add Item
           </button>
         </div>
       </header>
 
-      {/* KPI DASHBOARD */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
-        <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Package size={14} /> Total Unique Items</p>
-          <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{totalItems}</h2>
-        </div>
-        <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderBottom: '4px solid #3B82F6' }}>
-          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Zap size={14} /> Assets In Use</p>
-          <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{totalInUse}</h2>
-        </div>
-        <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderBottom: '4px solid #10B981' }}>
-          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><CheckCircle size={14} /> Healthy Stock</p>
-          <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{totalItems - lowStockItems.length}</h2>
-        </div>
-        <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', borderBottom: '4px solid #EF4444' }}>
-          <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><AlertTriangle size={14} /> Low / Critical Alerts</p>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-            <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#EF4444', margin: 0 }}>{lowStockItems.length + damagedAssets.length}</h2>
-            <span style={{ color: '#EF4444', fontSize: '0.85rem', fontWeight: '700' }}>Requires Action</span>
+      <div style={{ display: 'flex', gap: '1.5rem', background: '#FFFFFF', padding: '0 2.5rem', borderBottom: '1px solid #E2E8F0', overflowX: 'auto' }}>
+        {[
+          { id: 'inventory', label: 'Smart Inventory', icon: <Package size={22} /> },
+          { id: 'procurement', label: 'Purchase Management', icon: <ShoppingCart size={22} /> },
+          { id: 'assets', label: 'Assets Management', icon: <History size={22} /> }
+        ].map(tab => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ padding: '1.4rem 1.5rem', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1.05rem', fontWeight: '900', color: activeTab === tab.id ? '#3B82F6' : '#64748B', borderBottom: activeTab === tab.id ? '4px solid #3B82F6' : '4px solid transparent', marginBottom: '-1px', transition: '0.2s' }}>{tab.icon} {tab.label}</button>
+        ))}
+      </div>
+      <div style={{ flex: 1 }}>
+        {loading ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '400px' }}>
+            <RefreshCw className="animate-spin" size={40} color="#3B82F6" />
           </div>
-        </div>
+        ) : (
+          <div style={{ animation: 'fadeIn 0.3s ease' }}>
+            {activeTab === 'inventory' && renderInventoryTab()}
+            {activeTab === 'procurement' && renderProcurementTab()}
+            {activeTab === 'assets' && renderAssetsTab()}
+          </div>
+        )}
       </div>
 
-      {/* ALERTS SECTION */}
-      {(lowStockItems.length > 0 || damagedAssets.length > 0) && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2.5rem' }}>
-          {lowStockItems.length > 0 && (
-            <div style={{ background: '#FFF1F2', border: '1px solid #FECDD3', padding: '1.2rem 1.5rem', borderRadius: '16px', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-              <div style={{ padding: '0.6rem', background: '#FFE4E6', color: '#E11D48', borderRadius: '12px' }}><AlertTriangle size={20} /></div>
-              <div>
-                <h3 style={{ fontSize: '1rem', color: '#9F1239', fontWeight: '800', margin: '0 0 0.2rem 0' }}>Low Stock Warning</h3>
-                <p style={{ color: '#BE123C', fontSize: '0.85rem', margin: 0, fontWeight: '500' }}>{lowStockItems.length} items have fallen below threshold.</p>
-              </div>
-            </div>
-          )}
-          {damagedAssets.length > 0 && (
-            <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '1.2rem 1.5rem', borderRadius: '16px', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-              <div style={{ padding: '0.6rem', background: '#FEF3C7', color: '#D97706', borderRadius: '12px' }}><Info size={20} /></div>
-              <div>
-                <h3 style={{ fontSize: '1rem', color: '#92400E', fontWeight: '800', margin: '0 0 0.2rem 0' }}>Damaged Assets</h3>
-                <p style={{ color: '#B45309', fontSize: '0.85rem', margin: 0, fontWeight: '500' }}>{damagedAssets.length} asset types have items reported damaged.</p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* MAIN LIST VIEW */}
-      <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-
-        {/* Toolbar & Tabs */}
-        <div style={{ padding: '1.2rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {['All', 'Asset', 'Consumable'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  fontSize: '0.9rem', padding: '0.6rem 1.2rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer',
-                  background: activeTab === tab ? '#3B82F6' : '#FFFFFF',
-                  color: activeTab === tab ? '#FFFFFF' : '#475569',
-                  border: activeTab === tab ? 'none' : '1px solid #E2E8F0',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {tab === 'All' ? 'All Inventory' : tab + 's'}
-              </button>
-            ))}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <input type="text" placeholder="Search item..." value={search} onChange={e => setSearch(e.target.value)} style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.9rem' }} />
-            <button className="btn" style={{ border: '1px solid #E2E8F0', background: '#FFFFFF', padding: '0.6rem 1rem', borderRadius: '8px', color: '#475569', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Filter size={16} /> Filters
-            </button>
-          </div>
-        </div>
-
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead>
-            <tr style={{ background: '#FFFFFF', borderBottom: '2px solid #E2E8F0', fontSize: '0.8rem', color: '#64748B' }}>
-              <th style={{ padding: '1.2rem 1.5rem', textTransform: 'uppercase', fontWeight: '800' }}>Item Details</th>
-              <th style={{ padding: '1.2rem 1.5rem', textTransform: 'uppercase', fontWeight: '800' }}>Location & Usage</th>
-              <th style={{ padding: '1.2rem 1.5rem', textTransform: 'uppercase', fontWeight: '800', width: '250px' }}>Stock Level</th>
-              <th style={{ padding: '1.2rem 1.5rem', textTransform: 'uppercase', fontWeight: '800', textAlign: 'right' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <AnimatePresence>
-              {filteredItems.map(item => {
-                const isLow = item.stock < item.minThreshold;
-                const stockPercent = Math.min(100, Math.max(0, (item.stock / item.maxStock) * 100));
-
-                return (
-                  <motion.tr
-                    layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    key={item.id}
-                    className="inv-row"
-                    style={{ borderBottom: '1px solid #E2E8F0', background: isLow ? '#FFF1F2' : 'transparent', transition: 'all 0.2s' }}
-                  >
-                    <td style={{ padding: '1.2rem 1.5rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: item.type === 'Asset' ? '#EFF6FF' : '#F0FDF4', color: item.type === 'Asset' ? '#3B82F6' : '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {item.type === 'Asset' ? <BedDouble size={20} /> : <Coffee size={20} />}
-                        </div>
-                        <div>
-                          <p style={{ fontWeight: '800', fontSize: '1.05rem', color: '#0F172A', margin: '0 0 0.2rem 0' }}>{item.name}</p>
-                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748B', background: '#F1F5F9', padding: '0.1rem 0.5rem', borderRadius: '4px' }}>{item.category}</span>
-                            <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{item.type}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: '1.2rem 1.5rem' }}>
-                      <p style={{ fontWeight: '700', fontSize: '0.9rem', color: '#1E293B', margin: '0 0 0.3rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><MapPin size={14} color="#64748B" /> {item.location}</p>
-                      {item.type === 'Asset' && (
-                        <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0, fontWeight: '600' }}>{item.inUse} In Use • <span style={{ color: item.damaged > 0 ? '#EF4444' : '#64748B' }}>{item.damaged} Damaged</span></p>
-                      )}
-                    </td>
-                    <td style={{ padding: '1.2rem 1.5rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.85rem' }}>
-                        <span style={{ fontWeight: '800', color: isLow ? '#E11D48' : '#0F172A' }}>{item.stock} {item.unit} available</span>
-                        <span style={{ color: '#64748B', fontWeight: '600' }}>/ {item.maxStock}</span>
-                      </div>
-                      <div style={{ height: '6px', background: isLow ? '#FECDD3' : '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', background: isLow ? '#E11D48' : '#3B82F6', width: `${stockPercent}%`, borderRadius: '4px' }} />
-                      </div>
-                      {isLow && <span style={{ fontSize: '0.7rem', color: '#E11D48', fontWeight: '700', marginTop: '0.4rem', display: 'block' }}>Below threshold ({item.minThreshold})</span>}
-                    </td>
-                    <td style={{ padding: '1.2rem 1.5rem', textAlign: 'right' }}>
-                      <div className="row-actions" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', opacity: 0.4, transition: 'opacity 0.2s' }}>
-                        {item.type === 'Asset' ? (
-                          <>
-                            <button onClick={() => { setSelectedItem(item); setIsIssueModalOpen(true); }} className="btn" style={{ background: '#FFFFFF', border: '1px solid #3B82F6', color: '#3B82F6', padding: '0.5rem 0.8rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.8rem' }} title="Issue Asset">
-                              Issue
-                            </button>
-                            <button onClick={() => { setSelectedItem(item); setIsReturnModalOpen(true); }} className="btn" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#475569', padding: '0.5rem 0.8rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.8rem' }} title="Return Asset">
-                              Return
-                            </button>
-                          </>
-                        ) : (
-                          <button onClick={() => { setSelectedItem(item); setIsIssueModalOpen(true); }} className="btn" style={{ background: '#FFFFFF', border: '1px solid #3B82F6', color: '#3B82F6', padding: '0.5rem 0.8rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.8rem' }} title="Update Stock">
-                            Update
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </motion.tr>
-                );
-              })}
-            </AnimatePresence>
-            {filteredItems.length === 0 && (
-              <tr><td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: '#64748B', fontWeight: '600' }}>No items found.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-      {/* ISSUE ITEM MODAL */}
-      <Modal isOpen={isIssueModalOpen} onClose={() => setIsIssueModalOpen(false)} title="Issue Item">
-        {selectedItem && (
-          <form onSubmit={handleIssueSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ color: '#475569', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 0.2rem 0' }}>Item</p>
-                <p style={{ color: '#0F172A', fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>{selectedItem.name}</p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ color: '#475569', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 0.2rem 0' }}>Available Stock</p>
-                <p style={{ color: '#0F172A', fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>{selectedItem.stock} {selectedItem.unit}</p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Quantity to Issue</label>
-              <input type="number" min="1" max={selectedItem.stock} value={actionQuantity} onChange={e => setActionQuantity(parseInt(e.target.value) || 1)} style={inputStyle} required />
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Target Location / Assignee</label>
-              <input type="text" placeholder="e.g. Room 201-A or 'Staff Name'" value={actionLocation} onChange={e => setActionLocation(e.target.value)} style={inputStyle} required />
-            </div>
-
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-              <button className="btn" type="button" onClick={() => setIsIssueModalOpen(false)} style={{ flex: 1, padding: '1rem', background: '#F1F5F9', color: '#475569', fontWeight: '700', border: 'none', borderRadius: '12px' }}>Cancel</button>
-              <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem', background: '#3B82F6', fontWeight: '800', border: 'none', borderRadius: '12px', color: 'white' }}>Confirm Issuance</button>
-            </div>
-          </form>
-        )}
-      </Modal>
-
-      {/* RETURN ITEM MODAL */}
-      <Modal isOpen={isReturnModalOpen} onClose={() => setIsReturnModalOpen(false)} title="Return Asset">
-        {selectedItem && (
-          <form onSubmit={handleReturnSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between' }}>
-              <div>
-                <p style={{ color: '#475569', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 0.2rem 0' }}>Item</p>
-                <p style={{ color: '#0F172A', fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>{selectedItem.name}</p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ color: '#475569', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 0.2rem 0' }}>Currently In Use</p>
-                <p style={{ color: '#0F172A', fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>{selectedItem.inUse} {selectedItem.unit}</p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Quantity to Return</label>
-              <input type="number" min="1" max={selectedItem.inUse || 1} value={actionQuantity} onChange={e => setActionQuantity(parseInt(e.target.value) || 1)} style={inputStyle} required />
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Asset Condition</label>
-              <select style={inputStyle}>
-                <option value="good">Good / Functional</option>
-                <option value="damaged">Damaged / Needs Repair</option>
-                <option value="destroyed">Destroyed / Write-off</option>
-              </select>
-            </div>
-
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-              <button className="btn" type="button" onClick={() => setIsReturnModalOpen(false)} style={{ flex: 1, padding: '1rem', background: '#F1F5F9', color: '#475569', fontWeight: '700' }}>Cancel</button>
-              <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem', background: '#10B981', border: 'none', fontWeight: '800', color: 'white' }}>Confirm Return</button>
-            </div>
-          </form>
-        )}
-      </Modal>
-
-      {/* RESTOCK PO MODAL (PRESERVED LOGIC) */}
+      {/* RESTOCK PO MODAL */}
       <Modal isOpen={restockOpen} onClose={() => { if (!restockSent) setRestockOpen(false); }} title="🛒 Launch Restock P.O." maxWidth="650px">
         {restockSent ? (
           <div style={{ textAlign: 'center', padding: '3rem 0' }}>
             <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>📦</div>
             <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#10B981', marginBottom: '0.5rem' }}>Purchase Order Launched!</h2>
             <p style={{ color: '#64748B', marginBottom: '2rem', fontWeight: '500' }}>Your restock PO has been generated and sent to the supplier automatically.</p>
-            <button className="btn btn-primary" onClick={() => setRestockOpen(false)} style={{ padding: '1rem 3rem', borderRadius: '12px', background: '#10B981', border: 'none', fontWeight: '800', fontSize: '1rem' }}>Done</button>
+            <button className="btn" onClick={() => setRestockOpen(false)} style={{ padding: '1rem 3rem', borderRadius: '12px', background: '#10B981', border: 'none', color: 'white', fontWeight: '800', fontSize: '1rem' }}>Done</button>
           </div>
         ) : (
           <>
@@ -410,7 +535,7 @@ const Inventory = () => {
             </div>
             <button onClick={() => setRestockItems(prev => [...prev, { name: '', needed: 1, unit: 'Units' }])} className="btn" style={{ width: '100%', border: '2px dashed #CBD5E1', background: 'transparent', marginBottom: '2rem', padding: '1rem', color: '#64748B', fontWeight: '800', borderRadius: '12px' }}>+ Add Extra Item</button>
             {restockItems.length > 0 && restockItems.some(r => r.name) && (
-              <button className="btn btn-primary" onClick={() => setRestockSent(true)} style={{ width: '100%', padding: '1.2rem', fontSize: '1.1rem', fontWeight: '900', borderRadius: '12px', background: '#3B82F6', border: 'none' }}>✅ Confirm & Launch P.O.</button>
+              <button className="btn" onClick={() => setRestockSent(true)} style={{ width: '100%', padding: '1.2rem', fontSize: '1.1rem', fontWeight: '900', borderRadius: '12px', background: '#3B82F6', border: 'none', color: 'white' }}>✅ Confirm & Launch P.O.</button>
             )}
           </>
         )}
@@ -419,6 +544,9 @@ const Inventory = () => {
       <style>{`
         .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); }
+        .btn { padding: 0.8rem 1.5rem; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         ::-webkit-scrollbar { height: 6px; width: 6px; }
         ::-webkit-scrollbar-track { background: #F1F5F9; }

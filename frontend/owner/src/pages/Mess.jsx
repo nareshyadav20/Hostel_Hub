@@ -7,15 +7,17 @@ import { api } from '../mockData';
 const Mess = () => {
   const { buildingId: urlBuildingId } = useParams();
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+  const buildingId = activeBuildingId;
+
   const todayDay = new Date().toLocaleDateString('en-GB', { weekday: 'long' });
   const todayISO = new Date().toISOString().split('T')[0];
 
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'attendance' | 'menu' | 'subscriptions'
   const [menuView, setMenuView] = useState('daily'); // 'daily' | 'weekly'
   const [loading, setLoading] = useState(true);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  // ... rest of state stays the same
+  
   const [plans, setPlans] = useState([
     {
       id: 'basic',
@@ -50,16 +52,19 @@ const Mess = () => {
     },
   ]);
 
-  const [selectedDay, setSelectedDay] = useState('Monday');
+  const [selectedDay, setSelectedDay] = useState(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
   const [selectedMenuPlan, setSelectedMenuPlan] = useState('basic');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [planToDeactivate, setPlanToDeactivate] = useState(null);
 
   const [menuData, setMenuData] = useState({});
+  const [tenants, setTenants] = useState([]);
+  const [attendance, setAttendance] = useState({});
 
   useEffect(() => {
     const fetchMenu = async () => {
+      if (!activeBuildingId) return;
       setLoading(true);
       try {
         const raw = await api.getMessMenu(activeBuildingId);
@@ -85,15 +90,11 @@ const Mess = () => {
     fetchMenu();
   }, [activeBuildingId]);
 
-  const [tenants, setTenants] = useState([]);
-  const [attendance, setAttendance] = useState({});
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         const t = await api.getTenants();
-        const filteredTenants = t.filter(x => x.buildingId === activeBuildingId || !activeBuildingId);
-        setTenants(filteredTenants);
+        setTenants(t.filter(x => x.buildingId === activeBuildingId || !activeBuildingId));
       } catch (err) {
         console.error(err);
       }
@@ -104,6 +105,7 @@ const Mess = () => {
   useEffect(() => {
     const fetchAttendance = async () => {
       if (activeTab !== 'attendance' && activeTab !== 'dashboard') return;
+      if (!activeBuildingId) return;
       setAttendanceLoading(true);
       try {
         const data = await api.getMessAttendance(activeBuildingId, todayISO);
@@ -129,8 +131,11 @@ const Mess = () => {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const handleEditClick = () => {
-    if (!menuData[selectedMenuPlan] || !menuData[selectedMenuPlan][selectedDay]) return;
-    setEditForm(menuData[selectedMenuPlan][selectedDay]);
+    if (!menuData[selectedMenuPlan] || !menuData[selectedMenuPlan][selectedDay]) {
+      setEditForm({ breakfast: '', lunch: '', dinner: '' });
+    } else {
+      setEditForm(menuData[selectedMenuPlan][selectedDay]);
+    }
     setIsEditModalOpen(true);
   };
 
@@ -138,10 +143,9 @@ const Mess = () => {
     e.preventDefault();
     try {
       await api.updateMessMenu({
-        buildingId,
+        buildingId: activeBuildingId,
         plan: selectedMenuPlan,
         day: selectedDay,
-        buildingId: activeBuildingId,
         ...editForm
       });
 
@@ -262,7 +266,7 @@ const Mess = () => {
           </div>
         </div>
         {activeTab === 'menu' && (
-          <button onClick={handleEditClick} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700', borderRadius: '12px', padding: '0.8rem 1.5rem' }}>
+          <button onClick={handleEditClick} className="btn" style={{ background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700', borderRadius: '12px', padding: '0.8rem 1.5rem', border: 'none', cursor: 'pointer' }}>
             <Edit3 size={16} /> Edit Menu
           </button>
         )}
@@ -274,7 +278,7 @@ const Mess = () => {
             <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Total Meals Today</p>
               <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{stats.breakfast + stats.lunch + stats.dinner}</h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--accent-success)', marginTop: '0.5rem' }}>↑ 12% from yesterday</p>
+              <p style={{ fontSize: '0.8rem', color: '#10b981', marginTop: '0.5rem' }}>↑ 12% from yesterday</p>
             </div>
             <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #8b5cf6' }}>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Premium Usage</p>
@@ -283,7 +287,7 @@ const Mess = () => {
             </div>
             <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #ef4444' }}>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Skipped Meals</p>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{tenants.length * 3 - (stats.breakfast + stats.lunch + stats.dinner)}</h2>
+              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{Math.max(0, tenants.length * 3 - (stats.breakfast + stats.lunch + stats.dinner))}</h2>
               <p style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '0.5rem' }}>Based on total subscribers</p>
             </div>
             <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b' }}>
@@ -303,7 +307,7 @@ const Mess = () => {
                   { label: 'Dinner', val: stats.dinner, color: '#6366f1' }
                 ].map(bar => (
                   <div key={bar.label} style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                    <div style={{ width: '100%', background: bar.color, borderRadius: '8px 8px 0 0', height: `${(bar.val / tenants.length) * 100}%`, minHeight: '10px', transition: 'height 0.5s ease' }} />
+                    <div style={{ width: '100%', background: bar.color, borderRadius: '8px 8px 0 0', height: tenants.length ? `${(bar.val / tenants.length) * 100}%` : '0%', minHeight: '10px', transition: 'height 0.5s ease' }} />
                     <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>{bar.label}</span>
                   </div>
                 ))}
@@ -397,7 +401,6 @@ const Mess = () => {
 
       {activeTab === 'menu' && (
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
-          {/* Sub-tabs for Daily/Weekly view */}
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
             <button
               onClick={() => setMenuView('daily')}
@@ -424,7 +427,6 @@ const Mess = () => {
           {loading ? (
             <div className="card" style={{ padding: '4rem', textAlign: 'center' }}>Loading menu data...</div>
           ) : menuView === 'weekly' ? (
-            /* Weekly Overview Grid */
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
               {days.map(day => (
                 <div key={day} className="card" style={{ padding: '1.5rem', position: 'relative' }}>
@@ -459,7 +461,6 @@ const Mess = () => {
               ))}
             </div>
           ) : (
-            /* Daily Detail View (Existing) */
             <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div className="card" style={{ padding: '1.5rem' }}>
@@ -576,10 +577,10 @@ const Mess = () => {
                   ))}
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button onClick={() => setSelectedPlan(plan)} className="btn" style={{ flex: 1, border: '1px solid var(--border-color)', fontWeight: '800', borderRadius: '16px' }}>Specs</button>
+                  <button onClick={() => setSelectedPlan(plan)} className="btn" style={{ flex: 1, border: '1px solid var(--border-color)', fontWeight: '800', borderRadius: '16px', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer' }}>Specs</button>
                   <button
-                    className="btn btn-primary"
-                    style={{ flex: 2, fontWeight: '800', borderRadius: '16px', background: plan.color }}
+                    className="btn"
+                    style={{ flex: 2, fontWeight: '800', borderRadius: '16px', background: plan.color, color: 'white', border: 'none', cursor: 'pointer' }}
                     onClick={() => {
                       if (plan.active) {
                         setPlanToDeactivate(plan);
@@ -638,10 +639,8 @@ const Mess = () => {
                 padding: '2.5rem',
                 borderRadius: '28px',
                 zIndex: 1001,
-                boxShadow: 'var(--shadow-2xl)',
-                border: '1px solid var(--border-color)',
-                scrollbarWidth: 'none', /* Firefox */
-                msOverflowStyle: 'none' /* IE/Edge */
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                border: '1px solid var(--border-color)'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', marginBottom: '2rem' }}>
@@ -667,7 +666,7 @@ const Mess = () => {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                     {selectedPlan.features.map((f, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-success)' }} /> {f}
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} /> {f}
                       </div>
                     ))}
                   </div>
@@ -679,7 +678,7 @@ const Mess = () => {
                   </h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.8rem' }}>
                     {selectedPlan.menu.map((item, i) => (
-                      <div key={i} style={{ padding: '0.7rem 1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', textAlign: 'center', transition: 'transform 0.2s ease' }}>
+                      <div key={i} style={{ padding: '0.7rem 1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', textAlign: 'center' }}>
                         {item}
                       </div>
                     ))}
@@ -687,7 +686,7 @@ const Mess = () => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                  <button onClick={() => setSelectedPlan(null)} className="btn btn-primary" style={{ flex: 1, padding: '1.2rem', fontSize: '1rem', borderRadius: '16px' }}>Got it, thanks!</button>
+                  <button onClick={() => setSelectedPlan(null)} className="btn" style={{ flex: 1, padding: '1.2rem', fontSize: '1rem', borderRadius: '16px', background: 'var(--accent-primary)', color: 'white', border: 'none', cursor: 'pointer', fontWeight: '800' }}>Got it, thanks!</button>
                 </div>
               </div>
             </motion.div>
@@ -713,8 +712,8 @@ const Mess = () => {
                   <input value={editForm.dinner} onChange={e => setEditForm({ ...editForm, dinner: e.target.value })} style={inputStyle} required />
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem' }}>Save Menu</button>
-                  <button className="btn" type="button" onClick={() => setIsEditModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Cancel</button>
+                  <button className="btn" type="submit" style={{ flex: 1, padding: '1rem', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}>Save Menu</button>
+                  <button className="btn" type="button" onClick={() => setIsEditModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '12px', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancel</button>
                 </div>
               </form>
             </motion.div>
@@ -732,7 +731,7 @@ const Mess = () => {
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button
                   className="btn"
-                  style={{ flex: 1, background: '#EF4444', color: 'white' }}
+                  style={{ flex: 1, background: '#EF4444', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}
                   onClick={() => {
                     setPlans(plans.map(p => p.id === planToDeactivate.id ? { ...p, active: false } : p));
                     setIsDeactivateModalOpen(false);
@@ -740,12 +739,17 @@ const Mess = () => {
                 >
                   Yes, Deactivate
                 </button>
-                <button className="btn" onClick={() => setIsDeactivateModalOpen(false)} style={{ flex: 1, border: '1px solid var(--border-color)' }}>Cancel</button>
+                <button className="btn" onClick={() => setIsDeactivateModalOpen(false)} style={{ flex: 1, border: '1px solid var(--border-color)', borderRadius: '12px', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer' }}>Cancel</button>
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
+      <style>{`
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .btn { padding: 0.8rem 1.5rem; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
     </div>
   );
 };
