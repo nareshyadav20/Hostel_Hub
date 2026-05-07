@@ -4,6 +4,7 @@ const Hostel = require('../models/Hostel');
 const Bed = require('../models/Bed');
 const Room = require('../models/Room');
 const mongoose = require('mongoose');
+const notificationService = require('../utils/notificationService');
 
 exports.createComplaint = async (req, res) => {
   try {
@@ -87,6 +88,20 @@ exports.createComplaint = async (req, res) => {
       bedId
     });
 
+    // Trigger Notification
+    await notificationService.createNotification({
+      buildingId,
+      moduleName: 'Complaints',
+      portalType: 'Tenant',
+      category: 'Maintenance',
+      title: 'New Complaint Raised',
+      message: `Tenant ${tenant.name} raised a complaint: ${title}`,
+      priority,
+      tenantId: tenant._id,
+      roomId,
+      hostelId
+    });
+
     res.status(201).json(complaint);
   } catch (error) {
     res.status(500).json({ message: 'Failed to create complaint', error: error.message });
@@ -106,7 +121,22 @@ exports.updateComplaintStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const complaint = await Complaint.findByIdAndUpdate(id, { status }, { new: true });
+    const complaint = await Complaint.findByIdAndUpdate(id, { status }, { new: true }).populate('tenant', 'name buildingId');
+    
+    if (complaint) {
+      // Trigger Notification
+      await notificationService.createNotification({
+        buildingId: complaint.buildingId,
+        moduleName: 'Complaints',
+        portalType: 'Owner',
+        category: 'Maintenance',
+        title: 'Complaint Status Updated',
+        message: `Complaint "${complaint.title}" is now ${status}.`,
+        priority: 'Low',
+        tenantId: complaint.tenant?._id
+      });
+    }
+
     res.status(200).json(complaint);
   } catch (error) {
     res.status(500).json({ message: 'Failed to update complaint', error: error.message });

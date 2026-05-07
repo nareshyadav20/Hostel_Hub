@@ -2,8 +2,10 @@ const Inventory = require('../models/Inventory');
 
 exports.getInventory = async (req, res) => {
   try {
-    const { buildingId } = req.query;
-    const query = buildingId ? { buildingId } : {};
+    const { buildingId, dataType } = req.query;
+    const query = {};
+    if (buildingId) query.buildingId = buildingId;
+    if (dataType) query.dataType = dataType;
     const items = await Inventory.find(query);
     res.json(items);
   } catch (error) {
@@ -15,6 +17,18 @@ exports.addInventoryItem = async (req, res) => {
   try {
     const newItem = new Inventory(req.body);
     await newItem.save();
+
+    // Trigger Notification
+    await notificationService.createNotification({
+      buildingId: newItem.buildingId,
+      moduleName: 'Inventory',
+      portalType: 'Owner',
+      category: 'Procurement',
+      title: 'New Inventory Item',
+      message: `${newItem.itemName} has been added to inventory.`,
+      priority: 'Low'
+    });
+
     res.status(201).json(newItem);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -1,211 +1,303 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
-import { Bell, Send, Users, Building, Shield, Trash2, CheckCircle, Info, AlertTriangle, X } from 'lucide-react';
+import { 
+  Bell, Search, Filter, Settings, Check, 
+  Trash2, X, Archive, Eye, Zap, 
+  Smartphone, Mail, AlertTriangle, 
+  Info, CreditCard, Box, MessageSquare, 
+  Users, Shield, FileText, LayoutGrid, User, Briefcase
+} from 'lucide-react';
+import { api } from '../mockData';
+import { io } from 'socket.io-client';
 
 const Notifications = () => {
   const { buildingId } = useParams();
-  const [activeTab, setActiveTab] = useState('all');
-  const [messages, setMessages] = useState([
-    { id: 1, title: 'New Booking', message: 'Room 201-A booked by Rahul Sharma.', time: '10m ago', type: 'info', read: false, category: 'all' },
-    { id: 2, title: 'Low Stock Alert', message: 'Milk and Sugar running low in Building A storage.', time: '1h ago', type: 'warning', read: false, category: 'all' },
-    { id: 3, title: 'Maintenance Resolved', message: 'WiFi issue in Room 101 has been resolved by IT team.', time: '3h ago', type: 'success', read: true, category: 'all' },
-    { id: 4, title: 'System Update', message: 'The portal will be down for maintenance tonight at 2 AM.', time: '5h ago', type: 'info', read: true, category: 'all' },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [activeTab, setActiveTab] = useState('all'); 
+  const [activePortal, setActivePortal] = useState('All'); 
+  const [filterPriority, setFilterPriority] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const [systemLogs, setSystemLogs] = useState([
-    { id: 101, title: 'Backup Successful', message: 'Daily database backup completed at 03:00 AM.', time: '5h ago', type: 'success', read: true, category: 'system' },
-    { id: 102, title: 'Auth Failure', message: 'Multiple failed login attempts detected from IP 192.168.1.45.', time: '8h ago', type: 'warning', read: false, category: 'system' },
-    { id: 103, title: 'Server Restored', message: 'Frontend cluster auto-scaled due to high traffic.', time: '12h ago', type: 'info', read: true, category: 'system' },
-  ]);
+  const [notifSettings, setNotifSettings] = useState({
+    payments: { enabled: true, priority: 'high', delivery: ['in-app', 'sms'] },
+    inventory: { enabled: true, priority: 'medium', delivery: ['in-app'] },
+    complaints: { enabled: true, priority: 'high', delivery: ['in-app', 'email'] },
+    staff: { enabled: true, priority: 'medium', delivery: ['in-app'] },
+    hygiene: { enabled: true, priority: 'low', delivery: ['in-app'] },
+    security: { enabled: true, priority: 'high', delivery: ['in-app', 'sms', 'email'] },
+  });
 
-  const [staffUpdates, setStaffUpdates] = useState([
-    { id: 201, title: 'Shift Change', message: 'Kiran Kumar (Warden) swapped shift with Ravi Singh.', time: '2h ago', type: 'info', read: false, category: 'staff' },
-    { id: 202, title: 'Cleaning Schedule', message: 'Building B deep cleaning scheduled for tomorrow 10 AM.', time: '4h ago', type: 'info', read: true, category: 'staff' },
-  ]);
+  const categories = [
+    { id: 'all', name: 'All', icon: <LayoutGrid size={18} /> },
+    { id: 'Payments', name: 'Payments', icon: <CreditCard size={18} /> },
+    { id: 'Rooms', name: 'Rooms', icon: <Box size={18} /> },
+    { id: 'Inventory', name: 'Inventory', icon: <Box size={18} /> },
+    { id: 'Complaints', name: 'Complaints', icon: <MessageSquare size={18} /> },
+    { id: 'Staff', name: 'Staff', icon: <Briefcase size={18} /> },
+    { id: 'Hygiene', name: 'Hygiene', icon: <Zap size={18} /> },
+    { id: 'Tenants', name: 'Tenants', icon: <Users size={18} /> },
+    { id: 'Security', name: 'Security', icon: <Shield size={18} /> },
+    { id: 'Reports', name: 'Reports', icon: <FileText size={18} /> },
+  ];
 
-  const [isComposerOpen, setIsComposerOpen] = useState(false);
-  const [composerData, setComposerData] = useState({ title: '', message: '', target: 'All Tenants' });
+  const portals = ['All', 'Tenant', 'Staff', 'Owner'];
 
-  const handleSend = (e) => {
-    e.preventDefault();
-    const newMessage = {
-      id: Date.now(),
-      title: composerData.title,
-      message: composerData.message,
-      time: 'Just now',
-      type: 'info',
-      read: false,
-      category: composerData.target === 'Staff Members' ? 'staff' : 'all'
+  useEffect(() => {
+    if (buildingId) {
+      fetchNotifications();
+      const socket = io('http://localhost:5000');
+      socket.emit('joinBuilding', buildingId);
+      socket.on('newNotification', (newNotif) => {
+        setNotifications(prev => [newNotif, ...prev]);
+        setUnreadCount(prev => prev + 1);
+      });
+      return () => socket.disconnect();
+    }
+  }, [buildingId]);
+
+  const fetchNotifications = async () => {
+    setIsLoading(true);
+    try {
+      const data = await api.getNotifications(buildingId);
+      setNotifications(data);
+      setUnreadCount(data.filter(n => !n.isRead).length);
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSeed = async () => {
+    try {
+      await api.seedNotifications(buildingId);
+      fetchNotifications();
+    } catch (err) {
+      console.error('Failed to seed notifications:', err);
+    }
+  };
+
+  const filteredNotifications = useMemo(() => {
+    return notifications
+      .filter(n => activeTab === 'all' || n.moduleName === activeTab)
+      .filter(n => activePortal === 'All' || n.portalType === activePortal)
+      .filter(n => filterPriority === 'all' || n.priority === filterPriority)
+      .filter(n => 
+        (n.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+         n.message?.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+  }, [notifications, activeTab, activePortal, filterPriority, searchQuery]);
+
+  const handleMarkAsRead = async (id) => {
+    try {
+      await api.markNotificationRead(id);
+      setNotifications(prev => prev.map(n => (n.id === id || n._id === id) ? { ...n, isRead: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error('Failed to mark read:', err);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await api.markAllNotificationsRead(buildingId);
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Failed to mark all read:', err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.deleteNotification(id);
+      setNotifications(prev => prev.filter(n => n.id !== id && n._id !== id));
+      const removed = notifications.find(n => n.id === id || n._id === id);
+      if (removed && !removed.isRead) setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error('Failed to delete:', err);
+    }
+  };
+
+  const handleArchive = async (id) => {
+    try {
+      await api.archiveNotification(id);
+      setNotifications(prev => prev.filter(n => n.id !== id && n._id !== id));
+    } catch (err) {
+      console.error('Failed to archive:', err);
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case 'high': return '#EF4444';
+      case 'medium': return '#F59E0B';
+      case 'low': return '#3B82F6';
+      default: return 'var(--text-muted)';
+    }
+  };
+
+  const getModuleIcon = (module) => {
+    const cat = categories.find(c => c.id === module);
+    return cat ? cat.icon : <Bell size={18} />;
+  };
+
+  const getPortalBadge = (portal) => {
+    const colors = {
+      'Tenant': { bg: 'rgba(16, 185, 129, 0.1)', color: '#10B981', icon: <User size={12} /> },
+      'Staff': { bg: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6', icon: <Briefcase size={12} /> },
+      'Owner': { bg: 'rgba(14, 165, 233, 0.1)', color: '#0EA5E9', icon: <Shield size={12} /> },
     };
-    
-    if (newMessage.category === 'staff') {
-      setStaffUpdates([newMessage, ...staffUpdates]);
-    } else {
-      setMessages([newMessage, ...messages]);
-    }
-    
-    setIsComposerOpen(false);
-    setComposerData({ title: '', message: '', target: 'All Tenants' });
-    setActiveTab(newMessage.category === 'staff' ? 'staff' : 'all');
+    const style = colors[portal] || colors['Owner'];
+    return (
+      <span style={{ 
+        display: 'flex', alignItems: 'center', gap: '0.3rem', 
+        padding: '0.2rem 0.6rem', borderRadius: '100px', 
+        background: style.bg, color: style.color, 
+        fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase'
+      }}>
+        {style.icon} {portal}
+      </span>
+    );
   };
-
-  const markAllAsRead = () => {
-    if (activeTab === 'all') setMessages(messages.map(m => ({ ...m, read: true })));
-    if (activeTab === 'system') setSystemLogs(systemLogs.map(m => ({ ...m, read: true })));
-    if (activeTab === 'staff') setStaffUpdates(staffUpdates.map(m => ({ ...m, read: true })));
-  };
-
-  const deleteNotification = (id) => {
-    if (activeTab === 'all') setMessages(messages.filter(m => m.id !== id));
-    if (activeTab === 'system') setSystemLogs(systemLogs.filter(m => m.id !== id));
-    if (activeTab === 'staff') setStaffUpdates(staffUpdates.filter(m => m.id !== id));
-  };
-
-  const currentData = activeTab === 'all' ? messages : activeTab === 'system' ? systemLogs : staffUpdates;
-
-  const getTypeIcon = (type) => {
-    switch(type) {
-      case 'success': return <CheckCircle size={18} color="var(--accent-success)" />;
-      case 'warning': return <AlertTriangle size={18} color="var(--accent-warning)" />;
-      default: return <Info size={18} color="var(--accent-primary)" />;
-    }
-  };
-
-  const inputStyle = { padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', width: '100%' };
 
   return (
-    <div className="notifications-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
-      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+    <div className="notifications-page" style={{ padding: '2rem' }}>
+      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Bell size={32} color="var(--accent-primary)" /> Communications Center
+          <h1 style={{ fontSize: '2.4rem', fontWeight: '900', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+            Notification Hub
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Send broadcasts, manage alerts, and track system logs.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: '500' }}>
+            Centralized alerts from Tenants, Staff, and Operations.
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <button onClick={markAllAsRead} className="btn btn-secondary">
-            Mark all as read
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={handleSeed} className="btn" style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Zap size={18} /> Simulate Alerts
           </button>
-          <button onClick={() => setIsComposerOpen(true)} className="btn btn-primary">
-            <Send size={16} /> Compose Broadcast
+          <button onClick={() => setIsSettingsOpen(true)} className="btn" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Settings size={18} /> Settings
           </button>
-          <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={20} />
+          <button onClick={handleMarkAllRead} className="btn btn-secondary">
+            Mark all read
           </button>
         </div>
       </header>
 
-      <div className="card" style={{ padding: '0', overflow: 'hidden', minHeight: '500px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', display: 'flex', gap: '2rem' }}>
-           <button onClick={() => setActiveTab('all')} className="btn" style={{ fontSize: '0.85rem', fontWeight: activeTab === 'all' ? '800' : '500', color: activeTab === 'all' ? 'var(--accent-primary)' : 'var(--text-muted)', padding: 0, background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
-             All Messages
-             {activeTab === 'all' && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1.5rem', left: 0, right: 0, height: '2px', background: 'var(--accent-primary)' }} />}
-           </button>
-           <button onClick={() => setActiveTab('system')} className="btn" style={{ fontSize: '0.85rem', fontWeight: activeTab === 'system' ? '800' : '500', color: activeTab === 'system' ? 'var(--accent-primary)' : 'var(--text-muted)', padding: 0, background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
-             System Logs
-             {activeTab === 'system' && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1.5rem', left: 0, right: 0, height: '2px', background: 'var(--accent-primary)' }} />}
-           </button>
-           <button onClick={() => setActiveTab('staff')} className="btn" style={{ fontSize: '0.85rem', fontWeight: activeTab === 'staff' ? '800' : '500', color: activeTab === 'staff' ? 'var(--accent-primary)' : 'var(--text-muted)', padding: 0, background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
-             Staff Updates
-             {activeTab === 'staff' && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1.5rem', left: 0, right: 0, height: '2px', background: 'var(--accent-primary)' }} />}
-           </button>
+      <div style={{ background: 'var(--bg-secondary)', padding: '1.5rem', borderRadius: '24px', marginBottom: '2rem', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '1.5rem' }}>
+          <div style={{ position: 'relative' }}>
+            <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
+            <input
+              type="text"
+              placeholder="Search notifications..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 3rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', outline: 'none' }}
+            />
+          </div>
+          <select value={activePortal} onChange={(e) => setActivePortal(e.target.value)} style={{ padding: '0.8rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontWeight: '700' }}>
+             {portals.map(p => <option key={p} value={p}>{p} Portal</option>)}
+          </select>
+          <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} style={{ padding: '0.8rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontWeight: '700' }}>
+             <option value="all">All Priorities</option>
+             <option value="High">High Priority</option>
+             <option value="Medium">Medium Priority</option>
+             <option value="Low">Low Priority</option>
+          </select>
         </div>
 
-        <div style={{ flex: 1 }}>
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={activeTab}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+        <div style={{ display: 'flex', gap: '0.3rem', padding: '0.4rem', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px solid var(--border-color)', overflowX: 'auto', whiteSpace: 'nowrap' }}>
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveTab(cat.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.8rem', borderRadius: '10px', border: 'none',
+                background: activeTab === cat.id ? 'var(--accent-primary)' : 'transparent',
+                color: activeTab === cat.id ? 'white' : 'var(--text-secondary)',
+                cursor: 'pointer', transition: 'all 0.2s ease', fontWeight: '700', flexShrink: 0
+              }}
             >
-              {currentData.map((m, idx) => (
-                <motion.div 
-                  key={m.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ delay: idx * 0.05 }}
-                  style={{ 
-                    padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '1.5rem', alignItems: 'flex-start',
-                    background: m.read ? 'transparent' : 'rgba(14, 165, 233, 0.03)',
-                    transition: 'var(--transition-fast)'
-                  }}
-                  className="notification-item"
-                >
-                  <div style={{ marginTop: '0.2rem' }}>
-                     {getTypeIcon(m.type)}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
-                      <h3 style={{ fontSize: '1rem', fontWeight: m.read ? '600' : '800', color: 'var(--text-primary)' }}>{m.title}</h3>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{m.time}</span>
-                    </div>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>{m.message}</p>
-                  </div>
-                  <button 
-                    onClick={() => deleteNotification(m.id)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </motion.div>
-              ))}
-            </motion.div>
-          </AnimatePresence>
-          
-          {currentData.length === 0 && (
-            <div style={{ padding: '5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-               <Bell size={48} opacity={0.1} style={{ marginBottom: '1rem' }} />
-               <p>No new notifications.</p>
-            </div>
-          )}
+              {cat.icon} <span style={{ fontSize: '0.75rem' }}>{cat.name}</span>
+            </button>
+          ))}
         </div>
       </div>
 
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', gap: '1.2rem' }}>
+        <AnimatePresence mode="popLayout">
+          {filteredNotifications.length > 0 ? (
+            filteredNotifications.map((n, idx) => (
+              <motion.div
+                key={n.id || n._id}
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                style={{
+                  background: 'var(--bg-secondary)', borderRadius: '20px', padding: '1.25rem', borderLeft: `5px solid ${getPriorityColor(n.priority)}`,
+                  boxShadow: n.isRead ? 'none' : 'var(--shadow-md)', border: '1px solid var(--border-color)', display: 'flex', gap: '1.2rem', position: 'relative'
+                }}
+              >
+                <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: n.isRead ? 'var(--bg-tertiary)' : 'var(--accent-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: n.isRead ? 'var(--text-muted)' : 'var(--accent-primary)', flexShrink: 0 }}>
+                  {getModuleIcon(n.moduleName)}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      {getPortalBadge(n.portalType)}
+                      <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{n.moduleName}</span>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '0.3rem', color: n.isRead ? 'var(--text-secondary)' : 'var(--text-primary)' }}>{n.title}</h3>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.5 }}>{n.message}</p>
+                  <div style={{ display: 'flex', gap: '0.8rem' }}>
+                    {!n.isRead && <button onClick={() => handleMarkAsRead(n.id || n._id)} className="btn-notif-action"><Check size={14} /> Mark read</button>}
+                    <button onClick={() => handleArchive(n.id || n._id)} className="btn-notif-action"><Archive size={14} /> Archive</button>
+                  </div>
+                </div>
+                <button onClick={() => handleDelete(n.id || n._id)} style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><Trash2 size={16} /></button>
+              </motion.div>
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', padding: '5rem', gridColumn: '1 / -1' }}>
+              <Bell size={40} color="var(--text-muted)" style={{ margin: '0 auto 1rem' }} />
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>All caught up!</h2>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+
       <AnimatePresence>
-        {isComposerOpen && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsComposerOpen(false)} />
-            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '15%', left: '50%', x: '-50%', width: '90%', maxWidth: '550px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Send size={24} color="var(--accent-primary)" /> Compose Broadcast
-              </h2>
-              <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                <div>
-                   <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Target Audience</label>
-                   <select value={composerData.target} onChange={e => setComposerData({...composerData, target: e.target.value})} style={inputStyle}>
-                      <option>All Tenants</option>
-                      <option>Building A Only</option>
-                      <option>Building B Only</option>
-                      <option>Staff Members</option>
-                   </select>
-                </div>
-                <div>
-                   <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Message Title</label>
-                   <input placeholder="e.g. Water Supply Update" value={composerData.title} onChange={e => setComposerData({...composerData, title: e.target.value})} style={inputStyle} required />
-                </div>
-                <div>
-                   <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Content</label>
-                   <textarea placeholder="Type your message here..." value={composerData.message} onChange={e => setComposerData({...composerData, message: e.target.value})} style={{ ...inputStyle, minHeight: '150px' }} required />
-                </div>
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                    <Send size={18} /> Dispatch Notification
-                  </button>
-                  <button className="btn" type="button" onClick={() => setIsComposerOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Discard</button>
-                </div>
-              </form>
+        {isSettingsOpen && (
+          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' }} onClick={() => setIsSettingsOpen(false)} />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ position: 'relative', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto' }}>
+               <h2 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '1rem' }}>Hub Settings</h2>
+               {Object.entries(notifSettings).map(([key, config]) => (
+                 <div key={key} style={{ marginBottom: '1rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ textTransform: 'capitalize', fontWeight: '700' }}>{key}</span>
+                      <input type="checkbox" checked={config.enabled} onChange={e => setNotifSettings({...notifSettings, [key]: {...config, enabled: e.target.checked}})} />
+                    </div>
+                 </div>
+               ))}
+               <button onClick={() => setIsSettingsOpen(false)} className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>Close</button>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
 
       <style>{`
-        .notification-item:hover {
-          background: rgba(0,0,0,0.01) !important;
-        }
+        .btn-notif-action { background: transparent; border: none; display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); cursor: pointer; }
+        .btn-notif-action:hover { color: var(--text-primary); }
       `}</style>
     </div>
   );

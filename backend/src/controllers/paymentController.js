@@ -1,5 +1,7 @@
 const Payment = require('../models/Payment');
 const Building = require('../models/Building');
+const notificationService = require('../utils/notificationService');
+
 const createPayment = async (req, res) => {
   try {
     const { tenantId, amount, type, method, buildingId, category, status, month } = req.body;
@@ -20,6 +22,18 @@ const createPayment = async (req, res) => {
     });
 
     await payment.save();
+
+    // Trigger Notification
+    await notificationService.createNotification({
+      buildingId,
+      moduleName: 'Payments',
+      portalType: 'Tenant', // Payments usually triggered by tenants
+      category: 'Rent',
+      title: 'Payment Received',
+      message: `A payment of ${amount} has been received for ${month}.`,
+      priority: 'Medium',
+      tenantId
+    });
     
     // Populate before sending back
     const populated = await Payment.findById(payment._id).populate('tenantId');

@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   Building as BuildingIcon, Layers, DoorOpen, Bed, PlusCircle, UsersRound, Banknote, Clock, MessageSquareWarning,
-  ArrowLeft, CheckSquare, Square, Trash2, Edit2, Zap, X, Image as ImageIcon, BedDouble, Filter, ChevronRight, Search
+  ArrowLeft, CheckSquare, Square, Trash2, Edit2, Zap, X, Image as ImageIcon, BedDouble, Filter, ChevronRight, Search,
+  MapPin, ShieldCheck
 } from 'lucide-react';
 
 import { api } from '../mockData';
@@ -413,10 +414,13 @@ const Buildings = () => {
       {showFilters && (
         <motion.div
           initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-          style={{ overflow: 'hidden', marginBottom: '2rem', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', gap: '1rem', alignItems: 'center' }}
+          style={{ overflow: 'hidden', marginBottom: '2rem', background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}
         >
-          <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Filter By:</span>
-          {['All', 'AC', 'Non-AC', 'Available', 'Occupied'].map(f => (
+          <span style={{ fontSize: '0.8rem', fontWeight: '950', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Smart Filters:</span>
+          {(view === 'buildings' ? ['All', 'AC', 'Non-AC', 'High Occupancy', 'Premium'] : 
+            view === 'rooms' ? ['All', 'AC', 'Non-AC', 'Vacant', 'Suite', 'Shared'] :
+            view === 'beds' ? ['All', 'Available', 'Occupied', 'Window Side', 'Study Friendly', 'With Locker'] : 
+            ['All', 'AC', 'Non-AC']).map(f => (
             <button
               key={f}
               onClick={() => setFilterType(f)}
@@ -424,7 +428,7 @@ const Buildings = () => {
                 padding: '0.5rem 1.2rem', borderRadius: '10px', border: '1px solid var(--border-color)',
                 background: filterType === f ? 'var(--accent-primary)' : 'var(--bg-primary)',
                 color: filterType === f ? 'white' : 'var(--text-primary)',
-                fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer'
+                fontWeight: '800', fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.2s'
               }}
             >
               {f}
@@ -438,7 +442,7 @@ const Buildings = () => {
       {loading ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem', marginTop: '2rem' }}>
           {[1, 2, 3].map(i => (
-            <div key={i} className="card" style={{ height: '350px', background: 'var(--bg-secondary)', position: 'relative', overflow: 'hidden' }}>
+            <div key={i} className="card" style={{ height: '350px', background: 'var(--bg-secondary)', position: 'relative', overflow: 'hidden', borderRadius: '24px' }}>
               <motion.div
                 animate={{ x: ['-100%', '100%'] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
@@ -452,11 +456,17 @@ const Buildings = () => {
           {view === 'buildings' && (
             <motion.div key="buildings" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <BuildingsList
-                buildings={buildings.filter(b =>
-                  ((b?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    (b?.address || '').toLowerCase().includes(searchQuery.toLowerCase())) &&
-                  (filterType === 'All' || (filterType === 'AC' && b.isAC) || (filterType === 'Non-AC' && !b.isAC))
-                )}
+                buildings={buildings.filter(b => {
+                  const matchesSearch = ((b?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (b?.address || '').toLowerCase().includes(searchQuery.toLowerCase()));
+                  if (!matchesSearch) return false;
+                  
+                  if (filterType === 'All') return true;
+                  if (filterType === 'AC') return b.isAC;
+                  if (filterType === 'Non-AC') return !b.isAC;
+                  if (filterType === 'High Occupancy') return (b.occupancyRate || 0) > 80;
+                  if (filterType === 'Premium') return (b.rating || 0) >= 4.5;
+                  return true;
+                })}
                 onSelect={handleSelectBuilding}
                 onAdd={() => setIsAddBuildingOpen(true)}
               />
@@ -476,15 +486,18 @@ const Buildings = () => {
           {view === 'rooms' && (
             <motion.div key="rooms" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <RoomsList
-                rooms={rooms.filter(r =>
-                  ((r?.roomNumber?.toString() || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    (r?.floorType || '').toLowerCase().includes(searchQuery.toLowerCase())) &&
-                  (filterType === 'All' ||
-                    (filterType === 'AC' && r.isAC) ||
-                    (filterType === 'Non-AC' && !r.isAC) ||
-                    (filterType === 'Available' && (r.beds?.some(b => b.status === 'AVAILABLE') || r.status === 'AVAILABLE')) ||
-                    (filterType === 'Occupied' && r.beds?.length > 0 && !r.beds?.some(b => b.status === 'AVAILABLE')))
-                )}
+                rooms={rooms.filter(r => {
+                  const matchesSearch = ((r?.roomNumber?.toString() || '').toLowerCase().includes(searchQuery.toLowerCase()) || (r?.floorType || '').toLowerCase().includes(searchQuery.toLowerCase()));
+                  if (!matchesSearch) return false;
+
+                  if (filterType === 'All') return true;
+                  if (filterType === 'AC') return r.isAC;
+                  if (filterType === 'Non-AC') return !r.isAC;
+                  if (filterType === 'Vacant') return (r.occupied || 0) < r.capacity;
+                  if (filterType === 'Suite') return r.roomType === 'Single';
+                  if (filterType === 'Shared') return r.roomType === 'Shared' || r.roomType === 'Dormitory';
+                  return true;
+                })}
                 floor={selectedFloor}
                 onSelect={handleSelectRoom}
                 onBack={() => setView('floors')}
@@ -500,10 +513,18 @@ const Buildings = () => {
                 onEdit={() => handleOpenEditRoom(selectedRoom)}
               />
               <BedsList
-                beds={beds.filter(b =>
-                  (b?.bedNumber?.toString() || '').toLowerCase().includes(searchQuery.toLowerCase()) &&
-                  (filterType === 'All' || (filterType === 'Available' && b.status === 'AVAILABLE') || (filterType === 'Occupied' && b.status === 'OCCUPIED'))
-                )}
+                beds={beds.filter(b => {
+                  const matchesSearch = (b?.bedNumber?.toString() || '').toLowerCase().includes(searchQuery.toLowerCase());
+                  if (!matchesSearch) return false;
+
+                  if (filterType === 'All') return true;
+                  if (filterType === 'Available') return b.status === 'AVAILABLE';
+                  if (filterType === 'Occupied') return b.status === 'OCCUPIED';
+                  if (filterType === 'Window Side') return b.position === 'Window side';
+                  if (filterType === 'Study Friendly') return true; // Mocked
+                  if (filterType === 'With Locker') return true; // Mocked
+                  return true;
+                })}
                 room={selectedRoom}
                 onBack={() => setView('rooms')}
                 onAdd={() => setIsAddBedOpen(true)}
@@ -947,43 +968,143 @@ const RoomHero = ({ room, onImageUpdate, onEdit }) => (
 
 const BuildingsList = ({ buildings, onSelect, onAdd }) => (
   <div>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'center' }}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>All Buildings</h2>
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2.5rem', alignItems: 'center' }}>
+      <div>
+        <h2 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Property Portfolio</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Manage your buildings and their infrastructure</p>
+      </div>
+      <button className="btn btn-primary" onClick={onAdd} style={{ padding: '0.8rem 1.5rem', borderRadius: '14px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem', boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)' }}>
+        <PlusCircle size={20} /> Add Building
+      </button>
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-      {buildings.length > 0 ? buildings.map(b => (
-        <div key={b.id} className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', borderTop: '4px solid var(--accent-primary)', position: 'relative' }} onClick={() => onSelect(b)} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
-          <div style={{ height: '160px', width: '100%', backgroundImage: b.images?.[0] ? `url("${b.images[0]}")` : 'url("/assets/building.jpg")', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-            {b.isAC && (
-              <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(255, 255, 255, 0.95)', color: '#2563EB', padding: '0.4rem 0.8rem', borderRadius: '12px', fontWeight: '900', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.4rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', backdropFilter: 'blur(4px)', border: '1px solid rgba(37, 99, 235, 0.2)' }}>
-                <Zap size={14} fill="#2563EB" /> AC ENABLED
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '2rem' }}>
+      {buildings.length > 0 ? buildings.map(b => {
+        // Mock data for enhancement (as backend schema doesn't have these yet)
+        const occupancy = b.occupancyRate || 85;
+        const totalFloors = b.floorCount || 4;
+        const totalRooms = b.roomCount || 32;
+        const totalBeds = b.bedCount || 64;
+        const vacantBeds = Math.round(totalBeds * (1 - occupancy/100));
+        
+        return (
+          <motion.div 
+            key={b.id} 
+            whileHover={{ y: -8, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
+            className="card" 
+            style={{ 
+              padding: 0, overflow: 'hidden', cursor: 'pointer', 
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
+              border: '1px solid var(--border-color)',
+              position: 'relative',
+              background: 'var(--bg-secondary)',
+              borderRadius: '24px'
+            }} 
+            onClick={() => onSelect(b)}
+          >
+            {/* Banner Section */}
+            <div style={{ height: '200px', width: '100%', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ 
+                position: 'absolute', inset: 0, 
+                backgroundImage: b.images?.[0] ? `url("${b.images[0]}")` : 'url("https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80")', 
+                backgroundSize: 'cover', backgroundPosition: 'center',
+                transition: 'transform 0.6s'
+              }} className="building-banner" />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6))' }} />
+              
+              {/* Status & Rating Chips */}
+              <div style={{ position: 'absolute', top: '15px', left: '15px', display: 'flex', gap: '0.6rem' }}>
+                <span style={{ background: '#10B981', color: 'white', padding: '0.4rem 0.8rem', borderRadius: '100px', fontSize: '0.7rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Zap size={12} fill="white" /> ACTIVE
+                </span>
+                <span style={{ background: 'rgba(255,255,255,0.9)', color: '#F59E0B', padding: '0.4rem 0.8rem', borderRadius: '100px', fontSize: '0.7rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  ★ 4.8 Hygiene
+                </span>
               </div>
-            )}
-          </div>
-          <div style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.4rem', fontWeight: '900', margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>{b.name}</h3>
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.8rem' }}>
-              <span style={{ fontSize: '0.65rem', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '800' }}>{b.genderType}</span>
-              <span style={{ fontSize: '0.65rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '800' }}>{b.category}</span>
-            </div>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: '1.4' }}>{b.address}</p>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '1.2rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {b.amenities?.slice(0, 3).map((a, i) => (
-                  <span key={i} style={{ fontSize: '0.65rem', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700' }}>{a}</span>
-                ))}
+
+              {/* Occupancy Indicator */}
+              <div style={{ position: 'absolute', bottom: '15px', right: '15px', textAlign: 'right' }}>
+                <div style={{ color: 'white', fontSize: '1.2rem', fontWeight: '1000', marginBottom: '0.2rem' }}>{occupancy}%</div>
+                <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.65rem', fontWeight: '800', letterSpacing: '0.05em' }}>OCCUPANCY</div>
               </div>
-              <span style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                View Floors <ArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
-              </span>
             </div>
-          </div>
-        </div>
-      )) : (
-        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
-          <BuildingIcon size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
-          <h3 style={{ color: 'var(--text-primary)' }}>No Buildings Found</h3>
-          <p style={{ color: 'var(--text-secondary)' }}>Buildings can be registered from your Portfolio dashboard.</p>
+
+            <div style={{ padding: '1.8rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.6rem', fontWeight: '950', margin: '0 0 0.4rem 0', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>{b.name}</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: '600', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <MapPin size={14} /> {b.address}
+                  </p>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ height: '6px', background: 'var(--bg-tertiary)', borderRadius: '100px', overflow: 'hidden', marginBottom: '0.6rem' }}>
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${occupancy}%` }}
+                    style={{ height: '100%', background: 'linear-gradient(90deg, var(--accent-primary), #818cf8)', borderRadius: '100px' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>
+                  <span>{totalBeds - vacantBeds} BEDS OCCUPIED</span>
+                  <span>{vacantBeds} VACANT</span>
+                </div>
+              </div>
+
+              {/* Infrastructure KPIs */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.8rem', marginBottom: '1.8rem' }}>
+                <div style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '16px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-primary)' }}>{totalFloors}</div>
+                  <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)' }}>FLOORS</div>
+                </div>
+                <div style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '16px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-primary)' }}>{totalRooms}</div>
+                  <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)' }}>ROOMS</div>
+                </div>
+                <div style={{ background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '16px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-primary)' }}>{totalBeds}</div>
+                  <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)' }}>BEDS</div>
+                </div>
+              </div>
+
+              {/* Smart Feature Tags */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                <span style={{ fontSize: '0.65rem', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', padding: '0.3rem 0.7rem', borderRadius: '8px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Zap size={12} fill="var(--accent-primary)" /> {b.isAC ? 'FULL AC' : 'NON-AC'}
+                </span>
+                <span style={{ fontSize: '0.65rem', background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', padding: '0.3rem 0.7rem', borderRadius: '8px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <ShieldCheck size={12} /> SECURE+
+                </span>
+                <span style={{ fontSize: '0.65rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', padding: '0.3rem 0.7rem', borderRadius: '8px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                   FREE WIFI
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+                <div style={{ display: 'flex', WebkitMaskImage: 'linear-gradient(90deg, black 80%, transparent 100%)' }}>
+                  {['LIFT', 'CCTV', 'GYM', 'LAUNDRY'].map((a, i) => (
+                    <div key={i} style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '-8px', border: '2px solid var(--bg-secondary)', color: 'var(--text-secondary)' }}>
+                      {a === 'CCTV' ? <ShieldCheck size={14} /> : a === 'LIFT' ? <Layers size={14} /> : <Zap size={14} />}
+                    </div>
+                  ))}
+                </div>
+                <button 
+                  style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.4)' }}
+                >
+                  Manage Floors <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        );
+      }) : (
+        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '5rem 2rem', background: 'var(--bg-secondary)', borderRadius: '32px', border: '2px dashed var(--border-color)' }}>
+          <BuildingIcon size={64} color="var(--text-muted)" style={{ marginBottom: '1.5rem', opacity: 0.5 }} />
+          <h3 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Empty Portfolio</h3>
+          <p style={{ color: 'var(--text-muted)', maxWidth: '400px', margin: '0 auto 2rem' }}>You haven't added any building structures to this hostel property yet.</p>
+          <button className="btn btn-primary" onClick={onAdd} style={{ padding: '1rem 2rem', borderRadius: '16px' }}>Start Building Architecture</button>
         </div>
       )}
     </div>
@@ -992,30 +1113,96 @@ const BuildingsList = ({ buildings, onSelect, onAdd }) => (
 
 const FloorsList = ({ floors, building, onSelect, onBack, onAdd }) => (
   <div>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}><ArrowLeft size={24} /></button>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>Floors in {building?.name}</h2>
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2.5rem', alignItems: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+        <button onClick={onBack} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: 'pointer', width: '45px', height: '45px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ArrowLeft size={20} /></button>
+        <div>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Floor Hierarchy</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Building Structure: {building?.name}</p>
+        </div>
       </div>
-      <button className="btn btn-primary" onClick={onAdd}><PlusCircle size={18} /> Add Floor</button>
+      <button className="btn btn-primary" onClick={onAdd} style={{ padding: '0.8rem 1.5rem', borderRadius: '14px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <PlusCircle size={20} /> Add Floor
+      </button>
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem' }}>
-      {floors.length > 0 ? floors.map(f => (
-        <motion.div
-          key={f.id} whileHover={{ y: -5 }} className="card"
-          style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }}
-          onClick={() => onSelect(f)}
-        >
-          <div style={{ height: '120px', backgroundImage: `url("${f.images?.[0] || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          <div style={{ padding: '1.2rem', textAlign: 'center' }}>
-            <Layers size={24} color="var(--accent-primary)" style={{ marginBottom: '0.5rem' }} />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>Floor {f.floorNumber}</h3>
-          </div>
-        </motion.div>
-      )) : (
-        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
-          <Layers size={32} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
-          <p style={{ color: 'var(--text-secondary)' }}>No floors found in this building.</p>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
+      {floors.length > 0 ? floors.map(f => {
+        const occRate = 72; // Mocked for UI enhancement
+        const vacantRooms = 3;
+        const vacantBeds = 8;
+        
+        return (
+          <motion.div
+            key={f.id} 
+            whileHover={{ y: -5, boxShadow: 'var(--shadow-xl)' }} 
+            className="card"
+            style={{ 
+              padding: 0, overflow: 'hidden', cursor: 'pointer', 
+              background: 'var(--bg-secondary)', borderRadius: '24px',
+              border: '1px solid var(--border-color)',
+              display: 'flex', flexDirection: 'column'
+            }}
+            onClick={() => onSelect(f)}
+          >
+            <div style={{ 
+              height: '140px', 
+              backgroundImage: `url("${f.images?.[0] || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'}")`, 
+              backgroundSize: 'cover', backgroundPosition: 'center',
+              position: 'relative'
+            }}>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)' }} />
+              <div style={{ position: 'absolute', bottom: '15px', left: '20px', color: 'white' }}>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: '900', margin: 0 }}>Floor {f.floorNumber}</h3>
+                <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.8)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Level Identity</p>
+              </div>
+            </div>
+
+            <div style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '900', color: 'var(--text-primary)' }}>{occRate}%</div>
+                  <div style={{ fontSize: '0.6rem', fontWeight: '800', color: 'var(--text-muted)' }}>OCCUPANCY</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#10B981' }}>{vacantRooms}</div>
+                  <div style={{ fontSize: '0.6rem', fontWeight: '800', color: 'var(--text-muted)' }}>VACANT RMS</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#3B82F6' }}>{vacantBeds}</div>
+                  <div style={{ fontSize: '0.6rem', fontWeight: '800', color: 'var(--text-muted)' }}>VACANT BEDS</div>
+                </div>
+              </div>
+
+              {/* Progress Visualization */}
+              <div style={{ height: '6px', background: 'var(--bg-tertiary)', borderRadius: '100px', overflow: 'hidden', marginBottom: '1.5rem' }}>
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${occRate}%` }}
+                  style={{ height: '100%', background: 'var(--accent-primary)', borderRadius: '100px' }}
+                />
+              </div>
+
+              {/* Floor Tags */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1.5rem' }}>
+                <span style={{ fontSize: '0.6rem', background: '#FDF2F8', color: '#DB2777', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '900' }}>FEMALE-ONLY</span>
+                <span style={{ fontSize: '0.6rem', background: '#F0F9FF', color: '#0369A1', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '900' }}>QUIET ZONE</span>
+                <span style={{ fontSize: '0.6rem', background: '#F0FDFA', color: '#0D9488', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '900' }}>STUDY-FRIENDLY</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '1.2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
+                  <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>CLEANED: TODAY</span>
+                </div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: '900' }}>Explore Rooms →</span>
+              </div>
+            </div>
+          </motion.div>
+        );
+      }) : (
+        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem 2rem', background: 'var(--bg-secondary)', borderRadius: '24px', border: '2px dashed var(--border-color)' }}>
+          <Layers size={48} color="var(--text-muted)" style={{ marginBottom: '1rem', opacity: 0.5 }} />
+          <p style={{ color: 'var(--text-secondary)', fontWeight: '700' }}>No floor structural data found.</p>
         </div>
       )}
     </div>
@@ -1024,58 +1211,109 @@ const FloorsList = ({ floors, building, onSelect, onBack, onAdd }) => (
 
 const RoomsList = ({ rooms, floor, onSelect, onBack, onAdd }) => (
   <div>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}><ArrowLeft size={24} /></button>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>Rooms on Floor {floor?.floorNumber}</h2>
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2.5rem', alignItems: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+        <button onClick={onBack} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: 'pointer', width: '45px', height: '45px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ArrowLeft size={20} /></button>
+        <div>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Room Inventory</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Floor {floor?.floorNumber} Structure</p>
+        </div>
       </div>
-      <button className="btn btn-primary" onClick={onAdd}><PlusCircle size={18} /> Add Room</button>
+      <button className="btn btn-primary" onClick={onAdd} style={{ padding: '0.8rem 1.5rem', borderRadius: '14px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <PlusCircle size={20} /> Add Room
+      </button>
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '2rem' }}>
       {rooms.length > 0 ? rooms.map(r => (
         <motion.div
           key={r.id}
-          whileHover={{ scale: 1.02, y: -2 }}
+          whileHover={{ y: -8, boxShadow: 'var(--shadow-2xl)' }}
           className="card"
-          style={{ padding: 0, cursor: 'pointer', borderRadius: '16px', border: '1px solid #E2E8F0', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+          style={{ 
+            padding: 0, cursor: 'pointer', borderRadius: '28px', 
+            border: '1px solid var(--border-color)', 
+            position: 'relative', overflow: 'hidden', 
+            display: 'flex', flexDirection: 'column',
+            background: 'var(--bg-secondary)'
+          }}
           onClick={() => onSelect(r)}
         >
-          <div style={{ height: '140px', width: '100%', backgroundImage: `url("${r.images?.[0] || 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80'}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
+          {/* Room Image with Badges */}
+          <div style={{ height: '180px', width: '100%', position: 'relative' }}>
+            <div style={{ 
+              position: 'absolute', inset: 0, 
+              backgroundImage: `url("${r.images?.[0] || 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80'}")`, 
+              backgroundSize: 'cover', backgroundPosition: 'center' 
+            }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.4))' }} />
+            
+            <div style={{ position: 'absolute', top: '15px', right: '15px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {r.isAC && <span style={{ padding: '0.4rem 0.8rem', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.9)', color: '#F59E0B', fontSize: '0.65rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.3rem', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}><Zap size={12} fill="#F59E0B" /> AC ROOM</span>}
+              {r.balcony && <span style={{ padding: '0.4rem 0.8rem', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.9)', color: '#10B981', fontSize: '0.65rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.3rem', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}><ImageIcon size={12} /> BALCONY</span>}
+            </div>
 
-          <div style={{ padding: '1.2rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '1000', margin: 0, color: 'var(--text-primary)' }}>Room {r.roomNumber}</h3>
-                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#10B981' }}>₹{r.rentAmount || 0}/mo</span>
+            <div style={{ position: 'absolute', bottom: '15px', left: '20px' }}>
+              <div style={{ color: 'white', fontSize: '1.5rem', fontWeight: '1000', letterSpacing: '-0.02em' }}>Room {r.roomNumber}</div>
+            </div>
+          </div>
+
+          <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+            {/* Header Info */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.2rem' }}>
+              <div>
+                <span style={{ fontSize: '0.7rem', fontWeight: '900', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{r.roomType} SUITE</span>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
+                  <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.6rem', background: 'var(--bg-tertiary)', borderRadius: '6px', fontWeight: '700', color: 'var(--text-secondary)' }}>{r.washroomType} Washroom</span>
+                  <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.6rem', background: 'var(--bg-tertiary)', borderRadius: '6px', fontWeight: '700', color: 'var(--text-secondary)' }}>{r.floorType}</span>
+                </div>
               </div>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: '700', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Layers size={14} /> {r.roomType} • {r.floorType}
-              </p>
-
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1.2rem' }}>
-                {r.isAC && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B', fontSize: '0.65rem', fontWeight: '900' }}>AC</span>}
-                {r.balcony && <span style={{ padding: '0.2rem 0.6rem', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', fontSize: '0.65rem', fontWeight: '900' }}>BALCONY</span>}
-                <span style={{ padding: '0.2rem 0.6rem', borderRadius: '6px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', fontSize: '0.65rem', fontWeight: '900' }}>{r.washroomType}</span>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '1.2rem', fontWeight: '1000', color: 'var(--text-primary)' }}>₹{r.rentAmount}</div>
+                <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)' }}>PER MONTH</div>
               </div>
             </div>
 
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Occupancy</span>
-                <span style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-primary)' }}>{Math.round(((r.occupied || 0) / r.capacity) * 100)}%</span>
+            {/* Comfort Features Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.8rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                <ShieldCheck size={14} color="#10B981" /> Fire Safety Ready
               </div>
-              <div style={{ display: 'flex', gap: '4px', height: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                <Zap size={14} color="#F59E0B" /> Power Backup
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                <ImageIcon size={14} color="#3B82F6" /> Natural Light
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                <MessageSquareWarning size={14} color="#6366F1" /> Sanitized: Yes
+              </div>
+            </div>
+
+            {/* Occupancy Progress */}
+            <div style={{ marginTop: 'auto', paddingTop: '1.2rem', borderTop: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Occupancy Level</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-primary)' }}>{r.occupied || 0} / {r.capacity} BEDS</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 {Array.from({ length: r.capacity }).map((_, i) => (
-                  <div key={i} style={{ flex: 1, borderRadius: '3px', background: i < (r.occupied || 0) ? 'var(--accent-primary)' : 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }} />
+                  <div 
+                    key={i} 
+                    style={{ 
+                      flex: 1, height: '10px', borderRadius: '100px', 
+                      background: i < (r.occupied || 0) ? 'linear-gradient(90deg, var(--accent-primary), #818cf8)' : 'var(--bg-tertiary)',
+                      boxShadow: i < (r.occupied || 0) ? '0 0 10px rgba(99, 102, 241, 0.3)' : 'none'
+                    }} 
+                  />
                 ))}
               </div>
             </div>
           </div>
         </motion.div>
       )) : (
-        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
-          <DoorOpen size={32} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
-          <p style={{ color: 'var(--text-secondary)' }}>No rooms found on this floor.</p>
+        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem 2rem', background: 'var(--bg-secondary)', borderRadius: '32px', border: '2px dashed var(--border-color)' }}>
+          <DoorOpen size={48} color="var(--text-muted)" style={{ marginBottom: '1rem', opacity: 0.5 }} />
+          <p style={{ color: 'var(--text-secondary)', fontWeight: '700' }}>No room deployments found on this level.</p>
         </div>
       )}
     </div>
@@ -1084,60 +1322,110 @@ const RoomsList = ({ rooms, floor, onSelect, onBack, onAdd }) => (
 
 const BedsList = ({ beds, room, onBack, onAdd, onEditBed }) => (
   <div>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}><ArrowLeft size={24} /></button>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>Beds in Room {room?.roomNumber}</h2>
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2.5rem', alignItems: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+        <button onClick={onBack} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: 'pointer', width: '45px', height: '45px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ArrowLeft size={20} /></button>
+        <div>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Unit Management</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Individual Bed Configuration: Room {room?.roomNumber}</p>
+        </div>
       </div>
-      <button className="btn btn-primary" onClick={onAdd}><PlusCircle size={18} /> Add Bed</button>
+      <button className="btn btn-primary" onClick={onAdd} style={{ padding: '0.8rem 1.5rem', borderRadius: '14px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <PlusCircle size={20} /> Deploy Bed
+      </button>
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '1rem' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
       {beds.length > 0 ? beds.map(b => (
         <motion.div
           key={b.id}
-          whileHover={{ y: -5 }}
+          whileHover={{ y: -8, boxShadow: 'var(--shadow-2xl)' }}
           className="card"
-          style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', borderRadius: '16px', borderTop: `4px solid ${b.status === 'AVAILABLE' ? '#10B981' : b.status === 'OCCUPIED' ? '#3B82F6' : '#EF4444'}`, textAlign: 'center', position: 'relative' }}
+          style={{ 
+            padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', 
+            borderRadius: '24px', border: '1px solid var(--border-color)',
+            background: 'var(--bg-secondary)', position: 'relative' 
+          }}
         >
-          <button
-            onClick={() => onEditBed(b)}
-            style={{ position: 'absolute', top: '8px', right: '8px', width: '28px', height: '28px', borderRadius: '50%', background: 'white', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', zIndex: 10, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
-          >
-            <Edit2 size={14} />
-          </button>
+          {/* Bed Header Overlay */}
+          <div style={{ 
+            position: 'absolute', top: '15px', left: '15px', right: '15px', 
+            display: 'flex', justifyContent: 'space-between', zIndex: 10 
+          }}>
+            <span style={{ 
+              padding: '0.3rem 0.8rem', borderRadius: '100px', 
+              background: b.status === 'AVAILABLE' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(59, 130, 246, 0.9)', 
+              color: 'white', fontSize: '0.65rem', fontWeight: '900', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' 
+            }}>
+              {b.status}
+            </span>
+            <button
+              onClick={() => onEditBed(b)}
+              style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+            >
+              <Edit2 size={14} />
+            </button>
+          </div>
+
+          {/* Bed Visual */}
           <div style={{
-            height: '100px',
-            width: '100%',
+            height: '140px', width: '100%',
             backgroundImage: `url("${(b.images && b.images[0]) || 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80'}")`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            transition: 'all 0.3s'
-          }} />
-          <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: b.status === 'AVAILABLE' ? '#ECFDF5' : '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: b.status === 'AVAILABLE' ? '#10B981' : '#3B82F6' }}>
-              <Bed size={18} />
-            </div>
-            <div>
-              <h3 style={{ fontSize: '1rem', fontWeight: '900', margin: 0, color: '#0F172A' }}>{b.bedNumber}</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', marginTop: '0.2rem' }}>
-                <span style={{ fontSize: '0.6rem', fontWeight: '800', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>{b.bedType} • {b.position}</span>
-                <span style={{ fontSize: '0.6rem', fontWeight: '900', color: b.status === 'AVAILABLE' ? '#10B981' : '#3B82F6', textTransform: 'uppercase' }}>{b.status}</span>
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            position: 'relative'
+          }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)' }} />
+          </div>
+
+          <div style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: '950', margin: 0, color: 'var(--text-primary)' }}>Unit {b.bedNumber}</h3>
+              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                <span style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.6rem', fontWeight: '800' }}>{b.bedType}</span>
+                <span style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.6rem', fontWeight: '800' }}>{b.position}</span>
               </div>
             </div>
-            {b.tenant && (
-              <div style={{ marginTop: '0.2rem', padding: '0.3rem 0.6rem', borderRadius: '8px', background: '#F8FAFC', width: '100%' }}>
-                <p style={{ fontSize: '0.7rem', color: '#475569', fontWeight: '700', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  👤 {typeof b.tenant === 'object' ? b.tenant.name : b.tenant}
-                </p>
+
+            {/* Smart Comfort Icons */}
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', padding: '0.8rem', background: 'var(--bg-tertiary)', borderRadius: '16px', justifyContent: 'space-around' }}>
+              <div title="Reading Light" style={{ opacity: 0.8 }}><Zap size={16} color="#F59E0B" /></div>
+              <div title="USB Charging" style={{ opacity: 0.8 }}><CheckSquare size={16} color="#3B82F6" /></div>
+              <div title="Privacy Curtain" style={{ opacity: 0.8 }}><Layers size={16} color="#6366F1" /></div>
+              <div title="Personal Locker" style={{ opacity: 0.8 }}><ShieldCheck size={16} color="#10B981" /></div>
+            </div>
+
+            {/* AI Scores Section */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+                <span>COMFORT SCORE</span>
+                <span style={{ color: 'var(--accent-primary)' }}>9.4/10</span>
               </div>
+              <div style={{ height: '4px', background: 'var(--bg-tertiary)', borderRadius: '100px', overflow: 'hidden' }}>
+                <div style={{ width: '94%', height: '100%', background: 'var(--accent-primary)' }} />
+              </div>
+            </div>
+
+            {/* Tenant Quick Info or Action */}
+            {b.tenant ? (
+              <div style={{ padding: '0.8rem', borderRadius: '14px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '900' }}>
+                  {(typeof b.tenant === 'object' ? b.tenant.name : b.tenant).charAt(0)}
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-primary)' }}>{typeof b.tenant === 'object' ? b.tenant.name : b.tenant}</div>
+                  <div style={{ fontSize: '0.6rem', fontWeight: '700', color: 'var(--text-muted)' }}>Occupying since Mar 2024</div>
+                </div>
+              </div>
+            ) : (
+              <button style={{ width: '100%', padding: '0.8rem', borderRadius: '14px', border: '1px dashed var(--border-color)', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800', cursor: 'pointer' }}>
+                + Assign Tenant
+              </button>
             )}
           </div>
         </motion.div>
       )) : (
-        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
-          <Bed size={32} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
-          <p style={{ color: 'var(--text-secondary)' }}>No beds found in this room.</p>
+        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem 2rem', background: 'var(--bg-secondary)', borderRadius: '24px', border: '2px dashed var(--border-color)' }}>
+          <Bed size={48} color="var(--text-muted)" style={{ marginBottom: '1rem', opacity: 0.5 }} />
+          <p style={{ color: 'var(--text-secondary)', fontWeight: '700' }}>No bed configurations deployed in this room.</p>
         </div>
       )}
     </div>

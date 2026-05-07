@@ -179,11 +179,11 @@ export const api = {
   },
   getSettings: async (bId) => {
     const res = await axios.get(`${API_URL}/settings`, { params: { buildingId: bId } });
-    return res.data;
+    return handleId(res.data);
   },
   updateSettings: async (data) => {
     const res = await axios.post(`${API_URL}/settings`, data);
-    return res.data;
+    return handleId(res.data);
   },
 
   // CRUD Operations
@@ -246,7 +246,55 @@ export const api = {
   addComplaint: async (data) => {
     const res = await axios.post(`${API_URL}/complaints`, data);
     return handleId(res.data);
-  }
+  },
+  
+  // Inventory & Asset Management
+  getInventory: async (bId, dataType = null) => {
+    const params = { buildingId: bId };
+    if (dataType) params.dataType = dataType;
+    const res = await axios.get(`${API_URL}/inventory`, { params });
+    return handleId(res.data);
+  },
+  addInventoryItem: async (data) => {
+    const res = await axios.post(`${API_URL}/inventory`, data);
+    return handleId(res.data);
+  },
+  updateInventoryItem: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/inventory/${id}`, data);
+    return handleId(res.data);
+  },
+  deleteInventoryItem: async (id) => {
+    await axios.delete(`${API_URL}/inventory/${id}`);
+  },
+
+  // Notifications API
+  getNotifications: async (bId) => {
+    const res = await axios.get(`${API_URL}/notifications`, { params: { buildingId: bId } });
+    return handleId(res.data);
+  },
+  getNotificationUnreadCount: async (bId) => {
+    const res = await axios.get(`${API_URL}/notifications/unread-count`, { params: { buildingId: bId } });
+    return res.data;
+  },
+  markNotificationRead: async (id) => {
+    const res = await axios.patch(`${API_URL}/notifications/${id}/read`);
+    return handleId(res.data);
+  },
+  markAllNotificationsRead: async (bId) => {
+    const res = await axios.post(`${API_URL}/notifications/mark-all-read`, { buildingId: bId });
+    return res.data;
+  },
+  archiveNotification: async (id) => {
+    const res = await axios.patch(`${API_URL}/notifications/${id}/archive`);
+    return handleId(res.data);
+  },
+  deleteNotification: async (id) => {
+    await axios.delete(`${API_URL}/notifications/${id}`);
+  },
+  seedNotifications: async (bId) => {
+    const res = await axios.post(`${API_URL}/notifications/seed`, { buildingId: bId });
+    return res.data;
+  },
 };
 
 window.api = api;

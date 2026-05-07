@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   BedDouble, User, AlertTriangle, SlidersHorizontal,
-  Settings2, History, Filter, Layers, ChevronDown, ChevronRight, Building2, FileText
+  Settings2, History, Filter, Layers, ChevronDown, ChevronRight, Building2, FileText,
+  Zap, MapPin, ShieldCheck, Image as ImageIcon, MessageSquareWarning
 } from 'lucide-react';
 import { api } from '../mockData';
 
@@ -420,30 +421,41 @@ const Rooms = () => {
                             const occRate = roomBeds.length > 0 ? Math.round(((roomBeds.length - available) / roomBeds.length) * 100) : 0;
 
                             return (
-                              <div key={room.id} style={{ border: room.status === 'Maintenance' ? '2px dashed var(--accent-warning)' : '1px solid var(--border-color)', borderRadius: '16px', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
+                              <div key={room.id} style={{ 
+                                border: room.status === 'Maintenance' ? '2px dashed #F59E0B' : '1px solid var(--border-color)', 
+                                borderRadius: '24px', background: 'var(--bg-secondary)', overflow: 'hidden',
+                                transition: 'all 0.3s ease',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+                              }}>
                                 {/* Room Header Info */}
-                                <div style={{ padding: '1.2rem', borderBottom: '1px solid var(--border-color)' }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.2rem' }}>
                                     <div>
-                                      <h4 style={{ fontSize: '1.2rem', fontWeight: '900', margin: '0 0 0.2rem 0' }}>Room {room.roomNumber}</h4>
-                                      <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', background: 'var(--bg-tertiary)', borderRadius: '12px', fontWeight: '600' }}>{room.roomType}</span>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.3rem' }}>
+                                        <h4 style={{ fontSize: '1.3rem', fontWeight: '950', margin: 0, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Room {room.roomNumber}</h4>
+                                        {room.isAC && <Zap size={14} color="#F59E0B" fill="#F59E0B" />}
+                                      </div>
+                                      <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                        <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.6rem', background: 'var(--bg-tertiary)', borderRadius: '6px', fontWeight: '800', color: 'var(--text-muted)' }}>{room.roomType}</span>
+                                        {room.isAC && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.6rem', background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B', borderRadius: '6px', fontWeight: '900' }}>AC</span>}
+                                      </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                                        <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: `conic-gradient(var(--accent-primary) ${occRate}%, var(--bg-tertiary) 0)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                          <div style={{ width: '24px', height: '24px', background: 'var(--bg-secondary)', borderRadius: '50%' }} />
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', justifyContent: 'flex-end' }}>
+                                        <span style={{ fontWeight: '1000', fontSize: '1.1rem', color: 'var(--text-primary)' }}>{roomBeds.length - available}/{roomBeds.length}</span>
+                                        <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: `conic-gradient(var(--accent-primary) ${occRate}%, var(--bg-tertiary) 0)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          <div style={{ width: '22px', height: '22px', background: 'var(--bg-secondary)', borderRadius: '50%' }} />
                                         </div>
-                                        <span style={{ fontWeight: '800', fontSize: '1rem' }}>{roomBeds.length - available}/{roomBeds.length}</span>
                                       </div>
-                                      <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Beds Occupied</p>
+                                      <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.2rem', fontWeight: '800' }}>OCCUPANCY</p>
                                     </div>
                                   </div>
-                                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                    <button onClick={() => toggleRoomExpand(room.id)} className="btn btn-primary" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', borderRadius: '8px' }}>
-                                      {expandedRooms[room.id] ? 'Hide Beds' : 'View Beds'}
+                                  <div style={{ display: 'flex', gap: '0.8rem' }}>
+                                    <button onClick={() => toggleRoomExpand(room.id)} className="btn btn-primary" style={{ flex: 1, padding: '0.6rem', fontSize: '0.8rem', borderRadius: '12px', fontWeight: '800', boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.2)' }}>
+                                      {expandedRooms[room.id] ? 'Minimize Unit' : 'Manage Beds'}
                                     </button>
-                                    <button onClick={() => toggleMaintenance(room.id)} className="btn" style={{ padding: '0.5rem', fontSize: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: room.status === 'Maintenance' ? '#f59e0b20' : 'var(--bg-tertiary)', color: room.status === 'Maintenance' ? '#f59e0b' : 'var(--text-primary)' }}>
-                                      <AlertTriangle size={14} />
+                                    <button onClick={() => toggleMaintenance(room.id)} className="btn" style={{ padding: '0.6rem', width: '45px', borderRadius: '12px', border: '1px solid var(--border-color)', background: room.status === 'Maintenance' ? '#F59E0B' : 'var(--bg-tertiary)', color: room.status === 'Maintenance' ? 'white' : 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      <AlertTriangle size={18} />
                                     </button>
                                   </div>
                                 </div>
@@ -451,49 +463,56 @@ const Rooms = () => {
                                 {/* Bed Grid (Expanded) */}
                                 <AnimatePresence>
                                   {expandedRooms[room.id] && (
-                                    <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} style={{ overflow: 'hidden' }}>
-                                      <div style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '0.8rem' }}>
+                                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
+                                      <div style={{ padding: '1.5rem', background: 'var(--bg-tertiary)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: '1rem' }}>
                                         {roomBeds.map(bed => {
-                                          let bg = 'var(--bg-secondary)';
-                                          let color = 'var(--text-secondary)';
-                                          let border = 'var(--border-color)';
-
-                                          if (bed.status === 'OCCUPIED') { bg = '#ef444415'; color = '#ef4444'; border = '#ef444450'; }
-                                          else if (bed.status === 'AVAILABLE') { bg = '#10b98115'; color = '#10b981'; border = '#10b98150'; }
-                                          else if (bed.status === 'RESERVED') { bg = '#f59e0b15'; color = '#f59e0b'; border = '#f59e0b50'; }
+                                          const isOccupied = bed.status === 'OCCUPIED';
+                                          const isReserved = bed.status === 'RESERVED';
+                                          const isMaintenance = bed.status === 'MAINTENANCE';
 
                                           return (
-                                            <div
+                                            <motion.div
                                               key={bed.id}
+                                              whileHover={{ scale: 1.05 }}
                                               onClick={() => handleBedClick(room, bed)}
-                                              style={{ padding: '0', borderRadius: '12px', background: bg, border: `1px solid ${border}`, color: color, cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: 'all 0.2s', minHeight: '110px', position: 'relative' }}
+                                              style={{ 
+                                                padding: '0', borderRadius: '16px', 
+                                                background: 'var(--bg-secondary)', 
+                                                border: `2px solid ${isOccupied ? '#3B82F620' : isReserved ? '#F59E0B20' : isMaintenance ? '#EF444420' : '#10B98120'}`, 
+                                                color: 'var(--text-primary)', cursor: 'pointer', textAlign: 'center', 
+                                                display: 'flex', flexDirection: 'column', overflow: 'hidden', 
+                                                transition: 'all 0.2s', minHeight: '130px', position: 'relative',
+                                                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                                              }}
                                             >
                                               <div style={{
-                                                height: '50px',
+                                                height: '60px',
                                                 width: '100%',
                                                 backgroundImage: `url("${(bed.images && bed.images[0]) || 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80'}")`,
                                                 backgroundSize: 'cover',
                                                 backgroundPosition: 'center',
-                                                backgroundRepeat: 'no-repeat',
-                                                opacity: 0.9,
-                                                borderBottom: `1px solid ${border}`
+                                                opacity: isOccupied ? 0.7 : 1,
+                                                borderBottom: '1px solid var(--border-color)'
                                               }} />
-                                              <div style={{ padding: '0.5rem 0.4rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.1rem' }}>
+                                              
+                                              {/* Status Dot */}
+                                              <div style={{ position: 'absolute', top: '50px', right: '8px', width: '12px', height: '12px', borderRadius: '50%', background: isOccupied ? '#3B82F6' : isReserved ? '#F59E0B' : isMaintenance ? '#EF4444' : '#10B981', border: '2px solid var(--bg-secondary)' }} />
+
+                                              <div style={{ padding: '0.6rem 0.4rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                                  {bed.status === 'OCCUPIED' ? <User size={14} /> : <BedDouble size={14} />}
-                                                  <span style={{ fontSize: '0.75rem', fontWeight: '800' }}>{bed.bedNumber}</span>
+                                                  <span style={{ fontSize: '0.85rem', fontWeight: '950', color: isOccupied ? '#3B82F6' : 'var(--text-primary)' }}>{bed.bedNumber}</span>
                                                 </div>
-                                                <span style={{ fontSize: '0.55rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>
-                                                  {bed.status === 'OCCUPIED' ? (bed.tenant || 'Occupied') : bed.status}
+                                                <span style={{ fontSize: '0.55rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>
+                                                  {isOccupied ? (typeof bed.tenant === 'object' ? bed.tenant.name?.split(' ')[0] : 'Occupied') : bed.status}
                                                 </span>
                                               </div>
-                                            </div>
+                                            </motion.div>
                                           );
                                         })}
                                       </div>
-                                      <div style={{ padding: '0.8rem 1.2rem', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between' }}>
-                                        <button className="btn" style={{ fontSize: '0.7rem', padding: '0.3rem 0.8rem' }}>Auto Allocate</button>
-                                        <button className="btn" style={{ fontSize: '0.7rem', padding: '0.3rem 0.8rem' }}>Reserve</button>
+                                      <div style={{ padding: '1rem 1.5rem', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', gap: '0.8rem' }}>
+                                        <button className="btn" style={{ flex: 1, fontSize: '0.75rem', fontWeight: '800', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '10px' }}>Auto Assign</button>
+                                        <button className="btn" style={{ flex: 1, fontSize: '0.75rem', fontWeight: '800', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '10px' }}>Quick Reserve</button>
                                       </div>
                                     </motion.div>
                                   )}

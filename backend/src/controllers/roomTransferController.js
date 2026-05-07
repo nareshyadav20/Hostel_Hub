@@ -1,6 +1,7 @@
 const RoomTransfer = require('../models/RoomTransfer');
 const Tenant = require('../models/Tenant');
 const Building = require('../models/Building');
+const notificationService = require('../utils/notificationService');
 
 exports.createTransfer = async (req, res) => {
   try {
@@ -46,6 +47,18 @@ exports.createTransfer = async (req, res) => {
       newRoom,
       reason,
       status: 'PENDING'
+    });
+
+    // Trigger Notification
+    await notificationService.createNotification({
+      buildingId,
+      moduleName: 'Rooms',
+      portalType: 'Tenant',
+      category: 'Occupancy',
+      title: 'Room Transfer Request',
+      message: `${tenant.name} requested transfer to ${newRoom}. Reason: ${reason}`,
+      priority: 'Medium',
+      tenantId: tenant._id
     });
 
     res.status(201).json(transfer);
@@ -99,6 +112,20 @@ exports.updateTransferStatus = async (req, res) => {
 
     transfer.status = status;
     await transfer.save();
+
+    const populatedTransfer = await RoomTransfer.findById(transfer._id).populate('tenant', 'name');
+
+    // Trigger Notification
+    await notificationService.createNotification({
+      buildingId: transfer.buildingId,
+      moduleName: 'Rooms',
+      portalType: 'Owner',
+      category: 'Occupancy',
+      title: 'Transfer Status Updated',
+      message: `Room transfer for ${populatedTransfer.tenant?.name} has been ${status}.`,
+      priority: 'Low',
+      tenantId: transfer.tenant
+    });
 
     if (status === 'ACCEPTED') {
       await Tenant.findByIdAndUpdate(transfer.tenant, { room: transfer.newRoom });

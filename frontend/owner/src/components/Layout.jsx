@@ -4,6 +4,8 @@ import { api } from '../mockData';
 import Sidebar from './Sidebar';
 import ThemeToggle from './ThemeToggle';
 import ProfileDropdown from './ProfileDropdown';
+import { Bell } from 'lucide-react';
+import { io } from 'socket.io-client';
 import './Layout.css';
 
 // ── tiny hook: polls /api/ping every 30 s to track backend status ──
@@ -77,6 +79,32 @@ const Layout = ({ children }) => {
   const [activeBuildingId, setActiveBuildingId] = useState(
     urlBuildingId || localStorage.getItem('selectedBuildingId')
   );
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (activeBuildingId) {
+      // Fetch initial unread count
+      api.getNotificationUnreadCount(activeBuildingId).then(res => {
+        setUnreadCount(res.count || 0);
+      });
+
+      // Socket.IO for real-time badge updates
+      const socket = io('http://localhost:5000');
+      socket.emit('joinBuilding', activeBuildingId);
+      
+      socket.on('newNotification', () => {
+        setUnreadCount(prev => prev + 1);
+      });
+
+      socket.on('notificationUpdate', (data) => {
+        if (data.type === 'NEW' && data.notification.buildingId === activeBuildingId) {
+          setUnreadCount(prev => prev + 1);
+        }
+      });
+
+      return () => socket.disconnect();
+    }
+  }, [activeBuildingId]);
 
   useEffect(() => {
     api.getBuildings().then(data => {
@@ -154,12 +182,27 @@ const Layout = ({ children }) => {
           {/* ── Right side: theme + bell + profile ── */}
           <div className="user-profile" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <ThemeToggle />
-            <div className="notifications" style={{ color: 'var(--text-secondary)', cursor: 'pointer' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
+            <div 
+              className="notifications" 
+              onClick={() => window.location.href = `/owner/building/${activeBuildingId}/notifications`}
+              style={{ 
+                color: 'var(--text-secondary)', cursor: 'pointer', position: 'relative',
+                width: '40px', height: '40px', borderRadius: '12px', background: 'var(--bg-tertiary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-color)'
+              }}
+            >
+              <Bell size={20} />
+              {unreadCount > 0 && (
+                <span style={{
+                  position: 'absolute', top: '-5px', right: '-5px',
+                  background: '#EF4444', color: 'white', fontSize: '0.65rem',
+                  fontWeight: '800', padding: '0.1rem 0.4rem', borderRadius: '10px',
+                  border: '2px solid var(--bg-primary)',
+                  boxShadow: '0 2px 5px rgba(239, 68, 68, 0.3)'
+                }}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </div>
             <ProfileDropdown />
           </div>

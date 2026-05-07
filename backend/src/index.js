@@ -11,11 +11,38 @@ dotenv.config();
 connectDB();
 
 const app = express();
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require('socket.io');
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"]
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+const notificationService = require('./utils/notificationService');
+notificationService.setIo(io);
+
+// Socket.IO Connection Logic
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+
+  socket.on('joinBuilding', (buildingId) => {
+    socket.join(buildingId);
+    console.log(`Socket ${socket.id} joined building ${buildingId}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
 
 const buildingRoutes = require('./routes/buildingRoutes');
 const floorRoutes = require('./routes/floorRoutes');
@@ -32,6 +59,7 @@ const messRoutes = require('./routes/messRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const ownerRoutes = require('./routes/ownerRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 // Pre-load all models to ensure they are registered for population
 require('./models/User');
@@ -40,6 +68,7 @@ require('./models/RoomTransfer');
 require('./models/Complaint');
 require('./models/MessMenu');
 require('./models/Payment');
+require('./models/Notification');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -57,6 +86,7 @@ app.use('/api/mess', messRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/owner', ownerRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
@@ -66,6 +96,6 @@ app.get('/', (req, res) => {
   res.send('HostelHub API (Node/Mongoose) is running...');
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
