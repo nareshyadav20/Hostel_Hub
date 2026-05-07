@@ -33,7 +33,30 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// App version for cache/auth busting
+const APP_VERSION = '1.0.4';
+
 function App() {
+  React.useEffect(() => {
+    const storedVersion = localStorage.getItem('app_version');
+    if (storedVersion !== APP_VERSION) {
+      // Clear old storage and cache on version mismatch
+      localStorage.clear();
+      sessionStorage.clear();
+      localStorage.setItem('app_version', APP_VERSION);
+      
+      // Clear all cookies as well
+      document.cookie.split(";").forEach((c) => {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+
+      // Reload to ensure fresh assets are loaded
+      window.location.reload();
+    }
+  }, []);
+
   return (
     <Router>
       <Routes>

@@ -20,12 +20,23 @@ const Signup = () => {
     setLoading(true);
     setError('');
 
+    // Sanitize inputs
+    const cleanName = formData.name.trim();
+    const cleanEmail = formData.email.trim();
+    const cleanPassword = formData.password.trim();
+    const cleanPhone = formData.mobile.trim();
+
     try {
+      // Clear old/stale auth data before registration
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      sessionStorage.clear();
+
       const response = await API.post('/auth/register', {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.mobile,
+        name: cleanName,
+        email: cleanEmail,
+        password: cleanPassword,
+        phone: cleanPhone,
         role: 'TENANT'
       });
 

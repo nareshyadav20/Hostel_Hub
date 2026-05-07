@@ -15,8 +15,19 @@ const Login = () => {
     setError('');
     setLoading(true);
 
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+
     try {
-      const response = await API.post('/auth/login', { email, password });
+      // Clear old/stale auth data before logging in
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      sessionStorage.clear();
+
+      const response = await API.post('/auth/login', { 
+        email: cleanEmail, 
+        password: cleanPassword 
+      });
       const { user, token } = response.data;
 
       localStorage.setItem('token', token);
