@@ -151,7 +151,7 @@ const Payments = () => {
           <h3 className="sn-card-title">Transaction History</h3>
         </div>
 
-        <div className="table-overflow">
+        <div className="table-view-desktop">
           <table className="financial-table-premium">
             <thead>
               <tr>
@@ -185,6 +185,27 @@ const Payments = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="mobile-cards-view">
+          {invoices.map(invoice => (
+            <div key={invoice.id} className="mobile-transaction-card">
+              <div className="mobile-card-top">
+                <span className="m-date">{invoice.date}</span>
+                <span className={`status-pill ${invoice.status.toLowerCase()}`}>{invoice.status}</span>
+              </div>
+              <div className="mobile-card-middle">
+                <div className="m-info">
+                  <span className="m-label">ID</span>
+                  <span className="m-value">{invoice.id}</span>
+                </div>
+                <div className="m-amount">₹{invoice.amount.toLocaleString()}</div>
+              </div>
+              <button className="btn-mobile-details" onClick={() => setSelectedInvoice(invoice)}>
+                View Details
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 

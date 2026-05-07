@@ -62,7 +62,7 @@ const Home = () => {
     };
 
     const observer = new IntersectionObserver(handleIntersect, observerOptions);
-    
+
     // Target sections
     ['hero', 'how', 'reviews', 'cities'].forEach(id => {
       const el = document.getElementById(id);
@@ -147,6 +147,8 @@ const Home = () => {
     navigate(`/search?${params.toString()}`);
   };
 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <div className="hv2-root">
 
@@ -159,11 +161,19 @@ const Home = () => {
           </svg>
           <span className="hv2-logo-text">Livora</span>
         </div>
-        <nav className="hv2-nav">
+        
+        <nav className={`hv2-nav ${isMenuOpen ? 'mobile-open' : ''}`}>
+          {isMenuOpen && (
+            <div className="hv2-mobile-header">
+              <span className="hv2-logo-text">Livora</span>
+              <button className="hv2-menu-close" onClick={() => setIsMenuOpen(false)}>✕</button>
+            </div>
+          )}
           {navItems.map(item => (
             <span key={item.label} className={`hv2-nav-item ${activeNav === item.label ? 'active' : ''}`}
               onClick={() => {
                 setActiveNav(item.label);
+                setIsMenuOpen(false);
                 if (item.id === 'explore') navigate('/explore');
                 else if (['about', 'contact'].includes(item.id)) navigate(`/${item.id}`);
                 else scrollToSection(item.id);
@@ -171,10 +181,26 @@ const Home = () => {
               {item.label}
             </span>
           ))}
+          {isMenuOpen && (
+            <div className="hv2-mobile-actions">
+              <button className="hv2-login-btn" onClick={() => navigate('/login')}>Log In</button>
+              <button className="hv2-signup-btn" onClick={() => navigate('/signup')}>Sign Up</button>
+            </div>
+          )}
         </nav>
+
         <div className="hv2-header-actions">
-          <button className="hv2-login-btn" onClick={() => navigate('/login')}>Log In</button>
-          <button className="hv2-signup-btn" onClick={() => navigate('/signup')}>Sign Up</button>
+          <div className="hv2-desktop-actions">
+            <button className="hv2-login-btn" onClick={() => navigate('/login')}>Log In</button>
+            <button className="hv2-signup-btn" onClick={() => navigate('/signup')}>Sign Up</button>
+          </div>
+          <button className="hv2-menu-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
         </div>
       </header>
 

@@ -92,9 +92,20 @@
 }
 
 @keyframes pulse-green {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); }
-  70% { transform: scale(1.2); box-shadow: 0 0 0 8px rgba(22, 163, 74, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4);
+  }
+
+  70% {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 8px rgba(22, 163, 74, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+  }
 }
 
 .meal-segments {
@@ -128,11 +139,34 @@
   flex-shrink: 0;
 }
 
-.meal-details { flex: 1; }
-.meal-meta { display: flex; justify-content: space-between; margin-bottom: 0.25rem; }
-.meal-label { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-.meal-time { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
-.meal-dish { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
+.meal-details {
+  flex: 1;
+}
+
+.meal-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.meal-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.meal-time {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.meal-dish {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
 
 /* Attendance Card */
 .attendance-card-premium {
@@ -177,11 +211,23 @@
   background: transparent;
 }
 
-.att-btn.dining { color: #16a34a; }
-.att-btn.dining.active { background: #f0fdf4; border-color: #16a34a; }
+.att-btn.dining {
+  color: #16a34a;
+}
 
-.att-btn.skip { color: #ef4444; }
-.att-btn.skip.active { background: #fef2f2; border-color: #ef4444; }
+.att-btn.dining.active {
+  background: #f0fdf4;
+  border-color: #16a34a;
+}
+
+.att-btn.skip {
+  color: #ef4444;
+}
+
+.att-btn.skip.active {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
 
 .sustainability-box {
   margin-top: 2.5rem;
@@ -193,11 +239,22 @@
   text-align: left;
 }
 
-.tip-icon-pro { color: #db2777; flex-shrink: 0; }
-.sustainability-box p { font-size: 0.85rem; color: #9d174d; line-height: 1.5; }
+.tip-icon-pro {
+  color: #db2777;
+  flex-shrink: 0;
+}
+
+.sustainability-box p {
+  font-size: 0.85rem;
+  color: #9d174d;
+  line-height: 1.5;
+}
 
 /* Weekly Table */
-.schedule-table-card { padding: 2.5rem !important; }
+.schedule-table-card {
+  padding: 2.5rem !important;
+}
+
 .icon-badge-green {
   width: 44px;
   height: 44px;
@@ -230,8 +287,16 @@
   border-bottom: 1px solid var(--border-light);
 }
 
-.td-day { font-weight: 800; color: var(--text-primary); }
-.td-dish { color: var(--text-secondary); font-weight: 600; font-size: 0.95rem; }
+.td-day {
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.td-dish {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
 
 /* Premium Rating Section */
 .rating-section-premium {
@@ -315,12 +380,178 @@
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@media (max-width: 900px) {
-  .mess-grid { grid-template-columns: 1fr; }
-  .mess-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
-  .attendance-card-premium { min-height: auto; }
+@media (max-width: 992px) {
+  .mess-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .mess-page {
+    padding: 0.75rem;
+    gap: 1rem;
+  }
+
+  .mess-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .mess-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0;
+  }
+
+  .header-subtitle {
+    display: none;
+  }
+
+  .plan-badge-container {
+    text-align: right;
+    width: auto;
+  }
+
+  .plan-label {
+    font-size: 0.65rem;
+  }
+
+  .plan-value.orange {
+    font-size: 0.75rem;
+    padding: 2px 10px;
+  }
+
+  .menu-card-main {
+    padding: 1.25rem !important;
+    border-radius: 20px !important;
+  }
+
+  .card-header-flex {
+    margin-bottom: 1.25rem;
+  }
+
+  .card-header-flex .sn-card-title {
+    font-size: 1.1rem;
+  }
+
+  .meal-item-row {
+    padding: 0.85rem;
+    gap: 0.85rem;
+    border-radius: 12px;
+  }
+
+  .meal-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .meal-label {
+    font-size: 0.7rem;
+  }
+
+  .meal-time {
+    font-size: 0.7rem;
+  }
+
+  .meal-dish {
+    font-size: 0.95rem;
+  }
+
+  .rating-section-premium {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+  }
+
+  .rating-header p {
+    font-size: 0.9rem;
+  }
+
+  .colorful-rating-group {
+    padding: 0.25rem 0 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .rating-btn {
+    min-width: 65px;
+    padding: 0.6rem;
+  }
+
+  .rating-btn .rating-emoji {
+    font-size: 1.25rem !important;
+  }
+
+  .rating-label {
+    font-size: 0.6rem;
+  }
+
+  .attendance-card-premium {
+    padding: 1.5rem !important;
+    min-height: auto;
+    border-radius: 20px !important;
+  }
+
+  .attendance-visual h3 {
+    font-size: 1.1rem;
+  }
+
+  .attendance-visual p {
+    font-size: 0.85rem;
+  }
+
+  .attendance-toggle-group {
+    margin-top: 1.5rem;
+    gap: 0.75rem;
+  }
+
+  .att-btn {
+    padding: 0.85rem;
+    font-size: 0.85rem;
+  }
+
+  .sustainability-box {
+    margin-top: 1.5rem;
+    padding: 1rem;
+  }
+
+  .schedule-table-card {
+    padding: 1.25rem !important;
+    border-radius: 20px !important;
+  }
+
+  .weekly-table-premium th,
+  .weekly-table-premium td {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .rating-btn {
+    min-width: 60px;
+  }
+
+  .meal-item-row {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .meal-meta {
+    flex-direction: column;
+    gap: 0.1rem;
+  }
 }

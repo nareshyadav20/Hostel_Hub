@@ -99,7 +99,7 @@ const Complaints = () => {
           <h3 className="sn-card-title">Active Support Tickets</h3>
         </div>
 
-        <div className="table-overflow">
+        <div className="table-view-desktop">
           <table className="tickets-table">
             <thead>
               <tr>
@@ -135,6 +135,28 @@ const Complaints = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="mobile-cards-view">
+          {complaints.length === 0 ? (
+            <div className="td-empty">Everything is working perfectly!</div>
+          ) : (
+            complaints.map(item => (
+              <div key={item._id} className="mobile-ticket-card">
+                <div className="mobile-card-top">
+                  <span className="m-date">{new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+                  <span className={`status-pill ${item.status.toLowerCase()}`}>{item.status}</span>
+                </div>
+                <div className="mobile-card-middle">
+                  <span className="ticket-title">{item.title}</span>
+                  <span className="category-tag">{item.category}</span>
+                </div>
+                <div className="mobile-card-bottom">
+                  <p className="ticket-desc">{item.description}</p>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

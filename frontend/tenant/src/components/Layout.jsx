@@ -1,7 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import ThemeToggle from './ThemeToggle';
+import BottomNav from './BottomNav';
 import './Layout.css';
 
 const Layout = ({ children }) => {
@@ -16,6 +17,7 @@ const Layout = ({ children }) => {
     window.location.href = '/';
   };
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = React.useRef(null);
@@ -26,6 +28,8 @@ const Layout = ({ children }) => {
       setShowProfileModal(true);
     }
   }, [isLoggedIn, user.profileCompletion]);
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const handleProfileSubmit = (e) => {
     e.preventDefault();
@@ -44,9 +48,21 @@ const Layout = ({ children }) => {
 
   return (
     <div className="layout-root">
-      {isLoggedIn && <Sidebar />}
+      {isLoggedIn && <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />}
+      {isSidebarOpen && <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>}
+
       <main className={isLoggedIn ? "main-content" : "main-content guest"}>
         <header className="content-header">
+          {isLoggedIn && (
+            <button className="hamburger-btn" onClick={toggleSidebar}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          )}
+
           <div className="user-profile">
             <ThemeToggle />
             {isLoggedIn ? (
@@ -57,7 +73,7 @@ const Layout = ({ children }) => {
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                   </svg>
                 </div>
-                
+
                 <div className="avatar-container" ref={dropdownRef}>
                   <div className="profile-mini-box" onClick={() => setShowDropdown(!showDropdown)}>
                     <div className="profile-text">
@@ -149,7 +165,7 @@ const Layout = ({ children }) => {
           <div className="content-wrapper">
             {children}
           </div>
-          
+
           <footer className="layout-footer">
             <p>© 2024 StayNest All rights reserved.</p>
           </footer>
@@ -165,13 +181,15 @@ const Layout = ({ children }) => {
           </div>
         )}
 
+        {isLoggedIn && <BottomNav />}
+
         {showProfileModal && (
           <div className="modal-overlay">
             <div className="modal-content glass-card fade-in">
               <button className="modal-close" onClick={() => setShowProfileModal(false)}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
-              
+
               <div className="modal-header">
                 <div className="modal-icon-bg">
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -184,11 +202,11 @@ const Layout = ({ children }) => {
                 <div className="form-row">
                   <div className="input-group">
                     <label>Age</label>
-                    <input type="number" placeholder="e.g. 22" value={modalData.age} onChange={e => setModalData({...modalData, age: e.target.value})} required />
+                    <input type="number" placeholder="e.g. 22" value={modalData.age} onChange={e => setModalData({ ...modalData, age: e.target.value })} required />
                   </div>
                   <div className="input-group">
                     <label>Gender</label>
-                    <select value={modalData.gender} onChange={e => setModalData({...modalData, gender: e.target.value})}>
+                    <select value={modalData.gender} onChange={e => setModalData({ ...modalData, gender: e.target.value })}>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                       <option value="Other">Other</option>
@@ -198,7 +216,7 @@ const Layout = ({ children }) => {
 
                 <div className="input-group">
                   <label>Occupation</label>
-                  <select value={modalData.occupation} onChange={e => setModalData({...modalData, occupation: e.target.value})} required>
+                  <select value={modalData.occupation} onChange={e => setModalData({ ...modalData, occupation: e.target.value })} required>
                     <option value="">Select Occupation</option>
                     <option value="Student">Student</option>
                     <option value="Professional">Working Professional</option>
@@ -207,12 +225,12 @@ const Layout = ({ children }) => {
 
                 <div className="input-group">
                   <label>Preferred Location</label>
-                  <input type="text" placeholder="e.g. Koramangala, Bengaluru" value={modalData.locationPref} onChange={e => setModalData({...modalData, locationPref: e.target.value})} required />
+                  <input type="text" placeholder="e.g. Koramangala, Bengaluru" value={modalData.locationPref} onChange={e => setModalData({ ...modalData, locationPref: e.target.value })} required />
                 </div>
 
                 <div className="input-group">
                   <label>Room Preference</label>
-                  <select value={modalData.roomPref} onChange={e => setModalData({...modalData, roomPref: e.target.value})}>
+                  <select value={modalData.roomPref} onChange={e => setModalData({ ...modalData, roomPref: e.target.value })}>
                     <option value="Single">Single Room</option>
                     <option value="Double">2 Sharing</option>
                     <option value="Triple">3 Sharing</option>

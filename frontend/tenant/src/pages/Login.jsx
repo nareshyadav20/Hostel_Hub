@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
-import '@packages/ui-kit/auth.css';
+import './auth.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -15,10 +15,21 @@ const Login = () => {
     setError('');
     setLoading(true);
 
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+
     try {
-      const response = await API.post('/auth/login', { email, password });
+      // Clear old/stale auth data before logging in
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      sessionStorage.clear();
+
+      const response = await API.post('/auth/login', { 
+        email: cleanEmail, 
+        password: cleanPassword 
+      });
       const { user, token } = response.data;
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       navigate('/dashboard');

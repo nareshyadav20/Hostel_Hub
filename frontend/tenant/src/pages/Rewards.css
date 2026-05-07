@@ -166,8 +166,79 @@
   gap: 1rem;
 }
 
-@media (max-width: 900px) {
-  .rewards-cta-grid { grid-template-columns: 1fr; }
-  .cta-card { padding: 2rem; }
-  .cta-info { max-width: 100%; }
+@media (max-width: 768px) {
+  .rewards-page {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .rewards-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .header-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .header-icon-main {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .points-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .point-card {
+    padding: 1.25rem;
+    gap: 1rem;
+  }
+
+  .point-icon-bg {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+
+  .point-value {
+    font-size: 2rem;
+  }
+
+  .rewards-cta-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .cta-card {
+    padding: 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .cta-info {
+    max-width: 100%;
+  }
+
+  .cta-info h2 {
+    font-size: 1.35rem;
+  }
+
+  .cta-info p {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .btn-primary, .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .referral-action-wrapper {
+    margin-top: 1.5rem;
+    width: 100%;
+  }
 }

@@ -194,7 +194,89 @@
 .status-pill.rejected { background: #fef2f2; color: #ef4444; }
 
 /* Responsive */
-@media (max-width: 900px) {
-  .transfer-summary-grid { grid-template-columns: 1fr; }
-  .residency-details { flex-direction: row; justify-content: space-between; }
+@media (max-width: 768px) {
+  .transfers-page {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .transfers-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .header-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .header-icon-main {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .transfer-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .current-residency-card {
+    padding: 1.5rem !important;
+  }
+
+  .residency-details {
+    margin-top: 1.5rem;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .res-value {
+    font-size: 1.1rem;
+  }
+
+  .transfer-action-card {
+    padding: 2rem 1.5rem !important;
+  }
+
+  .pulse-icon-container {
+    width: 64px;
+    height: 64px;
+  }
+
+  .transfer-action-card h3 {
+    font-size: 1.25rem;
+  }
+
+  .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .history-card-full {
+    padding: 1.25rem !important;
+  }
+
+  .table-overflow {
+    margin: 0 -1.25rem;
+    padding: 0 1.25rem;
+    width: calc(100% + 2.5rem);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .transfer-table {
+    min-width: 600px;
+  }
+
+  .modal-content-premium {
+    width: 95%;
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .btn-large {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
 }

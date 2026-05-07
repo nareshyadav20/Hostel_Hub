@@ -110,6 +110,7 @@ const Search = () => {
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const hostelsPerPage = 5;
 
   useEffect(() => {
@@ -228,8 +229,21 @@ const Search = () => {
         </div>
       </header>
 
-      <div className="search-main-layout">
+      {/* Mobile Filter Toggle */}
+      <div className="mobile-filter-trigger">
+        <button className="btn-filter-toggle" onClick={() => setIsFilterOpen(!isFilterOpen)}>
+          <ICONS.Filter />
+          <span>Filters & Preferences</span>
+          <div className="filter-count-badge">{Object.values(filters).filter(v => v !== 'all' && v !== 'All' && (Array.isArray(v) ? v.length > 0 : true)).length}</div>
+        </button>
+      </div>
+
+      <div className={`search-main-layout ${isFilterOpen ? 'filter-open' : ''}`}>
         <aside className="search-sidebar-pro">
+          <div className="sidebar-header-mobile">
+            <h3>Refine Search</h3>
+            <button className="close-filter-btn" onClick={() => setIsFilterOpen(false)}>✕</button>
+          </div>
           <div className="filter-card-premium">
             <div className="filter-card-header">
               <ICONS.Filter />

@@ -452,30 +452,150 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .dash-hero {
     padding: 2rem;
   }
+  .dash-hero-title {
+    font-size: 2rem;
+  }
+  .dash-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .staynest-dashboard {
+    gap: 1.5rem;
+    padding: 0.5rem;
+  }
+
+  .dash-hero {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
 
   .dash-hero-title {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
+  }
+
+  .dash-hero-subtitle {
+    font-size: 0.9rem;
   }
 
   .dash-hero-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .dash-stat-chip {
+    padding: 0.6rem 0.8rem;
+    gap: 0.5rem;
+  }
+
+  .dash-stat-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .dash-stat-chip strong {
+    font-size: 0.85rem;
+  }
+
+  .dash-stat-chip span {
+    font-size: 0.65rem;
+  }
+
+  .dash-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .dash-action-card {
+    padding: 1rem;
     flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .dash-act-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 0.5rem;
+  }
+
+  .dash-act-text strong {
+    font-size: 0.9rem;
+  }
+
+  .dash-act-text span {
+    font-size: 0.7rem;
+  }
+
+  .dash-act-arrow {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    opacity: 0.5;
   }
 
   .dash-content-grid {
     grid-template-columns: 1fr;
   }
 
-  .dash-actions-grid {
-    grid-template-columns: 1fr 1fr;
+  .dash-summary-card {
+    padding: 1rem;
+  }
+
+  .dash-sum-value {
+    font-size: 1.4rem;
+  }
+
+  .dash-sum-label {
+    font-size: 0.65rem;
+  }
+
+  .dash-sum-sub {
+    font-size: 0.75rem;
   }
 }
 
 @media (max-width: 480px) {
-  .dash-actions-grid {
+  .dash-hero-stats {
     grid-template-columns: 1fr;
   }
+
+  .dash-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-hero-title {
+    font-size: 1.3rem;
+  }
+
+  .dash-summary-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .dash-sum-top {
+    margin-bottom: 0;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dash-sum-icon-box {
+    display: none;
+  }
+
+  .dash-sum-value {
+    margin-bottom: 0;
+  }
+
+  .dash-sum-right {
+    text-align: right;
+  }
 }
+

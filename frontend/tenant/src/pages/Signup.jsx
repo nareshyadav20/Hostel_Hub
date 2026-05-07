@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
-import '@packages/ui-kit/auth.css';
+import './auth.css';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -20,12 +20,23 @@ const Signup = () => {
     setLoading(true);
     setError('');
 
+    // Sanitize inputs
+    const cleanName = formData.name.trim();
+    const cleanEmail = formData.email.trim();
+    const cleanPassword = formData.password.trim();
+    const cleanPhone = formData.mobile.trim();
+
     try {
+      // Clear old/stale auth data before registration
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      sessionStorage.clear();
+
       const response = await API.post('/auth/register', {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.mobile,
+        name: cleanName,
+        email: cleanEmail,
+        password: cleanPassword,
+        phone: cleanPhone,
         role: 'TENANT'
       });
 
