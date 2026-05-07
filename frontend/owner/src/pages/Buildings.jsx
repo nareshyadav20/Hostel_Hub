@@ -40,7 +40,7 @@ const Modal = ({ isOpen, onClose, title, children }) => (
           <button 
             onClick={onClose} 
             style={{ 
-              background: 'var(--bg-tertiary)', border: 'none', color: 'var(--text-secondary)', 
+              background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', 
               cursor: 'pointer', width: '45px', height: '45px', borderRadius: '14px', 
               display: 'flex', alignItems: 'center', justifyContent: 'center', 
               transition: 'all 0.2s', border: '1px solid var(--border-color)' 
