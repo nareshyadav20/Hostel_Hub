@@ -49,7 +49,25 @@ exports.getMyTransfers = async (req, res) => {
 
 exports.getAllTransfers = async (req, res) => {
   try {
-    const transfers = await RoomTransfer.find()
+    const { buildingId } = req.query;
+    
+    // Owner filter - get all buildings owned by this owner
+    const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+    const bIds = ownerBuildings.map(b => b._id.toString());
+
+    let query = { buildingId: { $in: bIds } };
+    
+    // If specific buildingId requested, narrow down if it's owned by them
+    if (buildingId) {
+      if (bIds.includes(buildingId)) {
+        query.buildingId = buildingId;
+      } else {
+        // Requested a building they don't own
+        return res.status(403).json({ message: 'Unauthorized to access this building' });
+      }
+    }
+
+    const transfers = await RoomTransfer.find(query)
       .populate('tenant', 'name room email')
       .sort({ createdAt: -1 });
     res.json(transfers);

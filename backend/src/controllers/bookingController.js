@@ -1,5 +1,4 @@
-const Booking = require('../models/Booking');
-const Payment = require('../models/Payment');
+const mongoose = require('mongoose');
 
 const createBooking = async (req, res) => {
   try {
@@ -14,39 +13,49 @@ const createBooking = async (req, res) => {
       method 
     } = req.body;
 
-    const booking = new Booking({
-      tenantId,
-      buildingId,
-      category,
-      moveInDate: moveInDate || 'TBD',
-      securityDeposit,
-      onboardingFee,
-      totalAmount,
-      paymentMethod: method || 'UPI',
-      status: 'Confirmed'
-    });
+    // Validate ObjectIds — mock data often sends string IDs like 'alpha-tower'
+    const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
+    const bookingData = {
+      category: category || 'Standard',
+      moveInDate: moveInDate || 'TBD',
+      securityDeposit: securityDeposit || 0,
+      onboardingFee: onboardingFee || 0,
+      totalAmount: totalAmount || 0,
+      paymentMethod: method || 'UPI',
+      status: 'Confirmed',
+      userId: tenantId || 'guest'
+    };
+
+    if (isValidObjectId(tenantId)) bookingData.tenantId = tenantId;
+    if (isValidObjectId(buildingId)) bookingData.buildingId = buildingId;
+
+    const booking = new Booking(bookingData);
     await booking.save();
+    console.log('✅ Booking created:', booking._id);
 
     // Create a payment record for the booking
     const invoice = `BKG-${Date.now().toString().slice(-6)}`;
-    const payment = new Payment({
-      tenantId,
-      buildingId,
-      amount: totalAmount,
+    const paymentData = {
+      amount: totalAmount || 0,
       type: 'Booking',
       method: method || 'UPI',
-      category: category,
+      category: category || 'Standard',
       status: 'Paid',
       invoice,
       month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
-    });
+    };
 
+    if (isValidObjectId(tenantId)) paymentData.tenantId = tenantId;
+    if (isValidObjectId(buildingId)) paymentData.buildingId = buildingId;
+
+    const payment = new Payment(paymentData);
     await payment.save();
+    console.log('✅ Payment created:', payment._id);
 
     res.status(201).json({ booking, payment });
   } catch (error) {
-    console.error('Error creating booking:', error);
+    console.error('❌ Error creating booking:', error);
     res.status(500).json({ error: error.message });
   }
 };

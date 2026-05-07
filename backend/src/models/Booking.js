@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
 
 const bookingSchema = new mongoose.Schema({
-  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: true },
-  buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building', required: true },
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
+  buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
+  userId: { type: String },
   category: { type: String, required: true },
   moveInDate: { type: String, default: 'TBD' },
-  securityDeposit: { type: Number, required: true },
+  securityDeposit: { type: Number, default: 0 },
   onboardingFee: { type: Number, default: 2000 },
   totalAmount: { type: Number, required: true },
   status: { 

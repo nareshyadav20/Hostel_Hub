@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search, MapPin, IndianRupee, Home as HomeIcon } from 'lucide-react';
 import './Home.css';
 import SearchOverlay from '../components/SearchOverlay';
 import heroCouple from '../assets/hero_couple.png';
@@ -19,7 +20,73 @@ const Home = () => {
   const [roomType, setRoomType] = useState('');
   const [wishlist, setWishlist] = useState([]);
 
-  const navItems = ['Home', 'Explore', 'About Us', 'Contact'];
+  const [isBudgetOpen, setIsBudgetOpen] = useState(false);
+  const [isTypeOpen, setIsTypeOpen] = useState(false);
+  const searchBarRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchBarRef.current && !searchBarRef.current.contains(event.target)) {
+        setIsBudgetOpen(false);
+        setIsTypeOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const navItems = [
+    { label: 'Home', id: 'hero' },
+    { label: 'Explore', id: 'explore' },
+    { label: 'How It Works', id: 'how' },
+    { label: 'Locations', id: 'cities' },
+    { label: 'Reviews', id: 'reviews' },
+    { label: 'About Us', id: 'about' },
+    { label: 'Contact', id: 'contact' }
+  ];
+
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -70% 0px',
+      threshold: 0
+    };
+
+    const handleIntersect = (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const matchedItem = navItems.find(item => item.id === entry.target.id);
+          if (matchedItem) setActiveNav(matchedItem.label);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(handleIntersect, observerOptions);
+    
+    // Target sections
+    ['hero', 'how', 'reviews', 'cities'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [navItems]);
+
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const offset = 80;
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = el.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const stats = [
     { icon: '👥', value: '10,000+', label: 'Happy Tenants' },
@@ -94,15 +161,14 @@ const Home = () => {
         </div>
         <nav className="hv2-nav">
           {navItems.map(item => (
-            <span key={item} className={`hv2-nav-item ${activeNav === item ? 'active' : ''}`}
+            <span key={item.label} className={`hv2-nav-item ${activeNav === item.label ? 'active' : ''}`}
               onClick={() => {
-                setActiveNav(item);
-                if (item === 'Explore') navigate('/explore');
-                if (item === 'About Us') navigate('/about');
-                if (item === 'Contact') navigate('/contact');
-                if (item === 'Home') navigate('/');
+                setActiveNav(item.label);
+                if (item.id === 'explore') navigate('/explore');
+                else if (['about', 'contact'].includes(item.id)) navigate(`/${item.id}`);
+                else scrollToSection(item.id);
               }}>
-              {item}
+              {item.label}
             </span>
           ))}
         </nav>
@@ -113,7 +179,7 @@ const Home = () => {
       </header>
 
       {/* ── HERO ── */}
-      <section className="hv2-hero">
+      <section className="hv2-hero" id="hero">
         <div className="hv2-hero-left">
           <div className="hv2-hero-tag">🏆 India’s #1 Hostel & PG Network</div>
           <h1 className="hv2-hero-h1">
@@ -123,31 +189,59 @@ const Home = () => {
           <p className="hv2-hero-desc">Premium spaces for students & professionals. Quality living, zero hassle.</p>
 
           {/* Search Bar */}
-          <div className="hv2-search-bar">
+          <div className="hv2-search-bar" ref={searchBarRef}>
             <div className="hv2-search-field">
-              <span className="hv2-field-icon">📍</span>
-              <input placeholder="Location" value={searchLocation} onChange={e => setSearchLocation(e.target.value)} />
+              <span className="hv2-field-label">Location</span>
+              <div className="hv2-field-input-wrap">
+                <span className="hv2-field-icon" style={{ color: '#EF4444' }}><MapPin size={18} /></span>
+                <input placeholder="Enter City/Locality" value={searchLocation} onChange={e => setSearchLocation(e.target.value)} />
+              </div>
             </div>
             <div className="hv2-search-sep" />
-            <div className="hv2-search-field">
-              <span className="hv2-field-icon">💰</span>
-              <select value={budget} onChange={e => setBudget(e.target.value)}>
-                <option value="">Budget</option>
-                <option>Under ₹8k</option><option>₹8k–₹12k</option>
-                <option>₹12k–₹18k</option><option>Above ₹18k</option>
-              </select>
+            <div className="hv2-search-field" onClick={() => { setIsBudgetOpen(!isBudgetOpen); setIsTypeOpen(false); }}>
+              <span className="hv2-field-label">Budget</span>
+              <div className="hv2-field-input-wrap">
+                <span className="hv2-field-icon" style={{ color: '#10B981' }}><IndianRupee size={18} /></span>
+                <div className="hv2-custom-select">
+                  <span>{budget || 'Any Budget'}</span>
+                  <div className={`hv2-dropdown-arrow ${isBudgetOpen ? 'open' : ''}`}>▾</div>
+                </div>
+              </div>
+              {isBudgetOpen && (
+                <div className="hv2-dropdown-list">
+                  {['Any Budget', 'Under ₹8k', '₹8k–₹12k', '₹12k–₹18k', 'Above ₹18k'].map(opt => (
+                    <div key={opt} className={`hv2-dropdown-item ${budget === opt || (!budget && opt === 'Any Budget') ? 'selected' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); setBudget(opt === 'Any Budget' ? '' : opt); setIsBudgetOpen(false); }}>
+                      {opt}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="hv2-search-sep" />
-            <div className="hv2-search-field">
-              <span className="hv2-field-icon">🏠</span>
-              <select value={roomType} onChange={e => setRoomType(e.target.value)}>
-                <option value="">Stay Type</option>
-                <option>Private</option><option>2 Sharing</option>
-                <option>3 Sharing</option><option>Studio</option>
-              </select>
+            <div className="hv2-search-field" onClick={() => { setIsTypeOpen(!isTypeOpen); setIsBudgetOpen(false); }}>
+              <span className="hv2-field-label">Stay Type</span>
+              <div className="hv2-field-input-wrap">
+                <span className="hv2-field-icon" style={{ color: '#4F46E5' }}><HomeIcon size={18} /></span>
+                <div className="hv2-custom-select">
+                  <span>{roomType || 'Any Type'}</span>
+                  <div className={`hv2-dropdown-arrow ${isTypeOpen ? 'open' : ''}`}>▾</div>
+                </div>
+              </div>
+              {isTypeOpen && (
+                <div className="hv2-dropdown-list">
+                  {['Any Type', 'Private', '2 Sharing', '3 Sharing', 'Studio'].map(opt => (
+                    <div key={opt} className={`hv2-dropdown-item ${roomType === opt || (!roomType && opt === 'Any Type') ? 'selected' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); setRoomType(opt === 'Any Type' ? '' : opt); setIsTypeOpen(false); }}>
+                      {opt}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <button className="hv2-search-btn" onClick={handleSearch}>
-              🔍 Search
+              <Search size={18} />
+              <span>Search Stays</span>
             </button>
           </div>
 
@@ -159,7 +253,7 @@ const Home = () => {
 
           {/* Trust badges */}
           <div className="hv2-trust-row">
-            {['✔ Verified', '✔ Zero Brokerage', '✔ Flexible Rent', '✔ 24/7 Support'].map(b => (
+            {['Verified', 'Zero Brokerage', 'Flexible Rent', '24/7 Support'].map(b => (
               <span key={b} className="hv2-trust-badge">{b}</span>
             ))}
           </div>
@@ -226,7 +320,7 @@ const Home = () => {
       </div>
 
       {/* ── HOW IT WORKS ── */}
-      <section className="hv2-how">
+      <section className="hv2-how" id="how">
         <div className="hv2-section-head">
           <span className="hv2-tag">Simple Process</span>
           <h2 className="hv2-section-title">How It Works</h2>
@@ -325,7 +419,7 @@ const Home = () => {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="hv2-section hv2-testi-section">
+      <section className="hv2-section hv2-testi-section" id="reviews">
         <div className="hv2-section-head">
           <span className="hv2-tag">Resident Stories</span>
           <h2 className="hv2-section-title">What Our Residents Say</h2>
@@ -349,7 +443,7 @@ const Home = () => {
       </section>
 
       {/* ── TOP LOCATIONS ── */}
-      <section className="hv2-section hv2-cities-section">
+      <section className="hv2-section hv2-cities-section" id="cities">
         <div className="hv2-section-topbar">
           <div>
             <h2 className="hv2-section-title" style={{ textAlign: 'left', marginBottom: '6px' }}>Our Top Locations</h2>

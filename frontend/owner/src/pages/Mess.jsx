@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useParams } from 'react-router-dom';
 import { Utensils, Calendar as CalendarIcon, Users, Edit3, ArrowRight, Sun, Coffee, Moon, CheckCircle, X, Grid, List } from 'lucide-react';
 import { api } from '../mockData';
 
 const Mess = () => {
+  const { buildingId } = useParams();
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'attendance' | 'menu' | 'subscriptions'
   const [menuView, setMenuView] = useState('daily'); // 'daily' | 'weekly'
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState(null);
+  // ... rest of state stays the same
   const [plans, setPlans] = useState([
     { 
       id: 'basic', 
@@ -53,7 +56,7 @@ const Mess = () => {
   React.useEffect(() => {
     const fetchMenu = async () => {
       try {
-        const raw = await api.getMessMenu();
+        const raw = await api.getMessMenu(buildingId);
         const structured = { basic: {}, standard: {}, premium: {} };
         raw.forEach(item => {
           structured[item.plan][item.day] = {
@@ -70,7 +73,7 @@ const Mess = () => {
       }
     };
     fetchMenu();
-  }, []);
+  }, [buildingId]);
 
   const [tenants] = useState([
     { id: 't1', name: 'Rahul Sharma', room: '101', plan: 'Premium' },
@@ -103,6 +106,7 @@ const Mess = () => {
     e.preventDefault();
     try {
       await api.updateMessMenu({
+        buildingId,
         plan: selectedMenuPlan,
         day: selectedDay,
         ...editForm

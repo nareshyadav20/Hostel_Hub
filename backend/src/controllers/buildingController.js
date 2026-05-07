@@ -1,6 +1,7 @@
 const Building = require('../models/Building');
 const Floor = require('../models/Floor');
 const Room = require('../models/Room');
+const mongoose = require('mongoose');
 
 const createBuilding = async (req, res) => {
   try {
@@ -38,6 +39,7 @@ const getBuildings = async (req, res) => {
 
 const updateBuilding = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(404).json({ error: 'Building not found' });
     const building = await Building.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!building) return res.status(404).json({ error: 'Building not found' });
     res.status(200).json(building);
@@ -46,6 +48,7 @@ const updateBuilding = async (req, res) => {
 
 const deleteBuilding = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(404).json({ error: 'Building not found' });
     const building = await Building.findById(req.params.id);
     if (!building) return res.status(404).json({ error: 'Building not found' });
     if (building.floors && building.floors.length > 0)

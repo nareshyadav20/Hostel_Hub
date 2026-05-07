@@ -104,10 +104,10 @@ const Tenants = () => {
         setIsLoading(true);
         try {
           const [b, f, r, bd] = await Promise.all([
-            api.getBuildings(),
-            api.getAllFloors(),
-            api.getAllRooms(),
-            api.getAllBeds()
+            api.getBuildings(activeBuildingId),
+            api.getFloorsByBuilding(activeBuildingId),
+            api.getRoomsByBuilding(activeBuildingId),
+            api.getBedsByBuilding(activeBuildingId)
           ]);
           const filteredB = buildingId ? b.filter(x => (x.id || x._id) === buildingId) : b;
           setInfrastructure({ buildings: filteredB, floors: f, rooms: r, beds: bd });
@@ -119,7 +119,53 @@ const Tenants = () => {
       };
       fetchInfra();
     }
-  }, [isBulkRegisterModalOpen, buildingId]);
+  }, [isBulkRegisterModalOpen, activeBuildingId]);
+
+  const fetchTenants = async () => {
+    setIsLoading(true);
+    try {
+      const data = await api.getTenants(activeBuildingId);
+      if (!data || data.length === 0) {
+        // Keep the existing hardcoded mock data — no-op
+        setIsLoading(false);
+        return;
+      }
+
+      // Normalize backend field names → UI field names
+      const normalized = data.map(t => ({
+        id:               t._id  || t.id,
+        name:             t.name || 'Unknown',
+        email:            t.email || '',
+        phone:            t.phone || t.contact || '',
+        room:             t.room  || t.roomNumber || 'Unassigned',
+        rent:             t.rent  || 0,
+        status:           t.status || 'ACTIVE',
+        rentStatus:       t.rentStatus || 'PENDING',
+        checkIn:          t.checkInDate
+                            ? new Date(t.checkInDate).toISOString().split('T')[0]
+                            : (t.checkIn || 'N/A'),
+        emergencyContact: t.emergencyContact || 'N/A',
+        buildingId:       t.buildingId?._id || t.buildingId || null,
+        score:            t.score  ?? 4.5,
+        plan:             t.messPlan || t.plan || 'Standard',
+        lastPayment:      t.lastPayment || 'N/A',
+        docs:             t.docs  || (t.aadhaar ? [{ name: 'Aadhar Card', verified: true }] : []),
+      }));
+
+      // Filter by activeBuildingId if we're on a specific building route
+      const filtered = activeBuildingId
+        ? normalized.filter(t => t.buildingId === activeBuildingId)
+        : normalized;
+
+      // Only replace state if we actually got records (never blank the list)
+      if (filtered.length > 0) setTenants(filtered);
+    } catch (err) {
+      console.error('Failed to fetch tenants:', err);
+      // Keep existing mock state on error
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const [registerFormData, setRegisterFormData] = useState({
     name: '', email: '', phone: '', room: '', rent: '', checkIn: '', emergencyContact: '',

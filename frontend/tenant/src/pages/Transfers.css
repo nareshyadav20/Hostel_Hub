@@ -1,0 +1,200 @@
+/* ─── Room Transfer Portal Styles ─── */
+.transfers-page {
+  width: 100%;
+  animation: fadeIn 0.8s var(--transition-normal);
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.transfers-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: var(--space-2);
+}
+
+.header-icon-main {
+  width: 56px;
+  height: 56px;
+  background: var(--primary);
+  color: white;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.transfers-header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.transfer-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: var(--space-4);
+}
+
+/* Residency Card */
+.current-residency-card {
+  padding: 2.5rem !important;
+  background: white !important;
+}
+
+.icon-badge-blue {
+  width: 44px;
+  height: 44px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.residency-details {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.residency-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.res-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.res-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.res-value.highlight {
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 4px 12px;
+  border-radius: 8px;
+  width: fit-content;
+}
+
+/* Action Card */
+.transfer-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem !important;
+  background: #f0f9ff !important;
+  border: 2px dashed #bae6fd !important;
+}
+
+.pulse-icon-container {
+  width: 80px;
+  height: 80px;
+  background: white;
+  color: var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4);
+  animation: pulse-blue 2s infinite;
+}
+
+@keyframes pulse-blue {
+  0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); }
+  70% { box-shadow: 0 0 0 15px rgba(14, 165, 233, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+}
+
+.transfer-action-card h3 { font-size: 1.5rem; margin-bottom: 0.75rem; }
+.transfer-action-card p { color: var(--text-secondary); max-width: 300px; margin-bottom: 2rem; line-height: 1.5; }
+
+/* History Table */
+.history-card-full { padding: 2rem !important; }
+.icon-badge-history {
+  width: 44px;
+  height: 44px;
+  background: #f0fdf4;
+  color: #16a34a;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transfer-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+}
+
+.transfer-table th {
+  padding: 1rem 1.5rem;
+  background: var(--bg-primary);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.transfer-table td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.td-date { font-weight: 700; color: var(--text-secondary); }
+
+.route-flow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.room-badge {
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.room-badge.old { background: #f1f5f9; color: #64748b; }
+.room-badge.new { background: var(--primary-light); color: var(--primary); }
+
+.td-reason { font-size: 0.9rem; color: var(--text-secondary); max-width: 300px; }
+
+.status-pill {
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.status-pill.approved { background: #f0fdf4; color: #16a34a; }
+.status-pill.pending { background: #fff7ed; color: #ea580c; }
+.status-pill.rejected { background: #fef2f2; color: #ef4444; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .transfer-summary-grid { grid-template-columns: 1fr; }
+  .residency-details { flex-direction: row; justify-content: space-between; }
+}

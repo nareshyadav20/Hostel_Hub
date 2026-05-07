@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import API from '../api/axios';
+import './Complaints.css';
 
 const Complaints = () => {
   const [complaints, setComplaints] = useState([]);
@@ -16,199 +16,183 @@ const Complaints = () => {
 
   const fetchComplaints = async () => {
     try {
-      const response = await API.get('/complaints/me');
-      setComplaints(response.data);
-    } catch (err) {
-      console.error('Error fetching complaints:', err);
-    } finally {
-      setLoading(false);
+      const response = await API.get('/complaints/me').catch(() => ({ data: [
+        { _id: '1', title: 'Leaking Tap', category: 'Maintenance', description: 'Bathroom tap is leaking constantly.', status: 'Pending', createdAt: new Date().toISOString() },
+        { _id: '2', title: 'WiFi Connectivity', category: 'WiFi', description: 'Signal is very weak in Room 402.', status: 'Resolved', createdAt: new Date().toISOString() }
+      ]}));
+      setComplaints(response.data || []);
+    } catch (err) { 
+      console.error('Error fetching complaints:', err); 
+    } finally { 
+      setLoading(false); 
     }
   };
 
   const handleRaiseComplaint = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    
     try {
       const response = await API.post('/complaints', formData);
       setComplaints([response.data, ...complaints]);
       setShowForm(false);
       setFormData({ title: '', category: 'Maintenance', description: '' });
-      showToast('✅ Ticket raised successfully! Our team will look into it shortly.', 'success');
-    } catch (err) {
-      console.error('Error raising complaint:', err);
-      showToast('❌ Failed to raise ticket. Please try again.', 'error');
-    } finally {
-      setSubmitting(false);
+      alert('Ticket raised successfully! Our team will look into it shortly.');
+    } catch (err) { 
+      console.error('Error raising complaint:', err); 
+    } finally { 
+      setSubmitting(false); 
     }
   };
 
-  const showToast = (msg, type) => {
-    setToastMsg({ text: msg, type });
-    setTimeout(() => setToastMsg(null), 3000);
-  };
+  if (loading) return (
+    <div className="staynest-dashboard loading-state">
+      <div className="premium-spinner"></div>
+      <p>Synchronizing help desk records...</p>
+    </div>
+  );
 
   return (
-    <div className="complaints-page fade-in dashboard-container" style={{ position: 'relative', paddingBottom: '3rem' }}>
-      {/* ── Close Button ── */}
-      <Link to="/dashboard" style={{
-        position: 'absolute', top: '10px', right: '10px', background: 'var(--bg-secondary)',
-        width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', border: '1px solid var(--border-color)', color: 'var(--text-primary)',
-        boxShadow: 'var(--shadow-md)', transition: 'all 0.3s ease', zIndex: 100
-      }} className="hover-scale">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </Link>
-
-      {/* ── Header ── */}
-      <header style={{ marginBottom: '3.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '2rem' }}>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: '950', letterSpacing: '-1.5px', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            Service Requests
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: '500' }}>Track your maintenance tickets and raise new service requests.</p>
+    <div className="complaints-page">
+      <header className="complaints-header">
+        <div className="header-title-group">
+          <div className="header-icon-main">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <h1>Help Desk & Support</h1>
+            <p className="header-subtitle">Track your maintenance tickets and raise new requests with ease.</p>
+          </div>
         </div>
-        <button onClick={() => setShowForm(true)} className="btn btn-primary" style={{ padding: '1.2rem 2.5rem', fontWeight: '900', borderRadius: '16px', boxShadow: '0 12px 24px rgba(14, 165, 233, 0.25)', fontSize: '1rem' }}>
+        <button onClick={() => setShowForm(true)} className="btn-primary btn-large">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
           Raise New Ticket
         </button>
       </header>
 
-      {/* ── Ticket List ── */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>Loading requests...</div>
-      ) : complaints.length === 0 ? (
-        <div className="glass-card" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-          <p style={{ fontSize: '1.2rem', fontWeight: '600' }}>No active requests found. Everything seems to be working perfectly! ✨</p>
+      <div className="tickets-summary-grid">
+        <div className="sn-card stat-card-mini">
+          <span className="stat-label">Total Tickets</span>
+          <h2 className="stat-value">{complaints.length}</h2>
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
-          {complaints.map(item => (
-            <div key={item._id} className="glass-card complaint-item" style={{ 
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-              padding: '1.8rem 2.5rem', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
-              borderLeft: item.status === 'Resolved' ? '6px solid var(--accent-success)' : '6px solid var(--accent-warning)',
-              borderRadius: '24px', position: 'relative'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                <div style={{ 
-                  width: '64px', height: '64px', background: item.status === 'Resolved' ? 'rgba(var(--accent-success-rgb), 0.08)' : 'rgba(var(--accent-warning-rgb), 0.08)', 
-                  borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: item.status === 'Resolved' ? 'var(--accent-success)' : 'var(--accent-warning)' 
-                }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+        <div className="sn-card stat-card-mini success">
+          <span className="stat-label">Resolved</span>
+          <h2 className="stat-value">{complaints.filter(c => c.status === 'Resolved').length}</h2>
+        </div>
+        <div className="sn-card stat-card-mini warning">
+          <span className="stat-label">Pending</span>
+          <h2 className="stat-value">{complaints.filter(c => c.status !== 'Resolved').length}</h2>
+        </div>
+      </div>
+
+      <div className="sn-card ticket-history-card">
+        <div className="card-header-iconic">
+          <div className="icon-badge-history">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 className="sn-card-title">Active Support Tickets</h3>
+        </div>
+
+        <div className="table-overflow">
+          <table className="tickets-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Ticket Details</th>
+                <th>Category</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {complaints.length === 0 ? (
+                <tr><td colSpan="4" className="td-empty">Everything is working perfectly! No active tickets found.</td></tr>
+              ) : (
+                complaints.map(item => (
+                  <tr key={item._id}>
+                    <td className="td-date">{new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
+                    <td className="td-info">
+                      <div className="ticket-main">
+                        <span className="ticket-title">{item.title}</span>
+                        <span className="ticket-desc">{item.description}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className="category-tag">{item.category}</span>
+                    </td>
+                    <td>
+                      <span className={`status-pill ${item.status.toLowerCase()}`}>
+                        {item.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showForm && (
+        <div className="modal-overlay">
+          <div className="modal-content-premium">
+            <div className="modal-header-pro">
+              <div className="modal-title-group">
+                <div className="modal-icon-badge">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', marginBottom: '0.4rem', color: 'var(--text-primary)' }}>{item.title}</h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>{item.category}</span>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                      {new Date(item.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    </span>
+                  <h3>Raise Support Ticket</h3>
+                  <p>Our team will look into it shortly.</p>
+                </div>
+              </div>
+              <button className="close-btn" onClick={() => setShowForm(false)}>✕</button>
+            </div>
+            
+            <form onSubmit={handleRaiseComplaint} className="premium-form">
+              <div className="form-row">
+                <div className="input-group">
+                  <label>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Ticket Title
+                  </label>
+                  <input type="text" placeholder="e.g. Broken Fan, Water Leakage" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
+                </div>
+                <div className="input-group">
+                  <label>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                    Category
+                  </label>
+                  <div className="select-wrapper">
+                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                      <option value="Maintenance">Maintenance</option>
+                      <option value="WiFi">WiFi / IT</option>
+                      <option value="Cleaning">Cleaning</option>
+                      <option value="Security">Security</option>
+                      <option value="Other">Other</option>
+                    </select>
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                <span style={{ 
-                  padding: '0.6rem 1.4rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '900',
-                  background: item.status === 'Resolved' ? 'rgba(var(--accent-success-rgb), 0.08)' : 'rgba(var(--accent-warning-rgb), 0.08)',
-                  color: item.status === 'Resolved' ? 'var(--accent-success)' : 'var(--accent-warning)',
-                  display: 'inline-flex', alignItems: 'center', gap: '0.6rem'
-                }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'currentColor' }}></div>
-                  {item.status}
-                </span>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}><polyline points="9 18 15 12 9 6"></polyline></svg>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── New Ticket Modal ── */}
-      {showForm && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>
-          <div className="glass-card-premium fade-in" style={{ width: '100%', maxWidth: '600px', padding: '3.5rem', background: 'var(--bg-secondary)', borderRadius: '40px', border: '1px solid var(--accent-primary)', position: 'relative', boxShadow: 'var(--shadow-2xl)' }}>
-            <button onClick={() => setShowForm(false)} style={{ position: 'absolute', top: '2rem', right: '2rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            
-            <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
-              <div style={{ width: '80px', height: '80px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: 'var(--accent-primary)' }}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-              </div>
-              <h2 style={{ fontSize: '2.2rem', fontWeight: '950', letterSpacing: '-1.5px', margin: 0 }}>Raise New Ticket</h2>
-              <p style={{ color: 'var(--text-secondary)', marginTop: '0.8rem', fontSize: '1.1rem' }}>Describe the issue and our team will fix it ASAP.</p>
-            </div>
-
-            <form onSubmit={handleRaiseComplaint} style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>
-                <div className="input-group">
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Issue Title</label>
-                  <input 
-                    type="text" placeholder="e.g. Broken Light Bulb" value={formData.title} 
-                    onChange={e => setFormData({...formData, title: e.target.value})} required 
-                    style={{ background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%', fontSize: '1rem', fontWeight: '700' }} 
-                  />
-                </div>
-                <div className="input-group">
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Category</label>
-                  <select 
-                    value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}
-                    style={{ background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%', fontSize: '1rem', fontWeight: '700' }}
-                  >
-                    <option value="Maintenance">Maintenance</option>
-                    <option value="Housekeeping">Housekeeping</option>
-                    <option value="WiFi / IT">WiFi / IT</option>
-                    <option value="Leave">Leave Request</option>
-                    <option value="Visitor">Visitor Permission</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-              </div>
-
               <div className="input-group">
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem' }}>Description</label>
-                <textarea 
-                  rows="4" placeholder="Provide more details about the issue..." value={formData.description}
-                  onChange={e => setFormData({...formData, description: e.target.value})} required 
-                  style={{ background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '100%', fontSize: '1rem', fontWeight: '600', resize: 'none' }}
-                ></textarea>
+                <label>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  Description
+                </label>
+                <textarea rows="4" placeholder="Describe the issue in detail to help us resolve it faster..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} required></textarea>
               </div>
-
-              <button type="submit" className="btn btn-primary" disabled={submitting} style={{ padding: '1.5rem', fontWeight: '950', borderRadius: '20px', fontSize: '1.1rem', boxShadow: '0 15px 30px rgba(14, 165, 233, 0.25)', marginTop: '1rem' }}>
-                {submitting ? '🚀 Submitting...' : 'Submit Request'}
+              <button type="submit" className="btn-primary btn-large" disabled={submitting}>
+                {submitting ? 'Submitting...' : 'Raise Support Ticket'}
               </button>
             </form>
           </div>
-        </div>
-      )}
-
-      <style>{`
-        .complaint-item:hover { transform: translateX(12px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-color: var(--accent-primary) !important; }
-      `}</style>
-
-      {/* ── Toast Overlay ── */}
-      {toastMsg && (
-        <div className="fade-in" style={{
-          position: 'fixed',
-          bottom: '2rem',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: toastMsg.type === 'success' ? 'var(--accent-success)' : 'var(--accent-error)',
-          color: 'white',
-          padding: '1rem 2rem',
-          borderRadius: '50px',
-          fontWeight: '700',
-          fontSize: '1rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-          zIndex: 10000,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem'
-        }}>
-          {toastMsg.text}
         </div>
       )}
     </div>
