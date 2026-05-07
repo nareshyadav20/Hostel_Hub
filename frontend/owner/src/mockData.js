@@ -323,6 +323,40 @@ export const api = {
     const res = await axios.post(`${API_URL}/complaints`, data);
     return handleId(res.data);
   },
+  // Settings
+  getSettings: async (bId) => {
+    const res = await axios.get(`${API_URL}/settings`, { params: { buildingId: bId } });
+    return res.data;
+  },
+  updateSettings: async (data) => {
+    const res = await axios.post(`${API_URL}/settings`, data);
+    return res.data;
+  },
+  // Notifications
+  getNotifications: async (bId) => {
+    const res = await axios.get(`${API_URL}/notifications`, { params: { buildingId: bId } });
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data);
+  },
+  seedNotifications: async (bId) => {
+    const res = await axios.post(`${API_URL}/notifications/seed`, { buildingId: bId });
+    return res.data;
+  },
+  markNotificationRead: async (id) => {
+    const res = await axios.patch(`${API_URL}/notifications/${id}/read`);
+    return res.data;
+  },
+  markAllNotificationsRead: async (bId) => {
+    const res = await axios.post(`${API_URL}/notifications/mark-all-read`, { buildingId: bId });
+    return res.data;
+  },
+  deleteNotification: async (id) => {
+    await axios.delete(`${API_URL}/notifications/${id}`);
+  },
+  archiveNotification: async (id) => {
+    const res = await axios.patch(`${API_URL}/notifications/${id}/archive`);
+    return res.data;
+  },
   // Inventory
   getInventory: async (bId) => {
     const res = await axios.get(`${API_URL}/inventory`, { params: { buildingId: bId } });
