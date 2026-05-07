@@ -1,7 +1,7 @@
 const Building = require('../models/Building');
-const Tenant = require('../models/tenant/Tenant');
+const Tenant = require('../models/Tenant');
 const Payment = require('../models/Payment');
-const Complaint = require('../models/tenant/Complaint');
+const Complaint = require('../models/Complaint');
 const User = require('../models/User');
 
 // Helper: traverse the nested property hierarchy
@@ -34,13 +34,19 @@ const MessAttendance = require('../models/MessAttendance');
 // GET /api/dashboard/summary
 exports.getSummaryKPIs = async (req, res) => {
   try {
-    const buildings = await Building.find().populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
-    const { totalBeds, occupiedBeds, maintenanceRooms, buildingWise, floorWise } = traverseHierarchy(buildings);
-
+    const { buildingId } = req.query;
+    const query = buildingId ? { _id: buildingId } : {};
+    
+    // 1. Fetch Hierarchy Data
+    const buildings = await Building.find(query).populate({ 
+      path: 'floors', 
+      populate: { path: 'rooms', populate: { path: 'beds' } } 
+    });
+    
+    const { totalBeds, occupiedBeds, maintenanceRooms, buildingWise } = traverseHierarchy(buildings);
     const vacantBeds = totalBeds - occupiedBeds;
     const occupancyRate = totalBeds > 0 ? parseFloat(((occupiedBeds / totalBeds) * 100).toFixed(1)) : 0;
 
-    const { buildingId } = req.query;
     // 2. Real Tenant Count
     const totalTenants = await Tenant.countDocuments(buildingId ? { buildingId } : {});
 
@@ -54,23 +60,23 @@ exports.getSummaryKPIs = async (req, res) => {
     const pendingPaymentsCount = pendingPayments.length;
     const pendingPaymentsAmount = pendingPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
-    // Health Score calculation
+    // 4. Health Score (Dynamic)
     const occupancyScore = Math.min(40, (occupancyRate / 100) * 40);
     const paymentScore = Math.max(0, 30 - (pendingPaymentsCount * 1.5));
     const maintenanceScore = Math.max(0, 20 - (maintenanceRooms * 2));
     const healthScore = Math.round(occupancyScore + paymentScore + maintenanceScore + 10);
 
     // 5. Daily Activity Stats
-    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
-    const complaintsToday = await Complaint.countDocuments({
+    const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
+    const complaintsToday = await Complaint.countDocuments({ 
       createdAt: { $gte: startOfDay },
       ...(buildingId && { buildingId })
     });
 
     res.json({
       totalBeds, occupiedBeds, vacantBeds, occupancyRate,
-      todayRevenue,
-      expectedMonthlyRevenue: totalTenants * 8000,
+      todayRevenue, 
+      expectedMonthlyRevenue: totalTenants * 8000, 
       pendingPaymentsCount, pendingPaymentsAmount,
       maintenanceRooms, healthScore,
       buildingCount: buildings.length,
@@ -82,10 +88,8 @@ exports.getSummaryKPIs = async (req, res) => {
       checkInsToday: 0,
       checkOutsToday: 0,
       rentDueToday: pendingPaymentsCount,
-      complaintsToday: Math.floor(Math.random() * 3),
-      newTenantsThisMonth: Math.floor(occupiedBeds * 0.08),
-      renewalsPending: Math.floor(occupiedBeds * 0.05),
-      tenantsLeavingSoon: Math.floor(occupiedBeds * 0.03),
+      complaintsToday,
+      buildingName: buildings.length === 1 ? buildings[0].name : 'All Properties'
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -97,7 +101,7 @@ exports.getRevenueAnalytics = async (req, res) => {
   try {
     const { buildingId } = req.query;
     const payments = await Payment.find(buildingId ? { buildingId } : {});
-
+    
     // Last 7 days daily revenue
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dailyRevenue = days.map((name, i) => {
@@ -119,12 +123,12 @@ exports.getRevenueAnalytics = async (req, res) => {
         { name: 'Current', revenue: collectedRent, expenses: collectedRent * 0.25 }
       ],
       rentMetrics: {
-        pendingRent: 87500,
-        collectedRent: 1462500,
-        securityDepositsHeld: 3250000,
-        totalIncome: 1550000,
-        totalExpenses: 480000,
-        netProfit: 1070000
+        pendingRent,
+        collectedRent,
+        securityDepositsHeld: (await Tenant.countDocuments()) * 10000,
+        totalIncome: collectedRent,
+        totalExpenses: collectedRent * 0.25,
+        netProfit: collectedRent * 0.75
       }
     });
   } catch (error) {
@@ -135,7 +139,12 @@ exports.getRevenueAnalytics = async (req, res) => {
 // GET /api/dashboard/occupancy
 exports.getOccupancyStats = async (req, res) => {
   try {
-    const buildings = await Building.find().populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
+    const { buildingId } = req.query;
+    const query = buildingId ? { _id: buildingId } : {};
+    const buildings = await Building.find(query).populate({ 
+      path: 'floors', 
+      populate: { path: 'rooms', populate: { path: 'beds' } } 
+    });
     const { buildingWise, floorWise } = traverseHierarchy(buildings);
     res.json({ buildingWise, floorWise });
   } catch (error) {
@@ -146,20 +155,19 @@ exports.getOccupancyStats = async (req, res) => {
 // GET /api/dashboard/alerts
 exports.getAlertsAndInsights = async (req, res) => {
   try {
-    const buildings = await Building.find().populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
-    const { totalBeds, vacantBeds, occupancyRate } = traverseHierarchy(buildings);
+    const { buildingId } = req.query;
     const insights = [], alerts = [];
 
-    const highComplaints = await Complaint.find({
-      status: 'Pending',
+    const highComplaints = await Complaint.find({ 
+      status: 'Pending', 
       priority: 'High',
-      ...(req.query.buildingId && { buildingId: req.query.buildingId })
+      ...(buildingId && { buildingId })
     });
-
+    
     highComplaints.forEach(c => {
-      alerts.push({
-        type: 'complaint',
-        message: `Critical: ${c.title}`,
+      alerts.push({ 
+        type: 'complaint', 
+        message: `Critical: ${c.title}`, 
         severity: 'high',
         id: c._id
       });
@@ -178,23 +186,24 @@ exports.getAlertsAndInsights = async (req, res) => {
 exports.getComplaintsStats = async (req, res) => {
   try {
     const { buildingId } = req.query;
-    const complaints = await Complaint.find(buildingId ? { buildingId } : {});
-    const open = complaints.filter(c => c.status === 'Pending' || c.status === 'Open').length;
-    const resolved = complaints.filter(c => c.status === 'Resolved' || c.status === 'Closed').length;
+    const query = buildingId ? { buildingId } : {};
+    
+    const complaints = await Complaint.find(query);
+    const open = complaints.filter(c => c.status === 'Pending').length;
+    const resolved = complaints.filter(c => c.status === 'Resolved').length;
 
     res.json({
       total: complaints.length,
       open,
       resolved,
       highPriority: complaints.filter(c => c.priority === 'High').length,
-      avgResolutionHours: 24,
+      avgResolutionHours: 0,
       categories: [
         { name: 'Maintenance', count: complaints.filter(c => c.category === 'Maintenance').length, color: '#EF4444' },
         { name: 'Cleaning', count: complaints.filter(c => c.category === 'Cleaning').length, color: '#F59E0B' },
-        { name: 'Food', count: complaints.filter(c => c.category === 'Food').length, color: '#8B5CF6' },
-        { name: 'Others', count: complaints.filter(c => !['Maintenance', 'Cleaning', 'Food'].includes(c.category)).length, color: '#6B7280' },
+        { name: 'Mess', count: complaints.filter(c => c.category === 'Mess').length, color: '#8B5CF6' },
       ],
-      pending24h: complaints.filter(c => c.status === 'Pending' && (new Date() - new Date(c.createdAt)) > 86400000).length
+      pending24h: open
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -210,7 +219,7 @@ exports.getMessStats = async (req, res) => {
     const todayISO = new Date().toISOString().split('T')[0];
 
     const menu = await MessMenu.findOne({ buildingId, day, plan: 'standard' });
-
+    
     // Calculate real attendance stats
     const attendance = await MessAttendance.find({ buildingId, date: todayISO });
     let mealsServedToday = 0;
@@ -253,3 +262,45 @@ exports.getStaffStats = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// GET /api/dashboard/activity
+exports.getLiveActivity = async (req, res) => {
+  try {
+    const { buildingId } = req.query;
+    const query = buildingId ? { buildingId } : {};
+
+    const [payments, complaints] = await Promise.all([
+      Payment.find(query).sort({ createdAt: -1 }).limit(5).populate('tenantId'),
+      Complaint.find(query).sort({ createdAt: -1 }).limit(5).populate('tenant')
+    ]);
+
+    const activity = [
+      ...payments.map(p => ({
+        icon: '💰',
+        text: `${p.tenantId?.name || 'Tenant'} paid ₹${p.amount} rent`,
+        time: p.createdAt,
+        type: 'payment'
+      })),
+      ...complaints.map(c => ({
+        icon: c.priority === 'High' ? '⚠️' : '🔧',
+        text: `${c.title} reported by ${c.tenant?.name || 'Tenant'}`,
+        time: c.createdAt,
+        type: 'complaint'
+      }))
+    ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 8);
+
+    if (activity.length === 0) {
+      activity.push({
+        icon: '🚀',
+        text: 'Dashboard system initialized',
+        time: new Date(),
+        type: 'system'
+      });
+    }
+
+    res.json(activity);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+

@@ -1,71 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { api } from '../mockData';
 import { 
-  Package, AlertTriangle, Filter, Plus, RefreshCw, Info, TrendingDown, X, 
-  CheckCircle, Upload, Download, BedDouble, Coffee, MapPin, Box, Zap, 
-  CreditCard, ShieldCheck, ShoppingCart, Grid, ChevronDown, ChevronRight, 
-  Search, History, Edit, BarChart3, ClipboardList, Truck, Users, DollarSign, 
-  Clock, Layers, Hammer, Wallet, QrCode, Wrench, Mail, Eye 
+  Package, AlertTriangle, Filter, Plus, Info, CheckCircle, Box, Zap, 
+  ShoppingCart, DollarSign, TrendingUp, TrendingDown, ArrowRight, X, 
+  ShieldCheck, ArrowDownToLine, Wrench, Settings, Activity, ClipboardList,
+  UploadCloud, PlayCircle, Layers, ChevronRight, ChevronDown, Search, Grid,
+  Users, FileText, Truck, BarChart3, Clock, Wallet, Trash2, Calendar, Target,
+  Move, Shield, QrCode, ClipboardCheck, History, MoreVertical, MapPin, Receipt,
+  RefreshCcw, Landmark, Eye, Edit, Share2, AlertCircle, Settings2, Coffee, Utensils,
+  Armchair, Bed, Monitor, Brush, Download, FilePlus, ScanLine, LifeBuoy, AlertOctagon,
+  Hammer, Navigation, FileCheck, Mail, Tag, FileText as FileIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
-  Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, BarChart as RechartsBarChart
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
+import { api } from '../mockData';
 
 // --- SHARED COMPONENTS ---
-const Badge = ({ children, color = 'blue' }) => {
-  const colors = {
-    blue: { bg: '#EFF6FF', text: '#3B82F6' },
-    red: { bg: '#FFF1F2', text: '#E11D48' },
-    green: { bg: '#F0FDF4', text: '#10B981' },
-    amber: { bg: '#FFFBEB', text: '#D97706' },
-    slate: { bg: '#F8FAFC', text: '#64748B' },
-    indigo: { bg: '#EEF2FF', text: '#4F46E5' },
-    cyan: { bg: '#ECFEFF', text: '#0891B2' },
-    purple: { bg: '#F5F3FF', text: '#8B5CF6' }
-  };
-  const c = colors[color] || colors.blue;
-  return (
-    <span style={{ 
-      padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', 
-      fontWeight: '700', background: c.bg, color: c.text, display: 'inline-flex', 
-      alignItems: 'center', gap: '0.3rem' 
-    }}>
-      {children}
-    </span>
-  );
-};
-
 const Modal = ({ isOpen, onClose, title, children, maxWidth = '700px' }) => (
   <AnimatePresence>
     {isOpen && (
-      <motion.div
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        style={{
-          position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 2000, backdropFilter: 'blur(8px)', padding: '1rem'
-        }}
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ y: 50, opacity: 0, scale: 0.95 }}
-          animate={{ y: 0, opacity: 1, scale: 1 }}
-          exit={{ y: 50, opacity: 0, scale: 0.95 }}
-          className="card"
-          onClick={e => e.stopPropagation()}
-          style={{
-            width: '100%', maxWidth, padding: '0',
-            maxHeight: '94vh', overflowY: 'auto', background: '#F8FAFC',
-            borderRadius: '20px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-            border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column'
-          }}
-        >
-          <div style={{ padding: '1.5rem 2rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
-            <h2 style={{ fontSize: '1.3rem', fontWeight: '800', color: '#0F172A', letterSpacing: '-0.02em', margin: 0 }}>{title}</h2>
-            <button onClick={onClose} style={{ background: '#F1F5F9', border: 'none', color: '#64748B', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, backdropFilter: 'blur(10px)', padding: '1rem' }}
+        onClick={onClose}>
+        <motion.div initial={{ y: 50, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.95 }}
+          className="card" onClick={e => e.stopPropagation()}
+          style={{ width: '100%', maxWidth, padding: '0', maxHeight: '96vh', overflowY: 'auto', background: '#FFFFFF', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '1.5rem 2rem', background: '#FFFFFF', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '900', color: '#0F172A', letterSpacing: '-0.02em', margin: 0 }}>{title}</h2>
+            <button onClick={onClose} style={{ background: '#F1F5F9', border: 'none', color: '#64748B', cursor: 'pointer', padding: '0.6rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <X size={20} />
             </button>
           </div>
@@ -76,36 +40,65 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '700px' }) => (
   </AnimatePresence>
 );
 
-// --- EXTENDED DATASETS ---
+const Badge = ({ children, color = 'blue' }) => {
+  const colors = {
+    blue: { bg: '#EFF6FF', text: '#3B82F6' },
+    green: { bg: '#ECFDF5', text: '#10B981' },
+    red: { bg: '#FFF1F2', text: '#E11D48' },
+    amber: { bg: '#FFFBEB', text: '#D97706' },
+    slate: { bg: '#F8FAFC', text: '#64748B' },
+    purple: { bg: '#F5F3FF', text: '#8B5CF6' },
+    cyan: { bg: '#ECFEFF', text: '#0891B2' },
+    indigo: { bg: '#EEF2FF', text: '#4F46E5' }
+  };
+  return (
+    <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '800', background: colors[color]?.bg || colors.slate.bg, color: colors[color]?.text || colors.slate.text, textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}>
+      {children}
+    </span>
+  );
+};
+
+// --- MASTER CONSTANTS ---
 const CATEGORIES = [
-  { id: 'CAT-FOOD', name: 'Food & Supplies', icon: <Coffee size={18}/> },
-  { id: 'CAT-FURN', name: 'Furniture', icon: <BedDouble size={18}/> },
-  { id: 'CAT-ELEC', name: 'Electronics', icon: <Zap size={18}/> },
-  { id: 'CAT-CLEAN', name: 'Cleaning', icon: <ShieldCheck size={18}/> }
+  { id: 'CAT-FOOD', name: 'Food & Supplies', icon: <Utensils size={18}/> },
+  { id: 'CAT-FURN', name: 'Furniture', icon: <Armchair size={18}/> },
+  { id: 'CAT-CLEAN', name: 'Cleaning', icon: <Brush size={18}/> },
+  { id: 'CAT-ELEC', name: 'Electronics', icon: <Monitor size={18}/> }
 ];
 
 const SUBCATEGORIES = [
   { id: 'SUB-GRAIN', categoryId: 'CAT-FOOD', name: 'Rice & Grains' },
   { id: 'SUB-PULSE', categoryId: 'CAT-FOOD', name: 'Pulses' },
   { id: 'SUB-VEG', categoryId: 'CAT-FOOD', name: 'Vegetables' },
+  { id: 'SUB-FRUIT', categoryId: 'CAT-FOOD', name: 'Fruits' },
+  { id: 'SUB-OIL', categoryId: 'CAT-FOOD', name: 'Oils & Fats' },
   { id: 'SUB-DAIRY', categoryId: 'CAT-FOOD', name: 'Dairy' },
-  { id: 'SUB-KIT', categoryId: 'CAT-FOOD', name: 'Kitchen Assets' },
-  { id: 'SUB-BED', categoryId: 'CAT-FURN', name: 'Beds & Bedding' },
-  { id: 'SUB-AC', categoryId: 'CAT-ELEC', name: 'ACs & Cooling' },
-  { id: 'SUB-LIQ', categoryId: 'CAT-CLEAN', name: 'Liquids & Chemicals' }
+  { id: 'SUB-SPICE', categoryId: 'CAT-FOOD', name: 'Spices' },
+  { id: 'SUB-BREAK', categoryId: 'CAT-FOOD', name: 'Breakfast Items' },
+  { id: 'SUB-BEV', categoryId: 'CAT-FOOD', name: 'Beverages' },
+  { id: 'SUB-PACK', categoryId: 'CAT-FOOD', name: 'Packaged Food' },
+  { id: 'SUB-KIT', categoryId: 'CAT-FOOD', name: 'Kitchen Supplies' },
+  { id: 'SUB-BED', categoryId: 'CAT-FURN', name: 'Beds' },
+  { id: 'SUB-CHAIR', categoryId: 'CAT-FURN', name: 'Chairs' },
+  { id: 'SUB-TABLE', categoryId: 'CAT-FURN', name: 'Tables' },
+  { id: 'SUB-AC', categoryId: 'CAT-ELEC', name: 'ACs' },
+  { id: 'SUB-FAN', categoryId: 'CAT-ELEC', name: 'Fans' },
+  { id: 'SUB-LIQ', categoryId: 'CAT-CLEAN', name: 'Liquids' },
+  { id: 'SUB-TL', categoryId: 'CAT-CLEAN', name: 'Tools' }
 ];
 
+// --- EXTENDED DATASETS ---
 const INITIAL_INVENTORY = [
-  { id: 'F-RG-001', name: 'Basmati Rice', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 50, maxStock: 100, minThreshold: 20, unit: 'Kg', location: 'Dry Store A', type: 'Consumable' },
-  { id: 'F-RG-002', name: 'Sona Masoori Rice', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 100, maxStock: 150, minThreshold: 30, unit: 'Kg', location: 'Dry Store A', type: 'Consumable' },
-  { id: 'F-RG-004', name: 'Wheat Flour (Atta)', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 80, maxStock: 150, minThreshold: 40, unit: 'Kg', location: 'Dry Store B', type: 'Consumable' },
-  { id: 'F-PL-001', name: 'Toor Dal', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-PULSE', stock: 40, maxStock: 60, minThreshold: 15, unit: 'Kg', location: 'Pantry 1', type: 'Consumable' },
-  { id: 'F-VG-001', name: 'Potato', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-VEG', stock: 100, maxStock: 150, minThreshold: 40, unit: 'Kg', location: 'Cold Store', type: 'Consumable' },
-  { id: 'F-DY-001', name: 'Milk', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-DAIRY', stock: 100, maxStock: 150, minThreshold: 40, unit: 'L/Day', location: 'Dairy Cooler', type: 'Consumable' },
-  { id: 'F-KS-001', name: 'Gas Cylinder', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-KIT', stock: 10, maxStock: 15, minThreshold: 3, unit: 'Units', location: 'Gas Bank', type: 'Asset' },
-  { id: 'INV-G001', name: 'Single Bed (Steel)', categoryId: 'CAT-FURN', subCategoryId: 'SUB-BED', stock: 45, maxStock: 50, minThreshold: 5, unit: 'Units', location: 'Block A', type: 'Asset' },
-  { id: 'INV-E001', name: 'Split AC (1.5 Ton)', categoryId: 'CAT-ELEC', subCategoryId: 'SUB-AC', stock: 24, maxStock: 30, minThreshold: 2, unit: 'Units', location: 'Room 101', type: 'Asset' },
-  { id: 'INV-C001', name: 'Floor Cleaner', categoryId: 'CAT-CLEAN', subCategoryId: 'SUB-LIQ', stock: 5, maxStock: 25, minThreshold: 10, unit: 'Liters', location: 'Janitor Room', type: 'Consumable' }
+  { id: 'F-RG-001', name: 'Basmati Rice', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 50, maxStock: 100, minThreshold: 20, unit: 'Kg', location: 'Dry Store A' },
+  { id: 'F-RG-002', name: 'Sona Masoori Rice', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 100, maxStock: 150, minThreshold: 30, unit: 'Kg', location: 'Dry Store A' },
+  { id: 'F-RG-004', name: 'Wheat Flour (Atta)', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 80, maxStock: 150, minThreshold: 40, unit: 'Kg', location: 'Dry Store B' },
+  { id: 'F-PL-001', name: 'Toor Dal', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-PULSE', stock: 40, maxStock: 60, minThreshold: 15, unit: 'Kg', location: 'Pantry 1' },
+  { id: 'F-VG-001', name: 'Potato', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-VEG', stock: 100, maxStock: 150, minThreshold: 40, unit: 'Kg', location: 'Cold Store' },
+  { id: 'F-DY-001', name: 'Milk', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-DAIRY', stock: 100, maxStock: 150, minThreshold: 40, unit: 'L/Day', location: 'Dairy Cooler' },
+  { id: 'F-KS-001', name: 'Gas Cylinder', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-KIT', stock: 10, maxStock: 15, minThreshold: 3, unit: 'Units', location: 'Gas Bank' },
+  { id: 'INV-G001', name: 'Single Bed (Steel)', categoryId: 'CAT-FURN', subCategoryId: 'SUB-BED', stock: 45, maxStock: 50, minThreshold: 5, unit: 'Units', location: 'Block A' },
+  { id: 'INV-E001', name: 'Split AC (1.5 Ton)', categoryId: 'CAT-ELEC', subCategoryId: 'SUB-AC', stock: 24, maxStock: 30, minThreshold: 2, unit: 'Units', location: 'Room 101' },
+  { id: 'INV-C001', name: 'Floor Cleaner', categoryId: 'CAT-CLEAN', subCategoryId: 'SUB-LIQ', stock: 5, maxStock: 25, minThreshold: 10, unit: 'Liters', location: 'Janitor Room' }
 ];
 
 const INITIAL_VENDORS = [
@@ -162,7 +155,7 @@ const INITIAL_BUDGETS = [
   { categoryId: 'CAT-ELEC', allocated: 50000, used: 32000 }
 ];
 
-const Inventory = () => {
+const InventoryModule = () => {
   const { buildingId: urlBuildingId } = useParams();
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
   
@@ -187,11 +180,8 @@ const Inventory = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [selectedAsset, setSelectedAsset] = useState(null);
   const [isAssetModalOpen, setIsAssetModalOpen] = useState(false);
-  const [restockItems, setRestockItems] = useState([]);
-  const [restockSent, setRestockSent] = useState(false);
-  const [restockOpen, setRestockOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState(null);
 
   useEffect(() => {
     fetchInventory();
@@ -201,6 +191,7 @@ const Inventory = () => {
     setLoading(true);
     try {
       const data = await api.getInventory(activeBuildingId);
+      // Fallback to initial if mock is empty, but usually api should return data
       setInventory(data || INITIAL_INVENTORY);
     } catch (err) {
       console.error(err);
@@ -215,19 +206,23 @@ const Inventory = () => {
     setTimeout(() => setNotifications(prev => prev.slice(0, -1)), 5000);
   };
 
-  const procStats = {
-    totalSpend: budgets.reduce((sum, b) => sum + b.used, 0),
+  // --- ANALYTICS ---
+  const procStats = useMemo(() => ({
+    totalSpend: pos.reduce((s, p) => s + p.totalAmount, 0),
     pendingApprovals: requests.filter(r => r.status === 'Pending').length,
-    activePOs: pos.filter(p => p.deliveryStatus !== 'Completed').length,
-    delayed: 0
-  };
+    activePOs: pos.filter(p => p.deliveryStatus === 'Pending').length,
+    delayed: pos.filter(p => p.deliveryStatus === 'Pending' && new Date(p.expectedDelivery) < new Date()).length
+  }), [pos, requests]);
 
-  const assetStats = {
+  const assetStats = useMemo(() => ({
     total: assets.length,
-    active: assets.filter(a => a.lifecycleStage === 'In Use' || a.lifecycleStage === 'Active').length,
-    maintenance: assets.filter(a => a.lifecycleStatus === 'Maintenance').length,
-    valuation: assets.reduce((sum, a) => sum + a.currentValue, 0)
-  };
+    active: assets.filter(a => ['Active', 'In Use'].includes(a.lifecycleStage)).length,
+    maintenance: assets.filter(a => a.lifecycleStage === 'Maintenance').length,
+    damaged: assets.filter(a => a.conditionStatus === 'Damaged').length,
+    valuation: assets.reduce((s, a) => s + a.currentValue, 0)
+  }), [assets]);
+
+  // --- RENDERS ---
 
   const renderSidebar = () => (
     <div style={{ width: '300px', background: '#FFFFFF', borderRight: '1px solid #E2E8F0', padding: '1.5rem', height: '100%', overflowY: 'auto' }}>
@@ -329,6 +324,7 @@ const Inventory = () => {
             {pos.map(po => (<div key={po.id} className="card" style={{ padding: '2rem', borderTop: `6px solid ${po.deliveryStatus === 'Completed' ? '#10B981' : '#3B82F6'}` }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><Badge color="slate">{po.poNumber}</Badge><Badge color={po.deliveryStatus === 'Completed' ? 'green' : 'blue'}>{po.deliveryStatus}</Badge></div><h3 style={{ margin: '0 0 1rem 0', fontWeight: '900', fontSize: '1.3rem' }}>{po.vendorName}</h3><div style={{ background: '#F8FAFC', padding: '1.2rem', borderRadius: '16px', marginBottom: '1.5rem' }}>{po.items.map((it, i) => (<div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: '700' }}><span>{it.name} x {it.quantity}</span><span>₹{(it.quantity * it.unitPrice).toLocaleString()}</span></div>))}</div><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>TOTAL PAYABLE</p><h2 style={{ margin: 0, color: '#0F172A' }}>₹{po.totalAmount.toLocaleString()}</h2></div><button style={{ background: '#3B82F6', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><Eye size={18}/> View PO</button></div></div>))}
           </div>
         )}
+
         {procSubTab === 'vendors' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', animation: 'fadeIn 0.3s ease' }}>
             {vendors.map(v => (
@@ -462,31 +458,11 @@ const Inventory = () => {
   );
 
   return (
-    <div style={{ animation: 'fadeIn 0.5s ease-out', minHeight: '100vh', background: '#F8FAFC', padding: '0.5rem' }}>
-
-      {/* HEADER */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', marginBottom: '0.2rem', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <Box size={32} color="#3B82F6" /> Inventory & Assets
-          </h1>
-          <p style={{ color: '#64748B', fontSize: '1rem', fontWeight: '500', margin: 0 }}>Track stock levels, issue assets, and manage property supplies.</p>
-        </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button className="btn" onClick={() => {
-            const prefill = inventory.filter(i => i.stock < i.minThreshold).map(i => ({ name: i.name, needed: i.minThreshold - i.stock + 10, unit: i.unit }));
-            setRestockItems(prefill);
-            setRestockSent(false);
-            setRestockOpen(true);
-          }} style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#3B82F6', fontWeight: '700', padding: '0.8rem 1.2rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <ShoppingCart size={18} /> Launch Restock P.O.
-          </button>
-          <button onClick={() => alert('Add Item flow triggered!')} className="btn" style={{ background: '#3B82F6', border: 'none', color: 'white', padding: '0.8rem 1.2rem', borderRadius: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Plus size={18} /> Add Item
-          </button>
-        </div>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#F8FAFC', fontSmooth: 'antialiased' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        <div><h1 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#0F172A' }}><Layers size={32} color="#3B82F6" /> Material Control Center</h1><p style={{ color: '#64748B', fontSize: '0.95rem', fontWeight: '600', margin: 0 }}>Integrated Procurement, Smart Inventory & Asset Intelligence.</p></div>
+        <div style={{ display: 'flex', gap: '1rem' }}><button style={{ padding: '0.8rem 1.2rem', background: '#F1F5F9', border: 'none', borderRadius: '12px', color: '#0F172A', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><RefreshCcw size={18}/> Sync Data</button></div>
       </header>
-
       <div style={{ display: 'flex', gap: '1.5rem', background: '#FFFFFF', padding: '0 2.5rem', borderBottom: '1px solid #E2E8F0', overflowX: 'auto' }}>
         {[
           { id: 'inventory', label: 'Smart Inventory', icon: <Package size={22} /> },
@@ -496,58 +472,59 @@ const Inventory = () => {
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ padding: '1.4rem 1.5rem', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1.05rem', fontWeight: '900', color: activeTab === tab.id ? '#3B82F6' : '#64748B', borderBottom: activeTab === tab.id ? '4px solid #3B82F6' : '4px solid transparent', marginBottom: '-1px', transition: '0.2s' }}>{tab.icon} {tab.label}</button>
         ))}
       </div>
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, overflowY: 'hidden' }}>
         {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '400px' }}>
-            <RefreshCw className="animate-spin" size={40} color="#3B82F6" />
-          </div>
-        ) : (
-          <div style={{ animation: 'fadeIn 0.3s ease' }}>
-            {activeTab === 'inventory' && renderInventoryTab()}
-            {activeTab === 'procurement' && renderProcurementTab()}
-            {activeTab === 'assets' && renderAssetsTab()}
-          </div>
-        )}
-      </div>
-
-      {/* RESTOCK PO MODAL */}
-      <Modal isOpen={restockOpen} onClose={() => { if (!restockSent) setRestockOpen(false); }} title="🛒 Launch Restock P.O." maxWidth="650px">
-        {restockSent ? (
-          <div style={{ textAlign: 'center', padding: '3rem 0' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>📦</div>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#10B981', marginBottom: '0.5rem' }}>Purchase Order Launched!</h2>
-            <p style={{ color: '#64748B', marginBottom: '2rem', fontWeight: '500' }}>Your restock PO has been generated and sent to the supplier automatically.</p>
-            <button className="btn" onClick={() => setRestockOpen(false)} style={{ padding: '1rem 3rem', borderRadius: '12px', background: '#10B981', border: 'none', color: 'white', fontWeight: '800', fontSize: '1rem' }}>Done</button>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <RefreshCcw className="animate-spin" size={40} color="#3B82F6" />
           </div>
         ) : (
           <>
-            <p style={{ color: '#64748B', fontSize: '0.9rem', marginBottom: '1.5rem', fontWeight: '500' }}>Review and adjust quantities for low stock items. Add extra items if needed.</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '1.5rem' }}>
-              {restockItems.map((ri, idx) => (
-                <div key={idx} style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                  <span style={{ flex: 1, fontWeight: '800', fontSize: '1rem', color: '#0F172A' }}>{ri.name}</span>
-                  <input type="number" value={ri.needed} onChange={e => setRestockItems(prev => prev.map((r, i) => i === idx ? { ...r, needed: e.target.value } : r))}
-                    style={{ width: '80px', padding: '0.6rem', borderRadius: '8px', border: '1px solid #CBD5E1', background: '#FFFFFF', color: '#0F172A', textAlign: 'center', fontWeight: '800', outline: 'none' }} />
-                  <span style={{ fontSize: '0.85rem', color: '#64748B', minWidth: '45px', fontWeight: '600' }}>{ri.unit}</span>
-                  <button onClick={() => setRestockItems(prev => prev.filter((_, i) => i !== idx))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '0.4rem', borderRadius: '6px' }}><X size={18} /></button>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => setRestockItems(prev => [...prev, { name: '', needed: 1, unit: 'Units' }])} className="btn" style={{ width: '100%', border: '2px dashed #CBD5E1', background: 'transparent', marginBottom: '2rem', padding: '1rem', color: '#64748B', fontWeight: '800', borderRadius: '12px' }}>+ Add Extra Item</button>
-            {restockItems.length > 0 && restockItems.some(r => r.name) && (
-              <button className="btn" onClick={() => setRestockSent(true)} style={{ width: '100%', padding: '1.2rem', fontSize: '1.1rem', fontWeight: '900', borderRadius: '12px', background: '#3B82F6', border: 'none', color: 'white' }}>✅ Confirm & Launch P.O.</button>
-            )}
+            {activeTab === 'inventory' && renderInventoryTab()}
+            {activeTab === 'procurement' && renderProcurementTab()}
+            {activeTab === 'assets' && renderAssetsTab()}
           </>
+        )}
+      </div>
+
+      {/* Asset Detail Modal */}
+      <Modal isOpen={isAssetModalOpen} onClose={() => setIsAssetModalOpen(false)} title="Asset Life-Cycle Dossier" maxWidth="900px">
+        {selectedAsset && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem' }}>
+             <div>
+                <div style={{ width: '100%', height: '240px', background: '#F1F5F9', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem' }}>
+                   <Monitor size={100} color="#94A3B8" />
+                </div>
+                <div style={{ background: '#0F172A', color: 'white', padding: '2rem', borderRadius: '24px', textAlign: 'center' }}>
+                   <p style={{ fontSize: '0.8rem', fontWeight: '900', color: '#94A3B8', marginBottom: '1rem' }}>SECURE ASSET TAG</p>
+                   <QrCode size={140} style={{ margin: '0 auto' }} />
+                   <p style={{ fontSize: '1rem', fontWeight: '900', marginTop: '1rem' }}>{selectedAsset.tag}</p>
+                </div>
+             </div>
+             <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><Badge color="indigo">{selectedAsset.lifecycleStage}</Badge><Badge color="blue">{selectedAsset.category}</Badge></div>
+                <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', marginBottom: '0.5rem' }}>{selectedAsset.name}</h2>
+                <p style={{ color: '#64748B', fontWeight: '700', marginBottom: '2.5rem' }}>Internal Code: {selectedAsset.code}</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
+                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>PURCHASE COST</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>₹{selectedAsset.purchaseCost.toLocaleString()}</p></div>
+                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>CURRENT VALUE</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0, color: '#3B82F6' }}>₹{selectedAsset.currentValue.toLocaleString()}</p></div>
+                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>LOCATION</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>Room {selectedAsset.roomId}</p></div>
+                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>CONDITION</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0, color: '#10B981' }}>{selectedAsset.conditionScore}/10</p></div>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                   <button style={{ flex: 1, padding: '1.2rem', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}><Move size={20}/> Asset Transfer</button>
+                   <button style={{ flex: 1, padding: '1.2rem', background: '#F1F5F9', color: '#0F172A', border: 'none', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}><Wrench size={20}/> Service Log</button>
+                </div>
+             </div>
+          </div>
         )}
       </Modal>
 
       <style>{`
         .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); }
-        .btn { padding: 0.8rem 1.5rem; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         .animate-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         ::-webkit-scrollbar { height: 6px; width: 6px; }
         ::-webkit-scrollbar-track { background: #F1F5F9; }
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
@@ -557,4 +534,4 @@ const Inventory = () => {
   );
 };
 
-export default Inventory;
+export default InventoryModule;

@@ -3,109 +3,25 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 export const backendOnline = true;
 
-// --- SEED GENERATOR ---
-const generateSeed = () => {
-  const bNames = [
-    { id: 'b1', name: 'Alpha Tower', address: 'North Campus', desc: 'Premium Boys Hostel' },
-    { id: 'b2', name: 'Beta Block', address: 'South Campus', desc: 'Standard Girls Hostel' },
-    { id: 'b3', name: 'Gamma Guesthouse', address: 'West University', desc: 'Budget Student Stay' },
-    { id: 'b4', name: 'Delta Dorms', address: 'Technical Hub', desc: 'Professional Co-living' },
-    { id: 'b5', name: 'Epsilon Enclave', address: 'Down Town', desc: 'Luxury Executive Suite' },
-    { id: 'b6', name: 'Zeta Zone', address: 'Sector 12', desc: 'Quiet Residential Stay' },
-    { id: 'b7', name: 'Eta Heights', address: 'Main Market', desc: 'Centrally Located' },
-    { id: 'b8', name: 'Theta Terraces', address: 'Lake View', desc: 'Scenic View Residency' },
-    { id: 'b9', name: 'Iota Inn', address: 'Central Hub', desc: 'Modern Student Living' },
-    { id: 'b10', name: 'Kappa Korner', address: 'East Side', desc: 'Cozy Budget Rooms' },
-    { id: 'b11', name: 'Lambda Lodge', address: 'Science Park', desc: 'Researchers Choice' },
-    { id: 'b12', name: 'Mu Mansion', address: 'Royal Lane', desc: 'Premium Heritage Stay' }
-  ];
-
-  const buildings = bNames.map(b => ({
-    ...b,
-    description: b.desc,
-    amenities: ['WiFi', 'AC', 'CCTV', 'Laundry'],
-    images: [`https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800`],
-    isAC: true,
-    rating: (4 + Math.random()).toFixed(1),
-    status: 'Active',
-    monthlyRevenue: 150000 + Math.floor(Math.random() * 50000),
-    occupiedBeds: 25 + Math.floor(Math.random() * 10),
-    totalBeds: 40,
-    occupancyRate: 85
-  }));
-
-  let floors = [];
-  let rooms = [];
-  let beds = [];
-
-  buildings.forEach(b => {
-    for (let f = 1; f <= 2; f++) {
-      const fId = `f_${b.id}_${f}`;
-      floors.push({
-        id: fId,
-        buildingId: b.id,
-        floorNumber: `${f === 1 ? '1st' : '2nd'} Floor`,
-        images: ['https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80']
-      });
-
-      for (let r = 1; r <= 3; r++) {
-        const rId = `r_${fId}_${r}`;
-        const roomNum = `${f}${r < 10 ? '0' + r : r}`;
-        rooms.push({
-          id: rId,
-          floorId: fId,
-          roomNumber: roomNum,
-          roomType: r === 1 ? 'Single' : r === 2 ? 'Double' : 'Triple',
-          capacity: r,
-          status: 'Active',
-          isAC: true,
-          images: ['https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80']
-        });
-
-        for (let bd = 1; bd <= r; bd++) {
-          const bdId = `bd_${rId}_${bd}`;
-          beds.push({
-            id: bdId,
-            roomId: rId,
-            bedNumber: `${roomNum}${String.fromCharCode(64 + bd)}`,
-            status: Math.random() > 0.3 ? 'OCCUPIED' : 'AVAILABLE',
-            tenant: Math.random() > 0.3 ? 'Tenant Name' : null,
-            images: ['https://images.unsplash.com/photo-1505691938895-1758d7eaa511?auto=format&fit=crop&w=800&q=80']
-          });
-        }
-      }
-    }
-  });
-
-  return { buildings, floors, rooms, beds };
-};
-
-const SEED = generateSeed();
-
-// Cache utility
-const cacheGet = (key) => {
-  const val = localStorage.getItem(key);
-  try {
-    return val ? JSON.parse(val) : null;
-  } catch { return null; }
-};
-const cacheSet = (key, val) => localStorage.setItem(key, JSON.stringify(val));
-
-const cached = async (key, fetcher, fallback) => {
-  const c = cacheGet(key);
-  if (c && Array.isArray(c) && c.length > 0) return c;
-  try {
-    const data = await fetcher();
-    if (data && data.length > 0) {
-      cacheSet(key, data);
-      return data;
-    }
-    throw new Error('Empty');
-  } catch {
-    cacheSet(key, fallback);
-    return fallback;
+// --- GLOBAL AUTH INTERCEPTOR ---
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers['Authorization'] = `Bearer ${token}`;
   }
-};
+  return config;
+}, (error) => Promise.reject(error));
+
+axios.interceptors.response.use((response) => response, (error) => {
+  if (error.response && error.response.status === 401) {
+    console.warn('Unauthorized request - Token expired or invalid. Redirecting to login.');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  }
+  return Promise.reject(error);
+});
 
 const handleId = (data) => {
   if (Array.isArray(data)) return data.map(x => ({ ...x, id: x._id || x.id }));
@@ -119,24 +35,6 @@ export const api = {
     const res = await axios.get(`${API_URL}/owner/profile`);
     return res.data;
   },
-  getOwnerStats: async () => {
-    try {
-      const blds = await api.getBuildings();
-      const stats = await Promise.all(blds.map(b => api.getDashboardSummary(b.id).catch(() => null)));
-      const validStats = stats.filter(Boolean);
-      return {
-        buildingCount: blds.length,
-        totalBeds: validStats.reduce((sum, s) => sum + (s.totalBeds || 0), 0),
-        occupiedBeds: validStats.reduce((sum, s) => sum + (s.occupiedBeds || 0), 0),
-        expectedMonthlyRevenue: validStats.reduce((sum, s) => sum + (s.revenue?.expected || 0), 0),
-        occupancyRate: validStats.length > 0
-          ? Math.round(validStats.reduce((sum, s) => sum + ((s.occupiedBeds || 0) / (s.totalBeds || 1) * 100), 0) / validStats.length)
-          : 0
-      };
-    } catch (err) {
-      return { buildingCount: 0, totalBeds: 0, occupiedBeds: 0, expectedMonthlyRevenue: 0, occupancyRate: 0 };
-    }
-  },
   updateOwnerProfile: async (data) => {
     const res = await axios.patch(`${API_URL}/owner/profile`, data);
     return res.data;
@@ -147,15 +45,10 @@ export const api = {
   },
 
   // Buildings & Infrastructure
-  getBuildings: (id = null) => {
-    if (id) {
-      return axios.get(`${API_URL}/buildings/${id}`).then(res => handleId(res.data ? [res.data] : [])[0]).catch(() => SEED.buildings.find(b => b.id === id));
-    }
-    return cached('buildings_all_v4', async () => {
-      const res = await axios.get(`${API_URL}/buildings`);
-      const data = Array.isArray(res.data) ? res.data : (res.data ? [res.data] : []);
-      return handleId(data.filter(b => b.status !== 'Draft'));
-    }, SEED.buildings);
+  getBuildings: async () => {
+    const res = await axios.get(`${API_URL}/buildings`);
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data.filter(b => b.status !== 'Draft'));
   },
   getHostels: async () => {
     const res = await axios.get(`${API_URL}/hostels`);
@@ -167,176 +60,110 @@ export const api = {
     const data = Array.isArray(res.data) ? res.data : [];
     return data.map(m => m.floor?._id || m.floor?.id);
   },
-  getAllFloors: () => cached('floors_all_v4', async () => {
-    const res = await axios.get(`${API_URL}/buildings`);
-    let all = [];
-    res.data.forEach(b => {
-      if (b.floors) all = [...all, ...b.floors.map(f => ({ ...f, buildingId: b._id.toString() }))];
-    });
-    return handleId(all);
-  }, SEED.floors),
-  getFloors: async (bId) => {
-    const res = await axios.get(`${API_URL}/floors/${bId}`);
+  getAllFloors: async () => {
+    const res = await axios.get(`${API_URL}/floors`);
     return handleId(res.data);
   },
   getFloorsByBuilding: async (bId) => {
-    return await api.getFloors(bId);
+    const res = await axios.get(`${API_URL}/floors`, { params: { buildingId: bId } });
+    return handleId(res.data);
   },
   getAllRooms: async () => {
     const res = await axios.get(`${API_URL}/rooms`);
-    const data = Array.isArray(res.data) ? res.data : [];
-    return handleId(data);
-  },
-  getRooms: async (fId) => {
-    const res = await axios.get(`${API_URL}/rooms/${fId}`);
     return handleId(res.data);
   },
   getRoomsByBuilding: async (bId) => {
-    const res = await axios.get(`${API_URL}/floors/${bId}`);
-    const floors = res.data || [];
-    const rooms = floors.flatMap(f => (f.rooms || []).map(r => ({ ...r, floorId: f._id || f.id })));
-    return handleId(rooms);
+    const res = await axios.get(`${API_URL}/rooms`, { params: { buildingId: bId } });
+    return handleId(res.data);
   },
   getAllBeds: async () => {
     const res = await axios.get(`${API_URL}/beds`);
     const data = Array.isArray(res.data) ? res.data : [];
     return handleId(data);
   },
+  getBedsByBuilding: async (bId) => {
+    const res = await axios.get(`${API_URL}/beds`, { params: { buildingId: bId } });
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data);
+  },
+  getFloors: async (bId) => {
+    const res = await axios.get(`${API_URL}/floors/${bId}`);
+    return handleId(res.data);
+  },
+  getRooms: async (fId) => {
+    const res = await axios.get(`${API_URL}/rooms/${fId}`);
+    return handleId(res.data);
+  },
   getBeds: async (rId) => {
     const res = await axios.get(`${API_URL}/beds/${rId}`);
     return handleId(res.data);
   },
-  getBedsByBuilding: async (bId) => {
-    return axios.get(`${API_URL}/beds`, { params: { buildingId: bId } })
-      .then(res => handleId(Array.isArray(res.data) ? res.data : []))
-      .catch(() => {
-        // Find rooms for this building
-        const bRooms = SEED.rooms.filter(r => {
-          const f = SEED.floors.find(fl => fl.id === r.floorId);
-          return f && f.buildingId === bId;
-        });
-        const roomIds = bRooms.map(r => r.id);
-        return handleId(SEED.beds.filter(b => roomIds.includes(b.roomId)));
-      });
-  },
 
+  // Dashboard & Analytics (Live Backend)
   getDashboardSummary: async (bId) => {
-    const bBeds = await api.getBedsByBuilding(bId);
-    const occupied = bBeds.filter(b => b.status === 'OCCUPIED').length;
-    const total = bBeds.length;
-
-    return {
-      totalBeds: total,
-      occupiedBeds: occupied,
-      vacantBeds: total - occupied,
-      occupancyRate: total > 0 ? Math.round((occupied / total) * 100) : 0,
-      todayRevenue: occupied * 250,
-      expectedMonthlyRevenue: total * 7500,
-      healthScore: 88,
-      pendingPaymentsCount: 3,
-      pendingPaymentsAmount: 18500,
-      totalTenants: occupied,
-      checkInsToday: 2,
-      checkOutsToday: 1,
-      rentDueToday: 4,
-      complaintsToday: 2,
-      maintenanceRooms: 1,
-      newTenantsThisMonth: 8,
-      tenantsLeavingSoon: 2,
-      renewalsPending: 5
-    };
+    const res = await axios.get(`${API_URL}/dashboard/summary`, { params: { buildingId: bId } });
+    return res.data;
   },
-
-  getDashboardRevenue: async () => ({
-    rentMetrics: { collectedRent: 850000, pendingRent: 45000, netProfit: 620000, securityDepositsHeld: 1200000 },
-    dailyRevenue: [
-      { name: 'Mon', expected: 4500, actual: 4200 },
-      { name: 'Tue', expected: 4500, actual: 4500 },
-      { name: 'Wed', expected: 4500, actual: 3800 },
-      { name: 'Thu', expected: 4500, actual: 4800 },
-      { name: 'Fri', expected: 4500, actual: 4500 },
-      { name: 'Sat', expected: 4500, actual: 4100 },
-      { name: 'Sun', expected: 4500, actual: 4500 },
-    ],
-    monthlyRevenue: [
-      { name: 'Jan', revenue: 780000, expenses: 210000 },
-      { name: 'Feb', revenue: 820000, expenses: 225000 },
-      { name: 'Mar', revenue: 850000, expenses: 230000 },
-    ]
-  }),
-
+  getDashboardRevenue: async (bId) => {
+    const res = await axios.get(`${API_URL}/dashboard/revenue`, { params: { buildingId: bId } });
+    return res.data;
+  },
   getDashboardOccupancy: async (bId) => {
-    const b = await api.getBuildings();
-    return {
-      buildingWise: b.map(x => ({ name: x.name, occupied: x.occupiedBeds || 0, total: x.totalBeds || 40 }))
-    };
+    const res = await axios.get(`${API_URL}/dashboard/occupancy`, { params: { buildingId: bId } });
+    return res.data;
   },
-
-  getDashboardAlerts: async () => ({
-    alerts: [{ severity: 'high', msg: '3 pending payments in Building A' }],
-    insights: [{ type: 'insight', message: '💡 Optimize utility usage in Floor 2' }]
-  }),
-
-  getDashboardComplaints: async () => ({
-    total: 12, open: 4, resolved: 8, highPriority: 2,
-    categories: [{ name: 'Maintenance', count: 5 }, { name: 'WiFi', count: 3 }, { name: 'Food', count: 4 }],
-    pending24h: 1, avgResolutionHours: 18
-  }),
-
-  getDashboardMess: async () => ({
-    avgFoodRating: 4.2, mealsServedToday: 156, dailyMessCost: 4500, monthlyMessCost: 125000,
-    menuToday: { breakfast: 'Idli, Sambhar', lunch: 'Rice, Dal, Veg', dinner: 'Roti, Paneer' },
-    inventory: [{ item: 'Rice', stock: '20', unit: 'kg', alert: true }]
-  }),
-
-  getDashboardStaff: async () => ({
-    efficiencyScore: 92, tasksAssigned: 124, tasksCompleted: 114, tasksPending: 10,
-    staffList: []
-  }),
-
+  getDashboardAlerts: async (bId) => {
+    const res = await axios.get(`${API_URL}/dashboard/alerts`, { params: { buildingId: bId } });
+    return res.data;
+  },
+  getDashboardComplaints: async (bId) => {
+    const res = await axios.get(`${API_URL}/dashboard/complaints`, { params: { buildingId: bId } });
+    return res.data;
+  },
+  getDashboardMess: async (bId) => {
+    const res = await axios.get(`${API_URL}/dashboard/mess`, { params: { buildingId: bId } });
+    return res.data;
+  },
+  getDashboardStaff: async (bId) => {
+    const res = await axios.get(`${API_URL}/dashboard/staff`, { params: { buildingId: bId } });
+    return res.data;
+  },
   getDashboardActivity: async (bId) => {
-    return axios.get(`${API_URL}/dashboard/activity`, { params: { buildingId: bId } })
-      .then(res => res.data)
-      .catch(() => [
-        { id: 1, type: 'payment', msg: 'Rent received from Room 101', time: '10 mins ago' },
-        { id: 2, type: 'complaint', msg: 'New plumbing issue in 304', time: '1 hour ago' },
-        { id: 3, type: 'tenant', msg: 'Rahul moved into 205-A', time: '2 hours ago' }
-      ]);
+    const res = await axios.get(`${API_URL}/dashboard/activity`, { params: { buildingId: bId } });
+    return res.data;
   },
 
   // Operational Data
-  getTenants: async (bId) => {
-    return axios.get(`${API_URL}/tenants`, { params: { buildingId: bId } })
-      .then(res => handleId(res.data))
-      .catch(() => SEED.tenants.filter(t => !bId || t.buildingId === bId));
-  },
-  getComplaints: async (bId) => {
-    const res = await axios.get(`${API_URL}/complaints`, { params: { buildingId: bId } });
+  getTenants: async () => {
+    const res = await axios.get(`${API_URL}/tenants`);
     return handleId(res.data);
   },
-  updateComplaintStatus: async (id, data) => {
-    const res = await axios.patch(`${API_URL}/complaints/${id}`, data);
+  getComplaints: async () => {
+    const res = await axios.get(`${API_URL}/complaints`);
     return handleId(res.data);
   },
-
-  getPayments: async (bId) => {
-    const res = await axios.get(`${API_URL}/payments`, { params: { buildingId: bId } });
+  updateComplaintStatus: async (id, status, assignedTo = null) => {
+    const res = await axios.patch(`${API_URL}/complaints/${id}`, { status, assignedTo });
     return handleId(res.data);
   },
-  getRoomTransfers: async (bId) => {
-    const res = await axios.get(`${API_URL}/room-transfers`, { params: { buildingId: bId } });
+  getPayments: async () => {
+    const res = await axios.get(`${API_URL}/payments`);
+    return handleId(res.data);
+  },
+  getRoomTransfers: async () => {
+    const res = await axios.get(`${API_URL}/room-transfers`);
     return handleId(res.data);
   },
   updateRoomTransferStatus: async (id, status) => {
-    const res = await axios.patch(`${API_URL}/transfers/${id}`, { status });
+    const res = await axios.patch(`${API_URL}/room-transfers/${id}`, { status });
     return handleId(res.data);
   },
   getMessMenu: async (bId) => {
     const res = await axios.get(`${API_URL}/mess/menu`, { params: { buildingId: bId } });
     return handleId(res.data);
   },
-
   updateMessMenu: async (data) => {
+    // data should include buildingId
     const res = await axios.put(`${API_URL}/mess/menu`, data);
     return handleId(res.data);
   },
@@ -352,10 +179,12 @@ export const api = {
     const res = await axios.post(`${API_URL}/mess/attendance/mark-all`, data);
     return res.data;
   },
-  
   // Staff Management
   getStaff: async (bId) => {
     const res = await axios.get(`${API_URL}/staff`, { params: { buildingId: bId } });
+    if (res.data && res.data.staffList) {
+      res.data.staffList = res.data.staffList.map(s => ({ ...s, id: s._id }));
+    }
     return res.data;
   },
   addStaff: async (data) => {
@@ -370,21 +199,13 @@ export const api = {
     const res = await axios.delete(`${API_URL}/staff/${id}`);
     return res.data;
   },
-  
+  addStaffActivity: async (id, action) => {
+    const res = await axios.post(`${API_URL}/staff/${id}/activity`, { action });
+    return handleId(res.data);
+  },
   getSettings: async () => {
-    try {
-      const res = await axios.get(`${API_URL}/settings`);
-      return res.data;
-    } catch (err) {
-      return {
-        generalSettings: { hostelName: 'Hostel Hub', currency: '₹' },
-        rentSettings: { defaultRent: { single: 8000, double: 6000, shared: 4500 }, securityDeposit: 5000, paymentDueDate: 5, gracePeriod: 3, lateFeeRule: { type: 'FIXED', value: 100 } },
-        notificationSettings: { enablePaymentReminders: true, enableVacancyAlerts: true, enableComplaintAlerts: true, enableHygieneAlerts: true },
-        roomConfig: { roomTypes: ['Single', 'Double', 'Triple'], defaultBedCapacity: 2, autoCreateRooms: false },
-        hygieneSettings: { hygieneThreshold: 75, cleaningFrequency: 'DAILY' },
-        reportSettings: { defaultPeriod: 'MONTHLY', autoGenerateReports: true }
-      };
-    }
+    const res = await axios.get(`${API_URL}/settings`);
+    return res.data;
   },
   updateSettings: async (data) => {
     const res = await axios.post(`${API_URL}/settings`, data);
@@ -394,46 +215,76 @@ export const api = {
   // CRUD Operations
   addBuilding: async (data) => {
     const res = await axios.post(`${API_URL}/buildings`, data);
-    localStorage.removeItem('buildings_all_v4');
     return handleId(res.data);
   },
-  addFloor: async (data) => {
-    const res = await axios.post(`${API_URL}/floors`, data);
-    localStorage.removeItem('buildings_all_v4');
-    return handleId(res.data);
-  },
-  addRoom: async (data) => {
-    const res = await axios.post(`${API_URL}/rooms`, data);
-    localStorage.removeItem('buildings_all_v4');
-    return handleId(res.data);
-  },
-  addBed: async (data) => {
-    const res = await axios.post(`${API_URL}/beds`, data);
-    localStorage.removeItem('buildings_all_v4');
+  updateBuilding: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/buildings/${id}`, data);
     return handleId(res.data);
   },
   deleteBuilding: async (id) => {
     await axios.delete(`${API_URL}/buildings/${id}`);
-    localStorage.removeItem('buildings_all_v4');
+  },
+  addFloor: async (data) => {
+    const res = await axios.post(`${API_URL}/floors`, data);
+    return handleId(res.data);
+  },
+  updateFloor: async (id, data) => {
+    const res = await axios.put(`${API_URL}/floors/${id}`, data);
+    return handleId(res.data);
   },
   deleteFloor: async (id) => {
     await axios.delete(`${API_URL}/floors/${id}`);
-    localStorage.removeItem('buildings_all_v4');
+  },
+  addRoom: async (data) => {
+    const res = await axios.post(`${API_URL}/rooms`, data);
+    return handleId(res.data);
+  },
+  updateRoomStatus: async (id, status) => {
+    const res = await axios.patch(`${API_URL}/rooms/${id}`, { status });
+    return handleId(res.data);
+  },
+  updateRoom: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/rooms/${id}`, data);
+    return handleId(res.data);
   },
   deleteRoom: async (id) => {
     await axios.delete(`${API_URL}/rooms/${id}`);
-    localStorage.removeItem('buildings_all_v4');
+  },
+  addBed: async (data) => {
+    const res = await axios.post(`${API_URL}/beds`, data);
+    return handleId(res.data);
+  },
+  updateBedStatus: async (id, status) => {
+    const res = await axios.patch(`${API_URL}/beds/${id}`, { status });
+    return handleId(res.data);
+  },
+  updateBed: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/beds/${id}`, data);
+    return handleId(res.data);
   },
   deleteBed: async (id) => {
     await axios.delete(`${API_URL}/beds/${id}`);
-    localStorage.removeItem('buildings_all_v4');
   },
-  updateBuilding: async (id, data) => {
-    const res = await axios.put(`${API_URL}/buildings/${id}`, data);
-    localStorage.removeItem('buildings_all_v4');
+  addTenant: async (data) => {
+    const res = await axios.post(`${API_URL}/tenants`, data);
     return handleId(res.data);
   },
-  
+  bulkAddTenants: async (tenants) => {
+    const res = await axios.post(`${API_URL}/tenants/bulk`, { tenants });
+    return handleId(res.data);
+  },
+  updateTenant: async (id, data) => {
+    const res = await axios.put(`${API_URL}/tenants/${id}`, data);
+    return handleId(res.data);
+  },
+  addPayment: async (data) => {
+    const res = await axios.post(`${API_URL}/payments`, data);
+    return handleId(res.data);
+  },
+  addComplaint: async (data) => {
+    const res = await axios.post(`${API_URL}/complaints`, data);
+    return handleId(res.data);
+  },
   // Inventory
   getInventory: async (bId) => {
     const res = await axios.get(`${API_URL}/inventory`, { params: { buildingId: bId } });

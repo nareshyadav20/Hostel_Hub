@@ -9,5 +9,6 @@ router.get('/alerts', dashboardController.getAlertsAndInsights);
 router.get('/complaints', dashboardController.getComplaintsStats);
 router.get('/mess', dashboardController.getMessStats);
 router.get('/staff', dashboardController.getStaffStats);
+router.get('/activity', dashboardController.getLiveActivity);
 
 module.exports = router;

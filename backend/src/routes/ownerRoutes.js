@@ -1,9 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const ownerController = require('../controllers/ownerController');
+const authMiddleware = require('../utils/authMiddleware');
 
-// Placeholder owner routes — will be expanded when owner portal is re-integrated
-router.get('/profile', (req, res) => {
-  res.json({ message: 'Owner profile endpoint' });
-});
+// All routes are protected
+router.use(authMiddleware);
+
+router.get('/profile', ownerController.getProfile);
+router.patch('/profile', ownerController.updateProfile);
+router.post('/documents', ownerController.uploadDocument);
 
 module.exports = router;

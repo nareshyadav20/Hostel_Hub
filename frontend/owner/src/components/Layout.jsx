@@ -70,14 +70,30 @@ const StatusBadge = ({ status }) => {
 };
 
 const Layout = ({ children }) => {
-  const { buildingId } = useParams();
+  const { buildingId: urlBuildingId } = useParams();
   const navigate = useNavigate();
   const [buildings, setBuildings] = useState([]);
   const backendStatus = useBackendStatus();
 
+  // Step 1: Persistent context
+  const [activeBuildingId, setActiveBuildingId] = useState(
+    urlBuildingId || localStorage.getItem('selectedBuildingId')
+  );
+
   useEffect(() => {
-    api.getBuildings().then(data => setBuildings(data || []));
+    api.getBuildings().then(data => {
+      setBuildings(data || []);
+      console.log("Buildings loaded:", data?.length);
+    });
   }, []);
+
+  useEffect(() => {
+    if (urlBuildingId) {
+      localStorage.setItem('selectedBuildingId', urlBuildingId);
+      setActiveBuildingId(urlBuildingId);
+      console.log("Selected Building ID saved:", urlBuildingId);
+    }
+  }, [urlBuildingId]);
 
   return (
     <div className="layout">
@@ -98,7 +114,7 @@ const Layout = ({ children }) => {
           <div className="header-building-info" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
             {buildings.length > 0 ? (
               (() => {
-                const b = buildings.find(x => (x.id || x._id) === buildingId) || buildings[0];
+                const b = buildings.find(x => (x.id || x._id) === activeBuildingId) || buildings[0];
                 return (
                   <div 
                     style={{
@@ -127,7 +143,7 @@ const Layout = ({ children }) => {
                     </div>
                     <div>
                       <p style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0, lineHeight: 1 }}>Active Property</p>
-                      <h2 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0.1rem 0 0 0', lineHeight: 1 }}>Tower A</h2>
+                      <h2 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0.1rem 0 0 0', lineHeight: 1 }}>{b.name}</h2>
                     </div>
                   </div>
                 );

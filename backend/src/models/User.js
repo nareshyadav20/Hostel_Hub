@@ -13,11 +13,11 @@ const userSchema = new mongoose.Schema({
   },
   hostelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hostel' },
   tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' }
-}, { timestamps: true });
+}, { timestamps: true, collection: 'owner_users' });
 
 // Hash password before saving
-userSchema.pre('save', async function() {
-  if (!this.isModified('password')) return;
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });

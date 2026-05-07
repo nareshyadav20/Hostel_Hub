@@ -1,4 +1,4 @@
-const Tenant = require('../models/tenant/Tenant');
+const Tenant = require('../models/Tenant');
 
 const createTenant = async (req, res) => {
   try {
@@ -12,11 +12,7 @@ const createTenant = async (req, res) => {
 
 const getTenants = async (req, res) => {
   try {
-    const { buildingId } = req.query;
-    const query = {};
-    if (buildingId) query.buildingId = buildingId;
-    
-    const tenants = await Tenant.find(query);
+    const tenants = await Tenant.find();
     res.status(200).json(tenants);
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -1,26 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const Hostel = require('../models/Hostel');
+const hostelController = require('../controllers/hostelController');
+const authMiddleware = require('../utils/authMiddleware');
 
-// GET all hostels
-router.get('/', async (req, res) => {
-  try {
-    const hostels = await Hostel.find().populate('buildings');
-    res.json(hostels);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+router.use(authMiddleware);
 
-// GET single hostel
-router.get('/:id', async (req, res) => {
-  try {
-    const hostel = await Hostel.findById(req.params.id).populate('buildings');
-    if (!hostel) return res.status(404).json({ message: 'Hostel not found' });
-    res.json(hostel);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+router.get('/', hostelController.getHostels);
+router.post('/', hostelController.createHostel);
+router.patch('/:id', hostelController.updateHostel);
+router.delete('/:id', hostelController.deleteHostel);
 
 module.exports = router;

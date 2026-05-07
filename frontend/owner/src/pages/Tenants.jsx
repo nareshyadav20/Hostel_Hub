@@ -91,13 +91,12 @@ const Tenants = () => {
         setIsLoading(true);
         try {
           const [b, f, r, bd] = await Promise.all([
-            api.getBuildings(activeBuildingId),
-            api.getFloorsByBuilding(activeBuildingId),
-            api.getRoomsByBuilding(activeBuildingId),
-            api.getBedsByBuilding(activeBuildingId)
+            api.getBuildings(),
+            api.getAllFloors(),
+            api.getAllRooms(),
+            api.getAllBeds()
           ]);
-          const buildingsArray = Array.isArray(b) ? b : (b ? [b] : []);
-          const filteredB = urlBuildingId ? buildingsArray.filter(x => (x.id || x._id) === urlBuildingId) : buildingsArray;
+          const filteredB = activeBuildingId ? b.filter(x => (x.id || x._id) === activeBuildingId) : b;
           setInfrastructure({ buildings: filteredB, floors: f, rooms: r, beds: bd });
         } catch (err) {
           console.error("Failed to fetch infrastructure", err);
@@ -341,6 +340,10 @@ const Tenants = () => {
 
           <button className="btn btn-primary" onClick={() => { setModalMode('add'); setIsRegisterModalOpen(true); }} style={{ background: '#3B82F6', border: 'none', padding: '0.75rem 1.2rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
             <Plus size={18} /> Add Tenant
+          </button>
+
+          <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '0.5rem' }}>
+            <X size={20} />
           </button>
         </div>
       </header>
