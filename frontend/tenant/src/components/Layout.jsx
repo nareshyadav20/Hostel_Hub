@@ -1,7 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import ThemeToggle from './ThemeToggle';
+import BottomNav from './BottomNav';
 import './Layout.css';
 
 const Layout = ({ children }) => {
@@ -16,6 +17,7 @@ const Layout = ({ children }) => {
     window.location.href = '/';
   };
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = React.useRef(null);
@@ -26,6 +28,8 @@ const Layout = ({ children }) => {
       setShowProfileModal(true);
     }
   }, [isLoggedIn, user.profileCompletion]);
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const handleProfileSubmit = (e) => {
     e.preventDefault();
@@ -44,9 +48,21 @@ const Layout = ({ children }) => {
 
   return (
     <div className="layout-root">
-      {isLoggedIn && <Sidebar />}
+      {isLoggedIn && <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />}
+      {isSidebarOpen && <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>}
+      
       <main className={isLoggedIn ? "main-content" : "main-content guest"}>
         <header className="content-header">
+          {isLoggedIn && (
+            <button className="hamburger-btn" onClick={toggleSidebar}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          )}
+
           <div className="user-profile">
             <ThemeToggle />
             {isLoggedIn ? (
@@ -164,6 +180,8 @@ const Layout = ({ children }) => {
             </div>
           </div>
         )}
+
+        {isLoggedIn && <BottomNav />}
 
         {showProfileModal && (
           <div className="modal-overlay">

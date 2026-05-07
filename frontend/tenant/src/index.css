@@ -6,24 +6,24 @@
   --primary-hover: #15803d;
   --primary-light: #dcfce7;
   --primary-dark: #166534;
-  
+
   --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
   --bg-tertiary: #f1f5f9;
-  
-  --accent-primary: #16a34a; 
+
+  --accent-primary: #16a34a;
   --accent-secondary: #10b981;
   --accent-error: #ef4444;
   --accent-warning: #f59e0b;
   --accent-success: #22c55e;
-  
+
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #94a3b8;
-  
+
   --border-color: #e2e8f0;
   --border-light: #f1f5f9;
-  
+
   --accent-success: #22c55e;
   --accent-warning: #f59e0b;
   --accent-error: #ef4444;
@@ -43,13 +43,13 @@
   --radius-md: 12px;
   --radius-lg: 20px;
   --radius-xl: 32px;
-  
+
   /* Spacing Scale */
   --space-1: 8px;
   --space-2: 16px;
   --space-3: 24px;
   --space-4: 32px;
-  
+
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -70,7 +70,12 @@ body {
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary);
@@ -183,10 +188,25 @@ a {
   text-transform: uppercase;
 }
 
-.sn-badge-green { background: var(--primary-light); color: var(--primary-dark); }
-.sn-badge-blue { background: #e0f2fe; color: #0369a1; }
-.sn-badge-orange { background: #ffedd5; color: #9a3412; }
-.sn-badge-red { background: #fee2e2; color: #991b1b; }
+.sn-badge-green {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.sn-badge-blue {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.sn-badge-orange {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.sn-badge-red {
+  background: #fee2e2;
+  color: #991b1b;
+}
 
 /* Spinners */
 .premium-spinner {
@@ -199,7 +219,9 @@ a {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Dashboard Utils */
@@ -224,14 +246,14 @@ a {
   --bg-primary: #020617;
   --bg-secondary: #0f172a;
   --bg-tertiary: #1e293b;
-  
+
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  
+
   --accent-primary: #22c55e;
   --accent-secondary: #10b981;
   --accent-info: #3b82f6;
-  
+
   --border-color: rgba(255, 255, 255, 0.08);
 }

@@ -260,7 +260,99 @@
 }
 
 @media (max-width: 768px) {
-  .community-nav { width: 100%; overflow-x: auto; white-space: nowrap; }
-  .section-header-flex { flex-direction: column; gap: 1.5rem; align-items: flex-start; }
-  .section-header-flex button { width: 100%; }
+  .community-page {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .community-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .header-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .community-nav {
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.25rem;
+    background: transparent;
+    border: none;
+    gap: 0.5rem;
+  }
+
+  .community-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .community-nav-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .notice-card {
+    padding: 1.25rem;
+    gap: 1rem;
+  }
+
+  .notice-icon-box {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .notice-text h4 {
+    font-size: 1rem;
+  }
+
+  .notice-text p {
+    font-size: 0.85rem;
+  }
+
+  .events-grid, .market-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .section-header-flex {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: flex-start;
+  }
+
+  .section-header-flex button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table-wrapper {
+    margin: 0 -1.25rem;
+    padding: 0 1.25rem;
+    width: calc(100% + 2.5rem);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .lost-found-table {
+    min-width: 600px;
+  }
+
+  .modal-content-premium {
+    width: 95%;
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
 }

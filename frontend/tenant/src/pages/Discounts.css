@@ -154,7 +154,48 @@
 }
 
 @media (max-width: 768px) {
+  .discounts-page {
+    padding: 1rem;
+  }
+
+  .discounts-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .discounts-header h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .header-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
   .offers-grid {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .offer-card {
+    padding: 1.25rem;
+    gap: 1.25rem;
+  }
+
+  .offer-value {
+    font-size: 1.5rem;
+  }
+
+  .offer-desc {
+    font-size: 0.85rem;
+  }
+
+  .coupon-code-box code {
+    font-size: 1.1rem;
+  }
+
+  .get-coupon-btn {
+    height: 44px;
+    font-size: 0.9rem;
   }
 }

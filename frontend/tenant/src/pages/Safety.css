@@ -495,9 +495,116 @@
   justify-content: flex-end;
 }
 
-@media (max-width: 900px) {
-  .safety-grid { grid-template-columns: 1fr; }
-  .form-row { grid-template-columns: 1fr; }
-  .form-footer-premium { flex-direction: column; gap: 1.5rem; text-align: center; }
-  .detail-grid { grid-template-columns: 1fr; }
+@media (max-width: 768px) {
+  .safety-page {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .safety-header h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .header-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .safety-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .sos-card {
+    padding: 2rem !important;
+    min-height: auto;
+  }
+
+  .sos-btn-main {
+    width: 140px;
+    height: 140px;
+  }
+
+  .sos-progress-svg {
+    width: 160px;
+    height: 160px;
+  }
+
+  .sos-text {
+    font-size: 2rem;
+  }
+
+  .sos-info h2 {
+    font-size: 1.5rem;
+  }
+
+  .contact-item {
+    padding: 1rem;
+  }
+
+  .contact-phone {
+    font-size: 0.95rem;
+  }
+
+  .call-btn {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.7rem;
+  }
+
+  .premium-report {
+    padding: 1.25rem !important;
+  }
+
+  .report-card .sn-card-title {
+    font-size: 1.35rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .form-footer-premium {
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: stretch;
+  }
+
+  .security-assurance {
+    justify-content: center;
+  }
+
+  .btn-large {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .report-history-card {
+    padding: 1.25rem !important;
+  }
+
+  .table-wrapper {
+    margin: 0 -1.25rem;
+    padding: 0 1.25rem;
+    width: calc(100% + 2.5rem);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .reports-table {
+    min-width: 600px;
+  }
+
+  .modal-content-standard {
+    width: 95%;
+    padding: 1.25rem;
+    margin: 1rem;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }

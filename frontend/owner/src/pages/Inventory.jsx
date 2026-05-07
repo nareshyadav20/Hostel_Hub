@@ -206,7 +206,7 @@ const InventoryModule = () => {
   // --- RENDERS ---
 
   const renderSidebar = () => (
-    <div style={{ width: '300px', background: '#FFFFFF', borderRight: '1px solid #E2E8F0', padding: '1.5rem', height: '100%', overflowY: 'auto' }}>
+    <div className="inventory-sidebar" style={{ width: '300px', background: '#FFFFFF', borderRight: '1px solid #E2E8F0', padding: '1.5rem', height: '100%', overflowY: 'auto' }}>
       <h3 style={{ fontSize: '0.8rem', fontWeight: '900', color: '#64748B', textTransform: 'uppercase', marginBottom: '1.5rem' }}>Inventory Explorer</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
         <button onClick={() => { setSelectedCategory(null); setSelectedSubCategory(null); }} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '1rem', borderRadius: '16px', border: 'none', cursor: 'pointer', background: !selectedCategory ? '#3B82F6' : 'transparent', color: !selectedCategory ? '#FFFFFF' : '#475569', fontWeight: '800', transition: '0.2s' }}>
@@ -236,7 +236,7 @@ const InventoryModule = () => {
   );
 
   const renderInventoryTab = () => (
-    <div style={{ display: 'flex', height: '100%' }}>
+    <div className="inventory-layout" style={{ display: 'flex', height: '100%' }}>
       {renderSidebar()}
       <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
@@ -244,7 +244,7 @@ const InventoryModule = () => {
           <select style={{ padding: '1rem', borderRadius: '16px', border: '1px solid #E2E8F0', fontWeight: '800', outline: 'none', background: '#FFFFFF' }}><option>All Levels</option><option>Critical Only</option><option>Low Stock</option></select>
           <button style={{ background: '#3B82F6', color: 'white', border: 'none', padding: '1rem 1.5rem', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><Plus size={20}/> Add Item</button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
+        <div className="inventory-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
           {inventory.filter(i => (selectedCategory ? i.categoryId === selectedCategory : true) && (selectedSubCategory ? i.subCategoryId === selectedSubCategory : true) && i.name.toLowerCase().includes(searchQuery.toLowerCase())).map(item => (
             <motion.div layout key={item.id} className="card" style={{ padding: '1.8rem', borderTop: `6px solid ${item.stock < item.minThreshold ? '#E11D48' : '#10B981'}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem' }}><Badge color="slate">{SUBCATEGORIES.find(s=>s.id===item.subCategoryId)?.name}</Badge><Badge color={item.stock < item.minThreshold ? 'red' : 'green'}>{item.stock < item.minThreshold ? 'Low Stock' : 'Stable'}</Badge></div>
@@ -260,7 +260,7 @@ const InventoryModule = () => {
 
   const renderProcurementTab = () => (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '0 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
+      <div className="proc-subtabs" style={{ padding: '0 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
         {[
           { id: 'dashboard', label: 'Dashboard', icon: <BarChart3 size={20}/> },
           { id: 'requests', label: 'Purchase Requests', icon: <ClipboardList size={20}/> },
@@ -273,7 +273,7 @@ const InventoryModule = () => {
       <div style={{ flex: 1, padding: '2.5rem', overflowY: 'auto' }}>
         {procSubTab === 'dashboard' && (
           <div style={{ animation: 'fadeIn 0.3s ease' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+            <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
               {[
                 { l: 'MONTHLY SPEND', v: `₹${procStats.totalSpend.toLocaleString()}`, c: '#3B82F6', i: <DollarSign/> },
                 { l: 'PENDING APPROVALS', v: procStats.pendingApprovals, c: '#F59E0B', i: <Clock/> },
@@ -286,7 +286,7 @@ const InventoryModule = () => {
                 </div>
               ))}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '1.5rem' }}>
+            <div className="chart-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '1.5rem' }}>
                <div className="card" style={{ padding: '2rem' }}><h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '2rem' }}>Category-wise Allocation</h3><div style={{ height: '300px' }}><ResponsiveContainer width="100%" height="100%"><AreaChart data={[{n:'Jan',v:45000},{n:'Feb',v:52000},{n:'Mar',v:48000},{n:'Apr',v:61000},{n:'May',v:55000}]}><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="n"/><YAxis/><RechartsTooltip/><Area type="monotone" dataKey="v" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.1}/></AreaChart></ResponsiveContainer></div></div>
                <div className="card" style={{ padding: '2rem' }}><h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '2rem' }}>Budget Control</h3><div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>{budgets.map(b => (<div key={b.categoryId}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}><span style={{ fontWeight: '800', color: '#0F172A' }}>{CATEGORIES.find(c=>c.id===b.categoryId)?.name}</span><span style={{ fontWeight: '900', fontSize: '0.9rem' }}>₹{b.used.toLocaleString()} / ₹{b.allocated.toLocaleString()}</span></div><div style={{ height: '10px', background: '#F1F5F9', borderRadius: '10px', overflow: 'hidden' }}><div style={{ height: '100%', background: (b.used/b.allocated) > 0.8 ? '#E11D48' : '#3B82F6', width: `${(b.used/b.allocated)*100}%` }} /></div></div>))}</div></div>
             </div>
@@ -301,7 +301,7 @@ const InventoryModule = () => {
           </div>
         )}
         {procSubTab === 'orders' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', gap: '2rem' }}>
+          <div className="po-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', gap: '2rem' }}>
             {pos.map(po => (<div key={po.id} className="card" style={{ padding: '2rem', borderTop: `6px solid ${po.deliveryStatus === 'Completed' ? '#10B981' : '#3B82F6'}` }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><Badge color="slate">{po.poNumber}</Badge><Badge color={po.deliveryStatus === 'Completed' ? 'green' : 'blue'}>{po.deliveryStatus}</Badge></div><h3 style={{ margin: '0 0 1rem 0', fontWeight: '900', fontSize: '1.3rem' }}>{po.vendorName}</h3><div style={{ background: '#F8FAFC', padding: '1.2rem', borderRadius: '16px', marginBottom: '1.5rem' }}>{po.items.map((it, i) => (<div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: '700' }}><span>{it.name} x {it.quantity}</span><span>₹{(it.quantity * it.unitPrice).toLocaleString()}</span></div>))}</div><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>TOTAL PAYABLE</p><h2 style={{ margin: 0, color: '#0F172A' }}>₹{po.totalAmount.toLocaleString()}</h2></div><button style={{ background: '#3B82F6', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><Eye size={18}/> View PO</button></div></div>))}
           </div>
         )}
@@ -333,7 +333,7 @@ const InventoryModule = () => {
 
   const renderAssetsTab = () => (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '0 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
+      <div className="asset-subtabs" style={{ padding: '0 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
         {[
           { id: 'overview', label: 'Insights', icon: <Grid size={20}/> },
           { id: 'registry', label: 'Master Registry', icon: <Box size={20}/> },
@@ -346,7 +346,7 @@ const InventoryModule = () => {
       <div style={{ flex: 1, padding: '2.5rem', overflowY: 'auto' }}>
         {assetSubTab === 'overview' && (
           <div style={{ animation: 'fadeIn 0.3s ease' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+            <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
               {[
                 { l: 'TOTAL ASSETS', v: assetStats.total, c: '#3B82F6', i: <Layers/> },
                 { l: 'IN SERVICE', v: assetStats.active, c: '#10B981', i: <Zap/> },
@@ -363,7 +363,7 @@ const InventoryModule = () => {
           </div>
         )}
         {assetSubTab === 'registry' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.5rem' }}>
+          <div className="asset-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.5rem' }}>
             {assets.map(asset => (
               <motion.div layout key={asset.id} className="card" onClick={() => { setSelectedAsset(asset); setIsAssetModalOpen(true); }} style={{ padding: '2rem', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><div style={{ display: 'flex', gap: '0.5rem' }}><Badge color="slate">{asset.tag}</Badge><Badge color="indigo">{asset.lifecycleStage}</Badge></div><QrCode size={20} color="#94A3B8"/></div>
@@ -376,7 +376,7 @@ const InventoryModule = () => {
         )}
 
         {assetSubTab === 'maintenance' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: '1.5rem', animation: 'fadeIn 0.3s ease' }}>
+          <div className="maintenance-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: '1.5rem', animation: 'fadeIn 0.3s ease' }}>
             {assets.filter(a => a.maintenanceSchedule).map(asset => (
               <div key={asset.id} className="card" style={{ padding: '1.8rem', display: 'flex', gap: '1.5rem' }}>
                 <div style={{ width: '70px', height: '70px', background: '#F5F3FF', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6' }}>
@@ -439,16 +439,78 @@ const InventoryModule = () => {
   );
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#F8FAFC', fontSmooth: 'antialiased' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-        <div><h1 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#0F172A' }}><Layers size={32} color="#3B82F6" /> Material Control Center</h1><p style={{ color: '#64748B', fontSize: '0.95rem', fontWeight: '600', margin: 0 }}>Integrated Procurement, Smart Inventory & Asset Intelligence.</p></div>
-        <div style={{ display: 'flex', gap: '1rem' }}><button style={{ padding: '0.8rem 1.2rem', background: '#F1F5F9', border: 'none', borderRadius: '12px', color: '#0F172A', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><RefreshCcw size={18}/> Sync Data</button></div>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#F8FAFC', fontSmooth: 'antialiased' }}>
+      {/* Responsive Styles Injection */}
+      <style>{`
+        @media (max-width: 1024px) {
+          .kpi-grid {
+             grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .header-main {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            padding: 1.5rem !important;
+            gap: 1.5rem;
+          }
+          .header-main h1 {
+            font-size: 1.5rem !important;
+          }
+          .main-tabs {
+            padding: 0 1rem !important;
+          }
+          .main-tabs button {
+            padding: 1rem 1rem !important;
+            font-size: 0.9rem !important;
+            white-space: nowrap;
+          }
+          .inventory-layout {
+            flex-direction: column !important;
+          }
+          .inventory-sidebar {
+            width: 100% !important;
+            height: auto !important;
+            border-right: none !important;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem !important;
+          }
+          .inventory-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .kpi-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .proc-subtabs, .asset-subtabs {
+            padding: 0 1rem !important;
+            gap: 1.5rem !important;
+          }
+          .proc-subtabs button, .asset-subtabs button {
+            padding: 1rem 0 !important;
+            font-size: 0.9rem !important;
+          }
+          .chart-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .po-grid, .asset-grid, .maintenance-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .asset-detail-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1.5rem !important;
+          }
+        }
+      `}</style>
+
+      <header className="header-main" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        <div><h1 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#0F172A' }}><Layers size={32} color="#3B82F6" /> Material Control</h1><p style={{ color: '#64748B', fontSize: '0.95rem', fontWeight: '600', margin: 0 }}>Smart Inventory & Asset Intelligence.</p></div>
+        <div style={{ display: 'flex', gap: '1rem' }}><button style={{ padding: '0.8rem 1.2rem', background: '#F1F5F9', border: 'none', borderRadius: '12px', color: '#0F172A', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><RefreshCcw size={18}/> Sync</button></div>
       </header>
-      <div style={{ display: 'flex', gap: '1.5rem', background: '#FFFFFF', padding: '0 2.5rem', borderBottom: '1px solid #E2E8F0', overflowX: 'auto' }}>
+      <div className="main-tabs" style={{ display: 'flex', gap: '1.5rem', background: '#FFFFFF', padding: '0 2.5rem', borderBottom: '1px solid #E2E8F0', overflowX: 'auto' }}>
         {[
-          { id: 'inventory', label: 'Smart Inventory', icon: <Package size={22} /> },
-          { id: 'procurement', label: 'Purchase Management', icon: <ShoppingCart size={22} /> },
-          { id: 'assets', label: 'Assets Management', icon: <History size={22} /> }
+          { id: 'inventory', label: 'Inventory', icon: <Package size={22} /> },
+          { id: 'procurement', label: 'Procurement', icon: <ShoppingCart size={22} /> },
+          { id: 'assets', label: 'Assets', icon: <History size={22} /> }
         ].map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ padding: '1.4rem 1.5rem', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1.05rem', fontWeight: '900', color: activeTab === tab.id ? '#3B82F6' : '#64748B', borderBottom: activeTab === tab.id ? '4px solid #3B82F6' : '4px solid transparent', marginBottom: '-1px', transition: '0.2s' }}>{tab.icon} {tab.label}</button>
         ))}
@@ -462,7 +524,7 @@ const InventoryModule = () => {
       {/* Asset Detail Modal */}
       <Modal isOpen={isAssetModalOpen} onClose={() => setIsAssetModalOpen(false)} title="Asset Life-Cycle Dossier" maxWidth="900px">
         {selectedAsset && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem' }}>
+          <div className="asset-detail-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem' }}>
              <div>
                 <div style={{ width: '100%', height: '240px', background: '#F1F5F9', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem' }}>
                    <Monitor size={100} color="#94A3B8" />

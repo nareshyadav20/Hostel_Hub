@@ -289,25 +289,64 @@ const Tenants = () => {
   const pendingPaymentsCount = tenants.filter(t => t.rentStatus === 'PENDING').length;
 
   return (
-    <div style={{ animation: 'fadeIn 0.5s ease-out', minHeight: '100vh', background: '#F8FAFC', padding: '0.5rem' }}>
+      {/* Responsive Styles Injection */}
+      <style>{`
+        @media (max-width: 1024px) {
+          .kpi-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 1rem !important;
+          }
+          .header-main {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1.5rem;
+          }
+          .header-actions {
+            width: 100%;
+            flex-wrap: wrap;
+          }
+          .header-actions > div, .header-actions button {
+            flex: 1;
+            min-width: 140px;
+          }
+          .desktop-table-view {
+            display: none;
+          }
+          .mobile-tenant-cards {
+            display: grid !important;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            padding: 1rem;
+          }
+        }
+        @media (max-width: 640px) {
+          .kpi-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .header-actions > div, .header-actions button {
+            min-width: 100%;
+          }
+        }
+      `}</style>
+
       {/* SaaS Header */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <header className="header-main" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', marginBottom: '0.2rem', letterSpacing: '-0.03em' }}>
             Tenants Management
           </h1>
           <p style={{ color: '#64748B', fontSize: '1rem', fontWeight: '500', margin: 0 }}>Overview, tracking, and lifecycle management.</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="header-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
             <Search size={18} color="#94A3B8" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
             <input 
               type="text" placeholder="Search tenants..." value={search} onChange={e => setSearch(e.target.value)}
-              style={{ padding: '0.75rem 1rem 0.75rem 2.5rem', borderRadius: '10px', border: '1px solid #E2E8F0', width: '250px', fontSize: '0.9rem', outline: 'none' }} 
+              style={{ padding: '0.75rem 1rem 0.75rem 2.5rem', borderRadius: '100px', border: '1px solid #E2E8F0', width: '250px', fontSize: '0.9rem', outline: 'none' }} 
             />
           </div>
           <div style={{ position: 'relative' }}>
-            <button className="btn" onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)} style={{ background: filterStatus !== 'ALL' ? '#EFF6FF' : '#FFFFFF', border: filterStatus !== 'ALL' ? '1px solid #3B82F6' : '1px solid #E2E8F0', color: filterStatus !== 'ALL' ? '#3B82F6' : '#475569', padding: '0.75rem 1rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
+            <button className="btn" onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)} style={{ background: filterStatus !== 'ALL' ? '#EFF6FF' : '#FFFFFF', border: filterStatus !== 'ALL' ? '1px solid #3B82F6' : '1px solid #E2E8F0', color: filterStatus !== 'ALL' ? '#3B82F6' : '#475569', padding: '0.75rem 1rem', borderRadius: '100px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
               <Filter size={16} /> {filterStatus === 'ALL' ? 'Filters' : filterStatus}
             </button>
             {isFilterDropdownOpen && (
@@ -321,19 +360,18 @@ const Tenants = () => {
             )}
           </div>
           
-          {/* PRESERVED BULK REGISTER BUTTON */}
-          <button className="btn" onClick={() => setIsBulkRegisterModalOpen(true)} style={{ background: '#FFFFFF', border: '1px solid #3B82F6', color: '#3B82F6', padding: '0.75rem 1.2rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
+          <button className="btn" onClick={() => setIsBulkRegisterModalOpen(true)} style={{ background: '#FFFFFF', border: '1px solid #3B82F6', color: '#3B82F6', padding: '0.75rem 1.2rem', borderRadius: '100px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
             <Layers size={18} /> Bulk Register
           </button>
           
-          <button className="btn btn-primary" onClick={() => { setModalMode('add'); setIsRegisterModalOpen(true); }} style={{ background: '#3B82F6', border: 'none', padding: '0.75rem 1.2rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
+          <button className="btn btn-primary" onClick={() => { setModalMode('add'); setIsRegisterModalOpen(true); }} style={{ background: '#3B82F6', border: 'none', color: 'white', padding: '0.75rem 1.2rem', borderRadius: '100px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
             <Plus size={18} /> Add Tenant
           </button>
         </div>
       </header>
 
       {/* KPI Dashboard (Bento Grid) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
+      <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
         <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
           <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Users size={14}/> Total Tenants</p>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
@@ -365,73 +403,91 @@ const Tenants = () => {
 
       {/* Tenant List Hybrid Layout */}
       <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead>
-            <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-              <th style={{ padding: '1rem 1.5rem', fontWeight: '700', color: '#64748B', fontSize: '0.8rem', textTransform: 'uppercase' }}>Tenant Profile</th>
-              <th style={{ padding: '1rem 1.5rem', fontWeight: '700', color: '#64748B', fontSize: '0.8rem', textTransform: 'uppercase' }}>Room & Plan</th>
-              <th style={{ padding: '1rem 1.5rem', fontWeight: '700', color: '#64748B', fontSize: '0.8rem', textTransform: 'uppercase' }}>Status</th>
-              <th style={{ padding: '1rem 1.5rem', fontWeight: '700', color: '#64748B', fontSize: '0.8rem', textTransform: 'uppercase' }}>Insights</th>
-              <th style={{ padding: '1rem 1.5rem', textAlign: 'right' }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredTenants.map((tenant) => (
-              <tr 
-                key={tenant.id} 
-                className="tenant-row-hover"
-                style={{ borderBottom: '1px solid #E2E8F0', transition: 'all 0.2s', cursor: 'pointer' }}
-                onClick={() => { setSelectedTenant(tenant); setProfileTab('Overview'); }}
-              >
-                <td style={{ padding: '1.2rem 1.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: '800' }}>
-                      {tenant.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div>
-                      <p style={{ fontWeight: '800', fontSize: '1rem', color: '#0F172A', margin: 0, marginBottom: '2px' }}>{tenant.name}</p>
-                      <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>{tenant.phone}</p>
-                    </div>
-                  </div>
-                </td>
-                <td style={{ padding: '1.2rem 1.5rem' }}>
-                  <p style={{ fontWeight: '800', fontSize: '0.95rem', color: '#0F172A', margin: 0, marginBottom: '4px' }}>{tenant.room}</p>
-                  <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0, fontWeight: '600' }}>{tenant.plan} Room</p>
-                </td>
-                <td style={{ padding: '1.2rem 1.5rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-start' }}>
-                    {getStatusBadge(tenant.status)}
-                    {getRentBadge(tenant.rentStatus)}
-                  </div>
-                </td>
-                <td style={{ padding: '1.2rem 1.5rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#475569', fontWeight: '600' }}>
-                      <Star size={14} color="#F59E0B" fill="#F59E0B" /> {tenant.score} Score
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#64748B' }}>
-                      <Clock size={12} /> Since {tenant.checkIn}
-                    </div>
-                  </div>
-                </td>
-                <td style={{ padding: '1.2rem 1.5rem', textAlign: 'right' }}>
-                  <div className="row-actions" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', opacity: 0, transition: 'opacity 0.2s' }}>
-                    <button className="btn" onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${tenant.phone.replace(/[^0-9]/g, '')}?text=Hello ${tenant.name},`, '_blank'); }} style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', padding: '0.5rem', borderRadius: '8px', color: '#3B82F6' }} title="Send Message">
-                      <MessageSquare size={16} />
-                    </button>
-                    <button className="btn" onClick={(e) => { e.stopPropagation(); setSelectedTenant(tenant); setProfileTab('Payments'); }} style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', padding: '0.5rem', borderRadius: '8px', color: '#10B981' }} title="Collect Rent">
-                      <CreditCard size={16} />
-                    </button>
-                    <ChevronRight size={20} color="#94A3B8" style={{ alignSelf: 'center', marginLeft: '0.5rem' }} />
-                  </div>
-                </td>
+        <div className="desktop-table-view">
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                <th style={{ padding: '1rem 1.5rem', fontWeight: '700', color: '#64748B', fontSize: '0.8rem', textTransform: 'uppercase' }}>Tenant Profile</th>
+                <th style={{ padding: '1rem 1.5rem', fontWeight: '700', color: '#64748B', fontSize: '0.8rem', textTransform: 'uppercase' }}>Room & Plan</th>
+                <th style={{ padding: '1rem 1.5rem', fontWeight: '700', color: '#64748B', fontSize: '0.8rem', textTransform: 'uppercase' }}>Status</th>
+                <th style={{ padding: '1rem 1.5rem', fontWeight: '700', color: '#64748B', fontSize: '0.8rem', textTransform: 'uppercase' }}>Insights</th>
+                <th style={{ padding: '1rem 1.5rem', textAlign: 'right' }}></th>
               </tr>
-            ))}
-            {filteredTenants.length === 0 && (
-              <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: '#64748B', fontWeight: '600' }}>No tenants found matching criteria.</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredTenants.map((tenant) => (
+                <tr 
+                  key={tenant.id} 
+                  className="tenant-row-hover"
+                  style={{ borderBottom: '1px solid #E2E8F0', transition: 'all 0.2s', cursor: 'pointer' }}
+                  onClick={() => { setSelectedTenant(tenant); setProfileTab('Overview'); }}
+                >
+                  <td style={{ padding: '1.2rem 1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: '800' }}>
+                        {tenant.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div>
+                        <p style={{ fontWeight: '800', fontSize: '1rem', color: '#0F172A', margin: 0, marginBottom: '2px' }}>{tenant.name}</p>
+                        <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>{tenant.phone}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{ padding: '1.2rem 1.5rem' }}>
+                    <p style={{ fontWeight: '800', fontSize: '0.95rem', color: '#0F172A', margin: 0, marginBottom: '4px' }}>{tenant.room}</p>
+                    <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0, fontWeight: '600' }}>{tenant.plan} Room</p>
+                  </td>
+                  <td style={{ padding: '1.2rem 1.5rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-start' }}>
+                      {getStatusBadge(tenant.status)}
+                      {getRentBadge(tenant.rentStatus)}
+                    </div>
+                  </td>
+                  <td style={{ padding: '1.2rem 1.5rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#475569', fontWeight: '600' }}>
+                        <Star size={14} color="#F59E0B" fill="#F59E0B" /> {tenant.score} Score
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#64748B' }}>
+                        <Clock size={12} /> Since {tenant.checkIn}
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{ padding: '1.2rem 1.5rem', textAlign: 'right' }}>
+                    <ChevronRight size={20} color="#94A3B8" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mobile-tenant-cards" style={{ display: 'none' }}>
+          {filteredTenants.map((tenant) => (
+            <div 
+              key={tenant.id} 
+              onClick={() => { setSelectedTenant(tenant); setProfileTab('Overview'); }}
+              style={{ background: 'white', padding: '1.25rem', borderBottom: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '1rem' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: '800', color: '#3B82F6' }}>
+                    {tenant.name.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <div>
+                    <p style={{ fontWeight: '800', fontSize: '1rem', color: '#0F172A', margin: 0 }}>{tenant.name}</p>
+                    <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>{tenant.room}</p>
+                  </div>
+                </div>
+                {getStatusBadge(tenant.status)}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC', padding: '0.75rem', borderRadius: '8px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Rent Status</span>
+                {getRentBadge(tenant.rentStatus)}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* NEW TENANT PROFILE MODAL */}

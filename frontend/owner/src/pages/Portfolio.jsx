@@ -468,26 +468,110 @@ ${formData.longDesc || formData.shortDesc || ''}`;
     );
   }
 
-  return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', padding: '2rem', color: 'var(--text-primary)' }}>
-      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+    <div className="portfolio-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
+      {/* Responsive Styles Injection */}
+      <style>{`
+        @media (max-width: 1024px) {
+          .kpi-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .header-main {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1.5rem;
+          }
+          .header-actions {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+          }
+          .search-wrapper {
+            width: 100% !important;
+            order: 2;
+          }
+          .search-wrapper input {
+            width: 100% !important;
+          }
+          .create-btn {
+            order: 1;
+            flex: 1;
+          }
+          .logout-btn {
+            order: 1;
+          }
+          .kpi-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.8rem !important;
+          }
+          .property-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .filter-bar {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1rem;
+          }
+          .filter-buttons {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            display: flex;
+            gap: 0.8rem;
+          }
+          .filter-buttons button {
+            white-space: nowrap;
+          }
+          .sort-select {
+            width: 100%;
+          }
+          .stepper-modal-header {
+            padding: 1rem !important;
+          }
+          .stepper-progress-container {
+            display: none !important;
+          }
+          .stepper-content-wrapper {
+            padding: 1.2rem !important;
+          }
+          .form-grid-2 {
+            grid-template-columns: 1fr !important;
+          }
+          .hostel-scroll-container {
+            height: auto !important;
+            overflow-y: visible !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .kpi-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
+      <header className="header-main" style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
         <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-0.04em', marginBottom: '0.2rem' }}>Hostels Overview</h1>
-          <p style={{ color: 'var(--text-secondary)', fontWeight: '500', margin: 0 }}>Strategic portfolio performance.</p>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-0.04em', marginBottom: '0.2rem' }}>Portfolio</h1>
+          <p style={{ color: 'var(--text-secondary)', fontWeight: '500', margin: 0 }}>Strategic hostel overview.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <div className="header-actions" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+          <div className="search-wrapper" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <Search size={18} style={{ position: 'absolute', left: '1rem', color: 'var(--text-secondary)' }} />
             <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', width: '220px' }} />
           </div>
-          <button onClick={() => { setFormData(INITIAL_FORM_STATE); setCurrentStep(1); setIsAddModalOpen(true); }} className="btn-primary" style={{ padding: '0.8rem 1.4rem' }}>
-            <Plus size={18} /> Create Hostel
+          <button onClick={() => { setFormData(INITIAL_FORM_STATE); setCurrentStep(1); setIsAddModalOpen(true); }} className="btn-primary create-btn" style={{ padding: '0.8rem 1.4rem', whiteSpace: 'nowrap' }}>
+            <Plus size={18} /> Create
           </button>
-          <button onClick={handleLogout} className="btn-outline" style={{ width: '45px', height: '45px' }}><LogOut size={20} /></button>
+          <button onClick={handleLogout} className="btn-outline logout-btn" style={{ width: '45px', height: '45px', flexShrink: 0 }}><LogOut size={20} /></button>
         </div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '3rem' }}>
+      <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '3rem' }}>
         {kpis.map((kpi, idx) => (
           <motion.div key={idx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} className="card" style={{ padding: '1rem', borderRadius: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
@@ -499,8 +583,8 @@ ${formData.longDesc || formData.shortDesc || ''}`;
         ))}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+      <div className="filter-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <div className="filter-buttons" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {['All', 'High', 'Medium', 'Low'].map(f => (
             <button 
               key={f} 
@@ -512,8 +596,8 @@ ${formData.longDesc || formData.shortDesc || ''}`;
               {f}
             </button>
           ))}
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', marginLeft: '0.5rem' }}>
-            Showing {processedBuildings.length} Properties
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', marginLeft: '0.5rem', whiteSpace: 'nowrap' }}>
+            {processedBuildings.length} Properties
           </span>
         </div>
         <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ padding: '0.5rem 1rem', borderRadius: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: '600' }}>
@@ -537,7 +621,7 @@ ${formData.longDesc || formData.shortDesc || ''}`;
           <Building size={20} color="var(--accent-primary)" />
           <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>Verified Hostel Properties</h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', paddingBottom: '6rem' }}>
+        <div className="property-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', paddingBottom: '6rem' }}>
           {loading ? (
             <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem' }}><div className="loader"></div></div>
           ) : processedBuildings.length > 0 ? (

@@ -18,13 +18,37 @@
   height: var(--header-height);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 0 var(--space-4);
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
   z-index: 900;
+}
+
+.hamburger-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.hamburger-btn:hover {
+  background: var(--bg-primary);
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1500;
+  animation: fadeIn 0.3s ease;
 }
 
 .user-profile {
@@ -116,6 +140,13 @@
   flex: 1;
 }
 
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: var(--space-3);
+    padding-bottom: 80px; /* Space for BottomNav */
+  }
+}
+
 .layout-footer {
   padding: var(--space-4) 0;
   text-align: center;
@@ -149,6 +180,17 @@
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .floating-emergency-card {
+    bottom: 85px; /* Above BottomNav */
+    right: 1rem;
+    padding: 0.75rem 1rem;
+  }
+  .emergency-details strong { font-size: 0.7rem; }
+  .emergency-details span { font-size: 0.8rem; }
+  .emergency-icon { width: 36px; height: 36px; font-size: 1rem; }
 }
 
 .emergency-icon {
@@ -241,7 +283,11 @@
 }
 
 @media (max-width: 768px) {
-  .content-header { padding: 0 var(--space-2); }
+  .content-header { 
+    padding: 0 var(--space-3); 
+    justify-content: space-between;
+  }
+  .hamburger-btn { display: flex; }
   .modal-content { padding: 2rem; }
 }
 

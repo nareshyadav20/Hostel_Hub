@@ -139,21 +139,57 @@ const Rooms = () => {
   const activeBuilding = buildings.find(b => (b.id || b._id) === selectedBuildingId);
 
   return (
-    <div className="rooms-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '3rem' }}>
+      {/* Responsive Styles Injection */}
+      <style>{`
+        @media (max-width: 1024px) {
+          .kpi-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .header-main {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1.5rem;
+          }
+          .header-actions {
+            width: 100%;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+          }
+          .tabs-container {
+             overflow-x: auto;
+             white-space: nowrap;
+          }
+          .kpi-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .building-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .room-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .bed-grid {
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+          }
+        }
+      `}</style>
+
+      <header className="header-main" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '3rem' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <BedDouble size={32} color="var(--accent-primary)" /> Rooms & Beds
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Hierarchical occupancy tracking.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.8rem' }}>
+        <div className="header-actions" style={{ display: 'flex', gap: '0.8rem' }}>
           <button 
             className="btn" 
             onClick={() => navigate(`/owner/building/${buildingId}/buildings`)}
             style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--accent-primary)', fontWeight: '700' }}
           >
-            <Building2 size={18} /> Manage Structure
+            <Building2 size={18} /> Manage
           </button>
           <button className="btn" onClick={() => setShowFilters(!showFilters)} style={{ background: showFilters ? 'var(--bg-tertiary)' : 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
             <Filter size={16} /> Filters
@@ -175,7 +211,7 @@ const Rooms = () => {
         )}
       </AnimatePresence>
 
-      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2.5rem' }}>
+      <div className="tabs-container" style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2.5rem' }}>
         <button 
           onClick={() => setActiveTab('rooms')} 
           style={{ padding: '1rem 2rem', background: 'none', border: 'none', borderBottom: activeTab === 'rooms' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: activeTab === 'rooms' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer' }}
@@ -255,7 +291,7 @@ const Rooms = () => {
         /* Rooms & Infrastructure Section (Existing) */
         <>
           {/* Dashboard KPIs */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+          <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
             <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Total Rooms</p>
               <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{totalRooms}</h2>
@@ -273,7 +309,7 @@ const Rooms = () => {
           /* Level 1: Building Cards */
           <div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem' }}>Select Building</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
+            <div className="building-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
               {buildings.map(building => {
                 const bFloors = floors.filter(f => f.buildingId === building.id);
                 const bRooms = rooms.filter(r => bFloors.some(f => f.id === r.floorId));
@@ -363,7 +399,7 @@ const Rooms = () => {
                     <AnimatePresence>
                       {expandedFloors[floor.id] && (
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', paddingTop: '1.5rem' }}>
+                          <div className="room-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', paddingTop: '1.5rem' }}>
                             {floorRooms.map(room => {
                               const roomBeds = beds.filter(b => b.roomId === room.id);
                               const available = roomBeds.filter(b => b.status === 'AVAILABLE').length;
@@ -402,7 +438,7 @@ const Rooms = () => {
                                   <AnimatePresence>
                                     {expandedRooms[room.id] && (
                                       <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} style={{ overflow: 'hidden' }}>
-                                        <div style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '0.8rem' }}>
+                                        <div className="bed-grid" style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '0.8rem' }}>
                                           {roomBeds.map(bed => {
                                             let bg = 'var(--bg-secondary)';
                                             let color = 'var(--text-secondary)';

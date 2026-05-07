@@ -55,7 +55,7 @@ function Dashboard() {
 
   return (
     <div className="staynest-dashboard">
-      
+
       {/* ── 1. Welcome Hero Banner ── */}
       <section className="dash-hero">
         <div className="dash-hero-content">
@@ -104,7 +104,7 @@ function Dashboard() {
 
         <Link to="/mess" className="dash-action-card">
           <div className="dash-act-icon" style={{ background: 'linear-gradient(135deg, #ede9fe, #ddd6fe)', color: '#7c3aed' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3" /></svg>
           </div>
           <div className="dash-act-text"><strong>Dining & Mess</strong><span>Today's menu & ratings</span></div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="dash-act-arrow"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -149,7 +149,7 @@ function Dashboard() {
             <div className="dash-sum-top">
               <span className="dash-sum-label">Next Meal</span>
               <div className="dash-sum-icon-box" style={{ background: '#f0fdf4', color: meal.color }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" /></svg>
               </div>
             </div>
             <div className="dash-sum-value">{meal.name}</div>
@@ -171,7 +171,7 @@ function Dashboard() {
 
       {/* ── 4. Main Content Grid ── */}
       <div className="dash-content-grid">
-        
+
         {/* Payments Overview */}
         <div className="sn-card dash-payments-card">
           <div className="dash-card-header">
@@ -212,7 +212,7 @@ function Dashboard() {
             <h4 className="sn-card-title">My Complaints</h4>
             <Link to="/complaints" className="dash-card-link">View All</Link>
           </div>
-          
+
           {complaints.length === 0 ? (
             <div className="dash-empty-state">
               <p>No active complaints. Everything is running smoothly! ✨</p>
@@ -232,7 +232,7 @@ function Dashboard() {
               ))}
             </div>
           )}
-          
+
           <button className="dash-btn-outline" onClick={() => navigate('/complaints')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             Raise New Complaint

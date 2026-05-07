@@ -190,20 +190,40 @@ const Buildings = () => {
 
   return (
     <div className="buildings-page" style={{ animation: 'fadeIn 0.5s ease-out', minHeight: '100vh' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
+      {/* Responsive Styles Injection */}
+      <style>{`
+        @media (max-width: 768px) {
+          .header-main {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1.5rem;
+          }
+          .header-actions {
+            width: 100%;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+          }
+          .breadcrumb-container {
+            flex-wrap: wrap;
+            font-size: 0.85rem;
+          }
+        }
+      `}</style>
+
+      <header className="header-main" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <BuildingIcon size={32} color="var(--accent-primary)" /> Property Infrastructure
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Advanced hierarchical management of buildings, floors, rooms, and beds.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.8rem' }}>
+        <div className="header-actions" style={{ display: 'flex', gap: '0.8rem' }}>
           <button 
             className="btn" 
             onClick={() => navigate(`/owner/building/${buildingId}/rooms`)}
-            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--accent-primary)', fontWeight: '700' }}
+            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--accent-primary)', fontWeight: '700', whiteSpace: 'nowrap' }}
           >
-            <BedDouble size={18} /> Occupancy View
+            <BedDouble size={18} /> Occupancy
           </button>
           <button className="btn" onClick={() => setShowFilters(!showFilters)} style={{ background: showFilters ? 'var(--bg-tertiary)' : 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
             <Filter size={16} /> Filters
@@ -211,7 +231,27 @@ const Buildings = () => {
         </div>
       </header>
 
-      {renderBreadcrumb()}
+      <div className="breadcrumb-container" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', color: 'var(--text-secondary)' }}>
+        <button onClick={() => setView('buildings')} style={{ background: 'none', border: 'none', color: view === 'buildings' ? 'var(--text-primary)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: '600' }}>Buildings</button>
+        {selectedBuilding && (
+          <>
+            <span>/</span>
+            <button onClick={() => setView('floors')} style={{ background: 'none', border: 'none', color: view === 'floors' ? 'var(--text-primary)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: '600' }}>{selectedBuilding.name}</button>
+          </>
+        )}
+        {selectedFloor && (view === 'rooms' || view === 'beds') && (
+          <>
+            <span>/</span>
+            <button onClick={() => setView('rooms')} style={{ background: 'none', border: 'none', color: view === 'rooms' ? 'var(--text-primary)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: '600' }}>Floor {selectedFloor.floorNumber}</button>
+          </>
+        )}
+        {selectedRoom && view === 'beds' && (
+          <>
+            <span>/</span>
+            <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>Room {selectedRoom.roomNumber}</span>
+          </>
+        )}
+      </div>
 
       <AnimatePresence mode="wait">
         {view === 'buildings' && (

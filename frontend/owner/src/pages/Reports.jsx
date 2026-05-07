@@ -172,15 +172,64 @@ const Reports = () => {
 
   return (
     <div className="reports-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
+      {/* Responsive Styles Injection */}
+      <style>{`
+        @media (max-width: 1024px) {
+          .kpi-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .header-main {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1.5rem;
+          }
+          .header-actions {
+            width: 100%;
+            justify-content: space-between;
+          }
+          .kpi-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .main-layout {
+            grid-template-columns: 1fr !important;
+          }
+          .module-switcher {
+            flex-direction: row !important;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+          }
+          .module-switcher button {
+            white-space: nowrap;
+          }
+          .ai-insights {
+            display: none !important; /* Hide AI insights sidebar on mobile to save space, or move it elsewhere */
+          }
+          .chart-container {
+            grid-template-columns: 1fr !important;
+            padding: 1rem !important;
+          }
+          .tenant-stats-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .kpi-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
       {/* Header & Global Filters */}
-      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      <header className="header-main" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <FileBarChart size={32} color="var(--accent-primary)" /> Reports & Analytics
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Real-time business insights and performance tracking.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+        <div className="header-actions" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
           <div style={{ background: 'var(--bg-tertiary)', padding: '0.4rem', borderRadius: '12px', display: 'flex', gap: '0.4rem' }}>
             {['week', 'month', 'quarter'].map(r => (
               <button 
@@ -204,7 +253,7 @@ const Reports = () => {
       </header>
 
       {/* KPI Overview Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.2rem', marginBottom: '2.5rem' }}>
+      <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.2rem', marginBottom: '2.5rem' }}>
         <KPICard title="Revenue" value={`₹${p.stats.totalRevenue.toLocaleString()}`} icon={<TrendingUp size={18}/>} trend="+12.4%" color="#10B981" />
         <KPICard title="Occupancy" value={`${p.stats.occupancyRate}%`} icon={<Users size={18}/>} trend="+2.1%" color="#3B82F6" />
         <KPICard title="Vacant Beds" value={p.stats.vacantBeds} icon={<Home size={18}/>} trend="-1" color="#F59E0B" />
@@ -212,10 +261,10 @@ const Reports = () => {
         <KPICard title="Hygiene" value={p.stats.hygieneScore} icon={<ShieldCheck size={18}/>} trend="Stable" color="#8B5CF6" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '1.5rem' }}>
+      <div className="main-layout" style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '1.5rem' }}>
         
         {/* Module Switcher */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        <div className="module-switcher" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           {[
             { id: 'revenue', name: 'Financials', icon: <TrendingUp size={16}/> },
             { id: 'occupancy', name: 'Occupancy', icon: <Layers size={16}/> },
@@ -238,7 +287,7 @@ const Reports = () => {
           ))}
 
           {/* Insights Box */}
-          <div className="card" style={{ marginTop: '1.5rem', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px dashed var(--border-color)' }}>
+          <div className="card ai-insights" style={{ marginTop: '1.5rem', padding: '1rem', background: 'var(--bg-tertiary)', border: '1px dashed var(--border-color)' }}>
              <h4 style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                <Info size={12}/> AI Insights
              </h4>
@@ -259,7 +308,7 @@ const Reports = () => {
             {/* REVENUE ANALYTICS */}
             {selectedReport === 'revenue' && (
               <motion.div key="revenue" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+                <div className="chart-container" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
                   <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-tertiary)' }}>
                     <h4 style={{ fontSize: '0.9rem', marginBottom: '2rem', fontWeight: '800' }}>Revenue Performance vs Goal</h4>
                     <div style={{ height: '320px' }}>
@@ -345,7 +394,7 @@ const Reports = () => {
             {/* COMPLAINT ANALYTICS */}
             {selectedReport === 'complaints' && (
               <motion.div key="complaints" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem' }}>
+                 <div className="chart-container" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem' }}>
                     <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-tertiary)' }}>
                       <h4 style={{ fontSize: '0.9rem', marginBottom: '2rem', fontWeight: '800' }}>Issue Category Breakdown</h4>
                       <div style={{ height: '320px' }}>
@@ -388,7 +437,7 @@ const Reports = () => {
             {/* TENANTS ANALYTICS */}
             {selectedReport === 'tenants' && (
               <motion.div key="tenants" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '2rem' }}>
+                <div className="tenant-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '2rem' }}>
                    <div className="card" style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', textAlign: 'center' }}>
                       <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>TOTAL TENANTS</p>
                       <h3 style={{ fontSize: '2rem', margin: '0.5rem 0' }}>{p.stats.totalTenants}</h3>

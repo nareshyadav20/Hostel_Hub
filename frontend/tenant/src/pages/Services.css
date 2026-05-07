@@ -189,7 +189,77 @@
   font-size: 0.95rem;
 }
 
-@media (max-width: 900px) {
-  .services-grid { grid-template-columns: 1fr; }
-  .service-navigation { width: 100%; overflow-x: auto; white-space: nowrap; }
+@media (max-width: 768px) {
+  .services-page {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .services-header h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .header-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .service-navigation {
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.25rem;
+    background: transparent;
+    border: none;
+    gap: 0.5rem;
+  }
+
+  .service-navigation::-webkit-scrollbar {
+    display: none;
+  }
+
+  .service-nav-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .service-form-card {
+    padding: 1.25rem !important;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .laundry-counter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-item {
+    padding: 1rem;
+  }
+
+  .timeline-date {
+    font-size: 0.95rem;
+  }
+
+  .timeline-info {
+    font-size: 0.75rem;
+  }
+
+  .status-tag {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+  }
 }

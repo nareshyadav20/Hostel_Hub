@@ -62,7 +62,7 @@ const Home = () => {
     };
 
     const observer = new IntersectionObserver(handleIntersect, observerOptions);
-    
+
     // Target sections
     ['hero', 'how', 'reviews', 'cities'].forEach(id => {
       const el = document.getElementById(id);

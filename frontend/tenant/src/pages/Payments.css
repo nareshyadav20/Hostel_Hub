@@ -226,8 +226,192 @@
 .detail-label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
 .detail-value { font-size: 1.1rem; font-weight: 800; color: var(--text-primary); }
 
-@media (max-width: 900px) {
-  .payments-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
-  .stat-card-premium { padding: 1.5rem !important; }
-  .detail-grid { grid-template-columns: 1fr; }
+.mobile-cards-view {
+  display: none;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.mobile-transaction-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.mobile-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.m-date {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.mobile-card-middle {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.m-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.m-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.m-value {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.m-amount {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--primary);
+}
+
+.btn-mobile-details {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .payments-page {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .table-view-desktop {
+    display: none;
+  }
+
+  .mobile-cards-view {
+    display: flex;
+  }
+
+  .financial-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .stat-card-premium {
+    padding: 1.5rem !important;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .payments-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .header-title-group {
+    gap: 1rem;
+  }
+
+  .header-icon-main {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .payments-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .header-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .header-actions-pro {
+    width: 100%;
+  }
+
+  .header-actions-pro button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .history-card-main {
+    padding: 1.25rem !important;
+  }
+
+  .financial-table-premium th, 
+  .financial-table-premium td {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .td-amount {
+    font-size: 0.95rem;
+  }
+
+  .status-pill {
+    padding: 3px 8px;
+    font-size: 0.65rem;
+  }
+
+  .table-overflow {
+    margin: 0 -1.25rem;
+    padding: 0 1.25rem;
+    width: calc(100% + 2.5rem);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .financial-table-premium {
+    min-width: 600px;
+  }
+
+  .modal-content-premium {
+    width: 95%;
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .modal-icon-badge {
+    width: 36px;
+    height: 36px;
+  }
+
+  .modal-title-group h3 {
+    font-size: 1.1rem;
+  }
+
+  .modal-title-group p {
+    font-size: 0.8rem;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }

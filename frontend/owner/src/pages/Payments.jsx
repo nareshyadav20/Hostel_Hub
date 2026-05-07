@@ -159,18 +159,63 @@ const Payments = () => {
   if (loading) return <div style={{ padding: '2rem' }}>Loading financial data...</div>;
 
   return (
-    <div style={{ animation:'fadeIn 0.5s ease-out' }}>
-      {/* Header */}
-      <header style={{ marginBottom:'2.5rem', display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:'1rem' }}>
+    <div className="payments-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
+      {/* Responsive Styles Injection */}
+      <style>{`
+        @media (max-width: 1024px) {
+          .charts-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .desktop-table-view {
+            display: none;
+          }
+          .mobile-transaction-cards {
+            display: grid !important;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            padding: 0;
+          }
+        }
+        @media (max-width: 768px) {
+          .header-main {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1.5rem;
+          }
+          .header-actions {
+            width: 100%;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.8rem !important;
+          }
+          .header-actions button {
+            width: 100%;
+            justify-content: center;
+          }
+          .kpi-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .search-container {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+          .modal-content {
+            width: 95% !important;
+            padding: 1.5rem !important;
+          }
+        }
+      `}</style>
+
+      <header className="header-main" style={{ marginBottom:'2.5rem', display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:'1rem' }}>
         <div>
           <h1 style={{ fontSize:'2.2rem', fontWeight:'800', marginBottom:'0.4rem', letterSpacing:'-0.02em', display:'flex', alignItems:'center', gap:'0.5rem' }}>
-            <CreditCard size={32} color="var(--accent-primary)"/> Financial Dashboard
+            <CreditCard size={32} color="var(--accent-primary)"/> Payments
           </h1>
-          <p style={{ color:'var(--text-secondary)', fontSize:'1rem' }}>Advanced revenue tracking, analytics, and automated billing.</p>
+          <p style={{ color:'var(--text-secondary)', fontSize:'1rem' }}>Revenue tracking and automated billing.</p>
         </div>
-        <div style={{ display:'flex', gap:'1rem' }}>
-          <button className="btn btn-primary" onClick={() => setRecordOpen(true)} style={{ display:'flex', alignItems:'center', gap:'0.5rem' }}><CreditCard size={16}/> Record Transaction</button>
-          <button className="btn" onClick={() => setBulkOpen(true)} style={{ border:'1px solid #F59E0B', color:'#F59E0B', display:'flex', alignItems:'center', gap:'0.5rem', background: '#FEF3C7' }}><Bell size={16}/> Bulk Reminders</button>
+        <div className="header-actions" style={{ display:'flex', gap:'1rem' }}>
+          <button className="btn btn-primary" onClick={() => setRecordOpen(true)} style={{ display:'flex', alignItems:'center', gap:'0.5rem' }}><CreditCard size={16}/> Record</button>
+          <button className="btn" onClick={() => setBulkOpen(true)} style={{ border:'1px solid #F59E0B', color:'#F59E0B', display:'flex', alignItems:'center', gap:'0.5rem', background: '#FEF3C7' }}><Bell size={16}/> Reminders</button>
         </div>
       </header>
 
@@ -203,7 +248,7 @@ const Payments = () => {
       </div>
 
       {/* Analytics Charts */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginBottom: '2.5rem' }}>
+      <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginBottom: '2.5rem' }}>
         <div className="card" style={{ padding: '1.5rem' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><TrendingUp size={18} color="var(--accent-primary)"/> Monthly Revenue Trend</h3>
           <div style={{ height: '250px' }}>
@@ -242,15 +287,15 @@ const Payments = () => {
 
       {/* Transactions Table */}
       <div className="card" style={{ padding:0, overflow:'hidden' }}>
-        <div style={{ padding:'1.5rem', borderBottom:'1px solid var(--border-color)', display:'flex', justifyContent:'space-between', alignItems:'center', background:'var(--bg-tertiary)' }}>
+        <div style={{ padding:'1.5rem', borderBottom:'1px solid var(--border-color)', display:'flex', justifyContent:'space-between', alignItems:'center', background:'var(--bg-tertiary)', flexWrap: 'wrap', gap: '1rem' }}>
           <h3 style={{ fontSize:'1.1rem', fontWeight:'700' }}>Tenant Transactions</h3>
-          <div style={{ position:'relative' }}>
+          <div style={{ position:'relative', width: '100%', maxWidth: '300px' }}>
             <Search size={16} color="var(--text-muted)" style={{ position:'absolute', left:'1rem', top:'50%', transform:'translateY(-50%)' }}/>
             <input type="text" placeholder="Search tenant, room, or invoice..." value={search} onChange={e => setSearch(e.target.value)}
-              style={{ padding:'0.6rem 1rem 0.6rem 2.5rem', borderRadius:'8px', border:'1px solid var(--border-color)', background:'var(--bg-primary)', fontSize:'0.85rem', minWidth:'280px', color:'var(--text-primary)', outline:'none' }}/>
+              style={{ padding:'0.6rem 1rem 0.6rem 2.5rem', borderRadius:'8px', border:'1px solid var(--border-color)', background:'var(--bg-primary)', fontSize:'0.85rem', width:'100%', color:'var(--text-primary)', outline:'none' }}/>
           </div>
         </div>
-        <div style={{ overflowX: 'auto' }}>
+        <div className="desktop-table-view">
           <table style={{ width:'100%', borderCollapse:'collapse', textAlign:'left', whiteSpace: 'nowrap' }}>
             <thead>
               <tr style={{ background:'var(--bg-primary)', borderBottom:'1px solid var(--border-color)', fontSize:'0.85rem', color:'var(--text-secondary)' }}>
@@ -307,11 +352,33 @@ const Payments = () => {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
-                <tr><td colSpan="7" style={{ padding:'4rem', textAlign:'center', color:'var(--text-muted)' }}>No matching transactions found.</td></tr>
-              )}
             </tbody>
           </table>
+        </div>
+
+        <div className="mobile-transaction-cards" style={{ display: 'none' }}>
+          {filtered.map(p => (
+            <div 
+              key={p.id} 
+              onClick={() => setDetailsItem(p)}
+              style={{ background: 'white', padding: '1.25rem', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <p style={{ fontWeight:'800', margin:0, fontSize: '1rem' }}>{p.tenantName}</p>
+                  <p style={{ fontSize:'0.8rem', color:'var(--text-muted)', margin:0 }}>{p.invoice}</p>
+                </div>
+                {getStatusBadge(p.status)}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {getTypeBadge(p.type)}
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>{p.room}</span>
+                </div>
+                <span style={{ fontWeight:'900', fontSize:'1.1rem' }}>₹{Math.abs(p.amount).toLocaleString()}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

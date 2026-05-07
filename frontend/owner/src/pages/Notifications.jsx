@@ -76,25 +76,58 @@ const Notifications = () => {
 
   return (
     <div className="notifications-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
-      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      {/* Responsive Styles Injection */}
+      <style>{`
+        @media (max-width: 768px) {
+          .header-main {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1.5rem;
+          }
+          .header-actions {
+            width: 100%;
+            flex-direction: column-reverse;
+          }
+          .header-actions button {
+            width: 100%;
+          }
+          .tab-nav {
+            gap: 1rem !important;
+            overflow-x: auto;
+            padding: 1.2rem !important;
+          }
+          .tab-nav button {
+            white-space: nowrap;
+          }
+          .notification-item {
+            gap: 1rem !important;
+            padding: 1.2rem !important;
+          }
+          .composer-modal {
+            padding: 1.5rem !important;
+          }
+        }
+      `}</style>
+
+      <header className="header-main" style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Bell size={32} color="var(--accent-primary)" /> Communications Center
+            <Bell size={32} color="var(--accent-primary)" /> Communications
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Send broadcasts, manage alerts, and track system logs.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Manage broadcasts and track system logs.</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div className="header-actions" style={{ display: 'flex', gap: '1rem' }}>
           <button onClick={markAllAsRead} className="btn btn-secondary">
             Mark all as read
           </button>
-          <button onClick={() => setIsComposerOpen(true)} className="btn btn-primary">
-            <Send size={16} /> Compose Broadcast
+          <button onClick={() => setIsComposerOpen(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Send size={16} /> Compose
           </button>
         </div>
       </header>
 
       <div className="card" style={{ padding: '0', overflow: 'hidden', minHeight: '500px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', display: 'flex', gap: '2rem' }}>
+        <div className="tab-nav" style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', display: 'flex', gap: '2rem' }}>
            <button onClick={() => setActiveTab('all')} className="btn" style={{ fontSize: '0.85rem', fontWeight: activeTab === 'all' ? '800' : '500', color: activeTab === 'all' ? 'var(--accent-primary)' : 'var(--text-muted)', padding: 0, background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
              All Messages
              {activeTab === 'all' && <motion.div layoutId="tab" style={{ position: 'absolute', bottom: '-1.5rem', left: 0, right: 0, height: '2px', background: 'var(--accent-primary)' }} />}
@@ -165,7 +198,7 @@ const Notifications = () => {
         {isComposerOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsComposerOpen(false)} />
-            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '15%', left: '50%', x: '-50%', width: '90%', maxWidth: '550px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+            <motion.div className="composer-modal" initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '15%', left: '50%', x: '-50%', width: '90%', maxWidth: '550px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
               <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Send size={24} color="var(--accent-primary)" /> Compose Broadcast
               </h2>

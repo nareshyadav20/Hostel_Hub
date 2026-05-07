@@ -91,12 +91,47 @@ const Settings = () => {
 
   return (
     <div className="settings-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
-      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* Responsive Styles Injection */}
+      <style>{`
+        @media (max-width: 768px) {
+          .header-main {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1.5rem;
+          }
+          .header-actions {
+            width: 100%;
+            justify-content: flex-end;
+          }
+          .main-layout {
+            grid-template-columns: 1fr !important;
+          }
+          .settings-nav {
+            flex-direction: row !important;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+          }
+          .settings-nav button {
+            white-space: nowrap;
+          }
+          .settings-content {
+            padding: 1.5rem !important;
+          }
+          .form-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .rent-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
+      <header className="header-main" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0, letterSpacing: '-0.02em' }}>System Settings</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Centralized control for hostel operations.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+        <div className="header-actions" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
            <AnimatePresence>
              {msg.text && (
                <motion.div initial={{ opacity:0, x:20 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0 }}
@@ -111,10 +146,10 @@ const Settings = () => {
         </div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '1.5rem' }}>
+      <div className="main-layout" style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '1.5rem' }}>
         
         {/* Sidebar Navigation */}
-        <div className="card" style={{ padding: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.3rem', alignSelf: 'start', borderRadius: '14px' }}>
+        <div className="card settings-nav" style={{ padding: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.3rem', alignSelf: 'start', borderRadius: '14px' }}>
           {tabs.map((tab) => (
              <button 
                key={tab.id}
@@ -134,14 +169,14 @@ const Settings = () => {
         </div>
 
         {/* Content Area */}
-        <div className="card" style={{ padding: '2rem', borderRadius: '16px', minHeight: '500px' }}>
+        <div className="card settings-content" style={{ padding: '2rem', borderRadius: '16px', minHeight: '500px' }}>
           <AnimatePresence mode="wait">
             
             {/* GENERAL SETTINGS */}
             {activeTab === 'general' && settings?.generalSettings && (
               <motion.div key="general" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <SectionHeader title="General Configuration" subtitle="Primary identity and contact information." />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+                <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
                   <InputGroup label="Hostel Name">
                     <input type="text" value={settings.generalSettings.hostelName || ''} onChange={e => setSettings({...settings, generalSettings: {...settings.generalSettings, hostelName: e.target.value}})} style={iStyle} />
                   </InputGroup>
@@ -168,7 +203,7 @@ const Settings = () => {
             {activeTab === 'rent' && (
               <motion.div key="rent" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <SectionHeader title="Rent & Financials" subtitle="Configure pricing, due dates, and late fee policies." />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '2rem' }}>
+                <div className="rent-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '2rem' }}>
                   <InputGroup label="Default Rent (Single)">
                     <input type="number" value={settings.rentSettings.defaultRent.single} onChange={e => setSettings({...settings, rentSettings: {...settings.rentSettings, defaultRent: {...settings.rentSettings.defaultRent, single: Number(e.target.value)}}})} style={iStyle} />
                   </InputGroup>
@@ -179,7 +214,7 @@ const Settings = () => {
                     <input type="number" value={settings.rentSettings.defaultRent.shared} onChange={e => setSettings({...settings, rentSettings: {...settings.rentSettings, defaultRent: {...settings.rentSettings.defaultRent, shared: Number(e.target.value)}}})} style={iStyle} />
                   </InputGroup>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+                <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
                   <InputGroup label="Security Deposit" info="One-time deposit collected at check-in">
                     <input type="number" value={settings.rentSettings.securityDeposit} onChange={e => setSettings({...settings, rentSettings: {...settings.rentSettings, securityDeposit: Number(e.target.value)}})} style={iStyle} />
                   </InputGroup>
@@ -189,7 +224,7 @@ const Settings = () => {
                   <InputGroup label="Grace Period (Days)" info="Days allowed after due date before late fee starts">
                     <input type="number" value={settings.rentSettings.gracePeriod} onChange={e => setSettings({...settings, rentSettings: {...settings.rentSettings, gracePeriod: Number(e.target.value)}})} style={iStyle} />
                   </InputGroup>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
+                  <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
                     <InputGroup label="Late Fee Type">
                       <select value={settings.rentSettings.lateFeeRule.type} onChange={e => setSettings({...settings, rentSettings: {...settings.rentSettings, lateFeeRule: {...settings.rentSettings.lateFeeRule, type: e.target.value}}})} style={iStyle}>
                         <option value="FIXED">Fixed Amount</option>
@@ -234,7 +269,7 @@ const Settings = () => {
             {activeTab === 'rooms' && (
               <motion.div key="rooms" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <SectionHeader title="Property Infrastructure" subtitle="Configure room types and automated creation." />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
                   <InputGroup label="Default Bed Capacity" info="Default number of beds per room when creating floors.">
                     <input type="number" value={settings.roomConfig.defaultBedCapacity} onChange={e => setSettings({...settings, roomConfig: {...settings.roomConfig, defaultBedCapacity: Number(e.target.value)}})} style={iStyle} />
                   </InputGroup>
@@ -269,7 +304,7 @@ const Settings = () => {
             {activeTab === 'hygiene' && (
               <motion.div key="hygiene" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <SectionHeader title="Hygiene & Health" subtitle="Set quality standards and cleaning schedules." />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                   <InputGroup label="Hygiene Alert Threshold (%)" info="Alerts trigger when score falls below this.">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                       <input type="range" min="30" max="95" step="5" value={settings.hygieneSettings.hygieneThreshold} onChange={e => setSettings({...settings, hygieneSettings: {...settings.hygieneSettings, hygieneThreshold: Number(e.target.value)}})} style={{ flex: 1 }} />
@@ -313,7 +348,7 @@ const Settings = () => {
             {activeTab === 'reports' && (
               <motion.div key="reports" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <SectionHeader title="Reporting Engine" subtitle="Configure automated report generation." />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                   <InputGroup label="Default Reporting Period">
                     <select value={settings.reportSettings.defaultPeriod} onChange={e => setSettings({...settings, reportSettings: {...settings.reportSettings, defaultPeriod: e.target.value}})} style={iStyle}>
                       <option value="MONTHLY">Monthly Overview</option>

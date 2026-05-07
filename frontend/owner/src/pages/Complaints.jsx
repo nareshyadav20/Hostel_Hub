@@ -147,19 +147,62 @@ const Complaints = () => {
 
   return (
     <div className="complaints-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
-      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      {/* Responsive Styles Injection */}
+      <style>{`
+        @media (max-width: 1024px) {
+          .kpi-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+          .desktop-table-view {
+            display: none;
+          }
+          .mobile-complaint-cards {
+            display: grid !important;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            padding: 0;
+          }
+        }
+        @media (max-width: 768px) {
+          .header-main {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1.5rem;
+          }
+          .header-main button {
+            width: 100%;
+          }
+          .kpi-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .tabs-container {
+            width: 100% !important;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 0.5rem !important;
+            display: flex !important;
+            gap: 0.8rem !important;
+          }
+          .tabs-container button {
+            padding: 0.8rem 1.2rem !important;
+            font-size: 0.85rem !important;
+          }
+        }
+      `}</style>
+
+      <header className="header-main" style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Wrench size={32} color="var(--accent-primary)" /> Service Requests Hub
+            <Wrench size={32} color="var(--accent-primary)" /> Service Hub
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Manage maintenance tickets, leave applications, and visitor permissions.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Manage tickets and visitor permissions.</p>
         </div>
         <button onClick={() => setIsBroadcastModalOpen(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700' }}>
             <MessageSquare size={16} /> Broadcast Update
         </button>
       </header>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', width: 'fit-content' }}>
+      <div className="tabs-container" style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', width: 'fit-content' }}>
         {['Maintenance', 'Leave', 'Visitor'].map(tab => (
           <button
             key={tab}
@@ -177,7 +220,7 @@ const Complaints = () => {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
+      <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
         <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--text-primary)' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Total {activeTab}</p>
           <h2 style={{ fontSize: '2.4rem', fontWeight: '800' }}>{totalComplaints}</h2>
@@ -187,124 +230,123 @@ const Complaints = () => {
           <h2 style={{ fontSize: '2.4rem', fontWeight: '800', color: 'var(--accent-warning)' }}>{pendingCount}</h2>
         </div>
         <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-success)' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>{activeTab === 'Maintenance' ? 'Resolved' : 'Approved'}</p>
-          <h2 style={{ fontSize: '2.4rem', fontWeight: '800', color: 'var(--accent-success)' }}>{resolvedCount}</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Resolved</p>
+          <h2 style={{ fontSize: '2.4rem', fontWeight: '800', color: 'var(--accent-success)' }}>{totalComplaints - pendingCount}</h2>
         </div>
       </div>
 
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead>
-            <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <th style={{ padding: '1.2rem' }}>Ticket Info</th>
-              <th style={{ padding: '1.2rem' }}>{activeTab} Details</th>
-              <th style={{ padding: '1.2rem' }}>Status</th>
-              <th style={{ padding: '1.2rem', textAlign: 'right' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <AnimatePresence>
-              {complaints.map((c, index) => (
-                <React.Fragment key={c._id}>
-                  <motion.tr 
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={() => setExpandedId(expandedId === c._id ? null : c._id)}
-                    style={{ borderBottom: '1px solid var(--border-color)', background: c.status === 'Resolved' ? 'var(--bg-tertiary)' : 'transparent', opacity: c.status === 'Resolved' ? 0.7 : 1, cursor: 'pointer' }}
-                    className="table-row-hover"
-                  >
-                    <td style={{ padding: '1.2rem' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                        <span style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>{c.tenant?.room || 'N/A'}</span>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ticket #{index + 1001} • {new Date(c.createdAt).toLocaleDateString()}</span>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
-                          By: <span style={{ fontWeight: '600' }}>{c.tenant?.name || 'Unknown'}</span>
-                        </span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '1.2rem' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-start' }}>
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                          <span style={{ padding: '0.3rem', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
-                            {getCategoryIcon(c.category)}
+        <div className="desktop-table-view">
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                <th style={{ padding: '1.2rem' }}>Ticket Info</th>
+                <th style={{ padding: '1.2rem' }}>{activeTab} Details</th>
+                <th style={{ padding: '1.2rem' }}>Status</th>
+                <th style={{ padding: '1.2rem', textAlign: 'right' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <AnimatePresence>
+                {complaints.map((c, index) => (
+                  <React.Fragment key={c.id}>
+                    <motion.tr 
+                      layout
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
+                      style={{ borderBottom: '1px solid var(--border-color)', background: c.status === 'Resolved' ? 'var(--bg-tertiary)' : 'transparent', opacity: c.status === 'Resolved' ? 0.7 : 1, cursor: 'pointer' }}
+                      className="table-row-hover"
+                    >
+                      <td style={{ padding: '1.2rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                          <span style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>{c.room || 'N/A'}</span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ticket #{index + 1001}</span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
+                            By: <span style={{ fontWeight: '600' }}>{c.reportedBy || 'Unknown'}</span>
                           </span>
-                          <span style={{ fontWeight: '600' }}>{c.title}</span>
                         </div>
-                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.3rem' }}>
-                          {getUrgencyBadge(c.priority || 'Medium')}
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.category}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: '1.2rem' }}>
-                      {getStatusDisplay(c.status)}
-                    </td>
-                    <td style={{ padding: '1.2rem', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                          {c.status === 'Pending' && activeTab === 'Maintenance' && (
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); setSelectedComplaintId(c._id); setIsAssignModalOpen(true); }}
-                              className="btn btn-primary" 
-                              style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
-                            >
-                              Assign Task
-                            </button>
-                          )}
-                          {c.status === 'In Progress' && (
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handleStatusChange(c._id, 'Resolved'); }}
-                              className="btn" 
-                              style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-success)', border: '1px solid var(--accent-success)' }}
-                            >
-                              <CheckCircle2 size={14} style={{ marginRight: '0.4rem' }}/> Mark Resolved
-                            </button>
-                          )}
-                          {(c.status === 'Resolved' || c.status === 'Rejected') && (
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handleArchive(c._id); }}
-                              className="btn" 
-                              style={{ padding: '0.5rem', fontSize: '0.8rem', border: '1px solid var(--border-color)', color: 'var(--text-muted)' }}
-                            >
-                              Archive
-                            </button>
-                          )}
-                      </div>
-                    </td>
-                  </motion.tr>
-                  {expandedId === c._id && (
-                    <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: 'var(--bg-tertiary)' }}>
-                      <td colSpan="4" style={{ padding: '1.5rem 2.5rem' }}>
-                        <div style={{ borderLeft: '4px solid var(--accent-primary)', paddingLeft: '1.5rem' }}>
-                          <p style={{ fontWeight: '700', color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Issue Details</p>
-                          <p style={{ fontSize: '1rem', lineHeight: '1.6', color: 'var(--text-primary)' }}>{c.description}</p>
-                          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '2rem' }}>
-                             <div>
-                               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>REPORTED BY</p>
-                               <p style={{ fontWeight: '600' }}>{c.tenant?.name || 'Unknown'} (Room {c.tenant?.room || 'N/A'})</p>
-                             </div>
-                            <div>
-                               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>CATEGORY</p>
-                               <p style={{ fontWeight: '600' }}>{c.category}</p>
-                             </div>
-                             {c.assignedTo && (
-                               <div>
-                                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>ASSIGNED TO</p>
-                                 <p style={{ fontWeight: '600', color: 'var(--accent-primary)' }}>{c.assignedTo}</p>
-                               </div>
-                             )}
+                      </td>
+                      <td style={{ padding: '1.2rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <span style={{ padding: '0.3rem', background: 'var(--bg-tertiary)', borderRadius: '6px' }}>
+                              {getCategoryIcon(c.category)}
+                            </span>
+                            <span style={{ fontWeight: '600' }}>{c.issue}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.3rem' }}>
+                            {getUrgencyBadge(c.urgency || 'Medium')}
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.category}</span>
                           </div>
                         </div>
                       </td>
+                      <td style={{ padding: '1.2rem' }}>
+                        {getStatusDisplay(c.status)}
+                      </td>
+                      <td style={{ padding: '1.2rem', textAlign: 'right' }}>
+                        <ChevronDown size={18} color="var(--text-muted)" style={{ transform: expandedId === c.id ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
+                      </td>
                     </motion.tr>
-                  )}
-                </React.Fragment>
-              ))}
+                    {expandedId === c.id && (
+                      <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: 'var(--bg-tertiary)' }}>
+                        <td colSpan="4" style={{ padding: '1.5rem 2.5rem' }}>
+                          <div style={{ borderLeft: '4px solid var(--accent-primary)', paddingLeft: '1.5rem' }}>
+                            <p style={{ fontWeight: '700', color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Issue Details</p>
+                            <p style={{ fontSize: '1rem', lineHeight: '1.6', color: 'var(--text-primary)' }}>{c.description}</p>
+                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                              {c.status === 'Pending' && (
+                                <button onClick={(e) => { e.stopPropagation(); setSelectedComplaintId(c.id); setIsAssignModalOpen(true); }} className="btn btn-primary">Assign Staff</button>
+                              )}
+                              {c.status === 'In-Progress' && (
+                                <button onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'Resolved'); }} className="btn btn-primary" style={{ background: 'var(--accent-success)' }}>Mark Resolved</button>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </AnimatePresence>
+            </tbody>
+          </table>
+        </div>
 
-            </AnimatePresence>
-          </tbody>
-        </table>
+        <div className="mobile-complaint-cards" style={{ display: 'none' }}>
+          {complaints.map((c) => (
+            <div 
+              key={c.id} 
+              onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
+              style={{ background: 'white', padding: '1.25rem', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '1rem' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.25rem' }}>
+                    {getCategoryIcon(c.category)}
+                    <p style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)', margin: 0 }}>{c.room}</p>
+                  </div>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, fontWeight: '600' }}>{c.issue}</p>
+                </div>
+                {getStatusDisplay(c.status)}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {getUrgencyBadge(c.urgency)}
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{c.timeElapsed}</span>
+              </div>
+              {expandedId === c.id && (
+                <div style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '8px', marginTop: '0.5rem' }}>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', margin: 0 }}>{c.description}</p>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                    {c.status === 'Pending' && <button onClick={(e) => { e.stopPropagation(); setSelectedComplaintId(c.id); setIsAssignModalOpen(true); }} className="btn btn-primary" style={{ flex: 1, fontSize: '0.8rem' }}>Assign</button>}
+                    {c.status === 'In-Progress' && <button onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'Resolved'); }} className="btn btn-primary" style={{ flex: 1, fontSize: '0.8rem', background: 'var(--accent-success)' }}>Resolve</button>}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       <AnimatePresence>

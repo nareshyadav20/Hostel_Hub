@@ -92,14 +92,45 @@ function Dashboard() {
 
   const col = { gap:'1.5rem', marginBottom:'2.5rem' };
   const grid2 = { display:'grid', gridTemplateColumns:'1fr 1fr', ...col };
-  const grid3 = { display:'grid', gridTemplateColumns:'1fr 1fr 1fr', ...col };
+  const grid3 = { display:'grid', gridTemplateColumns:'1fr 1fr 1fr', ...col };      {/* Responsive Styles Injection */}
+      <style>{`
+        @media (max-width: 1024px) {
+          .kpi-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .action-health-grid, .revenue-grid, .breakdown-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .action-items-grid {
+             grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .header-main {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1.5rem;
+          }
+          .kpi-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .action-items-grid {
+             grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .modal-content {
+            width: 95% !important;
+            padding: 1.5rem !important;
+          }
+          .action-buttons {
+            grid-template-columns: 1fr 1fr !important;
+          }
+        }
+      `}</style>
 
-  return (
-    <>
       <div className="dashboard-container" style={{ animation:'fadeIn 0.5s ease' }}>
 
       {/* HEADER */}
-      <header style={{ marginBottom:'2rem', display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:'1rem' }}>
+      <header className="header-main" style={{ marginBottom:'2rem', display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:'1rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.5rem' }}>
             {buildingId && (
@@ -115,13 +146,11 @@ function Dashboard() {
             {buildingId ? 'Real-time property performance & operational control' : 'Real-time business insights & operational control'}
           </p>
         </div>
-        <div style={{ display:'flex', gap:'0.7rem', flexWrap:'wrap' }}>
-          {/* Settings and Export removed per request */}
-        </div>
+      </header> </div>
       </header>
 
       {/* 1. PRIMARY KPI CARDS */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:'1.5rem', marginBottom:'2.5rem' }}>
+      <div className="kpi-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:'1.5rem', marginBottom:'2.5rem' }}>
         {kpis.map((kpi, i) => (
           <motion.div key={i} whileHover={{ y:-2, boxShadow: 'var(--shadow-xl)' }} className="card" style={{ padding:'1.5rem', borderRadius:'16px', background:'var(--bg-secondary)', cursor:'pointer', position:'relative', overflow:'hidden' }}>
             <div style={{ position:'absolute', top:0, left:0, right:0, height:'3px', background: `linear-gradient(90deg, ${kpi.color}40, ${kpi.color})` }}/>
@@ -144,14 +173,14 @@ function Dashboard() {
       </div>
 
       {/* 2. ACTION CENTER + HEALTH SCORE */}
-      <div style={{ ...grid2, gridTemplateColumns:'2fr 1fr', marginBottom:'2rem' }}>
+      <div className="action-health-grid" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:'1.5rem', marginBottom:'2rem' }}>
         {/* Action Center */}
         <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.2rem' }}>
             <Zap size={18} color="#F59E0B"/>
             <h3 style={{ fontSize:'1rem', fontWeight:'800', margin:0 }}>Today's Action Center</h3>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'0.7rem', marginBottom:'1.3rem' }}>
+          <div className="action-items-grid" style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'0.7rem', marginBottom:'1.3rem' }}>
             {actionItems.map((a,i) => (
               <div key={i} style={{ background:'var(--bg-tertiary)', padding:'0.8rem 0.5rem', borderRadius:'10px', textAlign:'center' }}>
                 <div style={{ fontSize:'1.4rem', marginBottom:'0.3rem' }}>{a.icon}</div>
@@ -160,7 +189,7 @@ function Dashboard() {
               </div>
             ))}
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'0.6rem' }}>
+          <div className="action-buttons" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'0.6rem' }}>
             <button onClick={() => { setFormMsg(''); setModal('addTenant'); }} className="btn" style={{ background:'#DBEAFE', color:'#2563EB', fontSize:'0.75rem', padding:'0.55rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.3rem', borderRadius:'8px', cursor:'pointer' }}><UserPlus size={13}/> Add Tenant</button>
             <button onClick={() => { setFormMsg(''); setModal('assignBed'); }} className="btn" style={{ background:'#EDE9FE', color:'#7C3AED', fontSize:'0.75rem', padding:'0.55rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.3rem', borderRadius:'8px', cursor:'pointer' }}><LogIn size={13}/> Assign Bed</button>
             <button onClick={() => { setFormMsg(''); setModal('markPaid'); }} className="btn" style={{ background:'#DCFCE7', color:'#10B981', fontSize:'0.75rem', padding:'0.55rem', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.3rem', borderRadius:'8px', cursor:'pointer' }}><CheckCircle size={13}/> Mark Paid</button>
@@ -172,7 +201,7 @@ function Dashboard() {
       </div>
 
       {/* 3. REVENUE ANALYTICS */}
-      <div style={{ ...grid2, gridTemplateColumns:'2fr 1fr', marginBottom:'2rem' }}>
+      <div className="revenue-grid" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:'1.5rem', marginBottom:'2rem' }}>
         {/* Daily Bar Chart */}
         <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'1rem' }}>
@@ -240,7 +269,7 @@ function Dashboard() {
       </div>
 
       {/* 4. OCCUPANCY + TENANT + COMPLAINTS */}
-      <div style={{ ...grid3, marginBottom:'2rem' }}>
+      <div className="breakdown-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'1.5rem', marginBottom:'2.5rem' }}>
         {/* Occupancy */}
         <div className="card" style={{ padding:'1.5rem', borderRadius:'14px', border:'1px solid var(--border-color)' }}>
           <h3 style={{ fontSize:'1rem', fontWeight:'800', margin:'0 0 1rem' }}>Occupancy Breakdown</h3>
@@ -283,14 +312,14 @@ function Dashboard() {
       </div>
 
       {/* 5. MESS + STAFF + INFRASTRUCTURE */}
-      <div style={{ ...grid3, marginBottom:'2rem' }}>
+      <div className="breakdown-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'1.5rem', marginBottom:'2.5rem' }}>
         <MessPanel data={mess}/>
         <StaffPanel data={staff}/>
         <InfrastructureOverview buildingId={buildingId} />
       </div>
 
       {/* 6. INSIGHTS + ACTIVITY + DOCUMENTS */}
-      <div style={{ ...grid3, marginBottom:'2rem' }}>
+      <div className="breakdown-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'1.5rem', marginBottom:'2.5rem' }}>
         <InsightsPanel insights={alerts.insights} alerts={alerts.alerts} summary={summary}/>
         <ActivityFeed/>
         <DocumentTracker/>

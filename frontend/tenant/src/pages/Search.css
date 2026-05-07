@@ -602,15 +602,43 @@
 
   .card-media-side {
     width: 100%;
-    min-height: 200px;
-    height: 200px;
+    min-height: 220px;
+    height: 220px;
   }
 
   .card-details-side {
     padding: 1.25rem;
   }
 
+  .details-mid-grid {
+    gap: 1rem;
+    justify-content: space-between;
+  }
+
   .card-actions-row-pro {
     flex-direction: column;
+  }
+
+  .filter-card-premium {
+    padding: 1.25rem;
+    gap: 1.25rem;
+  }
+
+  .gender-pill-group {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    scrollbar-width: none;
+  }
+  .gender-pill-group::-webkit-scrollbar { display: none; }
+  
+  .gender-pill-btn {
+    white-space: nowrap;
+    padding: 0.5rem 1rem;
+  }
+
+  .budget-option-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 }

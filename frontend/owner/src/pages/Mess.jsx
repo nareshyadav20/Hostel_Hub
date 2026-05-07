@@ -187,16 +187,65 @@ const Mess = () => {
 
   return (
     <div className="mess-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
-      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      {/* Responsive Styles Injection */}
+      <style>{`
+        @media (max-width: 1024px) {
+          .kpi-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .header-main {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1.5rem;
+          }
+          .tab-switcher {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+          }
+          .tab-switcher button {
+            white-space: nowrap;
+          }
+          .kpi-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .dashboard-charts {
+            grid-template-columns: 1fr !important;
+          }
+          .attendance-table-container {
+            overflow-x: auto;
+          }
+          .menu-layout {
+            grid-template-columns: 1fr !important;
+          }
+          .menu-days-nav button {
+            padding: 1rem !important;
+            font-size: 0.8rem !important;
+          }
+          .meal-card {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1rem !important;
+            padding: 1.5rem !important;
+          }
+          .plans-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
+      <header className="header-main" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Utensils size={32} color="var(--accent-primary)" /> Premium Mess Control
+            <Utensils size={32} color="var(--accent-primary)" /> Mess Operations
           </h1>
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+          <div className="tab-switcher" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'nowrap' }}>
             <button onClick={() => setActiveTab('dashboard')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'dashboard' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'dashboard' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}>Dashboard</button>
             <button onClick={() => setActiveTab('attendance')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'attendance' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'attendance' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}>Attendance</button>
             <button onClick={() => setActiveTab('menu')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'menu' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'menu' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}>Menu Plan</button>
-            <button onClick={() => setActiveTab('subscriptions')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'subscriptions' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'subscriptions' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}>Plans ⭐</button>
+            <button onClick={() => setActiveTab('subscriptions')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'subscriptions' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'subscriptions' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}>Meal Plans</button>
           </div>
         </div>
         {activeTab === 'menu' && (
@@ -208,7 +257,7 @@ const Mess = () => {
 
       {activeTab === 'dashboard' && (
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+          <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
             <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Total Meals Today</p>
               <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{stats.breakfast + stats.lunch + stats.dinner}</h2>
@@ -231,7 +280,7 @@ const Mess = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+          <div className="dashboard-charts" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
             <div className="card" style={{ padding: '2rem' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '2rem' }}>Meal Consumption Analytics</h3>
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2rem', height: '200px', paddingBottom: '2rem' }}>
@@ -273,7 +322,7 @@ const Mess = () => {
 
       {activeTab === 'attendance' && (
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
-          <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
+          <div className="card attendance-table-container" style={{ padding: '0', overflow: 'hidden' }}>
             <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-tertiary)' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>Resident Meal Attendance - {today}</h3>
               <div style={{ display: 'flex', gap: '1rem' }}>
@@ -396,7 +445,7 @@ const Mess = () => {
             </div>
           ) : (
             /* Daily Detail View (Existing) */
-            <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
+            <div className="menu-layout" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div className="card" style={{ padding: '1.5rem' }}>
                   <h4 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem' }}>Select Plan</h4>
@@ -427,7 +476,7 @@ const Mess = () => {
               </div>
 
               <div className="card" style={{ padding: '0', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
+                <div className="menu-days-nav" style={{ display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
                   {days.map(day => (
                     <button 
                       key={day}
@@ -449,7 +498,7 @@ const Mess = () => {
                   animate={{ opacity: 1, x: 0 }}
                   style={{ padding: '2.5rem', display: 'grid', gap: '2rem' }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div className="meal-card" style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
                     <div style={{ padding: '1.2rem', background: '#f59e0b15', color: '#f59e0b', borderRadius: '20px' }}><Sun size={32} /></div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Breakfast (8:00 AM - 10:00 AM)</p>
@@ -457,7 +506,7 @@ const Mess = () => {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div className="meal-card" style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
                     <div style={{ padding: '1.2rem', background: '#10b98115', color: '#10b981', borderRadius: '20px' }}><Coffee size={32} /></div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Lunch (1:00 PM - 3:00 PM)</p>
@@ -465,7 +514,7 @@ const Mess = () => {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div className="meal-card" style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
                     <div style={{ padding: '1.2rem', background: '#6366f115', color: '#6366f1', borderRadius: '20px' }}><Moon size={32} /></div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Dinner (8:00 PM - 10:30 PM)</p>
@@ -481,7 +530,7 @@ const Mess = () => {
 
       {activeTab === 'subscriptions' && (
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+          <div className="plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
             {plans.map(plan => (
               <motion.div key={plan.id} whileHover={{ y: -10 }} className="card" style={{ 
                 padding: '2.5rem', borderRadius: '32px', position: 'relative', overflow: 'hidden',

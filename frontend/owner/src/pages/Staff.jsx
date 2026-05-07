@@ -137,7 +137,7 @@ const Staff = () => {
               <button className="btn btn-primary" style={{ padding: '0.6rem 1.2rem', fontSize: '0.85rem', fontWeight: '700', borderRadius: '12px' }}>+ Mark Attendance</button>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
+            <div className="performance-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                 <MetricCard label="Monthly Attendance" value={`${selectedStaff.attendance?.percentage || 0}%`} sub="Overall consistency" color="var(--accent-primary)" />
                 <MetricCard label="Present Days" value="24" sub="Current billing cycle" color="#10B981" />
@@ -197,7 +197,7 @@ const Staff = () => {
               <button className="btn btn-primary" style={{ padding: '0.6rem 1.2rem', fontSize: '0.85rem', fontWeight: '700', borderRadius: '12px' }}>Generate Review</button>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
+            <div className="performance-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                 <MetricCard label="Task Completion" value={`${selectedStaff.metrics?.completionRate || 0}%`} sub="Overall success rate" color="var(--accent-primary)" />
                 <MetricCard label="Avg Resolution" value={selectedStaff.metrics?.avgResolutionTime || '-'} sub="Time per assignment" color="#10B981" />
@@ -229,7 +229,7 @@ const Staff = () => {
       case 'Salary':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeIn 0.3s ease-out' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+            <div className="salary-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
               <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-tertiary)' }}>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Current Month Salary</p>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
@@ -335,23 +335,77 @@ const Staff = () => {
   const absentToday = allStaff.filter(s => s.status === 'On Leave');
 
   return (
-    <div style={{ animation: 'fadeIn 0.5s ease-out', minHeight: '100vh', background: '#F8FAFC', padding: '0.5rem', position: 'relative' }}>
+      {/* Responsive Styles Injection */}
+      <style>{`
+        @media (max-width: 1024px) {
+          .kpi-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .header-main {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1.5rem;
+          }
+          .header-actions {
+            width: 100%;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+          }
+          .kpi-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .staff-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .detail-modal {
+            flex-direction: column !important;
+            height: 95vh !important;
+            top: 2.5% !important;
+          }
+          .detail-sidebar {
+            width: 100% !important;
+            border-right: none !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            padding: 1.5rem !important;
+          }
+          .detail-nav {
+            flex-direction: row !important;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+          }
+          .detail-nav button {
+            white-space: nowrap;
+          }
+          .detail-content {
+            padding: 1.5rem !important;
+          }
+          .performance-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .salary-grid {
+             grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
       {/* HEADER */}
-      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header className="header-main" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', marginBottom: '0.2rem', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Activity size={32} color="#3B82F6" /> Staff Operations
           </h1>
           <p style={{ color: '#64748B', fontSize: '1rem', fontWeight: '500', margin: 0 }}>Workforce tracking, performance analytics, and payroll management.</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div className="header-actions" style={{ display: 'flex', gap: '1rem' }}>
           <button className="btn" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#475569', padding: '0.8rem 1.2rem', borderRadius: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Download size={18}/> Export</button>
           <button className="btn btn-primary" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#3B82F6', border: 'none' }}><UserPlus size={18}/> Add Staff</button>
         </div>
       </header>
 
       {/* KPI CARDS */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
         {[
           { label: 'Total Staff', value: allStaff.length || staffData.totalStaff || 8, icon: <User size={18}/>, color: '#3B82F6', border: '#BFDBFE', bg: '#EFF6FF' },
           { label: 'Active Today', value: activeStaff.length || (allStaff.length - onLeave.length), icon: <CheckCircle size={18}/>, color: '#10B981', border: '#A7F3D0', bg: '#ECFDF5' },
@@ -396,7 +450,7 @@ const Staff = () => {
       </div>
 
       {/* STAFF GRID */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
+      <div className="staff-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
         {filteredStaff.map((s, idx) => {
           const status = getStatusStyle(s.status);
           const roleStyle = ROLE_COLORS[s.role] || ROLE_COLORS['Cleaner'];
@@ -459,6 +513,7 @@ const Staff = () => {
               onClick={() => setSelectedStaff(null)}
             />
             <motion.div 
+              className="detail-modal"
               initial={{ scale: 0.9, opacity: 0, x: '-50%', y: '-40%' }} 
               animate={{ scale: 1, opacity: 1, x: '-50%', y: '-50%' }} 
               exit={{ scale: 0.9, opacity: 0, x: '-50%', y: '-60%' }}
@@ -471,13 +526,14 @@ const Staff = () => {
                 display: 'flex'
               }}
             >
-              <div style={{ 
+              <div className="detail-sidebar" style={{ 
                 width: '300px', 
                 borderRight: '1px solid var(--border-color)', 
                 background: 'var(--bg-tertiary)', 
                 display: 'flex', 
                 flexDirection: 'column',
-                padding: '2.5rem 1.5rem'
+                padding: '2.5rem 1.5rem',
+                flexShrink: 0
               }}>
                 <button 
                   onClick={() => setSelectedStaff(null)}
@@ -517,7 +573,7 @@ const Staff = () => {
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {selectedStaff.id}</p>
                 </div>
 
-                <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
+                <nav className="detail-nav" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
                   {[
                     { id: 'Overview', icon: <User size={18} /> },
                     { id: 'Attendance', icon: <Calendar size={18} /> },
@@ -561,7 +617,7 @@ const Staff = () => {
                 </button>
               </div>
 
-              <div style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-primary)', padding: '2.5rem' }}>
+              <div className="detail-content" style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-primary)', padding: '2.5rem' }}>
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTab}
