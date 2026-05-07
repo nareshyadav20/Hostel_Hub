@@ -175,7 +175,8 @@
     gap: 1.5rem;
   }
 
-  .profile-sidebar, .profile-main-card {
+  .profile-sidebar,
+  .profile-main-card {
     padding: 1.5rem !important;
   }
 

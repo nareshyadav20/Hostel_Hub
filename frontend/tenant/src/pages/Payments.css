@@ -90,17 +90,36 @@
   transition: var(--transition-normal);
 }
 
-.stat-card-premium.balance { border-left: 6px solid var(--primary); }
-.stat-card-premium.pending { border-left: 6px solid #ef4444; }
+.stat-card-premium.balance {
+  border-left: 6px solid var(--primary);
+}
+
+.stat-card-premium.pending {
+  border-left: 6px solid #ef4444;
+}
 
 .stat-card-premium:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }
 
-.stat-content { z-index: 2; }
-.stat-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-.stat-value { font-size: 2.5rem; font-weight: 900; color: var(--text-primary); margin-top: 0.5rem; }
+.stat-content {
+  z-index: 2;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-top: 0.5rem;
+}
 
 .btn-pay-now {
   margin-top: 1.25rem;
@@ -114,7 +133,10 @@
   transition: var(--transition-fast);
 }
 
-.btn-pay-now:hover { background: #dc2626; transform: scale(1.05); }
+.btn-pay-now:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
 
 .stat-icon-bg {
   opacity: 0.1;
@@ -123,7 +145,9 @@
 }
 
 /* History Card */
-.history-card-main { padding: 2rem !important; }
+.history-card-main {
+  padding: 2rem !important;
+}
 
 .icon-badge-history {
   width: 44px;
@@ -163,11 +187,29 @@
   background: white;
 }
 
-.financial-table-premium tr:last-child td { border-bottom: none; }
+.financial-table-premium tr:last-child td {
+  border-bottom: none;
+}
 
-.td-date { font-weight: 700; color: var(--text-secondary); }
-.invoice-id { font-family: monospace; font-weight: 800; color: var(--text-primary); background: #f1f5f9; padding: 4px 8px; border-radius: 6px; }
-.td-amount { font-weight: 900; color: var(--text-primary); font-size: 1.1rem; }
+.td-date {
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.invoice-id {
+  font-family: monospace;
+  font-weight: 800;
+  color: var(--text-primary);
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.td-amount {
+  font-weight: 900;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
 
 .status-pill {
   display: inline-flex;
@@ -180,8 +222,15 @@
   text-transform: uppercase;
 }
 
-.status-pill.paid { background: #f0fdf4; color: #16a34a; }
-.status-pill.pending { background: #fef2f2; color: #ef4444; }
+.status-pill.paid {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.status-pill.pending {
+  background: #fef2f2;
+  color: #ef4444;
+}
 
 .btn-table-details {
   padding: 0.6rem 1.2rem;
@@ -195,7 +244,11 @@
   transition: var(--transition-fast);
 }
 
-.btn-table-details:hover { background: var(--primary); color: white; border-color: var(--primary); }
+.btn-table-details:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
 
 /* Parent Modal */
 .phone-input-wrapper {
@@ -208,11 +261,31 @@
   border-radius: 8px;
 }
 
-.country-code { font-weight: 800; color: var(--text-muted); border-right: 1px solid var(--border-color); padding-right: 0.75rem; }
-.phone-input-wrapper input { background: transparent; border: none; font-weight: 700; font-size: 1rem; width: 100%; outline: none; }
+.country-code {
+  font-weight: 800;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-color);
+  padding-right: 0.75rem;
+}
 
-.whatsapp-color { background: #25d366 !important; border: none !important; }
-.whatsapp-color:hover { background: #128c7e !important; transform: translateY(-2px); }
+.phone-input-wrapper input {
+  background: transparent;
+  border: none;
+  font-weight: 700;
+  font-size: 1rem;
+  width: 100%;
+  outline: none;
+}
+
+.whatsapp-color {
+  background: #25d366 !important;
+  border: none !important;
+}
+
+.whatsapp-color:hover {
+  background: #128c7e !important;
+  transform: translateY(-2px);
+}
 
 /* Modal Detail Grid */
 .detail-grid {
@@ -222,9 +295,24 @@
   margin-top: 1rem;
 }
 
-.detail-item { display: flex; flex-direction: column; gap: 0.4rem; }
-.detail-label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-.detail-value { font-size: 1.1rem; font-weight: 800; color: var(--text-primary); }
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.detail-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
 
 .mobile-cards-view {
   display: none;
@@ -298,18 +386,55 @@
   cursor: pointer;
 }
 
+@media (max-width: 992px) {
+  .financial-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .payments-page {
-    padding: 1rem;
-    gap: 1.5rem;
+    padding: 0.75rem;
+    gap: 1rem;
   }
 
-  .table-view-desktop {
+  .payments-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .header-title-group {
+    gap: 1rem;
+  }
+
+  .header-icon-main {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .payments-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .header-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.4;
     display: none;
+    /* Hide subtitle to keep header compact */
   }
 
-  .mobile-cards-view {
-    display: flex;
+  .header-actions-pro {
+    width: 100%;
+  }
+
+  .header-actions-pro button {
+    width: 100%;
+    justify-content: center;
+    padding: 0.85rem;
   }
 
   .financial-stats-grid {
@@ -321,97 +446,108 @@
     padding: 1.5rem !important;
   }
 
+  .stat-label {
+    font-size: 0.75rem;
+  }
+
   .stat-value {
     font-size: 1.5rem;
+    margin-top: 0.25rem;
   }
 
-  .payments-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .header-title-group {
-    gap: 1rem;
-  }
-
-  .header-icon-main {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-  }
-
-  .payments-header h1 {
-    font-size: 1.75rem;
-  }
-
-  .header-subtitle {
+  .btn-pay-now,
+  .btn-call-emergency {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
     font-size: 0.85rem;
-    line-height: 1.4;
-  }
-
-  .header-actions-pro {
-    width: 100%;
-  }
-
-  .header-actions-pro button {
-    width: 100%;
-    justify-content: center;
   }
 
   .history-card-main {
     padding: 1.25rem !important;
+    border-radius: 20px !important;
   }
 
-  .financial-table-premium th, 
-  .financial-table-premium td {
-    padding: 0.75rem 1rem;
-    font-size: 0.8rem;
+  .table-view-desktop {
+    display: none;
   }
 
-  .td-amount {
-    font-size: 0.95rem;
+  .mobile-cards-view {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .mobile-transaction-card {
+    padding: 1rem;
+    border-radius: 14px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+  }
+
+  .mobile-card-top {
+    margin-bottom: 0.5rem;
+  }
+
+  .m-date {
+    font-size: 0.75rem;
   }
 
   .status-pill {
-    padding: 3px 8px;
+    padding: 2px 8px;
     font-size: 0.65rem;
   }
 
-  .table-overflow {
-    margin: 0 -1.25rem;
-    padding: 0 1.25rem;
-    width: calc(100% + 2.5rem);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+  .m-value {
+    font-size: 0.9rem;
   }
 
-  .financial-table-premium {
-    min-width: 600px;
-  }
-
-  .modal-content-premium {
-    width: 95%;
-    padding: 1.5rem;
-    margin: 1rem;
-  }
-
-  .modal-icon-badge {
-    width: 36px;
-    height: 36px;
-  }
-
-  .modal-title-group h3 {
+  .m-amount {
     font-size: 1.1rem;
   }
 
-  .modal-title-group p {
+  .btn-mobile-details {
+    margin-top: 0.5rem;
+    padding: 0.6rem;
     font-size: 0.8rem;
+    background: var(--bg-tertiary);
+  }
+
+  .modal-content-premium {
+    width: 90%;
+    max-width: 400px;
+    padding: 1.5rem;
+    border-radius: 24px;
   }
 
   .detail-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+
+  .modal-header-pro {
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-icon-badge {
+    width: 40px;
+    height: 40px;
+  }
+
+  .modal-title-group h3 {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .financial-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-value {
+    font-size: 1.3rem;
+  }
+
+  .header-icon-main {
+    display: none;
+    /* Even more compact */
   }
 }

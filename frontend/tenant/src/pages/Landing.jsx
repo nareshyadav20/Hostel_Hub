@@ -15,8 +15,10 @@ const Landing = () => {
   const navigate = useNavigate();
   const [selectedCity, setSelectedCity] = useState('Hyderabad');
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
-
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('coliving');
+
   const [selectedGender, setSelectedGender] = useState('');
   const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [searchLocality, setSearchLocality] = useState('');
@@ -81,7 +83,7 @@ const Landing = () => {
 
 
   return (
-    <div className="landing-page">
+    <div className={`landing-page ${isMobileFilterOpen ? 'filter-open' : ''}`}>
       <header className="landing-header">
         <div className="logo-container" onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -96,12 +98,40 @@ const Landing = () => {
           </svg>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '950', letterSpacing: '-1px', background: 'linear-gradient(to right, var(--text-primary), var(--accent-primary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Livora</h1>
         </div>
-        <nav className="nav-links">
+        
+        <nav className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+          {isMobileMenuOpen && (
+            <div className="mobile-menu-header">
+              <span className="mobile-logo-text">Livora</span>
+              <button className="close-menu-btn" onClick={() => setIsMobileMenuOpen(false)}>✕</button>
+            </div>
+          )}
           <ThemeToggle />
           <Link to="/login" className="btn-signin">Sign In</Link>
           <Link to="/signup" className="btn-signup" style={{ padding: '0.8rem 1.8rem', borderRadius: '12px' }}>Sign Up</Link>
         </nav>
+
+        <button className="hamburger-menu-btn" onClick={() => setIsMobileMenuOpen(true)}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
       </header>
+
+      {/* Mobile Filter Trigger */}
+      <div className="mobile-filter-bar">
+        <button className="btn-mobile-filter" onClick={() => setIsMobileFilterOpen(true)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          Filters
+        </button>
+        <div className="filter-summary">
+          {selectedGender && <span className="summary-chip">{selectedGender}</span>}
+          {activeTab === 'student' && <span className="summary-chip">Student</span>}
+          {selectedAmenities.length > 0 && <span className="summary-chip">{selectedAmenities.length} Amenities</span>}
+        </div>
+      </div>
 
       <section className="search-hero">
         <div className="fade-in">

@@ -56,8 +56,15 @@
   border-left: 5px solid var(--primary);
 }
 
-.stat-card-mini.success { border-left-color: #16a34a; background: #f0fdf4 !important; }
-.stat-card-mini.warning { border-left-color: #ea580c; background: #fff7ed !important; }
+.stat-card-mini.success {
+  border-left-color: #16a34a;
+  background: #f0fdf4 !important;
+}
+
+.stat-card-mini.warning {
+  border-left-color: #ea580c;
+  background: #fff7ed !important;
+}
 
 .stat-label {
   font-size: 0.75rem;
@@ -73,7 +80,9 @@
 }
 
 /* History Table */
-.ticket-history-card { padding: 2rem !important; }
+.ticket-history-card {
+  padding: 2rem !important;
+}
 
 .icon-badge-history {
   width: 44px;
@@ -107,11 +116,27 @@
   border-bottom: 1px solid var(--border-light);
 }
 
-.td-date { font-weight: 700; color: var(--text-secondary); }
+.td-date {
+  font-weight: 700;
+  color: var(--text-secondary);
+}
 
-.ticket-main { display: flex; flex-direction: column; }
-.ticket-title { font-weight: 800; color: var(--text-primary); font-size: 1.1rem; }
-.ticket-desc { font-size: 0.85rem; color: var(--text-muted); max-width: 400px; }
+.ticket-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.ticket-title {
+  font-weight: 800;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.ticket-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  max-width: 400px;
+}
 
 .category-tag {
   font-size: 0.75rem;
@@ -131,9 +156,20 @@
   text-transform: uppercase;
 }
 
-.status-pill.resolved { background: #f0fdf4; color: #16a34a; }
-.status-pill.pending { background: #fff7ed; color: #ea580c; }
-.status-pill.open { background: #f1f5f9; color: #64748b; }
+.status-pill.resolved {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.status-pill.pending {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.status-pill.open {
+  background: #f1f5f9;
+  color: #64748b;
+}
 
 .mobile-cards-view {
   display: none;
@@ -186,17 +222,24 @@
 }
 
 
+@media (max-width: 992px) {
+  .tickets-summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .complaints-page {
-    padding: 1rem;
-    gap: 1.5rem;
+    padding: 0.75rem;
+    gap: 1rem;
   }
 
   .complaints-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1.5rem;
+    gap: 1.25rem;
     margin-bottom: 0.5rem;
+    padding: 0.5rem;
   }
 
   .header-title-group {
@@ -206,7 +249,7 @@
   .header-icon-main {
     width: 44px;
     height: 44px;
-    border-radius: 10px;
+    border-radius: 12px;
   }
 
   .complaints-header h1 {
@@ -216,21 +259,28 @@
   .header-subtitle {
     font-size: 0.85rem;
     line-height: 1.4;
+    display: none;
   }
 
   .btn-large {
     width: 100%;
     justify-content: center;
-    padding: 0.8rem;
+    padding: 0.85rem;
+    font-size: 0.9rem;
   }
 
   .tickets-summary-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .stat-card-mini:first-child {
+    grid-column: span 2;
   }
 
   .stat-card-mini {
-    padding: 1.25rem !important;
+    padding: 1rem !important;
+    border-radius: 16px !important;
   }
 
   .stat-value {
@@ -239,6 +289,7 @@
 
   .ticket-history-card {
     padding: 1.25rem !important;
+    border-radius: 20px !important;
   }
 
   .table-view-desktop {
@@ -247,26 +298,78 @@
 
   .mobile-cards-view {
     display: flex;
+    gap: 0.75rem;
   }
 
+  .mobile-ticket-card {
+    padding: 1.25rem;
+    border-radius: 16px;
+    background: var(--bg-secondary);
+    border: 1.5px solid var(--border-color);
+    transition: all 0.2s ease;
+  }
+
+  .mobile-ticket-card:active {
+    transform: scale(0.98);
+  }
+
+  .m-date {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-muted);
+  }
+
+  .status-pill {
+    padding: 4px 10px;
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+  }
 
   .ticket-title {
-    font-size: 0.95rem;
+    font-size: 1.1rem;
+    line-height: 1.3;
   }
 
-  .ticket-desc {
-    font-size: 0.75rem;
-    max-width: 250px;
+  .category-tag {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    background: var(--bg-primary);
+  }
+
+  .mobile-card-bottom .ticket-desc {
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    color: var(--text-muted);
+    line-height: 1.5;
   }
 
   .modal-content-premium {
-    width: 95%;
+    width: 90%;
+    max-width: 400px;
     padding: 1.5rem;
-    margin: 1rem;
+    border-radius: 24px;
   }
 
   .form-row {
     grid-template-columns: 1fr !important;
     gap: 1rem !important;
+  }
+
+  .premium-form textarea {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tickets-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card-mini:first-child {
+    grid-column: span 1;
+  }
+
+  .stat-value {
+    font-size: 1.3rem;
   }
 }

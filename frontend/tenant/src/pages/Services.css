@@ -263,3 +263,18 @@
     padding: 3px 8px;
   }
 }
+/* ─── Dark Theme Overrides ─── */
+[data-theme='dark'] .services-page {
+  --bg-primary: #020617;
+  --bg-secondary: #0b1120;
+  --bg-tertiary: #1e293b;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.04);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+}
+
+[data-theme='dark'] .counter-controls button { background: var(--bg-tertiary); color: var(--text-primary); border-color: var(--border-color); }
+[data-theme='dark'] .status-tag.pending, [data-theme='dark'] .status-tag.scheduled { background: rgba(234, 88, 12, 0.1); border-color: rgba(234, 88, 12, 0.2); }
+[data-theme='dark'] .timeline-item { background: var(--bg-secondary); }
+[data-theme='dark'] .laundry-counter-row { background: var(--bg-secondary); }

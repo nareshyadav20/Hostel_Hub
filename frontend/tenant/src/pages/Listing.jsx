@@ -134,8 +134,10 @@ const Listing = () => {
     'ID verification mandatory for all residents'
   ];
 
+  const isLoggedIn = !!localStorage.getItem('token');
+
   return (
-    <div className="lst-page">
+    <div className={`lst-page ${isLoggedIn ? 'has-bottom-nav' : ''}`}>
       {/* Top Bar */}
       <div className="lst-topbar">
         <button className="lst-back-btn" onClick={() => navigate(-1)}>

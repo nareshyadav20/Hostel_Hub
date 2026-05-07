@@ -89,73 +89,51 @@
   font-size: 1rem;
 }
 
-/* --- Search Overlay --- */
-.search-overlay-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  z-index: 2000;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 5vh;
-  animation: fadeIn 0.3s ease;
+@media (max-width: 768px) {
+  .search-overlay-backdrop {
+    padding-top: 2vh;
+  }
+
+  .search-overlay-content {
+    width: 95%;
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  .overlay-header h2 {
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+
+  .filter-row {
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-chip {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+    min-width: calc(50% - 0.25rem);
+    flex: 1 1 auto;
+  }
+
+  .filter-chip.coliving,
+  .filter-chip.student {
+    width: 100%;
+    flex: 0 0 100%;
+  }
+
+  .details-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .zolo-search-btn {
+    width: 100%;
+    padding: 1rem;
+  }
 }
 
-.search-overlay-content {
-  background: var(--bg-secondary);
-  width: 90%;
-  max-width: 900px;
-  max-height: 90vh;
-  border-radius: 24px;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-  overflow-y: auto;
-  position: relative;
-  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  padding: 2.5rem;
-  border: 1px solid var(--border-color);
-}
-
-.overlay-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.overlay-header h2 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.overlay-header h2 span {
-  color: #00b0f0;
-  cursor: pointer;
-}
-
-.close-btn {
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #757575;
-  padding: 0.5rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.close-btn:hover {
-  background: var(--bg-tertiary);
-}
 
 .filter-row {
   display: flex;
@@ -211,10 +189,21 @@
   justify-content: space-between;
 }
 
-[data-theme='dark'] .filter-chip.coliving { background: rgba(0, 176, 240, 0.2); }
-[data-theme='dark'] .filter-chip.gender { background: rgba(245, 158, 11, 0.2); }
-[data-theme='dark'] .filter-chip.date { background: rgba(244, 63, 94, 0.2); }
-[data-theme='dark'] .filter-chip.amenities { background: rgba(139, 92, 246, 0.2); }
+[data-theme='dark'] .filter-chip.coliving {
+  background: rgba(0, 176, 240, 0.2);
+}
+
+[data-theme='dark'] .filter-chip.gender {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+[data-theme='dark'] .filter-chip.date {
+  background: rgba(244, 63, 94, 0.2);
+}
+
+[data-theme='dark'] .filter-chip.amenities {
+  background: rgba(139, 92, 246, 0.2);
+}
 
 .new-badge {
   background: #facc15;
@@ -666,30 +655,219 @@
   border-top: 1px solid var(--border-color);
 }
 
-@media (max-width: 1100px) {
+/* MOBILE MENU & HAMBURGER */
+.hamburger-menu-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+@media (max-width: 1024px) {
+  .hamburger-menu-btn {
+    display: block;
+  }
+
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 300px;
+    height: 100vh;
+    background: var(--bg-secondary);
+    flex-direction: column;
+    padding: 2rem;
+    gap: 1.5rem;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2000;
+  }
+
+  .nav-links.mobile-open {
+    right: 0;
+  }
+
+  .mobile-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 2rem;
+  }
+
+  .mobile-logo-text {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--accent-primary);
+  }
+
+  .close-menu-btn {
+    background: var(--bg-tertiary);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+}
+
+/* MOBILE FILTER BAR */
+.mobile-filter-bar {
+  display: none;
+  background: var(--bg-secondary);
+  padding: 0.8rem 5%;
+  position: sticky;
+  top: 90px;
+  z-index: 900;
+  border-bottom: 1px solid var(--border-color);
+  align-items: center;
+  gap: 1rem;
+  overflow-x: auto;
+}
+
+.btn-mobile-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.filter-summary {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.summary-chip {
+  padding: 0.4rem 0.8rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* RESPONSIVE LAYOUT */
+@media (max-width: 1024px) {
+  .mobile-filter-bar {
+    display: flex;
+  }
+
+  .filters-sidebar {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    z-index: 2100;
+    background: var(--bg-secondary);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0;
+    border: none;
+    padding-bottom: 80px;
+  }
+
+  .filter-open .filters-sidebar {
+    left: 0;
+  }
+
+  .landing-content {
+    flex-direction: column;
+    padding: 1rem 1rem 100px;
+  }
+
   .hostels-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    width: 100%;
   }
 }
 
 @media (max-width: 768px) {
+  .landing-page {
+    padding-top: 80px;
+  }
+
+  .landing-header {
+    height: 80px;
+    padding: 0 1rem;
+  }
+
+  .search-hero {
+    padding: 2.5rem 1rem;
+  }
+
+  .search-hero h2 {
+    font-size: 2.25rem;
+    line-height: 1.1;
+  }
+
+  .search-hero p {
+    font-size: 1rem;
+    margin-bottom: 2rem !important;
+  }
+
+  .zolo-search-trigger {
+    padding: 0.85rem 1.25rem;
+  }
+
+  .zolo-search-trigger span {
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .hostels-grid {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
 
-  .goibibo-search-container {
-    flex-direction: column;
-    border-radius: 24px;
+  .hostel-card-vertical {
+    border-radius: 20px;
   }
 
-  .search-field {
-    border-right: none;
-    border-bottom: 1px solid var(--border-color);
+  .card-img-container-v {
+    height: 220px;
   }
 
-  .search-btn-large {
-    border-radius: 16px;
-    padding: 1rem;
-    margin-top: 0.5rem;
+  .card-details-v {
+    padding: 1.25rem;
+    width: 100%;
+  }
+
+  .card-details-v h3 {
+    font-size: 1.2rem;
+  }
+
+  .price-val-v {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-hero h2 {
+    font-size: 1.8rem;
+  }
+
+  .card-img-container-v {
+    height: 180px;
+  }
+
+  .landing-footer-minimal {
+    padding: 2rem 1rem;
+    font-size: 0.8rem;
   }
 }
