@@ -49,7 +49,8 @@ const Notifications = () => {
   useEffect(() => {
     if (buildingId) {
       fetchNotifications();
-      const socket = io('http://localhost:5000');
+      const socketUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+      const socket = io(socketUrl);
       socket.emit('joinBuilding', buildingId);
       socket.on('newNotification', (newNotif) => {
         setNotifications(prev => [newNotif, ...prev]);

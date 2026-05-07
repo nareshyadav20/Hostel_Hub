@@ -14,7 +14,8 @@ function useBackendStatus() {
 
   const check = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/ping', { signal: AbortSignal.timeout(3000) });
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${apiBase}/ping`, { signal: AbortSignal.timeout(3000) });
       if (res.ok) { setStatus('live'); return; }
       throw new Error('non-ok');
     } catch {
