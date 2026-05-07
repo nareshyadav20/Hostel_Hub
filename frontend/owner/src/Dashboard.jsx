@@ -189,13 +189,13 @@ function Dashboard() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <TenantOverviewPanel summary={summary}/>
+            <TenantOverviewPanel summary={summary} buildingId={activeBuildingId}/>
             <ComplaintsPanel data={complaints}/>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <MessPanel data={mess}/>
-            <StaffPanel data={staff}/>
+            <MessPanel data={mess} buildingId={activeBuildingId}/>
+            <StaffPanel data={staff} buildingId={activeBuildingId}/>
           </div>
         </div>
 
@@ -255,7 +255,11 @@ function Dashboard() {
                });
                setFormMsg('✅ Tenant data securely committed to database.');
                setTimeout(() => { setModal(null); setFormMsg(''); fetchData(); }, 1500);
-             } catch { setFormMsg('❌ Backend error. Please check database connectivity.'); }
+             } catch (err) { 
+               console.error('Registration Error:', err);
+               const errMsg = err.response?.data?.error || err.response?.data?.message || 'Please check database connectivity.';
+               setFormMsg(`❌ Backend error. ${errMsg}`); 
+             }
            }}>
              <div><label style={lStyle}>Full Name</label><input name="name" required placeholder="Legal full name" style={iStyle}/></div>
              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' }}>
@@ -290,7 +294,11 @@ function Dashboard() {
                });
                setFormMsg('✅ Payment record verified and stored.');
                setTimeout(() => { setModal(null); setFormMsg(''); fetchData(); }, 1500);
-             } catch { setFormMsg('❌ Error recording payment.'); }
+             } catch (err) { 
+               console.error('Payment Error:', err);
+               const errMsg = err.response?.data?.error || err.response?.data?.message || 'Error recording payment.';
+               setFormMsg(`❌ ${errMsg}`); 
+             }
            }}>
              <div>
                <label style={lStyle}>Select Tenant</label>
@@ -316,7 +324,11 @@ function Dashboard() {
                 await api.updateTenant(fd.get('tenantId'), { room: fd.get('room') });
                 setFormMsg('✅ Room assignment updated successfully.');
                 setTimeout(() => { setModal(null); setFormMsg(''); fetchData(); }, 1500);
-              } catch { setFormMsg('❌ Error updating assignment.'); }
+              } catch (err) { 
+                console.error('Assignment Error:', err);
+                const errMsg = err.response?.data?.error || err.response?.data?.message || 'Error updating assignment.';
+                setFormMsg(`❌ ${errMsg}`); 
+              }
             }}>
               <div>
                 <label style={lStyle}>Select Tenant</label>
@@ -344,9 +356,13 @@ function Dashboard() {
                   description: fd.get('description'),
                   buildingId: activeBuildingId
                 });
-                setFormMsg('✅ Maintenance issue logged.');
+                setFormMsg('✅ Maintenance issue logged and prioritized.');
                 setTimeout(() => { setModal(null); setFormMsg(''); fetchData(); }, 1500);
-              } catch { setFormMsg('❌ Error logging complaint.'); }
+              } catch (err) { 
+                console.error('Complaint Error:', err);
+                const errMsg = err.response?.data?.error || err.response?.data?.message || 'Error logging issue.';
+                setFormMsg(`❌ ${errMsg}`); 
+              }
             }}>
               <div>
                 <label style={lStyle}>Reported By</label>

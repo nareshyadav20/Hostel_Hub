@@ -13,28 +13,33 @@ import {
   BarChart3, 
   Settings, 
   BellRing,
-  RefreshCw
+  RefreshCw,
+  User
 } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = () => {
-  const { buildingId } = useParams();
+  const { buildingId: urlBuildingId } = useParams();
   const iconProps = { size: 22, strokeWidth: 2.5 };
 
+  // Restore context from localStorage if URL doesn't have it (e.g. on Profile page)
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
   const menuItems = [
-    { name: 'Dashboard', path: `/owner/building/${buildingId}/dashboard`, icon: <LayoutDashboard {...iconProps} /> },
-    { name: 'Buildings', path: `/owner/building/${buildingId}/buildings`, icon: <Building2 {...iconProps} /> },
-    { name: 'Rooms & Beds', path: `/owner/building/${buildingId}/rooms`, icon: <BedDouble {...iconProps} /> },
-    { name: 'Tenants', path: `/owner/building/${buildingId}/tenants`, icon: <UsersRound {...iconProps} /> },
-    { name: 'Payments', path: `/owner/building/${buildingId}/payments`, icon: <Banknote {...iconProps} /> },
-    { name: 'Staff', path: `/owner/building/${buildingId}/staff`, icon: <Briefcase {...iconProps} /> },
-    { name: 'Mess Menu', path: `/owner/building/${buildingId}/mess`, icon: <UtensilsCrossed {...iconProps} /> },
-    { name: 'Complaints', path: `/owner/building/${buildingId}/complaints`, icon: <MessageSquareWarning {...iconProps} /> },
-    { name: 'Transfers', path: `/owner/building/${buildingId}/transfers`, icon: <RefreshCw {...iconProps} /> },
-    { name: 'Inventory', path: `/owner/building/${buildingId}/inventory`, icon: <PackageOpen {...iconProps} /> },
-    { name: 'Reports', path: `/owner/building/${buildingId}/reports`, icon: <BarChart3 {...iconProps} /> },
-    { name: 'Settings', path: `/owner/building/${buildingId}/settings`, icon: <Settings {...iconProps} /> },
-    { name: 'Notifications', path: `/owner/building/${buildingId}/notifications`, icon: <BellRing {...iconProps} /> },
+    { name: 'Dashboard', path: `/owner/building/${activeBuildingId}/dashboard`, icon: <LayoutDashboard {...iconProps} /> },
+    { name: 'Buildings', path: `/owner/building/${activeBuildingId}/buildings`, icon: <Building2 {...iconProps} /> },
+    { name: 'Rooms & Beds', path: `/owner/building/${activeBuildingId}/rooms`, icon: <BedDouble {...iconProps} /> },
+    { name: 'Tenants', path: `/owner/building/${activeBuildingId}/tenants`, icon: <UsersRound {...iconProps} /> },
+    { name: 'Payments', path: `/owner/building/${activeBuildingId}/payments`, icon: <Banknote {...iconProps} /> },
+    { name: 'Staff', path: `/owner/building/${activeBuildingId}/staff`, icon: <Briefcase {...iconProps} /> },
+    { name: 'Mess Menu', path: `/owner/building/${activeBuildingId}/mess`, icon: <UtensilsCrossed {...iconProps} /> },
+    { name: 'Complaints', path: `/owner/building/${activeBuildingId}/complaints`, icon: <MessageSquareWarning {...iconProps} /> },
+    { name: 'Transfers', path: `/owner/building/${activeBuildingId}/transfers`, icon: <RefreshCw {...iconProps} /> },
+    { name: 'Inventory', path: `/owner/building/${activeBuildingId}/inventory`, icon: <PackageOpen {...iconProps} /> },
+    { name: 'Reports', path: `/owner/building/${activeBuildingId}/reports`, icon: <BarChart3 {...iconProps} /> },
+    { name: 'Settings', path: `/owner/building/${activeBuildingId}/settings`, icon: <Settings {...iconProps} /> },
+    { name: 'Notifications', path: `/owner/building/${activeBuildingId}/notifications`, icon: <BellRing {...iconProps} /> },
+    { name: 'Profile', path: `/owner/building/${activeBuildingId}/profile`, icon: <User {...iconProps} /> },
   ];
 
   return (

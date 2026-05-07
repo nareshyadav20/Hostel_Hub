@@ -8,6 +8,8 @@ router.use(authMiddleware);
 
 router.get('/profile', ownerController.getProfile);
 router.patch('/profile', ownerController.updateProfile);
+router.get('/stats', ownerController.getStats);
+router.get('/history', ownerController.getHistory);
 router.post('/documents', ownerController.uploadDocument);
 
 module.exports = router;

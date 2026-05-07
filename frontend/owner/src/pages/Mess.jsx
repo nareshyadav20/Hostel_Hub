@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Utensils, Calendar as CalendarIcon, Users, Edit3, ArrowRight, Sun, Coffee, Moon, CheckCircle, X, Grid, List } from 'lucide-react';
 import { api } from '../mockData';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Mess = () => {
   const { buildingId: urlBuildingId } = useParams();
@@ -98,7 +99,7 @@ const Mess = () => {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const handleEditClick = () => {
-    if (!menuData[selectedMenuPlan] || !menuData[selectedMenuPlan][selectedDay]) {
+    if (!menuData?.[selectedMenuPlan]?.[selectedDay]) {
       setEditForm({ breakfast: '', lunch: '', dinner: '' });
     } else {
       setEditForm(menuData[selectedMenuPlan][selectedDay]);
@@ -380,21 +381,21 @@ const Mess = () => {
                       <Sun size={14} color="#f59e0b" />
                       <div style={{ fontSize: '0.85rem' }}>
                         <span style={{ fontWeight: '800', color: '#f59e0b', fontSize: '0.7rem', display: 'block' }}>BREAKFAST</span>
-                        <span style={{ fontWeight: '600' }}>{menuData[selectedMenuPlan]?.[day]?.breakfast || 'Not Set'}</span>
+                        <span style={{ fontWeight: '600' }}>{menuData?.[selectedMenuPlan]?.[day]?.breakfast || 'Not Set'}</span>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                       <Coffee size={14} color="#10b981" />
                       <div style={{ fontSize: '0.85rem' }}>
                         <span style={{ fontWeight: '800', color: '#10b981', fontSize: '0.7rem', display: 'block' }}>LUNCH</span>
-                        <span style={{ fontWeight: '600' }}>{menuData[selectedMenuPlan]?.[day]?.lunch || 'Not Set'}</span>
+                        <span style={{ fontWeight: '600' }}>{menuData?.[selectedMenuPlan]?.[day]?.lunch || 'Not Set'}</span>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                       <Moon size={14} color="#6366f1" />
                       <div style={{ fontSize: '0.85rem' }}>
                         <span style={{ fontWeight: '800', color: '#6366f1', fontSize: '0.7rem', display: 'block' }}>DINNER</span>
-                        <span style={{ fontWeight: '600' }}>{menuData[selectedMenuPlan]?.[day]?.dinner || 'Not Set'}</span>
+                        <span style={{ fontWeight: '600' }}>{menuData?.[selectedMenuPlan]?.[day]?.dinner || 'Not Set'}</span>
                       </div>
                     </div>
                   </div>
@@ -459,7 +460,7 @@ const Mess = () => {
                     <div style={{ padding: '1.2rem', background: '#f59e0b15', color: '#f59e0b', borderRadius: '20px' }}><Sun size={32} /></div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Breakfast (8:00 AM - 10:00 AM)</p>
-                      <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData[selectedMenuPlan]?.[selectedDay]?.breakfast || 'Not Set'}</p>
+                      <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData?.[selectedMenuPlan]?.[selectedDay]?.breakfast || 'Not Set'}</p>
                     </div>
                   </div>
 
@@ -467,7 +468,7 @@ const Mess = () => {
                     <div style={{ padding: '1.2rem', background: '#10b98115', color: '#10b981', borderRadius: '20px' }}><Coffee size={32} /></div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Lunch (1:00 PM - 3:00 PM)</p>
-                      <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData[selectedMenuPlan]?.[selectedDay]?.lunch || 'Not Set'}</p>
+                      <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData?.[selectedMenuPlan]?.[selectedDay]?.lunch || 'Not Set'}</p>
                     </div>
                   </div>
 
@@ -475,7 +476,7 @@ const Mess = () => {
                     <div style={{ padding: '1.2rem', background: '#6366f115', color: '#6366f1', borderRadius: '20px' }}><Moon size={32} /></div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Dinner (8:00 PM - 10:30 PM)</p>
-                      <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData[selectedMenuPlan]?.[selectedDay]?.dinner || 'Not Set'}</p>
+                      <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData?.[selectedMenuPlan]?.[selectedDay]?.dinner || 'Not Set'}</p>
                     </div>
                   </div>
                 </motion.div>

@@ -2,6 +2,13 @@ const Tenant = require('../models/Tenant');
 
 const createTenant = async (req, res) => {
   try {
+    const Building = require('../models/Building');
+    if (req.body.buildingId) {
+      const building = await Building.findOne({ _id: req.body.buildingId, owner: req.user.id });
+      if (!building) {
+        return res.status(403).json({ error: 'You do not have permission to add tenants to this building.' });
+      }
+    }
     const tenant = new Tenant(req.body);
     await tenant.save();
     res.status(201).json(tenant);
@@ -12,7 +19,11 @@ const createTenant = async (req, res) => {
 
 const getTenants = async (req, res) => {
   try {
-    const tenants = await Tenant.find();
+    const Building = require('../models/Building');
+    const userBuildings = await Building.find({ owner: req.user.id }).select('_id');
+    const buildingIds = userBuildings.map(b => b._id);
+    
+    const tenants = await Tenant.find({ buildingId: { $in: buildingIds } });
     res.status(200).json(tenants);
   } catch (err) {
     res.status(500).json({ error: err.message });

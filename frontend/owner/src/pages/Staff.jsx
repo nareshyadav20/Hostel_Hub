@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-// eslint-disable-next-line no-unused-vars
+import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, UserPlus, User, Search, Filter, Mail, Phone, Calendar,

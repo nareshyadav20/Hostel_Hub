@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 const connectDB = require('./src/config/db');
 const User = require('./src/models/User');
-const Tenant = require('./src/models/Tenant');
+const Tenant = require('./src/models/tenant/Tenant');
 const Building = require('./src/models/Building');
-const Complaint = require('./src/models/Complaint');
-const Laundry = require('./src/models/Laundry');
+const Complaint = require('./src/models/tenant/Complaint');
+const Inventory = require('./src/models/Inventory');
 
 const validateData = async () => {
   try {
@@ -14,14 +14,14 @@ const validateData = async () => {
     const tenantCount = await Tenant.countDocuments();
     const buildingCount = await Building.countDocuments();
     const complaintCount = await Complaint.countDocuments();
-    const laundryCount = await Laundry.countDocuments();
+    const inventoryCount = await Inventory.countDocuments();
     
     console.log('--- Database Validation ---');
     console.log(`Users: ${userCount}`);
     console.log(`Tenants: ${tenantCount}`);
     console.log(`Buildings: ${buildingCount}`);
     console.log(`Complaints: ${complaintCount}`);
-    console.log(`Laundry Orders: ${laundryCount}`);
+    console.log(`Inventory Items: ${inventoryCount}`);
     
     if (userCount > 0 && tenantCount > 0 && buildingCount > 0) {
       console.log('\nSUCCESS: Database is populated and connected correctly.');

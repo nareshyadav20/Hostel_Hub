@@ -35,6 +35,7 @@ const createBuilding = async (req, res) => {
 
 const getBuildings = async (req, res) => {
   try {
+    console.log('Fetching buildings for user:', req.user.id);
     const buildings = await Building.find({ owner: req.user.id }).populate({ 
       path: 'floors', 
       populate: { path: 'rooms', populate: { path: 'beds' } } 

@@ -39,6 +39,14 @@ export const api = {
     const res = await axios.patch(`${API_URL}/owner/profile`, data);
     return res.data;
   },
+  getOwnerStats: async () => {
+    const res = await axios.get(`${API_URL}/owner/stats`);
+    return res.data;
+  },
+  getOwnerHistory: async () => {
+    const res = await axios.get(`${API_URL}/owner/history`);
+    return res.data;
+  },
   updateOwnerDocuments: async (doc) => {
     const res = await axios.post(`${API_URL}/owner/documents`, doc);
     return res.data;
