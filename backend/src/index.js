@@ -33,6 +33,8 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const ownerRoutes = require('./routes/ownerRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const staffRoutes = require('./routes/staffRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const notificationService = require('./utils/notificationService');
 
 // Pre-load all models to ensure they are registered for population
 require('./models/User');
@@ -61,6 +63,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/owner', ownerRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/staff', staffRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
@@ -70,6 +73,30 @@ app.get('/', (req, res) => {
   res.send('HostelHub API (Node/Mongoose) is running...');
 });
 
-app.listen(PORT, () => {
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+io.on('connection', (socket) => {
+  socket.on('joinBuilding', (buildingId) => {
+    socket.join(buildingId);
+    console.log(`User joined building room: ${buildingId}`);
+  });
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+});
+
+// Link io to notification service
+notificationService.setIo(io);
+
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

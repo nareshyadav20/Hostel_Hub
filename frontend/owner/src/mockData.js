@@ -40,11 +40,11 @@ export const api = {
     return res.data;
   },
   getOwnerStats: async () => {
-    const res = await axios.get(`${API_URL}/owner/stats`);
+    const res = await axios.get(`${API_URL}/dashboard/summary`);
     return res.data;
   },
   getOwnerHistory: async () => {
-    const res = await axios.get(`${API_URL}/owner/history`);
+    const res = await axios.get(`${API_URL}/dashboard/activity`);
     return res.data;
   },
   updateOwnerDocuments: async (doc) => {
@@ -211,12 +211,42 @@ export const api = {
     const res = await axios.post(`${API_URL}/staff/${id}/activity`, { action });
     return handleId(res.data);
   },
-  getSettings: async () => {
-    const res = await axios.get(`${API_URL}/settings`);
+  getSettings: async (bId) => {
+    const buildingId = bId || localStorage.getItem('selectedBuildingId');
+    const res = await axios.get(`${API_URL}/settings`, { params: { buildingId } });
     return res.data;
   },
   updateSettings: async (data) => {
     const res = await axios.post(`${API_URL}/settings`, data);
+    return res.data;
+  },
+
+  // Notifications API
+  getNotifications: async (bId) => {
+    const res = await axios.get(`${API_URL}/notifications`, { params: { buildingId: bId } });
+    return handleId(res.data);
+  },
+  getNotificationUnreadCount: async (bId) => {
+    const res = await axios.get(`${API_URL}/notifications/unread-count`, { params: { buildingId: bId } });
+    return res.data;
+  },
+  markNotificationRead: async (id) => {
+    const res = await axios.patch(`${API_URL}/notifications/${id}/read`);
+    return handleId(res.data);
+  },
+  markAllNotificationsRead: async (bId) => {
+    const res = await axios.post(`${API_URL}/notifications/mark-all-read`, { buildingId: bId });
+    return res.data;
+  },
+  archiveNotification: async (id) => {
+    const res = await axios.patch(`${API_URL}/notifications/${id}/archive`);
+    return handleId(res.data);
+  },
+  deleteNotification: async (id) => {
+    await axios.delete(`${API_URL}/notifications/${id}`);
+  },
+  seedNotifications: async (bId) => {
+    const res = await axios.post(`${API_URL}/notifications/seed`, { buildingId: bId });
     return res.data;
   },
 
