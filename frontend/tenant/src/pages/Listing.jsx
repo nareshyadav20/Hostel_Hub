@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  Home, Bed, Utensils, IndianRupee, ClipboardList, Star, MapPin, ShieldCheck, 
+  ChevronRight, Heart, Share2, Info, Wind, Wifi, Battery, Zap, Users, CheckCircle2,
+  Tv, Dumbbell, Coffee, Calendar, Wallet, Banknote, ShieldAlert, GraduationCap,
+  Sparkles, Coffee as CommonAreaIcon
+} from 'lucide-react';
 import API from '../api/axios';
 import { MOCK_HOSTELS } from '../utils/mockData';
 import './Listing.css';
@@ -14,6 +20,17 @@ const Listing = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedBed, setSelectedBed] = useState(null);
+
+  const sectionRefs = {
+    overview: useRef(null),
+    rooms: useRef(null),
+    dining: useRef(null),
+    pricing: useRef(null),
+    rules: useRef(null),
+    reviews: useRef(null),
+    nearby: useRef(null),
+    safety: useRef(null)
+  };
 
   useEffect(() => {
     const fetchHostelDetails = async () => {
@@ -48,7 +65,8 @@ const Listing = () => {
     price: b.startingPrice || b.price || 16700,
     images: [
       'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80'
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=800'
     ]
   });
 
@@ -76,11 +94,15 @@ const Listing = () => {
     type: selectedSharing === 1 ? 'Single Bed' : 'Single Cot'
   }));
 
-  // Auto-select the first available bed when sharing changes
   useEffect(() => {
     const firstAvailable = beds.find(b => b.status === 'Available');
     setSelectedBed(firstAvailable ? firstAvailable.id : null);
   }, [selectedSharing]);
+
+  const scrollToSection = (sectionId) => {
+    setActiveTab(sectionId);
+    sectionRefs[sectionId].current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   if (loading) return (
     <div className="lst-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', flexDirection: 'column', gap: '1rem' }}>
@@ -88,13 +110,13 @@ const Listing = () => {
       <p style={{ fontWeight: '600', color: 'var(--lst-text-muted)' }}>Loading property details...</p>
     </div>
   );
+
   if (!hostel) return (
     <div className="lst-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
       <p style={{ fontWeight: '600', color: 'var(--lst-text-muted)', fontSize: '1.2rem' }}>Property not found.</p>
     </div>
   );
 
-  // Dynamic data based on sharing
   const pricing = {
     1: { rent: 18000, deposit: 36000, food: 3500, maintenance: 999 },
     2: { rent: 12000, deposit: 24000, food: 3000, maintenance: 799 },
@@ -102,71 +124,108 @@ const Listing = () => {
   };
   const currentPrice = pricing[selectedSharing];
 
-  const roomSize = selectedSharing === 1 ? { l: 10, w: 12 } : selectedSharing === 2 ? { l: 12, w: 14 } : { l: 14, w: 16 };
-
-  const facilities = [
-    { icon: '🪭', label: 'Fans', value: selectedSharing === 3 ? '2' : '1' },
-    { icon: '💡', label: 'Lights', value: `${selectedSharing}` },
-    { icon: '🪟', label: 'Windows', value: selectedSharing === 3 ? '3' : '2' },
-    { icon: '🔌', label: 'Sockets', value: `${selectedSharing * 2}` },
-    { icon: '🗄️', label: 'Cupboards', value: `${selectedSharing}` },
-    { icon: '📚', label: 'Study Table', value: 'Yes' },
-    { icon: '🪑', label: 'Chair', value: `${selectedSharing}` },
-    { icon: '📶', label: 'WiFi', value: 'High-Speed' },
-    { icon: '❄️', label: 'AC', value: selectedSharing === 1 ? 'Yes' : 'Non-AC' }
+  const roomScores = [
+    { name: 'Comfort Score', val: 92, icon: <Sparkles size={16} /> },
+    { name: 'Privacy Score', val: 85, icon: <ShieldCheck size={16} /> },
+    { name: 'Study Friendly', val: 88, icon: <GraduationCap size={16} /> },
+    { name: 'Sleep Quality', val: 90, icon: <Bed size={16} /> },
+    { name: 'Ventilation', val: 94, icon: <Wind size={16} /> },
+    { name: 'Noise Level', val: 20, icon: <Zap size={16} /> }
   ];
 
-  const buildingFeatures = [
-    { icon: '🏢', label: 'Floor', value: '3rd Floor' },
-    { icon: '🛗', label: 'Lift', value: 'Available' },
-    { icon: '🔋', label: 'Power Backup', value: '24/7 Generator' },
-    { icon: '📷', label: 'CCTV', value: 'All Common Areas' },
-    { icon: '👮', label: 'Security', value: '24/7 Guard' },
-    { icon: '🅿️', label: 'Parking', value: '2-Wheeler' }
+  const nearbyPlaces = [
+    { name: 'Reva University', dist: '300m', icon: '🎓' },
+    { name: 'Kattigenahalli Bus Stop', dist: '150m', icon: '🚌' },
+    { name: 'Sparsh Hospital', dist: '1.2km', icon: '🏥' },
+    { name: 'More Supermarket', dist: '400m', icon: '🛒' },
+    { name: 'Cult Fit Gym', dist: '600m', icon: '🏋️' }
   ];
 
-  const houseRules = [
-    'No smoking inside rooms or common areas',
-    'Visitors allowed between 9 AM – 8 PM only',
-    'Quiet hours from 10 PM – 7 AM',
-    'Keep rooms clean; weekly inspection applies',
-    'No pets allowed on premises',
-    'ID verification mandatory for all residents'
+  const roommatePrefs = [
+    { label: 'Early Riser Friendly', icon: '☀️' },
+    { label: 'Night Owl Friendly', icon: '🌙' },
+    { label: 'Study Oriented', icon: '📚' },
+    { label: 'Non-Smoker', icon: '🚭' },
+    { label: 'Language: English/Hindi', icon: '🗣️' }
   ];
 
-  const isLoggedIn = !!localStorage.getItem('token');
+  const trustBadges = [
+    { title: 'Verified Property', desc: 'Physically verified by Livora team', icon: '✅' },
+    { title: 'Safe for Students', desc: '24/7 internal security audit', icon: '🛡️' },
+    { title: 'CCTV Protected', desc: 'Full coverage of common areas', icon: '📷' },
+    { title: 'Police Verified', desc: 'Owner documentation verified', icon: '👮' }
+  ];
+
+  const financialOptions = [
+    { label: 'EMI Available', val: 'Starts ₹3,200/mo' },
+    { label: 'Zero Deposit', val: 'On selected profiles' },
+    { label: 'UPI/Card', val: 'Instant cashback' }
+  ];
+
+  const lifestyleFeatures = [
+    { label: 'Reading Room', icon: <GraduationCap size={18} /> },
+    { label: 'Common TV Area', icon: <Tv size={18} /> },
+    { label: 'Indoor Games', icon: <Zap size={18} /> },
+    { label: 'Gym Access', icon: <Dumbbell size={18} /> },
+    { label: 'Community Events', icon: <Users size={18} /> }
+  ];
+
+  const cleanlinessStatus = [
+    { label: 'Last Deep Cleaned', val: '2 days ago', icon: '✨' },
+    { label: 'Last Sanitized', val: 'Today, 10 AM', icon: '🧴' },
+    { label: 'Pest Control', val: 'Certified', icon: '🪳' },
+    { label: 'Laundry Day', val: 'Tue, Fri, Sun', icon: '🧺' }
+  ];
+
+  const reviews = [
+    { name: 'Rahul Sharma', rating: 5, comment: 'Best ventilation in this area. The window side bed is amazing for morning sunlight.', initial: 'R' },
+    { name: 'Priya Singh', rating: 4, comment: 'The common areas are very clean. WiFi is fast enough for my online classes.', initial: 'P' }
+  ];
+
+  const navTabs = [
+    { id: 'overview', label: 'Overview', icon: <Home size={18} /> },
+    { id: 'rooms', label: 'Rooms', icon: <Bed size={18} /> },
+    { id: 'dining', label: 'Dining', icon: <Utensils size={18} /> },
+    { id: 'pricing', label: 'Pricing', icon: <IndianRupee size={18} /> },
+    { id: 'rules', label: 'Rules', icon: <ClipboardList size={18} /> },
+    { id: 'reviews', label: 'Reviews', icon: <Star size={18} /> },
+    { id: 'nearby', label: 'Nearby', icon: <MapPin size={18} /> },
+    { id: 'safety', label: 'Safety', icon: <ShieldCheck size={18} /> }
+  ];
 
   return (
-    <div className={`lst-page ${isLoggedIn ? 'has-bottom-nav' : ''}`}>
-      {/* Top Bar */}
+    <div className="lst-page">
+      {/* Top Navigation Bar */}
       <div className="lst-topbar">
         <button className="lst-back-btn" onClick={() => navigate(-1)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          <ChevronRight style={{ transform: 'rotate(180deg)' }} size={20} />
           Back
         </button>
         <div className="lst-topbar-actions">
           <button className={`lst-save-btn ${wishlistId ? 'saved' : ''}`} onClick={handleWishlistToggle}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill={wishlistId ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+            <Heart size={18} fill={wishlistId ? 'currentColor' : 'none'} />
             {wishlistId ? 'Saved' : 'Save'}
           </button>
+          <button className="lst-save-btn"><Share2 size={18} /> Share</button>
         </div>
       </div>
 
       {/* Header */}
       <header className="lst-header">
         <div className="lst-badges">
+          <span className="lst-badge premium">PREMIUM CHOICE</span>
           <span className="lst-badge blue">{hostel.gender}</span>
           <span className="lst-badge green">{hostel.category}</span>
-          <span className="lst-badge orange">⚡ Filling Fast</span>
+          <span className="lst-badge orange">BEST FOR EXAMS</span>
         </div>
         <h1 className="lst-title">{hostel.name}</h1>
         <p className="lst-location">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+          <MapPin size={16} />
           {hostel.location} • <span className="lst-dist">{hostel.distance}</span>
         </p>
         <div className="lst-rating-row">
           <div className="lst-rating-badge">⭐ {hostel.rating}</div>
-          <span className="lst-review-count">{hostel.reviews} reviews</span>
+          <span className="lst-review-count">{hostel.reviews} Student Reviews</span>
         </div>
       </header>
 
@@ -177,293 +236,326 @@ const Listing = () => {
         </div>
         <div className="lst-gallery-side">
           <img src={hostel.images[1]} alt="Room view" />
+          <img src={hostel.images[2]} alt="Common area" />
         </div>
       </section>
 
-      {/* Tab Navigation */}
-      <nav className="lst-tabs">
-        {['overview', 'rooms', 'dining', 'pricing', 'rules'].map(tab => (
-          <button key={tab} className={`lst-tab ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+      {/* Sticky Tab Navigation */}
+      <nav className="lst-sticky-nav">
+        {navTabs.map(tab => (
+          <button 
+            key={tab.id} 
+            className={`lst-nav-item ${activeTab === tab.id ? 'active' : ''}`} 
+            onClick={() => scrollToSection(tab.id)}
+          >
+            {tab.icon}
+            {tab.label}
           </button>
         ))}
       </nav>
 
-      {/* Content */}
       <div className="lst-content">
-
-        {/* Left Column */}
         <div className="lst-main-col">
+          
+          {/* Live Availability */}
+          <div className="lst-live-box">
+            <div className="lst-live-left">
+              <div className="lst-pulse"></div>
+              <span className="lst-live-text">5 Students currently viewing this room</span>
+            </div>
+            <div className="lst-occupancy-bar">
+              <div className="lst-occ-fill" style={{ width: '85%' }}></div>
+            </div>
+            <span className="lst-live-text" style={{ color: '#ef4444' }}>Only 2 Beds Left!</span>
+          </div>
+
+          {/* Section: Overview */}
+          <div id="overview" ref={sectionRefs.overview} className="lst-section">
+            <h3 className="lst-section-title">
+              <span className="lst-icon-wrap"><Info size={18} /></span>
+              Smart Room Scores
+            </h3>
+            <div className="lst-score-grid">
+              {roomScores.map((s, i) => (
+                <div key={i} className="lst-score-card">
+                  <div className="lst-score-header">
+                    <span className="lst-score-name">{s.name}</span>
+                    {s.icon}
+                  </div>
+                  <span className="lst-score-val">{s.name === 'Noise Level' ? 'Low' : `${s.val}%`}</span>
+                  <div className="lst-progress-bg">
+                    <div className="lst-progress-fill" style={{ width: `${s.name === 'Noise Level' ? 20 : s.val}%` }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Sharing Selector */}
-          <div className="lst-section lst-sharing-box">
-            <span className="lst-selector-label">Select Room Type</span>
+          <div className="lst-sharing-box">
+            <span className="lst-selector-label">Choose Your Stay Configuration</span>
             <div className="lst-sharing-pills">
               {[1, 2, 3].map(n => (
                 <button key={n} className={`lst-sharing-pill ${selectedSharing === n ? 'active' : ''}`} onClick={() => setSelectedSharing(n)}>
-                  {n === 1 ? 'Single Room' : `${n} Sharing`}
+                  {n === 1 ? 'Single Private' : `${n} Sharing`}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Room Overview */}
-          {(activeTab === 'overview' || activeTab === 'rooms') && (
-            <>
-              {/* Room Dimensions */}
-              <section className="lst-section">
-                <h3 className="lst-section-title">
-                  <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg></span>
-                  Room Dimensions
-                </h3>
-                <div className="lst-dim-grid">
-                  <div className="lst-dim-card">
-                    <span className="lst-dim-label">Length</span>
-                    <span className="lst-dim-value">{roomSize.l} ft</span>
-                  </div>
-                  <div className="lst-dim-card">
-                    <span className="lst-dim-label">Width</span>
-                    <span className="lst-dim-value">{roomSize.w} ft</span>
-                  </div>
-                  <div className="lst-dim-card highlight">
-                    <span className="lst-dim-label">Total Area</span>
-                    <span className="lst-dim-value">{roomSize.l * roomSize.w} sq ft</span>
-                  </div>
-                </div>
-              </section>
-
-              {/* Occupancy Info */}
-              <section className="lst-section">
-                <h3 className="lst-section-title">
-                  <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
-                  Occupancy & Category
-                </h3>
-                <div className="lst-table-grid">
-                  <div className="lst-table-cell">
-                    <span className="lst-tc-label">Sharing</span>
-                    <span className="lst-tc-value">{selectedSharing} Sharing</span>
-                  </div>
-                  <div className="lst-table-cell">
-                    <span className="lst-tc-label">Category</span>
-                    <span className="lst-tc-value">{hostel.category}s</span>
-                  </div>
-                  <div className="lst-table-cell">
-                    <span className="lst-tc-label">Gender</span>
-                    <span className="lst-tc-value">{hostel.gender}</span>
-                  </div>
-                  <div className="lst-table-cell">
-                    <span className="lst-tc-label">Occupancy</span>
-                    <span className="lst-tc-value">70%</span>
-                  </div>
-                </div>
-              </section>
-
-              {/* Bed Availability */}
-              <section className="lst-section">
-                <h3 className="lst-section-title">
-                  <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></svg></span>
-                  Bed Availability
-                </h3>
-                <div className="lst-bed-summary">
-                  <div className="lst-bed-stat default-bg"><span className="lst-bed-num">{selectedSharing}</span><span>Total Beds</span></div>
-                  <div className="lst-bed-stat available"><span className="lst-bed-num">{beds.filter(b => b.status === 'Available').length}</span><span>Available</span></div>
-                  <div className="lst-bed-stat filled"><span className="lst-bed-num">{beds.filter(b => b.status === 'Filled').length}</span><span>Occupied</span></div>
-                </div>
-                <div className="lst-bed-cards">
-                  {beds.map(bed => (
-                    <div 
-                      key={bed.id} 
-                      className={`lst-bed-card ${bed.status.toLowerCase()} ${selectedBed === bed.id ? 'selected' : ''}`}
-                      onClick={() => {
-                        if (bed.status === 'Available') {
-                          setSelectedBed(bed.id);
-                        }
-                      }}
-                      style={{ cursor: bed.status === 'Available' ? 'pointer' : 'not-allowed' }}
-                    >
-                      <div className="lst-bed-card-header">
-                        <span className="lst-bed-label">Bed {bed.id}</span>
-                        <span className={`lst-bed-status ${bed.status.toLowerCase()}`}>
-                          {selectedBed === bed.id ? 'SELECTED' : bed.status.toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="lst-bed-details">
-                        <div><span className="lst-bd-key">Type</span><span className="lst-bd-val">{bed.type}</span></div>
-                        <div><span className="lst-bd-key">Position</span><span className="lst-bd-val">{bed.position}</span></div>
-                        <div><span className="lst-bd-key">Direction</span><span className="lst-bd-val direction-highlight">{bed.direction}</span></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* Facilities */}
-              <section className="lst-section">
-                <h3 className="lst-section-title">
-                  <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
-                  Room Facilities
-                </h3>
-                <div className="lst-fac-grid">
-                  {facilities.map((f, i) => (
-                    <div key={i} className="lst-fac-card">
-                      <span className="lst-fac-icon">{f.icon}</span>
-                      <div className="lst-fac-info">
-                        <span className="lst-fac-label">{f.label}</span>
-                        <span className="lst-fac-value">{f.value}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* Bathroom */}
-              <section className="lst-section">
-                <h3 className="lst-section-title">
-                  <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 6c0-1.1.9-2 2-2h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V6z"/><path d="M10 10h4"/></svg></span>
-                  Bathroom Details
-                </h3>
-                <div className="lst-table-grid">
-                  <div className="lst-table-cell">
-                    <span className="lst-tc-label">Type</span>
-                    <span className="lst-tc-value">Attached</span>
-                  </div>
-                  <div className="lst-table-cell">
-                    <span className="lst-tc-label">Count</span>
-                    <span className="lst-tc-value">1 per room</span>
-                  </div>
-                  <div className="lst-table-cell">
-                    <span className="lst-tc-label">Hot Water</span>
-                    <span className="lst-tc-value">24/7 Geyser</span>
-                  </div>
-                  <div className="lst-table-cell">
-                    <span className="lst-tc-label">Western Toilet</span>
-                    <span className="lst-tc-value">Yes</span>
-                  </div>
-                </div>
-              </section>
-            </>
-          )}
-
-          {/* Dining */}
-          {(activeTab === 'overview' || activeTab === 'dining') && (
-            <section className="lst-section">
-              <h3 className="lst-section-title">
-                <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg></span>
-                Dining & Food
-              </h3>
-              <div className="lst-table-grid">
-                <div className="lst-table-cell">
-                  <span className="lst-tc-label">Meal Type</span>
-                  <span className="lst-tc-value">Veg + Non-Veg</span>
-                </div>
-                <div className="lst-table-cell">
-                  <span className="lst-tc-label">Weekly Menu</span>
-                  <span className="lst-tc-value">7-day rotation</span>
-                </div>
-                <div className="lst-table-cell" style={{ gridColumn: 'span 2' }}>
-                  <span className="lst-tc-label">Custom</span>
-                  <span className="lst-tc-value">Available on request</span>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Building Features */}
-          {(activeTab === 'overview' || activeTab === 'rooms') && (
-            <section className="lst-section">
-              <h3 className="lst-section-title">
-                <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg></span>
-                Building & Security
-              </h3>
-              <div className="lst-fac-grid">
-                {buildingFeatures.map((f, i) => (
-                  <div key={i} className="lst-fac-card">
-                    <span className="lst-fac-icon">{f.icon}</span>
-                    <div className="lst-fac-info">
-                      <span className="lst-fac-label">{f.label}</span>
-                      <span className="lst-fac-value">{f.value}</span>
-                    </div>
+          {/* Section: Rooms (Interactive Map) */}
+          <div id="rooms" ref={sectionRefs.rooms} className="lst-section">
+            <h3 className="lst-section-title">
+              <span className="lst-icon-wrap"><Bed size={18} /></span>
+              Interactive Bed Layout
+            </h3>
+            <div className="lst-room-map-wrapper">
+              <div className="lst-floor-plan">
+                <div className="lst-door v"></div>
+                <div className="lst-window top"></div>
+                
+                {/* Visual Beds based on sharing */}
+                {beds.map((bed, i) => (
+                  <div 
+                    key={bed.id} 
+                    className={`lst-bed-visual ${bed.status.toLowerCase()} ${selectedBed === bed.id ? 'selected' : ''}`}
+                    style={{ 
+                      left: selectedSharing === 1 ? '50%' : (i % 2 === 0 ? '15%' : '65%'), 
+                      top: '20%',
+                      transform: selectedSharing === 1 ? 'translateX(-50%)' : 'none'
+                    }}
+                    onClick={() => bed.status === 'Available' && setSelectedBed(bed.id)}
+                  >
+                    <div className="lst-bed-pillow"></div>
+                    <span className="lst-bed-label-vis">BED {bed.id}</span>
                   </div>
                 ))}
               </div>
-            </section>
-          )}
+            </div>
 
-          {/* House Rules */}
-          {(activeTab === 'overview' || activeTab === 'rules') && (
-            <section className="lst-section">
-              <h3 className="lst-section-title">
-                <span className="lst-icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-                House Rules
-              </h3>
-              <div className="lst-rules-list">
-                {houseRules.map((rule, i) => (
-                  <div key={i} className="lst-rule-item">
-                    <span className="lst-rule-dot"></span>
-                    <span>{rule}</span>
+            <div style={{ marginTop: '2rem' }}>
+              <h4 className="lst-section-title" style={{ fontSize: '1.1rem' }}>Roommate & Stay Preferences</h4>
+              <div className="lst-pref-grid">
+                {roommatePrefs.map((p, i) => (
+                  <div key={i} className={`lst-pref-pill ${i < 3 ? 'active' : ''}`}>
+                    <span>{p.icon}</span>
+                    {p.label}
                   </div>
                 ))}
               </div>
-            </section>
-          )}
-        </div>
+            </div>
 
-        {/* ── Right Sidebar: Pricing ── */}
-        <aside className="lst-sidebar">
-          <div className="lst-price-card">
-            <span className="lst-price-label">MONTHLY RENT</span>
-            <div className="lst-price-main">₹{currentPrice.rent.toLocaleString()}<span>/mo</span></div>
-
-            {(activeTab === 'overview' || activeTab === 'pricing') && (
-              <div className="lst-price-breakdown">
-                <div className="lst-price-row"><span>Room Rent</span><span>₹{currentPrice.rent.toLocaleString()}</span></div>
-                <div className="lst-price-row"><span>Security Deposit</span><span>₹{currentPrice.deposit.toLocaleString()}</span></div>
-                <div className="lst-price-row"><span>Food (Monthly)</span><span>₹{currentPrice.food.toLocaleString()}</span></div>
-                <div className="lst-price-row"><span>Maintenance</span><span>₹{currentPrice.maintenance}</span></div>
-                <div className="lst-price-divider"></div>
-                <div className="lst-price-row total">
-                  <span>Total Due (Move-in)</span>
-                  <span>₹{(currentPrice.rent + currentPrice.deposit + currentPrice.food + currentPrice.maintenance).toLocaleString()}</span>
-                </div>
-                {selectedBed && (
-                  <div className="lst-price-row" style={{ marginTop: '0.5rem', color: 'var(--lst-accent)' }}>
-                    <span>Selected Bed</span><span>Bed {selectedBed}</span>
-                  </div>
-                )}
+            <div style={{ marginTop: '2rem' }}>
+              <h4 className="lst-section-title" style={{ fontSize: '1.1rem' }}>Bed Experience Details</h4>
+              <div className="lst-score-grid">
+                 <div className="lst-score-card">
+                    <span className="lst-score-name">Sunlight Access</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Zap size={14} color="#f59e0b" /> <span style={{ fontWeight: 700 }}>Excellent</span>
+                    </div>
+                 </div>
+                 <div className="lst-score-card">
+                    <span className="lst-score-name">WiFi Signal</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Wifi size={14} color="#10b981" /> <span style={{ fontWeight: 700 }}>Strong</span>
+                    </div>
+                 </div>
+                 <div className="lst-score-card">
+                    <span className="lst-score-name">Charging Access</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Battery size={14} color="#3b82f6" /> <span style={{ fontWeight: 700 }}>Dual Port</span>
+                    </div>
+                 </div>
               </div>
-            )}
-
-            <button 
-              className={`lst-book-btn ${!selectedBed ? 'disabled' : ''}`} 
-              onClick={() => {
-                if (selectedBed) {
-                  navigate(`/booking/${hostel.id}?sharing=${selectedSharing}&bed=${selectedBed}`);
-                } else {
-                  alert('Please select an available bed to proceed.');
-                }
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              {selectedBed ? 'Reserve Your Room Now' : 'No Beds Available'}
-            </button>
-            <p className="lst-price-footer">Secure payment powered by Livora Finance</p>
+            </div>
           </div>
 
-          {/* Sharing Comparison */}
-          <div className="lst-compare-card">
-            <h4 className="lst-compare-title">Pricing Comparison</h4>
-            <div className="lst-compare-list">
-              {[1, 2, 3].map(n => (
-                <div key={n} className={`lst-compare-row ${selectedSharing === n ? 'active' : ''}`} onClick={() => setSelectedSharing(n)}>
-                  <div>
-                    <strong>{n === 1 ? 'Single Room' : `${n} Sharing`}</strong>
-                    <span>{n === 1 ? 'Private room' : `${n} beds per room`}</span>
+          {/* Section: Dining */}
+          <div id="dining" ref={sectionRefs.dining} className="lst-section">
+            <h3 className="lst-section-title">
+              <span className="lst-icon-wrap"><Utensils size={18} /></span>
+              Dining & Nutrition
+            </h3>
+            <div className="lst-table-grid">
+              <div className="lst-table-cell">
+                <span className="lst-tc-label">Meal Type</span>
+                <span className="lst-tc-value">Home-style Veg/Non-Veg</span>
+              </div>
+              <div className="lst-table-cell">
+                <span className="lst-tc-label">Cleanliness</span>
+                <span className="lst-tc-value">FSSAI Certified</span>
+              </div>
+            </div>
+            
+            <div style={{ marginTop: '1.5rem' }}>
+               <h4 className="lst-section-title" style={{ fontSize: '1.1rem' }}>Cleanliness & Maintenance</h4>
+               <div className="lst-nearby-list">
+                 {cleanlinessStatus.map((c, i) => (
+                    <div key={i} className="lst-nearby-item">
+                      <div className="lst-nb-left">
+                        <span className="lst-nb-icon">{c.icon}</span>
+                        <span className="lst-nb-name">{c.label}</span>
+                      </div>
+                      <span className="lst-nb-dist" style={{ color: 'var(--lst-text-main)' }}>{c.val}</span>
+                    </div>
+                 ))}
+               </div>
+            </div>
+          </div>
+
+          {/* Section: Lifestyle */}
+          <div className="lst-section">
+            <h3 className="lst-section-title">
+              <span className="lst-icon-wrap"><Sparkles size={18} /></span>
+              Student Lifestyle Features
+            </h3>
+            <div className="lst-pref-grid">
+               {lifestyleFeatures.map((f, i) => (
+                 <div key={i} className="lst-pref-pill active">
+                   {f.icon}
+                   {f.label}
+                 </div>
+               ))}
+            </div>
+          </div>
+
+          {/* Section: Safety */}
+          <div id="safety" ref={sectionRefs.safety} className="lst-section">
+            <h3 className="lst-section-title">
+              <span className="lst-icon-wrap"><ShieldCheck size={18} /></span>
+              Trust & Safety Badges
+            </h3>
+            <div className="lst-trust-grid">
+               {trustBadges.map((b, i) => (
+                 <div key={i} className="lst-trust-card">
+                   <div className="lst-trust-icon">{b.icon}</div>
+                   <div className="lst-trust-info">
+                     <h5>{b.title}</h5>
+                     <p>{b.desc}</p>
+                   </div>
+                 </div>
+               ))}
+            </div>
+          </div>
+
+          {/* Section: Nearby */}
+          <div id="nearby" ref={sectionRefs.nearby} className="lst-section">
+            <h3 className="lst-section-title">
+              <span className="lst-icon-wrap"><MapPin size={18} /></span>
+              Location & Nearby Places
+            </h3>
+            <div className="lst-nearby-list">
+              {nearbyPlaces.map((p, i) => (
+                <div key={i} className="lst-nearby-item">
+                  <div className="lst-nb-left">
+                    <span className="lst-nb-icon">{p.icon}</span>
+                    <span className="lst-nb-name">{p.name}</span>
                   </div>
-                  <div className="lst-compare-price">₹{pricing[n].rent.toLocaleString()}</div>
+                  <span className="lst-nb-dist">{p.dist}</span>
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Section: Financial */}
+          <div className="lst-section">
+            <h3 className="lst-section-title">
+              <span className="lst-icon-wrap"><Wallet size={18} /></span>
+              Smart Financial Options
+            </h3>
+            <div className="lst-finance-grid">
+               {financialOptions.map((o, i) => (
+                 <div key={i} className="lst-fin-card">
+                   <span className="lst-fin-label">{o.label}</span>
+                   <span className="lst-fin-val">{o.val}</span>
+                 </div>
+               ))}
+            </div>
+          </div>
+
+          {/* Section: Rules */}
+          <div id="rules" ref={sectionRefs.rules} className="lst-section">
+             <h3 className="lst-section-title">
+               <span className="lst-icon-wrap"><ClipboardList size={18} /></span>
+               House Rules & Policies
+             </h3>
+             <div className="lst-rules-list">
+               {['No smoking inside rooms', 'Visitor hours: 9 AM - 8 PM', 'Quiet hours: 10 PM - 7 AM', 'Weekly deep cleaning included'].map((r, i) => (
+                 <div key={i} className="lst-rule-item">
+                   <CheckCircle2 size={16} color="#10b981" />
+                   <span>{r}</span>
+                 </div>
+               ))}
+             </div>
+          </div>
+
+          {/* Section: Reviews */}
+          <div id="reviews" ref={sectionRefs.reviews} className="lst-section">
+            <h3 className="lst-section-title">
+              <span className="lst-icon-wrap"><Star size={18} /></span>
+              Student Reviews
+            </h3>
+            <div className="lst-reviews-grid">
+              {reviews.map((r, i) => (
+                <div key={i} className="lst-review-card">
+                  <div className="lst-review-user">
+                    <div className="lst-user-img">{r.initial}</div>
+                    <div>
+                      <span className="lst-user-name">{r.name}</span>
+                      <div style={{ display: 'flex', color: '#f59e0b', fontSize: '0.8rem' }}>
+                        {Array.from({ length: r.rating }).map((_, j) => <Star key={j} size={12} fill="currentColor" />)}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="lst-review-comment">"{r.comment}"</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Sidebar */}
+        <aside className="lst-sidebar">
+           <div className="lst-price-card">
+              <span className="lst-price-label">MONTHLY RENT</span>
+              <div className="lst-price-main">₹{currentPrice.rent.toLocaleString()}<span>/mo</span></div>
+              
+              <div className="lst-price-breakdown">
+                <div className="lst-price-row"><span>Monthly Rent</span><span>₹{currentPrice.rent.toLocaleString()}</span></div>
+                <div className="lst-price-row"><span>Security Deposit</span><span>₹{currentPrice.deposit.toLocaleString()}</span></div>
+                <div className="lst-price-row"><span>Food & Maintenance</span><span>₹{(currentPrice.food + currentPrice.maintenance).toLocaleString()}</span></div>
+                <div className="lst-price-divider"></div>
+                <div className="lst-price-row total">
+                  <span>Move-in Total</span>
+                  <span>₹{(currentPrice.rent + currentPrice.deposit + currentPrice.food + currentPrice.maintenance).toLocaleString()}</span>
+                </div>
+              </div>
+
+              <button 
+                className={`lst-book-btn ${!selectedBed ? 'disabled' : ''}`}
+                onClick={() => selectedBed && navigate(`/booking/${hostel.id}?sharing=${selectedSharing}&bed=${selectedBed}`)}
+              >
+                {selectedBed ? 'Confirm & Reserve Bed' : 'No Beds Available'}
+                <ChevronRight size={18} />
+              </button>
+              <p className="lst-price-footer">100% Secure Payment • Refundable Deposit</p>
+           </div>
+
+           <div className="lst-compare-card">
+              <h4 className="lst-compare-title">Pricing Comparison</h4>
+              <div className="lst-compare-list">
+                {[1, 2, 3].map(n => (
+                  <div key={n} className={`lst-compare-row ${selectedSharing === n ? 'active' : ''}`} onClick={() => setSelectedSharing(n)}>
+                    <div>
+                      <strong>{n === 1 ? 'Single Room' : `${n} Sharing`}</strong>
+                      <span>{n === 1 ? 'Private' : `${n} beds`}</span>
+                    </div>
+                    <div className="lst-compare-price">₹{pricing[n].rent.toLocaleString()}</div>
+                  </div>
+                ))}
+              </div>
+           </div>
         </aside>
       </div>
     </div>
