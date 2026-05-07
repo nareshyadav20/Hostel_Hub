@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Settings as SettingsIcon, Shield, Bell, User, Building, 
   CreditCard, PaintBucket, ToggleLeft, Save, HelpCircle, 
@@ -9,8 +9,98 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../mockData';
 
+const Toggle = ({ enabled, onClick }) => (
+  <div 
+    onClick={onClick}
+    style={{ 
+      width: '44px', height: '24px', background: enabled ? 'var(--accent-primary)' : '#E2E8F0', 
+      borderRadius: '12px', padding: '2px', cursor: 'pointer', transition: '0.3s',
+      display: 'flex', alignItems: 'center', border: '1px solid #CBD5E1',
+      justifyContent: enabled ? 'flex-end' : 'flex-start'
+    }}
+  >
+    <motion.div layout style={{ width: '18px', height: '18px', background: '#fff', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
+  </div>
+);
+
+const iStyle = { 
+  width: '100%', 
+  padding: '1rem 1.2rem', 
+  borderRadius: '14px', 
+  border: '1px solid #E2E8F0', 
+  background: '#F8FAFC', 
+  color: '#0F172A',
+  fontSize: '0.95rem',
+  fontWeight: '700',
+  outline: 'none',
+  transition: 'all 0.2s',
+  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)'
+};
+
+const EditableTags = ({ tags, onUpdate, color = '#3B82F6', bgColor = '#EFF6FF' }) => {
+  const [inputValue, setInputValue] = useState('');
+
+  const handleAdd = () => {
+    if (inputValue.trim() && !tags.includes(inputValue.trim())) {
+      onUpdate([...tags, inputValue.trim()]);
+      setInputValue('');
+    }
+  };
+
+  const handleRemove = (tagToRemove) => {
+    onUpdate(tags.filter(t => t !== tagToRemove));
+  };
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', padding: '1rem', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+      {tags.map((tag, i) => (
+        <span key={i} style={{ 
+          display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.8rem', 
+          background: bgColor, color: color, borderRadius: '8px', fontSize: '0.85rem', fontWeight: '800' 
+        }}>
+          {tag}
+          <Trash2 size={12} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={() => handleRemove(tag)} />
+        </span>
+      ))}
+      <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '0.5rem' }}>
+        <input 
+          type="text" 
+          value={inputValue} 
+          onChange={e => setInputValue(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleAdd()}
+          placeholder="Add new..." 
+          style={{ ...iStyle, padding: '0.5rem 1rem', fontSize: '0.85rem', flex: 1 }}
+        />
+        <button onClick={handleAdd} className="btn" style={{ padding: '0.5rem 1rem', background: 'var(--accent-primary)', color: '#fff', borderRadius: '10px' }}>
+          <Plus size={16} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const SectionHeader = ({ title, subtitle }) => (
+  <div style={{ marginBottom: '2.5rem', borderBottom: '1px solid #F1F5F9', paddingBottom: '1.2rem' }}>
+    <h3 style={{ fontSize: '1.4rem', fontWeight: '900', margin: 0, color: '#0F172A' }}>{title}</h3>
+    <p style={{ fontSize: '0.9rem', color: '#64748B', marginTop: '0.4rem', fontWeight: '600' }}>{subtitle}</p>
+  </div>
+);
+
+const InputGroup = ({ label, children, info }) => (
+  <div style={{ marginBottom: '1.8rem' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.6rem' }}>
+      <label style={{ fontSize: '0.85rem', fontWeight: '800', color: '#475569' }}>{label}</label>
+      {info && <div title={info} style={{ cursor: 'help', color: '#94A3B8' }}><Info size={14}/></div>}
+    </div>
+    {children}
+  </div>
+);
+
 const Settings = () => {
-  const { buildingId } = useParams();
+  const { buildingId: urlBuildingId } = useParams();
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+  const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState('general');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -18,13 +108,15 @@ const Settings = () => {
   const [msg, setMsg] = useState({ type: '', text: '' });
 
   useEffect(() => {
-    fetchSettings();
-  }, [buildingId]);
+    if (activeBuildingId) fetchSettings();
+    else setIsLoading(false);
+  }, [activeBuildingId]);
 
   const fetchSettings = async () => {
     try {
-      const data = await api.getSettings(buildingId);
-      setSettings(data);
+      const data = await api.getSettings(activeBuildingId);
+      // Ensure buildingId is part of the state for updates
+      setSettings({ ...data, buildingId: activeBuildingId });
     } catch (err) {
       console.error(err);
     } finally {
@@ -36,7 +128,8 @@ const Settings = () => {
     setIsSaving(true);
     setMsg({ type: '', text: '' });
     try {
-      await api.updateSettings(settings);
+      const updated = await api.updateSettings(settings);
+      setSettings({ ...updated, buildingId: activeBuildingId });
       setMsg({ type: 'success', text: 'Settings updated successfully!' });
       setTimeout(() => setMsg({ type: '', text: '' }), 3000);
     } catch (err) {
@@ -46,7 +139,30 @@ const Settings = () => {
     }
   };
 
+  const handleChange = (section, field, value, subField = null) => {
+    setSettings(prev => {
+      if (!prev) return prev;
+      
+      const updatedSection = { ...(prev[section] || {}) };
+      
+      if (subField) {
+        updatedSection[field] = {
+          ...(updatedSection[field] || {}),
+          [subField]: value
+        };
+      } else {
+        updatedSection[field] = value;
+      }
+      
+      return {
+        ...prev,
+        [section]: updatedSection
+      };
+    });
+  };
+
   if (isLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading System Settings...</div>;
+  if (!settings) return <div style={{ padding: '2rem', textAlign: 'center' }}>No settings found. Please refresh.</div>;
 
   const tabs = [
     { id: 'general', name: 'General', icon: <Building size={18} /> },
@@ -54,47 +170,26 @@ const Settings = () => {
     { id: 'rooms', name: 'Infrastructure', icon: <LayoutGrid size={18} /> },
     { id: 'notifications', name: 'Notifications', icon: <Bell size={18} /> },
     { id: 'hygiene', name: 'Hygiene', icon: <Utensils size={18} /> },
-    { id: 'roles', name: 'Roles & Access', icon: <Users size={18} /> },
+    { id: 'roles', name: 'Roles & Access', icon: <Shield size={18} /> },
     { id: 'reports', name: 'Reports', icon: <BarChart size={18} /> },
+    { id: 'theme', name: 'Theme & UX', icon: <PaintBucket size={18} /> },
   ];
-
-  const Toggle = ({ enabled, onClick }) => (
-    <div 
-      onClick={onClick}
-      style={{ 
-        width: '40px', height: '20px', background: enabled ? 'var(--accent-primary)' : 'var(--bg-tertiary)', 
-        borderRadius: '10px', padding: '2px', cursor: 'pointer', transition: '0.3s',
-        display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)',
-        justifyContent: enabled ? 'flex-end' : 'flex-start'
-      }}
-    >
-      <motion.div layout style={{ width: '14px', height: '14px', background: '#fff', borderRadius: '50%' }} />
-    </div>
-  );
-
-  const SectionHeader = ({ title, subtitle }) => (
-    <div style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.8rem' }}>
-      <h3 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0 }}>{title}</h3>
-      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>{subtitle}</p>
-    </div>
-  );
-
-  const InputGroup = ({ label, children, info }) => (
-    <div style={{ marginBottom: '1.2rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-        <label style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-secondary)' }}>{label}</label>
-        {info && <div title={info} style={{ cursor: 'help', color: 'var(--text-muted)' }}><Info size={12}/></div>}
-      </div>
-      {children}
-    </div>
-  );
 
   return (
     <div className="settings-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
       <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0, letterSpacing: '-0.02em' }}>System Settings</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Centralized control for hostel operations.</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <button 
+            onClick={() => navigate(`/owner/building/${activeBuildingId}/dashboard`)}
+            className="btn" 
+            style={{ padding: '0.6rem 1rem', background: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px solid var(--border-color)', fontWeight: '700' }}
+          >
+            &larr; Dashboard
+          </button>
+          <div>
+            <h1 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0, letterSpacing: '-0.02em' }}>System Settings</h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Centralized control for hostel operations.</p>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
            <AnimatePresence>
@@ -111,94 +206,115 @@ const Settings = () => {
         </div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '1.5rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         
-        {/* Sidebar Navigation */}
-        <div className="card" style={{ padding: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.3rem', alignSelf: 'start', borderRadius: '14px' }}>
+        {/* Horizontal Navigation Bar */}
+        <div className="card" style={{ 
+          padding: '0.6rem', display: 'flex', gap: '0.8rem', borderRadius: '20px', 
+          overflowX: 'auto', background: '#FFFFFF', border: '1px solid #E2E8F0',
+          scrollbarWidth: 'none', msOverflowStyle: 'none'
+        }}>
           {tabs.map((tab) => (
              <button 
                key={tab.id}
                onClick={() => setActiveTab(tab.id)}
                style={{ 
-                 display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.75rem 1rem', 
-                 justifyContent: 'flex-start', fontSize: '0.85rem', fontWeight: activeTab === tab.id ? '800' : '600',
-                 background: activeTab === tab.id ? 'var(--bg-tertiary)' : 'transparent',
-                 color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                 border: 'none', borderRadius: '10px', cursor: 'pointer', transition: '0.2s', textAlign: 'left'
+                 display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '0.8rem 1.5rem', 
+                 whiteSpace: 'nowrap', fontSize: '0.9rem', fontWeight: activeTab === tab.id ? '900' : '700',
+                 background: activeTab === tab.id ? 'var(--accent-primary)' : 'transparent',
+                 color: activeTab === tab.id ? '#FFFFFF' : '#64748B',
+                 border: 'none', borderRadius: '14px', cursor: 'pointer', transition: '0.3s'
                }}
              >
-                <div style={{ opacity: activeTab === tab.id ? 1 : 0.6 }}>{tab.icon}</div>
+                {tab.icon}
                 {tab.name}
              </button>
           ))}
         </div>
 
         {/* Content Area */}
-        <div className="card" style={{ padding: '2rem', borderRadius: '16px', minHeight: '500px' }}>
+        <div className="card" style={{ padding: '3.5rem', borderRadius: '28px', minHeight: '650px', background: '#FFFFFF', border: '1px solid #E2E8F0', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}>
           <AnimatePresence mode="wait">
             
             {/* GENERAL SETTINGS */}
-            {activeTab === 'general' && settings?.generalSettings && (
+            {activeTab === 'general' && (
               <motion.div key="general" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <SectionHeader title="General Configuration" subtitle="Primary identity and contact information." />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-                  <InputGroup label="Hostel Name">
-                    <input type="text" value={settings.generalSettings.hostelName || ''} onChange={e => setSettings({...settings, generalSettings: {...settings.generalSettings, hostelName: e.target.value}})} style={iStyle} />
-                  </InputGroup>
-                  <InputGroup label="Currency Symbol">
-                    <input type="text" value={settings.generalSettings.currency || ''} onChange={e => setSettings({...settings, generalSettings: {...settings.generalSettings, currency: e.target.value}})} style={iStyle} />
-                  </InputGroup>
-                  <InputGroup label="Contact Email">
-                    <input type="email" value={settings.generalSettings.contactEmail || ''} onChange={e => setSettings({...settings, generalSettings: {...settings.generalSettings, contactEmail: e.target.value}})} style={iStyle} />
-                  </InputGroup>
-                  <InputGroup label="Contact Phone">
-                    <input type="text" value={settings.generalSettings.contactPhone || ''} onChange={e => setSettings({...settings, generalSettings: {...settings.generalSettings, contactPhone: e.target.value}})} style={iStyle} />
-                  </InputGroup>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.8rem' }}>
+                  <InputGroup label="Hostel Name"><input type="text" value={settings.generalSettings?.hostelName || ''} onChange={e => handleChange('generalSettings', 'hostelName', e.target.value)} style={iStyle} /></InputGroup>
+                  <InputGroup label="Owner Name"><input type="text" value={settings.generalSettings?.ownerName || ''} onChange={e => handleChange('generalSettings', 'ownerName', e.target.value)} style={iStyle} /></InputGroup>
+                  <InputGroup label="Contact Number"><input type="text" value={settings.generalSettings?.contactNumber || ''} onChange={e => handleChange('generalSettings', 'contactNumber', e.target.value)} style={iStyle} /></InputGroup>
+                  <InputGroup label="Contact Email"><input type="email" value={settings.generalSettings?.email || ''} onChange={e => handleChange('generalSettings', 'email', e.target.value)} style={iStyle} /></InputGroup>
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <InputGroup label="Full Address"><textarea value={settings.generalSettings?.address || ''} onChange={e => handleChange('generalSettings', 'address', e.target.value)} style={{ ...iStyle, height: '100px', resize: 'none' }} /></InputGroup>
+                  </div>
+                  <InputGroup label="Hostel Logo (URL)"><input type="text" value={settings.generalSettings?.hostelLogo || ''} onChange={e => handleChange('generalSettings', 'hostelLogo', e.target.value)} style={iStyle} /></InputGroup>
+                  <InputGroup label="Timezone"><select value={settings.generalSettings?.timezone || 'IST (UTC+5:30)'} onChange={e => handleChange('generalSettings', 'timezone', e.target.value)} style={iStyle}><option>IST (UTC+5:30)</option><option>EST (UTC-5:00)</option><option>GMT (UTC+0:00)</option></select></InputGroup>
+                  <InputGroup label="Currency"><input type="text" value={settings.generalSettings?.currency || '₹'} onChange={e => handleChange('generalSettings', 'currency', e.target.value)} style={iStyle} /></InputGroup>
+                  <InputGroup label="Language"><select value={settings.generalSettings?.language || 'English'} onChange={e => handleChange('generalSettings', 'language', e.target.value)} style={iStyle}><option>English</option><option>Hindi</option><option>Telugu</option></select></InputGroup>
                 </div>
               </motion.div>
-            )}
-
-            {!settings?.generalSettings && activeTab === 'general' && (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                General settings data is unavailable.
-              </div>
             )}
 
             {/* RENT & PAYMENTS */}
             {activeTab === 'rent' && (
               <motion.div key="rent" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <SectionHeader title="Rent & Financials" subtitle="Configure pricing, due dates, and late fee policies." />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '2rem' }}>
-                  <InputGroup label="Default Rent (Single)">
-                    <input type="number" value={settings.rentSettings.defaultRent.single} onChange={e => setSettings({...settings, rentSettings: {...settings.rentSettings, defaultRent: {...settings.rentSettings.defaultRent, single: Number(e.target.value)}}})} style={iStyle} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.8rem' }}>
+                  <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', padding: '1.5rem', background: '#F8FAFC', borderRadius: '16px' }}>
+                    <InputGroup label="Default Rent (Single)"><input type="number" value={settings.rentSettings?.defaultRent?.single || 0} onChange={e => handleChange('rentSettings', 'defaultRent', Number(e.target.value), 'single')} style={iStyle} /></InputGroup>
+                    <InputGroup label="Default Rent (Double)"><input type="number" value={settings.rentSettings?.defaultRent?.double || 0} onChange={e => handleChange('rentSettings', 'defaultRent', Number(e.target.value), 'double')} style={iStyle} /></InputGroup>
+                    <InputGroup label="Default Rent (Shared)"><input type="number" value={settings.rentSettings?.defaultRent?.shared || 0} onChange={e => handleChange('rentSettings', 'defaultRent', Number(e.target.value), 'shared')} style={iStyle} /></InputGroup>
+                  </div>
+                  <InputGroup label="Rent Cycle"><select value={settings.rentSettings?.rentCycle || 'MONTHLY'} onChange={e => handleChange('rentSettings', 'rentCycle', e.target.value)} style={iStyle}><option value="MONTHLY">Monthly</option><option value="QUARTERLY">Quarterly</option><option value="CUSTOM">Custom</option></select></InputGroup>
+                  <InputGroup label="Rent Due Date (Day of Month)"><input type="number" min="1" max="28" value={settings.rentSettings?.rentDueDate || 5} onChange={e => handleChange('rentSettings', 'rentDueDate', Number(e.target.value))} style={iStyle} /></InputGroup>
+                  <InputGroup label="Grace Period (Days)"><input type="number" value={settings.rentSettings?.gracePeriodDays || 3} onChange={e => handleChange('rentSettings', 'gracePeriodDays', Number(e.target.value))} style={iStyle} /></InputGroup>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <InputGroup label="Late Fee Type"><select value={settings.rentSettings?.lateFeeType || 'FIXED'} onChange={e => handleChange('rentSettings', 'lateFeeType', e.target.value)} style={iStyle}><option value="FIXED">Fixed</option><option value="PERCENTAGE">Percentage</option></select></InputGroup>
+                    <InputGroup label="Value"><input type="number" value={settings.rentSettings?.lateFeeValue || 0} onChange={e => handleChange('rentSettings', 'lateFeeValue', Number(e.target.value))} style={iStyle} /></InputGroup>
+                  </div>
+                  <InputGroup label="Security Deposit Amount"><input type="number" value={settings.rentSettings?.securityDepositAmount || 0} onChange={e => handleChange('rentSettings', 'securityDepositAmount', Number(e.target.value))} style={iStyle} /></InputGroup>
+                  <InputGroup label="Allowed Payment Methods">
+                    <EditableTags 
+                      tags={settings.rentSettings?.allowedPaymentMethods || []} 
+                      onUpdate={newTags => handleChange('rentSettings', 'allowedPaymentMethods', newTags)}
+                      color="#8B5CF6" bgColor="#F5F3FF"
+                    />
                   </InputGroup>
-                  <InputGroup label="Default Rent (Double)">
-                    <input type="number" value={settings.rentSettings.defaultRent.double} onChange={e => setSettings({...settings, rentSettings: {...settings.rentSettings, defaultRent: {...settings.rentSettings.defaultRent, double: Number(e.target.value)}}})} style={iStyle} />
-                  </InputGroup>
-                  <InputGroup label="Default Rent (Shared)">
-                    <input type="number" value={settings.rentSettings.defaultRent.shared} onChange={e => setSettings({...settings, rentSettings: {...settings.rentSettings, defaultRent: {...settings.rentSettings.defaultRent, shared: Number(e.target.value)}}})} style={iStyle} />
-                  </InputGroup>
+                  <div style={{ display: 'flex', gap: '2rem', padding: '1.5rem', background: '#F8FAFC', borderRadius: '16px', gridColumn: 'span 2' }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}><Toggle enabled={settings.rentSettings?.autoInvoiceGeneration} onClick={() => handleChange('rentSettings', 'autoInvoiceGeneration', !settings.rentSettings?.autoInvoiceGeneration)} /><span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Auto Invoice Generation</span></div>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}><Toggle enabled={settings.rentSettings?.allowPartialPayment} onClick={() => handleChange('rentSettings', 'allowPartialPayment', !settings.rentSettings?.allowPartialPayment)} /><span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Allow Partial Payments</span></div>
+                  </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-                  <InputGroup label="Security Deposit" info="One-time deposit collected at check-in">
-                    <input type="number" value={settings.rentSettings.securityDeposit} onChange={e => setSettings({...settings, rentSettings: {...settings.rentSettings, securityDeposit: Number(e.target.value)}})} style={iStyle} />
+              </motion.div>
+            )}
+
+            {/* INFRASTRUCTURE */}
+            {activeTab === 'rooms' && (
+              <motion.div key="rooms" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <SectionHeader title="Property Infrastructure" subtitle="Configure buildings, floors, and room types." />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+                  <InputGroup label="Total Buildings"><input type="number" value={settings.roomConfig?.totalBuildings || 0} onChange={e => handleChange('roomConfig', 'totalBuildings', Number(e.target.value))} style={iStyle} /></InputGroup>
+                  <InputGroup label="Floors / Building"><input type="number" value={settings.roomConfig?.floorsPerBuilding || 0} onChange={e => handleChange('roomConfig', 'floorsPerBuilding', Number(e.target.value))} style={iStyle} /></InputGroup>
+                  <InputGroup label="Rooms / Floor"><input type="number" value={settings.roomConfig?.roomsPerFloor || 0} onChange={e => handleChange('roomConfig', 'roomsPerFloor', Number(e.target.value))} style={iStyle} /></InputGroup>
+                  <InputGroup label="Beds / Room"><input type="number" value={settings.roomConfig?.bedsPerRoom || 0} onChange={e => handleChange('roomConfig', 'bedsPerRoom', Number(e.target.value))} style={iStyle} /></InputGroup>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  <InputGroup label="Supported Room Types">
+                    <EditableTags 
+                      tags={settings.roomConfig?.roomTypes || []} 
+                      onUpdate={newTags => handleChange('roomConfig', 'roomTypes', newTags)}
+                    />
                   </InputGroup>
-                  <InputGroup label="Payment Due Date" info="Day of month when rent is due (1-28)">
-                    <input type="number" min="1" max="28" value={settings.rentSettings.paymentDueDate} onChange={e => setSettings({...settings, rentSettings: {...settings.rentSettings, paymentDueDate: Number(e.target.value)}})} style={iStyle} />
+                  <InputGroup label="Bed Configuration">
+                    <EditableTags 
+                      tags={settings.roomConfig?.bedTypes || []} 
+                      onUpdate={newTags => handleChange('roomConfig', 'bedTypes', newTags)}
+                      color="#10B981" bgColor="#F0FDF4"
+                    />
                   </InputGroup>
-                  <InputGroup label="Grace Period (Days)" info="Days allowed after due date before late fee starts">
-                    <input type="number" value={settings.rentSettings.gracePeriod} onChange={e => setSettings({...settings, rentSettings: {...settings.rentSettings, gracePeriod: Number(e.target.value)}})} style={iStyle} />
-                  </InputGroup>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
-                    <InputGroup label="Late Fee Type">
-                      <select value={settings.rentSettings.lateFeeRule.type} onChange={e => setSettings({...settings, rentSettings: {...settings.rentSettings, lateFeeRule: {...settings.rentSettings.lateFeeRule, type: e.target.value}}})} style={iStyle}>
-                        <option value="FIXED">Fixed Amount</option>
-                        <option value="PERCENTAGE">Percentage</option>
-                      </select>
-                    </InputGroup>
-                    <InputGroup label="Late Fee Value">
-                      <input type="number" value={settings.rentSettings.lateFeeRule.value} onChange={e => setSettings({...settings, rentSettings: {...settings.rentSettings, lateFeeRule: {...settings.rentSettings.lateFeeRule, value: Number(e.target.value)}}})} style={iStyle} />
-                    </InputGroup>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', background: '#F8FAFC', borderRadius: '16px', gridColumn: 'span 2' }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}><Toggle enabled={settings.roomConfig?.autoCreateRooms} onClick={() => handleChange('roomConfig', 'autoCreateRooms', !settings.roomConfig?.autoCreateRooms)} /><span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Auto Create Rooms on Sync</span></div>
                   </div>
                 </div>
               </motion.div>
@@ -207,81 +323,57 @@ const Settings = () => {
             {/* NOTIFICATIONS */}
             {activeTab === 'notifications' && (
               <motion.div key="notif" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <SectionHeader title="Automated Alerts" subtitle="Control system-wide notification triggers." />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <SectionHeader title="Communication Channels" subtitle="Manage automated alerts and notification templates." />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2.5rem' }}>
                   {[
-                    { id: 'enablePaymentReminders', label: 'Payment Overdue Reminders', sub: 'Notify tenants and admins when rent is late.' },
-                    { id: 'enableVacancyAlerts', label: 'Vacancy & Booking Alerts', sub: 'Alert when beds become available or bookings are made.' },
-                    { id: 'enableComplaintAlerts', label: 'Complaint Escalations', sub: 'Notify owner of high-priority complaints.' },
-                    { id: 'enableHygieneAlerts', label: 'Hygiene Score Warnings', sub: 'Alert when property health score drops below threshold.' },
+                    { id: 'enableSMS', label: 'SMS Notifications', sub: 'Send critical alerts via text message.' },
+                    { id: 'enableEmail', label: 'Email Notifications', sub: 'Standard communication via official email.' },
+                    { id: 'enableAppNotifications', label: 'In-App Alerts', sub: 'Real-time dashboard and mobile notifications.' },
+                    { id: 'rentReminderEnabled', label: 'Rent Reminders', sub: 'Auto-notify tenants before due date.' },
+                    { id: 'complaintAlertEnabled', label: 'Complaint Escalations', sub: 'Alert admins on high-priority tickets.' },
+                    { id: 'paymentConfirmationEnabled', label: 'Payment Receipts', sub: 'Instant confirmation after successful payment.' },
+                    { id: 'maintenanceAlertsEnabled', label: 'Maintenance Alerts', sub: 'Notify staff on scheduled asset service.' },
                   ].map(item => (
-                    <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem', background: 'var(--bg-tertiary)', borderRadius: '12px' }}>
-                      <div>
-                        <p style={{ fontWeight: '700', fontSize: '0.9rem', margin: 0 }}>{item.label}</p>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>{item.sub}</p>
-                      </div>
-                      <Toggle 
-                        enabled={settings.notificationSettings[item.id]} 
-                        onClick={() => setSettings({...settings, notificationSettings: {...settings.notificationSettings, [item.id]: !settings.notificationSettings[item.id]}})} 
-                      />
+                    <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
+                      <div><p style={{ fontWeight: '800', fontSize: '0.95rem', margin: 0 }}>{item.label}</p><p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0, fontWeight: '600' }}>{item.sub}</p></div>
+                      <Toggle enabled={settings.notificationSettings?.[item.id]} onClick={() => handleChange('notificationSettings', item.id, !settings.notificationSettings?.[item.id])} />
                     </div>
                   ))}
                 </div>
-              </motion.div>
-            )}
-
-            {/* INFRASTRUCTURE */}
-            {activeTab === 'rooms' && (
-              <motion.div key="rooms" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <SectionHeader title="Property Infrastructure" subtitle="Configure room types and automated creation." />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                  <InputGroup label="Default Bed Capacity" info="Default number of beds per room when creating floors.">
-                    <input type="number" value={settings.roomConfig.defaultBedCapacity} onChange={e => setSettings({...settings, roomConfig: {...settings.roomConfig, defaultBedCapacity: Number(e.target.value)}})} style={iStyle} />
-                  </InputGroup>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '12px' }}>
-                    <div>
-                      <p style={{ fontWeight: '700', fontSize: '0.85rem', margin: 0 }}>Auto-create Rooms/Beds</p>
-                      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: 0 }}>Generate defaults when adding buildings.</p>
-                    </div>
-                    <Toggle 
-                      enabled={settings.roomConfig.autoCreateRooms} 
-                      onClick={() => setSettings({...settings, roomConfig: {...settings.roomConfig, autoCreateRooms: !settings.roomConfig.autoCreateRooms}})} 
-                    />
-                  </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  <InputGroup label="Rent Due Template"><textarea value={settings.notificationSettings?.notificationTemplates?.rentDue || ''} onChange={e => handleChange('notificationSettings', 'notificationTemplates', e.target.value, 'rentDue')} style={{ ...iStyle, height: '80px', resize: 'none' }} /></InputGroup>
+                  <InputGroup label="Payment Success Template"><textarea value={settings.notificationSettings?.notificationTemplates?.paymentSuccess || ''} onChange={e => handleChange('notificationSettings', 'notificationTemplates', e.target.value, 'paymentSuccess')} style={{ ...iStyle, height: '80px', resize: 'none' }} /></InputGroup>
                 </div>
-                <InputGroup label="Supported Room Types">
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    {settings.roomConfig.roomTypes.map((t, i) => (
-                      <span key={i} style={{ padding: '0.4rem 0.8rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '100px', fontSize: '0.8rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        {t} <Trash2 size={12} style={{ cursor: 'pointer' }} onClick={() => setSettings({...settings, roomConfig: {...settings.roomConfig, roomTypes: settings.roomConfig.roomTypes.filter((_, idx) => idx !== i)}})} />
-                      </span>
-                    ))}
-                    <button onClick={() => {
-                      const nt = prompt('Enter new room type:');
-                      if (nt) setSettings({...settings, roomConfig: {...settings.roomConfig, roomTypes: [...settings.roomConfig.roomTypes, nt]}});
-                    }} style={{ padding: '0.4rem 0.8rem', background: 'var(--bg-tertiary)', border: '1px dashed var(--border-color)', borderRadius: '100px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '700' }}>+ Add Type</button>
-                  </div>
-                </InputGroup>
               </motion.div>
             )}
 
             {/* HYGIENE */}
             {activeTab === 'hygiene' && (
               <motion.div key="hygiene" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <SectionHeader title="Hygiene & Health" subtitle="Set quality standards and cleaning schedules." />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                  <InputGroup label="Hygiene Alert Threshold (%)" info="Alerts trigger when score falls below this.">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <input type="range" min="30" max="95" step="5" value={settings.hygieneSettings.hygieneThreshold} onChange={e => setSettings({...settings, hygieneSettings: {...settings.hygieneSettings, hygieneThreshold: Number(e.target.value)}})} style={{ flex: 1 }} />
-                      <span style={{ fontWeight: '800', color: 'var(--accent-primary)', fontSize: '1.2rem', minWidth: '40px' }}>{settings.hygieneSettings.hygieneThreshold}%</span>
-                    </div>
+                <SectionHeader title="Hygiene Standards" subtitle="Cleaning frequencies, staff assignments, and checklists." />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  <InputGroup label="Cleaning Frequency"><select value={settings.hygieneSettings?.cleaningFrequency || 'DAILY'} onChange={e => handleChange('hygieneSettings', 'cleaningFrequency', e.target.value)} style={iStyle}><option value="DAILY">Daily</option><option value="WEEKLY">Weekly</option><option value="BI-WEEKLY">Bi-Weekly</option></select></InputGroup>
+                  <InputGroup label="Inspection Schedule"><input type="text" value={settings.hygieneSettings?.inspectionSchedule || ''} onChange={e => handleChange('hygieneSettings', 'inspectionSchedule', e.target.value)} style={iStyle} /></InputGroup>
+                  <InputGroup label="Hygiene Threshold (%)"><input type="number" value={settings.hygieneSettings?.hygieneThreshold || 70} onChange={e => handleChange('hygieneSettings', 'hygieneThreshold', Number(e.target.value))} style={iStyle} /></InputGroup>
+                  <InputGroup label="Rating Scale (Max)"><input type="number" value={settings.hygieneSettings?.hygieneRatingScale || 5} onChange={e => handleChange('hygieneSettings', 'hygieneRatingScale', Number(e.target.value))} style={iStyle} /></InputGroup>
+                  <InputGroup label="Hygiene Checklist Areas">
+                    <EditableTags 
+                      tags={settings.hygieneSettings?.hygieneChecklist || []} 
+                      onUpdate={newTags => handleChange('hygieneSettings', 'hygieneChecklist', newTags)}
+                      color="#DB2777" bgColor="#FDF2F8"
+                    />
                   </InputGroup>
-                  <InputGroup label="Cleaning Frequency">
-                    <select value={settings.hygieneSettings.cleaningFrequency} onChange={e => setSettings({...settings, hygieneSettings: {...settings.hygieneSettings, cleaningFrequency: e.target.value}})} style={iStyle}>
-                      <option value="DAILY">Daily Cleaning</option>
-                      <option value="WEEKLY">Weekly Deep Clean</option>
-                    </select>
+                  <InputGroup label="Assigned Cleaning Staff">
+                    <EditableTags 
+                      tags={settings.hygieneSettings?.assignedCleaningStaff || []} 
+                      onUpdate={newTags => handleChange('hygieneSettings', 'assignedCleaningStaff', newTags)}
+                      color="#4F46E5" bgColor="#EEF2FF"
+                    />
                   </InputGroup>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', background: '#F8FAFC', borderRadius: '16px', gridColumn: 'span 2' }}>
+                    <span style={{ fontWeight: '800' }}>Enable Direct Issue Reporting</span>
+                    <Toggle enabled={settings.hygieneSettings?.issueReportingEnabled} onClick={() => handleChange('hygieneSettings', 'issueReportingEnabled', !settings.hygieneSettings?.issueReportingEnabled)} />
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -289,22 +381,35 @@ const Settings = () => {
             {/* ROLES & PERMISSIONS */}
             {activeTab === 'roles' && (
               <motion.div key="roles" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <SectionHeader title="User Roles & Access" subtitle="Manage permissions for hostel staff." />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                   {[
-                     { role: 'Owner', access: 'Full Access', desc: 'All modules, settings, and financial data.', color: '#EF4444' },
-                     { role: 'Manager', access: 'Limited Admin', desc: 'Manage tenants, buildings, and staff. No billing/settings.', color: '#F59E0B' },
-                     { role: 'Staff / Warden', access: 'View Only', desc: 'Can view rooms and complaints. No edit access.', color: '#10B981' }
-                   ].map((r, i) => (
-                     <div key={i} style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', borderRadius: '12px', borderLeft: `4px solid ${r.color}` }}>
-                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                         <h4 style={{ margin: 0, fontSize: '1rem' }}>{r.role}</h4>
-                         <span style={{ fontSize: '0.72rem', fontWeight: '800', padding: '0.2rem 0.5rem', background: `${r.color}20`, color: r.color, borderRadius: '4px' }}>{r.access}</span>
-                       </div>
-                       <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>{r.desc}</p>
-                     </div>
-                   ))}
-                   <p style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: '700', textAlign: 'center', marginTop: '1rem', cursor: 'pointer' }}>+ Invite New Staff Member</p>
+                <SectionHeader title="Access Control" subtitle="Manage permissions and module visibility across roles." />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                   <InputGroup label="Available Roles">
+                     <EditableTags 
+                       tags={settings.roleAccess?.roles || []} 
+                       onUpdate={newTags => handleChange('roleAccess', 'roles', newTags)}
+                       color="#3B82F6" bgColor="#EFF6FF"
+                     />
+                   </InputGroup>
+                   <InputGroup label="Module Access">
+                     <EditableTags 
+                       tags={settings.roleAccess?.permissions?.moduleAccess || []} 
+                       onUpdate={newTags => handleChange('roleAccess', 'permissions', newTags, 'moduleAccess')}
+                       color="#10B981" bgColor="#F0FDF4"
+                     />
+                   </InputGroup>
+                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#F8FAFC', padding: '2rem', borderRadius: '24px' }}>
+                      {[
+                        { id: 'viewAccess', label: 'View Access', sub: 'Allow users to view data.' },
+                        { id: 'editAccess', label: 'Edit Access', sub: 'Allow users to modify records.' },
+                        { id: 'deleteAccess', label: 'Delete Access', sub: 'Allow users to remove records.' },
+                        { id: 'approvalRights', label: 'Approval Rights', sub: 'Allow users to approve requests.' },
+                      ].map(item => (
+                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem', background: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                          <div><p style={{ fontWeight: '800', fontSize: '0.95rem', margin: 0 }}>{item.label}</p><p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>{item.sub}</p></div>
+                          <Toggle enabled={settings.roleAccess?.permissions?.[item.id]} onClick={() => handleChange('roleAccess', 'permissions', !settings.roleAccess?.permissions?.[item.id], item.id)} />
+                        </div>
+                      ))}
+                   </div>
                 </div>
               </motion.div>
             )}
@@ -312,23 +417,49 @@ const Settings = () => {
             {/* REPORTS */}
             {activeTab === 'reports' && (
               <motion.div key="reports" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <SectionHeader title="Reporting Engine" subtitle="Configure automated report generation." />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                  <InputGroup label="Default Reporting Period">
-                    <select value={settings.reportSettings.defaultPeriod} onChange={e => setSettings({...settings, reportSettings: {...settings.reportSettings, defaultPeriod: e.target.value}})} style={iStyle}>
-                      <option value="MONTHLY">Monthly Overview</option>
-                      <option value="WEEKLY">Weekly Stats</option>
+                <SectionHeader title="Analytics & Export" subtitle="Configure report formats and automated generation." />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  <InputGroup label="Report Frequency"><select value={settings.reportSettings?.reportFrequency || 'MONTHLY'} onChange={e => handleChange('reportSettings', 'reportFrequency', e.target.value)} style={iStyle}><option value="DAILY">Daily</option><option value="WEEKLY">Weekly</option><option value="MONTHLY">Monthly</option></select></InputGroup>
+                  <InputGroup label="Export Formats">
+                    <EditableTags 
+                      tags={settings.reportSettings?.exportFormats || []} 
+                      onUpdate={newTags => handleChange('reportSettings', 'exportFormats', newTags)}
+                      color="#64748B" bgColor="#F1F5F9"
+                    />
+                  </InputGroup>
+                  <InputGroup label="Report Types" info="Financial, Occupancy, Inventory, etc.">
+                    <EditableTags 
+                      tags={settings.reportSettings?.reportTypes || []} 
+                      onUpdate={newTags => handleChange('reportSettings', 'reportTypes', newTags)}
+                      color="#F59E0B" bgColor="#FFFBEB"
+                    />
+                  </InputGroup>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', background: '#F8FAFC', borderRadius: '16px', gridColumn: 'span 2' }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}><Toggle enabled={settings.reportSettings?.autoReportGeneration} onClick={() => handleChange('reportSettings', 'autoReportGeneration', !settings.reportSettings?.autoReportGeneration)} /><span style={{ fontWeight: '800' }}>Automated Report Pre-calculation</span></div>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}><Toggle enabled={settings.reportSettings?.emailReportsEnabled} onClick={() => handleChange('reportSettings', 'emailReportsEnabled', !settings.reportSettings?.emailReportsEnabled)} /><span style={{ fontWeight: '800' }}>Weekly Email Summary</span></div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* THEME SETTINGS */}
+            {activeTab === 'theme' && (
+              <motion.div key="theme" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <SectionHeader title="Look & Feel" subtitle="Customize the dashboard appearance and user interface." />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  <InputGroup label="Theme Mode">
+                    <select 
+                      value={settings.themeSettings?.mode || 'LIGHT'} 
+                      onChange={e => handleChange('themeSettings', 'mode', e.target.value)} 
+                      style={iStyle}
+                    >
+                      <option value="LIGHT">Light Mode</option>
+                      <option value="DARK">Dark Mode</option>
                     </select>
                   </InputGroup>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '12px' }}>
-                    <div>
-                      <p style={{ fontWeight: '700', fontSize: '0.85rem', margin: 0 }}>Auto-generate Reports</p>
-                      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: 0 }}>Pre-calculate data for dashboard widgets.</p>
-                    </div>
-                    <Toggle 
-                      enabled={settings.reportSettings.autoGenerateReports} 
-                      onClick={() => setSettings({...settings, reportSettings: {...settings.reportSettings, autoGenerateReports: !settings.reportSettings.autoGenerateReports}})} 
-                    />
+                  <div style={{ gridColumn: 'span 2', padding: '2rem', background: '#F8FAFC', borderRadius: '24px', textAlign: 'center', color: '#64748B' }}>
+                    <PaintBucket size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+                    <p style={{ fontWeight: '700' }}>More customization options coming soon!</p>
                   </div>
                 </div>
               </motion.div>
@@ -339,19 +470,6 @@ const Settings = () => {
       </div>
     </div>
   );
-};
-
-const iStyle = { 
-  width: '100%', 
-  padding: '0.75rem 1rem', 
-  borderRadius: '10px', 
-  border: '1px solid var(--border-color)', 
-  background: 'var(--bg-tertiary)', 
-  color: 'var(--text-primary)',
-  fontSize: '0.9rem',
-  fontWeight: '600',
-  outline: 'none',
-  transition: 'border-color 0.2s'
 };
 
 export default Settings;

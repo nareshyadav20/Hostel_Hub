@@ -8,18 +8,14 @@ exports.getProfile = async (req, res) => {
     if (!profile) {
       // Fetch basic info from User model to seed the profile
       const user = await User.findById(req.user.id);
-      if (!user) {
-        return res.status(404).json({ message: 'Authenticated user not found in database.' });
-      }
-      
       profile = await OwnerProfile.create({
         userId: req.user.id,
         personalInfo: {
-          fullName: user.name || 'Property Owner',
+          fullName: user.name,
           address: ''
         },
         businessDetails: {
-          businessName: `${user.name || 'My'}'s Properties`
+          businessName: `${user.name}'s Properties`
         }
       });
     }
@@ -81,42 +77,6 @@ exports.uploadDocument = async (req, res) => {
       { new: true }
     );
     res.status(200).json(profile);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-exports.getStats = async (req, res) => {
-  try {
-    const Building = require('../models/Building');
-    const Room = require('../models/Room');
-    const Tenant = require('../models/Tenant');
-    const OwnerProfile = require('../models/OwnerProfile');
-
-    const buildingsCount = await Building.countDocuments({ owner: req.user.id });
-    const profile = await OwnerProfile.findOne({ userId: req.user.id });
-    
-    // In a real app, these would be based on buildingId
-    // For now, returning dummy stats for the profile view
-    res.json({
-      totalBuildings: buildingsCount,
-      activeTenants: 124,
-      occupancyRate: 88,
-      monthlyRevenue: 1250000,
-      profileCompleteness: profile?.profileCompleteness || 0,
-      verifiedProperties: buildingsCount,
-      totalStaff: 12,
-      ratings: 4.8
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-exports.getHistory = async (req, res) => {
-  try {
-    const profile = await OwnerProfile.findOne({ userId: req.user.id });
-    res.json(profile?.activityLogs || []);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -93,6 +93,6 @@ const ownerProfileSchema = new mongoose.Schema({
     timestamp: { type: Date, default: Date.now },
     type: { type: String, enum: ['Security', 'Profile', 'Business', 'System'], default: 'System' }
   }]
-}, { timestamps: true, collection: 'owner_ownerprofiles' });
+}, { timestamps: true, collection: 'ownerprofiles' });
 
 module.exports = mongoose.model('OwnerProfile', ownerProfileSchema);
