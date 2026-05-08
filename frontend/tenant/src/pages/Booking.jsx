@@ -15,6 +15,8 @@ const Booking = () => {
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ roomType: 'Double', moveInDate: '', agreementSigned: false, idProof: null, profilePhoto: null });
   const [bookings, setBookings] = useState([]);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
   const roomOptions = [
     { 
@@ -79,6 +81,78 @@ const Booking = () => {
   }, [buildingId]);
 
   const currentRoom = roomOptions.find(r => r.id === formData.roomType) || roomOptions[1];
+
+  const handleBooking = async () => {
+    setApiError(null);
+    const tenantId = user?._id || user?.id;
+    const amount = (parseInt(currentRoom.price) * 2);
+
+    console.log("[Booking] Debug Info:", { 
+      tenantId, 
+      buildingId, 
+      user, 
+      formData,
+      currentRoomName: currentRoom.name,
+      amount
+    });
+
+    if (!tenantId) {
+      setApiError("Authentication Error: Your session is invalid. Please log in again.");
+      console.error("[Booking] Critical Failure: No tenantId found in local storage.");
+      return;
+    }
+
+    if (!buildingId) {
+      setApiError("Data Error: Property identifier is missing. Please return to the listing page.");
+      return;
+    }
+
+    if (!formData.moveInDate) {
+      setApiError("Missing Information: Please select a Move-in Date in Step 1.");
+      setStep(1);
+      return;
+    }
+
+    if (!formData.agreementSigned) {
+      setApiError("Validation Failed: You must accept the rental agreement to proceed.");
+      setStep(2);
+      return;
+    }
+
+    const payload = {
+      tenantId,
+      buildingId,
+      category: currentRoom.name,
+      moveInDate: formData.moveInDate,
+      totalAmount: amount
+    };
+
+    console.log("[Booking] Outgoing Payload:", payload);
+    setBookingLoading(true);
+
+    try {
+      const response = await API.post('/bookings', payload);
+      console.log("[Booking] API Success:", response.data);
+      
+      // Navigate to dashboard on success
+      navigate('/dashboard', { state: { bookingSuccess: true } });
+    } catch (err) {
+      console.error("[Booking] API Error Object:", err);
+      
+      let errorMessage = "Booking failed due to an unexpected error.";
+      
+      if (!err.response) {
+        errorMessage = "Network Error: Server is unreachable. Please check your connection or try again later.";
+      } else {
+        errorMessage = err.response.data?.message || err.response.data?.error || `Server Error (${err.response.status}): Failed to process booking.`;
+        console.error("[Booking] Backend Error Detail:", err.response.data);
+      }
+      
+      setApiError(errorMessage);
+    } finally {
+      setBookingLoading(false);
+    }
+  };
 
   if (loading) return (
     <div className="staynest-dashboard loading-state">
@@ -359,15 +433,25 @@ const Booking = () => {
                 </svg>
                 Go Back
               </button>
-              <button className="btn-primary btn-large checkout-color" onClick={async () => {
-                try {
-                  await API.post('/bookings', { tenantId: user.id || user._id, buildingId, category: currentRoom.name, moveInDate: formData.moveInDate, totalAmount: parseInt(currentRoom.price) * 2 });
-                  alert('Booking Confirmed! Welcome to Livora.');
-                  navigate('/dashboard');
-                } catch (err) { alert('Booking failed. Please check your network or try again.'); }
-              }}>
-                Pay & Confirm Stay
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              {apiError && (
+                <div className="error-alert-pro fade-in">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  <span>{apiError}</span>
+                </div>
+              )}
+
+              <button className="btn-primary btn-large checkout-color" disabled={bookingLoading} onClick={handleBooking}>
+                {bookingLoading ? (
+                  <>
+                    <span className="mini-spinner"></span>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    Pay & Confirm Stay
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  </>
+                )}
               </button>
             </div>
           </div>
