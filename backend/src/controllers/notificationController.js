@@ -49,7 +49,7 @@ exports.markAllAsRead = async (req, res) => {
   try {
     const { buildingId } = req.body;
     await Notification.updateMany(
-      { buildingId, isRead: false }, 
+      { buildingId, isArchived: false, isRead: false }, 
       { isRead: true }
     );
     res.json({ message: 'All notifications marked as read' });
@@ -62,7 +62,7 @@ exports.archiveNotification = async (req, res) => {
   try {
     const notification = await Notification.findByIdAndUpdate(
       req.params.id, 
-      { archived: true }, 
+      { isArchived: true }, 
       { new: true }
     );
     res.json(notification);

@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const ownerProfileSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
-  
+
   // 1. Personal Information
   personalInfo: {
     fullName: { type: String },

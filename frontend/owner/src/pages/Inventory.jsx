@@ -261,7 +261,12 @@ const InventoryModule = () => {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
           <div style={{ position: 'relative', flex: 1, minWidth: '300px' }}><Search size={20} style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} /><input type="text" placeholder="Search Materials..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ padding: '1rem 1rem 1rem 3.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', width: '100%', outline: 'none', background: '#FFFFFF', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} /></div>
           <select style={{ padding: '1rem', borderRadius: '16px', border: '1px solid #E2E8F0', fontWeight: '800', outline: 'none', background: '#FFFFFF' }}><option>All Levels</option><option>Critical Only</option><option>Low Stock</option></select>
-          <button style={{ background: '#3B82F6', color: 'white', border: 'none', padding: '1rem 1.5rem', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><Plus size={20}/> Add Item</button>
+          <button 
+            onClick={() => { setSelectedItem(null); setIsModalOpen(true); }}
+            style={{ background: '#3B82F6', color: 'white', border: 'none', padding: '1rem 1.5rem', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}
+          >
+            <Plus size={20}/> Add Item
+          </button>
         </div>
         <div className="inventory-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
           {inventory.filter(i => (selectedCategory ? i.categoryId === selectedCategory : true) && (selectedSubCategory ? i.subCategoryId === selectedSubCategory : true) && i.name.toLowerCase().includes(searchQuery.toLowerCase())).map(item => (
@@ -579,6 +584,80 @@ const InventoryModule = () => {
              </div>
           </div>
         )}
+      </Modal>
+      
+      {/* Inventory Item Modal */}
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        title={selectedItem ? 'Edit Inventory Item' : 'Add New Material'}
+        maxWidth="600px"
+      >
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          const fd = new FormData(e.target);
+          const data = {
+            name: fd.get('name'),
+            type: fd.get('type'),
+            categoryId: fd.get('categoryId'),
+            stock: Number(fd.get('stock')),
+            minThreshold: Number(fd.get('minThreshold')),
+            unit: fd.get('unit'),
+            location: fd.get('location'),
+            buildingId: activeBuildingId
+          };
+          try {
+            if (selectedItem) {
+              await api.updateInventoryItem(selectedItem.id || selectedItem._id, data);
+            } else {
+              await api.addInventoryItem(data);
+            }
+            fetchInventory();
+            setIsModalOpen(false);
+          } catch (err) { alert('Failed to save: ' + err.message); }
+        }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>ITEM NAME</label>
+              <input name="name" defaultValue={selectedItem?.name} required style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none' }} placeholder="e.g. Basmati Rice" />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>TYPE</label>
+              <select name="type" defaultValue={selectedItem?.type || 'Consumable'} style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none', background: '#FFFFFF' }}>
+                <option value="Consumable">Consumable</option>
+                <option value="Asset">Asset</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>CATEGORY</label>
+              <select name="categoryId" defaultValue={selectedItem?.categoryId || 'CAT-FOOD'} style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none', background: '#FFFFFF' }}>
+                {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>CURRENT STOCK</label>
+              <input name="stock" type="number" defaultValue={selectedItem?.stock || 0} required style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>MIN THRESHOLD</label>
+              <input name="minThreshold" type="number" defaultValue={selectedItem?.minThreshold || 10} required style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>UNIT</label>
+              <input name="unit" defaultValue={selectedItem?.unit || 'Kg'} required style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none' }} placeholder="e.g. Kg, Liters, Units" />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>LOCATION</label>
+              <input name="location" defaultValue={selectedItem?.location || 'Store Room'} required style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none' }} placeholder="e.g. Dry Store A" />
+            </div>
+          </div>
+          <div style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem' }}>
+            <button type="button" onClick={() => setIsModalOpen(false)} style={{ flex: 1, padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', background: '#FFFFFF', fontWeight: '800', cursor: 'pointer' }}>Cancel</button>
+            <button type="submit" style={{ flex: 2, padding: '1rem', borderRadius: '14px', border: 'none', background: '#3B82F6', color: '#FFFFFF', fontWeight: '900', cursor: 'pointer' }}>
+              {selectedItem ? 'Update Item' : 'Save Item'}
+            </button>
+          </div>
+        </form>
       </Modal>
 
       <style>{`

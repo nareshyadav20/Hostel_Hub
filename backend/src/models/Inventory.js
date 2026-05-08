@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const inventorySchema = new mongoose.Schema({
   name: { type: String, required: true },
   type: { type: String, enum: ['Asset', 'Consumable'], default: 'Asset' },
-  category: { type: String },
+  categoryId: { type: String },
   stock: { type: Number, default: 0 },
   maxStock: { type: Number, default: 0 },
   minThreshold: { type: Number, default: 0 },

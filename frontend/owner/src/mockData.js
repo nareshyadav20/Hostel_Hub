@@ -334,6 +334,7 @@ export const api = {
   },
   addRoom: async (data) => {
     const res = await axios.post(`${API_URL}/rooms`, data);
+    cacheSet('all_rooms', null); // Clear cache to force refresh
     return handleId(res.data);
   },
   updateRoomStatus: async (id, status) => {
@@ -349,6 +350,7 @@ export const api = {
   },
   addBed: async (data) => {
     const res = await axios.post(`${API_URL}/beds`, data);
+    cacheSet('all_beds', null); // Clear cache to force refresh
     return handleId(res.data);
   },
   updateBedStatus: async (id, status) => {

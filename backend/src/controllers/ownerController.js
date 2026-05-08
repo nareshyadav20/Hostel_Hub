@@ -4,7 +4,7 @@ const User = require('../models/User');
 exports.getProfile = async (req, res) => {
   try {
     let profile = await OwnerProfile.findOne({ userId: req.user.id });
-    
+
     if (!profile) {
       // Fetch basic info from User model to seed the profile
       const user = await User.findById(req.user.id);
@@ -19,7 +19,7 @@ exports.getProfile = async (req, res) => {
         }
       });
     }
-    
+
     res.status(200).json(profile);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -41,24 +41,33 @@ exports.updateProfile = async (req, res) => {
   try {
     const updateData = req.body;
     
-    // Add activity log
-    const section = Object.keys(updateData)[0]; // e.g. personalInfo
+    // Construct dot notation for partial updates to nested objects
+    const flattenedUpdate = {};
+    Object.keys(updateData).forEach(key => {
+      if (typeof updateData[key] === 'object' && updateData[key] !== null && !Array.isArray(updateData[key])) {
+        Object.keys(updateData[key]).forEach(subKey => {
+          flattenedUpdate[`${key}.${subKey}`] = updateData[key][subKey];
+        });
+      } else {
+        flattenedUpdate[key] = updateData[key];
+      }
+    });
+
     const activity = {
       action: 'Updated Profile Section',
-      description: `User updated their ${section} details.`,
+      description: `User updated their details.`,
       type: 'Profile'
     };
 
     const profile = await OwnerProfile.findOneAndUpdate(
       { userId: req.user.id },
       { 
-        $set: updateData,
-        $push: { activityLogs: { $each: [activity], $slice: -20 } } // Keep last 20 logs
+        $set: flattenedUpdate,
+        $push: { activityLogs: { $each: [activity], $slice: -20 } }
       },
       { new: true, upsert: true, runValidators: true }
     );
 
-    // Recalculate completeness
     profile.profileCompleteness = calculateCompleteness(profile);
     await profile.save();
 
