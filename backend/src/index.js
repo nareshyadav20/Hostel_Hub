@@ -67,6 +67,9 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/tenant-portal', require('./routes/tenantPortalRoutes'));
+app.use('/api/services', require('./routes/serviceRoutes'));
+app.use('/api/confidential-reports', require('./routes/confidentialReportRoutes'));
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

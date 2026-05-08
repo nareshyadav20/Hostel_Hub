@@ -2,73 +2,50 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Hostel Hub API",
-    "description": "Complete API specification for Hostel Management System",
-    "version": "1.0.0"
+    "description": "Production API for Hostel Management System (Flutter/Web)",
+    "version": "2.0.0"
   },
   "servers": [
-    {
-      "url": "https://hostel-hub-1-0835.onrender.com",
-      "description": "Production Server"
-    },
-    {
-      "url": "http://localhost:5000",
-      "description": "Local Server"
-    }
+    { "url": "https://hostel-hub-1-0835.onrender.com/api" }
   ],
   "paths": {
-    "/api/auth/register": {
+    "/auth/login": {
       "post": {
-        "summary": "Register a new user",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": { "type": "string" },
-                  "password": { "type": "string" },
-                  "name": { "type": "string" },
-                  "role": { "type": "string" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": { "description": "User created successfully" }
-        }
+        "tags": ["Auth"],
+        "summary": "Login User",
+        "responses": { "200": { "description": "OK" } }
       }
     },
-    "/api/auth/login": {
-      "post": {
-        "summary": "User Login",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": { "type": "string" },
-                  "password": { "type": "string" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Login successful" }
-        }
-      }
-    },
-    "/api/buildings": {
+    "/buildings": {
       "get": {
-        "summary": "Get all buildings",
+        "tags": ["Buildings"],
+        "summary": "List all buildings",
         "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "200": { "description": "Success" }
-        }
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/bookings": {
+      "post": {
+        "tags": ["Bookings"],
+        "summary": "Create booking",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "201": { "description": "Created" } }
+      }
+    },
+    "/complaints": {
+      "post": {
+        "tags": ["Complaints"],
+        "summary": "Raise a complaint",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "201": { "description": "Created" } }
+      }
+    },
+    "/dashboard/summary": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get KPI Summary",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "OK" } }
       }
     }
   },
