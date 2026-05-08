@@ -631,7 +631,7 @@ const SecurityTab = ({ profile, onUpdate, onSecurityUpdate, onLogoutSession }) =
         <section style={{ borderTop: '1px solid var(--border-color)', paddingTop: '3rem' }}>
           <h4 style={{ fontWeight: '800', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>NOTIFICATION CHANNELS</h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-            {Object.keys(settings).map(key => (
+            {settings && Object.keys(settings).map(key => (
               <div key={key} className="card" style={{ padding: '1.5rem', background: 'var(--bg-tertiary)' }}>
                 <p style={{ fontWeight: '800', marginBottom: '1rem', textTransform: 'capitalize' }}>{key.replace(/([A-Z])/g, ' $1')}</p>
                 <div style={{ display: 'flex', gap: '1.5rem' }}>

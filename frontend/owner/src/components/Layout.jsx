@@ -83,8 +83,9 @@ const Layout = ({ children }) => {
 
   useEffect(() => {
     api.getBuildings().then(data => {
-      setBuildings(data || []);
-      console.log("Buildings loaded:", data?.length);
+      const bList = data || [];
+      setBuildings(bList);
+      console.log("Buildings loaded:", bList.length);
     });
   }, []);
 
