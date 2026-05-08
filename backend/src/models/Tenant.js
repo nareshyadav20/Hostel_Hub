@@ -34,4 +34,4 @@ const tenantSchema = new mongoose.Schema({
   }]
 }, { timestamps: true, collection: 'owner_tenants' });
 
-module.exports = mongoose.model('Tenant', tenantSchema);
+module.exports = mongoose.models.Tenant || mongoose.model('Tenant', tenantSchema);
