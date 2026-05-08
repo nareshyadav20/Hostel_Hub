@@ -63,12 +63,23 @@ const Mess = () => {
       try {
         const raw = await api.getMessMenu(buildingId);
         const structured = { basic: {}, standard: {}, premium: {} };
+        
+        // Ensure all days are initialized for all plans to prevent crashes
+        const plans = ['basic', 'standard', 'premium'];
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        plans.forEach(p => days.forEach(d => {
+          structured[p][d] = { breakfast: 'Not Set', lunch: 'Not Set', dinner: 'Not Set' };
+        }));
+
         raw.forEach(item => {
-          structured[item.plan][item.day] = {
-            breakfast: item.breakfast,
-            lunch: item.lunch,
-            dinner: item.dinner
-          };
+          const plan = item.plan || 'standard'; // Fallback
+          if (structured[plan] && item.day) {
+            structured[plan][item.day] = {
+              breakfast: item.breakfast || 'Not Set',
+              lunch: item.lunch || 'Not Set',
+              dinner: item.dinner || 'Not Set'
+            };
+          }
         });
         setMenuData(structured);
       } catch (err) {

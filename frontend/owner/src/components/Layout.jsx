@@ -89,12 +89,41 @@ const Layout = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (urlBuildingId) {
-      localStorage.setItem('selectedBuildingId', urlBuildingId);
-      setActiveBuildingId(urlBuildingId);
-      console.log("Selected Building ID saved:", urlBuildingId);
+    if (buildings.length > 0) {
+      const exists = buildings.find(b => (b.id || b._id) === activeBuildingId);
+      if (!exists) {
+        const firstId = buildings[0].id || buildings[0]._id;
+        console.log("Stale ID detected. Redirecting to default building:", firstId);
+        
+        // Update state and storage
+        setActiveBuildingId(firstId);
+        localStorage.setItem('selectedBuildingId', firstId);
+        
+        // If the URL contains the stale ID, redirect to the new one
+        if (urlBuildingId) {
+          const currentPath = window.location.pathname;
+          const newPath = currentPath.replace(urlBuildingId, firstId);
+          navigate(newPath);
+        }
+
+        // Clear old hh_ cache to ensure fresh demo data
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('hh_')) localStorage.removeItem(key);
+        });
+      }
     }
-  }, [urlBuildingId]);
+  }, [buildings, activeBuildingId, urlBuildingId, navigate]);
+
+  useEffect(() => {
+    if (urlBuildingId) {
+      const isValid = buildings.length === 0 || buildings.some(b => (b.id || b._id) === urlBuildingId);
+      if (isValid) {
+        localStorage.setItem('selectedBuildingId', urlBuildingId);
+        setActiveBuildingId(urlBuildingId);
+        console.log("Selected Building ID saved:", urlBuildingId);
+      }
+    }
+  }, [urlBuildingId, buildings]);
 
   return (
     <div className="layout">
