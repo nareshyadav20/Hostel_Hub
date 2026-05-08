@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import './Listing.css';
 
 const Listing = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedSharing, setSelectedSharing] = useState(2);
   const [selectedBed, setSelectedBed] = useState(2);
@@ -263,7 +264,13 @@ const Listing = () => {
               Selected Bed: {selectedBed ? `Bed ${selectedBed}` : 'None'}
             </div>
 
-            <button className="lst-btn-reserve" disabled={!selectedBed}>Reserve Your Room Now</button>
+            <button 
+              className="lst-btn-reserve" 
+              disabled={!selectedBed}
+              onClick={() => navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed } })}
+            >
+              Reserve Your Room Now
+            </button>
             <div style={{textAlign:'center', marginTop:'12px', fontSize:'12px', color:'var(--lst-text-muted)'}}>🔒 Secure payment powered by Livora Finance</div>
           </div>
         </div>
@@ -275,7 +282,14 @@ const Listing = () => {
           <div style={{fontSize:'18px', fontWeight:800, color:'var(--lst-primary)'}}>₹{currentPrice.rent.toLocaleString()}<span style={{fontSize:'12px', color:'var(--lst-text-muted)'}}>/mo</span></div>
           <div style={{fontSize:'13px', fontWeight:600}}>{currentPrice.name}</div>
         </div>
-        <button className="lst-btn-reserve" style={{width:'auto', padding:'12px 24px', margin:0}} disabled={!selectedBed}>Reserve</button>
+        <button 
+          className="lst-btn-reserve" 
+          style={{width:'auto', padding:'12px 24px', margin:0}} 
+          disabled={!selectedBed}
+          onClick={() => navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed } })}
+        >
+          Reserve
+        </button>
       </div>
 
     </div>
