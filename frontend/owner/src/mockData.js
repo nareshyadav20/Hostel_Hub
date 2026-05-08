@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { cacheGet, cacheSet } from './cache';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 export const backendOnline = true;
@@ -32,7 +33,14 @@ const handleId = (data) => {
 export const api = {
   // Owner Profile
   getOwnerProfile: async () => {
+    const cached = cacheGet('owner_profile');
+    if (cached) {
+      // Background revalidate
+      axios.get(`${API_URL}/owner/profile`).then(res => cacheSet('owner_profile', res.data));
+      return cached;
+    }
     const res = await axios.get(`${API_URL}/owner/profile`);
+    cacheSet('owner_profile', res.data);
     return res.data;
   },
   updateOwnerProfile: async (data) => {
@@ -40,7 +48,13 @@ export const api = {
     return res.data;
   },
   getOwnerStats: async () => {
+    const cached = cacheGet('owner_stats');
+    if (cached) {
+      axios.get(`${API_URL}/dashboard/summary`).then(res => cacheSet('owner_stats', res.data));
+      return cached;
+    }
     const res = await axios.get(`${API_URL}/dashboard/summary`);
+    cacheSet('owner_stats', res.data);
     return res.data;
   },
   getOwnerHistory: async () => {
@@ -54,8 +68,14 @@ export const api = {
 
   // Buildings & Infrastructure
   getBuildings: async () => {
+    const cached = cacheGet('buildings');
+    if (cached) {
+      axios.get(`${API_URL}/buildings`).then(res => cacheSet('buildings', res.data));
+      return handleId(cached.filter(b => b.status !== 'Draft'));
+    }
     const res = await axios.get(`${API_URL}/buildings`);
     const data = Array.isArray(res.data) ? res.data : [];
+    cacheSet('buildings', data);
     return handleId(data.filter(b => b.status !== 'Draft'));
   },
   getHostels: async () => {
@@ -77,7 +97,13 @@ export const api = {
     return handleId(res.data);
   },
   getAllRooms: async () => {
+    const cached = cacheGet('all_rooms');
+    if (cached) {
+      axios.get(`${API_URL}/rooms`).then(res => cacheSet('all_rooms', res.data));
+      return handleId(cached);
+    }
     const res = await axios.get(`${API_URL}/rooms`);
+    cacheSet('all_rooms', res.data);
     return handleId(res.data);
   },
   getRoomsByBuilding: async (bId) => {
@@ -85,8 +111,14 @@ export const api = {
     return handleId(res.data);
   },
   getAllBeds: async () => {
+    const cached = cacheGet('all_beds');
+    if (cached) {
+      axios.get(`${API_URL}/beds`).then(res => cacheSet('all_beds', res.data));
+      return handleId(cached);
+    }
     const res = await axios.get(`${API_URL}/beds`);
     const data = Array.isArray(res.data) ? res.data : [];
+    cacheSet('all_beds', data);
     return handleId(data);
   },
   getBedsByBuilding: async (bId) => {
@@ -143,11 +175,23 @@ export const api = {
 
   // Operational Data
   getTenants: async () => {
+    const cached = cacheGet('tenants');
+    if (cached) {
+      axios.get(`${API_URL}/tenants`).then(res => cacheSet('tenants', res.data));
+      return handleId(cached);
+    }
     const res = await axios.get(`${API_URL}/tenants`);
+    cacheSet('tenants', res.data);
     return handleId(res.data);
   },
   getComplaints: async () => {
+    const cached = cacheGet('complaints');
+    if (cached) {
+      axios.get(`${API_URL}/complaints`).then(res => cacheSet('complaints', res.data));
+      return handleId(cached);
+    }
     const res = await axios.get(`${API_URL}/complaints`);
+    cacheSet('complaints', res.data);
     return handleId(res.data);
   },
   updateComplaintStatus: async (id, status, assignedTo = null) => {
@@ -155,7 +199,13 @@ export const api = {
     return handleId(res.data);
   },
   getPayments: async () => {
+    const cached = cacheGet('payments');
+    if (cached) {
+      axios.get(`${API_URL}/payments`).then(res => cacheSet('payments', res.data));
+      return handleId(cached);
+    }
     const res = await axios.get(`${API_URL}/payments`);
+    cacheSet('payments', res.data);
     return handleId(res.data);
   },
   getRoomTransfers: async () => {
@@ -213,11 +263,20 @@ export const api = {
   },
   getSettings: async (bId) => {
     const buildingId = bId || localStorage.getItem('selectedBuildingId');
+    const cacheKey = `settings_${buildingId}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) {
+      axios.get(`${API_URL}/settings`, { params: { buildingId } }).then(res => cacheSet(cacheKey, res.data));
+      return cached;
+    }
     const res = await axios.get(`${API_URL}/settings`, { params: { buildingId } });
+    cacheSet(cacheKey, res.data);
     return res.data;
   },
   updateSettings: async (data) => {
-    const res = await axios.post(`${API_URL}/settings`, data);
+    const buildingId = data.buildingId || localStorage.getItem('selectedBuildingId');
+    const res = await axios.post(`${API_URL}/settings`, { ...data, buildingId });
+    cacheSet(`settings_${buildingId}`, res.data);
     return res.data;
   },
 
@@ -322,40 +381,6 @@ export const api = {
   addComplaint: async (data) => {
     const res = await axios.post(`${API_URL}/complaints`, data);
     return handleId(res.data);
-  },
-  // Settings
-  getSettings: async (bId) => {
-    const res = await axios.get(`${API_URL}/settings`, { params: { buildingId: bId } });
-    return res.data;
-  },
-  updateSettings: async (data) => {
-    const res = await axios.post(`${API_URL}/settings`, data);
-    return res.data;
-  },
-  // Notifications
-  getNotifications: async (bId) => {
-    const res = await axios.get(`${API_URL}/notifications`, { params: { buildingId: bId } });
-    const data = Array.isArray(res.data) ? res.data : [];
-    return handleId(data);
-  },
-  seedNotifications: async (bId) => {
-    const res = await axios.post(`${API_URL}/notifications/seed`, { buildingId: bId });
-    return res.data;
-  },
-  markNotificationRead: async (id) => {
-    const res = await axios.patch(`${API_URL}/notifications/${id}/read`);
-    return res.data;
-  },
-  markAllNotificationsRead: async (bId) => {
-    const res = await axios.post(`${API_URL}/notifications/mark-all-read`, { buildingId: bId });
-    return res.data;
-  },
-  deleteNotification: async (id) => {
-    await axios.delete(`${API_URL}/notifications/${id}`);
-  },
-  archiveNotification: async (id) => {
-    const res = await axios.patch(`${API_URL}/notifications/${id}/archive`);
-    return res.data;
   },
   // Inventory
   getInventory: async (bId) => {

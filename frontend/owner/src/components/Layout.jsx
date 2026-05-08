@@ -83,10 +83,18 @@ const Layout = ({ children }) => {
 
   useEffect(() => {
     api.getBuildings().then(data => {
-      setBuildings(data || []);
-      console.log("Buildings loaded:", data?.length);
+      const bList = data || [];
+      setBuildings(bList);
+      console.log("Buildings loaded:", bList.length);
+      
+      if (bList.length > 0 && !activeBuildingId) {
+        const firstId = bList[0].id || bList[0]._id;
+        setActiveBuildingId(firstId);
+        localStorage.setItem('selectedBuildingId', firstId);
+        console.log("Default building selected:", firstId);
+      }
     });
-  }, []);
+  }, [activeBuildingId]);
 
   useEffect(() => {
     if (urlBuildingId) {
