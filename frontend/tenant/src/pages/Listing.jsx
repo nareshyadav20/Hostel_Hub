@@ -1,5 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import {
+  Check, Info, Wind, Zap, BookOpen, ShieldCheck,
+  Clock, CreditCard, ChevronDown, ChevronUp, Star,
+  Volume2, Lock, MousePointer2, Smartphone,
+  Coffee, Wifi, Snowflake, MapPin, IndianRupee, Home as HomeIcon, Search
+} from 'lucide-react';
 import './Listing.css';
 
 const Listing = () => {
@@ -8,13 +14,22 @@ const Listing = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedSharing, setSelectedSharing] = useState(2);
   const [selectedBed, setSelectedBed] = useState(2);
+  const [selectedFilters, setSelectedFilters] = useState(['Available']);
+  const [expandedBed, setExpandedBed] = useState(null);
+
+  const toggleFilter = (filter) => {
+    setSelectedFilters(prev =>
+      prev.includes(filter) ? prev.filter(f => f !== filter) : [...prev, filter]
+    );
+  };
 
   const sectionRefs = {
     overview: useRef(null),
     rooms: useRef(null),
     dining: useRef(null),
     pricing: useRef(null),
-    rules: useRef(null)
+    rules: useRef(null),
+    rent: useRef(null)
   };
 
   const handleScrollTo = (sectionId) => {
@@ -59,9 +74,9 @@ const Listing = () => {
       {/* 2. Nav Tabs */}
       <div className="lst-nav-wrap">
         <div className="lst-nav-tabs">
-          {['overview', 'rooms', 'dining', 'pricing', 'rules'].map(tab => (
+          {['overview', 'rooms', 'dining', 'pricing', 'rules', 'rent'].map(tab => (
             <button key={tab} className={`lst-nav-btn ${activeTab === tab ? 'active' : ''}`} onClick={() => handleScrollTo(tab)}>
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'rent' ? 'MONTHLY RENT' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
@@ -69,34 +84,34 @@ const Listing = () => {
 
       <div className="lst-content">
         <div className="lst-main">
-          
+
           {/* OVERVIEW SECTION */}
           <div ref={sectionRefs.overview} className="lst-section">
             <h2 className="lst-section-title">
               <span className="lst-section-icon">📊</span> Overview & Details
             </h2>
-            
-            <h3 style={{fontSize:'16px', marginBottom:'12px'}}>Occupancy & Category</h3>
+
+            <h3 style={{ fontSize: '16px', marginBottom: '12px' }}>Occupancy & Category</h3>
             <div className="lst-grid-4">
-              <div className="lst-info-card" style={{background:'var(--lst-bg-blue)'}}>
+              <div className="lst-info-card" style={{ background: 'var(--lst-bg-blue)' }}>
                 <span className="lst-ic-label">Sharing</span>
                 <span className="lst-ic-val">{selectedSharing} Sharing</span>
               </div>
-              <div className="lst-info-card" style={{background:'var(--lst-bg-purple)'}}>
+              <div className="lst-info-card" style={{ background: 'var(--lst-bg-purple)' }}>
                 <span className="lst-ic-label">Category</span>
                 <span className="lst-ic-val">Students</span>
               </div>
-              <div className="lst-info-card" style={{background:'var(--lst-bg-orange)'}}>
+              <div className="lst-info-card" style={{ background: 'var(--lst-bg-orange)' }}>
                 <span className="lst-ic-label">Gender</span>
                 <span className="lst-ic-val">Boys</span>
               </div>
-              <div className="lst-info-card" style={{background:'var(--lst-bg-green)'}}>
+              <div className="lst-info-card" style={{ background: 'var(--lst-bg-green)' }}>
                 <span className="lst-ic-label">Occupancy</span>
                 <span className="lst-ic-val">70% Full</span>
               </div>
             </div>
 
-            <h3 style={{fontSize:'16px', marginBottom:'12px'}}>Building & Security</h3>
+            <h3 style={{ fontSize: '16px', marginBottom: '12px' }}>Building & Security</h3>
             <div className="lst-grid-3">
               <div className="lst-svg-card"><span className="lst-svg-icon">🏢</span><div className="lst-svg-text"><h4>Floor</h4><p>3rd Floor</p></div></div>
               <div className="lst-svg-card"><span className="lst-svg-icon">🛗</span><div className="lst-svg-text"><h4>Lift</h4><p>Available</p></div></div>
@@ -118,35 +133,36 @@ const Listing = () => {
               ))}
             </div>
 
-            <h3 style={{fontSize:'16px', marginBottom:'12px'}}>Room Dimensions</h3>
+            <h3 style={{ fontSize: '16px', marginBottom: '12px' }}>Room Dimensions</h3>
             <div className="lst-grid-3">
-              <div className="lst-info-card" style={{border:'1px solid var(--lst-border)'}}>
+              <div className="lst-info-card" style={{ border: '1px solid var(--lst-border)' }}>
                 <span className="lst-ic-label">Length</span><span className="lst-ic-val">12 ft</span>
               </div>
-              <div className="lst-info-card" style={{border:'1px solid var(--lst-border)'}}>
+              <div className="lst-info-card" style={{ border: '1px solid var(--lst-border)' }}>
                 <span className="lst-ic-label">Width</span><span className="lst-ic-val">14 ft</span>
               </div>
-              <div className="lst-info-card" style={{border:'1px solid var(--lst-primary)', background:'var(--lst-bg-blue)'}}>
-                <span className="lst-ic-label" style={{color:'var(--lst-primary)'}}>Total Area</span><span className="lst-ic-val">168 sq ft</span>
+              <div className="lst-info-card" style={{ border: '1px solid var(--lst-primary)', background: 'var(--lst-bg-blue)' }}>
+                <span className="lst-ic-label" style={{ color: 'var(--lst-primary)' }}>Total Area</span><span className="lst-ic-val">168 sq ft</span>
               </div>
             </div>
 
-            <h3 style={{fontSize:'16px', marginBottom:'12px'}}>Bed Availability</h3>
+
+            <h3 style={{ fontSize: '16px', marginBottom: '12px' }}>Bed Availability</h3>
             <div className="lst-bed-wrapper">
-              <div style={{display:'flex', gap:'20px', marginBottom:'16px', fontSize:'14px', fontWeight:700}}>
+              <div style={{ display: 'flex', gap: '20px', marginBottom: '16px', fontSize: '14px', fontWeight: 700 }}>
                 <span>Total Beds: {selectedSharing}</span>
-                <span style={{color:'var(--lst-success)'}}>Available: {selectedSharing === 1 ? 1 : 1}</span>
-                <span style={{color:'var(--lst-danger)'}}>Occupied: {selectedSharing === 1 ? 0 : selectedSharing - 1}</span>
+                <span style={{ color: 'var(--lst-success)' }}>Available: {selectedSharing === 1 ? 1 : 1}</span>
+                <span style={{ color: 'var(--lst-danger)' }}>Occupied: {selectedSharing === 1 ? 0 : selectedSharing - 1}</span>
               </div>
-              
+
               <div className="lst-bed-list">
-                {Array.from({length: selectedSharing}).map((_, i) => {
+                {Array.from({ length: selectedSharing }).map((_, i) => {
                   const bedNum = i + 1;
                   const isFilled = selectedSharing > 1 && bedNum === 1; // Bed 1 is filled if sharing > 1
                   return (
-                    <div key={bedNum} 
-                         className={`lst-bed-row ${isFilled ? 'occupied' : (selectedBed === bedNum ? 'selected' : '')}`}
-                         onClick={() => !isFilled && setSelectedBed(bedNum)}
+                    <div key={bedNum}
+                      className={`lst-bed-row ${isFilled ? 'occupied' : (selectedBed === bedNum ? 'selected' : '')}`}
+                      onClick={() => !isFilled && setSelectedBed(bedNum)}
                     >
                       <div className="lst-bed-left">
                         <h4>Bed {bedNum}</h4>
@@ -161,7 +177,118 @@ const Listing = () => {
               </div>
             </div>
 
-            <h3 style={{fontSize:'16px', marginTop:'24px', marginBottom:'12px'}}>Room Facilities</h3>
+            {/* NEW SECTION: BED DETAILS & PREFERENCES */}
+            <h3 style={{ fontSize: '16px', marginTop: '24px', marginBottom: '12px' }}>Bed Details & Preferences</h3>
+
+            {/* Horizontal Filters */}
+            <div className="lst-bed-filters">
+              {['Available', 'AC', 'Non-AC', 'Window Side', 'Quiet Zone', 'Study Friendly', 'With Locker', 'Lower Bunk', 'Upper Bunk'].map(filter => (
+                <button
+                  key={filter}
+                  className={`lst-filter-chip ${selectedFilters.includes(filter) ? 'active' : ''}`}
+                  onClick={() => toggleFilter(filter)}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+
+            <div className="lst-bed-cards-v2">
+              {Array.from({ length: selectedSharing }).map((_, i) => {
+                const bedNum = i + 1;
+                const isOccupied = selectedSharing > 1 && bedNum === 1;
+                const isSelected = selectedBed === bedNum;
+                const isExpanded = expandedBed === bedNum;
+
+                return (
+                  <div
+                    key={bedNum}
+                    className={`lst-bed-card-v2 ${isSelected ? 'selected' : ''} ${isOccupied ? 'occupied' : ''}`}
+                    onClick={() => !isOccupied && setSelectedBed(bedNum)}
+                  >
+                    <div className="lst-bed-card-top">
+                      <div className="lst-bc-header">
+                        <div className="lst-bc-title">
+                          <div className="lst-bc-num-wrap">
+                            <span className="lst-bc-num">#{bedNum}</span>
+                            <h4>Luxury Bed</h4>
+                          </div>
+                          <span className="lst-bc-type">
+                            <HomeIcon size={14} /> {bedNum % 2 === 0 ? 'Lower Bunk' : 'Single Cot'} •
+                            <MapPin size={14} /> {bedNum === 1 ? 'Near Door' : 'Window Side'}
+                          </span>
+                        </div>
+                        <div className={`lst-bc-status-pill ${isOccupied ? 'occupied' : (isSelected ? 'selected' : 'available')}`}>
+                          {isOccupied ? <Lock size={12} /> : (isSelected ? <Check size={12} /> : <MousePointer2 size={12} />)}
+                          {isOccupied ? 'Occupied' : (isSelected ? 'Selected' : 'Available')}
+                        </div>
+                      </div>
+
+                      <div className="lst-bc-features">
+                        <span className="lst-feat-pill qz"><Volume2 size={12} /> Quiet Zone</span>
+                        <span className="lst-feat-pill cs"><Zap size={12} /> Charging Socket</span>
+                        <span className="lst-feat-pill sf"><BookOpen size={12} /> Study Friendly</span>
+                        {bedNum % 2 === 0 && <span className="lst-feat-pill pl"><Lock size={12} /> Personal Locker</span>}
+                        <span className="lst-feat-pill ac"><Snowflake size={12} /> AC</span>
+                      </div>
+
+                      <div className="lst-bc-footer">
+                        <div className="lst-bc-stats">
+                          <span className="lst-stat-item"><Star size={14} fill="currentColor" /> 4.5</span>
+                          <span className="lst-stat-item"><Volume2 size={14} /> Quiet</span>
+                        </div>
+                        <button
+                          className={`lst-bc-expand-btn ${isExpanded ? 'open' : ''}`}
+                          onClick={(e) => { e.stopPropagation(); setExpandedBed(isExpanded ? null : bedNum); }}
+                        >
+                          {isExpanded ? 'Hide Details' : 'View Details'}
+                          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {isExpanded && (
+                      <div className="lst-bed-card-details" onClick={(e) => e.stopPropagation()}>
+                        <div className="lst-details-grid">
+                          <div className="lst-details-group">
+                            <h5><Info size={14} /> Bed Basic Info</h5>
+                            <ul>
+                              <li><span>Bed Direction</span><span>Head → South</span></li>
+                              <li><span>Window Side</span><span>Yes</span></li>
+                              <li><span>Quiet Zone</span><span>Yes</span></li>
+                            </ul>
+                          </div>
+                          <div className="lst-details-group">
+                            <h5><Zap size={14} /> Comfort Features</h5>
+                            <ul>
+                              <li><span>Personal Locker</span><span>Included</span></li>
+                              <li><span>Reading Light</span><span>Adjustable</span></li>
+                              <li><span>Charging</span><span>USB + 3-Pin</span></li>
+                            </ul>
+                          </div>
+                          <div className="lst-details-group">
+                            <h5><ShieldCheck size={14} /> Safety & Hygiene</h5>
+                            <ul>
+                              <li><span>Safe Locking</span><span>RFID Support</span></li>
+                              <li><span>Last Cleaned</span><span>Today, 10 AM</span></li>
+                              <li><span>Laundry</span><span>Weekly Change</span></li>
+                            </ul>
+                          </div>
+                          <div className="lst-details-group">
+                            <h5><CreditCard size={14} /> Pricing Details</h5>
+                            <div className="lst-bc-price-box">
+                              <div className="lst-bc-rent">₹{currentPrice.rent.toLocaleString()}<span>/mo</span></div>
+                              <span className="lst-bc-discount">10% Early Bird</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <h3 style={{ fontSize: '16px', marginTop: '24px', marginBottom: '12px' }}>Room Facilities</h3>
             <div className="lst-grid-3">
               <div className="lst-svg-card"><span className="lst-svg-icon">🪭</span><div className="lst-svg-text"><h4>Fans</h4><p>1</p></div></div>
               <div className="lst-svg-card"><span className="lst-svg-icon">💡</span><div className="lst-svg-text"><h4>Lights</h4><p>2</p></div></div>
@@ -174,18 +301,18 @@ const Listing = () => {
               <div className="lst-svg-card"><span className="lst-svg-icon">❄️</span><div className="lst-svg-text"><h4>AC</h4><p>Non-AC</p></div></div>
             </div>
 
-            <h3 style={{fontSize:'16px', marginBottom:'12px'}}>Bathroom Details</h3>
+            <h3 style={{ fontSize: '16px', marginBottom: '12px' }}>Bathroom Details</h3>
             <div className="lst-grid-4">
-              <div className="lst-info-card" style={{border:'1px solid var(--lst-border)'}}>
+              <div className="lst-info-card" style={{ border: '1px solid var(--lst-border)' }}>
                 <span className="lst-ic-label">Type</span><span className="lst-ic-val">Attached</span>
               </div>
-              <div className="lst-info-card" style={{border:'1px solid var(--lst-border)'}}>
+              <div className="lst-info-card" style={{ border: '1px solid var(--lst-border)' }}>
                 <span className="lst-ic-label">Count</span><span className="lst-ic-val">1 per room</span>
               </div>
-              <div className="lst-info-card" style={{border:'1px solid var(--lst-border)'}}>
+              <div className="lst-info-card" style={{ border: '1px solid var(--lst-border)' }}>
                 <span className="lst-ic-label">Hot Water</span><span className="lst-ic-val">24/7 Geyser</span>
               </div>
-              <div className="lst-info-card" style={{border:'1px solid var(--lst-border)'}}>
+              <div className="lst-info-card" style={{ border: '1px solid var(--lst-border)' }}>
                 <span className="lst-ic-label">Toilet</span><span className="lst-ic-val">Western</span>
               </div>
             </div>
@@ -195,14 +322,14 @@ const Listing = () => {
           <div ref={sectionRefs.dining} className="lst-section">
             <h2 className="lst-section-title"><span className="lst-section-icon">🍽️</span> Dining & Food</h2>
             <div className="lst-grid-3">
-              <div className="lst-info-card" style={{background:'var(--lst-bg-orange)'}}>
-                <span className="lst-ic-label" style={{color:'#c2410c'}}>Meal Type</span><span className="lst-ic-val">Veg + Non-Veg</span>
+              <div className="lst-info-card" style={{ background: 'var(--lst-bg-orange)' }}>
+                <span className="lst-ic-label" style={{ color: '#c2410c' }}>Meal Type</span><span className="lst-ic-val">Veg + Non-Veg</span>
               </div>
-              <div className="lst-info-card" style={{background:'var(--lst-bg-green)'}}>
-                <span className="lst-ic-label" style={{color:'#15803d'}}>Weekly Menu</span><span className="lst-ic-val">7-day rotation</span>
+              <div className="lst-info-card" style={{ background: 'var(--lst-bg-green)' }}>
+                <span className="lst-ic-label" style={{ color: '#15803d' }}>Weekly Menu</span><span className="lst-ic-val">7-day rotation</span>
               </div>
-              <div className="lst-info-card" style={{background:'var(--lst-bg-blue)'}}>
-                <span className="lst-ic-label" style={{color:'#1d4ed8'}}>Custom Menu</span><span className="lst-ic-val">On request</span>
+              <div className="lst-info-card" style={{ background: 'var(--lst-bg-blue)' }}>
+                <span className="lst-ic-label" style={{ color: '#1d4ed8' }}>Custom Menu</span><span className="lst-ic-val">On request</span>
               </div>
             </div>
           </div>
@@ -221,9 +348,9 @@ const Listing = () => {
               <tbody>
                 {[1, 2, 3].map(num => (
                   <tr key={num} className={selectedSharing === num ? 'active' : ''}>
-                    <td style={{fontWeight: selectedSharing === num ? 800 : 600}}>{pricingMap[num].name}</td>
+                    <td style={{ fontWeight: selectedSharing === num ? 800 : 600 }}>{pricingMap[num].name}</td>
                     <td>{pricingMap[num].desc}</td>
-                    <td style={{fontWeight: selectedSharing === num ? 800 : 600}}>₹{pricingMap[num].rent.toLocaleString()}</td>
+                    <td style={{ fontWeight: selectedSharing === num ? 800 : 600 }}>₹{pricingMap[num].rent.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -243,48 +370,50 @@ const Listing = () => {
             </div>
           </div>
 
-        </div>
+          {/* MONTHLY RENT SECTION */}
+          <div ref={sectionRefs.rent} className="lst-section">
+            <h2 className="lst-section-title"><span className="lst-section-icon">💰</span> Monthly Rent Breakdown</h2>
+            <div className="lst-booking-card" style={{ border: 'none', boxShadow: 'none', padding: 0 }}>
+              <div className="lst-bill-row"><span>Room Rent</span><span>₹{currentPrice.rent.toLocaleString()}</span></div>
+              <div className="lst-bill-row"><span>Security Deposit</span><span>₹{currentPrice.deposit.toLocaleString()}</span></div>
+              <div className="lst-bill-row"><span>Food (Monthly)</span><span>₹{currentPrice.food.toLocaleString()}</span></div>
+              <div className="lst-bill-row"><span>Maintenance</span><span>₹{currentPrice.maintenance.toLocaleString()}</span></div>
+              
+              <div className="lst-bill-divider"></div>
+              
+              <div className="lst-bill-total"><span>Total Due (Move-in)</span><span>₹{totalDue.toLocaleString()}</span></div>
 
-        {/* 5. SIDEBAR BOOKING WIDGET */}
-        <div className="lst-sidebar">
-          <div className="lst-booking-card">
-            <div className="lst-book-title">MONTHLY RENT</div>
-            <div className="lst-book-price">₹{currentPrice.rent.toLocaleString()} <span>/mo</span></div>
-            
-            <div className="lst-bill-row"><span>Room Rent</span><span>₹{currentPrice.rent.toLocaleString()}</span></div>
-            <div className="lst-bill-row"><span>Security Deposit</span><span>₹{currentPrice.deposit.toLocaleString()}</span></div>
-            <div className="lst-bill-row"><span>Food (Monthly)</span><span>₹{currentPrice.food.toLocaleString()}</span></div>
-            <div className="lst-bill-row"><span>Maintenance</span><span>₹{currentPrice.maintenance.toLocaleString()}</span></div>
-            
-            <div className="lst-bill-divider"></div>
-            
-            <div className="lst-bill-total"><span>Total Due (Move-in)</span><span>₹{totalDue.toLocaleString()}</span></div>
-            
-            <div style={{background:'var(--lst-bg-blue)', padding:'10px', borderRadius:'8px', marginBottom:'20px', fontSize:'14px', fontWeight:700, color:'var(--lst-primary)', textAlign:'center'}}>
-              Selected Bed: {selectedBed ? `Bed ${selectedBed}` : 'None'}
+              <div style={{ background: 'var(--lst-bg-blue)', padding: '16px', borderRadius: '12px', marginBottom: '24px', fontSize: '15px', fontWeight: 800, color: 'var(--lst-primary)', textAlign: 'center', border: '1px solid rgba(99,102,241,0.1)' }}>
+                Selected: {selectedBed ? `Bed ${selectedBed}` : 'Please select a bed above'}
+              </div>
+
+              <button 
+                className="lst-btn-reserve" 
+                disabled={!selectedBed}
+                onClick={() => navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed } })}
+                style={{ width: '100%', padding: '20px', fontSize: '18px' }}
+              >
+                Reserve Your Bed Now
+              </button>
+              <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: 'var(--lst-text-muted)', fontWeight: 600 }}>
+                🔒 Secure payment powered by Livora Finance
+              </div>
             </div>
-
-            <button 
-              className="lst-btn-reserve" 
-              disabled={!selectedBed}
-              onClick={() => navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed } })}
-            >
-              Reserve Your Room Now
-            </button>
-            <div style={{textAlign:'center', marginTop:'12px', fontSize:'12px', color:'var(--lst-text-muted)'}}>🔒 Secure payment powered by Livora Finance</div>
           </div>
+
         </div>
+
       </div>
 
       {/* MOBILE BOTTOM BAR */}
       <div className="lst-mobile-bar">
         <div>
-          <div style={{fontSize:'18px', fontWeight:800, color:'var(--lst-primary)'}}>₹{currentPrice.rent.toLocaleString()}<span style={{fontSize:'12px', color:'var(--lst-text-muted)'}}>/mo</span></div>
-          <div style={{fontSize:'13px', fontWeight:600}}>{currentPrice.name}</div>
+          <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--lst-primary)' }}>₹{currentPrice.rent.toLocaleString()}<span style={{ fontSize: '12px', color: 'var(--lst-text-muted)' }}>/mo</span></div>
+          <div style={{ fontSize: '13px', fontWeight: 600 }}>{currentPrice.name}</div>
         </div>
-        <button 
-          className="lst-btn-reserve" 
-          style={{width:'auto', padding:'12px 24px', margin:0}} 
+        <button
+          className="lst-btn-reserve"
+          style={{ width: 'auto', padding: '12px 24px', margin: 0 }}
           disabled={!selectedBed}
           onClick={() => navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed } })}
         >
