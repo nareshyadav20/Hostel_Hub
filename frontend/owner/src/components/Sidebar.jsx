@@ -13,7 +13,6 @@ import {
   BarChart3, 
   Settings, 
   BellRing,
-  RefreshCw,
   User
 } from 'lucide-react';
 import './Sidebar.css';
