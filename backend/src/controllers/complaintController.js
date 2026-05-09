@@ -130,7 +130,7 @@ exports.getAllComplaints = async (req, res) => {
     if (!buildingId && !hostelId && req.user) {
       try {
         const Building = require('../models/Building');
-        const ownerBuildings = await Building.find({}, '_id').lean();
+        const ownerBuildings = await Building.find({ owner: req.user.id }, '_id').lean();
         const buildingIds = ownerBuildings.map(b => b._id);
         if (buildingIds.length > 0) {
           query.buildingId = { $in: buildingIds };

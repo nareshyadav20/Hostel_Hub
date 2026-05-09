@@ -1,5 +1,9 @@
 const OwnerProfile = require('../models/OwnerProfile');
 const User = require('../models/User');
+const Building = require('../models/Building');
+const Room = require('../models/Room');
+const Tenant = require('../models/Tenant');
+const Staff = require('../models/Staff');
 
 exports.getProfile = async (req, res) => {
   try {
@@ -88,25 +92,32 @@ exports.uploadDocument = async (req, res) => {
 
 exports.getStats = async (req, res) => {
   try {
-    const Building = require('../models/Building');
-    const Room = require('../models/Room');
-    const Tenant = require('../models/Tenant');
-    const OwnerProfile = require('../models/OwnerProfile');
-
     const buildingsCount = await Building.countDocuments({ owner: req.user.id });
     const profile = await OwnerProfile.findOne({ userId: req.user.id });
     
-    // In a real app, these would be based on buildingId
-    // For now, returning dummy stats for the profile view
+    // Get real counts across all owned buildings
+    const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+    const bIds = ownerBuildings.map(b => b._id);
+    
+    const [totalTenants, totalStaff, staffList] = await Promise.all([
+      Tenant.countDocuments({ buildingId: { $in: bIds } }),
+      Staff.countDocuments({ buildingId: { $in: bIds } }),
+      Staff.find({ buildingId: { $in: bIds } }).select('performance')
+    ]);
+
+    const avgRating = staffList.length > 0 
+      ? staffList.reduce((s, st) => s + (st.performance || 0), 0) / staffList.length 
+      : 5;
+
     res.json({
       totalBuildings: buildingsCount,
-      activeTenants: 124,
-      occupancyRate: 88,
-      monthlyRevenue: 1250000,
+      activeTenants: totalTenants,
+      occupancyRate: 85, // Placeholder until occupancy calculation is moved here
+      monthlyRevenue: totalTenants * 8000, // Estimate based on standard rent
       profileCompleteness: profile?.profileCompleteness || 0,
       verifiedProperties: buildingsCount,
-      totalStaff: 12,
-      ratings: 4.8
+      totalStaff: totalStaff,
+      ratings: parseFloat(avgRating.toFixed(1))
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -4,6 +4,7 @@ const Payment = require('../models/Payment');
 const Complaint = require('../models/Complaint');
 const User = require('../models/User');
 const SystemSettings = require('../models/SystemSettings');
+const Staff = require('../models/Staff');
 
 // Helper: traverse the nested property hierarchy
 const traverseHierarchy = (buildings) => {
@@ -253,14 +254,33 @@ exports.getMessStats = async (req, res) => {
 // GET /api/dashboard/staff
 exports.getStaffStats = async (req, res) => {
   try {
-    const staff = await User.find({ role: { $in: ['STAFF', 'WARDEN'] } }).select('name role');
+    const { buildingId } = req.query;
+    let query = {};
+    
+    if (buildingId) {
+      query = { buildingId };
+    } else {
+      const Building = require('../models/Building');
+      const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+      const bIds = ownerBuildings.map(b => b._id);
+      query = { buildingId: { $in: bIds } };
+    }
+
+    const staff = await Staff.find(query).select('name role performance status');
+    const efficiency = staff.length > 0 ? (staff.reduce((s, st) => s + (st.performance || 0), 0) / staff.length) * 20 : 100;
+
     res.json({
       totalStaff: staff.length,
-      tasksAssigned: 0,
-      tasksCompleted: 0,
-      tasksPending: 0,
-      efficiencyScore: 100,
-      staffList: staff.map(s => ({ name: s.name, role: s.role, score: 100 }))
+      tasksAssigned: staff.reduce((s, st) => s + (st.tasks?.length || 0), 0),
+      tasksCompleted: staff.reduce((s, st) => s + (st.tasks?.filter(t => t.status === 'COMPLETED').length || 0), 0),
+      tasksPending: staff.reduce((s, st) => s + (st.tasks?.filter(t => t.status === 'PENDING').length || 0), 0),
+      efficiencyScore: Math.round(efficiency),
+      staffList: staff.map(s => ({ 
+        name: s.name, 
+        role: s.role, 
+        score: (s.performance || 0) * 20,
+        status: s.status 
+      }))
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
