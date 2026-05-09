@@ -18,6 +18,12 @@ import Offers from './pages/Offers';
 import Surveys from './pages/Surveys';
 import Cities from './pages/Cities';
 import Settings from './pages/Settings';
+import Finance from './pages/Finance';
+import Complaints from './pages/Complaints';
+import Rooms from './pages/Rooms';
+import Automation from './pages/Automation';
+import Insights from './pages/Insights';
+import Placeholder from './pages/Placeholder';
 
 function App() {
   return (
@@ -37,6 +43,18 @@ function App() {
           <Route path="/surveys"       element={<Layout><Surveys /></Layout>} />
           <Route path="/cities"        element={<Layout><Cities /></Layout>} />
           <Route path="/settings"      element={<Layout><Settings /></Layout>} />
+          
+          {/* Missing Sidebar Modules */}
+          <Route path="/rooms" element={<Layout><Rooms /></Layout>} />
+          <Route path="/beds" element={<Layout><Placeholder title="Beds" /></Layout>} />
+          <Route path="/mess" element={<Layout><Placeholder title="Mess" /></Layout>} />
+          <Route path="/inventory" element={<Layout><Placeholder title="Inventory" /></Layout>} />
+          <Route path="/complaints" element={<Layout><Complaints /></Layout>} />
+          <Route path="/finance" element={<Layout><Finance /></Layout>} />
+          <Route path="/wallet" element={<Layout><Placeholder title="Wallet" /></Layout>} />
+          <Route path="/automation" element={<Layout><Automation /></Layout>} />
+          <Route path="/insights" element={<Layout><Insights /></Layout>} />
+
           <Route path="*"              element={<Navigate to="/dashboard" />} />
         </Routes>
       </Router>

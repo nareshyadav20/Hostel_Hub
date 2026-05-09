@@ -37,7 +37,10 @@ exports.getSummaryKPIs = async (req, res) => {
   try {
     const { buildingId } = req.query;
     const mongoose = require('mongoose');
-    const matchQuery = buildingId ? { _id: new mongoose.Types.ObjectId(buildingId) } : {};
+    
+    // Validate buildingId to prevent 500 error on aggregation
+    const isValidObjectId = buildingId && mongoose.Types.ObjectId.isValid(buildingId) && buildingId !== 'undefined' && buildingId !== 'null';
+    const matchQuery = isValidObjectId ? { _id: new mongoose.Types.ObjectId(buildingId) } : {};
 
     // 1. Optimized Aggregation for Hierarchy Stats
     const stats = await Building.aggregate([
@@ -68,14 +71,14 @@ exports.getSummaryKPIs = async (req, res) => {
     const occupancyRate = totalBeds > 0 ? parseFloat(((occupiedBeds / totalBeds) * 100).toFixed(1)) : 0;
 
     // 2. Real Tenant Count
-    const totalTenants = await Tenant.countDocuments(buildingId ? { buildingId } : {});
+    const totalTenants = await Tenant.countDocuments(isValidObjectId ? { buildingId } : {});
 
     // 3. Optimized Payment Stats (Summing instead of fetching all)
     const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
     const endOfDay = new Date(); endOfDay.setHours(23,59,59,999);
     
     const paymentStats = await Payment.aggregate([
-      { $match: buildingId ? { buildingId: new mongoose.Types.ObjectId(buildingId) } : {} },
+      { $match: isValidObjectId ? { buildingId: new mongoose.Types.ObjectId(buildingId) } : {} },
       {
         $group: {
           _id: null,
@@ -112,9 +115,9 @@ exports.getSummaryKPIs = async (req, res) => {
       totalTenants,
       complaintsToday: await Complaint.countDocuments({ 
         createdAt: { $gte: startOfDay },
-        ...(buildingId && { buildingId })
+        ...(isValidObjectId && { buildingId })
       }),
-      buildingName: buildingId ? 'Selected Property' : 'All Properties'
+      buildingName: isValidObjectId ? 'Selected Property' : 'All Properties'
     });
   } catch (error) {
     console.error("Summary Error:", error);
@@ -126,7 +129,10 @@ exports.getSummaryKPIs = async (req, res) => {
 exports.getRevenueAnalytics = async (req, res) => {
   try {
     const { buildingId } = req.query;
-    const payments = await Payment.find(buildingId ? { buildingId } : {});
+    const mongoose = require('mongoose');
+    const isValidObjectId = buildingId && mongoose.Types.ObjectId.isValid(buildingId) && buildingId !== 'undefined' && buildingId !== 'null';
+    
+    const payments = await Payment.find(isValidObjectId ? { buildingId } : {});
     
     // Last 7 days daily revenue
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -166,7 +172,10 @@ exports.getRevenueAnalytics = async (req, res) => {
 exports.getOccupancyStats = async (req, res) => {
   try {
     const { buildingId } = req.query;
-    const query = buildingId ? { _id: buildingId } : {};
+    const mongoose = require('mongoose');
+    const isValidObjectId = buildingId && mongoose.Types.ObjectId.isValid(buildingId) && buildingId !== 'undefined' && buildingId !== 'null';
+    
+    const query = isValidObjectId ? { _id: buildingId } : {};
     const buildings = await Building.find(query).populate({ 
       path: 'floors', 
       populate: { path: 'rooms', populate: { path: 'beds' } } 
@@ -182,12 +191,15 @@ exports.getOccupancyStats = async (req, res) => {
 exports.getAlertsAndInsights = async (req, res) => {
   try {
     const { buildingId } = req.query;
+    const mongoose = require('mongoose');
+    const isValidObjectId = buildingId && mongoose.Types.ObjectId.isValid(buildingId) && buildingId !== 'undefined' && buildingId !== 'null';
+    
     const insights = [], alerts = [];
 
     const highComplaints = await Complaint.find({ 
       status: 'Pending', 
       priority: 'High',
-      ...(buildingId && { buildingId })
+      ...(isValidObjectId && { buildingId })
     });
     
     highComplaints.forEach(c => {
@@ -212,7 +224,10 @@ exports.getAlertsAndInsights = async (req, res) => {
 exports.getComplaintsStats = async (req, res) => {
   try {
     const { buildingId } = req.query;
-    const query = buildingId ? { buildingId } : {};
+    const mongoose = require('mongoose');
+    const isValidObjectId = buildingId && mongoose.Types.ObjectId.isValid(buildingId) && buildingId !== 'undefined' && buildingId !== 'null';
+    
+    const query = isValidObjectId ? { buildingId } : {};
     
     const complaints = await Complaint.find(query);
     const open = complaints.filter(c => c.status === 'Pending').length;
@@ -240,14 +255,24 @@ exports.getComplaintsStats = async (req, res) => {
 exports.getMessStats = async (req, res) => {
   try {
     const { buildingId } = req.query;
+    const mongoose = require('mongoose');
+    const isValidObjectId = buildingId && mongoose.Types.ObjectId.isValid(buildingId) && buildingId !== 'undefined' && buildingId !== 'null';
+    
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const day = days[new Date().getDay()];
     const todayISO = new Date().toISOString().split('T')[0];
 
-    const menu = await MessMenu.findOne({ buildingId, day, plan: 'standard' });
+    const menu = await MessMenu.findOne({ 
+      ...(isValidObjectId && { buildingId }), 
+      day, 
+      plan: 'standard' 
+    });
     
     // Calculate real attendance stats
-    const attendance = await MessAttendance.find({ buildingId, date: todayISO });
+    const attendance = await MessAttendance.find({ 
+      ...(isValidObjectId && { buildingId }), 
+      date: todayISO 
+    });
     let mealsServedToday = 0;
     attendance.forEach(att => {
       if (att.breakfast) mealsServedToday++;
@@ -293,7 +318,10 @@ exports.getStaffStats = async (req, res) => {
 exports.getLiveActivity = async (req, res) => {
   try {
     const { buildingId } = req.query;
-    const query = buildingId ? { buildingId } : {};
+    const mongoose = require('mongoose');
+    const isValidObjectId = buildingId && mongoose.Types.ObjectId.isValid(buildingId) && buildingId !== 'undefined' && buildingId !== 'null';
+    
+    const query = isValidObjectId ? { buildingId } : {};
 
     const [payments, complaints] = await Promise.all([
       Payment.find(query).sort({ createdAt: -1 }).limit(5).populate('tenantId'),
