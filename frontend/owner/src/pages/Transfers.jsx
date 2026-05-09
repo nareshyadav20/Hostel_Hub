@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useParams } from 'react-router-dom';
 import { RefreshCw, CheckCircle, XCircle, Clock, ArrowRightLeft, User, Home, MessageSquare } from 'lucide-react';
-import API from '../api/axios';
+import { api } from '../mockData';
 
 const Transfers = () => {
+  const { buildingId: urlBuildingId } = useParams();
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
 
   const fetchTransfers = async () => {
+    setLoading(true);
     try {
-      const response = await API.get('/transfers');
-      setTransfers(response.data);
+      const data = await api.getRoomTransfers(activeBuildingId);
+      setTransfers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching transfers:', err);
     } finally {
@@ -21,12 +26,12 @@ const Transfers = () => {
 
   useEffect(() => {
     fetchTransfers();
-  }, []);
+  }, [activeBuildingId]);
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await API.patch(`/transfers/${id}`, { status: newStatus });
-      setTransfers(transfers.map(t => t._id === id ? { ...t, status: newStatus } : t));
+      await api.updateRoomTransferStatus(id, newStatus);
+      setTransfers(transfers.map(t => (t._id === id || t.id === id) ? { ...t, status: newStatus } : t));
     } catch (err) {
       console.error('Error updating transfer status:', err);
       alert('Failed to update status.');
@@ -35,8 +40,8 @@ const Transfers = () => {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'Approved': return <span style={{ color: '#10B981', background: 'rgba(16, 185, 129, 0.1)', padding: '0.4rem 0.8rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: '800' }}>APPROVED</span>;
-      case 'Rejected': return <span style={{ color: '#EF4444', background: 'rgba(239, 68, 68, 0.1)', padding: '0.4rem 0.8rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: '800' }}>REJECTED</span>;
+      case 'ACCEPTED': case 'Approved': return <span style={{ color: '#10B981', background: 'rgba(16, 185, 129, 0.1)', padding: '0.4rem 0.8rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: '800' }}>APPROVED</span>;
+      case 'REJECTED': case 'Rejected': return <span style={{ color: '#EF4444', background: 'rgba(239, 68, 68, 0.1)', padding: '0.4rem 0.8rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: '800' }}>REJECTED</span>;
       default: return <span style={{ color: '#F59E0B', background: 'rgba(245, 158, 11, 0.1)', padding: '0.4rem 0.8rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: '800' }}>PENDING</span>;
     }
   };
@@ -107,7 +112,7 @@ const Transfers = () => {
                         {getStatusBadge(t.status)}
                       </td>
                       <td style={{ padding: '1.2rem', textAlign: 'right' }}>
-                        {t.status === 'Pending' && (
+                        {(t.status === 'PENDING' || t.status === 'Pending') && (
                           <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleStatusChange(t._id, 'Approved'); }}

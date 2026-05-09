@@ -2,10 +2,10 @@ const SystemSettings = require('../models/SystemSettings');
 
 exports.getSettings = async (req, res) => {
   try {
-    let settings = await SystemSettings.findOne();
+    let settings = await SystemSettings.findOne({ owner: req.user.id });
     if (!settings) {
-      // Create default settings if none exist
-      settings = await SystemSettings.create({});
+      // Create default settings if none exist for this owner
+      settings = await SystemSettings.create({ owner: req.user.id });
     }
     res.status(200).json(settings);
   } catch (error) {
@@ -15,12 +15,11 @@ exports.getSettings = async (req, res) => {
 
 exports.updateSettings = async (req, res) => {
   try {
-    let settings = await SystemSettings.findOne();
-    if (!settings) {
-      settings = await SystemSettings.create(req.body);
-    } else {
-      settings = await SystemSettings.findOneAndUpdate({}, req.body, { new: true, upsert: true });
-    }
+    const settings = await SystemSettings.findOneAndUpdate(
+      { owner: req.user.id },
+      { ...req.body, owner: req.user.id },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
     res.status(200).json(settings);
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -6,14 +6,16 @@ import {
   ArrowUpRight, ArrowDownRight, ShieldCheck, AlertCircle,
   Building2, Layers, Home, X
 } from 'lucide-react';
-import { 
-  ResponsiveContainer, AreaChart, Area, BarChart, Bar, 
+import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, 
   XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, 
   Cell, Legend, LineChart, Line 
 } from 'recharts';
+import { useParams } from 'react-router-dom';
 import { api } from '../mockData';
 
 const Reports = () => {
+  const { buildingId: urlBuildingId } = useParams();
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
   const [selectedReport, setSelectedReport] = useState('revenue');
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState({
@@ -29,19 +31,19 @@ const Reports = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [activeBuildingId]);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
       const [b, t, p, c, s, r, bd] = await Promise.all([
         api.getBuildings(),
-        api.getTenants(),
-        api.getPayments(),
-        api.getComplaints(),
-        api.getSettings(),
-        api.getAllRooms(),
-        api.getAllBeds()
+        api.getTenants(activeBuildingId),
+        api.getPayments(activeBuildingId),
+        api.getComplaints(activeBuildingId),
+        api.getSettings(activeBuildingId),
+        activeBuildingId ? api.getRoomsByBuilding(activeBuildingId) : api.getAllRooms(),
+        activeBuildingId ? api.getBedsByBuilding(activeBuildingId) : api.getAllBeds()
       ]);
       setData({ 
         buildings: b || [], 

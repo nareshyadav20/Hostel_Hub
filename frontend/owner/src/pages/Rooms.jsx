@@ -44,13 +44,14 @@ const Rooms = () => {
       console.log("Rooms module fetching for ID:", activeBuildingId);
       setLoading(true);
       try {
+        // Use building-scoped APIs to avoid cross-property data leakage
         const [b, f, r, bd, t, tr] = await Promise.all([
           api.getBuildings(),
-          api.getAllFloors(),
-          api.getAllRooms(),
-          api.getAllBeds(),
-          api.getTenants(),
-          api.getRoomTransfers()
+          activeBuildingId ? api.getFloorsByBuilding(activeBuildingId) : api.getAllFloors(),
+          activeBuildingId ? api.getRoomsByBuilding(activeBuildingId) : api.getAllRooms(),
+          activeBuildingId ? api.getBedsByBuilding(activeBuildingId) : api.getAllBeds(),
+          api.getTenants(activeBuildingId),
+          api.getRoomTransfers(activeBuildingId)
         ]);
 
         setBuildings(b || []);
@@ -58,12 +59,10 @@ const Rooms = () => {
         setRooms(r || []);
         setBeds(bd || []);
         setTenants(t || []);
-        setTransferRequests((tr && tr.length > 0) ? tr.filter(t => {
-          const tBldgId = typeof t.building === 'object' ? t.building._id : t.building;
-          return tBldgId === activeBuildingId;
-        }) : []);
+        // Server now pre-filters by buildingId, so no extra client filter needed
+        setTransferRequests(tr || []);
 
-        const fExp = {}; f?.forEach(x => fExp[x.id || x._id] = true);
+        const fExp = {}; (f || []).forEach(x => fExp[x.id || x._id] = true);
         setExpandedFloors(fExp);
 
         if (activeBuildingId) setSelectedBuildingId(activeBuildingId);

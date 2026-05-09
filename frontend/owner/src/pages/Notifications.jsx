@@ -1,68 +1,81 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import { Bell, Send, Users, Building, Shield, Trash2, CheckCircle, Info, AlertTriangle, X } from 'lucide-react';
+import { api } from '../mockData';
 
 const Notifications = () => {
-  const { buildingId } = useParams();
+  const { buildingId: urlBuildingId } = useParams();
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
   const [activeTab, setActiveTab] = useState('all');
-  const [messages, setMessages] = useState([
-    { id: 1, title: 'New Booking', message: 'Room 201-A booked by Rahul Sharma.', time: '10m ago', type: 'info', read: false, category: 'all' },
-    { id: 2, title: 'Low Stock Alert', message: 'Milk and Sugar running low in Building A storage.', time: '1h ago', type: 'warning', read: false, category: 'all' },
-    { id: 3, title: 'Maintenance Resolved', message: 'WiFi issue in Room 101 has been resolved by IT team.', time: '3h ago', type: 'success', read: true, category: 'all' },
-    { id: 4, title: 'System Update', message: 'The portal will be down for maintenance tonight at 2 AM.', time: '5h ago', type: 'info', read: true, category: 'all' },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [systemLogs, setSystemLogs] = useState([
-    { id: 101, title: 'Backup Successful', message: 'Daily database backup completed at 03:00 AM.', time: '5h ago', type: 'success', read: true, category: 'system' },
-    { id: 102, title: 'Auth Failure', message: 'Multiple failed login attempts detected from IP 192.168.1.45.', time: '8h ago', type: 'warning', read: false, category: 'system' },
-    { id: 103, title: 'Server Restored', message: 'Frontend cluster auto-scaled due to high traffic.', time: '12h ago', type: 'info', read: true, category: 'system' },
-  ]);
+  useEffect(() => {
+    fetchNotifications();
+  }, [activeBuildingId]);
 
-  const [staffUpdates, setStaffUpdates] = useState([
-    { id: 201, title: 'Shift Change', message: 'Kiran Kumar (Warden) swapped shift with Ravi Singh.', time: '2h ago', type: 'info', read: false, category: 'staff' },
-    { id: 202, title: 'Cleaning Schedule', message: 'Building B deep cleaning scheduled for tomorrow 10 AM.', time: '4h ago', type: 'info', read: true, category: 'staff' },
-  ]);
+  const fetchNotifications = async () => {
+    setIsLoading(true);
+    try {
+      const data = await api.getNotifications(activeBuildingId);
+      setNotifications(data || []);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [composerData, setComposerData] = useState({ title: '', message: '', target: 'All Tenants' });
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
-    const newMessage = {
-      id: Date.now(),
-      title: composerData.title,
-      message: composerData.message,
-      time: 'Just now',
-      type: 'info',
-      read: false,
-      category: composerData.target === 'Staff Members' ? 'staff' : 'all'
-    };
-
-    if (newMessage.category === 'staff') {
-      setStaffUpdates([newMessage, ...staffUpdates]);
-    } else {
-      setMessages([newMessage, ...messages]);
+    try {
+      const category = composerData.target === 'Staff Members' ? 'staff' : 'all';
+      await api.sendNotification({
+        title: composerData.title,
+        message: composerData.message,
+        target: composerData.target,
+        category,
+        buildingId: activeBuildingId,
+        type: 'info'
+      });
+      fetchNotifications();
+      setIsComposerOpen(false);
+      setComposerData({ title: '', message: '', target: 'All Tenants' });
+      setActiveTab(category);
+    } catch (err) {
+      console.error('Error sending notification:', err);
     }
-
-    setIsComposerOpen(false);
-    setComposerData({ title: '', message: '', target: 'All Tenants' });
-    setActiveTab(newMessage.category === 'staff' ? 'staff' : 'all');
   };
 
-  const markAllAsRead = () => {
-    if (activeTab === 'all') setMessages(messages.map(m => ({ ...m, read: true })));
-    if (activeTab === 'system') setSystemLogs(systemLogs.map(m => ({ ...m, read: true })));
-    if (activeTab === 'staff') setStaffUpdates(staffUpdates.map(m => ({ ...m, read: true })));
+  const markAllAsRead = async () => {
+    try {
+      await api.markAllNotificationsRead({ category: activeTab, buildingId: activeBuildingId });
+      setNotifications(notifications.map(m => {
+        if (activeTab === 'all' || m.category === activeTab) return { ...m, read: true };
+        return m;
+      }));
+    } catch (err) {
+      console.error('Error marking read:', err);
+    }
   };
 
-  const deleteNotification = (id) => {
-    if (activeTab === 'all') setMessages(messages.filter(m => m.id !== id));
-    if (activeTab === 'system') setSystemLogs(systemLogs.filter(m => m.id !== id));
-    if (activeTab === 'staff') setStaffUpdates(staffUpdates.filter(m => m.id !== id));
+  const deleteNotification = async (id) => {
+    try {
+      await api.deleteNotification(id);
+      setNotifications(notifications.filter(m => m.id !== id && m._id !== id));
+    } catch (err) {
+      console.error('Error deleting notification:', err);
+    }
   };
 
-  const currentData = activeTab === 'all' ? messages : activeTab === 'system' ? systemLogs : staffUpdates;
+  const currentData = activeTab === 'all' 
+    ? notifications 
+    : notifications.filter(n => n.category === activeTab);
 
   const getTypeIcon = (type) => {
     switch (type) {

@@ -111,7 +111,7 @@ const Tenants = () => {
   const fetchTenants = async () => {
     setIsLoading(true);
     try {
-      const data = await api.getTenants();
+      const data = await api.getTenants(activeBuildingId);
       if (!data) {
         setTenants([]);
         setIsLoading(false);

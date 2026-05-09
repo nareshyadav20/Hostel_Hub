@@ -54,9 +54,14 @@ export const api = {
 
   // Buildings & Infrastructure
   getBuildings: async () => {
-    const res = await axios.get(`${API_URL}/buildings`);
+    const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Active' } });
     const data = Array.isArray(res.data) ? res.data : [];
-    return handleId(data.filter(b => b.status !== 'Draft'));
+    return handleId(data);
+  },
+  getDraftBuildings: async () => {
+    const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Draft' } });
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data);
   },
   getHostels: async () => {
     const res = await axios.get(`${API_URL}/hostels`);
@@ -142,24 +147,32 @@ export const api = {
   },
 
   // Operational Data
-  getTenants: async () => {
-    const res = await axios.get(`${API_URL}/tenants`);
+  getTenants: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/tenants`, { params });
     return handleId(res.data);
   },
-  getComplaints: async () => {
-    const res = await axios.get(`${API_URL}/complaints`);
+  getComplaints: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/complaints`, { params });
     return handleId(res.data);
   },
   updateComplaintStatus: async (id, status, assignedTo = null) => {
     const res = await axios.patch(`${API_URL}/complaints/${id}`, { status, assignedTo });
     return handleId(res.data);
   },
-  getPayments: async () => {
-    const res = await axios.get(`${API_URL}/payments`);
+  getPayments: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/payments`, { params });
     return handleId(res.data);
   },
-  getRoomTransfers: async () => {
-    const res = await axios.get(`${API_URL}/room-transfers`);
+  updatePaymentStatus: async (id, status) => {
+    const res = await axios.patch(`${API_URL}/payments/${id}`, { status });
+    return handleId(res.data);
+  },
+  getRoomTransfers: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/room-transfers`, { params });
     return handleId(res.data);
   },
   updateRoomTransferStatus: async (id, status) => {
@@ -211,12 +224,14 @@ export const api = {
     const res = await axios.post(`${API_URL}/staff/${id}/activity`, { action });
     return handleId(res.data);
   },
-  getSettings: async () => {
-    const res = await axios.get(`${API_URL}/settings`);
+  getSettings: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/settings`, { params });
     return res.data;
   },
-  updateSettings: async (data) => {
-    const res = await axios.post(`${API_URL}/settings`, data);
+  updateSettings: async (data, buildingId) => {
+    const payload = buildingId ? { ...data, buildingId } : data;
+    const res = await axios.post(`${API_URL}/settings`, payload);
     return res.data;
   },
 
@@ -308,6 +323,40 @@ export const api = {
   },
   deleteInventoryItem: async (id) => {
     await axios.delete(`${API_URL}/inventory/${id}`);
+  },
+  // Notifications
+  getNotifications: async (bId) => {
+    const res = await axios.get(`${API_URL}/notifications`, { params: { buildingId: bId } });
+    return handleId(res.data);
+  },
+  sendNotification: async (data) => {
+    const res = await axios.post(`${API_URL}/notifications`, data);
+    return handleId(res.data);
+  },
+  markNotificationRead: async (id) => {
+    const res = await axios.patch(`${API_URL}/notifications/${id}/read`);
+    return handleId(res.data);
+  },
+  markAllNotificationsRead: async (data) => {
+    const res = await axios.post(`${API_URL}/notifications/mark-all-read`, data);
+    return res.data;
+  },
+  deleteNotification: async (id) => {
+    await axios.delete(`${API_URL}/notifications/${id}`);
+    return res.data;
+  },
+  // Procurement
+  getProcurementData: async (bId) => {
+    const res = await axios.get(`${API_URL}/procurement`, { params: { buildingId: bId } });
+    return res.data;
+  },
+  addPurchaseRequest: async (data) => {
+    const res = await axios.post(`${API_URL}/procurement/requests`, data);
+    return handleId(res.data);
+  },
+  addPurchaseOrder: async (data) => {
+    const res = await axios.post(`${API_URL}/procurement/orders`, data);
+    return handleId(res.data);
   }
 };
 

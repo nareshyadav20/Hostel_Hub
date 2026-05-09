@@ -34,7 +34,6 @@ const Sidebar = () => {
     { name: 'Staff', path: `/owner/building/${activeBuildingId}/staff`, icon: <Briefcase {...iconProps} /> },
     { name: 'Mess Menu', path: `/owner/building/${activeBuildingId}/mess`, icon: <UtensilsCrossed {...iconProps} /> },
     { name: 'Complaints', path: `/owner/building/${activeBuildingId}/complaints`, icon: <MessageSquareWarning {...iconProps} /> },
-    { name: 'Transfers', path: `/owner/building/${activeBuildingId}/transfers`, icon: <RefreshCw {...iconProps} /> },
     { name: 'Inventory', path: `/owner/building/${activeBuildingId}/inventory`, icon: <PackageOpen {...iconProps} /> },
     { name: 'Reports', path: `/owner/building/${activeBuildingId}/reports`, icon: <BarChart3 {...iconProps} /> },
     { name: 'Settings', path: `/owner/building/${activeBuildingId}/settings`, icon: <Settings {...iconProps} /> },

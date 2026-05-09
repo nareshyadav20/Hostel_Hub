@@ -3,6 +3,7 @@ const Tenant = require('../models/Tenant');
 const Payment = require('../models/Payment');
 const Complaint = require('../models/Complaint');
 const User = require('../models/User');
+const SystemSettings = require('../models/SystemSettings');
 
 // Helper: traverse the nested property hierarchy
 const traverseHierarchy = (buildings) => {
@@ -61,6 +62,9 @@ exports.getSummaryKPIs = async (req, res) => {
     const pendingPaymentsAmount = pendingPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
     // 4. Health Score (Dynamic)
+    const settings = await SystemSettings.findOne({ owner: req.user.id });
+    const defaultRent = settings ? settings.rentSettings.defaultRent.single : 8000;
+
     const occupancyScore = Math.min(40, (occupancyRate / 100) * 40);
     const paymentScore = Math.max(0, 30 - (pendingPaymentsCount * 1.5));
     const maintenanceScore = Math.max(0, 20 - (maintenanceRooms * 2));
@@ -76,7 +80,7 @@ exports.getSummaryKPIs = async (req, res) => {
     res.json({
       totalBeds, occupiedBeds, vacantBeds, occupancyRate,
       todayRevenue, 
-      expectedMonthlyRevenue: totalTenants * 8000, 
+      expectedMonthlyRevenue: totalTenants * defaultRent, 
       pendingPaymentsCount, pendingPaymentsAmount,
       maintenanceRooms, healthScore,
       buildingCount: buildings.length,

@@ -33,10 +33,11 @@ const Settings = () => {
   };
 
   const handleSave = async () => {
+    const activeBuildingId = buildingId || localStorage.getItem('selectedBuildingId');
     setIsSaving(true);
     setMsg({ type: '', text: '' });
     try {
-      await api.updateSettings(settings);
+      await api.updateSettings(settings, activeBuildingId);
       setMsg({ type: 'success', text: 'Settings updated successfully!' });
       setTimeout(() => setMsg({ type: '', text: '' }), 3000);
     } catch (err) {

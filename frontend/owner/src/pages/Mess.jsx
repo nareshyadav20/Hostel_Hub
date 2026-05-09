@@ -82,18 +82,35 @@ const Mess = () => {
 
   const [tenants, setTenants] = useState([]);
   const [attendance, setAttendance] = useState({});
+  // Format today's date as YYYY-MM-DD for backend
+  const todayDate = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const t = await api.getTenants();
-        setTenants(t.filter(x => x.buildingId === activeBuildingId || !activeBuildingId));
+        const t = await api.getTenants(activeBuildingId);
+        const filteredTenants = (t || []).filter(x => x.buildingId === activeBuildingId || !activeBuildingId);
+        setTenants(filteredTenants);
+
+        // Load today's attendance from backend
+        if (buildingId) {
+          const attData = await api.getMessAttendance(buildingId, todayDate);
+          const attMap = {};
+          (attData || []).forEach(rec => {
+            attMap[rec.tenantId] = {
+              breakfast: rec.breakfast || false,
+              lunch: rec.lunch || false,
+              dinner: rec.dinner || false
+            };
+          });
+          setAttendance({ [today]: attMap });
+        }
       } catch (err) {
         console.error(err);
       }
     };
     fetchData();
-  }, [activeBuildingId]);
+  }, [activeBuildingId, buildingId]);
 
   const [editForm, setEditForm] = useState({ breakfast: '', lunch: '', dinner: '' });
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -130,23 +147,36 @@ const Mess = () => {
     }
   };
 
-  const toggleAttendance = (tenantId, meal) => {
+  const toggleAttendance = async (tenantId, meal) => {
     const dayAttendance = attendance[today] || {};
     const tenantAttendance = dayAttendance[tenantId] || { breakfast: false, lunch: false, dinner: false };
-    
+    const newValue = !tenantAttendance[meal];
+
+    // Optimistic UI update
     setAttendance({
       ...attendance,
       [today]: {
         ...dayAttendance,
         [tenantId]: {
           ...tenantAttendance,
-          [meal]: !tenantAttendance[meal]
+          [meal]: newValue
         }
       }
     });
+
+    // Persist to backend
+    if (buildingId) {
+      api.updateMessAttendance({
+        tenantId,
+        buildingId,
+        date: todayDate,
+        meal,
+        status: newValue
+      }).catch(err => console.error('Failed to save attendance:', err));
+    }
   };
 
-  const markAllPresent = (meal) => {
+  const markAllPresent = async (meal) => {
     const dayAttendance = attendance[today] || {};
     const newDayAttendance = { ...dayAttendance };
     
@@ -161,6 +191,16 @@ const Mess = () => {
       ...attendance,
       [today]: newDayAttendance
     });
+
+    // Persist to backend
+    if (buildingId && tenants.length > 0) {
+      api.markAllMessAttendance({
+        buildingId,
+        date: todayDate,
+        meal,
+        tenantIds: tenants.map(t => t.id || t._id)
+      }).catch(err => console.error('Failed to mark all attendance:', err));
+    }
   };
 
   const getAttendanceStats = () => {

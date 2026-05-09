@@ -174,14 +174,27 @@ const InventoryModule = () => {
   const [budgets] = useState(INITIAL_BUDGETS);
 
   // UI States
-  const [selectedCategory, setSelectedCategory] = useState('CAT-FOOD');
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({ 'CAT-FOOD': true });
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isAssetModalOpen, setIsAssetModalOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [stockFilter, setStockFilter] = useState('All Levels');
+
+  const [newItemData, setNewItemData] = useState({
+    name: '',
+    categoryId: 'CAT-FOOD',
+    subCategoryId: 'SUB-GRAIN',
+    stock: 0,
+    maxStock: 100,
+    minThreshold: 10,
+    unit: 'Units',
+    location: ''
+  });
 
   useEffect(() => {
     fetchInventory();
@@ -190,12 +203,24 @@ const InventoryModule = () => {
   const fetchInventory = async () => {
     setLoading(true);
     try {
-      const data = await api.getInventory(activeBuildingId);
-      // Fallback to initial if mock is empty, but usually api should return data
-      setInventory(data || INITIAL_INVENTORY);
+      const [invData, procData] = await Promise.all([
+        api.getInventory(activeBuildingId),
+        api.getProcurementData(activeBuildingId)
+      ]);
+      
+      setInventory(invData || []);
+      setRequests(procData.requests || []);
+      setPos(procData.pos || []);
+      
+      // Filter assets from inventory collection
+      const assetItems = (invData || []).filter(i => i.type === 'Asset');
+      setAssets(assetItems); 
     } catch (err) {
       console.error(err);
-      setInventory(INITIAL_INVENTORY);
+      setInventory([]);
+      setRequests([]);
+      setPos([]);
+      setAssets([]);
     } finally {
       setLoading(false);
     }
@@ -204,6 +229,19 @@ const InventoryModule = () => {
   const triggerNotification = (msg, color = 'blue') => {
     setNotifications(prev => [{ msg, color, id: Date.now() }, ...prev]);
     setTimeout(() => setNotifications(prev => prev.slice(0, -1)), 5000);
+  };
+
+  const handleAddItem = async (e) => {
+    e.preventDefault();
+    try {
+      const item = await api.addInventoryItem({ ...newItemData, buildingId: activeBuildingId });
+      setInventory(prev => [...prev, item]);
+      setIsAddItemModalOpen(false);
+      triggerNotification('Item Added Successfully', 'green');
+    } catch (err) {
+      console.error(err);
+      triggerNotification('Failed to add item', 'red');
+    }
   };
 
   // --- ANALYTICS ---
@@ -260,18 +298,50 @@ const InventoryModule = () => {
       <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
           <div style={{ position: 'relative', flex: 1, minWidth: '300px' }}><Search size={20} style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} /><input type="text" placeholder="Search Materials..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ padding: '1rem 1rem 1rem 3.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', width: '100%', outline: 'none', background: '#FFFFFF', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} /></div>
-          <select style={{ padding: '1rem', borderRadius: '16px', border: '1px solid #E2E8F0', fontWeight: '800', outline: 'none', background: '#FFFFFF' }}><option>All Levels</option><option>Critical Only</option><option>Low Stock</option></select>
-          <button style={{ background: '#3B82F6', color: 'white', border: 'none', padding: '1rem 1.5rem', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><Plus size={20}/> Add Item</button>
+          <select 
+            value={stockFilter} 
+            onChange={e => setStockFilter(e.target.value)}
+            style={{ padding: '1rem', borderRadius: '16px', border: '1px solid #E2E8F0', fontWeight: '800', outline: 'none', background: '#FFFFFF' }}
+          >
+            <option>All Levels</option>
+            <option>Critical Only</option>
+            <option>Low Stock</option>
+          </select>
+          <button 
+            onClick={() => setIsAddItemModalOpen(true)}
+            style={{ background: '#3B82F6', color: 'white', border: 'none', padding: '1rem 1.5rem', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.6rem' }}
+          >
+            <Plus size={20}/> Add Item
+          </button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-          {inventory.filter(i => (selectedCategory ? i.categoryId === selectedCategory : true) && (selectedSubCategory ? i.subCategoryId === selectedSubCategory : true) && i.name.toLowerCase().includes(searchQuery.toLowerCase())).map(item => (
+          {(() => {
+  const filteredInventory = inventory.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         (item.category && item.category.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    // Support both categoryId (from new saves) and category (from seeded data)
+    const matchesCategory = !selectedCategory || 
+                           item.categoryId === selectedCategory || 
+                           (item.category && item.category.toUpperCase().includes(selectedCategory.replace('CAT-', '')));
+    
+    const matchesSubCategory = !selectedSubCategory || item.subCategoryId === selectedSubCategory;
+    
+    let matchesStock = true;
+    if (stockFilter === 'Critical Only') matchesStock = item.stock <= item.minThreshold;
+    if (stockFilter === 'Low Stock') matchesStock = item.stock > item.minThreshold && item.stock <= item.minThreshold * 1.5;
+    
+    return matchesSearch && matchesCategory && matchesSubCategory && matchesStock;
+  });
+  return filteredInventory.map(item => (
             <motion.div layout key={item.id} className="card" style={{ padding: '1.8rem', borderTop: `6px solid ${item.stock < item.minThreshold ? '#E11D48' : '#10B981'}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem' }}><Badge color="slate">{SUBCATEGORIES.find(s=>s.id===item.subCategoryId)?.name}</Badge><Badge color={item.stock < item.minThreshold ? 'red' : 'green'}>{item.stock < item.minThreshold ? 'Low Stock' : 'Stable'}</Badge></div>
               <h3 style={{ margin: '0 0 0.4rem 0', fontWeight: '900', fontSize: '1.2rem' }}>{item.name}</h3>
               <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#64748B', fontWeight: '700' }}><MapPin size={14} style={{ marginRight: '0.3rem' }}/> {item.location}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}><div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>AVAILABLE STOCK</p><span style={{ fontSize: '2rem', fontWeight: '900', color: '#0F172A' }}>{item.stock}</span><span style={{ fontSize: '1rem', color: '#64748B', marginLeft: '0.4rem', fontWeight: '800' }}>{item.unit}</span></div><div style={{ display: 'flex', gap: '0.6rem' }}><button onClick={() => { setSelectedItem(item); setIsModalOpen(true); }} style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#3B82F6' }}><Edit size={18}/></button><button style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#64748B' }}><History size={18}/></button></div></div>
             </motion.div>
-          ))}
+          ))
+  })()}
         </div>
       </div>
     </div>
@@ -517,6 +587,75 @@ const InventoryModule = () => {
              </div>
           </div>
         )}
+      </Modal>
+
+      {/* Add Item Modal */}
+      <Modal isOpen={isAddItemModalOpen} onClose={() => setIsAddItemModalOpen(false)} title="Add New Inventory Item">
+        <form onSubmit={handleAddItem} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>ITEM NAME</label>
+              <input 
+                required 
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} 
+                value={newItemData.name} 
+                onChange={e => setNewItemData({...newItemData, name: e.target.value})} 
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>CATEGORY</label>
+              <select 
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}
+                value={newItemData.categoryId}
+                onChange={e => setNewItemData({...newItemData, categoryId: e.target.value})}
+              >
+                {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>INITIAL STOCK</label>
+              <input 
+                type="number" 
+                required 
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} 
+                value={newItemData.stock} 
+                onChange={e => setNewItemData({...newItemData, stock: parseInt(e.target.value)})} 
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>UNIT (e.g. Kg, Units)</label>
+              <input 
+                required 
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} 
+                value={newItemData.unit} 
+                onChange={e => setNewItemData({...newItemData, unit: e.target.value})} 
+              />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>MIN THRESHOLD</label>
+              <input 
+                type="number" 
+                required 
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} 
+                value={newItemData.minThreshold} 
+                onChange={e => setNewItemData({...newItemData, minThreshold: parseInt(e.target.value)})} 
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>LOCATION</label>
+              <input 
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} 
+                value={newItemData.location} 
+                onChange={e => setNewItemData({...newItemData, location: e.target.value})} 
+              />
+            </div>
+          </div>
+          <button type="submit" style={{ background: '#3B82F6', color: 'white', padding: '1rem', borderRadius: '16px', fontWeight: '900', border: 'none', cursor: 'pointer', marginTop: '1rem' }}>Create Inventory Item</button>
+        </form>
       </Modal>
 
       <style>{`
