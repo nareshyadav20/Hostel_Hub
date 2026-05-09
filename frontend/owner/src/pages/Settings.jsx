@@ -48,6 +48,7 @@ const Settings = () => {
   };
 
   if (isLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading System Settings...</div>;
+  if (!settings) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--accent-primary)' }}>Failed to load settings or no settings available.</div>;
 
   const tabs = [
     { id: 'general', name: 'General', icon: <Building size={18} /> },

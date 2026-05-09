@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Utensils, Calendar as CalendarIcon, Users, Edit3, ArrowRight, Sun, Coffee, Moon, CheckCircle, X, Grid, List } from 'lucide-react';
+import { Utensils, Calendar as CalendarIcon, Users, Edit3, ArrowRight, Sun, Coffee, Moon, CheckCircle, X, Grid, List, TrendingUp } from 'lucide-react';
 import { api } from '../mockData';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 const Mess = () => {
   const { buildingId: urlBuildingId } = useParams();
@@ -259,62 +260,127 @@ const Mess = () => {
       {activeTab === 'dashboard' && (
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Total Meals Today</p>
+            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05 }}><Utensils size={100} /></div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Total Meals Today</p>
               <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{stats.breakfast + stats.lunch + stats.dinner}</h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--accent-success)', marginTop: '0.5rem' }}>↑ 12% from yesterday</p>
-            </div>
-            <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #8b5cf6' }}>
+              <p style={{ fontSize: '0.8rem', color: 'var(--accent-success)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><TrendingUp size={12}/> 12% from yesterday</p>
+            </motion.div>
+            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #8b5cf6', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05 }}><Users size={100} /></div>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Premium Usage</p>
               <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{stats.planUsage.Premium}</h2>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Active premium subscribers</p>
-            </div>
-            <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #ef4444' }}>
+            </motion.div>
+            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #ef4444', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05 }}><X size={100} /></div>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Skipped Meals</p>
               <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{tenants.length * 3 - (stats.breakfast + stats.lunch + stats.dinner)}</h2>
               <p style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '0.5rem' }}>Based on total subscribers</p>
-            </div>
-            <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b' }}>
+            </motion.div>
+            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05 }}><CalendarIcon size={100} /></div>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Peak Usage Time</p>
               <h2 style={{ fontSize: '1.8rem', fontWeight: '900', marginTop: '0.5rem' }}>1:30 PM</h2>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>During Lunch hours</p>
-            </div>
+            </motion.div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
             <div className="card" style={{ padding: '2rem' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '2rem' }}>Meal Consumption Analytics</h3>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2rem', height: '200px', paddingBottom: '2rem' }}>
-                {[
-                  { label: 'Breakfast', val: stats.breakfast, color: '#f59e0b' },
-                  { label: 'Lunch', val: stats.lunch, color: '#10b981' },
-                  { label: 'Dinner', val: stats.dinner, color: '#6366f1' }
-                ].map(bar => (
-                  <div key={bar.label} style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                    <div style={{ width: '100%', background: bar.color, borderRadius: '8px 8px 0 0', height: tenants.length ? `${(bar.val / tenants.length) * 100}%` : '0%', minHeight: '10px', transition: 'height 0.5s ease' }} />
-                    <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>{bar.label}</span>
-                  </div>
-                ))}
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Utensils size={18} color="var(--accent-primary)"/> Meal Consumption Analytics</h3>
+              <div style={{ height: '300px', width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={[
+                    { name: 'Breakfast', consumed: stats.breakfast, fill: '#f59e0b' },
+                    { name: 'Lunch', consumed: stats.lunch, fill: '#10b981' },
+                    { name: 'Dinner', consumed: stats.dinner, fill: '#6366f1' }
+                  ]} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" opacity={0.5} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12, fontWeight: 600 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+                    <RechartsTooltip 
+                      cursor={{ fill: 'var(--bg-tertiary)', opacity: 0.4 }}
+                      contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', boxShadow: 'var(--shadow-md)' }}
+                      labelStyle={{ color: 'var(--text-primary)', fontWeight: 'bold', marginBottom: '5px' }}
+                      itemStyle={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}
+                    />
+                    <Bar dataKey="consumed" radius={[8, 8, 0, 0]} maxBarSize={60}>
+                      {
+                        [
+                          { name: 'Breakfast', consumed: stats.breakfast, fill: '#f59e0b' },
+                          { name: 'Lunch', consumed: stats.lunch, fill: '#10b981' },
+                          { name: 'Dinner', consumed: stats.dinner, fill: '#6366f1' }
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))
+                      }
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
-            <div className="card" style={{ padding: '2rem' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '1.5rem' }}>Most Preferred</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {[
-                  { dish: 'Paneer Masala', score: 98, color: '#8b5cf6' },
-                  { dish: 'Veg Biryani', score: 85, color: '#3b82f6' },
-                  { dish: 'Aloo Paratha', score: 72, color: '#94a3b8' }
-                ].map((fav, i) => (
-                  <div key={i}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem', fontSize: '0.9rem' }}>
-                      <span style={{ fontWeight: '700' }}>{fav.dish}</span>
-                      <span style={{ color: 'var(--text-muted)' }}>{fav.score}%</span>
-                    </div>
-                    <div style={{ width: '100%', height: '6px', background: 'var(--bg-tertiary)', borderRadius: '3px' }}>
-                      <div style={{ width: `${fav.score}%`, height: '100%', background: fav.color, borderRadius: '3px' }} />
-                    </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="card" style={{ padding: '2rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Users size={18} color="#8b5cf6"/> Plan Distribution</h3>
+                <div style={{ flex: 1, position: 'relative', minHeight: '180px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Premium', value: stats.planUsage.Premium, color: '#8b5cf6' },
+                          { name: 'Standard', value: stats.planUsage.Standard, color: '#3b82f6' },
+                          { name: 'Basic', value: stats.planUsage.Basic, color: '#94a3b8' }
+                        ].filter(d => d.value > 0).length ? [
+                          { name: 'Premium', value: stats.planUsage.Premium, color: '#8b5cf6' },
+                          { name: 'Standard', value: stats.planUsage.Standard, color: '#3b82f6' },
+                          { name: 'Basic', value: stats.planUsage.Basic, color: '#94a3b8' }
+                        ].filter(d => d.value > 0) : [{ name: 'No Data', value: 1, color: '#334155' }]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {
+                          ([
+                            { name: 'Premium', value: stats.planUsage.Premium, color: '#8b5cf6' },
+                            { name: 'Standard', value: stats.planUsage.Standard, color: '#3b82f6' },
+                            { name: 'Basic', value: stats.planUsage.Basic, color: '#94a3b8' }
+                          ].filter(d => d.value > 0).length ? [
+                            { name: 'Premium', value: stats.planUsage.Premium, color: '#8b5cf6' },
+                            { name: 'Standard', value: stats.planUsage.Standard, color: '#3b82f6' },
+                            { name: 'Basic', value: stats.planUsage.Basic, color: '#94a3b8' }
+                          ].filter(d => d.value > 0) : [{ name: 'No Data', value: 1, color: '#334155' }]).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))
+                        }
+                      </Pie>
+                      <RechartsTooltip 
+                        contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}
+                        itemStyle={{ color: 'var(--text-primary)', fontWeight: 'bold' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                    <span style={{ fontSize: '1.8rem', fontWeight: '900' }}>{tenants.length}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>Total</span>
                   </div>
-                ))}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                  {[
+                    { name: 'Premium', value: stats.planUsage.Premium, color: '#8b5cf6' },
+                    { name: 'Standard', value: stats.planUsage.Standard, color: '#3b82f6' },
+                    { name: 'Basic', value: stats.planUsage.Basic, color: '#94a3b8' }
+                  ].map(p => (
+                    <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: '600' }}>
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: p.color }} /> {p.name} ({p.value})
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
