@@ -5,16 +5,26 @@ const Building = require('../models/Building');
 
 const createBed = async (req, res) => {
   try {
-    const { bedNumber, roomId, images, position, bedType } = req.body;
+    const { 
+      bedNumber, roomId, images, position, bedType,
+      comfortScore, specs, smartFeatures, hygieneSeal
+    } = req.body;
     const room = await Room.findById(roomId).populate({ path: 'floor', populate: { path: 'building' } });
     if (!room || room.floor.building.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Room not found or unauthorized' });
     }
 
     const bed = await Bed.create({ 
-      bedNumber, status: 'AVAILABLE', images: images||[], 
-      position: position||'Standard', bedType: bedType||'Single',
-      room: roomId 
+      bedNumber, 
+      status: 'AVAILABLE', 
+      images: images||[], 
+      position: position||'Standard', 
+      bedType: bedType||'Single',
+      room: roomId,
+      comfortScore,
+      specs,
+      smartFeatures,
+      hygieneSeal
     });
     room.beds.push(bed._id);
     await room.save();

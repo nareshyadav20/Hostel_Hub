@@ -5,25 +5,74 @@ const Room = require('../models/Room');
 const createBuilding = async (req, res) => {
   try {
     const { 
-      name, address, locationCity, description, amenities, images, 
-      startingPrice, genderType, category, rating, popularityLabel,
-      policies, staffInfo, status, lastStep, draftData
+      name, buildingName, propertyType, genderType, description, shortDesc, longDesc, coverImage, images,
+      address, addrLine1, addrLine2, locationCity, state, pincode, landmark,
+      numBuildings, numFloors, totalRooms, totalBeds, roomTypes,
+      rentPerBed, rentPerRoom, securityDeposit, maintenanceCharges, electricityPolicy, waterPolicy,
+      baseRoomConfig, foodAvailable, mealPlans, foodType, messCharges,
+      amenities, smartConfig, policies, staffInfo, ownerDetails,
+      hygieneScore, energyEfficiency, revenueEngine, roiValue, systemsStatus, smartAccessSystem,
+      status, lastStep, draftData
     } = req.body;
 
     const building = await Building.create({ 
       name: name || 'Untitled Draft', 
-      address, 
-      locationCity: locationCity || 'Bengaluru',
-      description, 
-      amenities: amenities||[], 
-      images: images||[],
-      startingPrice: startingPrice || 5000,
+      buildingName,
+      propertyType: propertyType || 'Hostel',
       genderType: genderType || 'Mixed',
-      category: category || 'Student',
-      rating: rating || 4.5,
-      popularityLabel,
+      description,
+      shortDesc,
+      longDesc,
+      coverImage,
+      images: images || [],
+      
+      address: address || addrLine1 || 'Draft Address',
+      addrLine1,
+      addrLine2,
+      locationCity: locationCity || 'Bengaluru',
+      state,
+      pincode,
+      landmark,
+
+      numBuildings: numBuildings || 1,
+      numFloors: numFloors || 1,
+      totalRooms,
+      totalBeds,
+      roomTypes: roomTypes || [],
+
+      rentPerBed,
+      rentPerRoom,
+      securityDeposit,
+      maintenanceCharges,
+      electricityPolicy: electricityPolicy || 'Included',
+      waterPolicy: waterPolicy || 'Included',
+
+      baseRoomConfig,
+      foodAvailable: foodAvailable || 'No',
+      mealPlans: mealPlans || [],
+      foodType,
+      messCharges,
+
+      amenities: amenities || [],
+      smartConfig: smartConfig || {
+        hasSmartAccess: false,
+        hasClimateControl: false,
+        hasAirQualityMonitor: false,
+        hasAIHygiene: false,
+        hasCCTVAi: false,
+        targetComfortScore: 90
+      },
       policies: policies || { smoking: 'Not Allowed', alcohol: 'Not Allowed', pets: 'No', visitors: 'Till 8 PM' },
       staffInfo,
+      ownerDetails,
+
+      hygieneScore,
+      energyEfficiency,
+      revenueEngine,
+      roiValue,
+      systemsStatus,
+      smartAccessSystem,
+
       status: status || 'Active',
       lastStep: lastStep || 1,
       draftData,

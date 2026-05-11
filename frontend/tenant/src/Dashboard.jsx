@@ -67,19 +67,19 @@ function Dashboard() {
             <div className="dash-stat-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </div>
-            <div><strong>Block A</strong><span>Building</span></div>
+            <div><strong>{tenantData?.buildingId?.name || 'Block A'}</strong><span>Building</span></div>
           </div>
           <div className="dash-stat-chip">
             <div className="dash-stat-icon" style={{ background: '#fef3c7', color: '#d97706' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
             </div>
-            <div><strong>{tenantData?.room || '203'}</strong><span>Room No.</span></div>
+            <div><strong>{tenantData?.roomId?.roomNumber || tenantData?.room || '203'}</strong><span>Room No.</span></div>
           </div>
           <div className="dash-stat-chip">
             <div className="dash-stat-icon" style={{ background: '#f0fdf4', color: '#16a34a' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             </div>
-            <div><strong>2 Sharing</strong><span>Room Type</span></div>
+            <div><strong>{tenantData?.roomId?.roomType || '2 Sharing'}</strong><span>Room Type</span></div>
           </div>
         </div>
       </section>
@@ -252,7 +252,7 @@ function Dashboard() {
               { label: 'WiFi', status: 'Good', icon: '📶', color: '#16a34a' },
               { label: 'Power', status: 'Stable', icon: '⚡', color: '#16a34a' },
               { label: 'Water', status: 'Available', icon: '💧', color: '#16a34a' },
-              { label: 'Laundry', status: 'Open', icon: '🧺', color: '#2563eb' }
+              { label: 'Laundry', status: tenantData?.buildingId?.liveFacilities?.includes('Laundry') ? 'Open' : 'Unavailable', icon: '🧺', color: '#2563eb' }
             ].map((f, i) => (
               <div key={i} className="dash-facility-row">
                 <div className="dash-fac-left">
@@ -267,6 +267,53 @@ function Dashboard() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
             Request a Service
           </button>
+        </div>
+
+        {/* Administrative Intelligence Card */}
+        <div className="sn-card dash-ai-card" style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: 'white', overflow: 'hidden', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)', zIndex: 0 }}></div>
+          <div className="dash-card-header" style={{ position: 'relative', zIndex: 1 }}>
+            <div className="dash-card-icon" style={{ background: 'rgba(255,255,255,0.1)', color: '#818cf8' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2a10 10 0 1 0 10 10H12V2z"></path><path d="M12 2a10 10 0 0 1 10 10h-7.5l-3.5-3.5L12 2z"></path></svg>
+            </div>
+            <h4 className="sn-card-title" style={{ color: 'white' }}>Administrative Intelligence</h4>
+            <span style={{ marginLeft: 'auto', fontSize: '0.65rem', fontWeight: '900', background: '#6366F1', padding: '0.3rem 0.6rem', borderRadius: '8px' }}>LIVE ANALYTICS</span>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.2rem', marginTop: '1.5rem', position: 'relative', zIndex: 1 }}>
+            <div className="ai-stat-box">
+              <span style={{ fontSize: '0.6rem', fontWeight: '900', color: '#94A3B8', textTransform: 'uppercase' }}>Hygiene Index</span>
+              <div style={{ fontSize: '1.6rem', fontWeight: '1000', color: '#10B981', marginTop: '0.3rem' }}>{tenantData?.roomId?.hygieneIndex || 98}%</div>
+              <div style={{ fontSize: '0.65rem', color: '#10B981', opacity: 0.8 }}>Highly Sanitized</div>
+            </div>
+            <div className="ai-stat-box">
+              <span style={{ fontSize: '0.6rem', fontWeight: '900', color: '#94A3B8', textTransform: 'uppercase' }}>Comfort Score</span>
+              <div style={{ fontSize: '1.6rem', fontWeight: '1000', color: '#6366F1', marginTop: '0.3rem' }}>{tenantData?.roomId?.comfortScore || 92}%</div>
+              <div style={{ fontSize: '0.65rem', color: '#6366F1', opacity: 0.8 }}>Premium Environment</div>
+            </div>
+            <div className="ai-stat-box">
+              <span style={{ fontSize: '0.6rem', fontWeight: '900', color: '#94A3B8', textTransform: 'uppercase' }}>Building Health</span>
+              <div style={{ fontSize: '1.6rem', fontWeight: '1000', color: '#F59E0B', marginTop: '0.3rem' }}>{tenantData?.buildingId?.hygieneScore || 96}%</div>
+              <div style={{ fontSize: '0.65rem', color: '#F59E0B', opacity: 0.8 }}>Operational Excellent</div>
+            </div>
+            <div className="ai-stat-box" style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <span style={{ fontSize: '0.65rem', fontWeight: '900', color: '#818cf8' }}>AI INSIGHT</span>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '700', lineHeight: '1.4', opacity: 0.9 }}>
+                {tenantData?.roomId?.aiInsight || 'Optimal living conditions detected based on current occupancy and environment scores.'}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '1.5rem', paddingTop: '1.2rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '1rem', position: 'relative', zIndex: 1 }}>
+            {['RFID Access', 'Smart AC', 'AQI Tracking', '24/7 Monitoring'].map(tag => (
+              <span key={tag} style={{ fontSize: '0.65rem', fontWeight: '900', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#6366F1' }}></div> {tag}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </div>

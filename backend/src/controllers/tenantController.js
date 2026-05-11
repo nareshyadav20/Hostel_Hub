@@ -71,7 +71,18 @@ const deleteTenant = async (req, res) => {
 
 const getTenantProfile = async (req, res) => {
   try {
-    const tenant = await Tenant.findOne({ email: req.user.email }); // Simplified for now, linking by email
+    // Find tenant by email and populate their infrastructure details
+    const tenant = await Tenant.findOne({ email: req.user.email })
+      .populate({
+        path: 'roomId',
+        populate: {
+          path: 'floor',
+          select: 'floorNumber hygieneScore occupancyHeatmap'
+        }
+      })
+      .populate('buildingId')
+      .populate('bedId');
+
     if (!tenant) return res.status(404).json({ message: 'Tenant profile not found' });
     res.status(200).json(tenant);
   } catch (err) {

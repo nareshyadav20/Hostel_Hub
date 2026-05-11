@@ -159,7 +159,8 @@ const Portfolio = () => {
   const saveDraftToBackend = useCallback(async (data, step, draftId = null) => {
     const payload = {
       name: data.name || 'Untitled Draft',
-      address: `${data.addr1 || ''}, ${data.city || ''}, ${data.state || ''}`.trim().replace(/^,\s*|,\s*$/g, '') || 'Draft',
+      buildingName: data.buildingName,
+      address: data.addr1 || 'Draft',
       locationCity: data.city || 'Bengaluru',
       genderType: data.gender === 'Co-living (Both)' ? 'Mixed' : data.gender || 'Mixed',
       status: 'Draft',
@@ -228,28 +229,48 @@ const Portfolio = () => {
     
     setIsSubmitting(true);
     try {
-      const extendedDesc = `# Property Overview\n**Type:** ${formData.propertyType} | **Gender:** ${formData.gender}\n**Capacity:** ${formData.totalRooms} Rooms, ${formData.totalBeds} Beds\n# Pricing\n- Rent: ₹${formData.rentBed}/bed, ₹${formData.rentRoom}/room\n- Deposit: ₹${formData.deposit}\n# Contact: ${formData.ownerName} (${formData.phone})\n---\n${formData.longDesc || formData.shortDesc || ''}`;
-
       const payload = {
         name: formData.name || 'New Hostel',
-        address: `${formData.addr1 || ''}, ${formData.city || ''}, ${formData.state || ''}`,
+        buildingName: formData.buildingName,
+        propertyType: formData.propertyType,
+        genderType: formData.gender,
+        shortDesc: formData.shortDesc,
+        longDesc: formData.longDesc,
+        coverImage: formData.coverImage,
+        
+        address: formData.addr1 || 'No Address',
+        addrLine1: formData.addr1,
+        addrLine2: formData.addr2,
         locationCity: formData.city || 'Bengaluru',
-        description: extendedDesc,
-        amenities: formData.amenities || [],
-        images: formData.coverImage ? [formData.coverImage] : [],
-        startingPrice: parseInt(formData.rentBed) || 5000,
-        genderType: formData.gender === 'Co-living (Both)' ? 'Mixed' : formData.gender || 'Mixed',
-        category: formData.propertyType === 'Co-living' ? 'Luxury' : (formData.propertyType === 'PG' ? 'Student' : 'Professional'),
-        rating: 4.5,
-        popularityLabel: 'New Property',
-        status: 'Active',
-        policies: {
-          smoking: formData.smokingPolicy || 'Not Allowed',
-          alcohol: formData.alcoholPolicy || 'Not Allowed',
-          pets: formData.petsAllowed || 'No',
-          visitors: formData.visitorPolicy || 'Till 8 PM'
+        state: formData.state,
+        pincode: formData.pincode,
+        landmark: formData.landmark,
+
+        numBuildings: parseInt(formData.numBuildings) || 1,
+        numFloors: parseInt(formData.numFloors) || 1,
+        totalRooms: parseInt(formData.totalRooms) || 0,
+        totalBeds: parseInt(formData.totalBeds) || 0,
+        roomTypes: formData.roomTypes || [],
+
+        rentPerBed: parseInt(formData.rentBed) || 0,
+        rentPerRoom: parseInt(formData.rentRoom) || 0,
+        securityDeposit: parseInt(formData.deposit) || 0,
+        maintenanceCharges: parseInt(formData.maintenance) || 0,
+        electricityPolicy: formData.electricity,
+        waterPolicy: formData.water,
+
+        baseRoomConfig: {
+          roomNumber: formData.roomBaseName,
+          roomType: formData.roomTypeSelect,
+          bedsPerRoom: parseInt(formData.bedsPerRoom) || 1
         },
-        staffInfo: { name: formData.staffName, role: formData.staffRole, contact: formData.staffContact },
+
+        foodAvailable: formData.foodAvailable,
+        mealPlans: formData.mealPlans,
+        foodType: formData.foodType,
+        messCharges: parseInt(formData.messCharges) || 0,
+
+        amenities: formData.amenities || [],
         smartConfig: {
           hasSmartAccess: formData.hasSmartAccess,
           hasClimateControl: formData.hasClimateControl,
@@ -257,7 +278,27 @@ const Portfolio = () => {
           hasAIHygiene: formData.hasAIHygiene,
           hasCCTVAi: formData.hasCCTVAi,
           targetComfortScore: formData.targetComfortScore
-        }
+        },
+        policies: {
+          smoking: formData.smokingPolicy || 'Not Allowed',
+          alcohol: formData.alcoholPolicy || 'Not Allowed',
+          pets: formData.petsAllowed || 'No',
+          visitors: formData.visitorPolicy || 'Till 8 PM',
+          visitorPolicy: formData.visitorPolicy
+        },
+        staffInfo: { 
+          name: formData.staffName, 
+          role: formData.staffRole, 
+          contact: formData.staffContact 
+        },
+        ownerDetails: {
+          name: formData.ownerName,
+          phone: formData.phone,
+          email: formData.email
+        },
+        status: 'Active',
+        lastStep: currentStep,
+        draftData: formData
       };
 
       if (activeDraftId) {
@@ -294,7 +335,8 @@ const Portfolio = () => {
         const occupiedBeds = bBeds.filter(bed => bed?.status === 'OCCUPIED').length;
         const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
         
-        const monthlyRevenue = occupiedBeds * 8500;
+        const rentPerBed = b?.rentPerBed || 8500;
+        const monthlyRevenue = occupiedBeds * rentPerBed;
         const pendingDues = Math.round(monthlyRevenue * 0.12);
         
         const bRoomNumbers = bRooms.map(r => r?.roomNumber).filter(Boolean);
@@ -1040,6 +1082,11 @@ const BuildingCard = ({ building, onNavigate }) => {
         </div>
         <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', right: '1rem', zIndex: 5 }}>
            <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.3)', margin: 0 }}>{building.name}</h3>
+           {building.buildingName && (
+             <p style={{ fontSize: '0.8rem', fontWeight: '700', color: 'rgba(255,255,255,0.9)', margin: '0.2rem 0 0 0', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+               <Building size={12} /> {building.buildingName}
+             </p>
+           )}
         </div>
       </div>
       <div style={{ padding: '1.2rem' }}>

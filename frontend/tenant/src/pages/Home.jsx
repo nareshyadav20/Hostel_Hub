@@ -403,6 +403,56 @@ const Home = () => {
         </div>
       </section>
 
+      {/* ── AI-POWERED INTELLIGENCE SECTION ── */}
+      <section className="hv2-section hv2-ai-section" style={{ background: '#0F172A', color: 'white', padding: '100px 0', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%)', zIndex: 0 }}></div>
+        <div className="sn-container" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="hv2-section-head">
+            <span className="hv2-tag" style={{ background: 'rgba(99, 102, 241, 0.2)', color: '#818CF8' }}>Next-Gen Living</span>
+            <h2 className="hv2-section-title" style={{ color: 'white' }}>Administrative Intelligence</h2>
+            <p className="hv2-section-sub" style={{ color: '#94A3B8' }}>AI-driven property management for a safer, cleaner environment.</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2.5rem', marginTop: '4rem' }}>
+            {[
+              { icon: '✨', title: 'Hygiene Audit', desc: 'AI-verified sanitization and cleaning protocols.', color: '#10B981' },
+              { icon: '🔒', title: 'Smart Access', desc: 'RFID & Biometric systems for secure, keyless entry.', color: '#3B82F6' },
+              { icon: '🌡️', title: 'Comfort Engine', desc: 'Automated climate and air quality monitoring.', color: '#F59E0B' },
+              { icon: '🧠', title: 'Predictive ROI', desc: 'Optimizing infrastructure for premium living.', color: '#6366F1' }
+            ].map((feat, i) => (
+              <div key={i} style={{ background: 'rgba(255,255,255,0.03)', padding: '2.5rem', borderRadius: '32px', border: '1px solid rgba(255,255,255,0.08)', transition: 'transform 0.3s' }} className="hv2-ai-card">
+                <div style={{ fontSize: '2.5rem', marginBottom: '1.5rem' }}>{feat.icon}</div>
+                <h4 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '0.8rem', color: 'white' }}>{feat.title}</h4>
+                <p style={{ fontSize: '0.9rem', color: '#94A3B8', lineHeight: '1.6', margin: 0 }}>{feat.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: '5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }}>
+             <div style={{ padding: '3rem', background: 'rgba(255,255,255,0.02)', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <h3 style={{ fontSize: '2rem', fontWeight: '1000', marginBottom: '1.5rem', letterSpacing: '-0.03em' }}>Live Property Insights</h3>
+                <p style={{ color: '#94A3B8', fontSize: '1.1rem', lineHeight: '1.7', marginBottom: '2rem' }}>
+                   Our platform integrates neural networks to monitor property health 24/7. From real-time hygiene scoring to automated facility status, experience transparency like never before.
+                </p>
+                <div style={{ display: 'flex', gap: '1.5rem' }}>
+                   <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '2.5rem', fontWeight: '1000', color: '#10B981' }}>98%</div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: '900', color: '#94A3B8', textTransform: 'uppercase' }}>Avg Hygiene Score</div>
+                   </div>
+                   <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '2.5rem', fontWeight: '1000', color: '#6366F1' }}>0.2s</div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: '900', color: '#94A3B8', textTransform: 'uppercase' }}>Smart Access Speed</div>
+                   </div>
+                </div>
+             </div>
+             <div style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(45deg, #4F46E5 0%, #10B981 100%)', opacity: 0.1, filter: 'blur(100px)', borderRadius: '50%' }}></div>
+                <img src={extReal} alt="Smart Building" style={{ width: '100%', borderRadius: '40px', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.5)', position: 'relative', zIndex: 1 }} />
+             </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── LIFESTYLE SECTION ── */}
       <section className="hv2-lifestyle">
         <div className="hv2-section-head">

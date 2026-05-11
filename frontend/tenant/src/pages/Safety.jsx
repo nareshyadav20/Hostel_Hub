@@ -126,6 +126,46 @@ const Safety = () => {
           </div>
         </div>
 
+        {/* Live Property Health Intelligence */}
+        <div className="sn-card health-intelligence-card" style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: 'white', padding: '1.5rem', borderRadius: '28px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)' }}></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', position: 'relative', zIndex: 1 }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', letterSpacing: '-0.02em' }}>Live Property Health</h3>
+              <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.7, fontWeight: '600' }}>Administrative Intelligence Ecosystem</p>
+            </div>
+            <span style={{ padding: '0.4rem 0.8rem', background: '#10B981', color: 'white', borderRadius: '12px', fontSize: '0.65rem', fontWeight: '900' }}>SECURE & HEALTHY</span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', position: 'relative', zIndex: 1 }}>
+            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+               <div style={{ color: '#10B981', marginBottom: '0.5rem' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
+               <span style={{ fontSize: '0.6rem', fontWeight: '900', color: '#94A3B8', textTransform: 'uppercase' }}>Hygiene Index</span>
+               <div style={{ fontSize: '1.4rem', fontWeight: '1000', color: '#10B981' }}>98.4%</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+               <div style={{ color: '#6366F1', marginBottom: '0.5rem' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
+               <span style={{ fontSize: '0.6rem', fontWeight: '900', color: '#94A3B8', textTransform: 'uppercase' }}>Smart Access</span>
+               <div style={{ fontSize: '1.4rem', fontWeight: '1000', color: '#6366F1' }}>ACTIVE</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+               <div style={{ color: '#F59E0B', marginBottom: '0.5rem' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2a10 10 0 1 0 10 10H12V2z"></path><path d="M12 2a10 10 0 0 1 10 10h-7.5l-3.5-3.5L12 2z"></path></svg></div>
+               <span style={{ fontSize: '0.6rem', fontWeight: '900', color: '#94A3B8', textTransform: 'uppercase' }}>AQI Status</span>
+               <div style={{ fontSize: '1.4rem', fontWeight: '1000', color: '#F59E0B' }}>OPTIMAL</div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '1.2rem', padding: '1rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '18px', border: '1px solid rgba(99, 102, 241, 0.2)', position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              <span style={{ fontSize: '0.7rem', fontWeight: '1000', color: '#818cf8', letterSpacing: '0.05em' }}>AI SAFETY INSIGHT</span>
+            </div>
+            <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '700', color: '#94A3B8', lineHeight: '1.5' }}>
+              Neural CCTV active. Motion-tracking sanitization verification complete. Building air quality is within healthy limits for all residents.
+            </p>
+          </div>
+        </div>
+
         {/* Directory & Support Column */}
         <div className="safety-side-col">
           <div className="sn-card directory-card">

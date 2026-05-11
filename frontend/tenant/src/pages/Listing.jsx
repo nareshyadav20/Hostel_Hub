@@ -44,6 +44,9 @@ const Listing = () => {
     gender: b.genderType || b.gender || 'Boys',
     rating: b.rating || 4.1,
     reviews: 128,
+    hygieneScore: b.hygieneScore || 98,
+    energyEfficiency: b.energyEfficiency || 82,
+    smartConfig: b.smartConfig || {},
     price: b.startingPrice || b.price || 16700,
     images: [
       'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80',
@@ -218,17 +221,30 @@ const Listing = () => {
                 </div>
               </section>
 
-              {/* Occupancy Info */}
+              {/* Occupancy & Intelligence Info */}
               <section className="lst-section">
                 <h3 className="lst-section-title">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                  Occupancy & Category
+                  Occupancy & Property Intelligence
                 </h3>
                 <div className="lst-info-chips">
                   <div className="lst-chip"><span className="lst-chip-label">Sharing</span><span className="lst-chip-value">{selectedSharing} Sharing</span></div>
-                  <div className="lst-chip"><span className="lst-chip-label">Category</span><span className="lst-chip-value">{hostel.category}s</span></div>
-                  <div className="lst-chip"><span className="lst-chip-label">Gender</span><span className="lst-chip-value">{hostel.gender}</span></div>
-                  <div className="lst-chip"><span className="lst-chip-label">Occupancy</span><span className="lst-chip-value">70%</span></div>
+                  <div className="lst-chip"><span className="lst-chip-label">Hygiene</span><span className="lst-chip-value" style={{ color: '#10B981' }}>{hostel.hygieneScore}% Score</span></div>
+                  <div className="lst-chip"><span className="lst-chip-label">Efficiency</span><span className="lst-chip-value" style={{ color: '#6366F1' }}>{hostel.energyEfficiency}% Rating</span></div>
+                  <div className="lst-chip"><span className="lst-chip-label">Smart Access</span><span className="lst-chip-value">{hostel.smartConfig?.hasSmartAccess ? 'Active' : 'Basic'}</span></div>
+                </div>
+                
+                {/* AI Insight Box */}
+                <div style={{ marginTop: '1.2rem', padding: '1.2rem', borderRadius: '20px', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', border: '1px solid #e2e8f0' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.6rem' }}>
+                      <div style={{ padding: '0.4rem', borderRadius: '10px', background: '#e0e7ff', color: '#6366F1' }}>
+                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '1000', color: '#1e293b', letterSpacing: '0.05em' }}>LIVORA AI INSIGHT</span>
+                   </div>
+                   <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '700', color: '#475569', lineHeight: '1.5' }}>
+                      Based on recent sanitization audits and occupancy patterns, this property maintains a top-tier hygiene index. Ideal for residents prioritizing cleanliness and modern smart amenities.
+                   </p>
                 </div>
               </section>
 

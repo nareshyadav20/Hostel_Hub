@@ -3,11 +3,24 @@ const Building = require('../models/Building');
 
 const createFloor = async (req, res) => {
   try {
-    const { floorNumber, buildingId, description, images } = req.body;
+    const { 
+      floorNumber, buildingId, description, images,
+      hygieneScore, occupancyHeatmap, aiInsights, floorType, liveFacilities
+    } = req.body;
     const building = await Building.findOne({ _id: buildingId, owner: req.user.id });
     if (!building) return res.status(404).json({ error: 'Building not found or unauthorized' });
     
-    const floor = await Floor.create({ floorNumber, description, images: images||[], building: buildingId });
+    const floor = await Floor.create({ 
+      floorNumber, 
+      description, 
+      images: images||[], 
+      building: buildingId,
+      hygieneScore,
+      occupancyHeatmap,
+      aiInsights,
+      floorType,
+      liveFacilities
+    });
     building.floors.push(floor._id);
     await building.save();
     res.status(201).json(floor);
