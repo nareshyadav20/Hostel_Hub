@@ -6,13 +6,15 @@ import {
   Trash2, X, Archive, Eye, Zap, 
   Smartphone, Mail, AlertTriangle, 
   Info, CreditCard, Box, MessageSquare, 
-  Users, Shield, FileText, LayoutGrid, User, Briefcase
+  Users, Shield, FileText, LayoutGrid, User, Briefcase, Send, CheckCircle
 } from 'lucide-react';
 import { api } from '../mockData';
 import { io } from 'socket.io-client';
 
 const Notifications = () => {
-  const { buildingId } = useParams();
+  const { buildingId: urlBuildingId } = useParams();
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
   const [notifications, setNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState('all'); 
   const [activePortal, setActivePortal] = useState('All'); 
@@ -21,6 +23,10 @@ const Notifications = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  
+  // Composer State
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
+  const [composerData, setComposerData] = useState({ title: '', message: '', target: 'All Tenants' });
 
   const [notifSettings, setNotifSettings] = useState({
     payments: { enabled: true, priority: 'high', delivery: ['in-app', 'sms'] },
@@ -47,25 +53,24 @@ const Notifications = () => {
   const portals = ['All', 'Tenant', 'Staff', 'Owner'];
 
   useEffect(() => {
-    if (buildingId) {
+    if (activeBuildingId) {
       fetchNotifications();
-      const socketUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
-      const socket = io(socketUrl);
-      socket.emit('joinBuilding', buildingId);
+      const socket = io('http://localhost:5000');
+      socket.emit('joinBuilding', activeBuildingId);
       socket.on('newNotification', (newNotif) => {
         setNotifications(prev => [newNotif, ...prev]);
         setUnreadCount(prev => prev + 1);
       });
       return () => socket.disconnect();
     }
-  }, [buildingId]);
+  }, [activeBuildingId]);
 
   const fetchNotifications = async () => {
     setIsLoading(true);
     try {
-      const data = await api.getNotifications(buildingId);
-      setNotifications(data);
-      setUnreadCount(data.filter(n => !n.isRead).length);
+      const data = await api.getNotifications(activeBuildingId);
+      setNotifications(data || []);
+      setUnreadCount((data || []).filter(n => !n.isRead).length);
     } catch (err) {
       console.error('Failed to fetch notifications:', err);
     } finally {
@@ -75,16 +80,39 @@ const Notifications = () => {
 
   const handleSeed = async () => {
     try {
-      await api.seedNotifications(buildingId);
+      await api.seedNotifications(activeBuildingId);
       fetchNotifications();
     } catch (err) {
       console.error('Failed to seed notifications:', err);
     }
   };
 
+  const handleSend = async (e) => {
+    e.preventDefault();
+    try {
+      const portalType = composerData.target === 'Staff Members' ? 'Staff' : 'Tenant';
+      await api.sendNotification({
+        title: composerData.title,
+        message: composerData.message,
+        target: composerData.target,
+        portalType,
+        moduleName: 'Owner',
+        category: 'Announcement',
+        buildingId: activeBuildingId,
+        priority: 'Medium',
+        type: 'info'
+      });
+      fetchNotifications();
+      setIsComposerOpen(false);
+      setComposerData({ title: '', message: '', target: 'All Tenants' });
+    } catch (err) {
+      console.error('Error sending notification:', err);
+    }
+  };
+
   const filteredNotifications = useMemo(() => {
     return notifications
-      .filter(n => activeTab === 'all' || n.moduleName === activeTab)
+      .filter(n => activeTab === 'all' || n.moduleName === activeTab || n.category === activeTab)
       .filter(n => activePortal === 'All' || n.portalType === activePortal)
       .filter(n => filterPriority === 'all' || n.priority === filterPriority)
       .filter(n => 
@@ -105,7 +133,7 @@ const Notifications = () => {
 
   const handleMarkAllRead = async () => {
     try {
-      await api.markAllNotificationsRead(buildingId);
+      await api.markAllNotificationsRead(activeBuildingId);
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch (err) {
@@ -166,6 +194,8 @@ const Notifications = () => {
     );
   };
 
+  const inputStyle = { padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', width: '100%' };
+
   return (
     <div className="notifications-page" style={{ padding: '2rem' }}>
       <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -178,6 +208,9 @@ const Notifications = () => {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={() => setIsComposerOpen(true)} className="btn" style={{ background: '#10B981', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Send size={18} /> Compose Alert
+          </button>
           <button onClick={handleSeed} className="btn" style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Zap size={18} /> Simulate Alerts
           </button>
@@ -275,6 +308,40 @@ const Notifications = () => {
           )}
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {isComposerOpen && (
+          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' }} onClick={() => setIsComposerOpen(false)} />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ position: 'relative', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '900' }}>Send Broadcast Alert</h2>
+                <X style={{ cursor: 'pointer' }} onClick={() => setIsComposerOpen(false)} />
+              </div>
+              <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Target Audience</label>
+                  <select value={composerData.target} onChange={e => setComposerData({...composerData, target: e.target.value})} style={inputStyle}>
+                    <option>All Tenants</option>
+                    <option>Staff Members</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Title</label>
+                  <input type="text" placeholder="e.g. Mess Update, Maintenance Notice" value={composerData.title} onChange={e => setComposerData({...composerData, title: e.target.value})} style={inputStyle} required />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Message</label>
+                  <textarea rows="4" placeholder="Type your message here..." value={composerData.message} onChange={e => setComposerData({...composerData, message: e.target.value})} style={inputStyle} required />
+                </div>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem', background: 'var(--accent-primary)', border: 'none', color: 'white', fontWeight: '800', borderRadius: '12px' }}>
+                  Send Broadcast
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isSettingsOpen && (

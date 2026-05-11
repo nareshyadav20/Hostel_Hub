@@ -18,7 +18,35 @@ const roomSchema = new mongoose.Schema({
   amenities:  [{ type: String }],
   images:     [{ type: String }],
   floor:      { type: mongoose.Schema.Types.ObjectId, ref: 'Floor' },
-  beds:       [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bed' }]
+  beds:       [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bed' }],
+
+  // Smart Room Features (Step 4)
+  ventilationScore: { type: Number, default: 0 },
+  naturalLightScore: { type: Number, default: 0 },
+  noiseLevel: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Medium' },
+  tempComfortScore: { type: Number, default: 0 },
+  studyFriendly: { type: Boolean, default: false },
+  quietRoom: { type: Boolean, default: false },
+
+  // Room Hygiene Tracking (Step 14)
+  hygieneRating: { type: Number, default: 5.0 },
+
+  // Bed & Room Safety Features (Step 5)
+  lockerAvailable: { type: Boolean, default: false },
+  smartLock: { type: Boolean, default: false },
+  rfidAccess: { type: Boolean, default: false },
+  qrAccess: { type: Boolean, default: false },
+  cctvNearby: { type: Boolean, default: false },
+  emergencyExit: { type: Boolean, default: false },
+  femaleSafety: { type: Boolean, default: false },
+
+  // Dynamic Pricing Features (Step 13)
+  premiumPricing: { type: Number, default: 0 },
+  seasonalPricing: { type: Boolean, default: false },
+
+  // Smart Energy Features (Step 15)
+  energyEfficient: { type: Boolean, default: false }
+
 }, { timestamps: true, collection: 'owner_rooms' });
 
 module.exports = mongoose.model('Room', roomSchema);

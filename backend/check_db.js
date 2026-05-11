@@ -1,31 +1,31 @@
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const path = require('path');
-
-dotenv.config({ path: path.join(__dirname, '.env') });
-
 const Building = require('./src/models/Building');
-const Tenant = require('./src/models/Tenant');
-const Payment = require('./src/models/Payment');
+const User = require('./src/models/User');
 
-async function checkData() {
+async function checkDB() {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('Connected to MongoDB');
-
-    const buildings = await Building.find();
-    console.log(`Found ${buildings.length} buildings:`);
-    for (const b of buildings) {
-      const tenantCount = await Tenant.countDocuments({ buildingId: b._id });
-      const paymentCount = await Payment.countDocuments({ buildingId: b._id });
-      console.log(`- ${b.name} (${b._id}): status=${b.status}, owner=${b.owner}, tenants=${tenantCount}, payments=${paymentCount}`);
+    await mongoose.connect('mongodb://hostel_admin:XMCpPZIZbne7NnNs@ac-ozmdn3w-shard-00-00.tdsqbc0.mongodb.net:27017,ac-ozmdn3w-shard-00-01.tdsqbc0.mongodb.net:27017,ac-ozmdn3w-shard-00-02.tdsqbc0.mongodb.net:27017/hostelhub?ssl=true&replicaSet=atlas-14n4zw-shard-0&authSource=admin&appName=hostelhub-db');
+    
+    const buildings = await Building.find({});
+    console.log(`Total buildings: ${buildings.length}`);
+    
+    const ownersInDB = [...new Set(buildings.map(b => b.owner ? b.owner.toString() : 'NO_OWNER'))];
+    console.log(`Owners found in buildings:`, ownersInDB);
+    
+    for (const id of ownersInDB) {
+      if (id === 'NO_OWNER') continue;
+      const u = await User.findById(id);
+      console.log(`ID: ${id} | User: ${u ? u.email : 'NOT FOUND'}`);
     }
-
-    process.exit();
+    
+    const systemOwner = await User.findOne({ role: 'OWNER' });
+    console.log(`System Owner in DB: ${systemOwner ? systemOwner.email : 'NONE'} (${systemOwner ? systemOwner._id : 'N/A'})`);
+    
+    process.exit(0);
   } catch (err) {
     console.error(err);
     process.exit(1);
   }
 }
 
-checkData();
+checkDB();

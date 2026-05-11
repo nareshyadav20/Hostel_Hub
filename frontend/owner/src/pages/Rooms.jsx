@@ -32,7 +32,7 @@ const Rooms = () => {
   const [selectedBuildingId, setSelectedBuildingId] = useState(activeBuildingId || null);
   const [expandedFloors, setExpandedFloors] = useState({});
   const [expandedRooms, setExpandedRooms] = useState({});
-  const [selectedTenantInfo, setSelectedTenantInfo] = useState(null);
+  const [selectedBedDetails, setSelectedBedDetails] = useState(null);
 
   const [filterType, setFilterType] = useState('All');
   const [showFilters, setShowFilters] = useState(false);
@@ -44,13 +44,14 @@ const Rooms = () => {
       console.log("Rooms module fetching for ID:", activeBuildingId);
       setLoading(true);
       try {
+        // Use building-scoped APIs to avoid cross-property data leakage
         const [b, f, r, bd, t, tr] = await Promise.all([
           api.getBuildings(),
-          api.getAllFloors(),
-          api.getAllRooms(),
-          api.getAllBeds(),
-          api.getTenants(),
-          api.getRoomTransfers()
+          activeBuildingId ? api.getFloorsByBuilding(activeBuildingId) : api.getAllFloors(),
+          activeBuildingId ? api.getRoomsByBuilding(activeBuildingId) : api.getAllRooms(),
+          activeBuildingId ? api.getBedsByBuilding(activeBuildingId) : api.getAllBeds(),
+          api.getTenants(activeBuildingId),
+          api.getRoomTransfers(activeBuildingId)
         ]);
 
         setBuildings(b || []);
@@ -58,12 +59,10 @@ const Rooms = () => {
         setRooms(r || []);
         setBeds(bd || []);
         setTenants(t || []);
-        setTransferRequests((tr && tr.length > 0) ? tr.filter(t => {
-          const tBldgId = typeof t.building === 'object' ? t.building._id : t.building;
-          return tBldgId === activeBuildingId;
-        }) : []);
+        // Server now pre-filters by buildingId, so no extra client filter needed
+        setTransferRequests(tr || []);
 
-        const fExp = {}; f?.forEach(x => fExp[x.id || x._id] = true);
+        const fExp = {}; (f || []).forEach(x => fExp[x.id || x._id] = true);
         setExpandedFloors(fExp);
 
         if (activeBuildingId) setSelectedBuildingId(activeBuildingId);
@@ -135,21 +134,20 @@ const Rooms = () => {
   const toggleRoomExpand = (id) => setExpandedRooms(p => ({ ...p, [id]: !p[id] }));
 
   const handleBedClick = (room, bed) => {
-    if (bed.status === 'OCCUPIED') {
-      // Find tenant info (handle populated tenant object)
-      const tName = typeof bed.tenant === 'object' ? bed.tenant.name : bed.tenant;
-      const tId = typeof bed.tenant === 'object' ? bed.tenant._id : (bed.tenantId || bed.tenant);
+    const tName = bed.tenant && typeof bed.tenant === 'object' ? bed.tenant.name : bed.tenant;
+    const tId = bed.tenant && typeof bed.tenant === 'object' ? bed.tenant._id : (bed.tenantId || bed.tenant);
 
-      const tenantInfo = tenants.find(t => t.id === tId || t.name === tName) || {
-        name: tName || 'Unknown Tenant',
-        status: 'Active',
-        room: `Room ${room.roomNumber} - Bed ${bed.bedNumber}`
-      };
-      setSelectedTenantInfo({ ...tenantInfo, roomId: room.id || room._id, bedId: bed.id || bed._id });
-    } else {
-      // Toggle if not occupied, or show action menu
-      toggleBed(room.id, bed.id);
-    }
+    const tenantInfo = tenants.find(t => t.id === tId || t.name === tName) || (bed.status === 'OCCUPIED' ? {
+      name: tName || 'Unknown Tenant',
+      status: 'Active',
+      room: `Room ${room.roomNumber} - Bed ${bed.bedNumber}`
+    } : null);
+
+    setSelectedBedDetails({
+      ...bed,
+      roomInfo: room,
+      tenantInfo: tenantInfo
+    });
   };
 
   const types = [...new Set(rooms.map(r => r.roomType).filter(Boolean))];
@@ -438,6 +436,16 @@ const Rooms = () => {
                                       <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Beds Occupied</p>
                                     </div>
                                   </div>
+                                  
+                                  {/* Smart Room Features Chips */}
+                                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                                    {room.hygieneRating && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#10b98115', color: '#10b981', borderRadius: '4px', fontWeight: '800' }}>✨ Hygiene {room.hygieneRating}/5</span>}
+                                    {room.studyFriendly && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#3b82f615', color: '#3b82f6', borderRadius: '4px', fontWeight: '800' }}>📚 Study Friendly</span>}
+                                    {room.smartLock && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#8b5cf615', color: '#8b5cf6', borderRadius: '4px', fontWeight: '800' }}>🔒 Smart Lock</span>}
+                                    {room.ventilationScore > 0 && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#0ea5e915', color: '#0ea5e9', borderRadius: '4px', fontWeight: '800' }}>💨 Vent: {room.ventilationScore}/10</span>}
+                                    {room.femaleSafety && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#ec489915', color: '#ec4899', borderRadius: '4px', fontWeight: '800' }}>🛡️ Safety Verified</span>}
+                                  </div>
+
                                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                                     <button onClick={() => toggleRoomExpand(room.id)} className="btn btn-primary" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', borderRadius: '8px' }}>
                                       {expandedRooms[room.id] ? 'Hide Beds' : 'View Beds'}
@@ -484,8 +492,13 @@ const Rooms = () => {
                                                   <span style={{ fontSize: '0.75rem', fontWeight: '800' }}>{bed.bedNumber}</span>
                                                 </div>
                                                 <span style={{ fontSize: '0.55rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>
-                                                  {bed.status === 'OCCUPIED' ? (bed.tenant || 'Occupied') : bed.status}
+                                                  {bed.status === 'OCCUPIED' ? (typeof bed.tenant === 'object' ? bed.tenant.name : bed.tenant || 'Occupied') : bed.status}
                                                 </span>
+                                                {bed.comfortScore > 0 && (
+                                                  <span style={{ fontSize: '0.55rem', fontWeight: '800', color: '#f59e0b', marginTop: '0.2rem' }}>
+                                                    ⭐ {bed.comfortScore}/10
+                                                  </span>
+                                                )}
                                               </div>
                                             </div>
                                           );
@@ -512,40 +525,111 @@ const Rooms = () => {
         </motion.div>
       )}
 
-      {/* Tenant Details Modal */}
+      {/* Bed Details Modal */}
       <AnimatePresence>
-        {selectedTenantInfo && (
+        {selectedBedDetails && (
           <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setSelectedTenantInfo(null)} />
-            <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} style={{ position: 'relative', width: '100%', maxWidth: '400px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', zIndex: 1001, border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)' }}>
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button onClick={() => setSelectedTenantInfo(null)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}>✕</button>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setSelectedBedDetails(null)} />
+            <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} style={{ position: 'relative', width: '100%', maxWidth: '440px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', zIndex: 1001, border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: '900', margin: 0 }}>Bed Assets & Details</h3>
+                <button onClick={() => setSelectedBedDetails(null)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}>✕</button>
               </div>
-              <div style={{ textAlign: 'center', marginTop: '-1rem' }}>
-                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: '800', margin: '0 auto 1rem', boxShadow: '0 8px 20px rgba(99, 102, 241, 0.3)' }}>
-                  {selectedTenantInfo.name.charAt(0)}
-                </div>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '0.2rem' }}>{selectedTenantInfo.name}</h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Room {selectedTenantInfo.room}</p>
 
-                <div style={{ background: 'var(--bg-tertiary)', borderRadius: '16px', padding: '1.5rem', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600' }}>Status</span>
-                    <span style={{ background: '#10b98120', color: '#10b981', padding: '0.2rem 0.8rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '800' }}>ACTIVE</span>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  width: '100%',
+                  height: '140px',
+                  borderRadius: '16px',
+                  backgroundImage: `url("${(selectedBedDetails.images && selectedBedDetails.images[0]) || 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80'}")`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  marginBottom: '1.5rem',
+                  border: '1px solid var(--border-color)'
+                }} />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <div style={{ textAlign: 'left' }}>
+                    <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900' }}>{selectedBedDetails.roomInfo.roomNumber} - Bed {selectedBedDetails.bedNumber}</h4>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>{selectedBedDetails.roomInfo.roomType} Room</p>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600' }}>Rent Status</span>
-                    <span style={{ fontWeight: '800' }}>Paid (Mar)</span>
+                  <span style={{
+                    padding: '0.4rem 1rem',
+                    borderRadius: '20px',
+                    fontSize: '0.75rem',
+                    fontWeight: '800',
+                    background: selectedBedDetails.status === 'OCCUPIED' ? '#ef444415' : '#10b98115',
+                    color: selectedBedDetails.status === 'OCCUPIED' ? '#ef4444' : '#10b981',
+                    textTransform: 'uppercase'
+                  }}>
+                    {selectedBedDetails.status}
+                  </span>
+                </div>
+
+                <div style={{ background: 'var(--bg-tertiary)', borderRadius: '20px', padding: '1.2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ textAlign: 'left' }}>
+                    <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Hygiene Score</p>
+                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: 'var(--accent-primary)' }}>✨ {selectedBedDetails.roomInfo.hygieneRating || '4.5'}/5</div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600' }}>Stay Duration</span>
-                    <span style={{ fontWeight: '800' }}>14 Months</span>
+                  <div style={{ textAlign: 'left' }}>
+                    <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Comfort Score</p>
+                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#f59e0b' }}>⭐ {selectedBedDetails.comfortScore || '8.2'}/10</div>
+                  </div>
+                  <div style={{ textAlign: 'left' }}>
+                    <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Last Sanitized</p>
+                    <div style={{ fontSize: '0.85rem', fontWeight: '800' }}>{selectedBedDetails.lastSanitized ? new Date(selectedBedDetails.lastSanitized).toLocaleDateString() : '3 days ago'}</div>
+                  </div>
+                  <div style={{ textAlign: 'left' }}>
+                    <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Security</p>
+                    <div style={{ fontSize: '0.85rem', fontWeight: '800' }}>{selectedBedDetails.roomInfo.smartLock ? '🔒 Smart Lock' : 'Standard'}</div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-                  <button onClick={() => { toggleBed(selectedTenantInfo.roomId, selectedTenantInfo.bedId); setSelectedTenantInfo(null); }} className="btn" style={{ flex: 1, fontWeight: '700', borderRadius: '12px', background: '#ef444415', color: '#ef4444', border: '1px solid #ef444430' }}>Vacate Bed</button>
-                  <button className="btn btn-primary" style={{ flex: 1, fontWeight: '700', borderRadius: '12px' }}>Message</button>
+                {selectedBedDetails.tenantInfo && (
+                  <div style={{ textAlign: 'left', marginBottom: '1.5rem', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1rem' }}>
+                    <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Current Occupant</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
+                        {selectedBedDetails.tenantInfo.name.charAt(0)}
+                      </div>
+                      <div>
+                        <h5 style={{ margin: 0, fontWeight: '800' }}>{selectedBedDetails.tenantInfo.name}</h5>
+                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {selectedBedDetails.tenantInfo.id?.slice(-6) || 'T-9921'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '0.8rem' }}>
+                  {selectedBedDetails.status === 'OCCUPIED' ? (
+                    <button 
+                      onClick={() => { toggleBed(selectedBedDetails.roomInfo.id, selectedBedDetails.id); setSelectedBedDetails(null); }} 
+                      className="btn" 
+                      style={{ flex: 1, fontWeight: '800', borderRadius: '12px', background: '#ef444415', color: '#ef4444', border: '1px solid #ef444430', padding: '0.8rem' }}
+                    >
+                      Vacate Bed
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => { toggleBed(selectedBedDetails.roomInfo.id, selectedBedDetails.id); setSelectedBedDetails(null); }} 
+                      className="btn btn-primary" 
+                      style={{ flex: 1, fontWeight: '800', borderRadius: '12px', padding: '0.8rem' }}
+                    >
+                      Allocate Bed
+                    </button>
+                  )}
+                  <button 
+                    onClick={async () => {
+                      await api.markBedSanitized(selectedBedDetails.id);
+                      setSelectedBedDetails(null);
+                      // Refresh parent
+                      window.location.reload();
+                    }}
+                    className="btn" 
+                    style={{ flex: 1, fontWeight: '800', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', padding: '0.8rem' }}
+                  >
+                    Sanitize Bed
+                  </button>
                 </div>
               </div>
             </motion.div>

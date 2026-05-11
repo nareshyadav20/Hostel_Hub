@@ -38,13 +38,21 @@ const getAllPayments = async (req, res) => {
     // 1. Get all buildings owned by this user
     const buildings = await Building.find({ owner: ownerId });
     const buildingIds = buildings.map(b => b._id);
+
+    // 2. If specific buildingId is requested, validate ownership
+    const { buildingId } = req.query;
+    let query;
+    if (buildingId) {
+      const isOwned = buildingIds.some(id => id.toString() === buildingId);
+      if (!isOwned) return res.status(403).json({ error: 'Access denied to this building.' });
+      query = { buildingId };
+    } else {
+      query = { buildingId: { $in: buildingIds } };
+    }
     
-    // 2. Find payments for these buildings
-    const payments = await Payment.find({ buildingId: { $in: buildingIds } })
-      .populate({
-        path: 'tenantId',
-        select: 'name room'
-      })
+    // 3. Find payments scoped to the query
+    const payments = await Payment.find(query)
+      .populate({ path: 'tenantId', select: 'name room' })
       .sort({ date: -1 });
       
     res.status(200).json(payments);

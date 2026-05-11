@@ -9,5 +9,7 @@ router.use(authMiddleware);
 router.get('/profile', ownerController.getProfile);
 router.patch('/profile', ownerController.updateProfile);
 router.post('/documents', ownerController.uploadDocument);
+router.get('/stats', ownerController.getStats);
+router.get('/history', ownerController.getHistory);
 
 module.exports = router;

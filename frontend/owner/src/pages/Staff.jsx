@@ -136,37 +136,63 @@ const Staff = () => {
     init();
   }, [activeBuildingId]);
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setUploading(true);
-
-    // Simulate upload delay
-    setTimeout(() => {
+    try {
+      // Create metadata for the document
       const newDoc = {
         name: file.name,
         type: file.name.split('.').pop()?.toUpperCase() || 'FILE',
-        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }),
-        url: '#'
+        date: new Date().toISOString(),
+        url: '#' // In a real app, this would be the S3/Cloudinary URL
       };
 
-      // Update selected staff locally
+      // Prepare updated documents array
+      const updatedDocs = [...(selectedStaff.documents || []), newDoc];
+      
+      // Update the staff record in the backend
+      await api.updateStaff(selectedStaff.id, { documents: updatedDocs });
+      
+      // Log the activity
+      await api.addStaffActivity(selectedStaff.id, `Uploaded document: ${file.name}`);
+
+      // Update local state
       const updatedStaff = {
         ...selectedStaff,
-        documents: [...(selectedStaff.documents || []), newDoc]
+        documents: updatedDocs
       };
       setSelectedStaff(updatedStaff);
-
-      // Update the main staff list as well
       setStaffData(prev => ({
         ...prev,
         staffList: (prev.staffList || []).map(s => s.id === selectedStaff.id ? updatedStaff : s)
       }));
 
-      setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
-    }, 1500);
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Failed to save document metadata.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteStaff = async (id) => {
+    if (!window.confirm('Are you sure you want to remove this staff member? This will delete all their records.')) return;
+    try {
+      await api.deleteStaff(id);
+      setStaffData(prev => ({
+        ...prev,
+        staffList: prev.staffList.filter(s => s.id !== id),
+        totalStaff: prev.totalStaff - 1
+      }));
+      if (selectedStaff?.id === id) setSelectedStaff(null);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete staff member.");
+    }
   };
 
   const handleExport = () => {
@@ -619,7 +645,7 @@ const Staff = () => {
                 </div>
                 <div style={{ display: 'flex', gap: '0.8rem' }}>
                   <button className="btn" style={{ background: '#F1F5F9', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '12px', fontWeight: '700' }}>Edit Profile</button>
-                  <button className="btn btn-primary" style={{ padding: '0.8rem 1.5rem', borderRadius: '12px', fontWeight: '800' }}>Generate Report</button>
+                  <button onClick={() => handleDeleteStaff(selectedStaff.id)} className="btn" style={{ background: '#FFF1F2', border: 'none', color: '#E11D48', padding: '0.8rem 1.5rem', borderRadius: '12px', fontWeight: '700' }}>Delete</button>
                 </div>
               </header>
 

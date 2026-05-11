@@ -35,7 +35,7 @@ function Dashboard() {
         api.getDashboardMess(activeBuildingId),
         api.getDashboardStaff(activeBuildingId),
         api.getDashboardActivity(activeBuildingId),
-        api.getTenants()
+        api.getTenants(activeBuildingId)
       ]);
 
       const [summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenants] = results.map(r => r.status === 'fulfilled' ? r.value : null);

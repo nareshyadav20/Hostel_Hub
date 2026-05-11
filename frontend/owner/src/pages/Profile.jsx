@@ -325,7 +325,7 @@ const OverviewTab = ({ profile, stats, setActiveTab }) => {
 };
 
 const ProfileTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
-  const [formData, setFormData] = useState(profile.personalInfo);
+  const [formData, setFormData] = useState(profile?.personalInfo || {});
 
   useEffect(() => {
     setFormData(profile.personalInfo);
@@ -405,7 +405,7 @@ const ProfileTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
 };
 
 const BusinessTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
-  const [formData, setFormData] = useState(profile.businessDetails);
+  const [formData, setFormData] = useState(profile?.businessDetails || {});
 
   useEffect(() => {
     setFormData(profile.businessDetails);
@@ -522,11 +522,7 @@ const KYCTab = ({ profile, onUpload, onDownload }) => {
 };
 
 const BankTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
-  const [formData, setFormData] = useState(profile.bankDetails);
-
-  useEffect(() => {
-    setFormData(profile.bankDetails);
-  }, [profile.bankDetails, step]);
+  const [formData, setFormData] = useState(profile?.bankDetails || {});
   const [step, setStep] = useState('view');
   const [otp, setOtp] = useState('');
 
@@ -609,7 +605,7 @@ const PerformanceTab = ({ stats }) => {
 };
 
 const SecurityTab = ({ profile, onUpdate, onSecurityUpdate, onLogoutSession }) => {
-  const [settings, setSettings] = useState(profile.notificationSettings);
+  const [settings, setSettings] = useState(profile?.notificationSettings || {});
 
   const toggle = (section, channel) => {
     const updated = { ...settings, [section]: { ...settings[section], [channel]: !settings[section][channel] } };
@@ -745,7 +741,7 @@ const ActivityLog = ({ logs }) => {
 };
 
 const BrandingCard = ({ profile, onSave }) => {
-  const [data, setData] = useState(profile.businessDetails);
+  const [data, setData] = useState(profile?.businessDetails || {});
 
   return (
     <div className="card" style={{ padding: '2rem', borderRadius: '24px', background: 'linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary))' }}>
