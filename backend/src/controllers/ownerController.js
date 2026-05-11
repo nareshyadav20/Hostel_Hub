@@ -106,10 +106,13 @@ exports.getStats = async (req, res) => {
       : 5;
 
     res.json({
-      totalBuildings: buildingsCount,
+      buildingCount: buildingsCount,
       activeTenants: totalTenants,
-      occupancyRate: 85, // Placeholder until occupancy calculation is moved here
-      monthlyRevenue: totalTenants * 8000, // Estimate based on standard rent
+      occupiedBeds: totalTenants, // Assuming 1 tenant = 1 occupied bed
+      totalBeds: totalTenants + 20, // Placeholder
+      occupancyRate: 85,
+      monthlyRevenue: totalTenants * 8000,
+      expectedMonthlyRevenue: totalTenants * 8000,
       profileCompleteness: profile?.profileCompleteness || 0,
       verifiedProperties: buildingsCount,
       totalStaff: totalStaff,

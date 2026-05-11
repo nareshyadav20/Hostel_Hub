@@ -14,5 +14,8 @@ export default defineConfig({
     alias: {
       '@packages': path.resolve(__dirname, '../../packages'),
     }
+  },
+  optimizeDeps: {
+    include: ['socket.io-client']
   }
 })
