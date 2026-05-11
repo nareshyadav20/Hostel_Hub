@@ -20,6 +20,11 @@
   gap: 2rem;
 }
 
+[data-theme='dark'] .dash-hero {
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
 .dash-hero-title {
   font-size: 2.25rem;
   font-weight: 900;
@@ -28,11 +33,19 @@
   margin: 0;
 }
 
+[data-theme='dark'] .dash-hero-title {
+  color: #e0e7ff;
+}
+
 .dash-hero-subtitle {
   font-size: 1.05rem;
   color: #6366f1;
   font-weight: 500;
   margin: 0.25rem 0 0;
+}
+
+[data-theme='dark'] .dash-hero-subtitle {
+  color: #a5b4fc;
 }
 
 .dash-hero-stats {
@@ -52,6 +65,11 @@
   backdrop-filter: blur(8px);
 }
 
+[data-theme='dark'] .dash-stat-chip {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
 .dash-stat-icon {
   width: 42px;
   height: 42px;
@@ -69,12 +87,20 @@
   line-height: 1.2;
 }
 
+[data-theme='dark'] .dash-stat-chip strong {
+  color: #f8fafc;
+}
+
 .dash-stat-chip span {
   font-size: 0.75rem;
   color: #6366f1;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+}
+
+[data-theme='dark'] .dash-stat-chip span {
+  color: #a5b4fc;
 }
 
 /* ── Quick Actions ── */
@@ -211,6 +237,11 @@
 .rent-card {
   background: linear-gradient(135deg, #fff1f2, #ffe4e6);
   border-color: #fecdd3;
+}
+
+[data-theme='dark'] .rent-card {
+  background: linear-gradient(135deg, #450a0a, #7f1d1d);
+  border-color: #991b1b;
 }
 
 /* ── Content Grid ── */
@@ -434,6 +465,12 @@
   font-size: 0.75rem;
   font-weight: 800;
   border: 1px solid #fecaca;
+}
+
+[data-theme='dark'] .sn-badge-red {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.2);
 }
 
 .sn-badge-green {

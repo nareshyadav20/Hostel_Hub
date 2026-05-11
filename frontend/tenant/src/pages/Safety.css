@@ -41,6 +41,11 @@
   overflow: hidden;
 }
 
+[data-theme='dark'] .sos-card {
+  background: linear-gradient(135deg, #450a0a, #7f1d1d) !important;
+  border: 1px solid #991b1b !important;
+}
+
 .sos-card::after {
   content: '';
   position: absolute;
@@ -124,10 +129,18 @@
   margin-bottom: 0.5rem;
 }
 
+[data-theme='dark'] .sos-info h2 {
+  color: #fca5a5;
+}
+
 .sos-info p {
   color: #be123c;
   font-weight: 600;
   font-size: 0.95rem;
+}
+
+[data-theme='dark'] .sos-info p {
+  color: #fecaca;
 }
 
 /* Directory & Support */
@@ -146,6 +159,8 @@
 
 .icon-badge-secure { background: var(--primary-light); color: var(--primary); }
 .icon-badge-history { background: #f0fdf4; color: #16a34a; }
+
+[data-theme='dark'] .icon-badge-history { background: rgba(22, 163, 74, 0.1); color: #4ade80; }
 
 .icon-badge-secure, .icon-badge-history {
   width: 48px;
@@ -302,7 +317,7 @@
 
 .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
   border-color: var(--primary);
-  background: white;
+  background: var(--bg-secondary);
   box-shadow: 0 0 0 4px var(--primary-light);
 }
 
@@ -369,7 +384,7 @@
 }
 
 .reports-table tr:hover {
-  background: rgba(248, 250, 252, 0.5);
+  background: var(--bg-tertiary);
 }
 
 .td-date { font-weight: 700; color: var(--text-secondary); }
@@ -400,8 +415,10 @@
 }
 
 .status-pill.under-investigation { background: #fff7ed; color: #ea580c; }
+[data-theme='dark'] .status-pill.under-investigation { background: rgba(234, 88, 12, 0.1); color: #fb923c; }
 .status-pill.resolved { background: #f0fdf4; color: #16a34a; }
-.status-pill.pending { background: #f1f5f9; color: #64748b; }
+[data-theme='dark'] .status-pill.resolved { background: rgba(22, 163, 74, 0.1); color: #4ade80; }
+.status-pill.pending { background: var(--bg-tertiary); color: var(--text-secondary); }
 
 .btn-details-small {
   padding: 0.5rem 1rem;

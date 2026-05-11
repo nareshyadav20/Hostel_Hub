@@ -1677,3 +1677,153 @@ body {
     padding: 1.5rem;
   }
 }
+
+/* ─── Dark Mode Overrides ─── */
+[data-theme='dark'] body {
+  background: #020617;
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .hv2-header {
+  background: rgba(15, 23, 42, 0.85);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .hv2-logo-text {
+  color: #818cf8;
+}
+
+[data-theme='dark'] .hv2-nav-item {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .hv2-nav-item:hover,
+[data-theme='dark'] .hv2-nav-item.active {
+  color: #818cf8;
+  border-bottom-color: #818cf8;
+}
+
+[data-theme='dark'] .hv2-login-btn {
+  border-color: #818cf8;
+  color: #818cf8;
+}
+
+[data-theme='dark'] .hv2-login-btn:hover {
+  background: rgba(129, 140, 248, 0.1);
+}
+
+[data-theme='dark'] .hv2-signup-btn {
+  background: #6366f1;
+}
+
+[data-theme='dark'] .hv2-signup-btn:hover {
+  background: #4f46e5;
+}
+
+[data-theme='dark'] .hv2-hero {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 55%, rgba(15, 23, 42, 0.7) 100%);
+}
+
+[data-theme='dark'] .hv2-hero-h1 {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .hv2-hero-desc {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .hv2-hero-sub-title {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .hv2-search-bar {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .hv2-search-field input,
+[data-theme='dark'] .hv2-search-field select,
+[data-theme='dark'] .hv2-custom-select span {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .hv2-dropdown-list {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .hv2-dropdown-item {
+  color: #cbd5e1;
+}
+
+[data-theme='dark'] .hv2-dropdown-item:hover {
+  background: #334155;
+  color: #818cf8;
+}
+
+[data-theme='dark'] .hv2-search-sep {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .hv2-btn-secondary {
+  background: #0f172a;
+  color: #818cf8;
+  border-color: #818cf8;
+}
+
+[data-theme='dark'] .hv2-btn-secondary:hover {
+  background: rgba(129, 140, 248, 0.1);
+}
+
+[data-theme='dark'] .hv2-categories {
+  background: #020617;
+}
+
+[data-theme='dark'] .hv2-trust-badge {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .hv2-float-badge {
+  background: rgba(30, 41, 59, 0.92);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .hv2-float-label {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .hv2-stats-bar {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .hv2-stat-val {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .hv2-stat-lbl {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .hv2-step-card {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .hv2-step-title {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .hv2-step-desc {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .hv2-section-title {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .hv2-rooms-section {
+  background: #020617;
+}
