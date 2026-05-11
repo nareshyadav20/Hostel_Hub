@@ -5,10 +5,10 @@ const Building = require('../models/Building');
 const createPayment = async (req, res) => {
   try {
     const { tenantId, amount, type, method, buildingId, category, status, month } = req.body;
-    
+
     // Generate simple invoice ID
     const invoice = `INV-${Date.now().toString().slice(-6)}`;
-    
+
     const payment = new Payment({
       tenantId,
       amount,
@@ -22,7 +22,7 @@ const createPayment = async (req, res) => {
     });
 
     await payment.save();
-    
+
     // Populate before sending back
     const populated = await Payment.findById(payment._id).populate('tenantId');
     res.status(201).json(populated);
@@ -34,11 +34,11 @@ const createPayment = async (req, res) => {
 const getAllPayments = async (req, res) => {
   try {
     const ownerId = req.user.id;
-    
+
     // 1. Get all buildings owned by this user
     const buildings = await Building.find({ owner: ownerId });
     const buildingIds = buildings.map(b => b._id);
-    
+
     // 2. Find payments for these buildings
     const payments = await Payment.find({ buildingId: { $in: buildingIds } })
       .populate({
@@ -46,7 +46,7 @@ const getAllPayments = async (req, res) => {
         select: 'name room'
       })
       .sort({ date: -1 });
-      
+
     res.status(200).json(payments);
   } catch (error) {
     res.status(500).json({ error: error.message });

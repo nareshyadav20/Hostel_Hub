@@ -18,11 +18,13 @@ const Booking = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
 
+  const basePrice = hostel?.startingPrice || 9000;
+
   const roomOptions = [
     { 
       id: 'Single', 
       name: 'Single Elite', 
-      price: '18000', 
+      price: (basePrice * 2).toString(), 
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -33,7 +35,7 @@ const Booking = () => {
     { 
       id: 'Double', 
       name: 'Luxury 2 Sharing', 
-      price: '12000', 
+      price: Math.round(basePrice * 1.3333).toString(), 
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -46,7 +48,7 @@ const Booking = () => {
     { 
       id: 'Triple', 
       name: 'Comfort 3 Sharing', 
-      price: '9000', 
+      price: basePrice.toString(), 
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
@@ -228,11 +230,33 @@ const Booking = () => {
                   <div className="booking-footer-pro">
                     <div className="booking-id-tag">ID: {b._id.slice(-8).toUpperCase()}</div>
                     <div className="booking-actions-pro">
-                      <button className="btn-secondary-small">
+                      <button className="btn-secondary-small" onClick={() => {
+                        const html = `<!DOCTYPE html><html><head><title>Receipt ${b._id}</title>
+                        <style>body{font-family:Arial,sans-serif;max-width:500px;margin:40px auto;padding:2rem;border:2px solid #e5e7eb;border-radius:12px}
+                        h1{color:#2563eb;margin:0}h2{margin:0;font-size:1rem;color:#6b7280}.divider{border:none;border-top:1px solid #e5e7eb;margin:1rem 0}
+                        .row{display:flex;justify-content:space-between;margin:0.5rem 0;font-size:0.95rem}
+                        .total{font-size:1.2rem;font-weight:800;color:#059669}.footer{text-align:center;color:#9ca3af;font-size:0.8rem;margin-top:1.5rem}</style>
+                        </head><body>
+                        <h1>HostelHub</h1><p style="color:#6b7280;margin-top:0.25rem">Transaction Receipt</p>
+                        <hr class="divider"/>
+                        <div class="row"><span><b>${b._id.slice(-8).toUpperCase()}</b></span><span>${new Date(b.moveInDate).toLocaleDateString()}</span></div>
+                        <hr class="divider"/>
+                        <div class="row"><span>Tenant</span><span><b>${user?.name || 'Tenant'}</b></span></div>
+                        <div class="row"><span>Plan / Type</span><span>${b.category}</span></div>
+                        <hr class="divider"/>
+                        <div class="row total"><span>Total Amount</span><span>₹${b.totalAmount?.toLocaleString()}</span></div>
+                        <hr class="divider"/>
+                        <p class="footer">Thank you for your payment · HostelHub Management System</p>
+                        </body></html>`;
+                        const win = window.open('', '_blank');
+                        win.document.write(html);
+                        win.document.close();
+                        win.print();
+                      }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         Invoice
                       </button>
-                      <button className="btn-primary-small">
+                      <button className="btn-primary-small" onClick={() => alert('Manage booking features coming soon!')}>
                         Manage
                       </button>
                     </div>
