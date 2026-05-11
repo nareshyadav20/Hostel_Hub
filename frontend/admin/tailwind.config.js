@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -19,32 +20,25 @@ export default {
           DEFAULT: 'rgb(var(--primary) / <alpha-value>)',
           dark: 'rgb(var(--primary-dark) / <alpha-value>)',
         },
-        accent: {
-          DEFAULT: '#06b6d4', // Cyan
-        },
-        success: {
-          DEFAULT: '#10b981', // Emerald
-        },
-        warning: {
-          DEFAULT: '#f59e0b', // Amber
-        },
-        danger: {
-          DEFAULT: '#f43f5e', // Rose
-        }
+        secondary: 'rgb(var(--secondary) / <alpha-value>)',
+        success: 'rgb(var(--success) / <alpha-value>)',
+        warning: 'rgb(var(--warning) / <alpha-value>)',
+        danger: 'rgb(var(--danger) / <alpha-value>)',
       },
       boxShadow: {
-        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+        'premium': '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05), 0 20px 25px -5px rgb(0 0 0 / 0.02)',
+        'glow': '0 0 20px -5px rgba(91, 95, 246, 0.3)',
+      },
+      borderRadius: {
+        '3xl': '1.5rem',
+        '4xl': '2rem',
       },
       animation: {
-        'fade-in': 'fadeIn 0.5s ease-out',
-        'slide-up': 'slideUp 0.5s ease-out',
+        'fade': 'fadeIn 0.4s ease-out',
+        'bounce-slow': 'bounce 3s infinite',
       },
       keyframes: {
         fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideUp: {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         }

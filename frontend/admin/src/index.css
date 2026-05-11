@@ -2,119 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 248 250 252;
-    --card: 255 255 255;
-    --border: 226 232 240;
-    --text-primary: 15 23 42;
-    --text-secondary: 51 65 85;
-    --text-muted: 100 116 139;
-    --primary: 79 70 229;
-    --primary-dark: 67 56 202;
-    --accent: 139 92 246;
-    --success: 16 185 129;
-    --danger: 239 68 68;
-    --warning: 245 158 11;
-    --info: 59 130 246;
-  }
+:root {
+  /* CLASSIC PREMIUM PALETTE - ROYAL BLUE & NEUTRALS */
+  --primary: 30 64 175; /* Royal Blue #1E40AF */
+  --primary-hover: 29 78 216;
+  --background: 249 250 251; /* Very Light Gray #F9FAFB */
+  --card: 255 255 255;
+  --border: 229 231 235; /* Gray 200 */
+  
+  --text-primary: 17 24 39; /* Gray 900 */
+  --text-secondary: 75 85 99; /* Gray 600 */
+  --text-muted: 156 163 175; /* Gray 400 */
+  
+  --success: 16 185 129; /* Emerald */
+  --warning: 245 158 11; /* Amber */
+  --danger: 239 68 68; /* Rose */
+}
 
-  .dark {
-    --background: 8 12 24;
-    --card: 15 23 42;
-    --border: 30 41 59;
-    --text-primary: 248 250 252;
-    --text-secondary: 203 213 225;
-    --text-muted: 120 130 160;
-    --primary: 99 102 241;
-    --primary-dark: 79 70 229;
-    --accent: 167 139 250;
-    --success: 52 211 153;
-    --danger: 248 113 113;
-    --warning: 251 191 36;
-    --info: 96 165 250;
-  }
+.dark {
+  --background: 17 24 39;
+  --card: 31 41 55;
+  --border: 55 65 81;
+  --text-primary: 249 250 251;
+  --text-secondary: 156 163 175;
+  --text-muted: 107 114 128;
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+  
   body {
-    @apply bg-background text-text-primary antialiased;
+    @apply bg-background text-text-primary antialiased selection:bg-primary/20;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 }
 
+@layer components {
+  .shadow-subtle {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  .shadow-premium {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-classic {
+    @apply bg-card border border-border rounded-xl shadow-subtle transition-all duration-200 hover:shadow-premium;
+  }
+}
+
 @layer utilities {
-  .glass {
-    @apply bg-card/70 backdrop-blur-xl border border-border/80 shadow-xl;
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
   
-  .glass-card {
-    @apply bg-card/60 backdrop-blur-md border border-border shadow-lg rounded-2xl transition-all duration-300;
+  .animate-fade {
+    animation: fadeIn 0.3s ease-out;
   }
   
-  .glass-card:hover {
-    @apply border-primary/40 shadow-[0_12px_40px_rgba(var(--primary),0.15)] translate-y-[-4px];
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-
-  /* DEPTH SYSTEM - ENHANCED CONTRAST */
-  .layer-1 {
-    @apply bg-background border border-border/40;
-  }
-
-  .layer-2 {
-    @apply glass-card;
-  }
-
-  .layer-3 {
-    @apply bg-card/90 backdrop-blur-lg border border-primary/30 shadow-[0_15px_45px_rgba(var(--primary),0.2)] rounded-2xl z-10;
-  }
-
-  .layer-4 {
-    @apply bg-card border-2 border-accent/40 shadow-[0_25px_60px_rgba(var(--accent),0.3)] rounded-2xl z-50;
-  }
-
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent font-bold;
-  }
-
-  .card-glow {
-    @apply relative overflow-hidden;
-  }
-  
-  .card-glow::after {
-    content: '';
-    @apply absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none;
-    background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(var(--primary), 0.1), transparent 40%);
-  }
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-background;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-slate-400/30 rounded-full border-2 border-transparent bg-clip-padding hover:bg-slate-400/50 transition-colors;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  @apply bg-slate-600/40 hover:bg-slate-600/60;
-}
-
-/* Animations */
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
-}
-
-.animate-glow {
-  animation: pulse-glow 3s ease-in-out infinite;
 }
