@@ -590,8 +590,40 @@ const Tenants = () => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '1rem' }}>
-                          <button className="btn" onClick={() => alert(`Successfully collected ₹${selectedTenant.rent} via ${paymentMode}`)} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', background: '#10B981', color: 'white', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: 'none' }}>
-                            <CheckCircle size={18} /> Collect Rent
+                          <button 
+                            className="btn" 
+                            disabled={isSubmitting}
+                            onClick={async () => {
+                              setIsSubmitting(true);
+                              try {
+                                const payload = {
+                                  tenantId: selectedTenant.id || selectedTenant._id,
+                                  amount: Number(selectedTenant.rent),
+                                  type: 'Rent',
+                                  method: paymentMode,
+                                  buildingId: activeBuildingId,
+                                  status: 'Paid',
+                                  month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
+                                };
+                                await api.addPayment(payload);
+                                
+                                // Also update tenant's rent status locally
+                                const updatedTenant = { ...selectedTenant, rentStatus: 'PAID' };
+                                await api.updateTenant(selectedTenant.id || selectedTenant._id, { rentStatus: 'PAID' });
+                                
+                                setTenants(prev => prev.map(t => (t.id === selectedTenant.id || t._id === selectedTenant._id) ? updatedTenant : t));
+                                setSelectedTenant(updatedTenant);
+                                
+                                alert(`Successfully collected ₹${selectedTenant.rent} via ${paymentMode}`);
+                              } catch (err) {
+                                alert("Failed to collect rent: " + (err.response?.data?.error || err.message));
+                              } finally {
+                                setIsSubmitting(false);
+                              }
+                            }} 
+                            style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', background: '#10B981', color: 'white', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: 'none', opacity: isSubmitting ? 0.7 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                          >
+                            <CheckCircle size={18} /> {isSubmitting ? 'Processing...' : 'Collect Rent'}
                           </button>
                           <button className="btn" onClick={() => window.location.href = `mailto:${selectedTenant.email}?subject=Rent Due Reminder`} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                             <MessageSquare size={18} /> Send Reminder

@@ -428,6 +428,9 @@ const Buildings = () => {
   const [rooms, setRooms] = useState([]);
   const [beds, setBeds] = useState([]);
 
+  const [isEditBuildingOpen, setIsEditBuildingOpen] = useState(false);
+  const [isEditFloorOpen, setIsEditFloorOpen] = useState(false);
+  
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [selectedFloor, setSelectedFloor] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -497,6 +500,36 @@ const Buildings = () => {
       console.error("Fetch error in Buildings:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateBuilding = async (e) => {
+    e.preventDefault();
+    try {
+      const bId = selectedBuilding?.id || selectedBuilding?._id;
+      const updated = await api.updateBuilding(bId, {
+        name: formData.name,
+        address: formData.address,
+        description: formData.description,
+        type: formData.type
+      });
+      setBuildings(prev => prev.map(b => (b.id === updated.id || b._id === updated._id) ? updated : b));
+      setSelectedBuilding(updated);
+      setIsEditBuildingOpen(false);
+      alert("Building updated successfully");
+    } catch (err) {
+      alert("Failed to update building: " + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleDeleteBuilding = async (bId) => {
+    if (!window.confirm("Are you sure you want to delete this entire building and all its data? This cannot be undone.")) return;
+    try {
+      await api.deleteBuilding(bId);
+      setBuildings(prev => prev.filter(b => b.id !== bId && b._id !== bId));
+      alert("Building deleted successfully");
+    } catch (err) {
+      alert("Failed to delete building: " + (err.response?.data?.error || err.message));
     }
   };
 
@@ -650,15 +683,7 @@ const Buildings = () => {
     }
   };
 
-  const handleDeleteBuilding = async (bId) => {
-    if (!window.confirm("Are you sure you want to delete this property portfolio? This cannot be undone.")) return;
-    try {
-      await api.deleteBuilding(bId);
-      setBuildings(prev => prev.filter(b => b.id !== bId && b._id !== bId));
-    } catch (err) {
-      alert("Failed to delete building: " + (err.response?.data?.error || err.message));
-    }
-  };
+
 
   // --- HELPER: Image Upload ---
   const handleImageUpload = (e) => {
@@ -971,8 +996,10 @@ const Buildings = () => {
                   (filterType === 'All' || (filterType === 'AC' && b.isAC) || (filterType === 'Non-AC' && !b.isAC))
                 )} 
                 onSelect={handleSelectBuilding} 
+                onEditBuilding={(b) => { setSelectedBuilding(b); setFormData({ ...INITIAL_FORM_STATE, ...b }); setIsEditBuildingOpen(true); }}
                 onAdd={() => setIsAddBuildingOpen(true)} 
                 onViewAnalytics={(target, type) => handleViewDetail(target, type)}
+                onDeleteBuilding={handleDeleteBuilding}
               />
             </motion.div>
           )}
@@ -1046,8 +1073,34 @@ const Buildings = () => {
       )}
 
       {/* --- Addition Modals --- */}
+      {/* Edit Building Modal */}
+      <Modal isOpen={isEditBuildingOpen} onClose={() => setIsEditBuildingOpen(false)} title={`Edit Property - ${selectedBuilding?.name}`}>
+        <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleUpdateBuilding}>
+          <div className="input-group">
+            <label style={{fontSize:'0.75rem', fontWeight:'900', color:'var(--text-muted)'}}>PROPERTY NAME</label>
+            <input placeholder="Elite Skyline" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={inputStyle} required />
+          </div>
+          <div className="input-group">
+            <label style={{fontSize:'0.75rem', fontWeight:'900', color:'var(--text-muted)'}}>ADDRESS</label>
+            <input placeholder="123 Tech Park" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} style={inputStyle} required />
+          </div>
+          <div className="input-group">
+            <label style={{fontSize:'0.75rem', fontWeight:'900', color:'var(--text-muted)'}}>DESCRIPTION</label>
+            <textarea placeholder="Premium student housing..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }} />
+          </div>
+          <div className="input-group">
+            <label style={{fontSize:'0.75rem', fontWeight:'900', color:'var(--text-muted)'}}>PROPERTY TYPE</label>
+            <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} style={{ ...inputStyle, width: '100%' }}>
+              <option value="Student">Student Housing</option>
+              <option value="Professional">Professional Suites</option>
+              <option value="Mixed">Mixed Occupancy</option>
+            </select>
+          </div>
+          <button className="btn btn-primary" type="submit" style={{ padding: '1.2rem', borderRadius: '18px', fontWeight: '950', marginTop: '0.5rem', fontSize: '1rem' }}>Save Property Changes</button>
+        </form>
+      </Modal>
 
-      <Modal isOpen={isAddBuildingOpen} onClose={() => setIsAddBuildingOpen(false)} title="Add New Building">
+      <Modal isOpen={isAddBuildingOpen} onClose={() => setIsAddBuildingOpen(false)} title="Register New Smart Property">
         <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleAddBuilding}>
           <div className="input-group"><label style={{fontSize:'0.8rem', fontWeight:'900', color:'var(--text-muted)'}}>BUILDING NAME</label><input placeholder="Royal residency" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={inputStyle} required /></div>
           <div className="input-group"><label style={{fontSize:'0.8rem', fontWeight:'900', color:'var(--text-muted)'}}>ADDRESS</label><input placeholder="123 tech street" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} style={inputStyle} required /></div>
@@ -2035,7 +2088,7 @@ const RoomHero = ({ room, onImageUpdate, onEdit }) => (
   </div>
 );
 
-const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics }) => {
+const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuilding, onDeleteBuilding }) => {
   const occupancyRate = 84; // Mocked for premium UI
   const monthlyRevenue = '12.4L';
   const hygieneScore = 98;
@@ -2254,11 +2307,30 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics }) => {
           </div>
           Intelligence
         </button>
+        <div style={{ display: 'flex', gap: '0.4rem' }}>
+          <button 
+            className="btn" 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              onEditBuilding(building); 
+            }}
+            style={{ padding: '0.6rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#6366F1' }}
+          >
+            <Edit2 size={16} />
+          </button>
+          <button 
+            className="btn" 
+            onClick={(e) => { e.stopPropagation(); onDeleteBuilding(building.id || building._id); }}
+            style={{ padding: '0.6rem', borderRadius: '12px', background: '#FEF2F2', border: 'none', color: '#EF4444' }}
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
         <button 
           className="btn btn-primary" 
           onClick={(e) => { e.stopPropagation(); onSelect(building); }}
           style={{ 
-            padding: '1.1rem', borderRadius: '22px', fontWeight: '950', fontSize: '0.85rem',
+            padding: '1.1rem', borderRadius: '22px', fontWeight: '950', fontSize: '0.85rem', flex: 1,
             boxShadow: '0 10px 20px rgba(99, 102, 241, 0.3)'
           }}
         >
@@ -2269,7 +2341,7 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics }) => {
   );
 };
 
-const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics }) => (
+const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics, onEditBuilding, onDeleteBuilding }) => (
   <div>
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem', alignItems: 'center' }}>
       <div>
@@ -2282,7 +2354,14 @@ const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics }) => (
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(440px, 1fr))', gap: '3rem' }}>
       {buildings.length > 0 ? buildings.map((b, i) => (
-        <PremiumBuildingCard key={b._id || b.id || i} building={b} onSelect={onSelect} onViewAnalytics={onViewAnalytics} />
+        <PremiumBuildingCard 
+          key={b._id || b.id || i} 
+          building={b} 
+          onSelect={onSelect} 
+          onViewAnalytics={onViewAnalytics} 
+          onEditBuilding={onEditBuilding}
+          onDeleteBuilding={onDeleteBuilding} 
+        />
       )) : (
         <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem 3rem', background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(20px)', borderRadius: '40px', border: '2px dashed #E2E8F0' }}>
           <BuildingIcon size={64} color="#94A3B8" style={{ marginBottom: '1.5rem' }} />

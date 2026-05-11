@@ -244,6 +244,20 @@ const InventoryModule = () => {
     }
   };
 
+  const handleUpdateItem = async (e) => {
+    e.preventDefault();
+    if (!selectedItem) return;
+    try {
+      const updated = await api.updateInventoryItem(selectedItem.id || selectedItem._id, selectedItem);
+      setInventory(prev => prev.map(i => (i.id === updated.id || i._id === updated._id) ? updated : i));
+      setIsModalOpen(false);
+      triggerNotification('Item Updated Successfully', 'green');
+    } catch (err) {
+      console.error(err);
+      triggerNotification('Failed to update item', 'red');
+    }
+  };
+
   const handleDeleteItem = async (id) => {
     if (!window.confirm('Are you sure you want to delete this item? This action cannot be undone.')) return;
     try {
@@ -614,7 +628,47 @@ const InventoryModule = () => {
         )}
       </Modal>
 
-      {/* Add Item Modal */}
+      {/* Edit Item Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Edit Inventory Item">
+        {selectedItem && (
+          <form onSubmit={handleUpdateItem} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>ITEM NAME</label>
+                <input required style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} value={selectedItem.name} onChange={e => setSelectedItem({...selectedItem, name: e.target.value})} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>CATEGORY</label>
+                <select style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} value={selectedItem.categoryId} onChange={e => setSelectedItem({...selectedItem, categoryId: e.target.value})}>
+                  {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>CURRENT STOCK</label>
+                <input type="number" required style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} value={selectedItem.stock} onChange={e => setSelectedItem({...selectedItem, stock: parseInt(e.target.value)})} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>UNIT</label>
+                <input required style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} value={selectedItem.unit} onChange={e => setSelectedItem({...selectedItem, unit: e.target.value})} />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>MIN THRESHOLD</label>
+                <input type="number" required style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} value={selectedItem.minThreshold} onChange={e => setSelectedItem({...selectedItem, minThreshold: parseInt(e.target.value)})} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>LOCATION</label>
+                <input style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} value={selectedItem.location} onChange={e => setSelectedItem({...selectedItem, location: e.target.value})} />
+              </div>
+            </div>
+            <button type="submit" style={{ background: '#3B82F6', color: 'white', padding: '1rem', borderRadius: '16px', fontWeight: '900', border: 'none', cursor: 'pointer', marginTop: '1rem' }}>Update Item Details</button>
+          </form>
+        )}
+      </Modal>
+
       <Modal isOpen={isAddItemModalOpen} onClose={() => setIsAddItemModalOpen(false)} title="Add New Inventory Item">
         <form onSubmit={handleAddItem} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

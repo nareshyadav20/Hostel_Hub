@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 export default defineConfig({
   plugins: [react()],
@@ -13,12 +17,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@packages': path.resolve(__dirname, '../../packages'),
-    },
-    // Allow Vite to resolve modules from the root node_modules (monorepo hoisting)
-    modules: [
-      'node_modules',
-      path.resolve(__dirname, '../../node_modules'),
-      path.resolve(__dirname, '../../../node_modules')
-    ]
+    }
+  },
+  optimizeDeps: {
+    include: ['socket.io-client', 'recharts', 'react-is']
   }
 })
