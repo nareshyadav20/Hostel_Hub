@@ -7,9 +7,10 @@ exports.getSettings = async (req, res) => {
       return res.status(400).json({ message: "buildingId is required" });
     }
 
-    let settings = await SystemSettings.findOne({ buildingId });
+    let settings = await SystemSettings.findOne({ buildingId, owner: req.user.id });
     if (!settings) {
-      settings = await SystemSettings.create({ buildingId });
+      // Create default settings if none exist for this building/owner
+      settings = await SystemSettings.create({ buildingId, owner: req.user.id });
     }
     
     const settingsObj = settings.toObject();
@@ -63,7 +64,7 @@ exports.getSettings = async (req, res) => {
         ...(settingsObj.roleAccess || {})
       },
       themeSettings: {
-        mode: 'LIGHT',
+        mode: 'DARK',
         ...(settingsObj.themeSettings || {})
       }
     };
@@ -82,8 +83,8 @@ exports.updateSettings = async (req, res) => {
       return res.status(400).json({ message: "buildingId is required" });
     }
     const settings = await SystemSettings.findOneAndUpdate(
-      { buildingId }, 
-      req.body, 
+      { buildingId, owner: req.user.id }, 
+      { ...req.body, owner: req.user.id }, 
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
     res.status(200).json(settings);

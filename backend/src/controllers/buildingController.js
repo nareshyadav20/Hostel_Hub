@@ -35,13 +35,25 @@ const createBuilding = async (req, res) => {
 
 const getBuildings = async (req, res) => {
   try {
-    console.log('Fetching buildings for user:', req.user.id);
-    const buildings = await Building.find({ owner: req.user.id }).populate({ 
+    const query = { owner: req.user.id };
+    if (req.query.status) {
+      if (req.query.status === 'Active') {
+        query.status = { $ne: 'Draft' };
+      } else {
+        query.status = req.query.status;
+      }
+    }
+    console.log(`[DEBUG] getBuildings query:`, JSON.stringify(query));
+    const buildings = await Building.find(query).populate({ 
       path: 'floors', 
       populate: { path: 'rooms', populate: { path: 'beds' } } 
     });
+    console.log(`[DEBUG] Found ${buildings.length} buildings for owner ${req.user.id}`);
     res.status(200).json(buildings);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (error) { 
+    console.error(`[DEBUG] getBuildings error:`, error);
+    res.status(500).json({ error: error.message }); 
+  }
 };
 
 const updateBuilding = async (req, res) => {

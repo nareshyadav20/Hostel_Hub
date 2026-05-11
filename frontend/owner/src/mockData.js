@@ -40,11 +40,11 @@ export const api = {
     return res.data;
   },
   getOwnerStats: async () => {
-    const res = await axios.get(`${API_URL}/dashboard/summary`);
+    const res = await axios.get(`${API_URL}/owner/stats`);
     return res.data;
   },
   getOwnerHistory: async () => {
-    const res = await axios.get(`${API_URL}/dashboard/activity`);
+    const res = await axios.get(`${API_URL}/owner/history`);
     return res.data;
   },
   updateOwnerDocuments: async (doc) => {
@@ -54,9 +54,14 @@ export const api = {
 
   // Buildings & Infrastructure
   getBuildings: async () => {
-    const res = await axios.get(`${API_URL}/buildings`);
+    const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Active' } });
     const data = Array.isArray(res.data) ? res.data : [];
-    return handleId(data.filter(b => b.status !== 'Draft'));
+    return handleId(data);
+  },
+  getDraftBuildings: async () => {
+    const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Draft' } });
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data);
   },
   getHostels: async () => {
     const res = await axios.get(`${API_URL}/hostels`);
@@ -93,6 +98,18 @@ export const api = {
     const res = await axios.get(`${API_URL}/beds`, { params: { buildingId: bId } });
     const data = Array.isArray(res.data) ? res.data : [];
     return handleId(data);
+  },
+  recommendBeds: async (buildingId, preferences) => {
+    const res = await axios.post(`${API_URL}/beds/recommend`, { buildingId, preferences });
+    return handleId(res.data);
+  },
+  getMaintenanceBeds: async () => {
+    const res = await axios.get(`${API_URL}/beds/maintenance`);
+    return handleId(res.data);
+  },
+  markBedSanitized: async (id) => {
+    const res = await axios.post(`${API_URL}/beds/${id}/sanitize`);
+    return handleId(res.data);
   },
   getFloors: async (bId) => {
     const res = await axios.get(`${API_URL}/floors/${bId}`);
@@ -142,24 +159,32 @@ export const api = {
   },
 
   // Operational Data
-  getTenants: async () => {
-    const res = await axios.get(`${API_URL}/tenants`);
+  getTenants: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/tenants`, { params });
     return handleId(res.data);
   },
-  getComplaints: async () => {
-    const res = await axios.get(`${API_URL}/complaints`);
+  getComplaints: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/complaints`, { params });
     return handleId(res.data);
   },
   updateComplaintStatus: async (id, status, assignedTo = null) => {
     const res = await axios.patch(`${API_URL}/complaints/${id}`, { status, assignedTo });
     return handleId(res.data);
   },
-  getPayments: async () => {
-    const res = await axios.get(`${API_URL}/payments`);
+  getPayments: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/payments`, { params });
     return handleId(res.data);
   },
-  getRoomTransfers: async () => {
-    const res = await axios.get(`${API_URL}/room-transfers`);
+  updatePaymentStatus: async (id, status) => {
+    const res = await axios.patch(`${API_URL}/payments/${id}`, { status });
+    return handleId(res.data);
+  },
+  getRoomTransfers: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/room-transfers`, { params });
     return handleId(res.data);
   },
   updateRoomTransferStatus: async (id, status) => {
@@ -171,7 +196,6 @@ export const api = {
     return handleId(res.data);
   },
   updateMessMenu: async (data) => {
-    // data should include buildingId
     const res = await axios.put(`${API_URL}/mess/menu`, data);
     return handleId(res.data);
   },
@@ -216,12 +240,13 @@ export const api = {
     const res = await axios.get(`${API_URL}/settings`, { params: { buildingId } });
     return res.data;
   },
-  updateSettings: async (data) => {
-    const res = await axios.post(`${API_URL}/settings`, data);
+  updateSettings: async (data, buildingId) => {
+    const payload = buildingId ? { ...data, buildingId } : data;
+    const res = await axios.post(`${API_URL}/settings`, payload);
     return res.data;
   },
 
-  // Notifications API
+  // Notifications API (Centralized)
   getNotifications: async (bId) => {
     const res = await axios.get(`${API_URL}/notifications`, { params: { buildingId: bId } });
     return handleId(res.data);
@@ -248,6 +273,10 @@ export const api = {
   seedNotifications: async (bId) => {
     const res = await axios.post(`${API_URL}/notifications/seed`, { buildingId: bId });
     return res.data;
+  },
+  sendNotification: async (data) => {
+    const res = await axios.post(`${API_URL}/notifications`, data);
+    return handleId(res.data);
   },
 
   // CRUD Operations
@@ -338,6 +367,23 @@ export const api = {
   },
   deleteInventoryItem: async (id) => {
     await axios.delete(`${API_URL}/inventory/${id}`);
+  },
+  // Procurement
+  getProcurementData: async (bId) => {
+    const res = await axios.get(`${API_URL}/procurement`, { params: { buildingId: bId } });
+    return res.data;
+  },
+  addPurchaseRequest: async (data) => {
+    const res = await axios.post(`${API_URL}/procurement/requests`, data);
+    return handleId(res.data);
+  },
+  addPurchaseOrder: async (data) => {
+    const res = await axios.post(`${API_URL}/procurement/orders`, data);
+    return handleId(res.data);
+  },
+  getReportsData: async (bId) => {
+    const res = await axios.get(`${API_URL}/reports`, { params: { buildingId: bId } });
+    return res.data;
   }
 };
 
