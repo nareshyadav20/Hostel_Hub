@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
+const socketService = require('../utils/socketService');
 
 const createBooking = async (req, res) => {
   try {
@@ -54,6 +55,16 @@ const createBooking = async (req, res) => {
     const payment = new Payment(paymentData);
     await payment.save();
     console.log('✅ Payment created:', payment._id);
+
+    // Real-time synchronization
+    // Emit booking created to owner portal
+    socketService.emitUpdate(null, 'bookingCreated', { booking, payment });
+    
+    // Emit payment completed
+    socketService.emitUpdate(buildingId, 'paymentCompleted', payment);
+    
+    // Emit bed status updated (since booking usually occupies a bed)
+    socketService.emitUpdate(buildingId, 'bedStatusUpdated', { status: 'Occupied' });
 
     res.status(201).json({ booking, payment });
   } catch (error) {

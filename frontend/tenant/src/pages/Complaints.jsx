@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../api/axios';
 import './Complaints.css';
+import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 
 const Complaints = () => {
   const [complaints, setComplaints] = useState([]);
@@ -12,6 +13,24 @@ const Complaints = () => {
 
   useEffect(() => {
     fetchComplaints();
+
+    // Connect to real-time sync
+    const buildingId = localStorage.getItem('buildingId');
+    if (buildingId) {
+      connectSocket(buildingId);
+      
+      socket.on('complaintStatusChanged', (updatedComplaint) => {
+        console.log('🔄 Complaint Status Updated in Real-time');
+        // Update local state directly for instant feedback
+        setComplaints(prev => prev.map(c => c._id === updatedComplaint._id ? updatedComplaint : c));
+        // Also show a toast/alert if possible or just rely on state update
+      });
+    }
+
+    return () => {
+      socket.off('complaintStatusChanged');
+      disconnectSocket();
+    };
   }, []);
 
   const fetchComplaints = async () => {

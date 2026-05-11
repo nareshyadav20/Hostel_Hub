@@ -4,6 +4,8 @@ const Hostel = require('../models/Hostel');
 const Bed = require('../models/Bed');
 const Room = require('../models/Room');
 const mongoose = require('mongoose');
+const socketService = require('../utils/socketService');
+const notificationService = require('../utils/notificationService');
 
 exports.createComplaint = async (req, res) => {
   try {
@@ -87,6 +89,12 @@ exports.createComplaint = async (req, res) => {
       bedId
     });
 
+    // Real-time synchronization for Owner
+    socketService.emitUpdate(null, 'complaintCreated', {
+      complaint,
+      tenantName: tenant.name
+    });
+
     res.status(201).json(complaint);
   } catch (error) {
     res.status(500).json({ message: 'Failed to create complaint', error: error.message });
@@ -109,7 +117,21 @@ exports.updateComplaintStatus = async (req, res) => {
     const update = { status };
     if (assignedTo) update.assignedTo = assignedTo;
     
-    const complaint = await Complaint.findByIdAndUpdate(id, update, { new: true });
+    const complaint = await Complaint.findByIdAndUpdate(id, update, { new: true })
+      .populate('user', 'name email');
+
+    // Real-time synchronization for Tenant
+    socketService.emitUpdate(complaint.buildingId, 'complaintStatusChanged', complaint);
+
+    // Create notification for tenant
+    await notificationService.createNotification({
+      title: 'Complaint Status Updated',
+      message: `Your complaint "${complaint.title}" is now ${status}.`,
+      type: 'COMPLAINT',
+      buildingId: complaint.buildingId,
+      userId: complaint.user._id
+    });
+
     res.status(200).json(complaint);
   } catch (error) {
     res.status(500).json({ message: 'Failed to update complaint', error: error.message });

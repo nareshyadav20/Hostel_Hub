@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../api/axios';
 import './Mess.css';
+import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 
 const Mess = () => {
   const [rating, setRating] = useState(0);
@@ -10,13 +11,20 @@ const Mess = () => {
   const [loading, setLoading] = useState(true);
   const [attendanceStatus, setAttendanceStatus] = useState('dining'); // 'dining' or 'skipped'
 
-  useEffect(() => {
-    const fetchMessData = async () => {
-      try {
-        const [profileRes] = await Promise.all([API.get('/tenants/me')]);
-        setTenantPlan(profileRes.data.messPlan || 'Basic');
-        
-        const fallbackMenu = [
+  const fetchMessData = async () => {
+    try {
+      const bId = localStorage.getItem('buildingId');
+      const [profileRes, menuRes] = await Promise.all([
+        API.get('/tenants/me'),
+        bId ? API.get(`/mess/menu?buildingId=${bId}`) : Promise.resolve({ data: [] })
+      ]);
+      
+      setTenantPlan(profileRes.data.messPlan || 'Basic');
+      
+      let finalMenu = menuRes.data.length > 0 ? menuRes.data : [];
+      
+      if (finalMenu.length === 0) {
+        finalMenu = [
           { day: 'Monday', breakfast: 'Poha & Jalebi', lunch: 'Rajma Chawal', dinner: 'Paneer Butter Masala' },
           { day: 'Tuesday', breakfast: 'Idli Sambar', lunch: 'Chole Bhature', dinner: 'Dal Tadka' },
           { day: 'Wednesday', breakfast: 'Aloo Paratha', lunch: 'Veg Biryani', dinner: 'Mix Veg' },
@@ -25,35 +33,35 @@ const Mess = () => {
           { day: 'Saturday', breakfast: 'Puri Sabzi', lunch: 'Veg Fried Rice', dinner: 'Aloo Gobi' },
           { day: 'Sunday', breakfast: 'Bread Omelette', lunch: 'Special Thali', dinner: 'Matar Paneer' }
         ];
-        setWeeklyMenu(fallbackMenu);
-        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-        setTodayMenu(fallbackMenu.find(m => m.day === today) || fallbackMenu[0]);
-      } catch (err) {
-        console.error('Error fetching mess data, using fallback data:', err);
-        
-        // Fallback Mock Data for Mess
-        const fallbackMenu = [
-          { day: 'Monday', breakfast: 'Poha & Jalebi', lunch: 'Rajma Chawal', dinner: 'Paneer Butter Masala & Roti', plan: 'basic' },
-          { day: 'Tuesday', breakfast: 'Idli Sambar', lunch: 'Chole Bhature', dinner: 'Dal Tadka & Jeera Rice', plan: 'basic' },
-          { day: 'Wednesday', breakfast: 'Aloo Paratha', lunch: 'Veg Biryani', dinner: 'Mix Veg & Roti', plan: 'basic' },
-          { day: 'Thursday', breakfast: 'Upma', lunch: 'Kadhi Pakora', dinner: 'Egg Curry & Rice', plan: 'basic' },
-          { day: 'Friday', breakfast: 'Masala Dosa', lunch: 'Dal Makhani', dinner: 'Chicken Curry & Roti', plan: 'basic' },
-          { day: 'Saturday', breakfast: 'Puri Sabzi', lunch: 'Veg Fried Rice', dinner: 'Aloo Gobi & Roti', plan: 'basic' },
-          { day: 'Sunday', breakfast: 'Bread Omelette', lunch: 'Special Thali', dinner: 'Matar Paneer & Pulao', plan: 'basic' }
-        ];
-        
-        setWeeklyMenu(fallbackMenu);
-        
-        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-        const todayItem = fallbackMenu.find(m => m.day === today);
-        if (todayItem) {
-          setTodayMenu(todayItem);
-        }
-      } finally {
-        setLoading(false);
       }
-    };
+      
+      setWeeklyMenu(finalMenu);
+      const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+      setTodayMenu(finalMenu.find(m => m.day === today) || finalMenu[0]);
+    } catch (err) {
+      console.error('Error fetching mess data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchMessData();
+
+    const buildingId = localStorage.getItem('buildingId');
+    if (buildingId) {
+      connectSocket(buildingId);
+      
+      socket.on('menuUpdated', () => {
+        console.log('🔄 Mess Menu Updated in Real-time');
+        fetchMessData();
+      });
+    }
+
+    return () => {
+      socket.off('menuUpdated');
+      disconnectSocket();
+    };
   }, []);
 
   const handleSkipMeal = () => {

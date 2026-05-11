@@ -9,6 +9,8 @@ import { ComplaintsPanel, MessPanel, StaffPanel, InsightsPanel, ActivityFeed, Te
 const iStyle = { padding:'0.85rem', borderRadius:'12px', border:'1px solid var(--border-color)', background:'var(--bg-secondary)', color:'var(--text-primary)', fontSize:'0.9rem', outline:'none', width:'100%', boxSizing:'border-box', transition:'all 0.3s' };
 const lStyle = { fontSize:'0.8rem', fontWeight:'800', color:'var(--text-muted)', marginBottom:'0.5rem', display:'block', textTransform:'uppercase', letterSpacing:'0.04em' };
 
+import socket, { connectSocket, disconnectSocket } from './utils/socket';
+
 function Dashboard() {
   const { buildingId: urlBuildingId } = useParams();
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
@@ -59,7 +61,33 @@ function Dashboard() {
     }
   };
 
-  useEffect(() => { fetchData(); }, [activeBuildingId]);
+  useEffect(() => { 
+    fetchData(); 
+
+    if (activeBuildingId) {
+      connectSocket(activeBuildingId);
+
+      socket.on('dashboardStatsUpdated', () => {
+        console.log('🔄 Dashboard Stats Updated in Real-time');
+        fetchData();
+      });
+
+      socket.on('complaintCreated', () => {
+        fetchData();
+      });
+
+      socket.on('bookingCreated', () => {
+        fetchData();
+      });
+
+      return () => {
+        socket.off('dashboardStatsUpdated');
+        socket.off('complaintCreated');
+        socket.off('bookingCreated');
+        disconnectSocket();
+      };
+    }
+  }, [activeBuildingId]);
 
 
   if (isLoading) return (

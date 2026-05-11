@@ -2,6 +2,7 @@ const Bed = require('../models/Bed');
 const Room = require('../models/Room');
 const Floor = require('../models/Floor');
 const Building = require('../models/Building');
+const socketService = require('../utils/socketService');
 
 const createBed = async (req, res) => {
   try {
@@ -18,6 +19,13 @@ const createBed = async (req, res) => {
     });
     room.beds.push(bed._id);
     await room.save();
+
+    // Real-time synchronization
+    if (room.floor && room.floor.building) {
+      socketService.emitUpdate(room.floor.building._id, 'bedStatusUpdated', bed);
+      socketService.emitUpdate(room.floor.building._id, 'roomUpdated', room);
+    }
+
     res.status(201).json({ ...bed.toObject(), roomId });
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
@@ -53,6 +61,21 @@ const updateBed = async (req, res) => {
       return res.status(404).json({ error: 'Bed not found or unauthorized' });
     }
     const updated = await Bed.findByIdAndUpdate(req.params.id, req.body, { new: true });
+
+    // Real-time synchronization
+    if (bed.room && bed.room.floor && bed.room.floor.building) {
+      const buildingId = bed.room.floor.building._id;
+      socketService.emitUpdate(buildingId, 'bedStatusUpdated', updated);
+      socketService.emitUpdate(buildingId, 'roomUpdated', bed.room);
+      
+      // Update owner dashboard stats
+      socketService.emitToOwner('dashboardStatsUpdated', { 
+        buildingId, 
+        ownerId: req.user.id,
+        type: 'BED_STATUS_CHANGE'
+      });
+    }
+
     res.status(200).json(updated);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };

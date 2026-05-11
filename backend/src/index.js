@@ -81,6 +81,7 @@ app.get('/', (req, res) => {
 
 const http = require('http');
 const { Server } = require('socket.io');
+const socketService = require('./utils/socketService');
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -90,18 +91,31 @@ const io = new Server(server, {
   }
 });
 
+// Initialize socket services
+socketService.setIo(io);
+notificationService.setIo(io);
+
 io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id);
+
   socket.on('joinBuilding', (buildingId) => {
-    socket.join(buildingId);
-    console.log(`User joined building room: ${buildingId}`);
+    if (buildingId) {
+      socket.join(buildingId.toString());
+      console.log(`Socket ${socket.id} joined building: ${buildingId}`);
+    }
   });
+
+  socket.on('joinOwner', (ownerId) => {
+    if (ownerId) {
+      socket.join(`owner_${ownerId}`);
+      console.log(`Socket ${socket.id} joined owner room: owner_${ownerId}`);
+    }
+  });
+
   socket.on('disconnect', () => {
-    console.log('User disconnected');
+    console.log('Client disconnected:', socket.id);
   });
 });
-
-// Link io to notification service
-notificationService.setIo(io);
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

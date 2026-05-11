@@ -8,6 +8,7 @@ import {
   Bed, Library, Monitor, Users, Video, Phone, Eye, Moon, Train, Bus, ShoppingCart, Activity, Dumbbell, Shirt, Sparkles
 } from 'lucide-react';
 import API from '../api/axios';
+import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 import './Listing.css';
 
 const Listing = () => {
@@ -46,9 +47,41 @@ const Listing = () => {
   ];
 
   const [hostel, setHostel] = useState(null);
+  const [menuUpdateInfo, setMenuUpdateInfo] = useState('');
 
   React.useEffect(() => {
-    API.get(`/buildings/${id}`).then(res => setHostel(res.data)).catch(console.error);
+    const fetchHostel = () => {
+      API.get(`/buildings/${id}`).then(res => setHostel(res.data)).catch(console.error);
+    };
+
+    fetchHostel();
+    
+    // Connect to real-time sync server
+    connectSocket(id);
+
+    // Listen for live updates
+    socket.on('hostelUpdated', (updatedHostel) => {
+      if (updatedHostel._id === id || (updatedHostel.buildings && updatedHostel.buildings.includes(id))) {
+        setHostel(updatedHostel);
+        console.log('⚡ Real-time Update: Hostel data refreshed');
+      }
+    });
+
+    socket.on('menuUpdated', (data) => {
+      setMenuUpdateInfo(data.indicator || 'Updated Just Now');
+      setTimeout(() => setMenuUpdateInfo(''), 8000);
+    });
+
+    socket.on('bedStatusUpdated', () => {
+      fetchHostel();
+    });
+
+    return () => {
+      socket.off('hostelUpdated');
+      socket.off('menuUpdated');
+      socket.off('bedStatusUpdated');
+      disconnectSocket();
+    };
   }, [id]);
 
   const basePrice = hostel?.startingPrice || 9000;
@@ -428,8 +461,9 @@ const Listing = () => {
               <div className="lst-info-card" style={{ background: 'var(--lst-bg-orange)' }}>
                 <span className="lst-ic-label" style={{ color: '#c2410c' }}>Meal Type</span><span className="lst-ic-val">Veg + Non-Veg</span>
               </div>
-              <div className="lst-info-card" style={{ background: 'var(--lst-bg-green)' }}>
+              <div className="lst-info-card" style={{ background: 'var(--lst-bg-green)', position: 'relative' }}>
                 <span className="lst-ic-label" style={{ color: '#15803d' }}>Weekly Menu</span><span className="lst-ic-val">7-day rotation</span>
+                {menuUpdateInfo && <span className="lst-live-indicator">{menuUpdateInfo}</span>}
               </div>
               <div className="lst-info-card" style={{ background: 'var(--lst-bg-blue)' }}>
                 <span className="lst-ic-label" style={{ color: '#1d4ed8' }}>Custom Menu</span><span className="lst-ic-val">On request</span>
@@ -534,17 +568,7 @@ const Listing = () => {
           </div>
         </div>
 
-        </div>
-
       </div>
-
-      {/* FLOATING AI HELP BUTTON */}
-      <button className="lst-ai-help-fab" onClick={() => alert('AI Assistant: How can I help you today?')}>
-        <div className="lst-ai-fab-content">
-          <Zap size={24} fill="currentColor" />
-          <span>AI Help</span>
-        </div>
-      </button>
 
     </div>
   );

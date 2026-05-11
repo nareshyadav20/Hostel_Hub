@@ -1,5 +1,6 @@
 const MessMenu = require('../models/MessMenu');
 const MessAttendance = require('../models/MessAttendance');
+const socketService = require('../utils/socketService');
 
 const DEFAULT_MENU = {
     Monday: { breakfast: 'Idli, Sambar', lunch: 'Rice, Dal, Veg Fry', dinner: 'Roti, Paneer Masala' },
@@ -54,6 +55,13 @@ exports.updateMenu = async (req, res) => {
             { breakfast, lunch, dinner },
             { new: true, upsert: true }
         );
+
+        // Real-time synchronization
+        socketService.emitUpdate(buildingId, 'menuUpdated', {
+            menu,
+            indicator: "Updated Just Now"
+        });
+
         res.json(menu);
     } catch (err) {
         res.status(500).json({ message: err.message });
