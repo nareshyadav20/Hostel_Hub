@@ -384,6 +384,19 @@ export const api = {
   getReportsData: async (bId) => {
     const res = await axios.get(`${API_URL}/reports`, { params: { buildingId: bId } });
     return res.data;
+  },
+  // Notifications - extra methods
+  seedNotifications: async (bId) => {
+    const res = await axios.post(`${API_URL}/notifications/seed`, { buildingId: bId });
+    return res.data;
+  },
+  archiveNotification: async (id) => {
+    const res = await axios.patch(`${API_URL}/notifications/${id}/archive`);
+    return res.data;
+  },
+  // Tenants - delete
+  deleteTenant: async (id) => {
+    await axios.delete(`${API_URL}/tenants/${id}`);
   }
 };
 

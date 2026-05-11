@@ -7,12 +7,18 @@ export default defineConfig({
   server: {
     port: 5174,
     fs: {
-      allow: ['..', '../../packages']
+      allow: ['..', '../../packages', '../../../']
     }
   },
   resolve: {
     alias: {
       '@packages': path.resolve(__dirname, '../../packages'),
-    }
+    },
+    // Allow Vite to resolve modules from the root node_modules (monorepo hoisting)
+    modules: [
+      'node_modules',
+      path.resolve(__dirname, '../../node_modules'),
+      path.resolve(__dirname, '../../../node_modules')
+    ]
   }
 })
