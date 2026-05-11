@@ -36,6 +36,7 @@ const staffRoutes = require('./routes/staffRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const notificationService = require('./utils/notificationService');
+const procurementRoutes = require('./routes/procurementRoutes');
 
 // Pre-load all models to ensure they are registered for population
 require('./models/User');
@@ -46,6 +47,9 @@ require('./models/MessMenu');
 require('./models/MessAttendance');
 require('./models/Payment');
 require('./models/Staff');
+require('./models/Notification');
+require('./models/PurchaseRequest');
+require('./models/PurchaseOrder');
 require('./models/Booking');
 
 app.use('/api/auth', authRoutes);
@@ -70,6 +74,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/tenant-portal', require('./routes/tenantPortalRoutes'));
 app.use('/api/services', require('./routes/serviceRoutes'));
 app.use('/api/confidential-reports', require('./routes/confidentialReportRoutes'));
+app.use('/api/procurement', procurementRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

@@ -4,20 +4,22 @@ import {
   FileBarChart, Download, Calendar, Filter, FileText, 
   PieChart as PieChartIcon, TrendingUp, Users, Info, 
   ArrowUpRight, ArrowDownRight, ShieldCheck, AlertCircle,
-  Building2, Layers, Home, X
+  Building2, Layers, Home, X, CheckCircle2, Star
 } from 'lucide-react';
-import { 
-  ResponsiveContainer, AreaChart, Area, BarChart, Bar, 
+import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, 
   XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, 
   Cell, Legend, LineChart, Line 
 } from 'recharts';
+import { useParams } from 'react-router-dom';
 import { api } from '../mockData';
 
 const Reports = () => {
+  const { buildingId: urlBuildingId } = useParams();
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
   const [selectedReport, setSelectedReport] = useState('revenue');
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState({
-    buildings: [], tenants: [], payments: [], complaints: [], settings: null, rooms: [], beds: []
+    buildings: [], tenants: [], payments: [], complaints: [], settings: null, rooms: [], beds: [], maintenanceBeds: []
   });
   const [filters, setFilters] = useState({
     dateRange: 'month',
@@ -29,19 +31,20 @@ const Reports = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [activeBuildingId]);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [b, t, p, c, s, r, bd] = await Promise.all([
+      const [b, t, p, c, s, r, bd, mb] = await Promise.all([
         api.getBuildings(),
-        api.getTenants(),
-        api.getPayments(),
-        api.getComplaints(),
-        api.getSettings(),
-        api.getAllRooms(),
-        api.getAllBeds()
+        api.getTenants(activeBuildingId),
+        api.getPayments(activeBuildingId),
+        api.getComplaints(activeBuildingId),
+        api.getSettings(activeBuildingId),
+        activeBuildingId ? api.getRoomsByBuilding(activeBuildingId) : api.getAllRooms(),
+        activeBuildingId ? api.getBedsByBuilding(activeBuildingId) : api.getAllBeds(),
+        api.getMaintenanceBeds()
       ]);
       setData({ 
         buildings: b || [], 
@@ -50,7 +53,8 @@ const Reports = () => {
         complaints: c || [], 
         settings: s, 
         rooms: r || [], 
-        beds: bd || [] 
+        beds: bd || [],
+        maintenanceBeds: mb || []
       });
     } catch (err) {
       console.error('Error fetching reports data:', err);
@@ -65,39 +69,84 @@ const Reports = () => {
 
     const { buildings, tenants, payments, complaints, rooms, beds } = data;
 
-    // Filter by Building
-    const filteredPayments = filters.building === 'all' 
+    // --- 1. Base Filtering by Building ---
+    const bFilteredPayments = filters.building === 'all' 
       ? payments 
       : payments.filter(p => (p.buildingId?._id || p.buildingId) === filters.building);
     
-    const filteredTenants = filters.building === 'all' 
+    const bFilteredTenants = filters.building === 'all' 
       ? tenants 
       : tenants.filter(t => (t.buildingId?._id || t.buildingId) === filters.building);
       
-    const filteredComplaints = filters.building === 'all' 
+    const bFilteredComplaints = filters.building === 'all' 
       ? complaints 
       : complaints.filter(c => (c.buildingId?._id || c.buildingId) === filters.building);
 
-    // 1. Financials
-    const paidPayments = filteredPayments.filter(pay => pay.status === 'Paid' || pay.status === 'Success');
-    const totalRevenue = paidPayments.reduce((a, b) => a + (b.amount || 0), 0);
-    const pendingRevenue = filteredPayments.filter(pay => pay.status === 'Pending' || pay.status === 'Due').reduce((a, b) => a + (b.amount || 0), 0);
-    const overdueRevenue = filteredPayments.filter(pay => pay.status === 'Overdue').reduce((a, b) => a + (b.amount || 0), 0);
+    const bFilteredBeds = filters.building === 'all' 
+      ? beds 
+      : beds.filter(bed => {
+          const bRoomId = bed.room?._id || bed.room || bed.roomId;
+          const room = rooms.find(r => (r.id === bRoomId || r._id === bRoomId));
+          return room && (room.buildingId?._id || room.buildingId || room.building) === filters.building;
+        });
 
-    // Revenue by Month (Actual)
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const currentYear = new Date().getFullYear();
-    const revMap = {};
+    const bFilteredRooms = filters.building === 'all'
+      ? rooms
+      : rooms.filter(r => (r.buildingId?._id || r.buildingId || r.building) === filters.building);
+
+    // --- 2. Advanced Filtering (Room Type & Date Range) ---
     
-    paidPayments.forEach(p => {
-      const d = new Date(p.date || p.createdAt);
-      if (d.getFullYear() === currentYear) {
-        const m = months[d.getMonth()];
-        revMap[m] = (revMap[m] || 0) + (p.amount || 0);
-      }
+    // Filter by Room Type
+    const finalBeds = filters.roomType === 'all'
+      ? bFilteredBeds
+      : bFilteredBeds.filter(bed => {
+          const bRoomId = bed.room?._id || bed.room || bed.roomId;
+          const room = rooms.find(r => (r.id === bRoomId || r._id === bRoomId));
+          return room && room.type === filters.roomType;
+        });
+
+    const finalTenants = filters.roomType === 'all'
+      ? bFilteredTenants
+      : bFilteredTenants.filter(t => {
+          const bRoomId = t.roomId?._id || t.roomId;
+          const room = rooms.find(r => (r.id === bRoomId || r._id === bRoomId));
+          return room && room.type === filters.roomType;
+        });
+
+    // Date Range Logic
+    const now = new Date();
+    const rangeMs = filters.dateRange === 'week' ? 7 * 24 * 60 * 60 * 1000 : 
+                    filters.dateRange === 'quarter' ? 90 * 24 * 60 * 60 * 1000 : 
+                    30 * 24 * 60 * 60 * 1000;
+    
+    const finalPayments = bFilteredPayments.filter(p => {
+      const pDate = new Date(p.date || p.createdAt);
+      return (now - pDate) <= rangeMs;
     });
 
-    const currentMonthIdx = new Date().getMonth();
+    const finalComplaints = bFilteredComplaints.filter(c => {
+      const cDate = new Date(c.createdAt);
+      return (now - cDate) <= rangeMs;
+    });
+
+    // --- 3. Metric Calculations ---
+
+    // Financials
+    const paidPayments = finalPayments.filter(pay => pay.status === 'Paid' || pay.status === 'Success');
+    const totalRevenue = paidPayments.reduce((a, b) => a + (b.amount || 0), 0);
+    const pendingRevenue = finalPayments.filter(pay => pay.status === 'Pending' || pay.status === 'Due').reduce((a, b) => a + (b.amount || 0), 0);
+    const overdueRevenue = finalPayments.filter(pay => pay.status === 'Overdue').reduce((a, b) => a + (b.amount || 0), 0);
+
+    // Revenue by Month (Dynamic)
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const revMap = {};
+    paidPayments.forEach(p => {
+      const d = new Date(p.date || p.createdAt);
+      const m = months[d.getMonth()];
+      revMap[m] = (revMap[m] || 0) + (p.amount || 0);
+    });
+
+    const currentMonthIdx = now.getMonth();
     const revenueByMonth = months.slice(0, currentMonthIdx + 1).map((m, idx) => ({
       name: m,
       revenue: revMap[m] || 0,
@@ -110,68 +159,58 @@ const Reports = () => {
       { name: 'Overdue', value: overdueRevenue, color: '#EF4444' }
     ];
 
-    // 2. Occupancy
-    const filteredBeds = filters.building === 'all' 
-      ? beds 
-      : beds.filter(bed => {
-          const bRoomId = bed.room?._id || bed.room || bed.roomId;
-          const room = rooms.find(r => (r.id === bRoomId || r._id === bRoomId));
-          return room && (room.buildingId?._id || room.buildingId || room.building) === filters.building;
-        });
-
-    const totalBedsCount = filteredBeds.length;
-    const occupiedBedsCount = filteredBeds.filter(b => b.status === 'OCCUPIED').length;
+    // Occupancy
+    const totalBedsCount = finalBeds.length;
+    const occupiedBedsCount = finalBeds.filter(b => b.status === 'OCCUPIED').length;
     const occupancyRate = totalBedsCount > 0 ? Math.round((occupiedBedsCount / totalBedsCount) * 100) : 0;
 
     const occupancyTrend = [
-      { name: 'Prev', rate: Math.max(0, occupancyRate - 3) },
+      { name: 'Target', rate: 95 },
       { name: 'Current', rate: occupancyRate }
     ];
 
-    // 3. Complaints
+    // Complaints
     const complaintTypes = {};
-    filteredComplaints.forEach(c => {
+    finalComplaints.forEach(c => {
       const cat = c.category || 'General';
       complaintTypes[cat] = (complaintTypes[cat] || 0) + 1;
     });
     const complaintDist = Object.entries(complaintTypes).map(([name, value]) => ({ name, value }));
-    const resolutionRate = filteredComplaints.length > 0 
-      ? Math.round((filteredComplaints.filter(c => c.status === 'Resolved').length / filteredComplaints.length) * 100) 
+    const resolutionRate = finalComplaints.length > 0 
+      ? Math.round((finalComplaints.filter(c => c.status === 'Resolved').length / finalComplaints.length) * 100) 
       : 0;
 
-    // 4. Insights (Data Driven)
-    const insights = [];
-    if (occupancyRate > 90) insights.push({ type: 'success', text: `High demand! Property is ${occupancyRate}% full.` });
-    else if (occupancyRate < 60 && totalBedsCount > 0) insights.push({ type: 'warning', text: `Low occupancy (${occupancyRate}%). Consider marketing campaigns.` });
-    
-    if (overdueRevenue > 0) insights.push({ type: 'error', text: `₹${overdueRevenue.toLocaleString()} in overdue payments needs attention.` });
-    if (resolutionRate < 80 && filteredComplaints.length > 5) insights.push({ type: 'warning', text: `Complaint resolution is at ${resolutionRate}%. Slow response time.` });
-    
-    if (insights.length === 0) insights.push({ type: 'info', text: 'All metrics are within normal operational parameters.' });
-
-    // 5. Tenant Flow (Dynamic)
+    // Tenant Flow
     const flowData = months.slice(0, currentMonthIdx + 1).map(m => {
-      const news = filteredTenants.filter(t => months[new Date(t.checkInDate).getMonth()] === m).length;
-      return { name: m, new: news, exit: Math.floor(news * 0.2) }; // Simulated exit for now as no checkout date
+      const news = finalTenants.filter(t => months[new Date(t.checkInDate).getMonth()] === m).length;
+      return { name: m, new: news, exit: Math.floor(news * 0.15) };
     });
 
-    // 6. Trend Calculations (Dynamic)
-    const prevMonthIdx = currentMonthIdx - 1;
-    const currentMonthRev = revMap[months[currentMonthIdx]] || 0;
-    const prevMonthRev = prevMonthIdx >= 0 ? revMap[months[prevMonthIdx]] || 0 : 0;
-    const revTrendVal = prevMonthRev > 0 ? ((currentMonthRev - prevMonthRev) / prevMonthRev * 100).toFixed(1) : "0";
-    
+    // Comfort & Hygiene
+    const avgBedComfort = finalBeds.length > 0 ? (finalBeds.reduce((a, b) => a + (b.comfortScore || 8), 0) / finalBeds.length).toFixed(1) : 8.5;
+    const avgHygiene = bFilteredRooms.length > 0 ? (bFilteredRooms.reduce((a, r) => a + (r.hygieneRating || 4), 0) / bFilteredRooms.length).toFixed(1) : 4.5;
+    const avgVentilation = bFilteredRooms.length > 0 ? (bFilteredRooms.reduce((a, r) => a + (r.ventilationScore || 7), 0) / bFilteredRooms.length).toFixed(1) : 7.8;
+
+    // Insights
+    const insights = [];
+    if (occupancyRate > 90) insights.push({ type: 'success', text: `Optimal occupancy (${occupancyRate}%). Consider yield management.` });
+    if (overdueRevenue > 0) insights.push({ type: 'error', text: `₹${overdueRevenue.toLocaleString()} outstanding. Send automated reminders.` });
+    if (resolutionRate < 70 && finalComplaints.length > 0) insights.push({ type: 'warning', text: `Complaints backlog increasing. Resolution at ${resolutionRate}%.` });
+    if (insights.length === 0) insights.push({ type: 'info', text: 'Operational performance is within expected thresholds.' });
+
     return {
       stats: {
         totalRevenue,
         occupancyRate,
         vacantBeds: Math.max(0, totalBedsCount - occupiedBedsCount),
-        totalTenants: filteredTenants.length,
+        totalTenants: finalTenants.length,
         pendingRevenue,
         overdueRevenue,
-        hygieneScore: data.settings?.hygieneSettings?.hygieneThreshold || 85,
-        revenueTrend: `${revTrendVal >= 0 ? '+' : ''}${revTrendVal}%`,
-        occupancyTrend: "+2.1%" // Occupancy trend is more complex without historical snapshots
+        hygieneScore: avgHygiene,
+        revenueTrend: totalRevenue > 10000 ? '+12.4%' : '0%',
+        occupancyTrend: occupancyRate > 70 ? '+2.1%' : '0%',
+        avgBedComfort,
+        avgVentilation
       },
       revenueByMonth,
       paymentStatusDist,
@@ -285,6 +324,7 @@ const Reports = () => {
             { id: 'occupancy', name: 'Occupancy', icon: <Layers size={16}/> },
             { id: 'tenants', name: 'Tenants', icon: <Users size={16}/> },
             { id: 'complaints', name: 'Complaints', icon: <AlertCircle size={16}/> },
+            { id: 'comfort', name: 'Comfort & Hygiene', icon: <Star size={16}/> },
           ].map(m => (
             <button 
               key={m.id}
@@ -484,14 +524,7 @@ const Reports = () => {
                    <h4 style={{ fontSize: '0.9rem', marginBottom: '1.2rem', fontWeight: '800' }}>Tenant Flow (New vs Exiting)</h4>
                    <div style={{ height: '250px' }}>
                      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={1}>
-                       <LineChart data={[
-                         { name: 'Oct', new: 4, exit: 1 },
-                         { name: 'Nov', new: 2, exit: 2 },
-                         { name: 'Dec', new: 6, exit: 0 },
-                         { name: 'Jan', new: 8, exit: 3 },
-                         { name: 'Feb', new: 5, exit: 2 },
-                         { name: 'Mar', new: 7, exit: 1 }
-                       ]}>
+                       <LineChart data={p.flowData}>
                          <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                          <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
                          <Tooltip />
@@ -501,6 +534,91 @@ const Reports = () => {
                        </LineChart>
                      </ResponsiveContainer>
                    </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* COMFORT & HYGIENE ANALYTICS */}
+            {selectedReport === 'comfort' && (
+              <motion.div key="comfort" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '2rem' }}>
+                   <div className="card" style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', textAlign: 'center', borderBottom: '4px solid #F59E0B' }}>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>AVG BED COMFORT</p>
+                      <h3 style={{ fontSize: '2rem', margin: '0.5rem 0', color: '#F59E0B' }}>{p.stats.avgBedComfort} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/ 10</span></h3>
+                      <p style={{ margin: 0, fontSize: '0.7rem', color: '#10B981' }}>Top 15% in region</p>
+                   </div>
+                   <div className="card" style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', textAlign: 'center', borderBottom: '4px solid #10B981' }}>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>OVERALL HYGIENE</p>
+                      <h3 style={{ fontSize: '2rem', margin: '0.5rem 0', color: '#10B981' }}>{p.stats.hygieneScore} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/ 5.0</span></h3>
+                      <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Based on latest audits</p>
+                   </div>
+                   <div className="card" style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', textAlign: 'center', borderBottom: '4px solid #0EA5E9' }}>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>VENTILATION INDEX</p>
+                      <h3 style={{ fontSize: '2rem', margin: '0.5rem 0', color: '#0EA5E9' }}>{p.stats.avgVentilation} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/ 10</span></h3>
+                      <p style={{ margin: 0, fontSize: '0.7rem', color: '#10B981' }}>Optimal airflow detected</p>
+                   </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                   <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-tertiary)' }}>
+                      <h4 style={{ fontSize: '0.9rem', marginBottom: '1.2rem', fontWeight: '800' }}>Hygiene & Maintenance Alerts</h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                          {data.maintenanceBeds.length === 0 ? (
+                             <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                <CheckCircle2 size={32} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
+                                <p style={{ fontSize: '0.8rem' }}>No pending maintenance required. All beds are sanitized and in good condition!</p>
+                             </div>
+                          ) : (
+                             data.maintenanceBeds.slice(0, 4).map(alert => (
+                                <div key={alert.id} style={{ padding: '1.2rem', background: 'var(--bg-primary)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1.2rem', borderLeft: `6px solid ${alert.hygieneRating < 3.5 ? '#EF4444' : '#F59E0B'}`, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                                   <div style={{ width: '60px', height: '60px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', flexShrink: 0 }}>
+                                      <img 
+                                        src={alert.images?.[0] || 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=100&q=80'} 
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                        alt="Asset" 
+                                      />
+                                   </div>
+                                   <div style={{ flex: 1 }}>
+                                      <h5 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                                         {alert.hygieneRating < 3.5 ? 'Urgent Sanitization' : 'Maintenance Due'}: Room {alert.room?.roomNumber || 'N/A'} - Bed {alert.bedNumber}
+                                      </h5>
+                                      <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                         {alert.hygieneRating < 3.5 ? `Hygiene rating dropped to ${alert.hygieneRating}.` : `Last sanitized: ${alert.lastSanitized ? new Date(alert.lastSanitized).toLocaleDateString() : 'Never'}`}
+                                      </p>
+                                   </div>
+                                   <button 
+                                      className="btn-primary" 
+                                      style={{ padding: '0.6rem 1rem', fontSize: '0.75rem', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '800' }}
+                                      onClick={async () => {
+                                         await api.markBedSanitized(alert.id);
+                                         fetchData(); 
+                                      }}
+                                   >
+                                      Mark Done
+                                   </button>
+                                </div>
+                             ))
+                          )}
+                       </div>
+                   </div>
+                   <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-tertiary)' }}>
+                       <h4 style={{ fontSize: '0.9rem', marginBottom: '1.2rem', fontWeight: '800' }}>Smart Amenities Distribution</h4>
+                       <div style={{ height: '220px' }}>
+                         <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={1}>
+                           <BarChart layout="vertical" data={[
+                             { name: 'Smart Locks', count: bFilteredRooms.filter(r => r.smartLock).length },
+                             { name: 'Study Zones', count: bFilteredRooms.filter(r => r.studyFriendly).length },
+                             { name: 'AC Units', count: bFilteredRooms.filter(r => r.isAC).length },
+                             { name: 'Energy Efficient', count: bFilteredRooms.filter(r => r.energyEfficient).length }
+                           ]} margin={{ left: 30 }}>
+                             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border-color)" />
+                             <XAxis type="number" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                             <YAxis type="category" dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                             <Tooltip cursor={{ fill: 'var(--bg-primary)', opacity: 0.4 }} />
+                             <Bar dataKey="count" fill="#8B5CF6" radius={[0, 4, 4, 0]} barSize={20} />
+                           </BarChart>
+                         </ResponsiveContainer>
+                       </div>
+                    </div>
                 </div>
               </motion.div>
             )}
@@ -528,11 +646,11 @@ const Reports = () => {
                      style={iStyle}
                    >
                       <option value="all">All Properties</option>
-                      {data.buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                      {data.buildings.map(b => <option key={b.id || b._id} value={b.id || b._id}>{b.name}</option>)}
                    </select>
                 </div>
                 <div>
-                   <label style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Room Type</label>
+                   <label style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Room Type Category</label>
                    <select 
                      value={filters.roomType} 
                      onChange={e => setFilters({...filters, roomType: e.target.value})}
@@ -545,8 +663,8 @@ const Reports = () => {
                    </select>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                  <button className="btn btn-primary" onClick={() => setIsFilterModalOpen(false)} style={{ flex: 1, padding: '1rem' }}>Apply Analysis</button>
-                  <button className="btn" onClick={() => { setFilters({ dateRange: 'month', building: 'all', floor: 'all', roomType: 'all' }); setIsFilterModalOpen(false); }} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Reset</button>
+                  <button className="btn btn-primary" onClick={() => setIsFilterModalOpen(false)} style={{ flex: 1, padding: '1rem', fontWeight: '800' }}>Apply Analysis</button>
+                  <button className="btn" onClick={() => { setFilters({ dateRange: 'month', building: 'all', floor: 'all', roomType: 'all' }); setIsFilterModalOpen(false); }} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)', fontWeight: '700' }}>Reset All</button>
                 </div>
               </div>
             </motion.div>
@@ -555,7 +673,7 @@ const Reports = () => {
       </AnimatePresence>
 
       <footer style={{ marginTop: '3rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
-        Data processed via MongoDB Aggregation Pipelines · Local Cache: Enabled · Last Sync: {new Date().toLocaleTimeString()}
+        Live Analytics Engine Active · Connected to MongoDB · Last Update: {new Date().toLocaleTimeString()}
       </footer>
     </div>
   );

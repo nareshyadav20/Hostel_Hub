@@ -65,11 +65,22 @@ exports.getMyTransfers = async (req, res) => {
 
 exports.getAllTransfers = async (req, res) => {
   try {
-    // Owner filter
+    // Owner filter — ensure only owner's buildings are visible
     const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
     const bIds = ownerBuildings.map(b => b._id);
 
-    const transfers = await RoomTransfer.find({ buildingId: { $in: bIds } })
+    // Optional single-building filter from query param
+    const { buildingId } = req.query;
+    let query;
+    if (buildingId) {
+      const isOwned = bIds.some(id => id.toString() === buildingId);
+      if (!isOwned) return res.status(403).json({ message: 'Access denied to this building.' });
+      query = { buildingId };
+    } else {
+      query = { buildingId: { $in: bIds } };
+    }
+
+    const transfers = await RoomTransfer.find(query)
       .populate('tenant', 'name room email')
       .sort({ createdAt: -1 });
     res.json(transfers);

@@ -174,14 +174,27 @@ const InventoryModule = () => {
   const [budgets] = useState(INITIAL_BUDGETS);
 
   // UI States
-  const [selectedCategory, setSelectedCategory] = useState('CAT-FOOD');
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({ 'CAT-FOOD': true });
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isAssetModalOpen, setIsAssetModalOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [stockFilter, setStockFilter] = useState('All Levels');
+
+  const [newItemData, setNewItemData] = useState({
+    name: '',
+    categoryId: 'CAT-FOOD',
+    subCategoryId: 'SUB-GRAIN',
+    stock: 0,
+    maxStock: 100,
+    minThreshold: 10,
+    unit: 'Units',
+    location: ''
+  });
 
   useEffect(() => {
     fetchInventory();
@@ -190,12 +203,24 @@ const InventoryModule = () => {
   const fetchInventory = async () => {
     setLoading(true);
     try {
-      const data = await api.getInventory(activeBuildingId);
-      // Fallback to initial if mock is empty, but usually api should return data
-      setInventory(data || INITIAL_INVENTORY);
+      const [invData, procData] = await Promise.all([
+        api.getInventory(activeBuildingId),
+        api.getProcurementData(activeBuildingId)
+      ]);
+      
+      setInventory(invData || []);
+      setRequests(procData.requests || []);
+      setPos(procData.pos || []);
+      
+      // Filter assets from inventory collection
+      const assetItems = (invData || []).filter(i => i.type === 'Asset');
+      setAssets(assetItems); 
     } catch (err) {
       console.error(err);
-      setInventory(INITIAL_INVENTORY);
+      setInventory([]);
+      setRequests([]);
+      setPos([]);
+      setAssets([]);
     } finally {
       setLoading(false);
     }
@@ -204,6 +229,58 @@ const InventoryModule = () => {
   const triggerNotification = (msg, color = 'blue') => {
     setNotifications(prev => [{ msg, color, id: Date.now() }, ...prev]);
     setTimeout(() => setNotifications(prev => prev.slice(0, -1)), 5000);
+  };
+
+  const handleAddItem = async (e) => {
+    e.preventDefault();
+    try {
+      const item = await api.addInventoryItem({ ...newItemData, buildingId: activeBuildingId });
+      setInventory(prev => [...prev, item]);
+      setIsAddItemModalOpen(false);
+      triggerNotification('Item Added Successfully', 'green');
+    } catch (err) {
+      console.error(err);
+      triggerNotification('Failed to add item', 'red');
+    }
+  };
+
+  const handleUpdateItem = async (e) => {
+    e.preventDefault();
+    if (!selectedItem) return;
+    try {
+      const updated = await api.updateInventoryItem(selectedItem.id || selectedItem._id, selectedItem);
+      setInventory(prev => prev.map(i => (i.id === updated.id || i._id === updated._id) ? updated : i));
+      setIsModalOpen(false);
+      triggerNotification('Item Updated Successfully', 'green');
+    } catch (err) {
+      console.error(err);
+      triggerNotification('Failed to update item', 'red');
+    }
+  };
+
+  const handleDeleteItem = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this item? This action cannot be undone.')) return;
+    try {
+      await api.deleteInventoryItem(id);
+      setInventory(prev => prev.filter(item => item.id !== id));
+      triggerNotification('Item deleted successfully', 'slate');
+    } catch (err) {
+      console.error(err);
+      triggerNotification('Failed to delete item', 'red');
+    }
+  };
+
+  const handleUpdateAsset = async (e) => {
+    e.preventDefault();
+    try {
+      const updatedAsset = await api.updateInventoryItem(selectedAsset.id, selectedAsset);
+      setInventory(prev => prev.map(item => item.id === selectedAsset.id ? updatedAsset : item));
+      setIsAssetModalOpen(false);
+      triggerNotification('Asset updated successfully', 'green');
+    } catch (err) {
+      console.error(err);
+      triggerNotification('Failed to update asset', 'red');
+    }
   };
 
   // --- ANALYTICS ---
@@ -260,8 +337,21 @@ const InventoryModule = () => {
       <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
           <div style={{ position: 'relative', flex: 1, minWidth: '300px' }}><Search size={20} style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} /><input type="text" placeholder="Search Materials..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ padding: '1rem 1rem 1rem 3.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', width: '100%', outline: 'none', background: '#FFFFFF', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} /></div>
-          <select style={{ padding: '1rem', borderRadius: '16px', border: '1px solid #E2E8F0', fontWeight: '800', outline: 'none', background: '#FFFFFF' }}><option>All Levels</option><option>Critical Only</option><option>Low Stock</option></select>
-          <button style={{ background: '#3B82F6', color: 'white', border: 'none', padding: '1rem 1.5rem', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><Plus size={20}/> Add Item</button>
+          <select 
+            value={stockFilter} 
+            onChange={e => setStockFilter(e.target.value)}
+            style={{ padding: '1rem', borderRadius: '16px', border: '1px solid #E2E8F0', fontWeight: '800', outline: 'none', background: '#FFFFFF' }}
+          >
+            <option>All Levels</option>
+            <option>Critical Only</option>
+            <option>Low Stock</option>
+          </select>
+          <button 
+            onClick={() => setIsAddItemModalOpen(true)}
+            style={{ background: '#3B82F6', color: 'white', border: 'none', padding: '1rem 1.5rem', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.6rem' }}
+          >
+            <Plus size={20}/> Add Item
+          </button>
         </div>
         <div className="inventory-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
           {inventory.filter(i => (selectedCategory ? i.categoryId === selectedCategory : true) && (selectedSubCategory ? i.subCategoryId === selectedSubCategory : true) && i.name.toLowerCase().includes(searchQuery.toLowerCase())).map(item => (
@@ -269,9 +359,10 @@ const InventoryModule = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem' }}><Badge color="slate">{SUBCATEGORIES.find(s=>s.id===item.subCategoryId)?.name}</Badge><Badge color={item.stock < item.minThreshold ? 'red' : 'green'}>{item.stock < item.minThreshold ? 'Low Stock' : 'Stable'}</Badge></div>
               <h3 style={{ margin: '0 0 0.4rem 0', fontWeight: '900', fontSize: '1.2rem' }}>{item.name}</h3>
               <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#64748B', fontWeight: '700' }}><MapPin size={14} style={{ marginRight: '0.3rem' }}/> {item.location}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}><div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>AVAILABLE STOCK</p><span style={{ fontSize: '2rem', fontWeight: '900', color: '#0F172A' }}>{item.stock}</span><span style={{ fontSize: '1rem', color: '#64748B', marginLeft: '0.4rem', fontWeight: '800' }}>{item.unit}</span></div><div style={{ display: 'flex', gap: '0.6rem' }}><button onClick={() => { setSelectedItem(item); setIsModalOpen(true); }} style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#3B82F6' }}><Edit size={18}/></button><button style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#64748B' }}><History size={18}/></button></div></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}><div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>AVAILABLE STOCK</p><span style={{ fontSize: '2rem', fontWeight: '900', color: '#0F172A' }}>{item.stock}</span><span style={{ fontSize: '1rem', color: '#64748B', marginLeft: '0.4rem', fontWeight: '800' }}>{item.unit}</span></div><div style={{ display: 'flex', gap: '0.6rem' }}><button onClick={() => { setSelectedItem(item); setIsModalOpen(true); }} style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#3B82F6' }}><Edit size={18}/></button><button onClick={() => handleDeleteItem(item.id)} style={{ padding: '0.6rem', background: '#FFF1F2', border: 'none', borderRadius: '10px', color: '#E11D48' }}><Trash2 size={18}/></button><button style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#64748B' }}><History size={18}/></button></div></div>
             </motion.div>
-          ))}
+          ))
+  })()}
         </div>
       </div>
     </div>
@@ -458,72 +549,10 @@ const InventoryModule = () => {
   );
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#F8FAFC', fontSmooth: 'antialiased' }}>
-      {/* Responsive Styles Injection */}
-      <style>{`
-        @media (max-width: 1024px) {
-          .kpi-grid {
-             grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
-        @media (max-width: 768px) {
-          .header-main {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            padding: 1.5rem !important;
-            gap: 1.5rem;
-          }
-          .header-main h1 {
-            font-size: 1.5rem !important;
-          }
-          .main-tabs {
-            padding: 0 1rem !important;
-          }
-          .main-tabs button {
-            padding: 1rem 1rem !important;
-            font-size: 0.9rem !important;
-            white-space: nowrap;
-          }
-          .inventory-layout {
-            flex-direction: column !important;
-          }
-          .inventory-sidebar {
-            width: 100% !important;
-            height: auto !important;
-            border-right: none !important;
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem !important;
-          }
-          .inventory-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .kpi-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .proc-subtabs, .asset-subtabs {
-            padding: 0 1rem !important;
-            gap: 1.5rem !important;
-          }
-          .proc-subtabs button, .asset-subtabs button {
-            padding: 1rem 0 !important;
-            font-size: 0.9rem !important;
-          }
-          .chart-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .po-grid, .asset-grid, .maintenance-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .asset-detail-grid {
-            grid-template-columns: 1fr !important;
-            gap: 1.5rem !important;
-          }
-        }
-      `}</style>
-
-      <header className="header-main" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-        <div><h1 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#0F172A' }}><Layers size={32} color="#3B82F6" /> Material Control</h1><p style={{ color: '#64748B', fontSize: '0.95rem', fontWeight: '600', margin: 0 }}>Smart Inventory & Asset Intelligence.</p></div>
-        <div style={{ display: 'flex', gap: '1rem' }}><button style={{ padding: '0.8rem 1.2rem', background: '#F1F5F9', border: 'none', borderRadius: '12px', color: '#0F172A', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><RefreshCcw size={18}/> Sync</button></div>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#F8FAFC', fontSmooth: 'antialiased' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        <div><h1 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#0F172A' }}><Layers size={32} color="#3B82F6" /> Material Control Center</h1><p style={{ color: '#64748B', fontSize: '0.95rem', fontWeight: '600', margin: 0 }}>Integrated Procurement, Smart Inventory & Asset Intelligence.</p></div>
+        <div style={{ display: 'flex', gap: '1rem' }}><button style={{ padding: '0.8rem 1.2rem', background: '#F1F5F9', border: 'none', borderRadius: '12px', color: '#0F172A', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><RefreshCcw size={18}/> Sync Data</button></div>
       </header>
       <div className="main-tabs" style={{ display: 'flex', gap: '1.5rem', background: '#FFFFFF', padding: '0 2.5rem', borderBottom: '1px solid #E2E8F0', overflowX: 'auto' }}>
         {[
@@ -567,18 +596,127 @@ const InventoryModule = () => {
                 <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', marginBottom: '0.5rem' }}>{selectedAsset.name}</h2>
                 <p style={{ color: '#64748B', fontWeight: '700', marginBottom: '2.5rem' }}>Internal Code: {selectedAsset.code}</p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
-                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>PURCHASE COST</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>₹{selectedAsset.purchaseCost.toLocaleString()}</p></div>
-                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>CURRENT VALUE</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0, color: '#3B82F6' }}>₹{selectedAsset.currentValue.toLocaleString()}</p></div>
-                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>LOCATION</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>Room {selectedAsset.roomId}</p></div>
-                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>CONDITION</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0, color: '#10B981' }}>{selectedAsset.conditionScore}/10</p></div>
+                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>PURCHASE COST</p><input type="number" style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #E2E8F0' }} value={selectedAsset.purchaseCost} onChange={e => setSelectedAsset({...selectedAsset, purchaseCost: parseInt(e.target.value)})} /></div>
+                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>CURRENT VALUE</p><input type="number" style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #E2E8F0', color: '#3B82F6' }} value={selectedAsset.currentValue} onChange={e => setSelectedAsset({...selectedAsset, currentValue: parseInt(e.target.value)})} /></div>
+                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>LOCATION</p><input style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #E2E8F0' }} value={selectedAsset.location || `Room ${selectedAsset.roomId}`} onChange={e => setSelectedAsset({...selectedAsset, location: e.target.value})} /></div>
+                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>CONDITION (1-10)</p><input type="number" min="1" max="10" style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #E2E8F0', color: '#10B981' }} value={selectedAsset.conditionScore} onChange={e => setSelectedAsset({...selectedAsset, conditionScore: parseInt(e.target.value)})} /></div>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                   <button style={{ flex: 1, padding: '1.2rem', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}><Move size={20}/> Asset Transfer</button>
+                   <button onClick={handleUpdateAsset} style={{ flex: 1, padding: '1.2rem', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}><Save size={20}/> Save Changes</button>
                    <button style={{ flex: 1, padding: '1.2rem', background: '#F1F5F9', color: '#0F172A', border: 'none', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}><Wrench size={20}/> Service Log</button>
                 </div>
              </div>
           </div>
         )}
+      </Modal>
+
+      {/* Edit Item Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Edit Inventory Item">
+        {selectedItem && (
+          <form onSubmit={handleUpdateItem} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>ITEM NAME</label>
+                <input required style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} value={selectedItem.name} onChange={e => setSelectedItem({...selectedItem, name: e.target.value})} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>CATEGORY</label>
+                <select style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} value={selectedItem.categoryId} onChange={e => setSelectedItem({...selectedItem, categoryId: e.target.value})}>
+                  {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>CURRENT STOCK</label>
+                <input type="number" required style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} value={selectedItem.stock} onChange={e => setSelectedItem({...selectedItem, stock: parseInt(e.target.value)})} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>UNIT</label>
+                <input required style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} value={selectedItem.unit} onChange={e => setSelectedItem({...selectedItem, unit: e.target.value})} />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>MIN THRESHOLD</label>
+                <input type="number" required style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} value={selectedItem.minThreshold} onChange={e => setSelectedItem({...selectedItem, minThreshold: parseInt(e.target.value)})} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>LOCATION</label>
+                <input style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} value={selectedItem.location} onChange={e => setSelectedItem({...selectedItem, location: e.target.value})} />
+              </div>
+            </div>
+            <button type="submit" style={{ background: '#3B82F6', color: 'white', padding: '1rem', borderRadius: '16px', fontWeight: '900', border: 'none', cursor: 'pointer', marginTop: '1rem' }}>Update Item Details</button>
+          </form>
+        )}
+      </Modal>
+
+      <Modal isOpen={isAddItemModalOpen} onClose={() => setIsAddItemModalOpen(false)} title="Add New Inventory Item">
+        <form onSubmit={handleAddItem} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>ITEM NAME</label>
+              <input 
+                required 
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} 
+                value={newItemData.name} 
+                onChange={e => setNewItemData({...newItemData, name: e.target.value})} 
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>CATEGORY</label>
+              <select 
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}
+                value={newItemData.categoryId}
+                onChange={e => setNewItemData({...newItemData, categoryId: e.target.value})}
+              >
+                {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>INITIAL STOCK</label>
+              <input 
+                type="number" 
+                required 
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} 
+                value={newItemData.stock} 
+                onChange={e => setNewItemData({...newItemData, stock: parseInt(e.target.value)})} 
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>UNIT (e.g. Kg, Units)</label>
+              <input 
+                required 
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} 
+                value={newItemData.unit} 
+                onChange={e => setNewItemData({...newItemData, unit: e.target.value})} 
+              />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>MIN THRESHOLD</label>
+              <input 
+                type="number" 
+                required 
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} 
+                value={newItemData.minThreshold} 
+                onChange={e => setNewItemData({...newItemData, minThreshold: parseInt(e.target.value)})} 
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginBottom: '0.5rem' }}>LOCATION</label>
+              <input 
+                style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1px solid #E2E8F0' }} 
+                value={newItemData.location} 
+                onChange={e => setNewItemData({...newItemData, location: e.target.value})} 
+              />
+            </div>
+          </div>
+          <button type="submit" style={{ background: '#3B82F6', color: 'white', padding: '1rem', borderRadius: '16px', fontWeight: '900', border: 'none', cursor: 'pointer', marginTop: '1rem' }}>Create Inventory Item</button>
+        </form>
       </Modal>
 
       <style>{`

@@ -634,3 +634,108 @@
 }
 
 
+
+/* ── Smart Comfort & Safety Card ── */
+.dash-smart-card {
+  background: white;
+}
+
+.dash-smart-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.smart-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.smart-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.smart-value-bar {
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.smart-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 1s ease;
+}
+
+.smart-num {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  align-self: flex-end;
+}
+
+.dash-smart-status {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #4b5563;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d1d5db;
+}
+
+.status-dot.active {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b98180;
+}
+
+.dash-sanitized-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.dash-btn-primary-sm {
+  width: 100%;
+  padding: 0.85rem;
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.dash-btn-primary-sm:hover {
+  background: #7c3aed;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(139, 92, 246, 0.3);
+}

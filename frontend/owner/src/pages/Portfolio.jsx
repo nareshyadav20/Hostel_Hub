@@ -47,10 +47,11 @@ const STEP_CONFIG = [
   { step: 5,  title: 'Room Setup',      icon: '🛏️',  desc: 'Room configuration' },
   { step: 6,  title: 'Food & Mess',     icon: '🍽️',  desc: 'Meals & plans' },
   { step: 7,  title: 'Amenities',       icon: '✨', desc: 'Facilities & features' },
-  { step: 8,  title: 'Policies',        icon: '📋', desc: 'Rules & stay terms' },
-  { step: 9,  title: 'Staff',           icon: '👤', desc: 'Warden & contacts' },
-  { step: 10, title: 'Owner Details',   icon: '🔑', desc: 'Contact information' },
-  { step: 11, title: 'Review',          icon: '✅', desc: 'Final summary' },
+  { step: 8,  title: 'Intelligence',    icon: '🧠', desc: 'Smart IoT & AI' },
+  { step: 9,  title: 'Policies',        icon: '📋', desc: 'Rules & stay terms' },
+  { step: 10, title: 'Staff',           icon: '👤', desc: 'Warden & contacts' },
+  { step: 11, title: 'Owner Details',   icon: '🔑', desc: 'Contact information' },
+  { step: 12, title: 'Review',          icon: '✅', desc: 'Final summary' },
 ];
 
 const INITIAL_FORM_STATE = {
@@ -66,7 +67,9 @@ const INITIAL_FORM_STATE = {
   visitorPolicy: '', smokingPolicy: 'Not Allowed', alcoholPolicy: 'Not Allowed',
   petsAllowed: 'No', minStay: '', noticePeriod: '', checkIn: '', checkOut: '',
   staffName: '', staffRole: '', staffContact: '',
-  ownerName: '', phone: '', altPhone: '', email: ''
+  ownerName: '', phone: '', altPhone: '', email: '',
+  hasSmartAccess: false, hasClimateControl: false, hasAirQualityMonitor: false,
+  hasAIHygiene: false, hasCCTVAi: false, targetComfortScore: 90
 };
 
 const Portfolio = () => {
@@ -133,8 +136,8 @@ const Portfolio = () => {
   // Load drafts from backend buildings with status: 'Draft'
   const loadDrafts = useCallback(async () => {
     try {
-      const allBuildings = await api.getBuildings();
-      setDrafts(allBuildings.filter(b => b.status === 'Draft').map(b => ({ ...b, id: b._id || b.id })));
+      const draftBuildings = await api.getDraftBuildings();
+      setDrafts((draftBuildings || []).map(b => ({ ...b, id: b._id || b.id })));
     } catch (err) { console.error('Draft load error', err); }
   }, []);
 
@@ -216,7 +219,7 @@ const Portfolio = () => {
 
   const handleCreateHostel = async (e) => {
     e.preventDefault();
-    if (currentStep < 11) {
+    if (currentStep < 12) {
       // Auto-save as draft when advancing steps
       saveDraftToBackend(formData, currentStep + 1, activeDraftId);
       setCurrentStep(s => s + 1);
@@ -246,7 +249,15 @@ const Portfolio = () => {
           pets: formData.petsAllowed || 'No',
           visitors: formData.visitorPolicy || 'Till 8 PM'
         },
-        staffInfo: { name: formData.staffName, role: formData.staffRole, contact: formData.staffContact }
+        staffInfo: { name: formData.staffName, role: formData.staffRole, contact: formData.staffContact },
+        smartConfig: {
+          hasSmartAccess: formData.hasSmartAccess,
+          hasClimateControl: formData.hasClimateControl,
+          hasAirQualityMonitor: formData.hasAirQualityMonitor,
+          hasAIHygiene: formData.hasAIHygiene,
+          hasCCTVAi: formData.hasCCTVAi,
+          targetComfortScore: formData.targetComfortScore
+        }
       };
 
       if (activeDraftId) {
@@ -470,6 +481,38 @@ const Portfolio = () => {
       );
       case 8: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', background: 'rgba(99,102,241,0.05)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid var(--accent-primary)' }}>Enable ultra-premium smart features for AI property intelligence.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+            {[
+              { id: 'hasSmartAccess', label: 'Smart Access', desc: 'RFID & Biometric' },
+              { id: 'hasClimateControl', label: 'Climate Control', desc: 'Automated HVAC' },
+              { id: 'hasAirQualityMonitor', label: 'Air Quality', desc: 'AQI Tracking' },
+              { id: 'hasAIHygiene', label: 'AI Hygiene', desc: 'Sanitization Audit' },
+              { id: 'hasCCTVAi', label: 'Neural CCTV', desc: 'AI Security Link' }
+            ].map(feat => (
+              <div 
+                key={feat.id} 
+                onClick={() => setFormData(p => ({ ...p, [feat.id]: !p[feat.id] }))}
+                style={{ padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: formData[feat.id] ? 'rgba(99,102,241,0.1)' : 'var(--bg-tertiary)', borderColor: formData[feat.id] ? 'var(--accent-primary)' : 'var(--border-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1rem', transition: 'all 0.2s' }}
+              >
+                <div style={{ width: '20px', height: '20px', borderRadius: '6px', border: '2px solid', borderColor: formData[feat.id] ? 'var(--accent-primary)' : 'var(--text-muted)', background: formData[feat.id] ? 'var(--accent-primary)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {formData[feat.id] && <div style={{ width: '8px', height: '8px', background: 'white', borderRadius: '2px' }} />}
+                </div>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: formData[feat.id] ? 'var(--accent-primary)' : 'var(--text-primary)' }}>{feat.label}</h4>
+                  <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>{feat.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="input-group" style={{ marginTop: '0.5rem' }}>
+            <label>Target AI Comfort Score: {formData.targetComfortScore}</label>
+            <input type="range" min="50" max="100" value={formData.targetComfortScore} onChange={e => setFormData({...formData, targetComfortScore: Number(e.target.value)})} style={{ width: '100%', accentColor: 'var(--accent-primary)' }} />
+          </div>
+        </div>
+      );
+      case 9: return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="input-group"><label>Smoking Policy</label><select value={formData.smokingPolicy} onChange={e => setFormData({...formData, smokingPolicy: e.target.value})}><option>Allowed</option><option>Not Allowed</option></select></div>
             <div className="input-group"><label>Alcohol Policy</label><select value={formData.alcoholPolicy} onChange={e => setFormData({...formData, alcoholPolicy: e.target.value})}><option>Allowed</option><option>Not Allowed</option></select></div>
@@ -480,7 +523,7 @@ const Portfolio = () => {
           </div>
         </div>
       );
-      case 9: return (
+      case 10: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}><div className="input-group"><label>Staff Name</label><input value={formData.staffName} onChange={e => setFormData({...formData, staffName: e.target.value})} /></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="input-group"><label>Role</label><select value={formData.staffRole} onChange={e => setFormData({...formData, staffRole: e.target.value})}><option value="">Select...</option><option>Warden</option><option>Cleaner</option><option>Cook</option></select></div>
@@ -488,21 +531,28 @@ const Portfolio = () => {
           </div>
         </div>
       );
-      case 10: return (
+      case 11: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
           <div className="input-group"><label>Owner Name</label><input value={formData.ownerName} onChange={e => setFormData({...formData, ownerName: e.target.value})} /></div>
           <div className="input-group"><label>Phone Number *</label><input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} /></div>
           <div className="input-group"><label>Email</label><input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
         </div>
       );
-      case 11: return (
-        <div style={{ padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '16px', fontSize: '0.9rem' }}>
-          <h4 style={{ marginBottom: '1rem', color: 'var(--accent-primary)' }}>Review Summary</h4>
-          <p><b>Name:</b> {formData.name}</p>
-          <p><b>Gender:</b> {formData.gender}</p>
-          <p><b>Location:</b> {formData.city}, {formData.state}</p>
-          <p><b>Rent:</b> ₹{formData.rentBed}/bed</p>
-          <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Ready to finalize? Click 'Finalize & Create' below.</p>
+      case 12: return (
+        <div style={{ padding: '1.5rem', background: 'var(--bg-tertiary)', borderRadius: '16px', fontSize: '0.9rem' }}>
+          <h4 style={{ marginBottom: '1.5rem', color: 'var(--accent-primary)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckCircle size={20} /> Review Summary</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div>
+              <p style={{ margin: '0 0 0.5rem 0' }}><b style={{ color: 'var(--text-secondary)' }}>Name:</b> {formData.name}</p>
+              <p style={{ margin: '0 0 0.5rem 0' }}><b style={{ color: 'var(--text-secondary)' }}>Gender:</b> {formData.gender}</p>
+              <p style={{ margin: '0 0 0.5rem 0' }}><b style={{ color: 'var(--text-secondary)' }}>Rent:</b> ₹{formData.rentBed}/bed</p>
+            </div>
+            <div>
+              <p style={{ margin: '0 0 0.5rem 0' }}><b style={{ color: 'var(--text-secondary)' }}>Smart IoT:</b> {[formData.hasSmartAccess, formData.hasClimateControl, formData.hasAirQualityMonitor, formData.hasAIHygiene, formData.hasCCTVAi].filter(Boolean).length} features enabled</p>
+              <p style={{ margin: '0 0 0.5rem 0' }}><b style={{ color: 'var(--text-secondary)' }}>AI Comfort Target:</b> {formData.targetComfortScore}%</p>
+            </div>
+          </div>
+          <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>Ready to deploy intelligent property infrastructure? Click 'Finalize & Create' below.</p>
         </div>
       );
       default: return null;
@@ -647,10 +697,10 @@ const Portfolio = () => {
                       <div style={{ fontSize: '0.78rem', color: '#475569', fontWeight: '600' }}>📍 Step: <b>{STEP_CONFIG[currentStep - 1]?.title}</b></div>
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '6px', fontWeight: '700' }}>
-                          <span>Progress</span><span style={{ color: '#3B82F6' }}>{Math.round((currentStep / 11) * 100)}%</span>
+                          <span>Progress</span><span style={{ color: '#3B82F6' }}>{Math.round((currentStep / 12) * 100)}%</span>
                         </div>
                         <div style={{ height: '7px', background: '#DBEAFE', borderRadius: '100px', overflow: 'hidden' }}>
-                          <div style={{ width: `${Math.round((currentStep / 11) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #6366F1)', borderRadius: '100px' }} />
+                          <div style={{ width: `${Math.round((currentStep / 12) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #6366F1)', borderRadius: '100px' }} />
                         </div>
                       </div>
                       <div style={{ padding: '0.65rem', borderRadius: '10px', background: '#3B82F6', color: 'white', fontWeight: '800', fontSize: '0.82rem', textAlign: 'center' }}>
@@ -677,7 +727,7 @@ const Portfolio = () => {
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                     {drafts.map(draft => {
-                      const progress = Math.round(((draft.lastStep || 1) / 11) * 100);
+                      const progress = Math.round(((draft.lastStep || 1) / 12) * 100);
                       const stepLabel = STEP_CONFIG[(draft.lastStep || 1) - 1]?.title || 'Basic Info';
                       const ago = draft.updatedAt ? (() => { const d = (Date.now() - new Date(draft.updatedAt)) / 60000; return d < 60 ? `${Math.round(d)}m ago` : `${Math.round(d/60)}h ago`; })() : 'Recently';
                       return (
@@ -964,7 +1014,14 @@ const BuildingCard = ({ building, onNavigate }) => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1 }}
-            style={{ height: '100%', width: '100%', backgroundImage: `url("${images[imgIdx]}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} 
+            style={{ 
+              height: '100%', 
+              width: '100%', 
+              backgroundImage: `url("${images[imgIdx]}")`, 
+              backgroundSize: 'cover', 
+              backgroundPosition: 'center',
+              backgroundColor: '#F1F5F9' // Fallback color
+            }} 
           />
         </AnimatePresence>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.8))' }} />

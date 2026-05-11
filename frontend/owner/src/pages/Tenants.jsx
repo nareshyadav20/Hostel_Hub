@@ -111,7 +111,7 @@ const Tenants = () => {
   const fetchTenants = async () => {
     setIsLoading(true);
     try {
-      const data = await api.getTenants();
+      const data = await api.getTenants(activeBuildingId);
       if (!data) {
         setTenants([]);
         setIsLoading(false);
@@ -155,8 +155,32 @@ const Tenants = () => {
 
   const [registerFormData, setRegisterFormData] = useState({
     name: '', email: '', phone: '', room: '', rent: '', checkIn: '', emergencyContact: '',
-    aadhaar: '', document: null, messPlan: 'basic'
+    aadhaar: '', document: null, messPlan: 'basic',
+    vegNonVegPreference: 'Any',
+    preferences: { windowSide: false, lowerBunk: false, quietArea: false, nearChargingPort: false, studyFriendlyZone: false }
   });
+  const [recommendedBeds, setRecommendedBeds] = useState([]);
+  const [isRecommending, setIsRecommending] = useState(false);
+
+  const handleRecommendBeds = async () => {
+    if (!registerFormData.buildingId && !activeBuildingId) {
+      alert('Please select a building first.');
+      return;
+    }
+    setIsRecommending(true);
+    try {
+      const beds = await api.recommendBeds(registerFormData.buildingId || activeBuildingId, registerFormData.preferences);
+      setRecommendedBeds(beds);
+      if(beds.length > 0) {
+        // Auto select best match
+        setRegisterFormData(prev => ({ ...prev, roomId: beds[0].room._id || beds[0].room, bedId: beds[0].id || beds[0]._id }));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsRecommending(false);
+    }
+  };
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
@@ -196,8 +220,11 @@ const Tenants = () => {
       emergencyContact: selectedTenant.emergencyContact,
       aadhaar: selectedTenant.docs?.find(d => d.name === 'Aadhar Card')?.id || '',
       document: selectedTenant.docs?.find(d => d.name === 'ID Proof') || null,
-      messPlan: selectedTenant.messPlan || 'basic'
+      messPlan: selectedTenant.messPlan || 'basic',
+      vegNonVegPreference: selectedTenant.vegNonVegPreference || 'Any',
+      preferences: selectedTenant.preferences || { windowSide: false, lowerBunk: false, quietArea: false, nearChargingPort: false, studyFriendlyZone: false }
     });
+    setRecommendedBeds([]);
     setModalMode('edit');
     setIsRegisterModalOpen(true);
   };
@@ -563,8 +590,40 @@ const Tenants = () => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '1rem' }}>
-                          <button className="btn" onClick={() => alert(`Successfully collected ₹${selectedTenant.rent} via ${paymentMode}`)} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', background: '#10B981', color: 'white', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: 'none' }}>
-                            <CheckCircle size={18} /> Collect Rent
+                          <button 
+                            className="btn" 
+                            disabled={isSubmitting}
+                            onClick={async () => {
+                              setIsSubmitting(true);
+                              try {
+                                const payload = {
+                                  tenantId: selectedTenant.id || selectedTenant._id,
+                                  amount: Number(selectedTenant.rent),
+                                  type: 'Rent',
+                                  method: paymentMode,
+                                  buildingId: activeBuildingId,
+                                  status: 'Paid',
+                                  month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
+                                };
+                                await api.addPayment(payload);
+                                
+                                // Also update tenant's rent status locally
+                                const updatedTenant = { ...selectedTenant, rentStatus: 'PAID' };
+                                await api.updateTenant(selectedTenant.id || selectedTenant._id, { rentStatus: 'PAID' });
+                                
+                                setTenants(prev => prev.map(t => (t.id === selectedTenant.id || t._id === selectedTenant._id) ? updatedTenant : t));
+                                setSelectedTenant(updatedTenant);
+                                
+                                alert(`Successfully collected ₹${selectedTenant.rent} via ${paymentMode}`);
+                              } catch (err) {
+                                alert("Failed to collect rent: " + (err.response?.data?.error || err.message));
+                              } finally {
+                                setIsSubmitting(false);
+                              }
+                            }} 
+                            style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', background: '#10B981', color: 'white', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: 'none', opacity: isSubmitting ? 0.7 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+                          >
+                            <CheckCircle size={18} /> {isSubmitting ? 'Processing...' : 'Collect Rent'}
                           </button>
                           <button className="btn" onClick={() => window.location.href = `mailto:${selectedTenant.email}?subject=Rent Due Reminder`} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                             <MessageSquare size={18} /> Send Reminder
@@ -710,13 +769,37 @@ const Tenants = () => {
               </select>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Bed</label>
-              <select style={inputStyle} value={registerFormData.bedId} onChange={e => setRegisterFormData({ ...registerFormData, bedId: e.target.value })} required>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Bed</label>
+                <button type="button" onClick={handleRecommendBeds} disabled={isRecommending} style={{ fontSize: '0.7rem', background: '#EFF6FF', color: '#3B82F6', border: '1px solid #BFDBFE', padding: '0.2rem 0.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: '700' }}>
+                  {isRecommending ? 'Suggesting...' : '✨ Suggest AI Bed'}
+                </button>
+              </div>
+              <select style={{ ...inputStyle, border: recommendedBeds.some(b => b.id === registerFormData.bedId) ? '2px solid #10B981' : '1px solid #E2E8F0' }} value={registerFormData.bedId} onChange={e => setRegisterFormData({ ...registerFormData, bedId: e.target.value })} required>
                 <option value="">Select Bed</option>
-                {infrastructure.beds.filter(b => b.roomId === registerFormData.roomId).map(b => <option key={b.id} value={b.id}>Bed {b.bedNumber}</option>)}
+                {infrastructure.beds.filter(b => b.roomId === registerFormData.roomId).map(b => (
+                  <option key={b.id} value={b.id}>
+                    Bed {b.bedNumber} {recommendedBeds.some(rb => rb.id === b.id) ? '⭐ (Recommended)' : ''}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
+
+          <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', marginTop: '0.5rem' }}>
+            <h4 style={{ fontSize: '0.85rem', fontWeight: '800', color: '#0F172A', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Star size={14} color="#F59E0B" /> Smart Bed Preferences
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+              {Object.keys(registerFormData.preferences).map(pref => (
+                <label key={pref} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#475569', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={registerFormData.preferences[pref]} onChange={e => setRegisterFormData({ ...registerFormData, preferences: { ...registerFormData.preferences, [pref]: e.target.checked } })} />
+                  {pref.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                </label>
+              ))}
+            </div>
+          </div>
+          
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Monthly Rent (₹)</label>
@@ -731,6 +814,12 @@ const Tenants = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Aadhaar Number</label>
               <input style={inputStyle} value={registerFormData.aadhaar} onChange={e => setRegisterFormData({ ...registerFormData, aadhaar: e.target.value })} required />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Food Preference</label>
+              <select style={inputStyle} value={registerFormData.vegNonVegPreference} onChange={e => setRegisterFormData({ ...registerFormData, vegNonVegPreference: e.target.value })}>
+                {['Any', 'Veg', 'Non-Veg', 'Vegan', 'Eggetarian'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid #E2E8F0', paddingTop: '1.5rem' }}>
