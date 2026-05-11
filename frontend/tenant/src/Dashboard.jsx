@@ -268,6 +268,49 @@ function Dashboard() {
             Request a Service
           </button>
         </div>
+
+        {/* Smart Comfort & Safety */}
+        <div className="sn-card dash-smart-card">
+          <div className="dash-card-header">
+            <div className="dash-card-icon" style={{ background: '#f5f3ff', color: '#8b5cf6' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+            <h4 className="sn-card-title">Smart Comfort & Safety</h4>
+          </div>
+          <div className="dash-smart-metrics">
+             <div className="smart-metric">
+                <span className="smart-label">Hygiene Rating</span>
+                <div className="smart-value-bar">
+                   <div className="smart-fill" style={{ width: `${(tenantData?.roomId?.hygieneRating || 4.5) * 20}%`, background: '#10b981' }}></div>
+                </div>
+                <span className="smart-num">{tenantData?.roomId?.hygieneRating || 4.5} / 5.0</span>
+             </div>
+             <div className="smart-metric">
+                <span className="smart-label">Comfort Score</span>
+                <div className="smart-value-bar">
+                   <div className="smart-fill" style={{ width: `${(tenantData?.bedId?.comfortScore || 8.2) * 10}%`, background: '#8b5cf6' }}></div>
+                </div>
+                <span className="smart-num">{tenantData?.bedId?.comfortScore || 8.2} / 10</span>
+             </div>
+          </div>
+          <div className="dash-smart-status">
+             <div className="status-item">
+                <span className="status-dot active"></span>
+                <span>Smart Lock Active</span>
+             </div>
+             <div className="status-item">
+                <span className="status-dot active"></span>
+                <span>Optimal Ventilation</span>
+             </div>
+          </div>
+          <div className="dash-sanitized-info">
+             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+             <span>Last Sanitized: {tenantData?.bedId?.lastSanitized ? new Date(tenantData.bedId.lastSanitized).toLocaleDateString() : 'Yesterday, 11:00 AM'}</span>
+          </div>
+          <button className="dash-btn-primary-sm" onClick={() => navigate('/safety')}>
+            View Detailed Insights
+          </button>
+        </div>
       </div>
     </div>
   );

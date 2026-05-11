@@ -5,7 +5,7 @@ const SystemSettings = require('../models/SystemSettings');
 
 const createRoom = async (req, res) => {
   try {
-    const { floorId, roomNumber, roomType, capacity, rentAmount, securityDeposit, noticePeriod, isAC, washroomType, balcony, facing, floorType, windowCount, furniture, images } = req.body;
+    const { floorId, roomNumber, roomType, capacity, rentAmount, securityDeposit, noticePeriod, isAC, washroomType, balcony, facing, floorType, windowCount, furniture, images, ...smartFeatures } = req.body;
     
     const floor = await Floor.findById(floorId).populate('building');
     if (!floor || floor.building.owner.toString() !== req.user.id) {
@@ -25,6 +25,7 @@ const createRoom = async (req, res) => {
       securityDeposit: finalDeposit, 
       noticePeriod: noticePeriod || 30,
       isAC, washroomType, balcony, facing, floorType, windowCount, furniture, images: images||[], 
+      ...smartFeatures,
       floor: floorId 
     });
     floor.rooms.push(room._id);

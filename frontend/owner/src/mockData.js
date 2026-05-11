@@ -99,6 +99,22 @@ export const api = {
     const data = Array.isArray(res.data) ? res.data : [];
     return handleId(data);
   },
+  recommendBeds: async (buildingId, preferences) => {
+    const res = await axios.post(`${API_URL}/beds/recommend`, { buildingId, preferences });
+    return handleId(res.data);
+  },
+  getMaintenanceBeds: async () => {
+    const res = await axios.get(`${API_URL}/beds/maintenance`);
+    return handleId(res.data);
+  },
+  markBedSanitized: async (id) => {
+    const res = await axios.post(`${API_URL}/beds/${id}/sanitize`);
+    return handleId(res.data);
+  },
+  recommendBeds_old: async (buildingId, preferences) => {
+    const res = await axios.post(`${API_URL}/beds/recommend`, { buildingId, preferences });
+    return handleId(res.data);
+  },
   getFloors: async (bId) => {
     const res = await axios.get(`${API_URL}/floors/${bId}`);
     return handleId(res.data);
@@ -358,6 +374,16 @@ export const api = {
     const res = await axios.post(`${API_URL}/procurement/orders`, data);
     return handleId(res.data);
   }
+,
+  getReportsData: async (bId) => {
+    const res = await axios.get(`${API_URL}/reports`, { params: { buildingId: bId } });
+    return res.data;
+  },
+  markBedSanitized: async (bedId) => {
+    const res = await axios.post(`${API_URL}/beds/${bedId}/sanitize`);
+    return res.data;
+  }
 };
 
 window.api = api;
+

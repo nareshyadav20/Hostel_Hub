@@ -244,6 +244,31 @@ const InventoryModule = () => {
     }
   };
 
+  const handleDeleteItem = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this item? This action cannot be undone.')) return;
+    try {
+      await api.deleteInventoryItem(id);
+      setInventory(prev => prev.filter(item => item.id !== id));
+      triggerNotification('Item deleted successfully', 'slate');
+    } catch (err) {
+      console.error(err);
+      triggerNotification('Failed to delete item', 'red');
+    }
+  };
+
+  const handleUpdateAsset = async (e) => {
+    e.preventDefault();
+    try {
+      const updatedAsset = await api.updateInventoryItem(selectedAsset.id, selectedAsset);
+      setInventory(prev => prev.map(item => item.id === selectedAsset.id ? updatedAsset : item));
+      setIsAssetModalOpen(false);
+      triggerNotification('Asset updated successfully', 'green');
+    } catch (err) {
+      console.error(err);
+      triggerNotification('Failed to update asset', 'red');
+    }
+  };
+
   // --- ANALYTICS ---
   const procStats = useMemo(() => ({
     totalSpend: pos.reduce((s, p) => s + p.totalAmount, 0),
@@ -338,7 +363,7 @@ const InventoryModule = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem' }}><Badge color="slate">{SUBCATEGORIES.find(s=>s.id===item.subCategoryId)?.name}</Badge><Badge color={item.stock < item.minThreshold ? 'red' : 'green'}>{item.stock < item.minThreshold ? 'Low Stock' : 'Stable'}</Badge></div>
               <h3 style={{ margin: '0 0 0.4rem 0', fontWeight: '900', fontSize: '1.2rem' }}>{item.name}</h3>
               <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#64748B', fontWeight: '700' }}><MapPin size={14} style={{ marginRight: '0.3rem' }}/> {item.location}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}><div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>AVAILABLE STOCK</p><span style={{ fontSize: '2rem', fontWeight: '900', color: '#0F172A' }}>{item.stock}</span><span style={{ fontSize: '1rem', color: '#64748B', marginLeft: '0.4rem', fontWeight: '800' }}>{item.unit}</span></div><div style={{ display: 'flex', gap: '0.6rem' }}><button onClick={() => { setSelectedItem(item); setIsModalOpen(true); }} style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#3B82F6' }}><Edit size={18}/></button><button style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#64748B' }}><History size={18}/></button></div></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}><div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>AVAILABLE STOCK</p><span style={{ fontSize: '2rem', fontWeight: '900', color: '#0F172A' }}>{item.stock}</span><span style={{ fontSize: '1rem', color: '#64748B', marginLeft: '0.4rem', fontWeight: '800' }}>{item.unit}</span></div><div style={{ display: 'flex', gap: '0.6rem' }}><button onClick={() => { setSelectedItem(item); setIsModalOpen(true); }} style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#3B82F6' }}><Edit size={18}/></button><button onClick={() => handleDeleteItem(item.id)} style={{ padding: '0.6rem', background: '#FFF1F2', border: 'none', borderRadius: '10px', color: '#E11D48' }}><Trash2 size={18}/></button><button style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#64748B' }}><History size={18}/></button></div></div>
             </motion.div>
           ))
   })()}
@@ -531,7 +556,7 @@ const InventoryModule = () => {
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#F8FAFC', fontSmooth: 'antialiased' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         <div><h1 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#0F172A' }}><Layers size={32} color="#3B82F6" /> Material Control Center</h1><p style={{ color: '#64748B', fontSize: '0.95rem', fontWeight: '600', margin: 0 }}>Integrated Procurement, Smart Inventory & Asset Intelligence.</p></div>
-        <div style={{ display: 'flex', gap: '1rem' }}><button style={{ padding: '0.8rem 1.2rem', background: '#F1F5F9', border: 'none', borderRadius: '12px', color: '#0F172A', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><RefreshCcw size={18}/> Sync Data</button></div>
+        <div style={{ display: 'flex', gap: '1rem' }}><button onClick={fetchInventory} style={{ padding: '0.8rem 1.2rem', background: '#F1F5F9', border: 'none', borderRadius: '12px', color: '#0F172A', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><RefreshCcw size={18}/> Sync Data</button></div>
       </header>
       <div style={{ display: 'flex', gap: '1.5rem', background: '#FFFFFF', padding: '0 2.5rem', borderBottom: '1px solid #E2E8F0', overflowX: 'auto' }}>
         {[
@@ -575,13 +600,13 @@ const InventoryModule = () => {
                 <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', marginBottom: '0.5rem' }}>{selectedAsset.name}</h2>
                 <p style={{ color: '#64748B', fontWeight: '700', marginBottom: '2.5rem' }}>Internal Code: {selectedAsset.code}</p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
-                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>PURCHASE COST</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>₹{selectedAsset.purchaseCost.toLocaleString()}</p></div>
-                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>CURRENT VALUE</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0, color: '#3B82F6' }}>₹{selectedAsset.currentValue.toLocaleString()}</p></div>
-                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>LOCATION</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>Room {selectedAsset.roomId}</p></div>
-                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>CONDITION</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0, color: '#10B981' }}>{selectedAsset.conditionScore}/10</p></div>
+                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>PURCHASE COST</p><input type="number" style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #E2E8F0' }} value={selectedAsset.purchaseCost} onChange={e => setSelectedAsset({...selectedAsset, purchaseCost: parseInt(e.target.value)})} /></div>
+                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>CURRENT VALUE</p><input type="number" style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #E2E8F0', color: '#3B82F6' }} value={selectedAsset.currentValue} onChange={e => setSelectedAsset({...selectedAsset, currentValue: parseInt(e.target.value)})} /></div>
+                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>LOCATION</p><input style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #E2E8F0' }} value={selectedAsset.location || `Room ${selectedAsset.roomId}`} onChange={e => setSelectedAsset({...selectedAsset, location: e.target.value})} /></div>
+                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>CONDITION (1-10)</p><input type="number" min="1" max="10" style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #E2E8F0', color: '#10B981' }} value={selectedAsset.conditionScore} onChange={e => setSelectedAsset({...selectedAsset, conditionScore: parseInt(e.target.value)})} /></div>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                   <button style={{ flex: 1, padding: '1.2rem', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}><Move size={20}/> Asset Transfer</button>
+                   <button onClick={handleUpdateAsset} style={{ flex: 1, padding: '1.2rem', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}><Save size={20}/> Save Changes</button>
                    <button style={{ flex: 1, padding: '1.2rem', background: '#F1F5F9', color: '#0F172A', border: 'none', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}><Wrench size={20}/> Service Log</button>
                 </div>
              </div>

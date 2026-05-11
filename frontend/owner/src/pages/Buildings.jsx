@@ -249,6 +249,19 @@ const PropertyDetailDrawer = ({ isOpen, onClose, target, type, activeTab, onTabC
       case 'AI Insights':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ position: 'relative', height: '180px', borderRadius: '32px', overflow: 'hidden', marginBottom: '0.5rem' }}>
+              <img 
+                src={target.images?.[0] || 'https://images.unsplash.com/photo-1545324418-f1d3c5b53571?auto=format&fit=crop&w=800&q=80'} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} 
+                alt="Intelligence Context" 
+              />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent, rgba(15, 23, 42, 0.9))' }} />
+              <div style={{ position: 'absolute', bottom: '1.5rem', left: '2rem' }}>
+                 <h3 style={{ color: 'white', fontSize: '1.2rem', fontWeight: '900', margin: 0 }}>Intelligence Context: {target.name || `Room ${target.roomNumber}`}</h3>
+                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontWeight: '700', margin: '0.2rem 0 0 0' }}>AI-DRIVEN VISUAL ANALYSIS ACTIVE</p>
+              </div>
+            </div>
+
             <div style={{ padding: '2.5rem', background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', borderRadius: '40px', color: 'white', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: '-100px', left: '-100px', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%)' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem' }}>
@@ -338,7 +351,7 @@ const PropertyDetailDrawer = ({ isOpen, onClose, target, type, activeTab, onTabC
                     </span>
                   </div>
                   <h2 style={{ fontSize: '2.4rem', fontWeight: '1000', color: '#0F172A', margin: 0, letterSpacing: '-0.04em' }}>
-                    {target.name || `Room ${target.roomNumber}` || `Floor ${target.floorNumber}`}
+                    {target.name || (target.roomNumber ? `Room ${target.roomNumber}` : target.floorNumber ? `Floor ${target.floorNumber}` : target.bedNumber ? `Bed ${target.bedNumber}` : 'Intelligence')}
                   </h2>
                 </div>
                 <button onClick={onClose} style={{ width: '48px', height: '48px', borderRadius: '16px', background: '#F8FAFC', border: '1px solid #F1F5F9', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -607,6 +620,46 @@ const Buildings = () => {
     }
   };
 
+  const handleDeleteRoom = async (roomId) => {
+    if (!window.confirm("Are you sure you want to decommission this room and all its beds?")) return;
+    try {
+      await api.deleteRoom(roomId);
+      setRooms(prev => prev.filter(r => r.id !== roomId && r._id !== roomId));
+    } catch (err) {
+      alert("Failed to delete room: " + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleDeleteBed = async (bedId) => {
+    if (!window.confirm("Are you sure you want to remove this bed record?")) return;
+    try {
+      await api.deleteBed(bedId);
+      setBeds(prev => prev.filter(b => b.id !== bedId && b._id !== bedId));
+    } catch (err) {
+      alert("Failed to delete bed: " + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleDeleteFloor = async (floorId) => {
+    if (!window.confirm("Are you sure you want to delete this floor and all its rooms?")) return;
+    try {
+      await api.deleteFloor(floorId);
+      setFloors(prev => prev.filter(f => f.id !== floorId && f._id !== floorId));
+    } catch (err) {
+      alert("Failed to delete floor: " + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleDeleteBuilding = async (bId) => {
+    if (!window.confirm("Are you sure you want to delete this property portfolio? This cannot be undone.")) return;
+    try {
+      await api.deleteBuilding(bId);
+      setBuildings(prev => prev.filter(b => b.id !== bId && b._id !== bId));
+    } catch (err) {
+      alert("Failed to delete building: " + (err.response?.data?.error || err.message));
+    }
+  };
+
   // --- HELPER: Image Upload ---
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -721,6 +774,7 @@ const Buildings = () => {
         buildingId: bId, 
         floorNumber: formData.number, 
         description: formData.description,
+        specializationCategory: formData.specialization || 'General',
         images: formData.imageUrl ? [formData.imageUrl] : [] 
       });
       setFloors([...floors, newF]);
@@ -930,6 +984,7 @@ const Buildings = () => {
                 onSelect={handleSelectFloor} 
                 onBack={() => setView('buildings')} 
                 onAdd={() => setIsAddFloorOpen(true)} 
+                onDelete={handleDeleteFloor}
                 onViewAnalytics={(target, type) => handleViewDetail(target, type)}
               />
             </motion.div>
@@ -951,6 +1006,8 @@ const Buildings = () => {
                 onSelect={handleSelectRoom} 
                 onBack={() => setView('floors')} 
                 onAdd={() => setIsAddRoomOpen(true)} 
+                onEdit={handleOpenEditRoom}
+                onDelete={handleDeleteRoom}
                 onViewDetails={(room) => handleViewDetail(room, 'room')}
               />
             </motion.div>
@@ -969,10 +1026,11 @@ const Buildings = () => {
                  )} 
                  room={selectedRoom} 
                  floor={selectedFloor}
-                  building={selectedBuilding}
+                 building={selectedBuilding}
                  onBack={() => setView('rooms')} 
                  onAdd={() => setIsAddBedOpen(true)} 
                  onEditBed={handleOpenEditBed}
+                 onDelete={handleDeleteBed}
                  onViewDetails={(bed) => handleViewDetail(bed, 'bed')}
                  onViewHistory={(bed) => { setViewingBed(bed); setIsViewBedHistoryOpen(true); }}
                  onAssignTenant={(bed) => { setViewingBed(bed); setIsAssignTenantOpen(true); }}
@@ -1051,6 +1109,17 @@ const Buildings = () => {
         <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleAddFloor}>
           <div className="input-group"><label style={{fontSize:'0.8rem', fontWeight:'900', color:'var(--text-muted)'}}>FLOOR NUMBER</label><input placeholder="e.g. G, 1, 2" value={formData.number} onChange={e => setFormData({...formData, number: e.target.value})} style={inputStyle} required /></div>
           <div className="input-group"><label style={{fontSize:'0.8rem', fontWeight:'900', color:'var(--text-muted)'}}>DESCRIPTION</label><textarea placeholder="e.g. Common Area, Library, etc." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ ...inputStyle, minHeight: '80px', paddingTop: '0.8rem' }} /></div>
+          <div className="input-group">
+            <label style={{fontSize:'0.8rem', fontWeight:'900', color:'var(--text-muted)'}}>FLOOR SPECIALIZATION</label>
+            <select value={formData.specialization} onChange={e => setFormData({...formData, specialization: e.target.value})} style={inputStyle}>
+              <option value="General">General Use</option>
+              <option value="Female-only">Female Only</option>
+              <option value="Male-only">Male Only</option>
+              <option value="Working Professionals">Working Professionals</option>
+              <option value="Students">Students</option>
+              <option value="Quiet Zone">Quiet Zone</option>
+            </select>
+          </div>
           <div className="input-group">
             <label style={{fontSize:'0.8rem', fontWeight:'900', color:'var(--text-muted)'}}>FLOOR LAYOUT PHOTO</label>
             <div style={{ position: 'relative', marginTop: '0.6rem' }}>
@@ -2180,7 +2249,10 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics }) => {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem' 
           }}
         >
-          <BarChart3 size={18} /> Intelligence
+          <div style={{ width: '32px', height: '32px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
+            <img src={building.images?.[0] || 'https://images.unsplash.com/photo-1545324418-f1d3c5b53571?auto=format&fit=crop&w=100&q=80'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Thumb" />
+          </div>
+          Intelligence
         </button>
         <button 
           className="btn btn-primary" 
@@ -2222,7 +2294,7 @@ const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics }) => (
   </div>
 );
 
-const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics }) => {
+const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete }) => {
   const occupancyRate = 78; // Mocked for premium UI
   const totalRooms = 12;
   const totalBeds = 48;
@@ -2394,19 +2466,34 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics }) => {
 
       {/* Action Footer */}
       <div style={{ 
-        marginTop: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', 
+        marginTop: 'auto', display: 'grid', gridTemplateColumns: '1.2fr 0.6fr 1.2fr', gap: '0.8rem', 
         paddingTop: '1.2rem', borderTop: '1px solid #F1F5F9', zIndex: 1 
       }}>
         <button 
           className="btn" 
           onClick={(e) => { e.stopPropagation(); onViewAnalytics(floor, 'floor'); }}
           style={{ 
-            padding: '1rem', borderRadius: '20px', background: '#F8FAFC', color: '#0F172A', 
+            padding: '0.6rem 1rem', borderRadius: '20px', background: '#F8FAFC', color: '#0F172A', 
             fontWeight: '950', fontSize: '0.85rem', border: '1px solid #E2E8F0', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem' 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem',
+            transition: 'all 0.3s ease'
           }}
         >
-          <Monitor size={16} /> Intelligence
+          <div style={{ width: '32px', height: '32px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
+            <img src={floor.images?.[0] || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=100&q=80'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Thumb" />
+          </div>
+          Intelligence
+        </button>
+        <button 
+          className="btn" 
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          style={{ 
+            padding: '1rem', borderRadius: '18px', background: '#FEF2F2', color: '#EF4444', 
+            fontWeight: '950', fontSize: '0.85rem', border: '1px solid #FEE2E2', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}
+        >
+          <Trash2 size={18} />
         </button>
         <button 
           className="btn btn-primary" 
@@ -2423,7 +2510,7 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics }) => {
   );
 };
 
-const FloorsList = ({ floors, building, onSelect, onBack, onAdd, onViewAnalytics }) => (
+const FloorsList = ({ floors, building, onSelect, onBack, onAdd, onDelete, onViewAnalytics }) => (
   <div>
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2.5rem', alignItems: 'center' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
@@ -2445,6 +2532,7 @@ const FloorsList = ({ floors, building, onSelect, onBack, onAdd, onViewAnalytics
           building={building}
           onSelect={onSelect}
           onViewAnalytics={onViewAnalytics}
+          onDelete={() => onDelete(f.id || f._id)}
         />
       )) : (
         <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
@@ -2456,7 +2544,7 @@ const FloorsList = ({ floors, building, onSelect, onBack, onAdd, onViewAnalytics
   </div>
 );
 
-const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onViewDetails }) => (
+const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onEdit, onDelete, onViewDetails }) => (
   <div>
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -2476,7 +2564,8 @@ const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onViewDeta
           floor={floor}
           onSelect={onSelect}
           onViewDetails={onViewDetails}
-          onEdit={() => {}} 
+          onEdit={() => onEdit(r)}
+          onDelete={() => onDelete(r.id || r._id)}
         />
       )) : (
         <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
@@ -2488,7 +2577,7 @@ const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onViewDeta
   </div>
 );
 
-const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit }) => {
+const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelete }) => {
   const occupancyRate = Math.round(((room.occupied || 0) / room.capacity) * 100);
   const isHighDemand = occupancyRate > 80;
   
@@ -2704,25 +2793,39 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit }) => {
 
       {/* Action Footer */}
       <div style={{ 
-        marginTop: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', 
+        marginTop: 'auto', display: 'grid', gridTemplateColumns: '1.2fr 0.6fr 1.2fr', gap: '0.8rem', 
         paddingTop: '1.2rem', borderTop: '1px solid #F1F5F9', zIndex: 1 
       }}>
         <button 
           className="btn" 
           onClick={(e) => { e.stopPropagation(); onViewDetails(room, 'room'); }}
           style={{ 
-            padding: '1rem', borderRadius: '18px', background: '#F8FAFC', color: '#0F172A', 
+            padding: '0.6rem 1rem', borderRadius: '18px', background: '#F8FAFC', color: '#0F172A', 
             fontWeight: '950', fontSize: '0.85rem', border: '1px solid #E2E8F0', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem' 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' 
           }}
         >
-          <Monitor size={16} /> Intelligence
+          <div style={{ width: '32px', height: '32px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
+            <img src={room.images?.[0] || 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=100&q=80'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Thumb" />
+          </div>
+          Intelligence
+        </button>
+        <button 
+          className="btn" 
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          style={{ 
+            padding: '1rem', borderRadius: '18px', background: '#FEF2F2', color: '#EF4444', 
+            fontWeight: '950', fontSize: '0.85rem', border: '1px solid #FEE2E2', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}
+        >
+          <Trash2 size={18} />
         </button>
         <button 
           className="btn btn-primary" 
           onClick={(e) => { e.stopPropagation(); onSelect(room); }}
           style={{ 
-            padding: '1rem', borderRadius: '18px', fontWeight: '950', fontSize: '0.85rem',
+            padding: '1.1rem', borderRadius: '22px', fontWeight: '950', fontSize: '0.85rem',
             boxShadow: `0 10px 20px ${themeColor}30`
           }}
         >
@@ -2733,7 +2836,7 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit }) => {
   );
 };
 
-const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssign }) => {
+const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssign, onDelete }) => {
   const isAvailable = bed.status === 'AVAILABLE';
   const isOccupied = bed.status === 'OCCUPIED';
   const isMaintenance = bed.status === 'MAINTENANCE';
@@ -2772,8 +2875,10 @@ const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssi
   return (
     <motion.div
       layout
-      whileHover={{ y: -12 }}
+      whileHover={{ y: -12, cursor: 'pointer' }}
+      whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
+      onClick={() => onViewDetails(bed)}
       className="smart-card"
       style={{
         background: 'rgba(255, 255, 255, 0.7)',
@@ -3127,8 +3232,8 @@ const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssi
           onClick={(e) => { e.stopPropagation(); onViewDetails(bed, 'bed'); }}
           style={{
             flex: isAvailable ? 'none' : 1,
-            width: isAvailable ? '45px' : 'auto',
-            padding: '0.8rem',
+            width: isAvailable ? 'auto' : 'auto',
+            padding: '0.6rem 1rem',
             borderRadius: '14px',
             background: '#0F172A',
             color: 'white',
@@ -3139,36 +3244,39 @@ const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssi
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '0.6rem'
+            gap: '0.8rem'
           }}
         >
-          <Activity size={16} /> {!isAvailable && 'Intelligence'}
+          <div style={{ width: '28px', height: '28px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
+            <img src={bed.images?.[0] || 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=100&q=80'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Thumb" />
+          </div>
+          {!isAvailable && 'Intelligence'}
         </motion.button>
         <motion.button 
-          whileHover={{ scale: 1.1, background: '#E2E8F0' }}
+          whileHover={{ scale: 1.1, background: '#FEF2F2' }}
           whileTap={{ scale: 0.9 }}
-          onClick={(e) => { e.stopPropagation(); onViewHistory(bed); }}
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
           style={{
             width: '45px',
             height: '45px',
             borderRadius: '14px',
-            background: '#F1F5F9',
+            background: '#FFF1F2',
             border: 'none',
-            color: '#64748B',
+            color: '#EF4444',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}
         >
-          <History size={18} />
+          <Trash2 size={18} />
         </motion.button>
       </div>
     </motion.div>
   );
 };
 
-const BedsList = ({ beds, room, floor, building, onBack, onAdd, onEditBed, onViewDetails, onViewHistory, onAssignTenant }) => {
+const BedsList = ({ beds, room, floor, building, onBack, onAdd, onEditBed, onViewDetails, onViewHistory, onAssignTenant, onDelete }) => {
   const [activeFilter, setActiveFilter] = useState('All Beds');
 
   const filteredBeds = beds.filter(b => {
@@ -3246,6 +3354,7 @@ const BedsList = ({ beds, room, floor, building, onBack, onAdd, onEditBed, onVie
           onViewDetails={onViewDetails}
           onViewHistory={onViewHistory}
           onAssign={onAssignTenant} 
+          onDelete={() => handleDeleteBed(b.id || b._id)}
         />
       )) : (
         <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '5rem 2rem', background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(10px)', borderRadius: '32px', border: '2px dashed #E2E8F0' }}>
