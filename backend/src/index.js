@@ -117,16 +117,19 @@ const io = new Server(server, {
   cors: {
     origin: [
       'http://localhost:5173',
+      'http://127.0.0.1:5173',
       'http://localhost:5174',
+      'http://127.0.0.1:5174',
       'http://localhost:5175',
+      'http://127.0.0.1:5175',
       'http://localhost:3000',
+      'http://127.0.0.1:3000',
       'https://hostel-hub-owner.vercel.app',
       'https://livora-hostel-hub-tenant.vercel.app',
     ],
-    methods: ['GET', 'POST'],
-    credentials: true
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
+    credentials: true,
   },
-  transports: ['websocket', 'polling']
 });
 
 // Initialize socket services
@@ -134,28 +137,24 @@ socketService.setIo(io);
 notificationService.setIo(io);
 
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
+  console.log('⚡ New client connected:', socket.id);
 
-  // Owner portal: join building-specific room for scoped updates
   socket.on('joinBuilding', (buildingId) => {
     if (buildingId) {
       socket.join(buildingId.toString());
-      console.log(`Socket ${socket.id} joined building: ${buildingId}`);
+      console.log(`Socket ${socket.id} joined building room: ${buildingId}`);
     }
   });
 
-  // Owner portal: join general owners room to receive all tenant events
   socket.on('joinOwner', (ownerId) => {
     if (ownerId) {
       socket.join(`owner_${ownerId}`);
-      console.log(`Socket ${socket.id} joined owner room: owner_${ownerId}`);
+      console.log(`Socket ${socket.id} joined owner personal room: owner_${ownerId}`);
     }
-    // All owners also join the general 'owners' room
     socket.join('owners');
     console.log(`Socket ${socket.id} joined global owners room`);
   });
 
-  // Tenant portal: join tenant-specific room for personal status updates
   socket.on('joinTenant', (tenantId) => {
     if (tenantId) {
       socket.join(`tenant_${tenantId}`);

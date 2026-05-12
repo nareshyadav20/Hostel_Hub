@@ -4,6 +4,7 @@ import { Search, MapPin, IndianRupee, Home as HomeIcon } from 'lucide-react';
 import './Home.css';
 import API from '../api/axios';
 import SearchOverlay from '../components/SearchOverlay';
+import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 import heroCouple from '../assets/hero_couple.png';
 import extReal from '../assets/ext_real.png';
 import chairsReal from '../assets/chairs_real.png';
@@ -25,9 +26,9 @@ const Home = () => {
   const [isTypeOpen, setIsTypeOpen] = useState(false);
   const searchBarRef = useRef(null);
 
-  useEffect(() => {
-    // Fetch real buildings
-    API.get('/buildings/public').then(res => {
+  const fetchRooms = async () => {
+    try {
+      const res = await API.get('/buildings/public');
       const formatted = res.data.map((b, i) => ({
         id: b._id,
         badge: b.popularityLabel || (i === 0 ? 'Premium' : i === 1 ? 'Popular' : 'New'),
@@ -39,7 +40,25 @@ const Home = () => {
         amenities: b.amenities && b.amenities.length > 0 ? b.amenities.slice(0, 4) : ['WiFi', 'Meals', 'AC', 'Laundry']
       }));
       setRooms(formatted.slice(0, 3)); // Show top 3
-    }).catch(console.error);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchRooms();
+
+    // Real-time synchronization
+    connectSocket(); // Global room
+    socket.on('hostelUpdated', () => {
+      console.log('🔄 Hostel Details Updated in Real-time');
+      fetchRooms();
+    });
+
+    return () => {
+      socket.off('hostelUpdated');
+      disconnectSocket();
+    };
   }, []);
 
   useEffect(() => {

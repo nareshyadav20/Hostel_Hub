@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown, X } from 'lucide-react';
 import { api } from '../mockData';
 import socket, { connectSocket } from '../utils/socket';
+import { clearAllCache } from '../cache';
 
 const Complaints = () => {
   const { buildingId: urlBuildingId } = useParams();
@@ -18,6 +19,7 @@ const Complaints = () => {
   const [activeTab, setActiveTab] = useState('Maintenance');
   const [filterBuilding, setFilterBuilding] = useState(activeBuildingId || 'all');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastNotification, setLastNotification] = useState(null);
 
   const fetchComplaints = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -25,14 +27,15 @@ const Complaints = () => {
     
     try {
       // Invalidate cache to get fresh data
-      localStorage.removeItem('complaints_all_v4');
-      const data = await api.getComplaints(activeBuildingId);
+      clearAllCache();
+      
+      // If filterBuilding is 'all', pass null to fetch everything for this owner
+      const fetchId = (filterBuilding === 'all') ? null : filterBuilding;
+      const data = await api.getComplaints(fetchId);
       const buildingsData = await api.getBuildings();
       setBuildings(buildingsData);
 
-      const formatted = data
-        .filter(c => filterBuilding === 'all' || c.buildingId === filterBuilding || c.buildingId?._id === filterBuilding)
-        .map(c => {
+      const formatted = data.map(c => {
           const createdAt = c.createdAt || c.date;
           const diffHours = Math.floor((new Date() - new Date(createdAt)) / (1000 * 60 * 60));
           const timeElapsed = diffHours < 24 ? `${diffHours} hours ago` : `${Math.floor(diffHours/24)} days ago`;
@@ -47,7 +50,8 @@ const Complaints = () => {
             reportedBy: c.tenant?.name || 'Unknown User',
             timeElapsed,
             description: c.description,
-            buildingName: c.buildingId?.name || 'Unknown Building'
+            buildingName: c.buildingId?.name || 'Unknown Building',
+            buildingId: c.buildingId?._id || c.buildingId
           };
         });
       setComplaints(formatted);
@@ -66,14 +70,19 @@ const Complaints = () => {
 
     // Real-time: instantly show new tenant complaints without waiting for poll
     connectSocket(activeBuildingId);
-    socket.on('complaintCreated', () => {
-      console.log('🔔 New complaint received — refreshing');
+    
+    const handleNewComplaint = (data) => {
+      console.log('🔔 New complaint received — refreshing', data);
+      setLastNotification(`New ticket from ${data.tenantName || 'a resident'}: "${data.complaint?.title || 'Maintenance Needed'}"`);
       fetchComplaints(false);
-    });
+      setTimeout(() => setLastNotification(null), 5000);
+    };
+
+    socket.on('complaintCreated', handleNewComplaint);
 
     return () => {
       clearInterval(interval);
-      socket.off('complaintCreated');
+      socket.off('complaintCreated', handleNewComplaint);
     };
   }, [fetchComplaints]);
 
@@ -163,6 +172,19 @@ const Complaints = () => {
 
   return (
     <div className="complaints-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
+      <AnimatePresence>
+        {lastNotification && (
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            exit={{ opacity: 0, x: 50 }}
+            style={{ position: 'fixed', top: '2rem', right: '2rem', zIndex: 10000, background: 'var(--accent-primary)', color: 'white', padding: '1rem 1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-lg)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.8rem' }}
+          >
+            <Bell size={20} />
+            {lastNotification}
+          </motion.div>
+        )}
+      </AnimatePresence>
       <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '900', marginBottom: '0.4rem', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
@@ -230,6 +252,15 @@ const Complaints = () => {
           <h2 style={{ fontSize: '2.4rem', fontWeight: '900', color: '#10B981', margin: 0 }}>{resolvedCount}</h2>
         </div>
       </div>
+
+      {totalComplaints === 0 && !loading && (
+        <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '20px', marginBottom: '2.5rem', border: '1px dashed var(--accent-primary)' }}>
+          <p style={{ color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '1rem' }}>No tickets found for this building. Try viewing all buildings?</p>
+          <button onClick={() => { setFilterBuilding('all'); navigate('/owner/complaints'); }} className="btn btn-primary" style={{ padding: '0.6rem 1.5rem', borderRadius: '10px' }}>
+            View All Buildings
+          </button>
+        </div>
+      )}
 
       <div className="card" style={{ padding: '0', overflow: 'hidden', borderRadius: '20px' }}>
         <div style={{ overflowX: 'auto' }}>

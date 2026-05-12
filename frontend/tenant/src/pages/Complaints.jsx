@@ -48,7 +48,9 @@ const Complaints = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const response = await API.post('/complaints', formData);
+      const buildingId = localStorage.getItem('buildingId');
+      const payload = { ...formData, buildingId };
+      const response = await API.post('/complaints', payload);
       setComplaints([response.data, ...complaints]);
       setShowForm(false);
       setFormData({ title: '', category: 'Maintenance', description: '' });

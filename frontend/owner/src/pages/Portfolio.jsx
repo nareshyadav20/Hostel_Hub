@@ -15,6 +15,8 @@ import {
   Heart, Home, ArrowLeft, Settings, Trash2
 } from 'lucide-react';
 import { api } from '../mockData';
+import socket, { connectSocket, disconnectSocket } from '../utils/socket';
+import { clearAllCache } from '../cache';
 
 // --- CONSTANTS MOVED OUTSIDE FOR STABILITY ---
 const FEATURE_GROUPS = {
@@ -135,8 +137,6 @@ const Portfolio = () => {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
-
   // Load drafts from backend buildings with status: 'Draft'
   const loadDrafts = useCallback(async () => {
     try {
@@ -146,6 +146,33 @@ const Portfolio = () => {
   }, []);
 
   useEffect(() => { loadDrafts(); }, [loadDrafts]);
+
+  useEffect(() => {
+    fetchData();
+
+    // Real-time synchronization for owner dashboard
+    connectSocket(); // Joins 'owners' room by default in connectSocket
+    
+    const refreshAll = () => {
+      console.log('🔄 Dashboard refreshing due to real-time event');
+      clearAllCache(); // Clear HH cache to ensure fresh data
+      fetchData();
+      loadDrafts();
+    };
+
+    socket.on('tenantAdded', refreshAll);
+    socket.on('complaintCreated', refreshAll);
+    socket.on('hostelUpdated', refreshAll);
+    socket.on('dashboardStatsUpdated', refreshAll);
+
+    return () => {
+      socket.off('tenantAdded', refreshAll);
+      socket.off('complaintCreated', refreshAll);
+      socket.off('hostelUpdated', refreshAll);
+      socket.off('dashboardStatsUpdated', refreshAll);
+      // We don't disconnectSocket here as owner might navigate between pages
+    };
+  }, [fetchData, loadDrafts]);
 
   // Auto-save draft when form data or step changes (debounced)
   useEffect(() => {

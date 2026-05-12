@@ -62,6 +62,12 @@ const updateBuilding = async (req, res) => {
   try {
     const building = await Building.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!building) return res.status(404).json({ error: 'Building not found' });
+    
+    // Real-time synchronization
+    const socketService = require('../utils/socketService');
+    socketService.emitUpdate(building._id, 'hostelUpdated', building);
+    socketService.emitUpdate(null, 'hostelUpdated', building); // Emit globally for landing/search pages
+
     res.status(200).json(building);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };

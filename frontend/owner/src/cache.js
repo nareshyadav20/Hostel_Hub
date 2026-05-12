@@ -44,6 +44,20 @@ export const cacheClear = (key) => {
   try { localStorage.removeItem(PREFIX + key); } catch { /* ignore */ }
 };
 
+/** Clear all hh_ prefixed cache entries. */
+export const clearAllCache = () => {
+  try {
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith(PREFIX)) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch (err) {
+    console.error('Failed to clear cache', err);
+  }
+};
+
 /**
  * withCache – wraps an async API call with cache fallback.
  *

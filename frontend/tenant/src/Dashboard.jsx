@@ -10,17 +10,30 @@ function Dashboard() {
   const [tenantData, setTenantData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [complaints, setComplaints] = useState([]);
+  const [showWelcomeAlert, setShowWelcomeAlert] = useState(false);
+
+  const location = React.useMemo(() => ({ state: window.history.state?.usr }), []);
 
   const fetchDashboardData = async () => {
     try {
       const [profileRes, complaintsRes] = await Promise.all([
-        API.get('/tenants/me').catch(() => ({ data: { name: user.name, room: '203', messPlan: 'Standard' } })),
+        API.get('/tenants/me'),
         API.get('/complaints/me').catch(() => ({ data: [] }))
       ]);
-      setTenantData(profileRes.data);
+      
+      const profile = profileRes.data;
+      setTenantData(profile);
       setComplaints((complaintsRes.data || []).slice(0, 3));
+      
+      // Keep local storage in sync for socket and other pages
+      if (profile?.buildingId?._id || profile?.buildingId) {
+        const bId = profile.buildingId?._id || profile.buildingId;
+        localStorage.setItem('buildingId', String(bId));
+      }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
+      // If unauthorized, redirect
+      if (err.response?.status === 401) navigate('/login');
     } finally {
       setLoading(false);
     }
@@ -28,6 +41,13 @@ function Dashboard() {
 
   useEffect(() => {
     fetchDashboardData();
+    
+    // Check if we just came from booking success
+    const isBookingSuccess = window.history.state?.usr?.bookingSuccess;
+    if (isBookingSuccess) {
+      setShowWelcomeAlert(true);
+      setTimeout(() => setShowWelcomeAlert(false), 8000);
+    }
 
     // Connect socket for real-time updates
     const buildingId = localStorage.getItem('buildingId');
@@ -79,25 +99,31 @@ function Dashboard() {
         <div className="dash-hero-content">
           <h1 className="dash-hero-title">{getGreeting()}, {user.name?.split(' ')[0] || 'Resident'}! 👋</h1>
           <p className="dash-hero-subtitle">Welcome back to your premium home experience.</p>
+          {showWelcomeAlert && (
+            <div className="booking-success-banner">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Booking Confirmed! Our team is preparing your room.</span>
+            </div>
+          )}
         </div>
         <div className="dash-hero-stats">
           <div className="dash-stat-chip">
             <div className="dash-stat-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </div>
-            <div><strong>Block A</strong><span>Building</span></div>
+            <div><strong>{tenantData?.buildingId?.name || 'Exploring Stays'}</strong><span>Building</span></div>
           </div>
           <div className="dash-stat-chip">
             <div className="dash-stat-icon" style={{ background: '#fef3c7', color: '#d97706' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
             </div>
-            <div><strong>{tenantData?.room || '203'}</strong><span>Room No.</span></div>
+            <div><strong>{tenantData?.roomId?.roomNumber || tenantData?.room || 'TBD'}</strong><span>Room No.</span></div>
           </div>
           <div className="dash-stat-chip">
             <div className="dash-stat-icon" style={{ background: '#f0fdf4', color: '#16a34a' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             </div>
-            <div><strong>2 Sharing</strong><span>Room Type</span></div>
+            <div><strong>{tenantData?.roomId?.roomType || tenantData?.occupation || 'Not Assigned'}</strong><span>Room Type</span></div>
           </div>
         </div>
       </section>
@@ -148,8 +174,8 @@ function Dashboard() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
               </div>
             </div>
-            <div className="dash-sum-value">₹{(tenantData?.rent || 5000).toLocaleString()}</div>
-            <div className="dash-sum-sub">Due in 3 days</div>
+            <div className="dash-sum-value">₹{tenantData?.rentStatus === 'PAID' ? '0' : (tenantData?.rent || 0).toLocaleString()}</div>
+            <div className="dash-sum-sub">{tenantData?.rentStatus === 'PAID' ? 'No pending dues' : 'Payment Pending'}</div>
           </div>
 
           <div className="dash-summary-card" onClick={() => navigate('/complaints')}>
@@ -194,29 +220,44 @@ function Dashboard() {
         <div className="sn-card dash-payments-card">
           <div className="dash-card-header">
             <div className="dash-card-icon" style={{ background: '#f0fdf4', color: '#16a34a' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><line x1="12" y1="18" x2="12" y2="20"></line><line x1="12" y1="4" x2="12" y2="6"></line></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path>
+                <line x1="12" y1="18" x2="12" y2="20"></line>
+                <line x1="12" y1="4" x2="12" y2="6"></line>
+              </svg>
             </div>
             <h4 className="sn-card-title">Payments Overview</h4>
           </div>
+
           <div className="dash-payment-row">
             <div>
               <span className="dash-pay-label">Total Due</span>
-              <strong className="dash-pay-value">₹{(tenantData?.rent || 5000).toLocaleString()}</strong>
+              <strong className="dash-pay-value">₹{tenantData?.rentStatus === 'PAID' ? '0' : (tenantData?.rent || 0).toLocaleString()}</strong>
             </div>
-            <span className="sn-badge-red">Due in 3 days</span>
+            <span className={tenantData?.rentStatus === 'PAID' ? 'sn-badge-green' : 'sn-badge-red'}>
+              {tenantData?.rentStatus === 'PAID' ? 'Paid' : 'Due Now'}
+            </span>
           </div>
+
           <div className="dash-payment-row">
             <div>
               <span className="dash-pay-label">Paid This Month</span>
-              <strong className="dash-pay-value">₹3,000</strong>
+              <strong className="dash-pay-value">₹{tenantData?.rentStatus === 'PAID' ? (tenantData?.rent || 0).toLocaleString() : '0'}</strong>
             </div>
           </div>
+
           <div className="dash-progress-wrap">
-            <div className="dash-progress-bg"><div className="dash-progress-fill" style={{ width: '60%' }}></div></div>
-            <span className="dash-progress-label">60% Paid</span>
+            <div className="dash-progress-bg">
+              <div className="dash-progress-fill" style={{ width: tenantData?.rentStatus === 'PAID' ? '100%' : '0%' }}></div>
+            </div>
+            <span className="dash-progress-label">{tenantData?.rentStatus === 'PAID' ? '100% Paid' : '0% Paid'}</span>
           </div>
+
           <button className="dash-btn-outline" onClick={() => navigate('/payments')}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
             View Payment History
           </button>
         </div>

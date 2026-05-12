@@ -9,6 +9,7 @@ import {
   Clock, MapPin, CheckCircle, CreditCard, Filter, ArrowRight
 } from 'lucide-react';
 import { api } from '../mockData';
+import { clearAllCache } from '../cache';
 
 // Generic Modal Component
 const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => (
@@ -90,6 +91,7 @@ const Tenants = () => {
         
         const refreshTenants = () => {
           console.log('🔄 Tenants updated via socket');
+          clearAllCache(); // Clear HH cache to ensure fresh data
           fetchTenants();
         };
 

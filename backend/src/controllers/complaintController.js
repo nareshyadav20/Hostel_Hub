@@ -34,9 +34,9 @@ exports.createComplaint = async (req, res) => {
     }
 
     // Robust hierarchy mapping
-    let buildingId = bodyBuildingId || tenant.buildingId;
-    let roomId = null;
-    let bedId = null;
+    let buildingId = bodyBuildingId || (tenant.buildingId?._id || tenant.buildingId);
+    let roomId = tenant.roomId?._id || tenant.roomId || null;
+    let bedId = tenant.bedId?._id || tenant.bedId || null;
     let hostelId = null;
 
     // Try to find bed assignment first
@@ -90,7 +90,13 @@ exports.createComplaint = async (req, res) => {
     });
 
     // Real-time synchronization for Owner
-    socketService.emitUpdate(null, 'complaintCreated', {
+    if (buildingId) {
+      socketService.emitUpdate(buildingId, 'complaintCreated', {
+        complaint,
+        tenantName: tenant.name
+      });
+    }
+    socketService.emitToOwner('complaintCreated', {
       complaint,
       tenantName: tenant.name
     });

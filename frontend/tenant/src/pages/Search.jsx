@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import API from '../api/axios';
 import './Search.css';
+import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 
 const ICONS = {
   Search: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
@@ -97,46 +98,59 @@ const Search = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const hostelsPerPage = 5;
 
-  useEffect(() => {
-    const fetchHostels = async () => {
-      try {
-        const [response, wishRes] = await Promise.all([
-          API.get('/buildings/public').catch(() => ({ data: [] })),
-          API.get('/tenant-portal/wishlist').catch(() => ({ data: [] }))
-        ]);
-        
-        setWishlist(Array.isArray(wishRes.data) ? wishRes.data : []);
-        
-        let mapped = [];
-        if (response.data && Array.isArray(response.data)) {
-          mapped = response.data.map(b => ({
-            id: b._id,
-            name: b.name,
-            location: b.address || b.location || 'Location unknown',
-            city: (b.locationCity || 'bengaluru').toLowerCase(),
-            price: b.startingPrice || 5000,
-            gender: b.genderType || 'Mixed',
-            category: (b.category || 'Student').toLowerCase(),
-            type: 'Premium',
-            rating: b.rating || (4.0 + Math.random()).toFixed(1),
-            popularityLabel: b.rating > 4.6 ? 'High Demand' : null,
-            occupancy: '70%',
-            image: b.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
-            amenities: b.amenities || []
-          }));
-        }
-
-        setAllHostels(mapped);
-        setHostels(mapped);
-      } catch (err) {
-        console.error('Error fetching hostels:', err);
-        setAllHostels([]);
-        setHostels([]);
-      } finally {
-        setLoading(false);
+  const fetchHostels = async () => {
+    try {
+      const [response, wishRes] = await Promise.all([
+        API.get('/buildings/public').catch(() => ({ data: [] })),
+        API.get('/tenant-portal/wishlist').catch(() => ({ data: [] }))
+      ]);
+      
+      setWishlist(Array.isArray(wishRes.data) ? wishRes.data : []);
+      
+      let mapped = [];
+      if (response.data && Array.isArray(response.data)) {
+        mapped = response.data.map(b => ({
+          id: b._id,
+          name: b.name,
+          location: b.address || b.location || 'Location unknown',
+          city: (b.locationCity || 'bengaluru').toLowerCase(),
+          price: b.startingPrice || 5000,
+          gender: b.genderType || 'Mixed',
+          category: (b.category || 'Student').toLowerCase(),
+          type: 'Premium',
+          rating: b.rating || (4.0 + Math.random()).toFixed(1),
+          popularityLabel: b.rating > 4.6 ? 'High Demand' : null,
+          occupancy: '70%',
+          image: b.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
+          amenities: b.amenities || []
+        }));
       }
-    };
+
+      setAllHostels(mapped);
+      setHostels(mapped);
+    } catch (err) {
+      console.error('Error fetching hostels:', err);
+      setAllHostels([]);
+      setHostels([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchHostels();
+
+    // Real-time synchronization
+    connectSocket(); // Global room
+    socket.on('hostelUpdated', () => {
+      console.log('🔄 Search results updating in real-time');
+      fetchHostels();
+    });
+
+    return () => {
+      socket.off('hostelUpdated');
+      disconnectSocket();
+    };
   }, []);
 
   useEffect(() => {

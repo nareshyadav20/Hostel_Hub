@@ -63,12 +63,24 @@ const Booking = () => {
     const fetchInitialData = async () => {
       const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
       setUser(storedUser);
+      const tenantId = localStorage.getItem('tenantId') || storedUser.id || storedUser._id;
+      
       try {
+        // If we have a tenant ID, check if they already have a confirmed booking/residency
+        if (tenantId) {
+          const profileRes = await API.get('/tenants/me').catch(() => null);
+          if (profileRes?.data?.buildingId) {
+             setApiError("Active Residency Found: You are already registered at a hostel. A resident can only have one active stay at a time.");
+             // Optional: redirect to dashboard after a delay
+             return;
+          }
+        }
+
         if (buildingId) {
           const res = await API.get(`/buildings/public/${buildingId}`);
           setHostel(res.data);
         } else {
-          const res = await API.get(`/bookings/me?tenantId=${storedUser.id || storedUser._id}`).catch(() => ({ data: [] }));
+          const res = await API.get(`/bookings/me?tenantId=${tenantId}`).catch(() => ({ data: [] }));
           setBookings(res.data || []);
         }
       } catch (err) { 

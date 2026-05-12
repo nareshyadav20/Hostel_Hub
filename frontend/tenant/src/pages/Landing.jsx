@@ -4,6 +4,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import SearchOverlay from '../components/SearchOverlay';
 import './Landing.css';
 import API from '../api/axios';
+import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 // Removed mockData import
 
 // Import images
@@ -32,31 +33,44 @@ const Landing = () => {
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchHostels = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get('/buildings/public');
+      const formatted = res.data.map(b => ({
+        id: b._id,
+        city: b.locationCity || 'Bengaluru',
+        name: b.name,
+        locality: b.address || 'Unknown',
+        rating: b.rating || 4.5,
+        price: b.startingPrice || 8000,
+        img: b.images && b.images[0] ? b.images[0] : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
+        amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['Free WiFi', 'A/C', 'Mess'],
+        gender: b.genderType || 'Unisex',
+        category: b.category || 'Student'
+      }));
+      setHostels(formatted);
+    } catch (error) {
+      console.error('Error fetching hostels:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchHostels = async () => {
-      try {
-        setLoading(true);
-        const res = await API.get('/buildings/public');
-        const formatted = res.data.map(b => ({
-          id: b._id,
-          city: b.locationCity || 'Bengaluru',
-          name: b.name,
-          locality: b.address || 'Unknown',
-          rating: b.rating || 4.5,
-          price: b.startingPrice || 8000,
-          img: b.images && b.images[0] ? b.images[0] : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
-          amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['Free WiFi', 'A/C', 'Mess'],
-          gender: b.genderType || 'Unisex',
-          category: b.category || 'Student'
-        }));
-        setHostels(formatted);
-      } catch (error) {
-        console.error('Error fetching hostels:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchHostels();
+
+    // Real-time synchronization
+    connectSocket(); // Global room
+    socket.on('hostelUpdated', () => {
+      console.log('🔄 Landing page updating in real-time');
+      fetchHostels();
+    });
+
+    return () => {
+      socket.off('hostelUpdated');
+      disconnectSocket();
+    };
   }, []);
 
   let filteredHostels = hostels.filter(h => {
