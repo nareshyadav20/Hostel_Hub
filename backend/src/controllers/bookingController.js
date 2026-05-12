@@ -48,10 +48,11 @@ const createBooking = async (req, res) => {
       totalAmount: totalAmount || 0,
       paymentMethod: method || 'UPI',
       status: 'Confirmed',
-      userId: tenantId || 'guest'
+      userId: tenantId || req.user.id || 'guest'
     };
 
-    if (isValidObjectId(tenantId)) bookingData.tenantId = tenantId;
+    const finalTenantId = tenantId || req.user.id;
+    if (isValidObjectId(finalTenantId)) bookingData.tenantId = finalTenantId;
     if (isValidObjectId(buildingId)) bookingData.buildingId = buildingId;
 
     const booking = new Booking(bookingData);
@@ -122,38 +123,16 @@ const createBooking = async (req, res) => {
 
 const getMyBookings = async (req, res) => {
   try {
-    const { tenantId } = req.query;
-    console.log(`[DEBUG] getMyBookings requested for ID: ${tenantId}`);
+    // 1. Identify the user from the JWT token (most reliable source)
+    const email = req.user.email;
+    const userIdFromToken = req.user.id;
     
-    if (!tenantId) {
-      return res.status(400).json({ error: 'tenantId is required' });
-    }
+    console.log(`[DEBUG] getMyBookings for user: ${email} (ID: ${userIdFromToken})`);
 
     const Tenant = require('../models/Tenant');
     const User = require('../models/User');
 
-    // 1. Find the email associated with the provided ID (could be Tenant ID or User ID)
-    let email = null;
-    const tenant = await Tenant.findById(tenantId);
-    if (tenant) {
-      email = tenant.email;
-      console.log(`[DEBUG] ID matched Tenant. Email: ${email}`);
-    } else {
-      const user = await User.findById(tenantId);
-      if (user) {
-        email = user.email;
-        console.log(`[DEBUG] ID matched User. Email: ${email}`);
-      }
-    }
-
-    // 2. If no email found, fall back to direct ID search
-    if (!email) {
-      console.log(`[DEBUG] No email found for ID ${tenantId}. Performing direct search.`);
-      const bookings = await Booking.find({ tenantId }).populate('buildingId').sort({ bookingDate: -1 });
-      return res.status(200).json(bookings);
-    }
-
-    // 3. Find all possible IDs (Tenant & User) for this email to ensure we catch all bookings
+    // 2. Find all possible IDs (Tenant profile & User account) for this email
     const [relatedTenants, relatedUsers] = await Promise.all([
       Tenant.find({ email }).select('_id'),
       User.find({ email }).select('_id')
@@ -163,14 +142,20 @@ const getMyBookings = async (req, res) => {
       ...relatedTenants.map(t => t._id),
       ...relatedUsers.map(u => u._id)
     ];
-    console.log(`[DEBUG] Associated IDs for ${email}:`, allAssociatedIds);
 
-    // 4. Find bookings linked to any of these IDs
+    // Ensure we also include the ID from the token if it's not already there
+    if (userIdFromToken && !allAssociatedIds.some(id => id.toString() === userIdFromToken)) {
+      allAssociatedIds.push(userIdFromToken);
+    }
+
+    console.log(`[DEBUG] Searching bookings for IDs:`, allAssociatedIds);
+
+    // 3. Find bookings linked to any of these IDs
     const bookings = await Booking.find({ 
       tenantId: { $in: allAssociatedIds } 
     }).populate('buildingId').sort({ bookingDate: -1 });
 
-    console.log(`[DEBUG] Found ${bookings.length} bookings for account ${email}`);
+    console.log(`[DEBUG] Found ${bookings.length} bookings for ${email}`);
     res.status(200).json(bookings);
   } catch (error) {
     console.error('[ERROR] getMyBookings failed:', error);
