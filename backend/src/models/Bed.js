@@ -35,6 +35,6 @@ const bedSchema = new mongoose.Schema({
   odorFree: { type: Boolean, default: true },
   hygieneRating: { type: Number, default: 5.0 }
 
-}, { timestamps: true, collection: 'owner_beds' });
+}, { timestamps: true, collection: 'beds' });
 
 module.exports = mongoose.model('Bed', bedSchema);

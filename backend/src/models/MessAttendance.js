@@ -7,7 +7,7 @@ const messAttendanceSchema = new mongoose.Schema({
   breakfast: { type: Boolean, default: false },
   lunch: { type: Boolean, default: false },
   dinner: { type: Boolean, default: false }
-}, { timestamps: true, collection: 'owner_messattendance' });
+}, { timestamps: true, collection: 'messattendance' });
 
 // Unique index for tenant and date
 messAttendanceSchema.index({ tenantId: 1, date: 1 }, { unique: true });

@@ -55,9 +55,13 @@ const Complaints = () => {
       setComplaints([response.data, ...complaints]);
       setShowForm(false);
       setFormData({ title: '', category: 'Maintenance', description: '' });
-      alert('Ticket raised successfully! Our team will look into it shortly.');
+      setToastMsg('✅ Ticket raised successfully! Our team will look into it shortly.');
+      setTimeout(() => setToastMsg(null), 4000);
     } catch (err) { 
-      console.error('Error raising complaint:', err); 
+      console.error('Error raising complaint:', err);
+      const msg = err.response?.data?.message || 'Failed to submit ticket. Please try again.';
+      setToastMsg(`❌ ${msg}`);
+      setTimeout(() => setToastMsg(null), 5000);
     } finally { 
       setSubmitting(false); 
     }
@@ -72,6 +76,11 @@ const Complaints = () => {
 
   return (
     <div className="complaints-page">
+      {toastMsg && (
+        <div style={{ position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 9999, padding: '1rem 1.5rem', borderRadius: '12px', background: toastMsg.startsWith('✅') ? 'rgba(16,185,129,0.95)' : 'rgba(239,68,68,0.95)', color: '#fff', fontWeight: '700', boxShadow: '0 8px 32px rgba(0,0,0,0.2)', backdropFilter: 'blur(8px)', maxWidth: '380px', fontSize: '0.9rem', lineHeight: '1.5' }}>
+          {toastMsg}
+        </div>
+      )}
       <header className="complaints-header">
         <div className="header-title-group">
           <div className="header-icon-main">

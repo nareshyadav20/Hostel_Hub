@@ -9,7 +9,7 @@ import {
   Users, Shield, FileText, LayoutGrid, User, Briefcase, Send, CheckCircle
 } from 'lucide-react';
 import { api } from '../mockData';
-import { io } from 'socket.io-client';
+import socket, { connectSocket } from '../utils/socket';
 
 const Notifications = () => {
   const { buildingId: urlBuildingId } = useParams();
@@ -55,15 +55,25 @@ const Notifications = () => {
   useEffect(() => {
     if (activeBuildingId) {
       fetchNotifications();
-      const socketUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
-      const socket = io(socketUrl);
-      socket.emit('joinBuilding', activeBuildingId);
-      socket.on('newNotification', (newNotif) => {
-        setNotifications(prev => [newNotif, ...prev]);
-        setUnreadCount(prev => prev + 1);
-      });
-      return () => socket.disconnect();
     }
+
+    // Use centralized socket — joins owners room automatically
+    connectSocket(activeBuildingId);
+
+    socket.on('newNotification', (newNotif) => {
+      setNotifications(prev => [newNotif, ...prev]);
+      setUnreadCount(prev => prev + 1);
+    });
+    socket.on('complaintCreated', () => fetchNotifications());
+    socket.on('tenantAdded', () => fetchNotifications());
+    socket.on('bookingCreated', () => fetchNotifications());
+
+    return () => {
+      socket.off('newNotification');
+      socket.off('complaintCreated');
+      socket.off('tenantAdded');
+      socket.off('bookingCreated');
+    };
   }, [activeBuildingId]);
 
   const fetchNotifications = async () => {

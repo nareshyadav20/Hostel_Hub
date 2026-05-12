@@ -7,11 +7,26 @@ const Profile = () => {
   const [tenantData, setTenantData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [formData, setFormData] = useState({
+    budgetRange: '₹5,000 - ₹10,000',
+    foodPreference: 'Veg Only',
+    sleepTiming: 'Early Bird',
+    primaryLanguage: '',
+    targetStayDuration: '1 Year'
+  });
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const response = await API.get('/tenants/me');
         setTenantData(response.data);
+        setFormData({
+          budgetRange: response.data.budgetRange || '₹5,000 - ₹10,000',
+          foodPreference: response.data.vegNonVegPreference || 'Veg Only',
+          sleepTiming: response.data.sleepTiming || 'Early Bird',
+          primaryLanguage: response.data.primaryLanguage || '',
+          targetStayDuration: response.data.targetStayDuration || '1 Year'
+        });
       } catch (err) {
         console.error('Error fetching profile:', err);
       } finally {
@@ -20,6 +35,24 @@ const Profile = () => {
     };
     fetchProfile();
   }, []);
+
+  const handleSaveProfile = async () => {
+    try {
+      const updatedData = {
+        budgetRange: formData.budgetRange,
+        vegNonVegPreference: formData.foodPreference,
+        sleepTiming: formData.sleepTiming,
+        primaryLanguage: formData.primaryLanguage,
+        targetStayDuration: formData.targetStayDuration
+      };
+      const response = await API.put(`/tenants/${displayUser.id || displayUser._id}`, updatedData);
+      setTenantData(response.data);
+      alert('Profile Settings Saved!');
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      alert('Failed to save profile settings.');
+    }
+  };
 
   if (loading) return (
     <div className="staynest-dashboard loading-state">
@@ -92,7 +125,7 @@ const Profile = () => {
           <div className="preferences-grid">
             <div className="input-group">
               <label>Budget Range</label>
-              <select className="premium-select">
+              <select className="premium-select" value={formData.budgetRange} onChange={(e) => setFormData({...formData, budgetRange: e.target.value})}>
                 <option>₹5,000 - ₹10,000</option>
                 <option>₹10,000 - ₹15,000</option>
                 <option>₹15,000+</option>
@@ -100,7 +133,7 @@ const Profile = () => {
             </div>
             <div className="input-group">
               <label>Food Preference</label>
-              <select className="premium-select">
+              <select className="premium-select" value={formData.foodPreference} onChange={(e) => setFormData({...formData, foodPreference: e.target.value})}>
                 <option>Veg Only</option>
                 <option>Non-Veg</option>
                 <option>Egg-itarian</option>
@@ -108,7 +141,7 @@ const Profile = () => {
             </div>
             <div className="input-group">
               <label>Sleep Timing</label>
-              <select className="premium-select">
+              <select className="premium-select" value={formData.sleepTiming} onChange={(e) => setFormData({...formData, sleepTiming: e.target.value})}>
                 <option>Early Bird</option>
                 <option>Night Owl</option>
                 <option>Flexible</option>
@@ -116,7 +149,7 @@ const Profile = () => {
             </div>
             <div className="input-group">
               <label>Primary Language</label>
-              <input type="text" placeholder="Hindi, English, etc." className="premium-input" />
+              <input type="text" placeholder="Hindi, English, etc." className="premium-input" value={formData.primaryLanguage} onChange={(e) => setFormData({...formData, primaryLanguage: e.target.value})} />
             </div>
           </div>
 
@@ -124,7 +157,7 @@ const Profile = () => {
             <label className="input-label" style={{ fontWeight: 800, color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem', display: 'block' }}>Target Stay Duration</label>
             <div className="duration-selection">
               {['3 Months', '6 Months', '1 Year', 'Flexible'].map((d) => (
-                <button key={d} className={`duration-pill ${d === '1 Year' ? 'active' : ''}`}>
+                <button key={d} onClick={() => setFormData({...formData, targetStayDuration: d})} className={`duration-pill ${formData.targetStayDuration === d ? 'active' : ''}`}>
                   {d}
                 </button>
               ))}
@@ -132,7 +165,7 @@ const Profile = () => {
           </div>
 
           <div className="profile-actions">
-            <button className="btn-primary btn-large" style={{ width: '100%' }}>
+            <button className="btn-primary btn-large" style={{ width: '100%' }} onClick={handleSaveProfile}>
               Save Profile Settings
             </button>
           </div>

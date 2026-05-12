@@ -13,7 +13,31 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:3000',
+  'https://hostel-hub-owner.vercel.app',
+  'https://livora-hostel-hub-tenant.vercel.app',
+  // Allow any vercel subdomain for preview deployments
+  /\.vercel\.app$/,
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    const allowed = allowedOrigins.some(o => 
+      typeof o === 'string' ? o === origin : o.test(origin)
+    );
+    if (allowed) return callback(null, true);
+    callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -91,9 +115,18 @@ const socketService = require('./utils/socketService');
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+      'http://localhost:3000',
+      'https://hostel-hub-owner.vercel.app',
+      'https://livora-hostel-hub-tenant.vercel.app',
+    ],
+    methods: ['GET', 'POST'],
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
 });
 
 // Initialize socket services
@@ -103,6 +136,7 @@ notificationService.setIo(io);
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
+  // Owner portal: join building-specific room for scoped updates
   socket.on('joinBuilding', (buildingId) => {
     if (buildingId) {
       socket.join(buildingId.toString());
@@ -110,10 +144,22 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Owner portal: join general owners room to receive all tenant events
   socket.on('joinOwner', (ownerId) => {
     if (ownerId) {
       socket.join(`owner_${ownerId}`);
       console.log(`Socket ${socket.id} joined owner room: owner_${ownerId}`);
+    }
+    // All owners also join the general 'owners' room
+    socket.join('owners');
+    console.log(`Socket ${socket.id} joined global owners room`);
+  });
+
+  // Tenant portal: join tenant-specific room for personal status updates
+  socket.on('joinTenant', (tenantId) => {
+    if (tenantId) {
+      socket.join(`tenant_${tenantId}`);
+      console.log(`Socket ${socket.id} joined tenant room: tenant_${tenantId}`);
     }
   });
 

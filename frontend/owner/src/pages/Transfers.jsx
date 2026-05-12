@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import { RefreshCw, CheckCircle, XCircle, Clock, ArrowRightLeft, User, Home, MessageSquare } from 'lucide-react';
 import { api } from '../mockData';
+import socket, { connectSocket } from '../utils/socket';
 
 const Transfers = () => {
   const { buildingId: urlBuildingId } = useParams();
@@ -26,6 +27,16 @@ const Transfers = () => {
 
   useEffect(() => {
     fetchTransfers();
+
+    // Real-time: listen for new tenant transfer requests
+    connectSocket(activeBuildingId);
+    socket.on('transferCreated', () => {
+      fetchTransfers();
+    });
+
+    return () => {
+      socket.off('transferCreated');
+    };
   }, [activeBuildingId]);
 
   const handleStatusChange = async (id, newStatus) => {
@@ -47,6 +58,7 @@ const Transfers = () => {
   };
 
   return (
+    <div>
       {/* Responsive Styles Injection */}
       <style>{`
         @media (max-width: 1024px) {

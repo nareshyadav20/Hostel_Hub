@@ -118,10 +118,14 @@ exports.updateComplaintStatus = async (req, res) => {
     if (assignedTo) update.assignedTo = assignedTo;
     
     const complaint = await Complaint.findByIdAndUpdate(id, update, { new: true })
-      .populate('user', 'name email');
+      .populate('user', 'name email')
+      .populate('tenant', 'name email');
 
-    // Real-time synchronization for Tenant
-    socketService.emitUpdate(complaint.buildingId, 'complaintStatusChanged', complaint);
+    // Real-time synchronization for Tenant — emit globally since tenant may not have buildingId
+    const buildingIdStr = complaint.buildingId ? complaint.buildingId.toString() : null;
+    if (buildingIdStr) socketService.emitUpdate(buildingIdStr, 'complaintStatusChanged', complaint);
+    // Also emit globally so all tenants receive their own update
+    socketService.emitToOwner('complaintStatusChanged', complaint);
 
     // Create notification for tenant
     await notificationService.createNotification({
@@ -155,7 +159,11 @@ exports.getAllComplaints = async (req, res) => {
         const ownerBuildings = await Building.find({ owner: req.user.id }, '_id').lean();
         const buildingIds = ownerBuildings.map(b => b._id);
         if (buildingIds.length > 0) {
-          query.buildingId = { $in: buildingIds };
+          query.$or = [
+            { buildingId: { $in: buildingIds } },
+            { buildingId: null },
+            { buildingId: { $exists: false } }
+          ];
         }
         // If no buildings found, query is empty — returns all complaints
       } catch (_e) {

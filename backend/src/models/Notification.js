@@ -26,6 +26,6 @@ const notificationSchema = new mongoose.Schema({
   
   // Actions
   actionLink: { type: String }, 
-}, { timestamps: true, collection: 'owner_notifications' });
+}, { timestamps: true, collection: 'notifications' });
 
 module.exports = mongoose.model('Notification', notificationSchema);

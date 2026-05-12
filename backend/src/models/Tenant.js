@@ -41,6 +41,12 @@ const tenantSchema = new mongoose.Schema({
 
   // Tenant Experience Features (Step 10)
   roommateCompatibilityScore: { type: Number, default: 0 },
+  occupation: { type: String },
+  organization: { type: String },
+  budgetRange: { type: String },
+  sleepTiming: { type: String },
+  primaryLanguage: { type: String },
+  targetStayDuration: { type: String },
 
   // Bed Preference Matching (Step 20)
   preferences: {
@@ -51,6 +57,6 @@ const tenantSchema = new mongoose.Schema({
     studyFriendlyZone: { type: Boolean, default: false }
   }
 
-}, { timestamps: true, collection: 'owner_tenants' });
+}, { timestamps: true, collection: 'tenants' });
 
 module.exports = mongoose.models.Tenant || mongoose.model('Tenant', tenantSchema);

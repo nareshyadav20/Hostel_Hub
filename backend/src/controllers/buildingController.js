@@ -146,4 +146,33 @@ const getBuildingById = async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
-module.exports = { createBuilding, getBuildings, getBuildingById, updateBuilding, deleteBuilding, bulkCreateBuildings };
+const getPublicBuildings = async (req, res) => {
+  try {
+    const buildings = await Building.find({ status: { $ne: 'Draft' } }).populate({ 
+      path: 'floors', 
+      populate: { path: 'rooms', populate: { path: 'beds' } } 
+    });
+    res.status(200).json(buildings);
+  } catch (error) { 
+    res.status(500).json({ error: error.message }); 
+  }
+};
+
+const getPublicBuildingById = async (req, res) => {
+  try {
+    const building = await Building.findOne({ _id: req.params.id, status: { $ne: 'Draft' } }).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
+    if (!building) return res.status(404).json({ error: 'Building not found' });
+    res.status(200).json(building);
+  } catch (error) { res.status(500).json({ error: error.message }); }
+};
+
+module.exports = { 
+  createBuilding, 
+  getBuildings, 
+  getBuildingById, 
+  updateBuilding, 
+  deleteBuilding, 
+  bulkCreateBuildings,
+  getPublicBuildings,
+  getPublicBuildingById
+};

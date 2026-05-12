@@ -1,6 +1,7 @@
 const Payment = require('../models/Payment');
 const Tenant = require('../models/Tenant');
 const Building = require('../models/Building');
+const socketService = require('../utils/socketService');
 
 const createPayment = async (req, res) => {
   try {
@@ -25,6 +26,11 @@ const createPayment = async (req, res) => {
 
     // Populate before sending back
     const populated = await Payment.findById(payment._id).populate('tenantId');
+    
+    // Real-time updates
+    socketService.emitUpdate(buildingId, 'paymentAdded', populated);
+    socketService.emitUpdate(buildingId, 'dashboardStatsUpdated', {});
+
     res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -75,6 +81,11 @@ const updatePaymentStatus = async (req, res) => {
   try {
     const payment = await Payment.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }).populate('tenantId');
     if (!payment) return res.status(404).json({ message: 'Payment not found' });
+    
+    // Real-time updates
+    socketService.emitUpdate(payment.buildingId, 'paymentUpdated', payment);
+    socketService.emitUpdate(payment.buildingId, 'dashboardStatsUpdated', {});
+
     res.status(200).json(payment);
   } catch (error) {
     res.status(500).json({ error: error.message });

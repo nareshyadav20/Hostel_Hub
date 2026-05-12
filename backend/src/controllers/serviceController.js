@@ -1,4 +1,4 @@
-const Laundry = require('../models/tenant/Laundry');
+const Laundry = require('../models/Laundry');
 const RoomCleaning = require('../models/tenant/RoomCleaning');
 const Visitor = require('../models/tenant/Visitor');
 const Leave = require('../models/tenant/Leave');

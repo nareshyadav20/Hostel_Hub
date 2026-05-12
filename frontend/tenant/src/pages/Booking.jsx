@@ -65,12 +65,10 @@ const Booking = () => {
       setUser(storedUser);
       try {
         if (buildingId) {
-          const res = await API.get(`/buildings/${buildingId}`);
+          const res = await API.get(`/buildings/public/${buildingId}`);
           setHostel(res.data);
         } else {
-          const res = await API.get(`/bookings/me?tenantId=${storedUser.id || storedUser._id}`).catch(() => ({ data: [
-            { _id: '1', buildingId: { name: 'Alpha Tower' }, category: 'Luxury 2 Sharing', moveInDate: '2026-05-15', totalAmount: 24000, status: 'Confirmed' }
-          ]}));
+          const res = await API.get(`/bookings/me?tenantId=${storedUser.id || storedUser._id}`).catch(() => ({ data: [] }));
           setBookings(res.data || []);
         }
       } catch (err) { 

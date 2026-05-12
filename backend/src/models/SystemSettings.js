@@ -97,6 +97,6 @@ const systemSettingsSchema = new mongoose.Schema({
   // Link to a specific building and owner
   buildingId: { type: String, required: true },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
-}, { timestamps: true, collection: 'owner_systemsettings' });
+}, { timestamps: true, collection: 'systemsettings' });
 
 module.exports = mongoose.model('SystemSettings', systemSettingsSchema);

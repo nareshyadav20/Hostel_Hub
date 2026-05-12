@@ -83,6 +83,29 @@ const Tenants = () => {
   useEffect(() => {
     console.log("Tenants module fetching for ID:", activeBuildingId);
     fetchTenants();
+
+    if (activeBuildingId) {
+      import('../utils/socket').then(({ default: socket, connectSocket, disconnectSocket }) => {
+        connectSocket(activeBuildingId);
+        
+        const refreshTenants = () => {
+          console.log('🔄 Tenants updated via socket');
+          fetchTenants();
+        };
+
+        socket.on('tenantAdded', refreshTenants);
+        socket.on('tenantUpdated', refreshTenants);
+        socket.on('tenantDeleted', refreshTenants);
+        socket.on('dashboardStatsUpdated', refreshTenants);
+
+        return () => {
+          socket.off('tenantAdded', refreshTenants);
+          socket.off('tenantUpdated', refreshTenants);
+          socket.off('tenantDeleted', refreshTenants);
+          socket.off('dashboardStatsUpdated', refreshTenants);
+        };
+      });
+    }
   }, [activeBuildingId]);
 
   useEffect(() => {
@@ -157,6 +180,7 @@ const Tenants = () => {
     name: '', email: '', phone: '', room: '', rent: '', checkIn: '', emergencyContact: '',
     aadhaar: '', document: null, messPlan: 'basic',
     vegNonVegPreference: 'Any',
+    budgetRange: '₹5,000 - ₹10,000', sleepTiming: 'Early Bird', primaryLanguage: '', targetStayDuration: '1 Year',
     preferences: { windowSide: false, lowerBunk: false, quietArea: false, nearChargingPort: false, studyFriendlyZone: false }
   });
   const [recommendedBeds, setRecommendedBeds] = useState([]);
@@ -200,7 +224,7 @@ const Tenants = () => {
         setTenants([...tenants, created]);
       }
       setIsRegisterModalOpen(false);
-      setRegisterFormData({ name: '', email: '', phone: '', room: '', rent: '', checkIn: '', emergencyContact: '', aadhaar: '', document: null });
+      setRegisterFormData({ name: '', email: '', phone: '', room: '', rent: '', checkIn: '', emergencyContact: '', aadhaar: '', document: null, budgetRange: '₹5,000 - ₹10,000', sleepTiming: 'Early Bird', primaryLanguage: '', targetStayDuration: '1 Year', vegNonVegPreference: 'Any', preferences: { windowSide: false, lowerBunk: false, quietArea: false, nearChargingPort: false, studyFriendlyZone: false } });
     } catch (err) {
       console.error('Failed to save tenant:', err);
       alert('Error saving tenant. Please check backend.');
@@ -221,7 +245,11 @@ const Tenants = () => {
       aadhaar: selectedTenant.docs?.find(d => d.name === 'Aadhar Card')?.id || '',
       document: selectedTenant.docs?.find(d => d.name === 'ID Proof') || null,
       messPlan: selectedTenant.messPlan || 'basic',
-      vegNonVegPreference: selectedTenant.vegNonVegPreference || 'Any',
+      vegNonVegPreference: selectedTenant.vegNonVegPreference || selectedTenant.foodPreference || 'Any',
+      budgetRange: selectedTenant.budgetRange || '₹5,000 - ₹10,000',
+      sleepTiming: selectedTenant.sleepTiming || 'Early Bird',
+      primaryLanguage: selectedTenant.primaryLanguage || '',
+      targetStayDuration: selectedTenant.targetStayDuration || '1 Year',
       preferences: selectedTenant.preferences || { windowSide: false, lowerBunk: false, quietArea: false, nearChargingPort: false, studyFriendlyZone: false }
     });
     setRecommendedBeds([]);
@@ -818,7 +846,33 @@ const Tenants = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Food Preference</label>
               <select style={inputStyle} value={registerFormData.vegNonVegPreference} onChange={e => setRegisterFormData({ ...registerFormData, vegNonVegPreference: e.target.value })}>
-                {['Any', 'Veg', 'Non-Veg', 'Vegan', 'Eggetarian'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                {['Any', 'Veg Only', 'Non-Veg', 'Vegan', 'Egg-itarian'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Budget Range</label>
+              <select style={inputStyle} value={registerFormData.budgetRange} onChange={e => setRegisterFormData({ ...registerFormData, budgetRange: e.target.value })}>
+                {['₹5,000 - ₹10,000', '₹10,000 - ₹15,000', '₹15,000+'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Sleep Timing</label>
+              <select style={inputStyle} value={registerFormData.sleepTiming} onChange={e => setRegisterFormData({ ...registerFormData, sleepTiming: e.target.value })}>
+                {['Early Bird', 'Night Owl', 'Flexible'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Primary Language</label>
+              <input style={inputStyle} placeholder="Hindi, English, etc." value={registerFormData.primaryLanguage} onChange={e => setRegisterFormData({ ...registerFormData, primaryLanguage: e.target.value })} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Stay Duration</label>
+              <select style={inputStyle} value={registerFormData.targetStayDuration} onChange={e => setRegisterFormData({ ...registerFormData, targetStayDuration: e.target.value })}>
+                {['3 Months', '6 Months', '1 Year', 'Flexible'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
             </div>
           </div>

@@ -1,4 +1,5 @@
 const Tenant = require('../models/Tenant');
+const socketService = require('../utils/socketService');
 
 const createTenant = async (req, res) => {
   try {
@@ -11,6 +12,11 @@ const createTenant = async (req, res) => {
     }
     const tenant = new Tenant(req.body);
     await tenant.save();
+    
+    // Real-time synchronization
+    socketService.emitUpdate(req.body.buildingId, 'tenantAdded', tenant);
+    socketService.emitUpdate(req.body.buildingId, 'dashboardStatsUpdated', {});
+    
     res.status(201).json(tenant);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -31,7 +37,13 @@ const getTenants = async (req, res) => {
       if (!isOwned) return res.status(403).json({ error: 'Access denied to this building.' });
       query = { buildingId };
     } else {
-      query = { buildingId: { $in: buildingIds } };
+      query = { 
+        $or: [
+          { buildingId: { $in: buildingIds } },
+          { buildingId: null },
+          { buildingId: { $exists: false } }
+        ]
+      };
     }
 
     const tenants = await Tenant.find(query);
@@ -45,6 +57,12 @@ const bulkCreateTenants = async (req, res) => {
   try {
     const { tenants } = req.body;
     const created = await Tenant.insertMany(tenants);
+    
+    if (tenants.length > 0 && tenants[0].buildingId) {
+      socketService.emitUpdate(tenants[0].buildingId, 'tenantAdded', created);
+      socketService.emitUpdate(tenants[0].buildingId, 'dashboardStatsUpdated', {});
+    }
+    
     res.status(201).json(created);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -54,6 +72,12 @@ const bulkCreateTenants = async (req, res) => {
 const updateTenant = async (req, res) => {
   try {
     const tenant = await Tenant.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    
+    if (tenant) {
+      socketService.emitUpdate(tenant.buildingId, 'tenantUpdated', tenant);
+      socketService.emitUpdate(tenant.buildingId, 'dashboardStatsUpdated', {});
+    }
+    
     res.status(200).json(tenant);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -62,7 +86,12 @@ const updateTenant = async (req, res) => {
 
 const deleteTenant = async (req, res) => {
   try {
-    await Tenant.findByIdAndDelete(req.params.id);
+    const tenant = await Tenant.findById(req.params.id);
+    if (tenant) {
+      await Tenant.findByIdAndDelete(req.params.id);
+      socketService.emitUpdate(tenant.buildingId, 'tenantDeleted', { id: req.params.id });
+      socketService.emitUpdate(tenant.buildingId, 'dashboardStatsUpdated', {});
+    }
     res.status(200).json({ message: 'Tenant deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });

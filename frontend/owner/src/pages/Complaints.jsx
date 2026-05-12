@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown, X } from 'lucide-react';
 import { api } from '../mockData';
-
+import socket, { connectSocket } from '../utils/socket';
 
 const Complaints = () => {
   const { buildingId: urlBuildingId } = useParams();
@@ -63,7 +63,18 @@ const Complaints = () => {
     fetchComplaints();
     // Auto-refresh every 30 seconds
     const interval = setInterval(() => fetchComplaints(false), 30000);
-    return () => clearInterval(interval);
+
+    // Real-time: instantly show new tenant complaints without waiting for poll
+    connectSocket(activeBuildingId);
+    socket.on('complaintCreated', () => {
+      console.log('🔔 New complaint received — refreshing');
+      fetchComplaints(false);
+    });
+
+    return () => {
+      clearInterval(interval);
+      socket.off('complaintCreated');
+    };
   }, [fetchComplaints]);
 
   useEffect(() => {

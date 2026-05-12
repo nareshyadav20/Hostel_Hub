@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, IndianRupee, Home as HomeIcon } from 'lucide-react';
 import './Home.css';
+import API from '../api/axios';
 import SearchOverlay from '../components/SearchOverlay';
 import heroCouple from '../assets/hero_couple.png';
 import extReal from '../assets/ext_real.png';
@@ -19,10 +20,27 @@ const Home = () => {
   const [budget, setBudget] = useState('');
   const [roomType, setRoomType] = useState('');
   const [wishlist, setWishlist] = useState([]);
-
+  const [rooms, setRooms] = useState([]);
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
   const [isTypeOpen, setIsTypeOpen] = useState(false);
   const searchBarRef = useRef(null);
+
+  useEffect(() => {
+    // Fetch real buildings
+    API.get('/buildings/public').then(res => {
+      const formatted = res.data.map((b, i) => ({
+        id: b._id,
+        badge: b.popularityLabel || (i === 0 ? 'Premium' : i === 1 ? 'Popular' : 'New'),
+        badgeColor: i === 0 ? '#4F46E5' : i === 1 ? '#10B981' : '#F59E0B',
+        img: b.images && b.images[0] ? b.images[0] : extReal,
+        name: b.name,
+        loc: b.address + ', ' + b.locationCity,
+        price: `₹${b.startingPrice?.toLocaleString() || '9,000'}`,
+        amenities: b.amenities && b.amenities.length > 0 ? b.amenities.slice(0, 4) : ['WiFi', 'Meals', 'AC', 'Laundry']
+      }));
+      setRooms(formatted.slice(0, 3)); // Show top 3
+    }).catch(console.error);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -101,11 +119,7 @@ const Home = () => {
     { num: 3, icon: '📅', title: 'Book Instantly', desc: 'Select your room and move in hassle-free' },
   ];
 
-  const rooms = [
-    { id: 1, badge: 'Premium', badgeColor: '#4F46E5', img: extReal, name: 'Livora Premium Stay', loc: 'Koramangala, Bangalore', price: '₹12,999', amenities: ['WiFi', 'Meals', 'AC', 'Laundry'] },
-    { id: 2, badge: 'Popular', badgeColor: '#10B981', img: chairsReal, name: 'Livora Comfort Home', loc: 'Whitefield, Bangalore', price: '₹10,999', amenities: ['WiFi', 'Meals', 'AC', 'Housekeeping'] },
-    { id: 3, badge: 'New', badgeColor: '#F59E0B', img: roomStanza, name: 'Livora Elite Stay', loc: 'HSR Layout, Bangalore', price: '₹13,999', amenities: ['WiFi', 'Meals', 'AC', 'Spa'] },
-  ];
+  // rooms state populated via API
 
   const features = [
     { icon: '🛋️', title: 'Fully Furnished', desc: 'Move-in with just your suitcase' },

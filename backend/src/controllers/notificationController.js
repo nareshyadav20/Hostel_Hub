@@ -4,8 +4,20 @@ const Notification = require('../models/Notification');
 exports.getNotifications = async (req, res) => {
   try {
     const { buildingId, portalType, moduleName, priority, isRead } = req.query;
-    const filters = { owner: req.user.id };
-    if (portalType) filters.portalType = portalType;
+    const filters = {};
+    
+    // Support for both portals
+    if (req.user.role === 'TENANT') {
+      filters.$or = [
+        { tenantId: req.user.tenantId || req.user.id },
+        { target: 'All Tenants', buildingId }
+      ];
+      filters.portalType = 'Tenant';
+    } else {
+      filters.owner = req.user.id;
+      if (portalType) filters.portalType = portalType;
+    }
+    
     if (moduleName) filters.moduleName = moduleName;
     if (priority) filters.priority = priority;
     if (isRead !== undefined) filters.isRead = isRead === 'true';
@@ -20,12 +32,19 @@ exports.getNotifications = async (req, res) => {
 exports.getUnreadCount = async (req, res) => {
   try {
     const { buildingId } = req.query;
-    const count = await Notification.countDocuments({ 
-      owner: req.user.id, 
-      buildingId, 
-      isRead: false, 
-      archived: false 
-    });
+    const query = { buildingId, isRead: false, archived: false };
+    
+    if (req.user.role === 'TENANT') {
+      query.$or = [
+        { tenantId: req.user.tenantId || req.user.id },
+        { target: 'All Tenants' }
+      ];
+      query.portalType = 'Tenant';
+    } else {
+      query.owner = req.user.id;
+    }
+    
+    const count = await Notification.countDocuments(query);
     res.json({ count });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -46,8 +65,15 @@ exports.createNotification = async (req, res) => {
 
 exports.markAsRead = async (req, res) => {
   try {
+    const query = { _id: req.params.id };
+    if (req.user.role === 'TENANT') {
+      query.$or = [{ tenantId: req.user.tenantId || req.user.id }, { target: 'All Tenants' }];
+    } else {
+      query.owner = req.user.id;
+    }
+    
     const notification = await Notification.findOneAndUpdate(
-      { _id: req.params.id, owner: req.user.id },
+      query,
       { isRead: true },
       { new: true }
     );
@@ -61,7 +87,14 @@ exports.markAsRead = async (req, res) => {
 exports.markAllAsRead = async (req, res) => {
   try {
     const { category, buildingId } = req.body;
-    const query = { owner: req.user.id, isRead: false };
+    const query = { isRead: false };
+    
+    if (req.user.role === 'TENANT') {
+      query.$or = [{ tenantId: req.user.tenantId || req.user.id }, { target: 'All Tenants' }];
+    } else {
+      query.owner = req.user.id;
+    }
+    
     if (category && category !== 'all') query.category = category;
     if (buildingId) query.buildingId = buildingId;
     
@@ -74,8 +107,15 @@ exports.markAllAsRead = async (req, res) => {
 
 exports.archiveNotification = async (req, res) => {
   try {
+    const query = { _id: req.params.id };
+    if (req.user.role === 'TENANT') {
+      query.$or = [{ tenantId: req.user.tenantId || req.user.id }, { target: 'All Tenants' }];
+    } else {
+      query.owner = req.user.id;
+    }
+    
     const notification = await Notification.findOneAndUpdate(
-      { _id: req.params.id, owner: req.user.id },
+      query,
       { archived: true },
       { new: true }
     );
@@ -87,7 +127,14 @@ exports.archiveNotification = async (req, res) => {
 
 exports.deleteNotification = async (req, res) => {
   try {
-    const result = await Notification.deleteOne({ _id: req.params.id, owner: req.user.id });
+    const query = { _id: req.params.id };
+    if (req.user.role === 'TENANT') {
+      query.$or = [{ tenantId: req.user.tenantId || req.user.id }, { target: 'All Tenants' }];
+    } else {
+      query.owner = req.user.id;
+    }
+    
+    const result = await Notification.deleteOne(query);
     if (result.deletedCount === 0) return res.status(404).json({ message: 'Notification not found' });
     res.json({ message: 'Notification deleted successfully' });
   } catch (error) {

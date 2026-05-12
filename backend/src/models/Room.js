@@ -47,6 +47,6 @@ const roomSchema = new mongoose.Schema({
   // Smart Energy Features (Step 15)
   energyEfficient: { type: Boolean, default: false }
 
-}, { timestamps: true, collection: 'owner_rooms' });
+}, { timestamps: true, collection: 'rooms' });
 
 module.exports = mongoose.model('Room', roomSchema);

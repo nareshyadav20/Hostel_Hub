@@ -16,6 +16,6 @@ const floorSchema = new mongoose.Schema({
 
   // Floor Hygiene Tracking (Step 14)
   hygieneRating: { type: Number, default: 5.0 }
-}, { timestamps: true, collection: 'owner_floors' });
+}, { timestamps: true, collection: 'floors' });
 
 module.exports = mongoose.model('Floor', floorSchema);

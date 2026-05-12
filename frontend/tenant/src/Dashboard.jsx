@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import API from './api/axios';
 import './Dashboard.css';
+import socket, { connectSocket, disconnectSocket } from './utils/socket';
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -10,22 +11,39 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [complaints, setComplaints] = useState([]);
 
+  const fetchDashboardData = async () => {
+    try {
+      const [profileRes, complaintsRes] = await Promise.all([
+        API.get('/tenants/me').catch(() => ({ data: { name: user.name, room: '203', messPlan: 'Standard' } })),
+        API.get('/complaints/me').catch(() => ({ data: [] }))
+      ]);
+      setTenantData(profileRes.data);
+      setComplaints((complaintsRes.data || []).slice(0, 3));
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [profileRes, complaintsRes] = await Promise.all([
-          API.get('/tenants/me').catch(() => ({ data: { name: user.name, room: '203', messPlan: 'Standard' } })),
-          API.get('/complaints/me').catch(() => ({ data: [] }))
-        ]);
-        setTenantData(profileRes.data);
-        setComplaints((complaintsRes.data || []).slice(0, 3));
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDashboardData();
+
+    // Connect socket for real-time updates
+    const buildingId = localStorage.getItem('buildingId');
+    connectSocket(buildingId);
+
+    // Re-fetch when complaint status changes (owner resolved/rejected)
+    socket.on('complaintStatusChanged', () => {
+      API.get('/complaints/me').then(r => setComplaints((r.data || []).slice(0, 3))).catch(() => {});
+    });
+    // Refresh if owner updates hostel/room info
+    socket.on('dashboardStatsUpdated', fetchDashboardData);
+
+    return () => {
+      socket.off('complaintStatusChanged');
+      socket.off('dashboardStatsUpdated');
+    };
   }, []);
 
   const getGreeting = () => {

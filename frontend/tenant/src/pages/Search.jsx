@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import API from '../api/axios';
-import { MOCK_HOSTELS } from '../utils/mockData';
 import './Search.css';
 
 const ICONS = {
@@ -14,21 +13,6 @@ const ICONS = {
   Occupancy: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
 };
 
-const HOSTELS = MOCK_HOSTELS.map(h => ({
-  id: h.id,
-  name: h.name,
-  location: h.locality || h.location || 'Area unknown',
-  city: (h.city || 'bengaluru').toLowerCase(),
-  price: h.price || 0,
-  gender: h.gender || 'Mixed',
-  category: (h.category || 'Student').toLowerCase(),
-  type: h.type || 'Standard',
-  rating: h.rating || 4.0,
-  popularityLabel: (h.rating || 0) > 4.5 ? 'High Demand' : null,
-  occupancy: h.occupancy || '70%',
-  image: (h.images && h.images[0]) || h.image || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
-  amenities: h.amenities || []
-}));
 
 const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => (
   <div className="search-hostel-card-pro">
@@ -117,7 +101,7 @@ const Search = () => {
     const fetchHostels = async () => {
       try {
         const [response, wishRes] = await Promise.all([
-          API.get('/buildings').catch(() => ({ data: [] })),
+          API.get('/buildings/public').catch(() => ({ data: [] })),
           API.get('/tenant-portal/wishlist').catch(() => ({ data: [] }))
         ]);
         
@@ -142,13 +126,12 @@ const Search = () => {
           }));
         }
 
-        if (mapped.length === 0) mapped = HOSTELS;
         setAllHostels(mapped);
         setHostels(mapped);
       } catch (err) {
         console.error('Error fetching hostels:', err);
-        setAllHostels(HOSTELS);
-        setHostels(HOSTELS);
+        setAllHostels([]);
+        setHostels([]);
       } finally {
         setLoading(false);
       }

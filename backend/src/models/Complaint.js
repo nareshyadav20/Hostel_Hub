@@ -5,7 +5,7 @@ const complaintSchema = new mongoose.Schema({
   description: { type: String, required: true },
   category: { 
     type: String, 
-    enum: ['Maintenance', 'Housekeeping', 'WiFi / IT', 'Leave', 'Visitor', 'Plumbing', 'Electrical', 'Other'],
+    enum: ['Maintenance', 'Housekeeping', 'Cleaning', 'Security', 'WiFi', 'WiFi / IT', 'Leave', 'Visitor', 'Plumbing', 'Electrical', 'Other'],
     default: 'Maintenance'
   },
   status: { 
@@ -26,6 +26,6 @@ const complaintSchema = new mongoose.Schema({
   roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
   bedId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bed' },
   date: { type: Date, default: Date.now }
-}, { timestamps: true, collection: 'owner_complaints' });
+}, { timestamps: true, collection: 'complaints' });
 
 module.exports = mongoose.model('Complaint', complaintSchema);
