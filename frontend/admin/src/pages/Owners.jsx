@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { UserPlus, Mail, Phone, Home, ShieldCheck, MoreHorizontal, Search, Filter, TrendingUp, Building, ArrowUpRight } from 'lucide-react';
+import { UserPlus, Mail, Phone, Home, ShieldCheck, MoreHorizontal, Search, Filter, TrendingUp, Building, ArrowUpRight, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Owners = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [owners] = useState([
     { id: 1, name: 'Rahul Sharma', email: 'rahul@sharma.com', phone: '+91 98765 12345', hostels: 4, plan: 'Enterprise', status: 'Active', joined: 'Jan 2024', revenue: '₹8.5L' },
@@ -12,6 +13,16 @@ const Owners = () => {
 
   return (
     <div className="space-y-8 pb-10">
+      
+      {/* --- BACK NAVIGATION --- */}
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group"
+      >
+        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Dashboard
+      </button>
+
       {/* Header Area */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

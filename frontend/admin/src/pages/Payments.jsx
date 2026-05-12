@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { IndianRupee, TrendingUp, CreditCard, Download, ExternalLink, Calendar, Search, Filter } from 'lucide-react';
+import { IndianRupee, TrendingUp, CreditCard, Download, ExternalLink, Calendar, Search, Filter, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import '../NexusElite.css';
 
 const Payments = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [payments, setPayments] = useState([
     { id: 'TXN-9921', owner: 'Rahul Sharma', amount: '4,999', plan: 'Enterprise', date: '20 Apr 2026', status: 'Success', method: 'UPI' },
@@ -19,6 +20,15 @@ const Payments = () => {
 
   return (
     <div className="payments-view">
+      
+      {/* --- BACK NAVIGATION --- */}
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group mb-6"
+      >
+        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Dashboard
+      </button>
       <header className="page-header">
         <div>
           <h1 className="page-title">💰 Financial Ledger</h1>

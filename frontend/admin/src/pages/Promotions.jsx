@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Tag, Calendar, ShieldCheck, Plus, Search, Filter, Trash2, Edit2 } from 'lucide-react';
+import { Tag, Calendar, ShieldCheck, Plus, Search, Filter, Trash2, Edit2, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import '../NexusElite.css';
 
 const Promotions = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [offers, setOffers] = useState([
     { id: 1, code: 'WELCOME50', discount: '50% OFF', type: 'Percentage', validity: '31 Dec 2026', status: 'Active', usage: '1.2k' },
@@ -18,6 +20,14 @@ const Promotions = () => {
 
   return (
     <div className="promotions-view">
+      {/* --- BACK NAVIGATION --- */}
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group mb-6"
+      >
+        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Dashboard
+      </button>
       <header className="page-header">
         <div>
           <h1 className="page-title">🎁 Marketing Engine</h1>

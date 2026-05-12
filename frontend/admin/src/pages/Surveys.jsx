@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
-import { ClipboardList, Plus, Search, MoreVertical, MessageCircle, X } from 'lucide-react';
+import { ClipboardList, Plus, Search, MoreVertical, MessageCircle, X, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const initialSurveys = [
   { id: 1, title: 'Resident Satisfaction Q3', responses: 1240, status: 'Active', created: 'Oct 1, 2024' },
@@ -19,6 +20,7 @@ const surveyData = [
 ];
 
 const Surveys = () => {
+  const navigate = useNavigate();
   const [surveys, setSurveys] = useState(initialSurveys);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ title: '', type: 'Rating Scale' });
@@ -32,6 +34,14 @@ const Surveys = () => {
 
   return (
     <div className="animate-fade" style={{ maxWidth: '1300px' }}>
+      {/* --- BACK NAVIGATION --- */}
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group mb-6"
+      >
+        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Dashboard
+      </button>
       <div className="page-header">
         <div>
           <h1>Voice of Residents</h1>

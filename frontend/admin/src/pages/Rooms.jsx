@@ -9,8 +9,10 @@ import {
 } from 'lucide-react';
 import Modal from '../components/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const Rooms = () => {
+  const navigate = useNavigate();
   const [activeModal, setActiveModal] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
@@ -161,6 +163,15 @@ const Rooms = () => {
   return (
     <div className="space-y-10 pb-20 animate-fade">
       
+      {/* --- BACK NAVIGATION --- */}
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group"
+      >
+        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Dashboard
+      </button>
+
       {/* --- HEADER --- */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>

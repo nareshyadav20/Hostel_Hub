@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Layout, Image, FileText, ChevronRight, Save, Eye, Plus } from 'lucide-react';
+import { Layout, Image, FileText, ChevronRight, Save, Eye, Plus, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const pages = [
   { name: 'Home Landing', lastEdit: '2h ago', status: 'Published' },
@@ -13,6 +14,7 @@ const banners = [
 ];
 
 const Cms = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Pages');
   const [selectedPage, setSelectedPage] = useState(pages[0]);
   const [headline, setHeadline] = useState('Find Luxury Living That Fits Your Budget');
@@ -28,6 +30,14 @@ const Cms = () => {
 
   return (
     <div className="animate-fade" style={{ maxWidth: '1300px' }}>
+      {/* --- BACK NAVIGATION --- */}
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group mb-6"
+      >
+        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Dashboard
+      </button>
       <div className="page-header">
         <div>
           <h1>Content Management</h1>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Tag, Plus, Edit2, Trash2, RefreshCw, Calendar, X } from 'lucide-react';
+import { Tag, Plus, Edit2, Trash2, RefreshCw, Calendar, X, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const initialPromos = [
   { id: 1, code: 'WELCOME500', type: 'Flat',       value: '₹500',  used: 1240, limit: 2000, expiry: '2025-12-31', status: 'Active' },
@@ -8,6 +9,7 @@ const initialPromos = [
 ];
 
 const Offers = () => {
+  const navigate = useNavigate();
   const [promos, setPromos] = useState(initialPromos);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ code: '', type: 'Flat', value: '', limit: '', expiry: '' });
@@ -23,6 +25,14 @@ const Offers = () => {
 
   return (
     <div className="animate-fade" style={{ maxWidth: '1300px' }}>
+      {/* --- BACK NAVIGATION --- */}
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group mb-6"
+      >
+        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Dashboard
+      </button>
       <div className="page-header">
         <div>
           <h1>Promotion Engine</h1>

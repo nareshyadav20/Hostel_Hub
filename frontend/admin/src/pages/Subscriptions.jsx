@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Subscriptions = () => {
+  const navigate = useNavigate();
   const [isAnnual, setIsAnnual] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -71,6 +74,14 @@ const Subscriptions = () => {
 
   return (
     <div className="subscriptions-page page-container animate-fade">
+      {/* --- BACK NAVIGATION --- */}
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group mb-6"
+      >
+        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Dashboard
+      </button>
       <header className="subs-header">
         <div className="header-badge">HostelHub Premium</div>
         <h1>Subscription <span style={{ color: 'var(--accent-primary)' }}>Command Center</span></h1>

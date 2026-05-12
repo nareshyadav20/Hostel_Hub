@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Filter, Download, UserCheck, UserMinus, FileText, MoreHorizontal, ShieldCheck, ArrowUpRight, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Filter, Download, UserCheck, UserMinus, FileText, MoreHorizontal, ShieldCheck, ArrowUpRight, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const initialUsers = [
   { id: 1, name: 'Rahul Sharma', phone: '+91 98765 43210', kycStatus: 'Pending', type: 'Owner', document: 'Aadhar Card', joined: '2h ago' },
@@ -9,6 +10,7 @@ const initialUsers = [
 ];
 
 const Users = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState(initialUsers);
   const [search, setSearch] = useState('');
 
@@ -23,7 +25,15 @@ const Users = () => {
 
   return (
     <div className="space-y-8 pb-10">
-      {/* Header */}
+      {/* --- BACK NAVIGATION --- */}
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group"
+      >
+        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Dashboard
+      </button>
+      {/* Header */
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-text-primary">Identity & Trust Center</h1>

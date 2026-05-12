@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Play, Pause, Plus, Zap, Clock, Shield, Bell, CheckCircle, MoreHorizontal, Settings, ArrowRight, Activity } from 'lucide-react';
+import { Play, Pause, Plus, Zap, Clock, Shield, Bell, CheckCircle, MoreHorizontal, Settings, ArrowRight, Activity, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Automation = () => {
+  const navigate = useNavigate();
   const [workflows] = useState([
     { id: 1, name: 'Late Rent Reminder', trigger: 'Overdue > 3 Days', action: 'Send WhatsApp + Email', status: 'Active', executions: 42, color: 'primary' },
     { id: 2, name: 'Low Stock Alert', trigger: 'Inventory < 20%', action: 'Notify Admin + Vendor', status: 'Active', executions: 12, color: 'warning' },
@@ -11,6 +13,14 @@ const Automation = () => {
 
   return (
     <div className="space-y-8 pb-10">
+      {/* --- BACK NAVIGATION --- */}
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group"
+      >
+        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Dashboard
+      </button>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

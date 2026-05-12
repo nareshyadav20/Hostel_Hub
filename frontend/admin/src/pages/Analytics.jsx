@@ -6,8 +6,9 @@ import {
 import { 
   Filter, Calendar, Download, TrendingUp, TrendingDown, 
   Brain, Zap, Target, Activity, DollarSign, Users, 
-  ChevronRight, ArrowUpRight, ArrowDownRight, Sparkles
+  ChevronRight, ArrowUpRight, ArrowDownRight, Sparkles, ArrowLeft
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const REVENUE_VELOCITY = [
   { name: 'Jan', actual: 42, predicted: 40 },
@@ -31,11 +32,20 @@ const PREDICTIONS = [
 ];
 
 const Analytics = () => {
+  const navigate = useNavigate();
   const [range, setRange] = useState('Last 6 Months');
 
   return (
     <div className="space-y-6 animate-fade">
-      {/* --- TOP ROW: KPI SUMMARY --- */}
+      {/* --- BACK NAVIGATION --- */}
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group"
+      >
+        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Dashboard
+      </button>
+      {/* --- TOP ROW: KPI SUMMARY --- */
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-4 layer-2 p-6 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">

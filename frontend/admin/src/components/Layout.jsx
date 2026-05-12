@@ -2,30 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import ThemeToggle from './ThemeToggle';
-import { Bell, Search, Settings, Calendar, Menu, ChevronDown } from 'lucide-react';
+import { Bell, Search, Settings, Calendar, Menu, ChevronDown, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 
 const Layout = ({ children }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsed, setCollapsed] = useState(false);
-  
+
   return (
     <div className="min-h-screen bg-background flex font-sans text-text-primary overflow-hidden">
       <Sidebar collapsed={collapsed} />
-      
+
       <main className={`flex-1 flex flex-col transition-all duration-300 relative ${collapsed ? 'ml-20' : 'ml-64'}`}>
-        
+
         {/* TOP BAR */}
         <header className="h-16 px-8 bg-card border-b border-border flex items-center justify-between sticky top-0 z-40">
-          
+
           {/* Greeting & Date */}
           <div className="flex items-center gap-6">
             <div>
-              <h1 className="text-[15px] font-bold text-text-primary">Hello, Administrator</h1>
-              <div className="flex items-center gap-2 text-[11px] text-text-muted font-medium uppercase tracking-wider">
-                <Calendar size={12} />
-                {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </div>
+              <h1 className="text-[15px] font-black text-text-primary uppercase tracking-tight italic flex items-center gap-2">
+                 Hello, Administrator <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              </h1>
             </div>
           </div>
 
@@ -33,10 +33,10 @@ const Layout = ({ children }) => {
           <div className="flex-1 max-w-xl px-10">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 className="w-full bg-background border border-border rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                placeholder="Search everything..." 
+                placeholder="Search everything..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
