@@ -54,7 +54,7 @@ const Mess = () => {
     const buildingId = localStorage.getItem('buildingId');
     if (buildingId) {
       connectSocket(buildingId);
-      
+
       socket.on('menuUpdated', () => {
         console.log('🔄 Mess Menu Updated in Real-time');
         fetchMessData();
