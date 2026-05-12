@@ -159,7 +159,8 @@ const Rooms = () => {
       const rFloorId = typeof r.floor === 'object' ? r.floor._id : r.floor;
       return floors.some(f => {
         const fId = f.id || f._id;
-        const fBldgId = typeof f.building === 'object' ? f.building._id : f.building;
+        const fBuilding = f.building || f.buildingId;
+        const fBldgId = typeof fBuilding === 'object' ? fBuilding._id : fBuilding;
         return fId === rFloorId && fBldgId === selectedBuildingId;
       });
     }).length
@@ -173,7 +174,8 @@ const Rooms = () => {
         const rFloorId = typeof r.floor === 'object' ? r.floor._id : r.floor;
         return rId === bRoomId && floors.some(f => {
           const fId = f.id || f._id;
-          const fBldgId = typeof f.building === 'object' ? f.building._id : f.building;
+          const fBuilding = f.building || f.buildingId;
+        const fBldgId = typeof fBuilding === 'object' ? fBuilding._id : fBuilding;
           return fId === rFloorId && fBldgId === selectedBuildingId;
         });
       });
@@ -187,7 +189,8 @@ const Rooms = () => {
       const rFloorId = typeof r.floor === 'object' ? r.floor._id : r.floor;
       return rId === bRoomId && floors.some(f => {
         const fId = f.id || f._id;
-        const fBldgId = typeof f.building === 'object' ? f.building._id : f.building;
+        const fBuilding = f.building || f.buildingId;
+        const fBldgId = typeof fBuilding === 'object' ? fBuilding._id : fBuilding;
         return fId === rFloorId && fBldgId === selectedBuildingId;
       });
     })).length
@@ -196,7 +199,8 @@ const Rooms = () => {
 
   const activeBuilding = buildings.find(b => (b.id || b._id) === selectedBuildingId);
   const buildingFloors = floors.filter(f => {
-    const fBldgId = typeof f.building === 'object' ? f.building._id : f.building;
+    const fBuilding = f.building || f.buildingId;
+    const fBldgId = typeof fBuilding === 'object' ? fBuilding._id : fBuilding;
     return fBldgId === selectedBuildingId;
   });
 

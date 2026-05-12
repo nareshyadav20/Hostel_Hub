@@ -1,5 +1,6 @@
 const MessMenu = require('../models/MessMenu');
 const MessAttendance = require('../models/MessAttendance');
+const Building = require('../models/Building');
 
 const DEFAULT_MENU = {
     Monday: { breakfast: 'Idli, Sambar', lunch: 'Rice, Dal, Veg Fry', dinner: 'Roti, Paneer Masala' },
@@ -18,6 +19,9 @@ exports.getMenu = async (req, res) => {
     try {
         const { buildingId } = req.query;
         if (!buildingId) return res.status(400).json({ message: 'buildingId is required' });
+        
+        const building = await Building.findOne({ _id: buildingId, owner: req.user.id });
+        if (!building) return res.status(403).json({ message: 'Access denied to this building.' });
 
         let menu = await MessMenu.find({ buildingId }).sort({ plan: 1, day: 1 });
 
@@ -48,6 +52,9 @@ exports.updateMenu = async (req, res) => {
     try {
         const { plan, day, breakfast, lunch, dinner, buildingId } = req.body;
         if (!buildingId) return res.status(400).json({ message: 'buildingId is required' });
+        
+        const building = await Building.findOne({ _id: buildingId, owner: req.user.id });
+        if (!building) return res.status(403).json({ message: 'Access denied to this building.' });
 
         const menu = await MessMenu.findOneAndUpdate(
             { plan, day, buildingId },
@@ -64,6 +71,9 @@ exports.getAttendance = async (req, res) => {
     try {
         const { buildingId, date } = req.query; // date format: YYYY-MM-DD
         if (!buildingId || !date) return res.status(400).json({ message: 'buildingId and date are required' });
+        
+        const building = await Building.findOne({ _id: buildingId, owner: req.user.id });
+        if (!building) return res.status(403).json({ message: 'Access denied to this building.' });
 
         const attendance = await MessAttendance.find({ buildingId, date });
         res.json(attendance);
@@ -75,6 +85,10 @@ exports.getAttendance = async (req, res) => {
 exports.updateAttendance = async (req, res) => {
     try {
         const { tenantId, buildingId, date, meal, status } = req.body;
+        if (!buildingId) return res.status(400).json({ message: 'buildingId is required' });
+        
+        const building = await Building.findOne({ _id: buildingId, owner: req.user.id });
+        if (!building) return res.status(403).json({ message: 'Access denied to this building.' });
         
         const update = { [meal]: status };
         
@@ -93,6 +107,10 @@ exports.updateAttendance = async (req, res) => {
 exports.markAllAttendance = async (req, res) => {
     try {
         const { buildingId, date, meal, tenantIds } = req.body;
+        if (!buildingId) return res.status(400).json({ message: 'buildingId is required' });
+        
+        const building = await Building.findOne({ _id: buildingId, owner: req.user.id });
+        if (!building) return res.status(403).json({ message: 'Access denied to this building.' });
         
         const operations = tenantIds.map(tId => ({
             updateOne: {

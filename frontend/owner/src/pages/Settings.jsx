@@ -176,30 +176,35 @@ const Settings = () => {
 
   return (
     <div className="settings-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
-      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
           <button 
             onClick={() => navigate(`/owner/building/${activeBuildingId}/dashboard`)}
             className="btn" 
-            style={{ padding: '0.6rem 1rem', background: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px solid var(--border-color)', fontWeight: '700' }}
+            style={{ 
+              padding: '0.6rem 1.2rem', background: '#F1F5F9', borderRadius: '12px', 
+              border: '1px solid #E2E8F0', fontWeight: '800', fontSize: '0.85rem',
+              color: '#475569', transition: 'all 0.2s'
+            }}
           >
             &larr; Dashboard
           </button>
+          <div style={{ height: '32px', width: '1px', background: '#E2E8F0' }}></div>
           <div>
-            <h1 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0, letterSpacing: '-0.02em' }}>System Settings</h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Centralized control for hostel operations.</p>
+            <h1 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, letterSpacing: '-0.03em', color: '#0F172A' }}>System Settings</h1>
+            <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '500' }}>Centralized control for hostel operations.</p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
            <AnimatePresence>
              {msg.text && (
                <motion.div initial={{ opacity:0, x:20 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0 }}
-                 style={{ padding: '0.5rem 1rem', borderRadius: '8px', background: msg.type==='success'?'#DCFCE7':'#FEE2E2', color: msg.type==='success'?'#10B981':'#EF4444', fontSize: '0.85rem', fontWeight: '700' }}>
+                 style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', background: msg.type==='success'?'#DCFCE7':'#FEE2E2', color: msg.type==='success'?'#10B981':'#EF4444', fontSize: '0.85rem', fontWeight: '800', border: `1px solid ${msg.type==='success'?'#BBF7D0':'#FECACA'}` }}>
                  {msg.text}
                </motion.div>
              )}
            </AnimatePresence>
-           <button onClick={handleSave} disabled={isSaving} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.7rem 1.5rem' }}>
+           <button onClick={handleSave} disabled={isSaving} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.8rem 1.8rem', borderRadius: '14px', fontWeight: '800', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.2)' }}>
              {isSaving ? 'Saving...' : <><Save size={18} /> Save Settings</>}
            </button>
         </div>
@@ -209,20 +214,23 @@ const Settings = () => {
         
         {/* Horizontal Navigation Bar */}
         <div className="card" style={{ 
-          padding: '0.6rem', display: 'flex', gap: '0.8rem', borderRadius: '20px', 
+          padding: '0.5rem', display: 'flex', gap: '0.4rem', borderRadius: '20px', 
           overflowX: 'auto', background: '#FFFFFF', border: '1px solid #E2E8F0',
-          scrollbarWidth: 'none', msOverflowStyle: 'none'
+          scrollbarWidth: 'none', msOverflowStyle: 'none',
+          justifyContent: 'center', alignItems: 'center',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
         }}>
           {tabs.map((tab) => (
              <button 
                key={tab.id}
                onClick={() => setActiveTab(tab.id)}
                style={{ 
-                 display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '0.8rem 1.5rem', 
-                 whiteSpace: 'nowrap', fontSize: '0.9rem', fontWeight: activeTab === tab.id ? '900' : '700',
+                 display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.7rem 1.2rem', 
+                 whiteSpace: 'nowrap', fontSize: '0.85rem', fontWeight: activeTab === tab.id ? '900' : '700',
                  background: activeTab === tab.id ? 'var(--accent-primary)' : 'transparent',
                  color: activeTab === tab.id ? '#FFFFFF' : '#64748B',
-                 border: 'none', borderRadius: '14px', cursor: 'pointer', transition: '0.3s'
+                 border: 'none', borderRadius: '14px', cursor: 'pointer', transition: 'all 0.3s',
+                 flexShrink: 0
                }}
              >
                 {tab.icon}
@@ -232,7 +240,7 @@ const Settings = () => {
         </div>
 
         {/* Content Area */}
-        <div className="card" style={{ padding: '3.5rem', borderRadius: '28px', minHeight: '650px', background: '#FFFFFF', border: '1px solid #E2E8F0', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}>
+        <div className="card" style={{ padding: '2.5rem 3rem', borderRadius: '28px', minHeight: '650px', background: '#FFFFFF', border: '1px solid #E2E8F0', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}>
           <AnimatePresence mode="wait">
             
             {/* GENERAL SETTINGS */}

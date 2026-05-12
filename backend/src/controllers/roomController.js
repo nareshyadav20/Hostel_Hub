@@ -7,8 +7,8 @@ const createRoom = async (req, res) => {
   try {
     const { floorId, roomNumber, roomType, capacity, rentAmount, securityDeposit, noticePeriod, isAC, washroomType, balcony, facing, floorType, windowCount, furniture, images, ...smartFeatures } = req.body;
     
-    const floor = await Floor.findById(floorId).populate('building');
-    if (!floor || floor.building.owner.toString() !== req.user.id) {
+    const floor = await Floor.findById(floorId).populate('buildingId');
+    if (!floor || floor.buildingId.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Floor not found or unauthorized' });
     }
 
@@ -36,8 +36,8 @@ const createRoom = async (req, res) => {
 
 const getRooms = async (req, res) => {
   try {
-    const floor = await Floor.findById(req.params.floorId).populate('building');
-    if (!floor || floor.building.owner.toString() !== req.user.id) {
+    const floor = await Floor.findById(req.params.floorId).populate('buildingId');
+    if (!floor || floor.buildingId.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Floor not found or unauthorized' });
     }
     const rooms = await Room.find({ floor: req.params.floorId }).populate('beds');
@@ -47,9 +47,21 @@ const getRooms = async (req, res) => {
 
 const getAllRooms = async (req, res) => {
   try {
-    const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
-    const bIds = ownerBuildings.map(b => b._id);
-    const floors = await Floor.find({ building: { $in: bIds } }).select('_id');
+    const { buildingId } = req.query;
+    let floorQuery = {};
+
+    if (buildingId) {
+      // Verify building ownership
+      const building = await Building.findOne({ _id: buildingId, owner: req.user.id });
+      if (!building) return res.status(404).json({ error: 'Building not found or unauthorized' });
+      floorQuery = { buildingId: buildingId };
+    } else {
+      const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+      const bIds = ownerBuildings.map(b => b._id);
+      floorQuery = { buildingId: { $in: bIds } };
+    }
+
+    const floors = await Floor.find(floorQuery).select('_id');
     const fIds = floors.map(f => f._id);
     const rooms = await Room.find({ floor: { $in: fIds } }).populate('beds');
     res.status(200).json(rooms);
@@ -59,8 +71,8 @@ const getAllRooms = async (req, res) => {
 const bulkCreateRooms = async (req, res) => {
   try {
     const { rooms, floorId } = req.body;
-    const floor = await Floor.findById(floorId).populate('building');
-    if (!floor || floor.building.owner.toString() !== req.user.id) {
+    const floor = await Floor.findById(floorId).populate('buildingId');
+    if (!floor || floor.buildingId.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Floor not found or unauthorized' });
     }
 
@@ -73,8 +85,8 @@ const bulkCreateRooms = async (req, res) => {
 
 const updateRoom = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id).populate({ path: 'floor', populate: { path: 'building' } });
-    if (!room || room.floor.building.owner.toString() !== req.user.id) {
+    const room = await Room.findById(req.params.id).populate({ path: 'floor', populate: { path: 'buildingId' } });
+    if (!room || room.floor.buildingId.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Room not found or unauthorized' });
     }
     const updated = await Room.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -84,8 +96,8 @@ const updateRoom = async (req, res) => {
 
 const deleteRoom = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id).populate({ path: 'floor', populate: { path: 'building' } });
-    if (!room || room.floor.building.owner.toString() !== req.user.id) {
+    const room = await Room.findById(req.params.id).populate({ path: 'floor', populate: { path: 'buildingId' } });
+    if (!room || room.floor.buildingId.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Room not found or unauthorized' });
     }
     await Room.findByIdAndDelete(req.params.id);

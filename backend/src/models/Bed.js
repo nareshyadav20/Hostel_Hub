@@ -7,7 +7,7 @@ const bedSchema = new mongoose.Schema({
   bedType:   { type: String, default: 'Single' },   // e.g. Lower Bunk, Upper Bunk, Single, Queen
   images:    [{ type: String }],
   tenant:    { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
-  room:      { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
+  roomId:    { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
   
   // Smart Bed Management (Step 1)
   comfortScore: { type: Number, default: 0 },

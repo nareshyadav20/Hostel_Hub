@@ -93,7 +93,7 @@ const bulkCreateBuildings = async (req, res) => {
       const createdFloors = [];
 
       for (let i = 1; i <= numFloors; i++) {
-        const floor = new Floor({ floorNumber: String(i), building: building._id });
+        const floor = new Floor({ floorNumber: String(i), buildingId: building._id });
         await floor.save();
 
         const createdRooms = [];

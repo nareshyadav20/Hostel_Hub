@@ -44,6 +44,17 @@ const getTenants = async (req, res) => {
 const bulkCreateTenants = async (req, res) => {
   try {
     const { tenants } = req.body;
+    if (!tenants || tenants.length === 0) return res.status(400).json({ error: 'No tenants provided' });
+    
+    const Building = require('../models/Building');
+    const buildingId = tenants[0].buildingId;
+    
+    // Assuming all bulk tenants belong to the same building
+    if (buildingId) {
+      const building = await Building.findOne({ _id: buildingId, owner: req.user.id });
+      if (!building) return res.status(403).json({ error: 'Access denied to this building.' });
+    }
+    
     const created = await Tenant.insertMany(tenants);
     res.status(201).json(created);
   } catch (err) {
@@ -53,6 +64,13 @@ const bulkCreateTenants = async (req, res) => {
 
 const updateTenant = async (req, res) => {
   try {
+    const existingTenant = await Tenant.findById(req.params.id);
+    if (!existingTenant) return res.status(404).json({ error: 'Tenant not found' });
+    
+    const Building = require('../models/Building');
+    const building = await Building.findOne({ _id: existingTenant.buildingId, owner: req.user.id });
+    if (!building) return res.status(403).json({ error: 'Access denied' });
+
     const tenant = await Tenant.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.status(200).json(tenant);
   } catch (err) {
@@ -62,6 +80,13 @@ const updateTenant = async (req, res) => {
 
 const deleteTenant = async (req, res) => {
   try {
+    const existingTenant = await Tenant.findById(req.params.id);
+    if (!existingTenant) return res.status(404).json({ error: 'Tenant not found' });
+    
+    const Building = require('../models/Building');
+    const building = await Building.findOne({ _id: existingTenant.buildingId, owner: req.user.id });
+    if (!building) return res.status(403).json({ error: 'Access denied' });
+
     await Tenant.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: 'Tenant deleted successfully' });
   } catch (err) {

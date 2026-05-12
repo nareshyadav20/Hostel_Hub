@@ -26,6 +26,12 @@ exports.getInventory = async (req, res) => {
 
 exports.addInventoryItem = async (req, res) => {
   try {
+    const { buildingId } = req.body;
+    if (!buildingId) return res.status(400).json({ error: 'buildingId is required' });
+    
+    const building = await Building.findOne({ _id: buildingId, owner: req.user.id });
+    if (!building) return res.status(403).json({ error: 'Access denied to this building.' });
+
     const data = { ...req.body, lastUpdatedBy: req.user.id };
     
     // Auto-map type based on common hostel categories if not provided
@@ -47,6 +53,12 @@ exports.addInventoryItem = async (req, res) => {
 
 exports.updateInventoryItem = async (req, res) => {
   try {
+    const existingItem = await Inventory.findById(req.params.id);
+    if (!existingItem) return res.status(404).json({ error: 'Item not found' });
+    
+    const building = await Building.findOne({ _id: existingItem.buildingId, owner: req.user.id });
+    if (!building) return res.status(403).json({ error: 'Access denied' });
+
     const item = await Inventory.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(item);
   } catch (error) {
@@ -56,6 +68,12 @@ exports.updateInventoryItem = async (req, res) => {
 
 exports.deleteInventoryItem = async (req, res) => {
   try {
+    const existingItem = await Inventory.findById(req.params.id);
+    if (!existingItem) return res.status(404).json({ error: 'Item not found' });
+    
+    const building = await Building.findOne({ _id: existingItem.buildingId, owner: req.user.id });
+    if (!building) return res.status(403).json({ error: 'Access denied' });
+
     await Inventory.findByIdAndDelete(req.params.id);
     res.status(204).send();
   } catch (error) {

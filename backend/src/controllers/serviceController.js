@@ -2,6 +2,7 @@ const Laundry = require('../models/tenant/Laundry');
 const RoomCleaning = require('../models/tenant/RoomCleaning');
 const Visitor = require('../models/tenant/Visitor');
 const Leave = require('../models/tenant/Leave');
+const Complaint = require('../models/Complaint');
 const { getOrCreateTenant } = require('../utils/tenantHelper');
 
 // Helper to get tenant profile
@@ -25,6 +26,19 @@ exports.createLaundryOrder = async (req, res) => {
       tenant: tenant._id,
       user: req.user.id
     });
+
+    // Mirror into owner_complaints for visibility in Service Hub
+    const itemList = Array.isArray(items) ? items.join(', ') : (items || 'N/A');
+    await Complaint.create({
+      title: `Laundry Request — ${orderNumber}`,
+      description: `Items: ${itemList}. Pickup Date: ${pickupDate || 'Not specified'}.`,
+      category: 'Laundry',
+      priority: 'Low',
+      tenant: tenant._id,
+      user: req.user.id,
+      buildingId: tenant.buildingId || null,
+    });
+
     console.log('✅ Laundry Order Saved:', laundry._id);
     res.status(201).json(laundry);
   } catch (error) {
@@ -56,6 +70,18 @@ exports.scheduleCleaning = async (req, res) => {
       tenant: tenant._id,
       user: req.user.id
     });
+
+    // Mirror into owner_complaints for visibility in Service Hub
+    await Complaint.create({
+      title: `Room Cleaning Request`,
+      description: `Scheduled for: ${date || 'N/A'}. Time Slot: ${slot || 'Not specified'}.`,
+      category: 'Room Cleaning',
+      priority: 'Low',
+      tenant: tenant._id,
+      user: req.user.id,
+      buildingId: tenant.buildingId || null,
+    });
+
     console.log('✅ Cleaning Scheduled:', cleaning._id);
     res.status(201).json(cleaning);
   } catch (error) {
@@ -88,6 +114,18 @@ exports.createVisitorAccess = async (req, res) => {
       tenant: tenant._id,
       user: req.user.id
     });
+
+    // Mirror into owner_complaints for visibility in Service Hub
+    await Complaint.create({
+      title: `Visitor Access Request — ${name}`,
+      description: `Visitor: ${name}. Relation: ${relation || 'N/A'}. Expected Arrival: ${arrivalDate || 'Not specified'}.`,
+      category: 'Visitor',
+      priority: 'Low',
+      tenant: tenant._id,
+      user: req.user.id,
+      buildingId: tenant.buildingId || null,
+    });
+
     console.log('✅ Visitor Access Saved:', visitor._id);
     res.status(201).json(visitor);
   } catch (error) {
@@ -120,6 +158,18 @@ exports.submitLeaveNotice = async (req, res) => {
       tenant: tenant._id,
       user: req.user.id
     });
+
+    // Mirror into owner_complaints for visibility in Service Hub
+    await Complaint.create({
+      title: `Leave Notice`,
+      description: `From: ${fromDate || 'N/A'} To: ${toDate || 'N/A'}. Reason: ${reason || 'Not specified'}.`,
+      category: 'Leave',
+      priority: 'Low',
+      tenant: tenant._id,
+      user: req.user.id,
+      buildingId: tenant.buildingId || null,
+    });
+
     console.log('✅ Leave Saved:', leave._id);
     res.status(201).json(leave);
   } catch (error) {

@@ -39,16 +39,16 @@ exports.createComplaint = async (req, res) => {
 
     // Try to find bed assignment first
     const bed = await Bed.findOne({ tenant: tenant._id }).populate({
-      path: 'room',
+      path: 'roomId',
       populate: { path: 'floor' }
     });
 
     if (bed) {
       bedId = bed._id;
-      if (bed.room) {
-        roomId = bed.room._id;
-        if (bed.room.floor) {
-          buildingId = bed.room.floor.building;
+      if (bed.roomId) {
+        roomId = bed.roomId._id;
+        if (bed.roomId.floor) {
+          buildingId = bed.roomId.floor.buildingId;
         }
       }
     }
@@ -64,7 +64,7 @@ exports.createComplaint = async (req, res) => {
       
       if (roomObj) {
         roomId = roomObj._id;
-        if (roomObj.floor) buildingId = roomObj.floor.building;
+        if (roomObj.floor) buildingId = roomObj.floor.buildingId;
       }
     }
 
@@ -106,6 +106,16 @@ exports.updateComplaintStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, assignedTo } = req.body;
+    
+    const existingComplaint = await Complaint.findById(id);
+    if (!existingComplaint) return res.status(404).json({ message: 'Complaint not found' });
+    
+    if (existingComplaint.buildingId) {
+       const Building = require('../models/Building');
+       const building = await Building.findOne({ _id: existingComplaint.buildingId, owner: req.user.id });
+       if (!building) return res.status(403).json({ message: 'Access denied' });
+    }
+    
     const update = { status };
     if (assignedTo) update.assignedTo = assignedTo;
     
@@ -120,26 +130,27 @@ exports.getAllComplaints = async (req, res) => {
   try {
     const { buildingId, hostelId, status } = req.query;
     let query = {};
-
-    if (buildingId) query.buildingId = buildingId;
-    if (hostelId) query.hostelId = hostelId;
-    if (status) query.status = status;
-
-    // If no specific filter, try to scope to owner's buildings first,
-    // then fall back to all complaints (owner portal view)
-    if (!buildingId && !hostelId && req.user) {
-      try {
-        const Building = require('../models/Building');
-        const ownerBuildings = await Building.find({ owner: req.user.id }, '_id').lean();
-        const buildingIds = ownerBuildings.map(b => b._id);
-        if (buildingIds.length > 0) {
-          query.buildingId = { $in: buildingIds };
-        }
-        // If no buildings found, query is empty — returns all complaints
-      } catch (_e) {
-        // Silently fall back to returning all complaints
+    
+    const Building = require('../models/Building');
+    const ownerBuildings = await Building.find({ owner: req.user.id }, '_id').lean();
+    const buildingIds = ownerBuildings.map(b => b._id.toString());
+    
+    if (buildingId) {
+      if (!buildingIds.includes(buildingId)) {
+        return res.status(403).json({ message: 'Access denied to this building' });
+      }
+      query.buildingId = buildingId;
+    } else {
+      if (ownerBuildings.length > 0) {
+        query.buildingId = { $in: ownerBuildings.map(b => b._id) };
+      } else {
+        // Force empty array if no buildings owned, to prevent leaking all complaints
+        query.buildingId = { $in: [] };
       }
     }
+
+    if (hostelId) query.hostelId = hostelId;
+    if (status) query.status = status;
 
     const complaints = await Complaint.find(query)
       .populate('tenant', 'name room email')

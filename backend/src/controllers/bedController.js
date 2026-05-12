@@ -6,8 +6,8 @@ const Building = require('../models/Building');
 const createBed = async (req, res) => {
   try {
     const { bedNumber, roomId, images, position, bedType, ...smartFeatures } = req.body;
-    const room = await Room.findById(roomId).populate({ path: 'floor', populate: { path: 'building' } });
-    if (!room || room.floor.building.owner.toString() !== req.user.id) {
+    const room = await Room.findById(roomId).populate({ path: 'floor', populate: { path: 'buildingId' } });
+    if (!room || room.floor.buildingId.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Room not found or unauthorized' });
     }
 
@@ -15,7 +15,7 @@ const createBed = async (req, res) => {
       bedNumber, status: 'AVAILABLE', images: images||[], 
       position: position||'Standard', bedType: bedType||'Single',
       ...smartFeatures,
-      room: roomId 
+      roomId: roomId 
     });
     room.beds.push(bed._id);
     await room.save();
@@ -25,32 +25,44 @@ const createBed = async (req, res) => {
 
 const getBeds = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.roomId).populate({ path: 'floor', populate: { path: 'building' } });
-    if (!room || room.floor.building.owner.toString() !== req.user.id) {
+    const room = await Room.findById(req.params.roomId).populate({ path: 'floor', populate: { path: 'buildingId' } });
+    if (!room || room.floor.buildingId.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Room not found or unauthorized' });
     }
-    const beds = await Bed.find({ room: req.params.roomId }).populate('tenant', 'name');
-    res.status(200).json(beds.map(b => ({ ...b.toObject(), roomId: b.room })));
+    const beds = await Bed.find({ roomId: req.params.roomId }).populate('tenant', 'name');
+    res.status(200).json(beds.map(b => ({ ...b.toObject(), roomId: b.roomId })));
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
 const getAllBeds = async (req, res) => {
   try {
-    const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
-    const bIds = ownerBuildings.map(b => b._id);
-    const floors = await Floor.find({ building: { $in: bIds } }).select('_id');
+    const { buildingId } = req.query;
+    let floorQuery = {};
+
+    if (buildingId) {
+      // Verify building ownership
+      const building = await Building.findOne({ _id: buildingId, owner: req.user.id });
+      if (!building) return res.status(404).json({ error: 'Building not found or unauthorized' });
+      floorQuery = { buildingId: buildingId };
+    } else {
+      const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+      const bIds = ownerBuildings.map(b => b._id);
+      floorQuery = { buildingId: { $in: bIds } };
+    }
+
+    const floors = await Floor.find(floorQuery).select('_id');
     const fIds = floors.map(f => f._id);
     const rooms = await Room.find({ floor: { $in: fIds } }).select('_id');
     const rIds = rooms.map(r => r._id);
-    const beds = await Bed.find({ room: { $in: rIds } }).populate('tenant', 'name');
+    const beds = await Bed.find({ roomId: { $in: rIds } }).populate('tenant', 'name');
     res.status(200).json(beds);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
 const updateBed = async (req, res) => {
   try {
-    const bed = await Bed.findById(req.params.id).populate({ path: 'room', populate: { path: 'floor', populate: { path: 'building' } } });
-    if (!bed || bed.room.floor.building.owner.toString() !== req.user.id) {
+    const bed = await Bed.findById(req.params.id).populate({ path: 'roomId', populate: { path: 'floor', populate: { path: 'buildingId' } } });
+    if (!bed || bed.roomId.floor.buildingId.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Bed not found or unauthorized' });
     }
     const updated = await Bed.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -60,8 +72,8 @@ const updateBed = async (req, res) => {
 
 const deleteBed = async (req, res) => {
   try {
-    const bed = await Bed.findById(req.params.id).populate({ path: 'room', populate: { path: 'floor', populate: { path: 'building' } } });
-    if (!bed || bed.room.floor.building.owner.toString() !== req.user.id) {
+    const bed = await Bed.findById(req.params.id).populate({ path: 'roomId', populate: { path: 'floor', populate: { path: 'buildingId' } } });
+    if (!bed || bed.roomId.floor.buildingId.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Bed not found or unauthorized' });
     }
     await Bed.findByIdAndDelete(req.params.id);
@@ -72,12 +84,12 @@ const deleteBed = async (req, res) => {
 const bulkCreateBeds = async (req, res) => {
   try {
     const { beds, roomId } = req.body;
-    const room = await Room.findById(roomId).populate({ path: 'floor', populate: { path: 'building' } });
-    if (!room || room.floor.building.owner.toString() !== req.user.id) {
+    const room = await Room.findById(roomId).populate({ path: 'floor', populate: { path: 'buildingId' } });
+    if (!room || room.floor.buildingId.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Room not found or unauthorized' });
     }
 
-    const bedsWithRoom = beds.map(b => ({ ...b, room: roomId }));
+    const bedsWithRoom = beds.map(b => ({ ...b, roomId: roomId }));
     const createdBeds = await Bed.insertMany(bedsWithRoom);
     await Room.findByIdAndUpdate(roomId, { $push: { beds: { $each: createdBeds.map(b => b._id) } } });
     res.status(201).json(createdBeds);
@@ -91,13 +103,13 @@ const recommendBeds = async (req, res) => {
     
     // Find rooms in this building
     const Floor = require('../models/Floor');
-    const floors = await Floor.find({ building: buildingId }).select('_id');
+    const floors = await Floor.find({ buildingId: buildingId }).select('_id');
     const fIds = floors.map(f => f._id);
     const rooms = await Room.find({ floor: { $in: fIds } }).select('_id');
     const rIds = rooms.map(r => r._id);
 
     // Find available beds
-    const beds = await Bed.find({ room: { $in: rIds }, status: 'AVAILABLE' }).populate('room');
+    const beds = await Bed.find({ roomId: { $in: rIds }, status: 'AVAILABLE' }).populate('roomId');
 
     // Simple rule-based scoring algorithm to simulate AI recommendation
     const scoredBeds = beds.map(bed => {
@@ -126,7 +138,7 @@ const getMaintenanceRequired = async (req, res) => {
   try {
     const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
     const bIds = ownerBuildings.map(b => b._id);
-    const floors = await Floor.find({ building: { $in: bIds } }).select('_id');
+    const floors = await Floor.find({ buildingId: { $in: bIds } }).select('_id');
     const fIds = floors.map(f => f._id);
     const rooms = await Room.find({ floor: { $in: fIds } }).select('_id');
     const rIds = rooms.map(r => r._id);
@@ -135,14 +147,14 @@ const getMaintenanceRequired = async (req, res) => {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const beds = await Bed.find({
-      room: { $in: rIds },
+      roomId: { $in: rIds },
       $or: [
         { status: 'MAINTENANCE' },
         { hygieneRating: { $lt: 3.5 } },
         { lastSanitized: { $lt: sevenDaysAgo } },
         { mattressStatus: 'Dirty' }
       ]
-    }).populate('room', 'roomNumber roomType');
+    }).populate('roomId', 'roomNumber roomType');
 
     res.status(200).json(beds);
   } catch (error) { res.status(500).json({ error: error.message }); }
@@ -150,8 +162,8 @@ const getMaintenanceRequired = async (req, res) => {
 
 const markAsSanitized = async (req, res) => {
   try {
-    const bed = await Bed.findById(req.params.id).populate({ path: 'room', populate: { path: 'floor', populate: { path: 'building' } } });
-    if (!bed || bed.room.floor.building.owner.toString() !== req.user.id) {
+    const bed = await Bed.findById(req.params.id).populate({ path: 'roomId', populate: { path: 'floor', populate: { path: 'buildingId' } } });
+    if (!bed || bed.roomId.floor.buildingId.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Bed not found or unauthorized' });
     }
     bed.lastSanitized = new Date();

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown, X } from 'lucide-react';
+import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown, X, ShoppingBag, Sparkles, Wind } from 'lucide-react';
 import { api } from '../mockData';
 
 
@@ -78,9 +78,11 @@ const Complaints = () => {
   };
 
   const filteredComplaints = complaints.filter(c => {
-    if (activeTab === 'Maintenance') return !['Leave', 'Visitor'].includes(c.category);
+    if (activeTab === 'Maintenance') return !['Leave', 'Visitor', 'Laundry', 'Room Cleaning'].includes(c.category);
     if (activeTab === 'Leave') return c.category === 'Leave';
     if (activeTab === 'Visitor') return c.category === 'Visitor';
+    if (activeTab === 'Laundry') return c.category === 'Laundry';
+    if (activeTab === 'Room Cleaning') return c.category === 'Room Cleaning';
     return true;
   });
 
@@ -144,6 +146,8 @@ const Complaints = () => {
       case 'WiFi / IT': return <Activity size={16} color="#10B981" />;
       case 'Leave': return <Clock size={16} color="#8B5CF6" />;
       case 'Visitor': return <MessageSquare size={16} color="#EC4899" />;
+      case 'Laundry': return null;
+      case 'Room Cleaning': return null;
       default: return <Wrench size={16} color="var(--text-secondary)" />;
     }
   };
@@ -184,20 +188,26 @@ const Complaints = () => {
         </div>
       </header>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', width: 'fit-content' }}>
-        {['Maintenance', 'Leave', 'Visitor'].map(tab => (
+      <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
+        {[
+          { key: 'Maintenance', label: 'Maintenance Tickets' },
+          { key: 'Laundry', label: 'Laundry' },
+          { key: 'Room Cleaning', label: 'Room Cleaning' },
+          { key: 'Leave', label: 'Leave Requests' },
+          { key: 'Visitor', label: 'Visitor Requests' },
+        ].map(({ key, label }) => (
           <button
-            key={tab}
-            onClick={() => { setActiveTab(tab); setExpandedId(null); }}
+            key={key}
+            onClick={() => { setActiveTab(key); setExpandedId(null); }}
             style={{ 
-              padding: '0.8rem 2rem', borderRadius: '12px', border: 'none', 
-              background: activeTab === tab ? 'var(--bg-primary)' : 'transparent',
-              color: activeTab === tab ? 'var(--accent-primary)' : 'var(--text-secondary)',
-              fontWeight: '800', fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.3s',
-              boxShadow: activeTab === tab ? 'var(--shadow-sm)' : 'none'
+              padding: '0.8rem 1.4rem', borderRadius: '12px', border: 'none', 
+              background: activeTab === key ? 'var(--bg-primary)' : 'transparent',
+              color: activeTab === key ? 'var(--accent-primary)' : 'var(--text-secondary)',
+              fontWeight: '800', fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.3s',
+              boxShadow: activeTab === key ? 'var(--shadow-sm)' : 'none'
             }}
           >
-            {tab} {tab === 'Maintenance' ? 'Tickets' : 'Requests'}
+            {label}
           </button>
         ))}
       </div>
@@ -260,9 +270,11 @@ const Complaints = () => {
                     <td style={{ padding: '1.2rem' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-start' }}>
                         <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
-                          <span style={{ padding: '0.4rem', background: 'var(--bg-secondary)', borderRadius: '10px', boxShadow: 'var(--shadow-sm)' }}>
-                            {getCategoryIcon(c.category)}
-                          </span>
+                          {getCategoryIcon(c.category) && (
+                            <span style={{ padding: '0.4rem', background: 'var(--bg-secondary)', borderRadius: '10px', boxShadow: 'var(--shadow-sm)' }}>
+                              {getCategoryIcon(c.category)}
+                            </span>
+                          )}
                           <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{c.issue}</span>
                         </div>
                         <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>

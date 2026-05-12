@@ -6,6 +6,11 @@ const createPayment = async (req, res) => {
   try {
     const { tenantId, amount, type, method, buildingId, category, status, month } = req.body;
     
+    if (buildingId) {
+      const building = await Building.findOne({ _id: buildingId, owner: req.user.id });
+      if (!building) return res.status(403).json({ error: 'Access denied to this building.' });
+    }
+    
     // Generate simple invoice ID
     const invoice = `INV-${Date.now().toString().slice(-6)}`;
     
@@ -73,8 +78,15 @@ const getMyPayments = async (req, res) => {
 
 const updatePaymentStatus = async (req, res) => {
   try {
+    const existingPayment = await Payment.findById(req.params.id);
+    if (!existingPayment) return res.status(404).json({ message: 'Payment not found' });
+    
+    if (existingPayment.buildingId) {
+      const building = await Building.findOne({ _id: existingPayment.buildingId, owner: req.user.id });
+      if (!building) return res.status(403).json({ error: 'Access denied' });
+    }
+    
     const payment = await Payment.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }).populate('tenantId');
-    if (!payment) return res.status(404).json({ message: 'Payment not found' });
     res.status(200).json(payment);
   } catch (error) {
     res.status(500).json({ error: error.message });

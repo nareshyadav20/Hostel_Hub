@@ -4,7 +4,7 @@ const floorSchema = new mongoose.Schema({
   floorNumber: { type: String, required: true },
   description: { type: String },
   images:      [{ type: String }],
-  building:    { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
+  buildingId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   rooms:       [{ type: mongoose.Schema.Types.ObjectId, ref: 'Room' }],
 
   // Floor Specialization (Step 7)
