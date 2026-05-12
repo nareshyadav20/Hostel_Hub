@@ -88,6 +88,8 @@ const Portfolio = () => {
   const [activeDraftId, setActiveDraftId] = useState(null);
   const [draftMsg, setDraftMsg] = useState('');
   const [showDrafts, setShowDrafts] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null); // { id, name, type: 'draft' | 'property' }
+  const [isDeletingItem, setIsDeletingItem] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [occupancyFilter, setOccupancyFilter] = useState('All');
@@ -111,17 +113,19 @@ const Portfolio = () => {
     setLoading(true);
     setError(null);
     try {
-      const [b, f, r, bd, t, c] = await Promise.all([
+      const [b, f, r, bd, t, c, s] = await Promise.all([
         api.getBuildings().catch(() => []), 
         api.getAllFloors().catch(() => []), 
         api.getAllRooms().catch(() => []),
         api.getAllBeds().catch(() => []), 
         api.getTenants().catch(() => []), 
-        api.getComplaints().catch(() => [])
+        api.getComplaints().catch(() => []),
+        api.getStaff().catch(() => ({ staffList: [] }))
       ]);
       setData({
         buildings: b || [], floors: f || [], rooms: r || [], 
-        beds: bd || [], tenants: t || [], complaints: c || []
+        beds: bd || [], tenants: t || [], complaints: c || [],
+        staff: s?.staffList || []
       });
     } catch (err) {
       console.error("Data fetch error", err);
@@ -207,6 +211,7 @@ const Portfolio = () => {
   };
 
   const deleteDraft = async (id) => {
+    setIsDeletingItem(true);
     try {
       await api.deleteBuilding(id);
       loadDrafts();
@@ -214,7 +219,12 @@ const Portfolio = () => {
         setActiveDraftId(null);
         setIsAddModalOpen(false);
       }
-    } catch { alert('Could not delete draft.'); }
+      setItemToDelete(null);
+    } catch (err) {
+      console.error('Delete failed:', err);
+    } finally {
+      setIsDeletingItem(false);
+    }
   };
 
   const handleCreateHostel = async (e) => {
@@ -274,7 +284,7 @@ const Portfolio = () => {
       fetchData();
     } catch (err) {
       console.error("Submission error", err);
-      alert("Failed to create hostel. Please check your network.");
+      // Removed alert
     } finally {
       setIsSubmitting(false);
     }
@@ -336,7 +346,7 @@ const Portfolio = () => {
   }, [data]);
 
   const globalStats = useMemo(() => {
-    if (!buildingStats || buildingStats.length === 0) return { totalBuildings: 0, totalRooms: 0, totalBeds: 0, occupiedBeds: 0, occupancyRate: 0, totalRevenue: 0, totalDues: 0, totalComplaints: 0 };
+    if (!buildingStats || buildingStats.length === 0) return { totalBuildings: 0, totalRooms: 0, totalBeds: 0, occupiedBeds: 0, occupancyRate: 0, totalRevenue: 0, totalDues: 0, totalComplaints: 0, totalStaff: 0 };
     try {
       const totalBeds = buildingStats.reduce((acc, b) => acc + (b.totalBeds || 0), 0);
       const occupiedBeds = buildingStats.reduce((acc, b) => acc + (b.occupiedBeds || 0), 0);
@@ -347,7 +357,8 @@ const Portfolio = () => {
         occupancyRate: totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0,
         totalRevenue: buildingStats.reduce((acc, b) => acc + (b.monthlyRevenue || 0), 0),
         totalDues: buildingStats.reduce((acc, b) => acc + (b.pendingDues || 0), 0),
-        totalComplaints: buildingStats.reduce((acc, b) => acc + (b.complaintsCount || 0), 0)
+        totalComplaints: buildingStats.reduce((acc, b) => acc + (b.complaintsCount || 0), 0),
+        totalStaff: (data.staff || []).length
       };
     } catch (_err) {
       return { totalBuildings: 0, totalRooms: 0, totalBeds: 0, occupiedBeds: 0, occupancyRate: 0, totalRevenue: 0, totalDues: 0, totalComplaints: 0 };
@@ -379,43 +390,87 @@ const Portfolio = () => {
   }, [buildingStats, searchTerm, occupancyFilter, selectedFeatures, sortBy]);
 
   const kpis = [
-    { label: 'Properties', value: globalStats.totalBuildings, icon: <Building2 size={20}/>, color: 'var(--accent-primary)' },
-    { label: 'Total Rooms', value: globalStats.totalRooms, icon: <LayoutDashboard size={20}/>, color: '#6366F1' },
-    { label: 'Total Beds', value: globalStats.totalBeds, icon: <BedDouble size={20}/>, color: '#8B5CF6' },
-    { label: 'Occupancy', value: `${globalStats.occupancyRate}%`, icon: <Activity size={20}/>, color: '#10B981' },
-    { label: 'Revenue', value: `₹${(globalStats.totalRevenue / 100000).toFixed(1)}L`, icon: <DollarSign size={20}/>, color: '#10B981' },
-    { label: 'Pending Dues', value: `₹${(globalStats.totalDues / 1000).toFixed(0)}k`, icon: <CreditCard size={20}/>, color: '#EF4444' },
-    { label: 'Complaints', value: globalStats.totalComplaints, icon: <AlertCircle size={20}/>, color: '#F59E0B' },
-    { label: 'Total Staff', value: data.staffCount || 12, icon: <Users size={20}/>, color: '#8B5CF6' }
+    { label: 'Properties', value: globalStats.totalBuildings, icon: <Building2 size={16}/>, color: 'var(--accent-primary)' },
+    { label: 'Total Beds', value: globalStats.totalBeds, icon: <BedDouble size={16}/>, color: '#8B5CF6' },
+    { label: 'Occupancy', value: `${globalStats.occupancyRate}%`, icon: <Activity size={16}/>, color: '#10B981' },
+    { label: 'Revenue', value: `₹${(globalStats.totalRevenue / 100000).toFixed(1)}L`, icon: <DollarSign size={16}/>, color: '#10B981' },
+    { label: 'Complaints', value: globalStats.totalComplaints, icon: <AlertCircle size={16}/>, color: '#F59E0B' },
+    { label: 'Staff', value: globalStats.totalStaff, icon: <Users size={16}/>, color: '#6366F1' }
   ];
+
 
   const renderStep = () => {
     switch(currentStep) {
       case 1: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>Hostel Name *</label><input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Royal Residency" /></div>
-            <div className="input-group"><label>Building Name</label><input value={formData.buildingName} onChange={e => setFormData({...formData, buildingName: e.target.value})} placeholder="Phase 1 Tower" /></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div className="input-group">
+              <label>Hostel Name *</label>
+              <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Royal Residency" />
+            </div>
+            <div className="input-group">
+              <label>Building Name</label>
+              <input value={formData.buildingName} onChange={e => setFormData({...formData, buildingName: e.target.value})} placeholder="e.g. Phase 1 Tower" />
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>Property Type</label><select value={formData.propertyType} onChange={e => setFormData({...formData, propertyType: e.target.value})}><option>Hostel</option><option>PG</option><option>Co-living</option></select></div>
-            <div className="input-group"><label>Gender Allowed *</label><select required value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})}><option value="">Select...</option><option>Boys</option><option>Girls</option><option>Co-living (Both)</option></select></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div className="input-group">
+              <label>Property Type</label>
+              <select value={formData.propertyType} onChange={e => setFormData({...formData, propertyType: e.target.value})}>
+                <option>Hostel</option>
+                <option>PG</option>
+                <option>Co-living</option>
+              </select>
+            </div>
+            <div className="input-group">
+              <label>Gender Allowed *</label>
+              <select required value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})}>
+                <option value="">Select...</option>
+                <option>Boys</option>
+                <option>Girls</option>
+                <option>Co-living (Both)</option>
+              </select>
+            </div>
           </div>
-          <div className="input-group"><label>Description</label><textarea rows={3} value={formData.shortDesc} onChange={e => setFormData({...formData, shortDesc: e.target.value})} placeholder="Short summary..." /></div>
-          <div className="input-group"><label>Cover Image URL</label><input value={formData.coverImage} onChange={e => setFormData({...formData, coverImage: e.target.value})} placeholder="https://..." /></div>
+          <div className="input-group">
+            <label>Description</label>
+            <textarea rows={3} value={formData.shortDesc} onChange={e => setFormData({...formData, shortDesc: e.target.value})} placeholder="Provide a premium summary of your property..." />
+          </div>
+          <div className="input-group">
+            <label>Cover Image URL</label>
+            <input value={formData.coverImage} onChange={e => setFormData({...formData, coverImage: e.target.value})} placeholder="https://images.unsplash.com/..." />
+          </div>
         </div>
       );
       case 2: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div className="input-group"><label>Address Line 1 *</label><input required value={formData.addr1} onChange={e => setFormData({...formData, addr1: e.target.value})} /></div>
-          <div className="input-group"><label>Address Line 2</label><input value={formData.addr2} onChange={e => setFormData({...formData, addr2: e.target.value})} /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>City *</label><input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} /></div>
-            <div className="input-group"><label>State *</label><input required value={formData.state} onChange={e => setFormData({...formData, state: e.target.value})} /></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="input-group">
+            <label>Address Line 1 *</label>
+            <input required value={formData.addr1} onChange={e => setFormData({...formData, addr1: e.target.value})} placeholder="Building No, Street Name" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>Pincode *</label><input required type="number" value={formData.pincode} onChange={e => setFormData({...formData, pincode: e.target.value})} /></div>
-            <div className="input-group"><label>Landmark</label><input value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} /></div>
+          <div className="input-group">
+            <label>Address Line 2</label>
+            <input value={formData.addr2} onChange={e => setFormData({...formData, addr2: e.target.value})} placeholder="Area, Locality" />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div className="input-group">
+              <label>City *</label>
+              <input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} placeholder="Hyderabad" />
+            </div>
+            <div className="input-group">
+              <label>State *</label>
+              <input required value={formData.state} onChange={e => setFormData({...formData, state: e.target.value})} placeholder="Telangana" />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div className="input-group">
+              <label>Pincode *</label>
+              <input required type="number" value={formData.pincode} onChange={e => setFormData({...formData, pincode: e.target.value})} placeholder="500081" />
+            </div>
+            <div className="input-group">
+              <label>Landmark</label>
+              <input value={formData.landmark} onChange={e => setFormData({...formData, landmark: e.target.value})} placeholder="Near Cyber Towers" />
+            </div>
           </div>
         </div>
       );
@@ -429,7 +484,31 @@ const Portfolio = () => {
             <div className="input-group"><label>Total Rooms *</label><input required type="number" value={formData.totalRooms} onChange={e => setFormData({...formData, totalRooms: e.target.value})} /></div>
             <div className="input-group"><label>Total Beds *</label><input required type="number" value={formData.totalBeds} onChange={e => setFormData({...formData, totalBeds: e.target.value})} /></div>
           </div>
-          <div className="input-group"><label>Room Types</label><div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>{['Single', 'Double', 'Triple', 'Dormitory'].map(t => (<button type="button" key={t} onClick={() => setFormData(p => ({...p, roomTypes: p.roomTypes.includes(t) ? p.roomTypes.filter(x => x !== t) : [...p.roomTypes, t]}))} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: formData.roomTypes.includes(t) ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: formData.roomTypes.includes(t) ? 'white' : 'var(--text-secondary)', cursor: 'pointer' }}>{t}</button>))}</div></div>
+          <div className="input-group">
+            <label>Room Types</label>
+            <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+              {['Single', 'Double', 'Triple', 'Dormitory'].map(t => (
+                <button 
+                  type="button" 
+                  key={t} 
+                  onClick={() => setFormData(p => ({...p, roomTypes: p.roomTypes.includes(t) ? p.roomTypes.filter(x => x !== t) : [...p.roomTypes, t]}))} 
+                  style={{ 
+                    padding: '0.75rem 1.25rem', 
+                    borderRadius: '12px', 
+                    border: '1.5px solid', 
+                    borderColor: formData.roomTypes.includes(t) ? 'var(--accent-primary)' : '#E2E8F0',
+                    background: formData.roomTypes.includes(t) ? 'rgba(79, 70, 229, 0.1)' : '#FFFFFF', 
+                    color: formData.roomTypes.includes(t) ? 'var(--accent-primary)' : '#64748B', 
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       );
       case 4: return (
@@ -450,7 +529,10 @@ const Portfolio = () => {
       );
       case 5: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', background: 'rgba(99,102,241,0.05)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid var(--accent-primary)' }}>Standard configuration for initial setup.</p>
+          <div style={{ padding: '1rem', background: '#F0F9FF', borderRadius: '16px', borderLeft: '4px solid #0EA5E9', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ fontSize: '1.5rem' }}>ℹ️</div>
+            <p style={{ fontSize: '0.85rem', color: '#0369A1', fontWeight: '600', margin: 0 }}>Standard configuration for your initial property setup. You can customize individual rooms later.</p>
+          </div>
           <div className="input-group"><label>Base Room Number/Name</label><input value={formData.roomBaseName} onChange={e => setFormData({...formData, roomBaseName: e.target.value})} placeholder="e.g. 101" /></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="input-group"><label>Room Type</label><select value={formData.roomTypeSelect} onChange={e => setFormData({...formData, roomTypeSelect: e.target.value})}><option>Single</option><option>Double</option><option>Triple</option><option>Dormitory</option></select></div>
@@ -460,101 +542,225 @@ const Portfolio = () => {
       );
       case 6: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div className="input-group"><label>Food Available?</label><div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>{['Yes', 'No'].map(v => (<button type="button" key={v} onClick={() => setFormData({...formData, foodAvailable: v})} style={{ flex: 1, padding: '0.8rem', borderRadius: '10px', border: '1px solid var(--border-color)', background: formData.foodAvailable === v ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: formData.foodAvailable === v ? 'white' : 'var(--text-secondary)', cursor: 'pointer' }}>{v}</button>))}</div></div>
+          <div className="input-group">
+            <label>Food Available?</label>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+              {['Yes', 'No'].map(v => (
+                <button 
+                  type="button" 
+                  key={v} 
+                  onClick={() => setFormData({...formData, foodAvailable: v})} 
+                  style={{ 
+                    flex: 1, 
+                    padding: '1rem', 
+                    borderRadius: '16px', 
+                    border: '1.5px solid', 
+                    borderColor: formData.foodAvailable === v ? 'var(--accent-primary)' : '#E2E8F0',
+                    background: formData.foodAvailable === v ? 'rgba(79, 70, 229, 0.1)' : '#FFFFFF', 
+                    color: formData.foodAvailable === v ? 'var(--accent-primary)' : '#64748B', 
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
           {formData.foodAvailable === 'Yes' && (
-            <><div className="input-group"><label>Meal Plans</label><div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>{['Breakfast', 'Lunch', 'Dinner'].map(m => (<button type="button" key={m} onClick={() => setFormData(p => ({...p, mealPlans: p.mealPlans.includes(m) ? p.mealPlans.filter(x => x !== m) : [...p.mealPlans, m]}))} style={{ padding: '0.4rem 1rem', borderRadius: '20px', border: '1px solid var(--border-color)', background: formData.mealPlans.includes(m) ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: formData.mealPlans.includes(m) ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem' }}>{m}</button>))}</div></div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="input-group"><label>Food Type</label><select value={formData.foodType} onChange={e => setFormData({...formData, foodType: e.target.value})}><option>Veg</option><option>Non-Veg</option><option>Both</option></select></div>
-              <div className="input-group"><label>Monthly Mess Charges</label><input type="number" value={formData.messCharges} onChange={e => setFormData({...formData, messCharges: e.target.value})} /></div>
-            </div></>
+            <>
+              <div className="input-group">
+                <label>Meal Plans</label>
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                  {['Breakfast', 'Lunch', 'Dinner'].map(m => (
+                    <button 
+                      type="button" 
+                      key={m} 
+                      onClick={() => setFormData(p => ({...p, mealPlans: p.mealPlans.includes(m) ? p.mealPlans.filter(x => x !== m) : [...p.mealPlans, m]}))} 
+                      style={{ 
+                        padding: '0.6rem 1.2rem', 
+                        borderRadius: '20px', 
+                        border: '1.5px solid', 
+                        borderColor: formData.mealPlans.includes(m) ? 'var(--accent-primary)' : '#E2E8F0',
+                        background: formData.mealPlans.includes(m) ? 'var(--accent-primary)' : '#FFFFFF', 
+                        color: formData.mealPlans.includes(m) ? '#FFFFFF' : '#64748B', 
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="input-group"><label>Food Type</label><select value={formData.foodType} onChange={e => setFormData({...formData, foodType: e.target.value})}><option>Veg</option><option>Non-Veg</option><option>Both</option></select></div>
+                <div className="input-group"><label>Monthly Mess Charges</label><input type="number" value={formData.messCharges} onChange={e => setFormData({...formData, messCharges: e.target.value})} /></div>
+              </div>
+            </>
           )}
         </div>
       );
       case 7: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '400px', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem', maxHeight: '420px', overflowY: 'auto', paddingRight: '0.5rem' }}>
           {Object.entries(FEATURE_GROUPS).map(([cat, feats]) => (
-            <div key={cat}><h4 style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.6rem' }}>{cat}</h4>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>{feats.map(f => (<button type="button" key={f} onClick={() => setFormData(p => ({...p, amenities: p.amenities.includes(f) ? p.amenities.filter(x => x !== f) : [...p.amenities, f]}))} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: formData.amenities.includes(f) ? 'rgba(99,102,241,0.1)' : 'var(--bg-tertiary)', color: formData.amenities.includes(f) ? 'var(--accent-primary)' : 'var(--text-secondary)', borderColor: formData.amenities.includes(f) ? 'var(--accent-primary)' : 'var(--border-color)', cursor: 'pointer', fontSize: '0.8rem' }}>{AMENITY_ICONS[f] || <Star size={14}/>} {f}</button>))}</div>
+            <div key={cat}>
+              <h4 style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: '900', textTransform: 'uppercase', marginBottom: '0.8rem', letterSpacing: '0.1em' }}>{cat}</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                {feats.map(f => (
+                  <button 
+                    type="button" 
+                    key={f} 
+                    onClick={() => setFormData(p => ({...p, amenities: p.amenities.includes(f) ? p.amenities.filter(x => x !== f) : [...p.amenities, f]}))} 
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.6rem', 
+                      padding: '0.7rem 1rem', 
+                      borderRadius: '12px', 
+                      border: '1.5px solid', 
+                      borderColor: formData.amenities.includes(f) ? 'var(--accent-primary)' : '#F1F5F9',
+                      background: formData.amenities.includes(f) ? 'rgba(79, 70, 229, 0.05)' : '#F8FAFC', 
+                      color: formData.amenities.includes(f) ? 'var(--accent-primary)' : '#475569', 
+                      fontWeight: '700',
+                      cursor: 'pointer', 
+                      fontSize: '0.85rem',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <span style={{ opacity: formData.amenities.includes(f) ? 1 : 0.6 }}>{AMENITY_ICONS[f] || <Star size={14}/>}</span>
+                    {f}
+                  </button>
+                ))}
+              </div>
             </div>
           ))}
         </div>
       );
       case 8: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', background: 'rgba(99,102,241,0.05)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid var(--accent-primary)' }}>Enable ultra-premium smart features for AI property intelligence.</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ padding: '1rem', background: '#F5F3FF', borderRadius: '16px', borderLeft: '4px solid #7C3AED', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ fontSize: '1.5rem' }}>🧠</div>
+            <p style={{ fontSize: '0.85rem', color: '#5B21B6', fontWeight: '600', margin: 0 }}>Enable ultra-premium smart features powered by AI Property Intelligence.</p>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
             {[
-              { id: 'hasSmartAccess', label: 'Smart Access', desc: 'RFID & Biometric' },
-              { id: 'hasClimateControl', label: 'Climate Control', desc: 'Automated HVAC' },
-              { id: 'hasAirQualityMonitor', label: 'Air Quality', desc: 'AQI Tracking' },
-              { id: 'hasAIHygiene', label: 'AI Hygiene', desc: 'Sanitization Audit' },
-              { id: 'hasCCTVAi', label: 'Neural CCTV', desc: 'AI Security Link' }
+              { id: 'hasSmartAccess', label: 'Smart Access', desc: 'RFID & Biometric', icon: <Fingerprint size={18}/> },
+              { id: 'hasClimateControl', label: 'Climate Control', desc: 'Automated HVAC', icon: <Wind size={18}/> },
+              { id: 'hasAirQualityMonitor', label: 'Air Quality', desc: 'AQI Tracking', icon: <Activity size={18}/> },
+              { id: 'hasAIHygiene', label: 'AI Hygiene', desc: 'Sanitization Audit', icon: <ShieldCheck size={18}/> },
+              { id: 'hasCCTVAi', label: 'Neural CCTV', desc: 'AI Security Link', icon: <Shield size={18}/> }
             ].map(feat => (
               <div 
                 key={feat.id} 
                 onClick={() => setFormData(p => ({ ...p, [feat.id]: !p[feat.id] }))}
-                style={{ padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: formData[feat.id] ? 'rgba(99,102,241,0.1)' : 'var(--bg-tertiary)', borderColor: formData[feat.id] ? 'var(--accent-primary)' : 'var(--border-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1rem', transition: 'all 0.2s' }}
+                style={{ 
+                  padding: '1.25rem', 
+                  borderRadius: '20px', 
+                  border: '2px solid', 
+                  background: formData[feat.id] ? '#FFFFFF' : '#F8FAFC', 
+                  borderColor: formData[feat.id] ? 'var(--accent-primary)' : '#F1F5F9', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '1rem', 
+                  transition: 'all 0.2s',
+                  boxShadow: formData[feat.id] ? '0 10px 15px -3px rgba(79, 70, 229, 0.1)' : 'none'
+                }}
               >
-                <div style={{ width: '20px', height: '20px', borderRadius: '6px', border: '2px solid', borderColor: formData[feat.id] ? 'var(--accent-primary)' : 'var(--text-muted)', background: formData[feat.id] ? 'var(--accent-primary)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {formData[feat.id] && <div style={{ width: '8px', height: '8px', background: 'white', borderRadius: '2px' }} />}
+                <div style={{ 
+                  width: '40px', 
+                  height: '40px', 
+                  borderRadius: '12px', 
+                  background: formData[feat.id] ? 'var(--accent-primary)' : '#E2E8F0', 
+                  color: 'white', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center' 
+                }}>
+                  {feat.icon}
                 </div>
                 <div>
-                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: formData[feat.id] ? 'var(--accent-primary)' : 'var(--text-primary)' }}>{feat.label}</h4>
-                  <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)' }}>{feat.desc}</p>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: formData[feat.id] ? '#1E293B' : '#64748B' }}>{feat.label}</h4>
+                  <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '600', color: '#94A3B8' }}>{feat.desc}</p>
                 </div>
               </div>
             ))}
           </div>
           <div className="input-group" style={{ marginTop: '0.5rem' }}>
-            <label>Target AI Comfort Score: {formData.targetComfortScore}</label>
-            <input type="range" min="50" max="100" value={formData.targetComfortScore} onChange={e => setFormData({...formData, targetComfortScore: Number(e.target.value)})} style={{ width: '100%', accentColor: 'var(--accent-primary)' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label>Target Comfort Score</label>
+              <span style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--accent-primary)' }}>{formData.targetComfortScore}%</span>
+            </div>
+            <input type="range" min="50" max="100" value={formData.targetComfortScore} onChange={e => setFormData({...formData, targetComfortScore: Number(e.target.value)})} style={{ width: '100%', accentColor: 'var(--accent-primary)', height: '6px', borderRadius: '10px', background: '#E2E8F0' }} />
           </div>
         </div>
       );
       case 9: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="input-group"><label>Smoking Policy</label><select value={formData.smokingPolicy} onChange={e => setFormData({...formData, smokingPolicy: e.target.value})}><option>Allowed</option><option>Not Allowed</option></select></div>
             <div className="input-group"><label>Alcohol Policy</label><select value={formData.alcoholPolicy} onChange={e => setFormData({...formData, alcoholPolicy: e.target.value})}><option>Allowed</option><option>Not Allowed</option></select></div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="input-group"><label>Pets Allowed?</label><select value={formData.petsAllowed} onChange={e => setFormData({...formData, petsAllowed: e.target.value})}><option>Yes</option><option>No</option></select></div>
             <div className="input-group"><label>Visitor Policy</label><input value={formData.visitorPolicy} onChange={e => setFormData({...formData, visitorPolicy: e.target.value})} placeholder="e.g. Till 8 PM" /></div>
           </div>
         </div>
       );
       case 10: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}><div className="input-group"><label>Staff Name</label><input value={formData.staffName} onChange={e => setFormData({...formData, staffName: e.target.value})} /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>Role</label><select value={formData.staffRole} onChange={e => setFormData({...formData, staffRole: e.target.value})}><option value="">Select...</option><option>Warden</option><option>Cleaner</option><option>Cook</option></select></div>
-            <div className="input-group"><label>Contact Number</label><input value={formData.staffContact} onChange={e => setFormData({...formData, staffContact: e.target.value})} /></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="input-group"><label>Primary Warden / Staff Name</label><input value={formData.staffName} onChange={e => setFormData({...formData, staffName: e.target.value})} placeholder="Full name" /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div className="input-group"><label>Assigned Role</label><select value={formData.staffRole} onChange={e => setFormData({...formData, staffRole: e.target.value})}><option value="">Select Role...</option><option>Warden</option><option>Property Manager</option><option>Receptionist</option></select></div>
+            <div className="input-group"><label>Contact Number</label><input value={formData.staffContact} onChange={e => setFormData({...formData, staffContact: e.target.value})} placeholder="+91 ..." /></div>
           </div>
         </div>
       );
       case 11: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div className="input-group"><label>Owner Name</label><input value={formData.ownerName} onChange={e => setFormData({...formData, ownerName: e.target.value})} /></div>
-          <div className="input-group"><label>Phone Number *</label><input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} /></div>
-          <div className="input-group"><label>Email</label><input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="input-group"><label>Owner / Legal Representative Name</label><input value={formData.ownerName} onChange={e => setFormData({...formData, ownerName: e.target.value})} placeholder="Legal owner name" /></div>
+          <div className="input-group"><label>Primary Contact Number *</label><input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="Verification number" /></div>
+          <div className="input-group"><label>Official Email Address</label><input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="owner@example.com" /></div>
         </div>
       );
       case 12: return (
-        <div style={{ padding: '1.5rem', background: 'var(--bg-tertiary)', borderRadius: '16px', fontSize: '0.9rem' }}>
-          <h4 style={{ marginBottom: '1.5rem', color: 'var(--accent-primary)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckCircle size={20} /> Review Summary</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ padding: '2rem', background: '#F8FAFC', borderRadius: '24px', border: '1.5px solid #E2E8F0' }}>
+          <h4 style={{ marginBottom: '2rem', color: '#1E293B', fontSize: '1.4rem', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '0.75rem', letterSpacing: '-0.02em' }}>
+            <CheckCircle size={28} color="#10B981" /> Review Property Profile
+          </h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
             <div>
-              <p style={{ margin: '0 0 0.5rem 0' }}><b style={{ color: 'var(--text-secondary)' }}>Name:</b> {formData.name}</p>
-              <p style={{ margin: '0 0 0.5rem 0' }}><b style={{ color: 'var(--text-secondary)' }}>Gender:</b> {formData.gender}</p>
-              <p style={{ margin: '0 0 0.5rem 0' }}><b style={{ color: 'var(--text-secondary)' }}>Rent:</b> ₹{formData.rentBed}/bed</p>
+              <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem' }}><b style={{ color: '#64748B' }}>Property:</b> <span style={{ color: '#1E293B', fontWeight: '800' }}>{formData.name || 'Untitled'}</span></p>
+              <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem' }}><b style={{ color: '#64748B' }}>Location:</b> <span style={{ color: '#1E293B', fontWeight: '800' }}>{formData.city}, {formData.state}</span></p>
+              <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem' }}><b style={{ color: '#64748B' }}>Pricing:</b> <span style={{ color: '#10B981', fontWeight: '900' }}>₹{formData.rentBed}/bed</span></p>
+              <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem' }}><b style={{ color: '#64748B' }}>Capacity:</b> <span style={{ color: '#1E293B', fontWeight: '800' }}>{formData.totalRooms} Rooms, {formData.totalBeds} Beds</span></p>
             </div>
-            <div>
-              <p style={{ margin: '0 0 0.5rem 0' }}><b style={{ color: 'var(--text-secondary)' }}>Smart IoT:</b> {[formData.hasSmartAccess, formData.hasClimateControl, formData.hasAirQualityMonitor, formData.hasAIHygiene, formData.hasCCTVAi].filter(Boolean).length} features enabled</p>
-              <p style={{ margin: '0 0 0.5rem 0' }}><b style={{ color: 'var(--text-secondary)' }}>AI Comfort Target:</b> {formData.targetComfortScore}%</p>
+            <div style={{ padding: '1.25rem', background: '#FFFFFF', borderRadius: '20px', border: '1.5px solid #F1F5F9', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+              <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.75rem', fontWeight: '900', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Intelligence Stack</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                {['hasSmartAccess', 'hasClimateControl', 'hasAirQualityMonitor', 'hasAIHygiene', 'hasCCTVAi'].filter(f => formData[f]).map(f => (
+                  <span key={f} style={{ padding: '0.3rem 0.6rem', background: '#F5F3FF', color: '#7C3AED', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800' }}>
+                    {f.replace('has', '').replace('AI', ' AI')}
+                  </span>
+                ))}
+                {[formData.hasSmartAccess, formData.hasClimateControl, formData.hasAirQualityMonitor, formData.hasAIHygiene, formData.hasCCTVAi].filter(Boolean).length === 0 && <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>No smart features selected</span>}
+              </div>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--accent-primary)', fontWeight: '800' }}>Target IQ Score: {formData.targetComfortScore}%</p>
             </div>
           </div>
-          <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>Ready to deploy intelligent property infrastructure? Click 'Finalize & Create' below.</p>
+          <div style={{ padding: '1.25rem', background: '#F0FDF4', borderRadius: '18px', border: '1.5px solid #DCFCE7', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            <div style={{ fontSize: '1.5rem' }}>🚀</div>
+            <p style={{ margin: 0, fontSize: '0.88rem', color: '#166534', fontWeight: '600', lineHeight: 1.6 }}>
+              <b>Everything looks great!</b> Once you publish, your property will be live. You can always edit these details or add more structural info (like specific rooms and beds) from the management dashboard.
+            </p>
+          </div>
         </div>
       );
+
       default: return null;
     }
   };
@@ -573,43 +779,249 @@ const Portfolio = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', padding: '2rem', color: 'var(--text-primary)' }}>
-      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-0.04em', marginBottom: '0.2rem' }}>Hostels Overview</h1>
-          <p style={{ color: 'var(--text-secondary)', fontWeight: '500', margin: 0 }}>Strategic portfolio performance.</p>
-        </div>
-        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <Search size={18} style={{ position: 'absolute', left: '1rem', color: 'var(--text-secondary)' }} />
-            <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', width: '220px' }} />
-          </div>
-          <button onClick={() => setShowDrafts(s => !s)} className="btn-outline" style={{ padding: '0.8rem 1.2rem', position: 'relative', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            📂 Saved Hostels
-            {(drafts.length + (isAddModalOpen ? 1 : 0)) > 0 && (
-              <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#EF4444', color: 'white', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.65rem', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {drafts.length + (isAddModalOpen ? 1 : 0)}
-              </span>
-            )}
-          </button>
-          <button onClick={openFreshForm} className="btn-primary" style={{ padding: '0.8rem 1.4rem' }}>
-            <Plus size={18} /> Create Hostel
-          </button>
-          <button onClick={handleLogout} className="btn-outline" style={{ width: '45px', height: '45px' }}><LogOut size={20} /></button>
-        </div>
-      </header>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '3rem' }}>
-        {kpis.map((kpi, idx) => (
-          <motion.div key={idx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} className="card" style={{ padding: '1rem', borderRadius: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-              <div style={{ padding: '0.4rem', borderRadius: '6px', background: `${kpi.color}10`, color: kpi.color }}>{kpi.icon}</div>
-              <span style={{ fontWeight: '700', fontSize: '0.8rem' }}>{kpi.label}</span>
+    <>
+      <div style={{ 
+        height: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        background: 'var(--bg-primary)', 
+        overflow: 'hidden',
+        color: 'var(--text-primary)'
+      }}>
+        {/* ── PART 1: FIXED TOP SECTION (Approx 25% height) ── */}
+        <div style={{ 
+          flex: '0 0 auto', 
+          padding: '1.5rem 2.5rem 1rem', 
+          background: '#FFFFFF', 
+          borderBottom: '1.5px solid #F1F5F9',
+          zIndex: 10,
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)'
+        }}>
+          <header style={{ 
+            marginBottom: '1.5rem', 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            flexWrap: 'wrap', 
+            gap: '2rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ 
+                width: '56px', 
+                height: '56px', 
+                borderRadius: '18px', 
+                background: 'linear-gradient(135deg, var(--accent-primary), #4F46E5)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                boxShadow: '0 8px 20px -4px rgba(79, 70, 229, 0.4)'
+              }}>
+                <Building2 size={28} color="white" />
+              </div>
+              <div>
+                <h1 style={{ 
+                  fontSize: '2.4rem', 
+                  fontWeight: '950', 
+                  letterSpacing: '-0.05em', 
+                  margin: 0,
+                  color: '#0F172A',
+                  lineHeight: 1
+                }}>My Portfolio</h1>
+                <p style={{ 
+                  color: '#64748B', 
+                  fontWeight: '600', 
+                  margin: '0.25rem 0 0 0',
+                  fontSize: '0.95rem'
+                }}>Managing {globalStats.totalBuildings} premium properties</p>
+              </div>
             </div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '800' }}>{kpi.value || 0}</div>
-          </motion.div>
-        ))}
+
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <Search size={18} style={{ position: 'absolute', left: '1.2rem', color: '#94A3B8' }} />
+                <input 
+                  type="text" 
+                  placeholder="Search properties..." 
+                  value={searchTerm} 
+                  onChange={(e) => setSearchTerm(e.target.value)} 
+                  style={{ 
+                    padding: '0.9rem 1.2rem 0.9rem 3.5rem', 
+                    borderRadius: '18px', 
+                    border: '1.5px solid #E2E8F0', 
+                    background: '#F8FAFC', 
+                    color: '#1E293B', 
+                    width: '320px',
+                    fontSize: '0.95rem',
+                    fontWeight: '600',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                  }} 
+                />
+              </div>
+              
+              <button onClick={() => setShowDrafts(s => !s)} style={{ 
+                padding: '0.9rem 1.5rem', 
+                position: 'relative', 
+                background: '#FFFFFF',
+                border: '1.5px solid #E2E8F0',
+                borderRadius: '18px',
+                fontWeight: '700',
+                fontSize: '0.95rem',
+                color: '#475569',
+                cursor: 'pointer',
+                display: 'flex', gap: '0.6rem', alignItems: 'center'
+              }}>
+                <Briefcase size={18} /> Drafts
+                {(drafts.length + (isAddModalOpen ? 1 : 0)) > 0 && (
+                  <span style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#EF4444', color: 'white', borderRadius: '50%', minWidth: '24px', height: '24px', fontSize: '0.75rem', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #FFFFFF' }}>
+                    {drafts.length + (isAddModalOpen ? 1 : 0)}
+                  </span>
+                )}
+              </button>
+
+              <button onClick={openFreshForm} style={{ 
+                padding: '0.9rem 2.2rem', 
+                borderRadius: '18px',
+                background: 'linear-gradient(135deg, var(--accent-primary), #4F46E5)',
+                color: 'white',
+                border: 'none',
+                fontWeight: '800',
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '0.6rem',
+                boxShadow: '0 8px 24px -4px rgba(79, 70, 229, 0.4)'
+              }}>
+                <Plus size={20} strokeWidth={3} /> Add Property
+              </button>
+
+              <button onClick={() => fetchData()} style={{ width: '52px', height: '52px', borderRadius: '18px', background: '#FFFFFF', border: '1.5px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--accent-primary)' }} title="Refresh Data"><Activity size={22} /></button>
+              <button onClick={handleLogout} style={{ width: '52px', height: '52px', borderRadius: '18px', background: '#FFFFFF', border: '1.5px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#EF4444' }}><LogOut size={22} /></button>
+            </div>
+          </header>
+
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
+            gap: '1rem', 
+            paddingBottom: '0.5rem'
+          }}>
+            {kpis.map((kpi, idx) => (
+              <motion.div 
+                key={idx} 
+                initial={{ opacity: 0, y: 10 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ delay: idx * 0.05 }} 
+                className="kpi-card-glass"
+                style={{ 
+                  padding: '0.8rem 1.25rem', 
+                  borderRadius: '18px',
+                  background: '#FFFFFF',
+                  border: '1.5px solid #F1F5F9',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center'
+                }}
+              >
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '3px', height: '100%', background: kpi.color, opacity: 0.8 }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                  <div style={{ padding: '0.35rem', borderRadius: '6px', background: `${kpi.color}10`, color: kpi.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{kpi.icon}</div>
+                  <span style={{ fontWeight: '800', fontSize: '0.6rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{kpi.label}</span>
+                </div>
+                <div style={{ fontSize: '1.3rem', fontWeight: '950', color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.1 }}>{kpi.value || 0}</div>
+                <div style={{ marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                  <span style={{ fontSize: '0.55rem', fontWeight: '800', color: '#10B981' }}>↑ 12%</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── PART 2: SCROLLABLE BOTTOM SECTION (Approx 75% height) ── */}
+        <div style={{ 
+          flex: 1, 
+          overflowY: 'auto', 
+          padding: '2rem 2.5rem 4rem',
+          background: '#F8FAFC'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '2rem',
+            background: '#FFFFFF',
+            padding: '1rem 1.5rem',
+            borderRadius: '20px',
+            border: '1.5px solid #F1F5F9',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+          }}>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginRight: '0.5rem', textTransform: 'uppercase' }}>Filter Occupancy:</span>
+              {['All', 'High', 'Medium', 'Low'].map(f => (
+                <button 
+                  key={f} 
+                  onClick={() => setOccupancyFilter(f)} 
+                  style={{ 
+                    padding: '0.5rem 1.25rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: '800', 
+                    border: '1.5px solid', borderColor: occupancyFilter === f ? 'var(--accent-primary)' : '#E2E8F0',
+                    background: occupancyFilter === f ? 'var(--accent-primary)' : '#FFFFFF', color: occupancyFilter === f ? '#FFFFFF' : '#64748B', 
+                    cursor: 'pointer', transition: 'all 0.2s', boxShadow: occupancyFilter === f ? '0 4px 12px rgba(79, 70, 229, 0.2)' : 'none'
+                  }}
+                >
+                  {f}
+                </button>
+              ))}
+              <div style={{ width: '1px', height: '24px', background: '#E2E8F0', margin: '0 0.5rem' }} />
+              <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '700' }}>
+                <Building size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
+                {processedBuildings.length} Properties
+              </span>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>Sort:</span>
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)} 
+                style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: '#F8FAFC', border: '1.5px solid #E2E8F0', color: '#1E293B', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer', outline: 'none' }}
+              >
+                <option value="name">Alphabetical</option>
+                <option value="revenue">Highest Revenue</option>
+                <option value="occupancy">Top Occupancy</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
+            {loading ? (
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem' }}>
+                <div className="premium-spinner"></div>
+                <p style={{ marginTop: '1.5rem', color: '#64748B', fontWeight: '700' }}>Analyzing portfolio data...</p>
+              </div>
+            ) : processedBuildings.length > 0 ? (
+              processedBuildings.map((b) => (
+                <BuildingCard 
+                  key={b.id} 
+                  building={b} 
+                  onNavigate={() => navigate(`/owner/building/${b.id}/dashboard`)} 
+                  onRefresh={() => { fetchData(); loadDrafts(); }}
+                />
+              ))
+            ) : (
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem', background: '#FFFFFF', borderRadius: '24px', border: '2px dashed #E2E8F0' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏢</div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1E293B', margin: 0 }}>No Properties Found</h3>
+                <p style={{ color: '#64748B', marginTop: '0.5rem' }}>Try adjusting your search or filters to find what you're looking for.</p>
+                <button onClick={() => { setSearchTerm(''); setOccupancyFilter('All'); }} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#3B82F6', fontWeight: '800', cursor: 'pointer' }}>Clear All Filters</button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
+
+
 
       {/* SAVED DRAFTS — FULL SCREEN OVERLAY */}
       <AnimatePresence>
@@ -782,7 +1194,7 @@ const Portfolio = () => {
                               ▶ Continue Filling
                             </div>
                             <button
-                              onClick={(e) => { e.stopPropagation(); deleteDraft(draft._id); }}
+                              onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: draft._id, name: draft.name || 'Untitled Draft', type: 'draft' }); }}
                               style={{ padding: '0.75rem 1rem', borderRadius: '12px', background: '#FEE2E2', color: '#EF4444', border: 'none', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', flexShrink: 0 }}
                             >
                               🗑
@@ -807,56 +1219,7 @@ const Portfolio = () => {
         )}
       </AnimatePresence>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          {['All', 'High', 'Medium', 'Low'].map(f => (
-            <button 
-              key={f} 
-              onClick={() => {
-                setOccupancyFilter(f);
-              }} 
-              style={{ padding: '0.4rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '700', border: '1px solid var(--border-color)', background: occupancyFilter === f ? 'var(--accent-primary)' : 'var(--bg-secondary)', color: occupancyFilter === f ? 'white' : 'var(--text-secondary)', cursor: 'pointer', transition: '0.2s' }}
-            >
-              {f}
-            </button>
-          ))}
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', marginLeft: '0.5rem' }}>
-            Showing {processedBuildings.length} Properties
-          </span>
-        </div>
-        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ padding: '0.5rem 1rem', borderRadius: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: '600' }}>
-          <option value="name">Sort by Name</option><option value="revenue">Revenue</option><option value="occupancy">Occupancy</option>
-        </select>
-      </div>
 
-      <div 
-        className="hostel-scroll-container" 
-        style={{ 
-          height: 'calc(100vh - 360px)', 
-          overflowY: 'auto', 
-          padding: '1.5rem', 
-          margin: '0 -1.5rem', 
-          borderRadius: '20px',
-          background: 'rgba(0,0,0,0.01)',
-          border: '1px solid var(--border-color)'
-        }}
-      >
-        <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <Building size={20} color="var(--accent-primary)" />
-          <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>Verified Hostel Properties</h2>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', paddingBottom: '6rem' }}>
-          {loading ? (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem' }}><div className="loader"></div></div>
-          ) : processedBuildings.length > 0 ? (
-            processedBuildings.map((b) => (
-              <BuildingCard key={b.id} building={b} onNavigate={() => navigate(`/owner/building/${b.id}/dashboard`)} />
-            ))
-          ) : (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem' }}><h3>No Property Records Found</h3></div>
-          )}
-        </div>
-      </div>
 
       <AnimatePresence>
         {isAddModalOpen && (
@@ -939,8 +1302,26 @@ const Portfolio = () => {
                     <button type="button" onClick={() => saveDraftToBackend(formData, currentStep, activeDraftId)} style={{ flex: 1, padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#3B82F6', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
                       <FileText size={16}/> Save Draft
                     </button>
-                    <button disabled={isSubmitting} type="submit" style={{ flex: 2, padding: '1rem', borderRadius: '12px', border: 'none', background: currentStep === 11 ? '#10B981' : '#3B82F6', color: 'white', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
-                      {isSubmitting ? 'Processing...' : currentStep === 11 ? '🚀 Finalize & Publish' : 'Continue'} <ChevronRight size={18}/>
+                    <button 
+                      disabled={isSubmitting} 
+                      type="submit" 
+                      style={{ 
+                        flex: 2, 
+                        padding: '1rem', 
+                        borderRadius: '12px', 
+                        border: 'none', 
+                        background: currentStep === 12 ? '#10B981' : '#3B82F6', 
+                        color: 'white', 
+                        fontWeight: '800', 
+                        cursor: 'pointer', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        gap: '0.5rem', 
+                        fontSize: '0.95rem' 
+                      }}
+                    >
+                      {isSubmitting ? 'Processing...' : currentStep === 12 ? '🚀 Finalize & Publish' : 'Continue'} <ChevronRight size={18}/>
                     </button>
                   </div>
                 </form>
@@ -951,26 +1332,101 @@ const Portfolio = () => {
       </AnimatePresence>
 
       <style>{`
-        .hostel-scroll-container::-webkit-scrollbar { width: 8px; }
+        .hostel-scroll-container::-webkit-scrollbar { width: 6px; }
         .hostel-scroll-container::-webkit-scrollbar-track { background: transparent; }
-        .hostel-scroll-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; border: 2px solid var(--bg-primary); }
-        .hostel-scroll-container::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-        .input-group { display: flex; flex-direction: column; gap: 0.4rem; }
-        .input-group label { font-size: 0.8rem; font-weight: 800; color: var(--text-secondary); }
-        .input-group input, .input-group select, .input-group textarea { padding: 0.8rem 1rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-tertiary); color: var(--text-primary); font-size: 0.9rem; }
-        .btn-primary { background: var(--accent-primary); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-        .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
-        .btn-outline { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-        .loader { width: 30px; height: 30px; border: 3px solid var(--bg-tertiary); border-bottom-color: var(--accent-primary); border-radius: 50%; animation: rotation 1s linear infinite; margin: auto; }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hostel-scroll-container::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+        .hostel-scroll-container::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
+        
+        .input-group { display: flex; flex-direction: column; gap: 0.6rem; }
+        .input-group label { font-size: 0.75rem; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; }
+        .input-group input, .input-group select, .input-group textarea { 
+          padding: 1rem; 
+          border-radius: 14px; 
+          border: 1.5px solid #E2E8F0; 
+          background: #F8FAFC; 
+          color: #1E293B; 
+          font-size: 0.95rem;
+          font-weight: 600;
+          transition: all 0.2s;
+          outline: none;
+        }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+          border-color: var(--accent-primary);
+          background: #FFFFFF;
+          box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        .premium-spinner {
+          width: 48px;
+          height: 48px;
+          border: 4px solid #F1F5F9;
+          border-top: 4px solid var(--accent-primary);
+          border-radius: 50%;
+          animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          margin: 4rem auto;
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .kpi-card-glass {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .kpi-card-glass:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 12px 24px -8px rgba(0,0,0,0.1);
+          border-color: #E2E8F0;
+        }
+
+        select {
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 1rem center;
+          padding-right: 2.5rem !important;
+        }
       `}</style>
-    </div>
+
+      {/* REUSABLE DELETE MODAL FOR DRAFTS */}
+      {itemToDelete && createPortal(
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={() => setItemToDelete(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }} />
+          <div style={{ position: 'relative', zIndex: 1, background: '#FFFFFF', borderRadius: '24px', padding: '2.5rem', width: '100%', maxWidth: '440px', boxShadow: '0 32px 64px -12px rgba(0,0,0,0.5)' }}>
+            <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+              <Trash2 size={30} color="#EF4444" />
+            </div>
+            <h2 style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: '900', margin: '0 0 0.4rem', color: '#0F172A' }}>Delete {itemToDelete.type === 'draft' ? 'Draft' : 'Property'}?</h2>
+            <p style={{ textAlign: 'center', color: '#64748B', fontSize: '0.9rem', margin: '0 0 1rem' }}>You are about to permanently delete</p>
+            <p style={{ textAlign: 'center', fontWeight: '800', fontSize: '1rem', color: '#1E293B', margin: '0 0 1.2rem', background: '#F8FAFC', padding: '0.6rem 1rem', borderRadius: '12px', border: '1.5px solid #F1F5F9' }}>
+              {itemToDelete.type === 'draft' ? '📝' : '🏢'} {itemToDelete.name}
+            </p>
+            <p style={{ textAlign: 'center', color: '#DC2626', fontSize: '0.8rem', fontWeight: '700', margin: '0 0 2rem', padding: '0.75rem 1rem', background: '#FFF1F2', borderRadius: '10px', border: '1px solid #FECACA' }}>
+              ⚠️ This action is irreversible.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button onClick={() => setItemToDelete(null)} style={{ flex: 1, padding: '0.9rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#475569', fontWeight: '800', cursor: 'pointer' }}>Cancel</button>
+              <button 
+                disabled={isDeletingItem}
+                onClick={() => itemToDelete.type === 'draft' ? deleteDraft(itemToDelete.id) : null} 
+                style={{ flex: 1, padding: '0.9rem', borderRadius: '12px', background: '#EF4444', color: 'white', fontWeight: '900', cursor: 'pointer' }}
+              >
+                {isDeletingItem ? 'Deleting...' : 'Delete Now'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
   );
 };
 
-const BuildingCard = ({ building, onNavigate }) => {
+const BuildingCard = ({ building, onNavigate, onRefresh }) => {
   const [imgIdx, setImgIdx] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const images = useMemo(() => [
@@ -991,117 +1447,197 @@ const BuildingCard = ({ building, onNavigate }) => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }} 
-      whileHover={{ y: -8, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className="card" 
+      whileHover={{ y: -10, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      className="property-card-premium" 
       style={{ 
         padding: 0, 
         overflow: 'hidden', 
-        borderTop: `4px solid ${building.occupancyRate >= 80 ? '#10B981' : building.occupancyRate >= 50 ? '#F59E0B' : '#EF4444'}`, 
         position: 'relative',
-        borderRadius: '20px',
-        border: '1px solid var(--border-color)',
-        background: 'var(--bg-secondary)',
-        cursor: 'pointer'
+        borderRadius: '28px',
+        border: '1.5px solid #F1F5F9',
+        background: '#FFFFFF',
+        cursor: 'pointer',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column'
       }}
       onClick={onNavigate}
     >
-      <div style={{ height: '180px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ height: '220px', position: 'relative', overflow: 'hidden' }}>
         <AnimatePresence mode="wait">
           <motion.div 
             key={imgIdx}
             initial={{ opacity: 0.8, scale: 1.1 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
             style={{ 
               height: '100%', 
               width: '100%', 
               backgroundImage: `url("${images[imgIdx]}")`, 
               backgroundSize: 'cover', 
               backgroundPosition: 'center',
-              backgroundColor: '#F1F5F9' // Fallback color
+              backgroundColor: '#F1F5F9'
             }} 
           />
         </AnimatePresence>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.8))' }} />
-        <div style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 5 }}>
+        
+        {/* Overlays */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.8) 100%)' }} />
+        
+        {/* Badges */}
+        <div style={{ position: 'absolute', top: '1.25rem', left: '1.25rem', zIndex: 5, display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
           {building.popularityLabel && (
-            <div style={{ padding: '0.4rem 0.8rem', borderRadius: '100px', background: 'var(--accent-primary)', color: 'white', fontSize: '0.65rem', fontWeight: '900', boxShadow: '0 4px 12px rgba(99,102,241,0.5)', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+            <div style={{ 
+              padding: '0.5rem 1rem', 
+              borderRadius: '12px', 
+              background: 'linear-gradient(135deg, #FF6B6B, #EE5253)', 
+              color: 'white', 
+              fontSize: '0.65rem', 
+              fontWeight: '900', 
+              boxShadow: '0 4px 12px rgba(238, 82, 83, 0.4)', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.05em' 
+            }}>
               {building.popularityLabel}
             </div>
           )}
+          <div style={{ 
+            padding: '0.5rem 1rem', 
+            borderRadius: '12px', 
+            background: building.status === 'Active' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(245, 158, 11, 0.9)', 
+            backdropFilter: 'blur(8px)',
+            color: 'white', 
+            fontSize: '0.65rem', 
+            fontWeight: '900', 
+            textTransform: 'uppercase'
+          }}>{building.status}</div>
         </div>
-        <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.4rem', flexDirection: 'column', alignItems: 'flex-end', zIndex: 5 }}>
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
-            <div style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', color: 'white', fontSize: '0.7rem', fontWeight: '800', border: '1px solid rgba(255,255,255,0.3)' }}>{building.occupancyRate}%</div>
-            <div style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', background: building.status === 'Active' ? '#10B981' : '#F59E0B', color: 'white', fontSize: '0.7rem', fontWeight: '800', border: '1px solid rgba(255,255,255,0.1)' }}>{building.status}</div>
+
+        <div style={{ position: 'absolute', bottom: '1.25rem', left: '1.25rem', right: '1.25rem', zIndex: 5 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+             <div style={{ 
+               padding: '0.2rem 0.6rem', 
+               borderRadius: '6px', 
+               background: 'rgba(255,255,255,0.25)', 
+               backdropFilter: 'blur(10px)', 
+               color: 'white', 
+               fontSize: '0.75rem', 
+               fontWeight: '900',
+               border: '1px solid rgba(255,255,255,0.3)'
+             }}>
+               <Users size={12} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+               {building.occupancyRate}% Occupied
+             </div>
           </div>
-        </div>
-        <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', right: '1rem', zIndex: 5 }}>
-           <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.3)', margin: 0 }}>{building.name}</h3>
+          <h3 style={{ fontSize: '1.6rem', fontWeight: '950', color: 'white', textShadow: '0 2px 8px rgba(0,0,0,0.4)', margin: 0, letterSpacing: '-0.02em' }}>{building.name}</h3>
         </div>
       </div>
-      <div style={{ padding: '1.2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}><MapPin size={14} style={{ verticalAlign: 'text-bottom', marginRight: '4px' }} /> {building.address || 'Address not set'}</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#FEF3C7', color: '#D97706', padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: '800' }}>
-            <Star size={14} fill="#D97706" /> {building.rating}
+
+      <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.2rem' }}>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: '0.85rem', color: '#64748B', margin: 0, fontWeight: '600' }}>
+              <MapPin size={14} style={{ verticalAlign: 'text-bottom', marginRight: '6px', color: '#3B82F6' }} /> 
+              {building.address || 'Address not set'}
+            </p>
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.4rem', 
+            background: '#FFFBEB', 
+            color: '#D97706', 
+            padding: '0.4rem 0.75rem', 
+            borderRadius: '10px', 
+            fontSize: '0.85rem', 
+            fontWeight: '900',
+            border: '1px solid #FEF3C7'
+          }}>
+            <Star size={16} fill="#D97706" /> {building.rating}
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginBottom: '1.2rem' }}>
-          <div style={{ padding: '0.7rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}>
-            <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '800', margin: '0 0 0.2rem 0' }}>REVENUE</p>
-            <p style={{ fontSize: '1.1rem', fontWeight: '900', color: 'var(--accent-success)', margin: 0 }}>₹{(building.monthlyRevenue / 1000).toFixed(0)}k</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div style={{ padding: '0.8rem', borderRadius: '16px', background: '#F8FAFC', border: '1.5px solid #F1F5F9' }}>
+            <p style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '900', margin: '0 0 0.4rem 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Est. Revenue</p>
+            <p style={{ fontSize: '1.25rem', fontWeight: '950', color: '#10B981', margin: 0 }}>₹{(building.monthlyRevenue / 1000).toFixed(0)}k<span style={{ fontSize: '0.8rem', color: '#94A3B8', fontWeight: '700' }}>/mo</span></p>
           </div>
-          <div style={{ padding: '0.7rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}>
-            <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '800', margin: '0 0 0.2rem 0' }}>TENANTS</p>
-            <p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>{building.occupiedBeds}</p>
+          <div style={{ padding: '0.8rem', borderRadius: '16px', background: '#F8FAFC', border: '1.5px solid #F1F5F9' }}>
+            <p style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '900', margin: '0 0 0.4rem 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Live Residents</p>
+            <p style={{ fontSize: '1.25rem', fontWeight: '950', color: '#1E293B', margin: 0 }}>{building.occupiedBeds}<span style={{ fontSize: '0.8rem', color: '#94A3B8', fontWeight: '700' }}> / {building.totalBeds}</span></p>
           </div>
         </div>
         
-        <div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-            {(building.features || []).slice(0, 3).map((feat, fidx) => (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {(building.features || []).slice(0, 4).map((feat, fidx) => (
               <div 
                 key={fidx} 
                 style={{ 
-                  display: 'flex', alignItems: 'center', gap: '0.3rem', 
-                  padding: '0.3rem 0.6rem', borderRadius: '8px', 
-                  background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
-                  fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-primary)'
+                  display: 'flex', alignItems: 'center', gap: '0.4rem', 
+                  padding: '0.4rem 0.8rem', borderRadius: '10px', 
+                  background: '#FFFFFF', border: '1.5px solid #F1F5F9',
+                  fontSize: '0.75rem', fontWeight: '800', color: '#475569'
                 }}
               >
-                {AMENITY_ICONS[feat] || <Star size={10} />} {feat}
+                <span style={{ color: 'var(--accent-primary)' }}>{AMENITY_ICONS[feat] || <Star size={12} />}</span>
+                {feat}
               </div>
             ))}
-            {building.features && building.features.length > 3 && (
-              <div style={{ padding: '0.3rem 0.6rem', fontSize: '0.7rem', fontWeight: '800', color: 'var(--accent-primary)', alignSelf: 'center' }}>
-                +{building.features.length - 3} more
+            {building.features && building.features.length > 4 && (
+              <div style={{ padding: '0.4rem', fontSize: '0.75rem', fontWeight: '900', color: 'var(--accent-primary)', alignSelf: 'center' }}>
+                +{building.features.length - 4} More
               </div>
             )}
           </div>
         </div>
-        <div style={{ marginTop: '1.2rem', display: 'flex', gap: '0.8rem' }}>
+
+        <div style={{ marginTop: 'auto', display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
           <button 
-            className="btn btn-primary" 
-            style={{ flex: 2, padding: '0.6rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '800' }}
-            onClick={(e) => { e.stopPropagation(); navigate(`/owner/building/${building.id}/dashboard`); }}
+            style={{ 
+              flex: 1, 
+              padding: '0.9rem', 
+              borderRadius: '16px', 
+              fontSize: '0.9rem', 
+              fontWeight: '900',
+              background: 'linear-gradient(135deg, var(--accent-primary), #4F46E5)',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 12px rgba(79, 70, 229, 0.2)'
+            }}
+            onClick={(e) => { e.stopPropagation(); onNavigate(); }}
+            onMouseEnter={(e) => e.target.style.filter = 'brightness(1.1)'}
+            onMouseLeave={(e) => e.target.style.filter = 'none'}
           >
-            Go to Dashboard
+            Manage Property
           </button>
           <button 
-            className="btn" 
-            style={{ padding: '0.6rem 0.9rem', borderRadius: '12px', background: '#FEE2E2', border: '1px solid #FECACA', color: '#EF4444', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '800' }}
+            style={{ 
+              width: '48px',
+              height: '48px',
+              padding: 0, 
+              borderRadius: '16px', 
+              background: '#FEE2E2', 
+              border: 'none', 
+              color: '#EF4444', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              cursor: 'pointer'
+            }}
             onClick={(e) => { e.stopPropagation(); setShowDeleteModal(true); }}
             title="Delete Property"
           >
-            <Trash2 size={16} />
+            <Trash2 size={20} />
           </button>
         </div>
       </div>
     </motion.div>
+
 
     {/* Delete Confirmation Modal — rendered via Portal to escape card's stacking context */}
     {showDeleteModal && createPortal(
@@ -1151,6 +1687,12 @@ const BuildingCard = ({ building, onNavigate }) => {
           <p style={{ textAlign: 'center', color: '#DC2626', fontSize: '0.8rem', fontWeight: '700', margin: '0 0 2rem', padding: '0.75rem 1rem', background: '#FFF1F2', borderRadius: '10px', border: '1px solid #FECACA', lineHeight: 1.6 }}>
             ⚠️ This action is <strong>irreversible</strong>. All associated rooms, beds, and tenant records will be permanently removed.
           </p>
+          
+          {deleteError && (
+            <div style={{ marginBottom: '1.5rem', padding: '0.8rem', borderRadius: '12px', background: '#FEF2F2', border: '1px solid #FEE2E2', color: '#B91C1C', fontSize: '0.8rem', fontWeight: '700', textAlign: 'center' }}>
+              ❌ {deleteError}
+            </div>
+          )}
 
           {/* Action buttons */}
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -1167,10 +1709,10 @@ const BuildingCard = ({ building, onNavigate }) => {
                 try {
                   await api.deleteBuilding(building.id);
                   setShowDeleteModal(false);
-                  window.location.reload();
+                  if (onRefresh) onRefresh();
                 } catch (err) {
                   console.error('Delete failed:', err);
-                  alert('Failed to delete property. Please try again.');
+                  setDeleteError(err.response?.data?.error || 'Failed to delete property. Server connection issue.');
                   setIsDeleting(false);
                 }
               }}

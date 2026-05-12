@@ -1,6 +1,8 @@
 const Building = require('../models/Building');
 const Floor = require('../models/Floor');
 const Room = require('../models/Room');
+const Bed = require('../models/Bed');
+const Tenant = require('../models/Tenant');
 
 const createBuilding = async (req, res) => {
   try {
@@ -68,11 +70,36 @@ const deleteBuilding = async (req, res) => {
   try {
     const building = await Building.findById(req.params.id);
     if (!building) return res.status(404).json({ error: 'Building not found' });
-    if (building.floors && building.floors.length > 0)
-      return res.status(400).json({ error: 'Cannot delete building with floors. Delete floors first.' });
+    
+    // Perform Cascade Delete
+    // 1. Find all floors in this building
+    const floors = await Floor.find({ building: req.params.id });
+    const floorIds = floors.map(f => f._id);
+    
+    // 2. Find all rooms in these floors
+    const rooms = await Room.find({ floor: { $in: floorIds } });
+    const roomIds = rooms.map(r => r._id);
+    
+    // 3. Delete all beds in these rooms
+    await Bed.deleteMany({ room: { $in: roomIds } });
+    
+    // 4. Delete all rooms
+    await Room.deleteMany({ floor: { $in: floorIds } });
+    
+    // 5. Delete all floors
+    await Floor.deleteMany({ building: req.params.id });
+    
+    // 6. Delete or update tenants associated with this building
+    await Tenant.deleteMany({ buildingId: req.params.id });
+    
+    // 7. Finally delete the building itself
     await Building.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: 'Building deleted successfully' });
-  } catch (error) { res.status(500).json({ error: error.message }); }
+    
+    res.status(200).json({ message: 'Building and all associated infrastructure deleted successfully' });
+  } catch (error) { 
+    console.error(`[ERROR] deleteBuilding:`, error);
+    res.status(500).json({ error: error.message }); 
+  }
 };
 
 const bulkCreateBuildings = async (req, res) => {
