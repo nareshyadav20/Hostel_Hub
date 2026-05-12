@@ -317,7 +317,7 @@ const Layout = ({ children }) => {
           </div>
 
           <footer className="layout-footer">
-            <p>© 2024 StayNest All rights reserved.</p>
+            <p>© 2026 Livora All rights reserved.</p>
           </footer>
         </div>
 

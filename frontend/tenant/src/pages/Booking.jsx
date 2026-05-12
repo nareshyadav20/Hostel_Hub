@@ -67,11 +67,10 @@ const Booking = () => {
       
       try {
         // If we have a tenant ID, check if they already have a confirmed booking/residency
-        if (tenantId) {
+        if (tenantId && buildingId) {
           const profileRes = await API.get('/tenants/me').catch(() => null);
           if (profileRes?.data?.buildingId) {
              setApiError("Active Residency Found: You are already registered at a hostel. A resident can only have one active stay at a time.");
-             // Optional: redirect to dashboard after a delay
              return;
           }
         }
@@ -80,7 +79,8 @@ const Booking = () => {
           const res = await API.get(`/buildings/public/${buildingId}`);
           setHostel(res.data);
         } else {
-          const res = await API.get(`/bookings/me?tenantId=${tenantId}`).catch(() => ({ data: [] }));
+          // Now using JWT token for identification - no query param needed
+          const res = await API.get('/bookings/me');
           setBookings(res.data || []);
         }
       } catch (err) { 

@@ -43,7 +43,7 @@ const Sidebar = () => {
   return (
     <aside className="sidebar">
       <div className="sidebar-header" style={{ paddingBottom: '1rem' }}>
-        <h2 className="logo">StayNest</h2>
+        <h2 className="logo">Livora</h2>
       </div>
       <div style={{ padding: '0 1.5rem', marginBottom: '1.5rem' }}>
         <Link to="/owner/portfolio" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>
