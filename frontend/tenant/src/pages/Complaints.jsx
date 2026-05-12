@@ -35,10 +35,7 @@ const Complaints = () => {
 
   const fetchComplaints = async () => {
     try {
-      const response = await API.get('/complaints/me').catch(() => ({ data: [
-        { _id: '1', title: 'Leaking Tap', category: 'Maintenance', description: 'Bathroom tap is leaking constantly.', status: 'Pending', createdAt: new Date().toISOString() },
-        { _id: '2', title: 'WiFi Connectivity', category: 'WiFi', description: 'Signal is very weak in Room 402.', status: 'Resolved', createdAt: new Date().toISOString() }
-      ]}));
+      const response = await API.get('/complaints/me').catch(() => ({ data: [] }));
       setComplaints(response.data || []);
     } catch (err) { 
       console.error('Error fetching complaints:', err); 
