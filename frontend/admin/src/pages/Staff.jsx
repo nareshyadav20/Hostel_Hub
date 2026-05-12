@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { 
-  Search, Filter, Download, UserPlus, Users,
+  Search, Filter, Download, UserPlus, Users, Building2,
   Briefcase, Shield, Star, Calendar, Activity,
   TrendingUp, AlertCircle, Zap, MessageSquare,
-  Trash2, Edit, ChevronDown, ArrowLeft
+  Trash2, Edit, ChevronDown, ArrowLeft, Mail, Phone,
+  MoreHorizontal, CheckCircle2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +18,17 @@ const Staff = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [selectedStaff, setSelectedStaff] = useState([]);
 
+  const handleOnboard = () => alert("Staff Onboarding protocol initiated.");
+  const handleExport = () => alert("Exporting HR Personnel Manifest...");
+  const handleAnnouncement = () => alert("Global Announcement Composer initialized.");
+  const handleProtocolAssign = (name) => alert(`Assigning new protocol to ${name}...`);
+  const handlePerformanceReview = (name) => alert(`Initializing performance audit for ${name}...`);
+  const handleOffboard = (name) => {
+    if(window.confirm(`Are you sure you want to offboard ${name}? This action is permanent.`)) {
+      alert(`${name} offboarding protocol finalized.`);
+    }
+  };
+
   const [staff] = useState([
     { 
       id: 'EMP-2021', 
@@ -27,7 +39,7 @@ const Staff = () => {
       status: 'Active', 
       joined: '12 Jan 2023', 
       tasks: 12,
-      email: 'sanjay.k@livora.com',
+      email: 'sanjay.k@staynest.com',
       phone: '+91 98765 43210',
       skills: ['Operations', 'Conflict Res', 'Finance']
     },
@@ -40,7 +52,7 @@ const Staff = () => {
       status: 'Active', 
       joined: '05 Mar 2023', 
       tasks: 8,
-      email: 'anita.r@livora.com',
+      email: 'anita.r@staynest.com',
       phone: '+91 98765 43211',
       skills: ['Accounting', 'Audit', 'Taxation']
     },
@@ -53,7 +65,7 @@ const Staff = () => {
       status: 'On Leave', 
       joined: '22 Feb 2023', 
       tasks: 4,
-      email: 'vikram.d@livora.com',
+      email: 'vikram.d@staynest.com',
       phone: '+91 98765 43212',
       skills: ['Plumbing', 'Electrical', 'HVAC']
     },
@@ -66,7 +78,7 @@ const Staff = () => {
       status: 'Active', 
       joined: '15 May 2023', 
       tasks: 22,
-      email: 'meera.i@livora.com',
+      email: 'meera.i@staynest.com',
       phone: '+91 98765 43213',
       skills: ['Hospitality', 'Audit', 'HR']
     },
@@ -102,20 +114,29 @@ const Staff = () => {
       {/* --- ELITE HEADER --- */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black text-text-primary tracking-tight uppercase italic">Personnel Manifest</h1>
+          <h1 className="text-3xl text-premium-header">Personnel Manifest</h1>
           <p className="text-sm text-text-muted mt-1 font-medium italic">Global administrative oversight of operational staff and role distribution</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
            <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-2 py-1 shadow-subtle">
-              <button className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
+              <button 
+                onClick={handleExport}
+                className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all"
+              >
                 <Download size={14} className="text-emerald-500" /> Export HR
               </button>
               <div className="w-px h-4 bg-border" />
-              <button className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
+              <button 
+                onClick={handleOnboard}
+                className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all"
+              >
                 <UserPlus size={14} className="text-primary" /> Onboard
               </button>
            </div>
-           <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
+           <button 
+             onClick={handleAnnouncement}
+             className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
+           >
              <MessageSquare size={16} strokeWidth={3} /> Global Announcement
            </button>
         </div>
@@ -336,9 +357,9 @@ const Staff = () => {
                                               <TrendingUp size={14} className="text-success" /> Decision Matrix
                                             </h4>
                                             <div className="grid grid-cols-1 gap-3">
-                                               <button className="w-full py-4 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all">Assign Protocol</button>
-                                               <button className="w-full py-4 bg-white dark:bg-card border border-border text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Performance Review</button>
-                                               <button className="w-full py-4 bg-rose-500/5 text-rose-500 border border-rose-500/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all">Offboard Personnel</button>
+                                               <button onClick={() => handleProtocolAssign(s.name)} className="w-full py-4 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all">Assign Protocol</button>
+                                               <button onClick={() => handlePerformanceReview(s.name)} className="w-full py-4 bg-white dark:bg-card border border-border text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Performance Review</button>
+                                               <button onClick={() => handleOffboard(s.name)} className="w-full py-4 bg-rose-500/5 text-rose-500 border border-rose-500/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all">Offboard Personnel</button>
                                             </div>
                                          </div>
                                       </div>

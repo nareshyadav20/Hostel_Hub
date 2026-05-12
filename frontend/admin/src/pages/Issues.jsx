@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { MessageSquare, Wrench, Search, Filter, Download, FileText, Zap, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,7 +7,7 @@ import Maintenance from './Maintenance';
 
 const Issues = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('complaints');
+  const [activeTab, setActiveTab] = React.useState('complaints');
 
   return (
     <div className="space-y-6">

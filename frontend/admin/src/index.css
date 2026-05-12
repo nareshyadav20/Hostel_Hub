@@ -3,53 +3,99 @@
 @tailwind utilities;
 
 :root {
-  /* CLASSIC PREMIUM PALETTE - ROYAL BLUE & NEUTRALS */
-  --primary: 30 64 175; /* Royal Blue #1E40AF */
-  --primary-hover: 29 78 216;
-  --background: 249 250 251; /* Very Light Gray #F9FAFB */
+  /* PREMIUM INDIGO PALETTE - MATCHING OWNER PORTAL */
+  --primary: 99 102 241; /* Indigo 500 #6366F1 */
+  --primary-hover: 79 70 229; /* Indigo 600 */
+  --background: 248 250 252; /* Slate 50 #F8FAFC */
   --card: 255 255 255;
-  --border: 229 231 235; /* Gray 200 */
+  --border: 226 232 240; /* Slate 200 */
   
-  --text-primary: 17 24 39; /* Gray 900 */
-  --text-secondary: 75 85 99; /* Gray 600 */
-  --text-muted: 156 163 175; /* Gray 400 */
+  --text-primary: 15 23 42; /* Slate 900 #0F172A */
+  --text-secondary: 71 85 105; /* Slate 600 */
+  --text-muted: 148 163 184; /* Slate 400 */
   
-  --success: 16 185 129; /* Emerald */
-  --warning: 245 158 11; /* Amber */
-  --danger: 239 68 68; /* Rose */
+  --success: 34 197 94; /* Emerald 500 */
+  --warning: 245 158 11; /* Amber 500 */
+  --danger: 239 68 68; /* Rose 500 */
+
+  /* Premium Nexus Elite Compatibility */
+  --accent-primary: #6366f1;
+  --accent-secondary: #8b5cf6;
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --border-color: rgba(15, 23, 42, 0.06);
+  
+  --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.02);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  --shadow-lg: 0 12px 24px rgba(15, 23, 42, 0.06), 0 4px 8px rgba(15, 23, 42, 0.03);
+  --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.08), 0 8px 16px rgba(15, 23, 42, 0.04);
+  
+  --font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .dark {
-  --background: 17 24 39;
-  --card: 31 41 55;
-  --border: 55 65 81;
-  --text-primary: 249 250 251;
-  --text-secondary: 156 163 175;
-  --text-muted: 107 114 128;
+  --background: 2 6 23; /* Slate 950 #020617 */
+  --card: 15 23 42; /* Slate 900 #0F172A */
+  --border: 30 41 59; /* Slate 800 */
+  --text-primary: 248 250 252; /* Slate 50 */
+  --text-secondary: 148 163 184; /* Slate 400 */
+  --text-muted: 100 116 139; /* Slate 500 */
+
+  /* Premium Dark Nexus Elite Compatibility */
+  --accent-primary: #818cf8;
+  --bg-primary: #020617;
+  --bg-secondary: #0f172a;
+  --bg-tertiary: #1e293b;
+  --border-color: rgba(255, 255, 255, 0.08);
 }
 
 @layer base {
   * {
     @apply border-border;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
   
   body {
     @apply bg-background text-text-primary antialiased selection:bg-primary/20;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-family);
   }
 }
 
 @layer components {
   .shadow-subtle {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
   }
   
   .shadow-premium {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-lg);
   }
 
   .card-classic {
-    @apply bg-card border border-border rounded-xl shadow-subtle transition-all duration-200 hover:shadow-premium;
+    @apply bg-card border border-border rounded-2xl shadow-subtle transition-all duration-300 hover:shadow-premium hover:-translate-y-1;
+    border: 1px solid var(--border-color);
+  }
+
+  .btn-premium {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all duration-300 gap-2;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: white;
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+  }
+
+  .btn-premium:hover {
+    @apply -translate-y-0.5 filter brightness-110;
+    box-shadow: 0 15px 20px -3px rgba(99, 102, 241, 0.4);
+  }
+
+  .text-premium-header {
+    @apply font-black tracking-tighter uppercase italic text-text-primary;
+    letter-spacing: -0.04em;
+  }
+
+  .text-premium-label {
+    @apply font-black uppercase tracking-widest text-text-muted text-[10px];
+    letter-spacing: 0.1em;
   }
 }
 
@@ -63,11 +109,15 @@
   }
   
   .animate-fade {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  .glass-effect {
+    @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-white/20 dark:border-white/5;
   }
 }

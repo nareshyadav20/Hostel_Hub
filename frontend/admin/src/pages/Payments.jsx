@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { IndianRupee, TrendingUp, CreditCard, Download, ExternalLink, Calendar, Search, Filter, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../NexusElite.css';

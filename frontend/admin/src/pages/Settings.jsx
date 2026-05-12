@@ -143,11 +143,11 @@ const Settings = () => {
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="space-y-3">
                              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Platform Persona</label>
-                             <input type="text" defaultValue="Livora Enterprise Hub" className="w-full bg-slate-50 dark:bg-white/[0.02] border border-border rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all" />
+                             <input type="text" defaultValue="StayNest Enterprise Hub" className="w-full bg-slate-50 dark:bg-white/[0.02] border border-border rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all" />
                           </div>
                           <div className="space-y-3">
                              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Administrative Email</label>
-                             <input type="email" defaultValue="ops@livora.ai" className="w-full bg-slate-50 dark:bg-white/[0.02] border border-border rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all" />
+                             <input type="email" defaultValue="ops@staynest.com" className="w-full bg-slate-50 dark:bg-white/[0.02] border border-border rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all" />
                           </div>
                           <div className="space-y-3">
                              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Primary Fiscal Unit</label>

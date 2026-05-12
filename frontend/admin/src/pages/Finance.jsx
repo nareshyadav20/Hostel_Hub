@@ -239,7 +239,13 @@ const Finance = () => {
                     { id: 'TX-9022', entity: 'Arjun Das - Rent Pulse', cat: 'Revenue', amount: '+₹12,000', method: 'UPI Instant', status: 'Settled', date: '12 May', trend: 'up' },
                     { id: 'TX-9023', entity: 'Zomato Mess Logistics', cat: 'Logistics', amount: '-₹18,500', method: 'Settlement', status: 'Pending', date: '11 May', trend: 'down' },
                     { id: 'TX-9024', entity: 'Elite Living - Ad Cluster', cat: 'Marketing', amount: '-₹8,000', method: 'Corporate Card', status: 'Settled', date: '11 May', trend: 'down' },
-                  ].map((tx, i) => (
+                  ]
+                    .filter(tx => {
+                      return tx.entity.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                             tx.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                             tx.cat.toLowerCase().includes(searchTerm.toLowerCase());
+                    })
+                    .map((tx, i) => (
                     <tr key={i} className="group hover:bg-slate-50/50 dark:hover:bg-white/1 transition-all cursor-pointer">
                        <td className="py-5 px-8">
                           <span className="text-[11px] font-black text-text-muted font-mono tracking-tighter uppercase">{tx.id}</span>

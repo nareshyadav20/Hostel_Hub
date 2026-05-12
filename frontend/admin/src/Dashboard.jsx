@@ -26,9 +26,9 @@ const REVENUE_DATA = [
 ];
 
 const ROOM_SEGMENTS = [
-  { name: 'Single', value: 45, color: '#1E40AF' },
-  { name: 'Double', value: 35, color: '#3B82F6' },
-  { name: 'Deluxe', value: 20, color: '#60A5FA' },
+  { name: 'Single', value: 45, color: '#4338ca' },
+  { name: 'Double', value: 35, color: '#6366f1' },
+  { name: 'Deluxe', value: 20, color: '#818cf8' },
 ];
 
 const UPCOMING_DUES = [
@@ -84,12 +84,12 @@ const Dashboard = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Livora_Report_${filters.location}_${sessionDate}.csv`);
+    link.setAttribute("download", `StayNest_Report_${filters.location}_${sessionDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
-    alert(`Tactical Manifest Generated Successfully!\nDownloading: Livora_Report_${filters.location}_${sessionDate}.csv`);
+    alert(`Tactical Manifest Generated Successfully!\nDownloading: StayNest_Report_${filters.location}_${sessionDate}.csv`);
   };
 
   useEffect(() => {
@@ -252,7 +252,7 @@ const Dashboard = () => {
           </div>
           <button 
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-[11px] font-black uppercase tracking-widest shadow-md shadow-primary/20 hover:bg-primary-dark transition-all"
+            className="btn-premium"
           >
             <Download size={14} strokeWidth={3} /> Export Report
           </button>
@@ -269,7 +269,7 @@ const Dashboard = () => {
 
       {/* ⚡ QUICK ACTIONS HUB */}
       <div className="card-classic p-8">
-        <h3 className="text-lg font-black text-text-primary uppercase tracking-tight mb-8">Quick Actions Command Hub</h3>
+        <h3 className="text-xl text-premium-header mb-8">Quick Actions Command Hub</h3>
         <div className="flex flex-wrap items-center justify-between gap-6">
           {[
             { label: 'Add Booking', path: '/bookings', icon: <CalendarCheck />, color: 'indigo' },
@@ -301,8 +301,8 @@ const Dashboard = () => {
         <div className="col-span-12 lg:col-span-8 card-classic p-8">
           <div className="flex justify-between items-center mb-10">
             <div>
-              <h3 className="text-lg font-black text-text-primary uppercase tracking-tight">Financial Pulse</h3>
-              <p className="text-[12px] font-medium text-text-muted">Comparing gross revenue against maintenance expenditure</p>
+              <h3 className="text-xl text-premium-header">Financial Pulse</h3>
+              <p className="text-[12px] font-medium text-text-muted italic">Comparing gross revenue against maintenance expenditure</p>
             </div>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
@@ -321,15 +321,15 @@ const Dashboard = () => {
               <AreaChart data={REVENUE_DATA} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#1e40af" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#1e40af" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: isDark ? '#94a3b8' : '#6b7280', fontSize: 11, fontWeight: '800' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: isDark ? '#94a3b8' : '#6b7280', fontSize: 11, fontWeight: '800' }} />
                 <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#0f172a', color: '#fff' }} />
-                <Area type="monotone" dataKey="revenue" stroke="#1e40af" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
+                <Area type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={4} fillOpacity={1} fill="url(#colorRev)" />
                 <Area type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} strokeDasharray="5 5" fill="none" />
               </AreaChart>
             </ResponsiveContainer>
@@ -339,7 +339,7 @@ const Dashboard = () => {
         {/* 🏨 SEGMENTATION & HEALTH */}
         <div className="col-span-12 lg:col-span-4 flex flex-col gap-8">
           <div className="card-classic p-8 flex-1">
-            <h3 className="text-lg font-black text-text-primary uppercase tracking-tight mb-8">Capacity Mix</h3>
+            <h3 className="text-xl text-premium-header mb-8">Capacity Mix</h3>
             <div className="flex items-center gap-8">
               <div className="relative w-32 h-32 min-h-[128px]">
                 <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
@@ -365,7 +365,7 @@ const Dashboard = () => {
           </div>
 
           <div className="card-classic p-8 flex-1">
-            <h3 className="text-lg font-black text-text-primary uppercase tracking-tight mb-8">Service Health</h3>
+            <h3 className="text-xl text-premium-header mb-8">Service Health</h3>
             <div className="space-y-6">
               <div>
                 <div className="flex justify-between items-center mb-2">
@@ -394,7 +394,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-12 gap-8">
         {/* ⚠️ PRIORITY ALERTS */}
         <div className="col-span-12 lg:col-span-4 card-classic p-8">
-          <h3 className="text-lg font-black text-text-primary uppercase tracking-tight mb-8">Priority Actions</h3>
+          <h3 className="text-xl text-premium-header mb-8">Priority Actions</h3>
           <div className="space-y-4">
             {[
               { label: 'Unpaid Dues', count: '₹45,200', sub: 'Critical Action Required', icon: <DollarSign />, color: 'danger' },

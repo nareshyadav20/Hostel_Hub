@@ -21,6 +21,10 @@ const Hostels = () => {
    const [selectedHostel, setSelectedHostel] = useState(null);
    const [userRole] = useState('admin'); // Mock role for access control
 
+   const handleAuditTrail = () => alert("Audit Trail manifest generating...");
+   const handleGenerateReport = (name) => alert(`Generating Strategic Portfolio Report for ${name}...`);
+   const handleMoreFilters = () => alert("Advanced Filter Matrix initialized.");
+
    const [hostels, setHostels] = useState([
       {
          id: 1,
@@ -183,9 +187,12 @@ const Hostels = () => {
                         >
                            Initialize Edit
                         </button>
-                        <button className="w-full py-3.5 bg-white dark:bg-slate-900 border border-primary/20 text-primary rounded-xl text-[11px] font-black uppercase tracking-widest">
-                           Generate Report
-                        </button>
+                        <button 
+                            onClick={() => handleGenerateReport(selectedHostel.name)}
+                            className="w-full py-3.5 bg-white dark:bg-slate-900 border border-primary/20 text-primary rounded-xl text-[11px] font-black uppercase tracking-widest"
+                         >
+                            Generate Report
+                         </button>
                      </div>
                   </div>
                </div>
@@ -209,17 +216,20 @@ const Hostels = () => {
          {/* --- HEADER --- */}
          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-               <h1 className="text-3xl font-black text-text-primary tracking-tight">Properties Portfolio</h1>
+               <h1 className="text-3xl text-premium-header">Properties Portfolio</h1>
                <p className="text-sm text-text-muted mt-1 font-medium italic">Strategic asset management and operational monitoring</p>
             </div>
-            <div className="flex items-center gap-3">
-               <button className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-xl text-[11px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle">
-                  <Download size={16} /> Audit Trail
-               </button>
+             <div className="flex items-center gap-3">
+                <button 
+                  onClick={handleAuditTrail}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-xl text-[11px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle"
+                >
+                   <Download size={16} /> Audit Trail
+                </button>
                {userRole === 'admin' && (
                   <button
                      onClick={() => { setSelectedHostel(null); setActiveModal('add'); setCurrentStep(1); }}
-                     className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
+                     className="btn-premium"
                   >
                      <Plus size={18} strokeWidth={3} /> Add Property
                   </button>
@@ -230,15 +240,15 @@ const Hostels = () => {
          {/* --- PORTFOLIO STATS --- */}
          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {portfolioStats.map((stat, i) => (
-               <div key={i} className="card-classic p-6 flex items-center gap-5 group">
-                  <div className={`w-14 h-14 rounded-2xl bg-${stat.color}/5 text-${stat.color} flex items-center justify-center border border-${stat.color}/10 group-hover:shadow-glow transition-all duration-300`}>
+               <div key={i} className="card-classic p-6 flex items-center gap-5 group border-none glass-effect">
+                  <div className={`w-14 h-14 rounded-2xl bg-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/10 text-${stat.color === 'primary' ? 'primary' : stat.color + '-500'} flex items-center justify-center border border-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/10 group-hover:shadow-glow transition-all duration-300`}>
                      {React.cloneElement(stat.icon, { size: 24, strokeWidth: 2.5 })}
                   </div>
                   <div>
-                     <p className="text-[11px] font-black text-text-muted uppercase tracking-[0.15em] mb-1">{stat.label}</p>
+                     <p className="text-premium-label mb-1">{stat.label}</p>
                      <div className="flex items-center gap-3">
-                        <h3 className="text-2xl font-black text-text-primary tracking-tight italic">{stat.value}</h3>
-                        <span className="text-[10px] font-black text-success bg-success/10 px-2 py-0.5 rounded-lg">{stat.change}</span>
+                        <h3 className="text-2xl font-black text-text-primary tracking-tighter italic">{stat.value}</h3>
+                        <span className="text-[10px] font-black text-success bg-success/10 px-2 py-0.5 rounded-lg border border-success/20">{stat.change}</span>
                      </div>
                   </div>
                </div>
@@ -268,15 +278,24 @@ const Hostels = () => {
                   <option>Pune</option>
                   <option>Mumbai</option>
                </select>
-               <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-border rounded-xl text-xs font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle">
-                  <Filter size={16} /> More Filters
-               </button>
+                <button 
+                  onClick={handleMoreFilters}
+                  className="flex items-center gap-2 px-6 py-3.5 bg-card border border-border rounded-xl text-xs font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle"
+                >
+                   <Filter size={16} /> More Filters
+                </button>
             </div>
          </div>
 
          {/* --- PROPERTY GRID --- */}
          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            {hostels.map((h) => (
+            {hostels
+               .filter(h => {
+                  const matchesSearch = h.name.toLowerCase().includes(searchTerm.toLowerCase()) || h.location.toLowerCase().includes(searchTerm.toLowerCase());
+                  const matchesCity = filterCity === 'All Cities' || h.location.toLowerCase().includes(filterCity.toLowerCase());
+                  return matchesSearch && matchesCity;
+               })
+               .map((h) => (
                <motion.div
                   key={h.id}
                   layout

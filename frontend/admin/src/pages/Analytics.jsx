@@ -45,7 +45,7 @@ const Analytics = () => {
         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
         Back to Dashboard
       </button>
-      {/* --- TOP ROW: KPI SUMMARY --- */
+      {/* --- TOP ROW: KPI SUMMARY --- */}
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-4 layer-2 p-6 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">

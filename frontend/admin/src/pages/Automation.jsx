@@ -56,7 +56,7 @@ const Automation = () => {
             <Zap size={200} className="text-primary" />
          </div>
          <div className="relative z-10 max-w-2xl">
-            <h2 className="text-xl font-black text-text-primary mb-4">Livora Logic™ Editor</h2>
+            <h2 className="text-xl font-black text-text-primary mb-4">StayNest Logic™ Editor</h2>
             <p className="text-sm text-text-secondary leading-relaxed mb-8">
                Our drag-and-drop automation builder allows you to connect triggers (like rent payments) 
                to actions (like generating invoices) with zero code.

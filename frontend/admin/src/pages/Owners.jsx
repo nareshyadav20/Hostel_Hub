@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { UserPlus, Mail, Phone, Home, ShieldCheck, MoreHorizontal, Search, Filter, TrendingUp, Building, ArrowUpRight, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

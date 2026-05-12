@@ -18,6 +18,17 @@ const Tenants = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [filterRent, setFilterRent] = useState('All');
+ 
+  const handleOnboard = () => alert("Resident Onboarding workflow initialized.");
+  const handleIntelExport = () => alert("Exporting Resident Intelligence Manifest...");
+  const handleBroadcast = () => alert("Global Broadcast Composer initialized.");
+  const handleOffboard = (name) => {
+    if(window.confirm(`Are you sure you want to offboard ${name}?`)) {
+      alert(`${name} offboarding sequence completed.`);
+    }
+  };
+  const handleUpdateNode = (name) => alert(`Updating configuration for ${name}...`);
+  const handleGenerateLedger = (name) => alert(`Generating Financial Ledger for ${name}...`);
 
   const [tenants] = useState([
     {
@@ -123,17 +134,26 @@ const Tenants = () => {
       {/* --- COMMAND HEADER --- */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black text-text-primary tracking-tight">Global Tenant Directory</h1>
+          <h1 className="text-3xl text-premium-header">Global Tenant Directory</h1>
           <p className="text-sm text-text-muted mt-1 font-medium italic">High-fidelity resident management and operational manifest</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle">
+          <button 
+            onClick={handleIntelExport}
+            className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle"
+          >
             <Download size={14} /> Intel Export
           </button>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle">
+          <button 
+            onClick={handleBroadcast}
+            className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle"
+          >
             <MessageSquare size={14} /> Broadcast
           </button>
-          <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
+          <button 
+            onClick={handleOnboard}
+            className="btn-premium"
+          >
             <UserPlus size={16} strokeWidth={3} /> Onboard Tenant
           </button>
         </div>
@@ -147,21 +167,21 @@ const Tenants = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="card-classic p-6 flex items-center gap-5 group relative overflow-hidden"
+            className="card-classic p-6 flex items-center gap-5 group relative overflow-hidden border-none glass-effect"
           >
-            <div className={`absolute top-0 right-0 w-32 h-32 bg-${stat.color}/5 rounded-full -mr-16 -mt-16 blur-3xl`} />
-            <div className={`w-14 h-14 rounded-2xl bg-${stat.color}/10 text-${stat.color} flex items-center justify-center border border-${stat.color}/10 group-hover:shadow-glow transition-all duration-300 relative z-10`}>
+            <div className={`absolute top-0 right-0 w-32 h-32 bg-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/5 rounded-full -mr-16 -mt-16 blur-3xl`} />
+            <div className={`w-14 h-14 rounded-2xl bg-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/10 text-${stat.color === 'primary' ? 'primary' : stat.color + '-500'} flex items-center justify-center border border-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/10 group-hover:shadow-glow transition-all duration-300 relative z-10`}>
               {React.cloneElement(stat.icon, { size: 24, strokeWidth: 2.5 })}
             </div>
             <div className="relative z-10">
-              <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-1">{stat.label}</p>
+              <p className="text-premium-label mb-1">{stat.label}</p>
               <div className="flex items-center gap-3">
-                <h3 className="text-3xl font-black text-text-primary tracking-tight italic">{stat.value}</h3>
+                <h3 className="text-3xl font-black text-text-primary tracking-tighter italic">{stat.value}</h3>
                 <div className="flex flex-col">
                   <span className="text-[10px] font-black text-success flex items-center gap-0.5">
                     <ArrowUpRight size={10} strokeWidth={3} /> {stat.change}
                   </span>
-                  <span className="text-[9px] font-bold text-text-muted uppercase tracking-tighter">{stat.description}</span>
+                  <span className="text-[9px] font-bold text-text-muted uppercase tracking-tighter italic">{stat.description}</span>
                 </div>
               </div>
             </div>
@@ -339,10 +359,13 @@ const Tenants = () => {
                                 <CheckCircle2 size={32} className="text-success mb-3" />
                                 <p className="text-[14px] font-black text-text-primary">Clean Record</p>
                                 <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1">No outstanding overheads</p>
+                                <button 
+                                  onClick={() => handleGenerateLedger(t.name)}
+                                  className="w-full mt-4 py-3 bg-white dark:bg-slate-800 border border-border text-[10px] font-black uppercase tracking-widest rounded-xl hover:border-primary transition-all"
+                                >
+                                  Generate Ledger
+                                </button>
                               </div>
-                              <button className="w-full py-3 bg-white dark:bg-slate-800 border border-border text-[10px] font-black uppercase tracking-widest rounded-xl hover:border-primary transition-all">
-                                Generate Ledger
-                              </button>
                             </div>
                           </div>
                           <div className="mt-8 pt-8 border-t border-border flex justify-between items-center">
@@ -357,8 +380,18 @@ const Tenants = () => {
                               </div>
                             </div>
                             <div className="flex gap-2">
-                              <button className="px-5 py-2.5 bg-rose-500/10 text-rose-500 rounded-xl text-[10px] font-black uppercase tracking-widest">Offboard</button>
-                              <button className="px-5 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest">Update Node</button>
+                              <button 
+                                onClick={() => handleOffboard(t.name)}
+                                className="px-5 py-2.5 bg-rose-500/10 text-rose-500 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                              >
+                                Offboard
+                              </button>
+                              <button 
+                                onClick={() => handleUpdateNode(t.name)}
+                                className="px-5 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest"
+                              >
+                                Update Node
+                              </button>
                             </div>
                           </div>
                         </motion.div>

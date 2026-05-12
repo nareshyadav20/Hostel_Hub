@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutGrid, Building2, ClipboardList, Users, MessageSquare,
   BarChart3, FileText, Settings, LogOut, ShieldCheck,
@@ -9,6 +9,12 @@ import {
 import { motion } from 'framer-motion';
 
 const Sidebar = ({ collapsed }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/login');
+  };
   console.log('Sidebar motion:', typeof motion);
   const sections = [
     {
@@ -46,7 +52,7 @@ const Sidebar = ({ collapsed }) => {
   ];
 
   return (
-    <aside className={`fixed top-0 left-0 h-screen bg-card transition-all duration-500 z-50 flex flex-col border-r border-border shadow-premium ${collapsed ? 'w-20' : 'w-64'}`}>
+    <aside className={`fixed top-0 left-0 h-screen bg-card transition-all duration-300 ease-in-out z-50 flex flex-col border-r border-border shadow-premium ${collapsed ? 'w-20' : 'w-64'}`}>
 
       {/* LOGO SECTION */}
       <div className="h-16 flex items-center px-6 border-b border-border bg-slate-50/50 dark:bg-white/2">
@@ -55,7 +61,7 @@ const Sidebar = ({ collapsed }) => {
             <ShieldCheck size={20} className="text-white" strokeWidth={2.5} />
           </div>
           {!collapsed && (
-            <span className="text-lg font-black text-text-primary tracking-tight uppercase italic">Livora</span>
+            <span className="text-xl text-premium-header">StayNest</span>
           )}
         </div>
       </div>
@@ -65,7 +71,7 @@ const Sidebar = ({ collapsed }) => {
         {sections.map((section, idx) => (
           <div key={idx} className="space-y-2">
             {!collapsed && (
-              <h4 className="px-6 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-4 opacity-50">
+              <h4 className="px-6 text-premium-label mb-4 opacity-50">
                 {section.title}
               </h4>
             )}
@@ -86,7 +92,7 @@ const Sidebar = ({ collapsed }) => {
                       {isActive && (
                         <motion.div
                           layoutId="activeBar"
-                          className="absolute left-0 w-1 h-2/3 bg-primary rounded-r-full"
+                          className="absolute left-0 w-1 h-2/3 bg-primary rounded-r-full top-1/2 -translate-y-1/2"
                         />
                       )}
                       <div className={`shrink-0 transition-transform duration-300 ${isActive ? 'text-primary scale-110' : 'text-text-muted group-hover:scale-110 group-hover:text-primary'}`}>
@@ -117,7 +123,10 @@ const Sidebar = ({ collapsed }) => {
 
       {/* FOOTER / LOGOUT */}
       <div className="p-4 border-t border-border bg-slate-50/50 dark:bg-white/2">
-        <button className={`w-full flex items-center gap-4 px-4 py-3 text-text-secondary hover:text-danger hover:bg-rose-500/5 rounded-xl transition-all group ${collapsed ? 'justify-center px-0' : ''}`}>
+        <button 
+          onClick={handleLogout}
+          className={`w-full flex items-center gap-4 px-4 py-3 text-text-secondary hover:text-danger hover:bg-rose-500/5 rounded-xl transition-all group ${collapsed ? 'justify-center px-0' : ''}`}
+        >
           <LogOut size={18} className="group-hover:translate-x-0.5 transition-transform" />
           {!collapsed && <span className="text-[13px] font-bold">Logout</span>}
         </button>

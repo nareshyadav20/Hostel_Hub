@@ -6,7 +6,7 @@ import {
   ArrowUpRight, Users, LayoutGrid, List, FileText,
   CreditCard, ExternalLink, ShieldCheck, Zap,
   Droplets, Lightbulb, Thermometer, ShieldAlert,
-  Trash2, Edit, MessageSquare, ArrowLeft
+  Trash2, Edit, MessageSquare, ArrowLeft, Plus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +17,16 @@ const Maintenance = () => {
   const [filterStatus, setFilterStatus] = useState('All');
   const [expandedId, setExpandedId] = useState(null);
   const [selectedTasks, setSelectedTasks] = useState([]);
+ 
+  const handleRefine = () => alert("Advanced Maintenance Filter Matrix initialized.");
+  const handleVerifyClose = (id) => alert(`Task ${id} verified and marked as Resolved.`);
+  const handleReassign = (id) => alert(`Reassigning Specialist for Task ${id}...`);
+  const handleAbort = (id) => {
+    if(window.confirm(`Are you sure you want to abort operation ${id}?`)) {
+      alert(`Operation ${id} aborted and logged.`);
+    }
+  };
+  const handleExport = () => alert("Exporting Maintenance Logs Manifest...");
 
   const [tasks] = useState([
     {
@@ -87,7 +97,7 @@ const Maintenance = () => {
   const getCategoryIcon = (cat) => {
     switch(cat) {
       case 'HVAC': return <Thermometer size={16} className="text-rose-500" />;
-      case 'Plumbing': return <Droplets size={16} className="text-blue-500" />;
+      case 'Plumbing': return <Droplets size={16} className="text-cyan-500" />;
       case 'Electrical': return <Lightbulb size={16} className="text-amber-500" />;
       case 'Safety': return <ShieldAlert size={16} className="text-indigo-500" />;
       default: return <Wrench size={16} className="text-slate-500" />;
@@ -106,16 +116,34 @@ const Maintenance = () => {
         Back to Dashboard
       </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* --- COMMAND HEADER --- */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-3xl text-premium-header">Maintenance Hub</h1>
+          <p className="text-sm text-text-muted mt-1 font-medium italic">Global infrastructure oversight and operational resolution manifest</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-xl text-[11px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle"
+          >
+            <Download size={16} /> Export Logs
+          </button>
+          <button className="btn-premium">
+            <Plus size={18} strokeWidth={3} /> New Task
+          </button>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
         {stats.map((stat, i) => (
-          <div key={i} className="card-classic p-6 group relative overflow-hidden">
-             <div className={`absolute top-0 right-0 w-24 h-24 bg-${stat.color}/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-${stat.color}/10 transition-all`} />
-             <div className={`w-12 h-12 rounded-2xl bg-${stat.color}/10 text-${stat.color} flex items-center justify-center mb-4 border border-${stat.color}/10`}>
+          <div key={i} className="card-classic p-6 group relative overflow-hidden border-none glass-effect">
+             <div className={`absolute top-0 right-0 w-24 h-24 bg-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/10 transition-all`} />
+             <div className={`w-12 h-12 rounded-2xl bg-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/10 text-${stat.color === 'primary' ? 'primary' : stat.color + '-500'} flex items-center justify-center mb-4 border border-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/10 group-hover:shadow-glow transition-all duration-300`}>
                 {React.cloneElement(stat.icon, { size: 22, strokeWidth: 2.5 })}
              </div>
-             <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">{stat.label}</p>
+             <p className="text-premium-label">{stat.label}</p>
              <div className="flex items-end justify-between mt-1">
-                <h3 className="text-3xl font-black text-text-primary tracking-tight italic">{stat.value}</h3>
+                <h3 className="text-3xl font-black text-text-primary tracking-tighter italic">{stat.value}</h3>
                 <span className="text-[9px] font-bold text-text-muted uppercase italic">{stat.desc}</span>
              </div>
           </div>
@@ -152,7 +180,10 @@ const Maintenance = () => {
 
             <div className="h-10 w-px bg-border mx-2 shrink-0" />
 
-            <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
+            <button 
+              onClick={handleRefine}
+              className="flex items-center gap-2 px-6 py-3.5 bg-card border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0"
+            >
                <Filter size={14} strokeWidth={3} /> Refine
             </button>
          </div>

@@ -26,10 +26,13 @@ export default {
         danger: 'rgb(var(--danger) / <alpha-value>)',
       },
       boxShadow: {
-        'premium': '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05), 0 20px 25px -5px rgb(0 0 0 / 0.02)',
-        'glow': '0 0 20px -5px rgba(91, 95, 246, 0.3)',
+        'subtle': '0 2px 4px rgba(15, 23, 42, 0.02)',
+        'premium': '0 12px 24px rgba(15, 23, 42, 0.06), 0 4px 8px rgba(15, 23, 42, 0.03)',
+        'glow': '0 0 20px -5px rgba(99, 102, 241, 0.3)',
       },
       borderRadius: {
+        'xl': '1rem',
+        '2xl': '1.25rem',
         '3xl': '1.5rem',
         '4xl': '2rem',
       },

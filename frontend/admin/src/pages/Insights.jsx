@@ -92,7 +92,7 @@ const Insights = () => {
                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={RADAR_DATA}>
                     <PolarGrid stroke="rgb(var(--border))" />
                     <PolarAngleAxis dataKey="subject" tick={{fill: '#64748b', fontSize: 10, fontWeight: 'bold'}} />
-                    <Radar name="Livora AI" dataKey="A" stroke="rgb(var(--primary))" fill="rgb(var(--primary))" fillOpacity={0.3} />
+                    <Radar name="StayNest AI" dataKey="A" stroke="rgb(var(--primary))" fill="rgb(var(--primary))" fillOpacity={0.3} />
                  </RadarChart>
               </ResponsiveContainer>
            </div>

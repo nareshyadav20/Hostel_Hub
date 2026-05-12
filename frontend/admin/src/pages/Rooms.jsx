@@ -18,6 +18,10 @@ const Rooms = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [userRole] = useState('admin'); // Mock role for RBAC
+ 
+  const handleInventoryAudit = () => alert("Inventory Audit manifest generating...");
+  const handleAssignResident = (id) => alert(`Assigning new resident to Room ${id}...`);
+  const handleScheduleMaintenance = (id) => alert(`Scheduling maintenance for Room ${id}...`);
 
   const [rooms, setRooms] = useState([
     { id: '101', type: 'Premium Double', property: 'Sapphire PG', occupants: 2, capacity: 2, status: 'Occupied', price: '₹12,000', floor: '1st Floor', amenities: ['AC', 'Attached Bath', 'Balcony'] },
@@ -138,12 +142,18 @@ const Rooms = () => {
                <div className="card-classic p-8 bg-indigo-500/5 border-indigo-500/20">
                   <h3 className="text-lg font-black text-indigo-500 uppercase tracking-tight mb-6">Inventory Controls</h3>
                   <div className="space-y-4 flex flex-col">
-                     <button className="w-full py-4 bg-primary text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all">
-                        Assign New Resident
-                     </button>
-                     <button className="w-full py-4 bg-white dark:bg-slate-900 border border-primary/20 text-primary rounded-xl text-[11px] font-black uppercase tracking-widest">
-                        Schedule Maintenance
-                     </button>
+                     <button 
+                        onClick={() => handleAssignResident(selectedRoom.id)}
+                        className="w-full py-4 bg-primary text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
+                      >
+                         Assign New Resident
+                      </button>
+                      <button 
+                        onClick={() => handleScheduleMaintenance(selectedRoom.id)}
+                        className="w-full py-4 bg-white dark:bg-slate-900 border border-primary/20 text-primary rounded-xl text-[11px] font-black uppercase tracking-widest"
+                      >
+                         Schedule Maintenance
+                      </button>
                      <div className="pt-4 border-t border-indigo-500/10">
                         <button 
                           onClick={() => handleEdit(selectedRoom)}
@@ -175,17 +185,20 @@ const Rooms = () => {
       {/* --- HEADER --- */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black text-text-primary tracking-tight">Room Inventory</h1>
+          <h1 className="text-3xl text-premium-header">Room Inventory</h1>
           <p className="text-sm text-text-muted mt-1 font-medium italic">Global oversight of living units, occupancy vectors, and service states.</p>
         </div>
         <div className="flex items-center gap-3">
-           <button className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-xl text-[11px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle">
-             <Download size={16} /> Inventory Audit
-           </button>
+           <button 
+              onClick={handleInventoryAudit}
+              className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-xl text-[11px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle"
+            >
+              <Download size={16} /> Inventory Audit
+            </button>
            {userRole === 'admin' && (
              <button 
               onClick={() => { setSelectedRoom(null); setActiveModal('add'); setCurrentStep(1); }}
-              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
+              className="btn-premium"
             >
                <Plus size={18} strokeWidth={3} /> Add Unit
              </button>
@@ -196,15 +209,15 @@ const Rooms = () => {
       {/* --- STATS CLUSTER --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {inventoryStats.map((stat, i) => (
-          <div key={i} className="card-classic p-6 flex items-center gap-5 group">
-            <div className={`w-14 h-14 rounded-2xl bg-${stat.color}/5 text-${stat.color} flex items-center justify-center border border-${stat.color}/10 group-hover:rotate-12 transition-all duration-500`}>
+          <div key={i} className="card-classic p-6 flex items-center gap-5 group border-none glass-effect">
+            <div className={`w-14 h-14 rounded-2xl bg-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/5 text-${stat.color === 'primary' ? 'primary' : stat.color + '-500'} flex items-center justify-center border border-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/10 group-hover:rotate-12 transition-all duration-500`}>
                {React.cloneElement(stat.icon, { size: 24, strokeWidth: 2.5 })}
             </div>
             <div>
-               <p className="text-[11px] font-black text-text-muted uppercase tracking-[0.15em] mb-1">{stat.label}</p>
+               <p className="text-premium-label mb-1">{stat.label}</p>
                <div className="flex items-center gap-3">
-                  <h3 className="text-2xl font-black text-text-primary tracking-tight italic">{stat.value}</h3>
-                  <span className="text-[10px] font-black text-success bg-success/10 px-2 py-0.5 rounded-lg">{stat.change}</span>
+                  <h3 className="text-2xl font-black text-text-primary tracking-tighter italic">{stat.value}</h3>
+                  <span className="text-[10px] font-black text-success bg-success/10 px-2 py-0.5 rounded-lg border border-success/20">{stat.change}</span>
                </div>
             </div>
           </div>
@@ -237,7 +250,14 @@ const Rooms = () => {
 
       {/* --- ROOM GRID --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-        {rooms.map((room) => (
+        {rooms
+          .filter(room => {
+            const matchesSearch = room.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                 room.type.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                 room.property.toLowerCase().includes(searchTerm.toLowerCase());
+            return matchesSearch;
+          })
+          .map((room) => (
           <motion.div 
             key={room.id} 
             layout

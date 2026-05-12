@@ -33,7 +33,7 @@ const Users = () => {
         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
         Back to Dashboard
       </button>
-      {/* Header */
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-text-primary">Identity & Trust Center</h1>
