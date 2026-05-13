@@ -99,6 +99,12 @@ const Layout = ({ children }) => {
                         <p className="text-[10px] text-text-muted mt-1 font-medium italic">Root Access Level</p>
                       </div>
                       <div className="p-2">
+                        <button 
+                          onClick={() => { navigate('/profile'); setIsProfileOpen(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-xs font-semibold text-text-main hover:bg-gray-50 rounded-lg transition-all"
+                        >
+                          <User size={14} /> My Profile
+                        </button>
                         <button className="w-full flex items-center gap-3 px-3 py-2 text-xs font-semibold text-text-main hover:bg-gray-50 rounded-lg transition-all">
                           <Settings size={14} /> System Settings
                         </button>

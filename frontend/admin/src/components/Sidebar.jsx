@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutGrid, Building2, Users, UserCheck, CreditCard, 
   Settings, LogOut, ShieldCheck, BarChart3, Package, 
-  Megaphone, Share2, ShieldAlert, Calendar, Zap
+  Megaphone, Share2, ShieldAlert, Calendar, Zap, User
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -42,6 +42,7 @@ const Sidebar = ({ collapsed }) => {
         { name: 'Insights', path: '/insights', icon: <Zap size={18} /> },
         { name: 'Support', path: '/support', icon: <ShieldCheck size={18} /> },
         { name: 'Settings', path: '/settings', icon: <Settings size={18} /> },
+        { name: 'Profile', path: '/profile', icon: <User size={18} /> },
       ]
     }
   ];

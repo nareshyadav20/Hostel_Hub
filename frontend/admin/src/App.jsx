@@ -28,11 +28,12 @@ import Placeholder from './pages/Placeholder';
 import Bookings from './pages/Bookings.jsx';
 import Maintenance from './pages/Maintenance';
 import Support from './pages/Support';
+import Profile from './pages/Profile';
 
 function App() {
   return (
     <ThemeProvider>
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           <Route path="/"              element={<Layout><Dashboard /></Layout>} />
           <Route path="/dashboard"     element={<Layout><Dashboard /></Layout>} />
@@ -66,6 +67,7 @@ function App() {
           <Route path="/insights"      element={<Layout><Insights /></Layout>} />
           <Route path="/support"       element={<Layout><Support /></Layout>} />
           <Route path="/complaints"    element={<Layout><Placeholder title="Complaints" /></Layout>} />
+          <Route path="/profile"       element={<Layout><Profile /></Layout>} />
           <Route path="*"              element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>

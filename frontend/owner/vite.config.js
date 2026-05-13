@@ -8,5 +8,9 @@ export default defineConfig({
     alias: {
       '@packages': path.resolve(__dirname, '../../packages'),
     }
+  },
+  server: {
+    port: 5174,
+    host: true
   }
 })
