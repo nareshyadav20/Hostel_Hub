@@ -97,7 +97,7 @@ const Insights = () => {
               </ResponsiveContainer>
            </div>
            <div className="mt-6 w-full space-y-4">
-              <div className="p-4 rounded-2xl bg-background border border-border flex items-center justify-between group cursor-default">
+              <div className="p-4 rounded-2xl bg-background border border-divider flex items-center justify-between group cursor-default">
                  <div className="flex items-center gap-3">
                     <Target size={18} className="text-primary" />
                     <span className="text-xs font-bold text-text-secondary">Efficiency Target</span>

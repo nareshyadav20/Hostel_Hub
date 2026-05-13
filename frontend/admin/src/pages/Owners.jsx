@@ -65,12 +65,12 @@ const Owners = () => {
           <input 
             type="text" 
             placeholder="Search owners by name, email, property..." 
-            className="w-full bg-card/50 border border-border rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-all placeholder:text-text-muted text-text-primary shadow-sm"
+            className="w-full bg-card/50 border border-divider rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-all placeholder:text-text-muted text-text-primary shadow-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button className="p-3 bg-card border border-border rounded-2xl text-text-muted hover:text-primary hover:border-primary/50 transition-all shadow-sm">
+        <button className="p-3 bg-card border border-divider rounded-2xl text-text-muted hover:text-primary hover:border-primary/50 transition-all shadow-sm">
           <Filter size={20} />
         </button>
       </div>
@@ -80,7 +80,7 @@ const Owners = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
-              <tr className="bg-card/20 border-b border-border">
+              <tr className="bg-card/20 border-b border-divider">
                 <th className="py-5 px-6 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em]">Owner Profile</th>
                 <th className="py-5 px-6 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em]">Portfolio</th>
                 <th className="py-5 px-6 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em]">Revenue Contrib.</th>

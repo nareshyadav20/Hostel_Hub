@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import ThemeToggle from './ThemeToggle';
-import { Bell, Search, Settings, Calendar, Menu, ChevronDown, ChevronRight } from 'lucide-react';
+import { Bell, Search, Settings, Menu, ChevronDown, Sun, Moon, Globe, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
+import { useTheme } from '../context/ThemeContext';
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { isDark, toggle } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsed, setCollapsed] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -19,68 +18,70 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex font-sans text-text-primary overflow-hidden">
+    <div className="min-h-screen bg-background flex font-inter text-text-main overflow-hidden">
       <Sidebar collapsed={collapsed} />
 
       <main className={`flex-1 flex flex-col transition-all duration-300 ease-in-out relative ${collapsed ? 'ml-20' : 'ml-64'}`}>
 
-        {/* TOP BAR */}
-        <header className="h-16 px-8 bg-card border-b border-border flex items-center justify-between sticky top-0 z-40">
+        {/* TOP NAVBAR */}
+        <header className="h-16 px-8 bg-surface border-b border-divider flex items-center justify-between sticky top-0 z-40 shadow-sm">
 
-          {/* Collapse Toggle & Greeting */}
           <div className="flex items-center gap-6">
             <button 
               onClick={() => setCollapsed(!collapsed)}
-              className="p-2 hover:bg-primary/5 rounded-lg text-text-muted hover:text-primary transition-all active:scale-95"
-              title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+              className="p-2 hover:bg-gray-100 rounded-xl text-text-muted hover:text-primary transition-all active:scale-95"
             >
-              <Menu size={20} className={`transition-transform duration-300 ${collapsed ? '' : 'rotate-180'}`} />
+              <Menu size={20} />
             </button>
-            <div>
-              <h1 className="text-[14px] text-premium-header flex items-center gap-2">
-                 StayNest Admin <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              </h1>
+            <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-green-50 rounded-full border border-green-100">
+              <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+              <span className="text-[10px] font-bold text-success uppercase tracking-wider">Platform Live</span>
             </div>
           </div>
 
-          {/* Search Bar */}
+          {/* SEARCH BAR */}
           <div className="flex-1 max-w-xl px-10">
             <div className="relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
               <input
                 type="text"
-                className="w-full bg-background border border-border rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all shadow-subtle"
-                placeholder="Command Search..."
+                className="w-full bg-gray-50 border border-divider rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
+                placeholder="Search across platform..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </div>
 
-          {/* Actions & Profile */}
+          {/* ACTIONS */}
           <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <button className="p-2 text-text-secondary hover:text-primary transition-colors relative group">
-              <Bell size={20} />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full border-2 border-card"></span>
-              
-              {/* Notification Tooltip/Dropdown Placeholder */}
-              <div className="absolute top-full right-0 mt-2 w-64 bg-card border border-border rounded-xl shadow-premium opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50 p-4">
-                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2">Recent Notifications</p>
-                <p className="text-xs text-text-secondary">No new critical alerts.</p>
-              </div>
+            <button 
+              onClick={toggle}
+              className="p-2.5 text-text-muted hover:text-primary hover:bg-gray-50 rounded-xl transition-all"
+            >
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <div className="h-8 w-[1px] bg-border mx-2" />
+
+            <button className="p-2.5 text-text-muted hover:text-primary hover:bg-gray-50 rounded-xl transition-all relative">
+              <Bell size={20} />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-danger rounded-full border-2 border-surface"></span>
+            </button>
+
+            <div className="h-6 w-px bg-border mx-2" />
             
             <div className="relative">
               <div 
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center gap-3 cursor-pointer group"
+                className="flex items-center gap-3 cursor-pointer group p-1 hover:bg-gray-50 rounded-xl transition-all"
               >
-                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs border border-primary/20 group-hover:shadow-glow transition-all">
-                  AD
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs border border-primary/20">
+                  SA
                 </div>
-                <ChevronDown size={14} className={`text-text-muted group-hover:text-text-primary transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                <div className="hidden lg:block">
+                  <p className="text-xs font-bold text-text-main leading-none">Super Admin</p>
+                  <p className="text-[10px] text-text-muted mt-1 leading-none">Platform Root</p>
+                </div>
+                <ChevronDown size={14} className={`text-text-muted transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
               </div>
 
               <AnimatePresence>
@@ -91,21 +92,24 @@ const Layout = ({ children }) => {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-2xl shadow-premium z-50 overflow-hidden"
+                      className="absolute top-full right-0 mt-2 w-56 bg-surface border border-divider rounded-2xl shadow-premium z-50 overflow-hidden"
                     >
-                      <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-white/2">
-                        <p className="text-xs font-black text-text-primary uppercase tracking-tight">Super Admin</p>
-                        <p className="text-[10px] font-medium text-text-muted mt-0.5 italic">admin@staynest.com</p>
+                      <div className="p-4 border-b border-divider bg-gray-50/50">
+                        <p className="text-xs font-bold text-text-main">admin@livora.io</p>
+                        <p className="text-[10px] text-text-muted mt-1 font-medium italic">Root Access Level</p>
                       </div>
                       <div className="p-2">
-                        <button className="w-full flex items-center gap-3 px-3 py-2 text-[11px] font-bold text-text-secondary hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
-                          <Settings size={14} /> Account Settings
+                        <button className="w-full flex items-center gap-3 px-3 py-2 text-xs font-semibold text-text-main hover:bg-gray-50 rounded-lg transition-all">
+                          <Settings size={14} /> System Settings
+                        </button>
+                        <button className="w-full flex items-center gap-3 px-3 py-2 text-xs font-semibold text-text-main hover:bg-gray-50 rounded-lg transition-all">
+                          <Globe size={14} /> Change Language
                         </button>
                         <button 
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-3 py-2 text-[11px] font-bold text-rose-500 hover:bg-rose-500/5 rounded-lg transition-all"
+                          className="w-full mt-1 flex items-center gap-3 px-3 py-2 text-xs font-bold text-danger hover:bg-red-50 rounded-lg transition-all"
                         >
-                          <Settings size={14} className="opacity-0" /> Sign Out
+                          <LogOut size={14} /> Sign Out
                         </button>
                       </div>
                     </motion.div>
@@ -116,9 +120,9 @@ const Layout = ({ children }) => {
           </div>
         </header>
 
-        {/* MAIN CONTENT */}
-        <div className="flex-1 p-10 overflow-y-auto scrollbar-hide bg-background">
-          <div className="max-w-[1400px] mx-auto animate-fade">
+        {/* MAIN CONTENT AREA */}
+        <div className="flex-1 p-8 overflow-y-auto bg-background scroll-smooth">
+          <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </div>

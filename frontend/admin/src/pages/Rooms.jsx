@@ -89,15 +89,15 @@ const Rooms = () => {
                   </div>
 
                   <div className="grid grid-cols-3 gap-6 mb-12">
-                     <div className="p-6 rounded-2xl bg-slate-50 dark:bg-white/5 border border-border/50 text-center">
+                     <div className="p-6 rounded-2xl bg-slate-50 dark:bg-white/5 border border-divider/50 text-center">
                         <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2">Occupants</p>
                         <h4 className="text-2xl font-black text-text-primary italic">{selectedRoom.occupants}/{selectedRoom.capacity}</h4>
                      </div>
-                     <div className="p-6 rounded-2xl bg-slate-50 dark:bg-white/5 border border-border/50 text-center">
+                     <div className="p-6 rounded-2xl bg-slate-50 dark:bg-white/5 border border-divider/50 text-center">
                         <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2">Monthly Yield</p>
                         <h4 className="text-2xl font-black text-text-primary italic">{selectedRoom.price}</h4>
                      </div>
-                     <div className="p-6 rounded-2xl bg-slate-50 dark:bg-white/5 border border-border/50 text-center">
+                     <div className="p-6 rounded-2xl bg-slate-50 dark:bg-white/5 border border-divider/50 text-center">
                         <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2">Location Node</p>
                         <h4 className="text-2xl font-black text-text-primary italic">{selectedRoom.floor}</h4>
                      </div>
@@ -106,7 +106,7 @@ const Rooms = () => {
                   <h3 className="text-lg font-black text-text-primary uppercase tracking-tight mb-8">Asset Inventory</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                      {selectedRoom.amenities.map((item, i) => (
-                       <div key={i} className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-slate-50 dark:bg-white/5 border border-border/50 group hover:border-primary transition-all">
+                       <div key={i} className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-slate-50 dark:bg-white/5 border border-divider/50 group hover:border-primary transition-all">
                           <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                              <Zap size={24} />
                           </div>
@@ -123,7 +123,7 @@ const Rooms = () => {
                         { date: '12 May, 2024', event: 'AC Filter Sanitization', status: 'Completed', user: 'Ops Lead' },
                         { date: '28 April, 2024', event: 'New Occupant Checklist', status: 'Verified', user: 'System' },
                      ].map((log, i) => (
-                        <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-background border border-border group hover:border-primary/20 transition-all">
+                        <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-background border border-divider group hover:border-primary/20 transition-all">
                            <div className="flex gap-4 items-center">
                               <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-white/5 flex items-center justify-center text-text-muted"><Wrench size={16} /></div>
                               <div>
@@ -191,7 +191,7 @@ const Rooms = () => {
         <div className="flex items-center gap-3">
            <button 
               onClick={handleInventoryAudit}
-              className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-xl text-[11px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle"
+              className="flex items-center gap-2 px-5 py-2.5 bg-card border border-divider rounded-xl text-[11px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle"
             >
               <Download size={16} /> Inventory Audit
             </button>
@@ -230,19 +230,19 @@ const Rooms = () => {
             <Search className="absolute left-4 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
             <input 
                type="text" 
-               className="w-full bg-card border border-border rounded-xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary shadow-subtle"
+               className="w-full bg-card border border-divider rounded-xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary shadow-subtle"
                placeholder="Search units by number, property or resident identity..."
                value={searchTerm}
                onChange={(e) => setSearchTerm(e.target.value)}
             />
          </div>
          <div className="flex gap-3">
-            <select className="bg-card border border-border rounded-xl px-6 py-3.5 text-xs font-black uppercase tracking-widest text-text-primary outline-none focus:border-primary shadow-subtle cursor-pointer">
+            <select className="bg-card border border-divider rounded-xl px-6 py-3.5 text-xs font-black uppercase tracking-widest text-text-primary outline-none focus:border-primary shadow-subtle cursor-pointer">
                <option>All Properties</option>
                <option>Sapphire PG</option>
                <option>Elite Living</option>
             </select>
-            <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-border rounded-xl text-xs font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle">
+            <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-divider rounded-xl text-xs font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle">
                <Filter size={16} /> Filters
             </button>
          </div>
@@ -294,7 +294,7 @@ const Rooms = () => {
                         </div>
                         <span className="text-[11px] font-black text-text-primary italic">{room.occupants}/{room.capacity} Units</span>
                      </div>
-                     <div className="w-full h-1.5 bg-background border border-border/50 rounded-full overflow-hidden">
+                     <div className="w-full h-1.5 bg-background border border-divider/50 rounded-full overflow-hidden">
                         <div 
                            className={`h-full transition-all duration-1000 ${
                               room.status === 'Occupied' ? 'bg-success' : 'bg-primary'
@@ -305,7 +305,7 @@ const Rooms = () => {
                   </div>
 
                   {/* Monthly Yield */}
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-border/50">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-divider/50">
                      <div className="flex items-center gap-2">
                         <DollarSign size={14} className="text-text-muted" />
                         <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">Monthly Rate</span>
@@ -315,7 +315,7 @@ const Rooms = () => {
                </div>
             </div>
 
-            <div className="mt-auto px-6 py-4 bg-background/50 border-t border-border/50 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all">
+            <div className="mt-auto px-6 py-4 bg-background/50 border-t border-divider/50 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all">
                <button 
                 onClick={() => { setSelectedRoom(room); setActiveModal('details'); }}
                 className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline"
@@ -339,7 +339,7 @@ const Rooms = () => {
             whileHover={{ scale: 1.02 }}
             className="card-classic border-dashed border-2 hover:border-primary/50 flex flex-col items-center justify-center p-12 gap-5 group cursor-pointer transition-all bg-primary/5 min-h-[380px]"
           >
-            <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 border border-border flex items-center justify-center text-text-muted group-hover:text-primary group-hover:scale-110 transition-all duration-500 shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 border border-divider flex items-center justify-center text-text-muted group-hover:text-primary group-hover:scale-110 transition-all duration-500 shadow-sm">
               <Plus size={32} strokeWidth={2.5} />
             </div>
             <div className="text-center">
@@ -364,7 +364,7 @@ const Rooms = () => {
               {steps.map((s) => (
                 <div key={s.id} className="relative z-10 flex flex-col items-center gap-3">
                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 border-2 ${
-                     currentStep >= s.id ? 'bg-primary border-primary text-white shadow-glow' : 'bg-card border-border text-text-muted'
+                     currentStep >= s.id ? 'bg-primary border-primary text-white shadow-glow' : 'bg-card border-divider text-text-muted'
                    }`}>
                       {currentStep > s.id ? <CheckCircle2 size={18} /> : s.icon}
                    </div>
@@ -387,11 +387,11 @@ const Rooms = () => {
                       <div className="grid grid-cols-2 gap-6">
                          <div className="space-y-2">
                             <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Unit Number</label>
-                            <input className="w-full bg-background border border-border rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedRoom?.id} placeholder="e.g. 101" />
+                            <input className="w-full bg-background border border-divider rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedRoom?.id} placeholder="e.g. 101" />
                          </div>
                          <div className="space-y-2">
                             <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Unit Category</label>
-                            <select className="w-full bg-background border border-border rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer" defaultValue={selectedRoom?.type}>
+                            <select className="w-full bg-background border border-divider rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer" defaultValue={selectedRoom?.type}>
                                <option>Premium Double</option>
                                <option>Elite Single</option>
                                <option>Standard Triple</option>
@@ -401,7 +401,7 @@ const Rooms = () => {
                       </div>
                       <div className="space-y-2">
                          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Asset Property</label>
-                         <select className="w-full bg-background border border-border rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer" defaultValue={selectedRoom?.property}>
+                         <select className="w-full bg-background border border-divider rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer" defaultValue={selectedRoom?.property}>
                             <option>Sapphire PG</option>
                             <option>Elite Living</option>
                             <option>Tech Park PG</option>
@@ -410,11 +410,11 @@ const Rooms = () => {
                       <div className="grid grid-cols-2 gap-6">
                          <div className="space-y-2">
                             <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Location (Floor)</label>
-                            <input className="w-full bg-background border border-border rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedRoom?.floor} placeholder="e.g. 2nd Floor" />
+                            <input className="w-full bg-background border border-divider rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedRoom?.floor} placeholder="e.g. 2nd Floor" />
                          </div>
                          <div className="space-y-2">
                             <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Deployment Status</label>
-                            <select className="w-full bg-background border border-border rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer" defaultValue={selectedRoom?.status}>
+                            <select className="w-full bg-background border border-divider rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer" defaultValue={selectedRoom?.status}>
                                <option>Available</option>
                                <option>Occupied</option>
                                <option>Maintenance</option>
@@ -433,18 +433,18 @@ const Rooms = () => {
                       <div className="grid grid-cols-2 gap-6">
                          <div className="space-y-2">
                             <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Max Capacity (Beds)</label>
-                            <input type="number" className="w-full bg-background border border-border rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedRoom?.capacity} placeholder="0" />
+                            <input type="number" className="w-full bg-background border border-divider rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedRoom?.capacity} placeholder="0" />
                          </div>
                          <div className="space-y-2">
                             <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Current Occupants</label>
-                            <input type="number" className="w-full bg-background border border-border rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedRoom?.occupants} placeholder="0" />
+                            <input type="number" className="w-full bg-background border border-divider rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedRoom?.occupants} placeholder="0" />
                          </div>
                       </div>
                       <div className="space-y-2">
                          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Asset Amenities</label>
                          <div className="flex flex-wrap gap-2 pt-2">
                             {['AC', 'TV', 'Fridge', 'Wifi', 'Locker', 'Attached Bath', 'Balcony'].map(a => (
-                              <label key={a} className="flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg cursor-pointer hover:border-primary transition-all">
+                              <label key={a} className="flex items-center gap-2 px-4 py-2 bg-background border border-divider rounded-lg cursor-pointer hover:border-primary transition-all">
                                  <input type="checkbox" className="w-4 h-4 rounded accent-primary" defaultChecked={selectedRoom?.amenities.includes(a)} />
                                  <span className="text-[11px] font-black uppercase tracking-tight text-text-secondary">{a}</span>
                               </label>
@@ -463,11 +463,11 @@ const Rooms = () => {
                       <div className="grid grid-cols-2 gap-6">
                          <div className="space-y-2">
                             <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Monthly Rental</label>
-                            <input className="w-full bg-background border border-border rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedRoom?.price} placeholder="₹ 0.00" />
+                            <input className="w-full bg-background border border-divider rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedRoom?.price} placeholder="₹ 0.00" />
                          </div>
                          <div className="space-y-2">
                             <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Security Node</label>
-                            <input className="w-full bg-background border border-border rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" placeholder="₹ 0.00" />
+                            <input className="w-full bg-background border border-divider rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" placeholder="₹ 0.00" />
                          </div>
                       </div>
                       <div className="p-5 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 flex gap-4 items-center">
@@ -499,7 +499,7 @@ const Rooms = () => {
            </div>
 
            {/* Modal Footer */}
-           <div className="flex justify-between items-center pt-8 border-t border-border">
+           <div className="flex justify-between items-center pt-8 border-t border-divider">
               <button 
                 disabled={currentStep === 1}
                 onClick={() => setCurrentStep(prev => prev - 1)}

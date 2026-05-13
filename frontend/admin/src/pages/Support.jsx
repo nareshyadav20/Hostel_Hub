@@ -75,7 +75,7 @@ const Support = () => {
           <p className="text-sm text-text-muted mt-1 font-medium italic">Tactical help manifest and administrative assistance command center</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-           <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-2 py-1 shadow-subtle">
+           <div className="flex items-center gap-2 bg-card border border-divider rounded-xl px-2 py-1 shadow-subtle">
               <button className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
                 <Phone size={14} className="text-emerald-500" /> Call Support
               </button>
@@ -159,7 +159,7 @@ const Support = () => {
                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-all duration-300" size={20} />
                <input 
                   type="text" 
-                  className="w-full bg-card border border-border rounded-3xl py-5 pl-16 pr-6 text-sm focus:outline-none focus:ring-8 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-premium"
+                  className="w-full bg-card border border-divider rounded-3xl py-5 pl-16 pr-6 text-sm focus:outline-none focus:ring-8 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-premium"
                   placeholder="Ask a question or search for a protocol..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -181,7 +181,7 @@ const Support = () => {
                       className="w-full p-6 flex items-center justify-between text-left"
                     >
                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center text-text-muted group-hover:text-primary transition-all">
+                          <div className="w-10 h-10 rounded-xl bg-background border border-divider flex items-center justify-center text-text-muted group-hover:text-primary transition-all">
                              <HelpCircle size={18} />
                           </div>
                           <span className="text-[13px] font-black text-text-primary tracking-tight uppercase">{faq.q}</span>
@@ -196,7 +196,7 @@ const Support = () => {
                             exit={{ height: 0, opacity: 0 }}
                             className="px-6 pb-6"
                           >
-                             <div className="pt-4 border-t border-border/50">
+                             <div className="pt-4 border-t border-divider/50">
                                 <p className="text-[12px] font-medium text-text-secondary leading-relaxed italic">"{faq.a}"</p>
                                 <div className="mt-6 flex items-center gap-4">
                                    <button className="px-4 py-2 bg-primary/10 text-primary rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all italic">Protocol Detailed</button>
@@ -212,7 +212,7 @@ const Support = () => {
 
             {/* Support Ticket Tracking */}
             <div className="card-classic overflow-hidden">
-               <div className="p-6 border-b border-border flex items-center justify-between bg-slate-50/50 dark:bg-white/2">
+               <div className="p-6 border-b border-divider flex items-center justify-between bg-slate-50/50 dark:bg-white/2">
                   <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                     <Clock size={14} className="text-warning" /> Support Manifest
                   </h4>
@@ -234,7 +234,7 @@ const Support = () => {
                              <span className="text-[9px] font-bold text-text-muted italic">{t.time}</span>
                           </div>
                        </div>
-                       <button className="p-2.5 rounded-xl bg-background border border-border text-text-muted group-hover:text-primary group-hover:border-primary transition-all">
+                       <button className="p-2.5 rounded-xl bg-background border border-divider text-text-muted group-hover:text-primary group-hover:border-primary transition-all">
                           <ExternalLink size={16} />
                        </button>
                     </div>
@@ -252,10 +252,10 @@ const Support = () => {
                   <p className="text-[11px] text-text-muted font-bold uppercase tracking-widest mb-8 leading-relaxed">Direct transmission to the administrative response force</p>
                   <div className="space-y-4">
                      <div className="grid grid-cols-2 gap-4">
-                        <input type="text" placeholder="Personnel Name" className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary" />
-                        <input type="email" placeholder="Auth Email" className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary" />
+                        <input type="text" placeholder="Personnel Name" className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary" />
+                        <input type="email" placeholder="Auth Email" className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary" />
                      </div>
-                     <textarea placeholder="Describe the operational anomaly..." rows={3} className="w-full bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary resize-none" />
+                     <textarea placeholder="Describe the operational anomaly..." rows={3} className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary resize-none" />
                      <button className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
                         <Send size={14} strokeWidth={3} /> Transmit Manifest
                      </button>

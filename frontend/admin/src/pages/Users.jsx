@@ -44,7 +44,7 @@ const Users = () => {
              <span className="text-xs font-bold text-warning uppercase">Awaiting Verification</span>
              <span className="text-xl font-black text-text-primary">{users.filter(u => u.kycStatus === 'Pending').length} Users</span>
           </div>
-          <button className="flex items-center gap-2 px-6 py-3 bg-background border border-border text-text-primary font-bold rounded-xl hover:bg-text-primary/5 transition-all">
+          <button className="flex items-center gap-2 px-6 py-3 bg-background border border-divider text-text-primary font-bold rounded-xl hover:bg-text-primary/5 transition-all">
             <Download size={18} /> Export Audit
           </button>
         </div>
@@ -75,12 +75,12 @@ const Users = () => {
           <input 
             type="text" 
             placeholder="Search by name, phone, or UID..." 
-            className="w-full bg-card/50 border border-border rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-all text-text-primary"
+            className="w-full bg-card/50 border border-divider rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-all text-text-primary"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <button className="p-3 bg-card border border-border rounded-2xl text-text-muted hover:text-primary transition-all shadow-sm">
+        <button className="p-3 bg-card border border-divider rounded-2xl text-text-muted hover:text-primary transition-all shadow-sm">
           <Filter size={20} />
         </button>
       </div>
@@ -90,7 +90,7 @@ const Users = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
-              <tr className="bg-card/20 border-b border-border">
+              <tr className="bg-card/20 border-b border-divider">
                 <th className="py-5 px-6 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em]">User Profile</th>
                 <th className="py-5 px-6 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em]">Phone Number</th>
                 <th className="py-5 px-6 text-[10px] font-bold text-text-muted uppercase tracking-[0.2em]">Role</th>
@@ -115,7 +115,7 @@ const Users = () => {
                   </td>
                   <td className="py-5 px-6 text-sm font-medium text-text-secondary">{u.phone}</td>
                   <td className="py-5 px-6">
-                    <span className="px-2 py-0.5 rounded bg-background border border-border text-[10px] font-bold text-text-muted uppercase tracking-wider">{u.type}</span>
+                    <span className="px-2 py-0.5 rounded bg-background border border-divider text-[10px] font-bold text-text-muted uppercase tracking-wider">{u.type}</span>
                   </td>
                   <td className="py-5 px-6">
                     <div className="flex items-center gap-2 text-text-secondary">

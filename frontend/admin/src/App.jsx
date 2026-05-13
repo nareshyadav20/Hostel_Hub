@@ -34,6 +34,7 @@ function App() {
     <ThemeProvider>
       <Router>
         <Routes>
+          <Route path="/"              element={<Layout><Dashboard /></Layout>} />
           <Route path="/dashboard"     element={<Layout><Dashboard /></Layout>} />
           <Route path="/hostels"       element={<Layout><Hostels /></Layout>} />
           <Route path="/owners"        element={<Layout><Owners /></Layout>} />
@@ -49,20 +50,23 @@ function App() {
           <Route path="/settings"      element={<Layout><Settings /></Layout>} />
           <Route path="/bookings"      element={<Layout><Bookings /></Layout>} />
           <Route path="/issues"        element={<Layout><Issues /></Layout>} />
-          
-          {/* Missing Sidebar Modules */}
-          <Route path="/rooms" element={<Layout><Rooms /></Layout>} />
-          <Route path="/beds" element={<Layout><Placeholder title="Beds" /></Layout>} />
-          <Route path="/mess" element={<Layout><Placeholder title="Mess" /></Layout>} />
-          <Route path="/inventory" element={<Layout><Placeholder title="Inventory" /></Layout>} />
-          <Route path="/finance" element={<Layout><Finance /></Layout>} />
-          <Route path="/wallet" element={<Layout><Placeholder title="Wallet" /></Layout>} />
-          <Route path="/automation" element={<Layout><Automation /></Layout>} />
-          <Route path="/tasks" element={<Layout><Tasks /></Layout>} />
-          <Route path="/insights" element={<Layout><Insights /></Layout>} />
-          <Route path="/support" element={<Layout><Support /></Layout>} />
-
-          <Route path="*"              element={<Navigate to="/dashboard" />} />
+          <Route path="/payments"      element={<Layout><Finance /></Layout>} />
+          <Route path="/plans"         element={<Layout><Placeholder title="SaaS Plans" /></Layout>} />
+          <Route path="/promotions"    element={<Layout><Cms /></Layout>} />
+          <Route path="/integrations"  element={<Layout><Placeholder title="Partner Integrations" /></Layout>} />
+          <Route path="/security"      element={<Layout><Settings /></Layout>} />
+          <Route path="/rooms"         element={<Layout><Rooms /></Layout>} />
+          <Route path="/beds"          element={<Layout><Placeholder title="Beds" /></Layout>} />
+          <Route path="/mess"          element={<Layout><Placeholder title="Mess" /></Layout>} />
+          <Route path="/inventory"     element={<Layout><Placeholder title="Inventory" /></Layout>} />
+          <Route path="/finance"       element={<Layout><Finance /></Layout>} />
+          <Route path="/wallet"        element={<Layout><Placeholder title="Wallet" /></Layout>} />
+          <Route path="/automation"    element={<Layout><Automation /></Layout>} />
+          <Route path="/tasks"         element={<Layout><Tasks /></Layout>} />
+          <Route path="/insights"      element={<Layout><Insights /></Layout>} />
+          <Route path="/support"       element={<Layout><Support /></Layout>} />
+          <Route path="/complaints"    element={<Layout><Placeholder title="Complaints" /></Layout>} />
+          <Route path="*"              element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>
     </ThemeProvider>

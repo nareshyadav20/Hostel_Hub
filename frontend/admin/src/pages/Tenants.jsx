@@ -140,13 +140,13 @@ const Tenants = () => {
         <div className="flex flex-wrap items-center gap-3">
           <button 
             onClick={handleIntelExport}
-            className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle"
+            className="flex items-center gap-2 px-5 py-2.5 bg-card border border-divider rounded-xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle"
           >
             <Download size={14} /> Intel Export
           </button>
           <button 
             onClick={handleBroadcast}
-            className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle"
+            className="flex items-center gap-2 px-5 py-2.5 bg-card border border-divider rounded-xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle"
           >
             <MessageSquare size={14} /> Broadcast
           </button>
@@ -190,12 +190,12 @@ const Tenants = () => {
       </div>
 
       {/* --- STICKY CONTROL BAR --- */}
-      <div className="sticky top-0 z-40 py-4 bg-background/80 backdrop-blur-xl border-b border-border/50 -mx-4 px-4 flex flex-col lg:flex-row gap-6">
+      <div className="sticky top-0 z-40 py-4 bg-background/80 backdrop-blur-xl border-b border-divider/50 -mx-4 px-4 flex flex-col lg:flex-row gap-6">
         <div className="flex-1 relative flex items-center group">
           <Search className="absolute left-4 text-text-muted group-focus-within:text-primary transition-all duration-300" size={18} />
           <input
             type="text"
-            className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-subtle"
+            className="w-full bg-card border border-divider rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-subtle"
             placeholder="Search residents by name, room, property or phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -203,7 +203,7 @@ const Tenants = () => {
         </div>
 
         <div className="flex items-center gap-4 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
-          <div className="flex bg-card p-1.5 rounded-2xl border border-border shadow-subtle shrink-0">
+          <div className="flex bg-card p-1.5 rounded-2xl border border-divider shadow-subtle shrink-0">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-text-muted hover:text-text-primary'}`}
@@ -220,7 +220,7 @@ const Tenants = () => {
 
           <div className="h-10 w-px bg-border mx-2 shrink-0" />
 
-          <div className="flex bg-card p-1.5 rounded-2xl border border-border shadow-subtle shrink-0">
+          <div className="flex bg-card p-1.5 rounded-2xl border border-divider shadow-subtle shrink-0">
             {['All', 'Active', 'Pending', 'Left'].map((status) => (
               <button
                 key={status}
@@ -233,7 +233,7 @@ const Tenants = () => {
             ))}
           </div>
 
-          <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle">
+          <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-divider rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle">
             <Filter size={14} strokeWidth={3} /> Filters
           </button>
         </div>
@@ -275,13 +275,13 @@ const Tenants = () => {
                         </div>
                       </div>
                       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-border/50 text-text-muted hover:text-primary transition-all"><Edit size={16} /></button>
-                        <button className="p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-border/50 text-text-muted hover:text-primary transition-all"><Mail size={16} /></button>
+                        <button className="p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-divider/50 text-text-muted hover:text-primary transition-all"><Edit size={16} /></button>
+                        <button className="p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-divider/50 text-text-muted hover:text-primary transition-all"><Mail size={16} /></button>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-border/50">
+                      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-divider/50">
                         <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-2">Payment Status</p>
                         <div className="flex items-center justify-between">
                           <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${t.rentStatus === 'Paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
@@ -289,7 +289,7 @@ const Tenants = () => {
                           <span className="text-[11px] font-black text-text-primary italic">{t.balance} Due</span>
                         </div>
                       </div>
-                      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-border/50">
+                      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-divider/50">
                         <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-2">Check-in</p>
                         <div className="flex items-center gap-2">
                           <Calendar size={12} className="text-primary" />
@@ -298,7 +298,7 @@ const Tenants = () => {
                       </div>
                     </div>
 
-                    <div className="mt-6 pt-6 border-t border-border/50 flex items-center justify-between">
+                    <div className="mt-6 pt-6 border-t border-divider/50 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex -space-x-2">
                           {t.docs.map((doc, i) => (
@@ -329,7 +329,7 @@ const Tenants = () => {
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden pt-8 mt-4 border-t border-border"
+                          className="overflow-hidden pt-8 mt-4 border-t border-divider"
                         >
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-6">
@@ -337,15 +337,15 @@ const Tenants = () => {
                                 <Clock size={14} className="text-indigo-500" /> Stay Manifest
                               </h4>
                               <div className="space-y-3">
-                                <div className="flex justify-between items-center p-3 rounded-xl bg-background border border-border">
+                                <div className="flex justify-between items-center p-3 rounded-xl bg-background border border-divider">
                                   <span className="text-[10px] font-bold text-text-muted uppercase">Gender</span>
                                   <span className="text-[11px] font-black text-text-primary">{t.gender}</span>
                                 </div>
-                                <div className="flex justify-between items-center p-3 rounded-xl bg-background border border-border">
+                                <div className="flex justify-between items-center p-3 rounded-xl bg-background border border-divider">
                                   <span className="text-[10px] font-bold text-text-muted uppercase">Check-in</span>
                                   <span className="text-[11px] font-black text-text-primary">{t.checkIn}</span>
                                 </div>
-                                <div className="flex justify-between items-center p-3 rounded-xl bg-background border border-border">
+                                <div className="flex justify-between items-center p-3 rounded-xl bg-background border border-divider">
                                   <span className="text-[10px] font-bold text-text-muted uppercase">Duration</span>
                                   <span className="text-[11px] font-black text-text-primary">{t.duration}</span>
                                 </div>
@@ -361,14 +361,14 @@ const Tenants = () => {
                                 <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1">No outstanding overheads</p>
                                 <button 
                                   onClick={() => handleGenerateLedger(t.name)}
-                                  className="w-full mt-4 py-3 bg-white dark:bg-slate-800 border border-border text-[10px] font-black uppercase tracking-widest rounded-xl hover:border-primary transition-all"
+                                  className="w-full mt-4 py-3 bg-white dark:bg-slate-800 border border-divider text-[10px] font-black uppercase tracking-widest rounded-xl hover:border-primary transition-all"
                                 >
                                   Generate Ledger
                                 </button>
                               </div>
                             </div>
                           </div>
-                          <div className="mt-8 pt-8 border-t border-border flex justify-between items-center">
+                          <div className="mt-8 pt-8 border-t border-divider flex justify-between items-center">
                             <div className="flex items-center gap-6">
                               <div className="flex flex-col">
                                 <span className="text-[9px] font-bold text-text-muted uppercase">Phone</span>
@@ -410,7 +410,7 @@ const Tenants = () => {
             <div className="overflow-x-auto scrollbar-hide">
               <table className="w-full text-left border-collapse whitespace-nowrap">
                 <thead>
-                  <tr className="bg-card/20 border-b border-border">
+                  <tr className="bg-card/20 border-b border-divider">
                     <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest">Resident Manifest</th>
                     <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest">Asset Node</th>
                     <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest">Status</th>
@@ -482,7 +482,7 @@ const Tenants = () => {
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-border rounded-xl text-text-muted opacity-50 cursor-not-allowed">Previous Phase</button>
+          <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-divider rounded-xl text-text-muted opacity-50 cursor-not-allowed">Previous Phase</button>
           <div className="flex gap-1">
             {[1, 2, 3, '...', 12].map((p, i) => (
               <button key={i} className={`w-8 h-8 rounded-lg text-[10px] font-black flex items-center justify-center transition-all ${p === 1 ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-text-muted hover:text-text-primary hover:bg-background'}`}>
@@ -490,7 +490,7 @@ const Tenants = () => {
               </button>
             ))}
           </div>
-          <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-border rounded-xl text-text-secondary hover:border-primary hover:text-primary transition-all shadow-subtle">Next Phase</button>
+          <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-divider rounded-xl text-text-secondary hover:border-primary hover:text-primary transition-all shadow-subtle">Next Phase</button>
         </div>
       </div>
     </div>

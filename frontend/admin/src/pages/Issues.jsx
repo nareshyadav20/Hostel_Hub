@@ -26,7 +26,7 @@ const Issues = () => {
           <p className="text-sm text-text-muted mt-1 font-medium italic">Unified resolution center for tenant grievances and asset infrastructure</p>
         </div>
         
-        <div className="flex bg-card p-1.5 rounded-2xl border border-border shadow-subtle shrink-0 self-start lg:self-center">
+        <div className="flex bg-card p-1.5 rounded-2xl border border-divider shadow-subtle shrink-0 self-start lg:self-center">
           <button
             onClick={() => setActiveTab('complaints')}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${

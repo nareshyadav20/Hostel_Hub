@@ -67,7 +67,7 @@ const Finance = () => {
           <p className="text-sm text-text-muted mt-1 font-medium italic">Global fiscal command center for revenue optimization and yield tracking</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-           <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-2 py-1 shadow-subtle">
+           <div className="flex items-center gap-2 bg-card border border-divider rounded-xl px-2 py-1 shadow-subtle">
               <button className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
                 <FileText size={14} className="text-emerald-500" /> Excel
               </button>
@@ -166,7 +166,7 @@ const Finance = () => {
                      </div>
                   </div>
                </div>
-               <div className="mt-8 pt-8 border-t border-border/50 flex items-center justify-between">
+               <div className="mt-8 pt-8 border-t border-divider/50 flex items-center justify-between">
                   <div className="text-center">
                      <p className="text-[9px] font-black text-text-muted uppercase mb-1">Avg Collection</p>
                      <p className="text-lg font-black text-text-primary italic">2.4 Days</p>
@@ -183,7 +183,7 @@ const Finance = () => {
                <h3 className="text-[13px] font-black text-text-primary uppercase tracking-widest mb-6">Top Performers</h3>
                <div className="space-y-4">
                   {TOP_TENANTS.map((t, i) => (
-                    <div key={i} className="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-border/50 hover:border-primary/20 transition-all cursor-pointer">
+                    <div key={i} className="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-divider/50 hover:border-primary/20 transition-all cursor-pointer">
                        <div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center font-black text-xs">{t.name[0]}</div>
                        <div className="flex-1 min-w-0">
                           <p className="text-[11px] font-black text-text-primary uppercase tracking-tight truncate">{t.name}</p>
@@ -202,7 +202,7 @@ const Finance = () => {
 
       {/* --- TRANSACTION LEDGER --- */}
       <div className="card-classic overflow-hidden shadow-premium bg-white/50 dark:bg-card/50">
-         <div className="p-8 border-b border-border/50 flex flex-col md:flex-row md:items-center justify-between gap-6">
+         <div className="p-8 border-b border-divider/50 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
                <h3 className="text-lg font-black text-text-primary uppercase tracking-tight">Global Transaction Ledger</h3>
                <p className="text-[11px] font-medium text-text-muted italic">Historical pulse of all inward and outward capital movements</p>
@@ -213,17 +213,17 @@ const Finance = () => {
                   <input 
                      type="text" 
                      placeholder="Search ledger..."
-                     className="bg-background border border-border rounded-xl py-2 pl-10 pr-4 text-[11px] font-bold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all w-64 shadow-subtle"
+                     className="bg-background border border-divider rounded-xl py-2 pl-10 pr-4 text-[11px] font-bold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all w-64 shadow-subtle"
                   />
                </div>
-               <button className="p-2.5 bg-background border border-border rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle"><Filter size={18} /></button>
+               <button className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle"><Filter size={18} /></button>
             </div>
          </div>
 
          <div className="overflow-x-auto scrollbar-hide">
             <table className="w-full text-left border-collapse whitespace-nowrap">
                <thead>
-                  <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-border">
+                  <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-divider">
                      <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest">Transaction ID</th>
                      <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Entity Manifest</th>
                      <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Allocation</th>
@@ -255,7 +255,7 @@ const Finance = () => {
                           <p className="text-[10px] font-bold text-text-muted italic">{tx.date}</p>
                        </td>
                        <td className="py-5 px-4">
-                          <span className="px-2.5 py-1 rounded-lg bg-background border border-border text-[9px] font-black uppercase tracking-widest text-text-muted italic">{tx.cat}</span>
+                          <span className="px-2.5 py-1 rounded-lg bg-background border border-divider text-[9px] font-black uppercase tracking-widest text-text-muted italic">{tx.cat}</span>
                        </td>
                        <td className={`py-5 px-4 text-[14px] font-black ${tx.trend === 'up' ? 'text-emerald-500' : 'text-rose-500'} italic`}>
                           {tx.amount}
@@ -274,7 +274,7 @@ const Finance = () => {
                           }`}>{tx.status}</span>
                        </td>
                        <td className="py-5 px-8 text-right">
-                          <button className="p-2.5 bg-background border border-border rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle group-hover:scale-110">
+                          <button className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle group-hover:scale-110">
                              <MoreHorizontal size={18} />
                           </button>
                        </td>

@@ -131,15 +131,15 @@ const Hostels = () => {
                         </div>
                      </div>
                      <div className="p-8 grid grid-cols-3 gap-6">
-                        <div className="text-center p-6 bg-slate-50 dark:bg-white/5 rounded-2xl border border-border/50">
+                        <div className="text-center p-6 bg-slate-50 dark:bg-white/5 rounded-2xl border border-divider/50">
                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2">Capacity</p>
                            <h4 className="text-2xl font-black text-text-primary italic">{selectedHostel.capacity} Beds</h4>
                         </div>
-                        <div className="text-center p-6 bg-slate-50 dark:bg-white/5 rounded-2xl border border-border/50">
+                        <div className="text-center p-6 bg-slate-50 dark:bg-white/5 rounded-2xl border border-divider/50">
                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2">Occupancy</p>
                            <h4 className="text-2xl font-black text-primary italic">{selectedHostel.occupancy}%</h4>
                         </div>
-                        <div className="text-center p-6 bg-slate-50 dark:bg-white/5 rounded-2xl border border-border/50">
+                        <div className="text-center p-6 bg-slate-50 dark:bg-white/5 rounded-2xl border border-divider/50">
                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2">Revenue</p>
                            <h4 className="text-2xl font-black text-success italic">₹{selectedHostel.revenue}</h4>
                         </div>
@@ -150,7 +150,7 @@ const Hostels = () => {
                      <h3 className="text-lg font-black text-text-primary uppercase tracking-tight mb-8">Amenities & Features</h3>
                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {selectedHostel.amenities.map((item, i) => (
-                           <div key={i} className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-slate-50 dark:bg-white/5 border border-border/50">
+                           <div key={i} className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-slate-50 dark:bg-white/5 border border-divider/50">
                               <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                                  <Zap size={24} />
                               </div>
@@ -222,7 +222,7 @@ const Hostels = () => {
              <div className="flex items-center gap-3">
                 <button 
                   onClick={handleAuditTrail}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-card border border-border rounded-xl text-[11px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-card border border-divider rounded-xl text-[11px] font-black uppercase tracking-widest text-text-secondary hover:border-primary transition-all shadow-subtle"
                 >
                    <Download size={16} /> Audit Trail
                 </button>
@@ -261,7 +261,7 @@ const Hostels = () => {
                <Search className="absolute left-4 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
                <input
                   type="text"
-                  className="w-full bg-card border border-border rounded-xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary shadow-subtle"
+                  className="w-full bg-card border border-divider rounded-xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary shadow-subtle"
                   placeholder="Search properties by name, location or manager..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -269,7 +269,7 @@ const Hostels = () => {
             </div>
             <div className="flex gap-3">
                <select
-                  className="bg-card border border-border rounded-xl px-6 py-3.5 text-xs font-black uppercase tracking-widest text-text-primary outline-none focus:border-primary shadow-subtle cursor-pointer"
+                  className="bg-card border border-divider rounded-xl px-6 py-3.5 text-xs font-black uppercase tracking-widest text-text-primary outline-none focus:border-primary shadow-subtle cursor-pointer"
                   value={filterCity}
                   onChange={(e) => setFilterCity(e.target.value)}
                >
@@ -280,7 +280,7 @@ const Hostels = () => {
                </select>
                 <button 
                   onClick={handleMoreFilters}
-                  className="flex items-center gap-2 px-6 py-3.5 bg-card border border-border rounded-xl text-xs font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle"
+                  className="flex items-center gap-2 px-6 py-3.5 bg-card border border-divider rounded-xl text-xs font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle"
                 >
                    <Filter size={16} /> More Filters
                 </button>
@@ -355,14 +355,14 @@ const Hostels = () => {
                      </div>
 
                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-border/50">
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-divider/50">
                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1 leading-none">Occupancy</p>
                            <div className="flex items-baseline gap-1 mt-1">
                               <span className="text-xl font-black text-text-primary italic">{h.occupancy}%</span>
                               <span className="text-[10px] font-bold text-text-muted">/ {h.capacity}</span>
                            </div>
                         </div>
-                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-border/50">
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-divider/50">
                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1 leading-none">Monthly Rev</p>
                            <div className="flex items-baseline gap-1 mt-1">
                               <span className="text-xl font-black text-text-primary italic">₹{h.revenue}</span>
@@ -371,10 +371,10 @@ const Hostels = () => {
                         </div>
                      </div>
 
-                     <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                     <div className="flex items-center justify-between pt-4 border-t border-divider/50">
                         <div className="flex gap-2">
                            {h.amenities.slice(0, 3).map((a, i) => (
-                              <div key={i} className="w-7 h-7 rounded-lg bg-background border border-border/50 flex items-center justify-center text-text-muted" title={a}>
+                              <div key={i} className="w-7 h-7 rounded-lg bg-background border border-divider/50 flex items-center justify-center text-text-muted" title={a}>
                                  {i === 0 ? <Wifi size={14} /> : i === 1 ? <Wind size={14} /> : <Coffee size={14} />}
                               </div>
                            ))}
@@ -392,7 +392,7 @@ const Hostels = () => {
                   whileHover={{ scale: 1.02 }}
                   className="card-classic border-dashed border-2 hover:border-primary/50 flex flex-col items-center justify-center p-12 gap-5 group cursor-pointer transition-all bg-primary/5 min-h-[480px]"
                >
-                  <div className="w-20 h-20 rounded-3xl bg-white dark:bg-slate-800 border border-border flex items-center justify-center text-text-muted group-hover:text-primary group-hover:rotate-90 transition-all duration-500 shadow-sm">
+                  <div className="w-20 h-20 rounded-3xl bg-white dark:bg-slate-800 border border-divider flex items-center justify-center text-text-muted group-hover:text-primary group-hover:rotate-90 transition-all duration-500 shadow-sm">
                      <Plus size={40} strokeWidth={2.5} />
                   </div>
                   <div className="text-center">
@@ -446,7 +446,7 @@ const Hostels = () => {
                   <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-border -translate-y-1/2 z-0" />
                   {steps.map((s) => (
                      <div key={s.id} className="relative z-10 flex flex-col items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 border-2 ${currentStep >= s.id ? 'bg-primary border-primary text-white shadow-glow' : 'bg-card border-border text-text-muted'
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 border-2 ${currentStep >= s.id ? 'bg-primary border-primary text-white shadow-glow' : 'bg-card border-divider text-text-muted'
                            }`}>
                            {currentStep > s.id ? <CheckCircle2 size={18} /> : s.icon}
                         </div>
@@ -468,11 +468,11 @@ const Hostels = () => {
                            <div className="grid grid-cols-2 gap-6">
                               <div className="space-y-2">
                                  <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Identity</label>
-                                 <input className="w-full bg-background border border-border rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedHostel?.name} placeholder="e.g. Sapphire Heights" />
+                                 <input className="w-full bg-background border border-divider rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedHostel?.name} placeholder="e.g. Sapphire Heights" />
                               </div>
                               <div className="space-y-2">
                                  <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Category</label>
-                                 <select className="w-full bg-background border border-border rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer" defaultValue={selectedHostel?.type}>
+                                 <select className="w-full bg-background border border-divider rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer" defaultValue={selectedHostel?.type}>
                                     <option>Premium PG</option>
                                     <option>Standard Hostel</option>
                                     <option>Executive Suites</option>
@@ -483,14 +483,14 @@ const Hostels = () => {
                               <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Geographical Hub</label>
                               <div className="relative flex items-center group">
                                  <MapPin className="absolute left-4 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
-                                 <input className="w-full bg-background border border-border rounded-xl py-3.5 pl-12 pr-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedHostel?.location} placeholder="Enter full address or city..." />
+                                 <input className="w-full bg-background border border-divider rounded-xl py-3.5 pl-12 pr-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedHostel?.location} placeholder="Enter full address or city..." />
                               </div>
                            </div>
                            <div className="space-y-2">
                               <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Amenities</label>
                               <div className="flex flex-wrap gap-2 pt-2">
                                  {['Wifi', 'AC', 'Gym', 'Laundry', 'Parking', 'Kitchen'].map(a => (
-                                    <label key={a} className="flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg cursor-pointer hover:border-primary transition-all">
+                                    <label key={a} className="flex items-center gap-2 px-4 py-2 bg-background border border-divider rounded-lg cursor-pointer hover:border-primary transition-all">
                                        <input type="checkbox" className="w-4 h-4 rounded accent-primary" defaultChecked={selectedHostel?.amenities.includes(a)} />
                                        <span className="text-[11px] font-black uppercase tracking-tight text-text-secondary">{a}</span>
                                     </label>
@@ -506,7 +506,7 @@ const Hostels = () => {
                            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                            className="space-y-8 text-center"
                         >
-                           <div className="border-2 border-dashed border-border rounded-3xl p-12 bg-slate-50 dark:bg-white/5 group hover:border-primary transition-all cursor-pointer">
+                           <div className="border-2 border-dashed border-divider rounded-3xl p-12 bg-slate-50 dark:bg-white/5 group hover:border-primary transition-all cursor-pointer">
                               <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto mb-6 group-hover:scale-110 transition-transform">
                                  <Camera size={40} />
                               </div>
@@ -517,7 +517,7 @@ const Hostels = () => {
                               </button>
                            </div>
                            {selectedHostel && (
-                              <div className="relative aspect-video rounded-3xl overflow-hidden border border-border shadow-premium group">
+                              <div className="relative aspect-video rounded-3xl overflow-hidden border border-divider shadow-premium group">
                                  <img src={selectedHostel.image} className="w-full h-full object-cover" alt="" />
                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                     <button className="p-3 bg-white text-primary rounded-xl font-black text-[10px] uppercase tracking-widest">Update Photo</button>
@@ -536,11 +536,11 @@ const Hostels = () => {
                            <div className="grid grid-cols-2 gap-6">
                               <div className="space-y-2">
                                  <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Max Capacity</label>
-                                 <input type="number" className="w-full bg-background border border-border rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedHostel?.capacity} placeholder="00" />
+                                 <input type="number" className="w-full bg-background border border-divider rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedHostel?.capacity} placeholder="00" />
                               </div>
                               <div className="space-y-2">
                                  <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Base Rental (Monthly)</label>
-                                 <input className="w-full bg-background border border-border rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedHostel?.revenue} placeholder="₹ 0.00" />
+                                 <input className="w-full bg-background border border-divider rounded-xl py-3.5 px-5 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" defaultValue={selectedHostel?.revenue} placeholder="₹ 0.00" />
                               </div>
                            </div>
                            <div className="p-5 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 flex gap-4 items-center">

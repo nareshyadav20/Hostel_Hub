@@ -62,12 +62,12 @@ const Automation = () => {
                to actions (like generating invoices) with zero code.
             </p>
             <div className="flex items-center gap-4">
-               <div className="px-4 py-3 rounded-2xl bg-card border border-border flex items-center gap-2 shadow-sm">
+               <div className="px-4 py-3 rounded-2xl bg-card border border-divider flex items-center gap-2 shadow-sm">
                   <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
                   <span className="text-xs font-bold uppercase tracking-widest">IF: Rent Received</span>
                </div>
                <ArrowRight className="text-text-muted" size={18} />
-               <div className="px-4 py-3 rounded-2xl bg-card border border-border flex items-center gap-2 shadow-sm">
+               <div className="px-4 py-3 rounded-2xl bg-card border border-divider flex items-center gap-2 shadow-sm">
                   <div className="w-2 h-2 bg-success rounded-full"></div>
                   <span className="text-xs font-bold uppercase tracking-widest">THEN: Issue Receipt</span>
                </div>
@@ -80,7 +80,7 @@ const Automation = () => {
 
       {/* Active Workflows Table */}
       <div className="layer-2 overflow-hidden">
-         <div className="p-6 border-b border-border">
+         <div className="p-6 border-b border-divider">
             <h2 className="text-lg font-bold tracking-tight text-text-primary">Operational Workflows</h2>
          </div>
          <div className="overflow-x-auto">
@@ -125,13 +125,13 @@ const Automation = () => {
                         </td>
                         <td className="py-5 px-6 text-right opacity-0 group-hover:opacity-100 transition-opacity">
                            <div className="flex items-center justify-end gap-2">
-                              <button className="p-2 rounded-lg bg-background border border-border text-text-muted hover:text-primary transition-all">
+                              <button className="p-2 rounded-lg bg-background border border-divider text-text-muted hover:text-primary transition-all">
                                  {wf.status === 'Active' ? <Pause size={16} /> : <Play size={16} />}
                               </button>
-                              <button className="p-2 rounded-lg bg-background border border-border text-text-muted hover:text-primary transition-all">
+                              <button className="p-2 rounded-lg bg-background border border-divider text-text-muted hover:text-primary transition-all">
                                  <Settings size={16} />
                               </button>
-                              <button className="p-2 rounded-lg bg-background border border-border text-text-muted hover:text-primary transition-all">
+                              <button className="p-2 rounded-lg bg-background border border-divider text-text-muted hover:text-primary transition-all">
                                  <MoreHorizontal size={16} />
                               </button>
                            </div>

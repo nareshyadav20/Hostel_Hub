@@ -111,7 +111,7 @@ const Bookings = () => {
           <p className="text-sm text-text-muted mt-1 font-medium italic">Operational command for reservation lifecycle and guest ingress</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-           <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-2 py-1 shadow-subtle">
+           <div className="flex items-center gap-2 bg-card border border-divider rounded-xl px-2 py-1 shadow-subtle">
               <button className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
                 <FileText size={14} className="text-emerald-500" /> Excel
               </button>
@@ -157,12 +157,12 @@ const Bookings = () => {
       </div>
 
       {/* --- STICKY CONTROL BAR --- */}
-      <div className="sticky top-0 z-40 py-4 bg-background/80 backdrop-blur-xl border-b border-border/50 -mx-4 px-4 flex flex-col lg:flex-row gap-6">
+      <div className="sticky top-0 z-40 py-4 bg-background/80 backdrop-blur-xl border-b border-divider/50 -mx-4 px-4 flex flex-col lg:flex-row gap-6">
          <div className="flex-1 relative flex items-center group">
             <Search className="absolute left-4 text-text-muted group-focus-within:text-primary transition-all duration-300" size={18} />
             <input 
                type="text" 
-               className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-subtle"
+               className="w-full bg-card border border-divider rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-subtle"
                placeholder="Search bookings by Guest Name, ID, or Property..."
                value={searchTerm}
                onChange={(e) => setSearchTerm(e.target.value)}
@@ -170,7 +170,7 @@ const Bookings = () => {
          </div>
          
          <div className="flex items-center gap-4 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
-            <div className="flex bg-card p-1.5 rounded-2xl border border-border shadow-subtle shrink-0">
+            <div className="flex bg-card p-1.5 rounded-2xl border border-divider shadow-subtle shrink-0">
                {['All', 'Arriving', 'Confirmed', 'Pending', 'Cancelled'].map((status) => (
                  <button
                    key={status}
@@ -186,7 +186,7 @@ const Bookings = () => {
 
             <div className="h-10 w-px bg-border mx-2 shrink-0" />
 
-            <div className="flex bg-card p-1.5 rounded-2xl border border-border shadow-subtle shrink-0">
+            <div className="flex bg-card p-1.5 rounded-2xl border border-divider shadow-subtle shrink-0">
                <button
                  onClick={() => setViewMode('table')}
                  className={`p-2.5 rounded-xl transition-all ${viewMode === 'table' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-text-muted hover:text-text-primary'}`}
@@ -201,7 +201,7 @@ const Bookings = () => {
                </button>
             </div>
             
-            <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
+            <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-divider rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
                <Filter size={14} strokeWidth={3} /> Refine
             </button>
          </div>
@@ -213,16 +213,16 @@ const Bookings = () => {
           <motion.div 
             key="table" 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="card-classic overflow-hidden border border-border/50 shadow-premium"
+            className="card-classic overflow-hidden border border-divider/50 shadow-premium"
           >
              <div className="overflow-x-auto scrollbar-hide">
                 <table className="w-full text-left border-collapse whitespace-nowrap">
                   <thead>
-                    <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-border sticky top-0 z-20 backdrop-blur-md">
+                    <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-divider sticky top-0 z-20 backdrop-blur-md">
                       <th className="py-5 px-8 w-12">
                          <input 
                            type="checkbox" 
-                           className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 transition-all cursor-pointer"
+                           className="w-4 h-4 rounded border-divider text-primary focus:ring-primary/20 transition-all cursor-pointer"
                            onChange={(e) => {
                              if (e.target.checked) setSelectedBookings(bookings.map(b => b.id));
                              else setSelectedBookings([]);
@@ -257,12 +257,12 @@ const Bookings = () => {
                                  if (selectedBookings.includes(b.id)) setSelectedBookings(selectedBookings.filter(id => id !== b.id));
                                  else setSelectedBookings([...selectedBookings, b.id]);
                                }}
-                               className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 transition-all cursor-pointer"
+                               className="w-4 h-4 rounded border-divider text-primary focus:ring-primary/20 transition-all cursor-pointer"
                              />
                           </td>
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-4">
-                               <div className="w-10 h-10 rounded-xl overflow-hidden shadow-subtle border border-border/50">
+                               <div className="w-10 h-10 rounded-xl overflow-hidden shadow-subtle border border-divider/50">
                                   <img src={b.image} className="w-full h-full object-cover" alt={b.guestName} />
                                </div>
                                <div>
@@ -316,20 +316,20 @@ const Bookings = () => {
                                   exit={{ height: 0, opacity: 0 }}
                                   className="bg-slate-50/30 dark:bg-white/[0.01] overflow-hidden"
                                 >
-                                  <div className="p-10 grid grid-cols-1 lg:grid-cols-3 gap-12 border-b border-border/50">
+                                  <div className="p-10 grid grid-cols-1 lg:grid-cols-3 gap-12 border-b border-divider/50">
                                      <div className="space-y-8">
                                         <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                                           <User size={14} className="text-primary" /> Guest Intelligence
                                         </h4>
                                         <div className="grid grid-cols-1 gap-4">
-                                           <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-card border border-border shadow-subtle">
+                                           <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-card border border-divider shadow-subtle">
                                               <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary"><Phone size={16} /></div>
                                               <div>
                                                  <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">Mobile Phase</p>
                                                  <p className="text-[12px] font-black text-text-primary">{b.phone}</p>
                                               </div>
                                            </div>
-                                           <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-card border border-border shadow-subtle">
+                                           <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-card border border-divider shadow-subtle">
                                               <div className="w-10 h-10 rounded-xl bg-indigo-500/5 flex items-center justify-center text-indigo-500"><Mail size={16} /></div>
                                               <div>
                                                  <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">Protocol Email</p>
@@ -343,18 +343,18 @@ const Bookings = () => {
                                         <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                                           <Calendar size={14} className="text-warning" /> Operational Manifest
                                         </h4>
-                                        <div className="p-6 rounded-3xl bg-white dark:bg-card border border-border shadow-subtle space-y-4">
-                                           <div className="flex justify-between items-center pb-4 border-b border-border/50">
+                                        <div className="p-6 rounded-3xl bg-white dark:bg-card border border-divider shadow-subtle space-y-4">
+                                           <div className="flex justify-between items-center pb-4 border-b border-divider/50">
                                               <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">Property Node</span>
                                               <span className="text-[12px] font-black text-text-primary italic">{b.hostel}</span>
                                            </div>
-                                           <div className="flex justify-between items-center pb-4 border-b border-border/50">
+                                           <div className="flex justify-between items-center pb-4 border-b border-divider/50">
                                               <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">Applied On</span>
                                               <span className="text-[12px] font-black text-text-primary italic">{b.appliedOn}</span>
                                            </div>
                                            <div>
                                               <span className="text-[10px] font-black text-text-muted uppercase tracking-widest block mb-2">Internal Note</span>
-                                              <p className="text-[11px] font-medium text-text-secondary italic leading-relaxed bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-border/50">"{b.specialRequest}"</p>
+                                              <p className="text-[11px] font-medium text-text-secondary italic leading-relaxed bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-divider/50">"{b.specialRequest}"</p>
                                            </div>
                                         </div>
                                      </div>
@@ -367,7 +367,7 @@ const Bookings = () => {
                                            <button className="w-full py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all group">
                                               Confirm Reservation <ChevronRight size={14} className="inline ml-1 group-hover:translate-x-1 transition-transform" />
                                            </button>
-                                           <button className="w-full py-4 bg-white dark:bg-card border border-border text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Modify Check-in</button>
+                                           <button className="w-full py-4 bg-white dark:bg-card border border-divider text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Modify Check-in</button>
                                            <button className="w-full py-4 bg-rose-500/5 text-rose-500 border border-rose-500/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all">Abort Booking</button>
                                         </div>
                                      </div>
@@ -417,7 +417,7 @@ const Bookings = () => {
                       <div>
                         <div className="flex items-center gap-3 mb-1">
                            <h3 className="text-2xl font-black text-text-primary tracking-tight">{b.guestName}</h3>
-                           <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-[9px] font-black text-text-muted uppercase tracking-widest border border-border/50">{b.id}</span>
+                           <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-[9px] font-black text-text-muted uppercase tracking-widest border border-divider/50">{b.id}</span>
                         </div>
                         <div className="flex items-center gap-4 text-sm font-medium text-text-muted">
                            <p className="flex items-center gap-1.5"><Mail size={14} /> {b.email}</p>
@@ -458,7 +458,7 @@ const Bookings = () => {
                        >
                          {expandedId === b.id ? 'Abort Manifest' : 'Deep Insight'}
                        </button>
-                       <button className="p-3 bg-card border border-border rounded-xl text-text-muted hover:text-primary transition-all">
+                       <button className="p-3 bg-card border border-divider rounded-xl text-text-muted hover:text-primary transition-all">
                           <MoreHorizontal size={20} />
                        </button>
                     </div>
@@ -470,7 +470,7 @@ const Bookings = () => {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden mt-10 pt-10 border-t border-border"
+                        className="overflow-hidden mt-10 pt-10 border-t border-divider"
                       >
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                            <div className="space-y-6">
@@ -483,7 +483,7 @@ const Bookings = () => {
                                    { label: 'Applied Date', value: b.appliedOn },
                                    { label: 'Special Instructions', value: b.specialRequest, full: true }
                                  ].map((item, i) => (
-                                   <div key={i} className={`p-4 rounded-2xl bg-background border border-border ${item.full ? 'col-span-full' : ''}`}>
+                                   <div key={i} className={`p-4 rounded-2xl bg-background border border-divider ${item.full ? 'col-span-full' : ''}`}>
                                       <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-1">{item.label}</p>
                                       <p className="text-[12px] font-black text-text-primary italic">{item.value}</p>
                                    </div>
@@ -495,7 +495,7 @@ const Bookings = () => {
                               <h4 className="text-[11px] font-black text-text-primary uppercase tracking-widest flex items-center gap-2">
                                 <CreditCard size={14} className="text-success" /> Payment Pulse
                               </h4>
-                              <div className="p-6 rounded-[2rem] bg-slate-50 dark:bg-white/5 border border-border flex flex-col items-center justify-center text-center group">
+                              <div className="p-6 rounded-[2rem] bg-slate-50 dark:bg-white/5 border border-divider flex flex-col items-center justify-center text-center group">
                                  <div className="w-16 h-16 rounded-full bg-success/10 text-success flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                     <ShieldCheck size={32} />
                                  </div>
@@ -513,7 +513,7 @@ const Bookings = () => {
                               </h4>
                               <div className="grid grid-cols-1 gap-3">
                                  <button className="w-full py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all">Verify & Confirm Ingress</button>
-                                 <button className="w-full py-4 bg-background border border-border text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Modify Booking Parameters</button>
+                                 <button className="w-full py-4 bg-background border border-divider text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Modify Booking Parameters</button>
                                  <button className="w-full py-4 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all">Abort Reservation</button>
                               </div>
                            </div>
@@ -540,7 +540,7 @@ const Bookings = () => {
             </select>
          </div>
          <div className="flex items-center gap-2">
-            <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-border rounded-xl text-text-muted opacity-50 cursor-not-allowed">Previous Phase</button>
+            <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-divider rounded-xl text-text-muted opacity-50 cursor-not-allowed">Previous Phase</button>
             <div className="flex gap-1">
                {[1, 2, 3, '...', 42].map((p, i) => (
                  <button key={i} className={`w-8 h-8 rounded-lg text-[10px] font-black flex items-center justify-center transition-all ${p === 1 ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-text-muted hover:text-text-primary hover:bg-background'}`}>
@@ -548,7 +548,7 @@ const Bookings = () => {
                  </button>
                ))}
             </div>
-            <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-border rounded-xl text-text-secondary hover:border-primary hover:text-primary transition-all shadow-subtle">Next Phase</button>
+            <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-divider rounded-xl text-text-secondary hover:border-primary hover:text-primary transition-all shadow-subtle">Next Phase</button>
          </div>
       </div>
     </div>

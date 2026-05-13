@@ -33,7 +33,7 @@ const Settings = () => {
   };
 
   const Toggle = ({ enabled, label, sub }) => (
-    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 dark:bg-white/[0.02] border border-border/50">
+    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 dark:bg-white/[0.02] border border-divider/50">
        <div>
           <p className="text-[11px] font-black text-text-primary uppercase tracking-tight">{label}</p>
           <p className="text-[9px] font-bold text-text-muted uppercase italic">{sub}</p>
@@ -83,7 +83,7 @@ const Settings = () => {
                className={`w-full group text-left p-5 rounded-2xl transition-all border ${
                  activeTab === item.name 
                    ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' 
-                   : 'bg-card border-border hover:border-primary/30 hover:bg-slate-50 dark:hover:bg-white/2'
+                   : 'bg-card border-divider hover:border-primary/30 hover:bg-slate-50 dark:hover:bg-white/2'
                }`}
              >
                <div className="flex items-center gap-4">
@@ -128,7 +128,7 @@ const Settings = () => {
                    className="space-y-12"
                  >
                     {/* CATEGORY HEADER */}
-                    <div className="flex items-center gap-4 border-b border-border/50 pb-8">
+                    <div className="flex items-center gap-4 border-b border-divider/50 pb-8">
                        <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
                           {React.cloneElement(menuItems.find(m => m.name === activeTab).icon, { size: 28, strokeWidth: 2.5 })}
                        </div>
@@ -143,22 +143,22 @@ const Settings = () => {
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="space-y-3">
                              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Platform Persona</label>
-                             <input type="text" defaultValue="StayNest Enterprise Hub" className="w-full bg-slate-50 dark:bg-white/[0.02] border border-border rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all" />
+                             <input type="text" defaultValue="StayNest Enterprise Hub" className="w-full bg-slate-50 dark:bg-white/[0.02] border border-divider rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all" />
                           </div>
                           <div className="space-y-3">
                              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Administrative Email</label>
-                             <input type="email" defaultValue="ops@staynest.com" className="w-full bg-slate-50 dark:bg-white/[0.02] border border-border rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all" />
+                             <input type="email" defaultValue="ops@staynest.com" className="w-full bg-slate-50 dark:bg-white/[0.02] border border-divider rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all" />
                           </div>
                           <div className="space-y-3">
                              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Primary Fiscal Unit</label>
-                             <select className="w-full bg-slate-50 dark:bg-white/[0.02] border border-border rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all">
+                             <select className="w-full bg-slate-50 dark:bg-white/[0.02] border border-divider rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all">
                                 <option>INR (₹) - Indian Rupee</option>
                                 <option>USD ($) - US Dollar</option>
                              </select>
                           </div>
                           <div className="space-y-3">
                              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Operational Language</label>
-                             <select className="w-full bg-slate-50 dark:bg-white/[0.02] border border-border rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all">
+                             <select className="w-full bg-slate-50 dark:bg-white/[0.02] border border-divider rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all">
                                 <option>English (Universal)</option>
                                 <option>Hindi (Localized)</option>
                              </select>
@@ -180,7 +180,7 @@ const Settings = () => {
                                 <input 
                                   type={showPassword ? "text" : "password"} 
                                   defaultValue="••••••••••••"
-                                  className="w-full bg-slate-50 dark:bg-white/[0.02] border border-border rounded-xl py-4 pl-6 pr-14 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all"
+                                  className="w-full bg-slate-50 dark:bg-white/[0.02] border border-divider rounded-xl py-4 pl-6 pr-14 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all"
                                 />
                                 <button 
                                   onClick={() => setShowPassword(!showPassword)}
@@ -231,21 +231,21 @@ const Settings = () => {
                        <div className="space-y-10">
                           <div className="card-classic p-8 bg-emerald-500/[0.02] border-emerald-500/20">
                              <div className="flex items-center gap-6 mb-8">
-                                <div className="w-16 h-10 rounded-lg bg-white dark:bg-card border border-border flex items-center justify-center font-black text-[10px] text-primary italic shadow-subtle">STRIPE</div>
+                                <div className="w-16 h-10 rounded-lg bg-white dark:bg-card border border-divider flex items-center justify-center font-black text-[10px] text-primary italic shadow-subtle">STRIPE</div>
                                 <div>
                                    <h4 className="text-[13px] font-black text-text-primary uppercase tracking-tight">Stripe Connect Manifest</h4>
                                    <p className="text-[10px] font-bold text-emerald-500 uppercase italic">Active Node: live_sk_90...21</p>
                                 </div>
-                                <button className="ml-auto px-6 py-2 border border-border rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white dark:hover:bg-white/5 transition-all">Calibrate</button>
+                                <button className="ml-auto px-6 py-2 border border-divider rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white dark:hover:bg-white/5 transition-all">Calibrate</button>
                              </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">Invoicing Prefix</label>
-                                   <input type="text" defaultValue="LIV-" className="w-full bg-white dark:bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold" />
+                                   <input type="text" defaultValue="LIV-" className="w-full bg-white dark:bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold" />
                                 </div>
                                 <div className="space-y-2">
                                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">Tax Percentage (GST)</label>
-                                   <input type="text" defaultValue="18%" className="w-full bg-white dark:bg-card border border-border rounded-xl py-3 px-4 text-xs font-bold" />
+                                   <input type="text" defaultValue="18%" className="w-full bg-white dark:bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold" />
                                 </div>
                              </div>
                           </div>
@@ -273,7 +273,7 @@ const Settings = () => {
                           </div>
                           <div className="space-y-4">
                              <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em]">API Key Manifest</h4>
-                             <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-border flex items-center justify-between">
+                             <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-divider flex items-center justify-between">
                                 <span className="text-[11px] font-mono text-text-muted">admin_manifest_key_v2_9872...9011</span>
                                 <button className="p-2 text-primary hover:bg-primary/5 rounded-lg transition-all"><Key size={14} /></button>
                              </div>

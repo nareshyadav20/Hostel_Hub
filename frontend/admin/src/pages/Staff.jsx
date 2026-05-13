@@ -118,7 +118,7 @@ const Staff = () => {
           <p className="text-sm text-text-muted mt-1 font-medium italic">Global administrative oversight of operational staff and role distribution</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-           <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-2 py-1 shadow-subtle">
+           <div className="flex items-center gap-2 bg-card border border-divider rounded-xl px-2 py-1 shadow-subtle">
               <button 
                 onClick={handleExport}
                 className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all"
@@ -158,12 +158,12 @@ const Staff = () => {
       </div>
 
       {/* --- CONTROL BAR --- */}
-      <div className="sticky top-0 z-40 py-4 bg-background/80 backdrop-blur-xl border-b border-border/50 -mx-4 px-4 flex flex-col lg:flex-row gap-6">
+      <div className="sticky top-0 z-40 py-4 bg-background/80 backdrop-blur-xl border-b border-divider/50 -mx-4 px-4 flex flex-col lg:flex-row gap-6">
          <div className="flex-1 relative flex items-center group">
             <Search className="absolute left-4 text-text-muted group-focus-within:text-primary transition-all duration-300" size={18} />
             <input 
                type="text" 
-               className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-subtle"
+               className="w-full bg-card border border-divider rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-subtle"
                placeholder="Search personnel by Name, Role, or ID..."
                value={searchTerm}
                onChange={(e) => setSearchTerm(e.target.value)}
@@ -171,7 +171,7 @@ const Staff = () => {
          </div>
          
          <div className="flex items-center gap-4 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
-            <div className="flex bg-card p-1.5 rounded-2xl border border-border shadow-subtle shrink-0">
+            <div className="flex bg-card p-1.5 rounded-2xl border border-divider shadow-subtle shrink-0">
                {['All', 'Admin', 'Finance', 'Maintenance'].map((role) => (
                  <button
                    key={role}
@@ -187,22 +187,22 @@ const Staff = () => {
 
             <div className="h-10 w-px bg-border mx-2 shrink-0" />
 
-            <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
+            <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-divider rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
                <Filter size={14} strokeWidth={3} /> Filters
             </button>
          </div>
       </div>
 
       {/* --- STAFF MANIFEST --- */}
-      <div className="card-classic overflow-hidden border border-border/50 shadow-premium">
+      <div className="card-classic overflow-hidden border border-divider/50 shadow-premium">
          <div className="overflow-x-auto scrollbar-hide">
             <table className="w-full text-left border-collapse whitespace-nowrap">
                <thead>
-                  <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-border sticky top-0 z-20 backdrop-blur-md">
+                  <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-divider sticky top-0 z-20 backdrop-blur-md">
                      <th className="py-5 px-8 w-12">
                         <input 
                           type="checkbox" 
-                          className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 transition-all cursor-pointer"
+                          className="w-4 h-4 rounded border-divider text-primary focus:ring-primary/20 transition-all cursor-pointer"
                           onChange={(e) => {
                             if (e.target.checked) setSelectedStaff(staff.map(s => s.id));
                             else setSelectedStaff([]);
@@ -238,7 +238,7 @@ const Staff = () => {
                                  if (selectedStaff.includes(s.id)) setSelectedStaff(selectedStaff.filter(id => id !== s.id));
                                  else setSelectedStaff([...selectedStaff, s.id]);
                                }}
-                               className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 transition-all cursor-pointer"
+                               className="w-4 h-4 rounded border-divider text-primary focus:ring-primary/20 transition-all cursor-pointer"
                              />
                           </td>
                           <td className="py-5 px-4">
@@ -285,9 +285,9 @@ const Staff = () => {
                           </td>
                           <td className="py-5 px-8 text-right">
                              <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button className="p-2.5 bg-background border border-border rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle"><Mail size={16} /></button>
-                                <button className="p-2.5 bg-background border border-border rounded-xl text-text-muted hover:text-indigo-500 transition-all shadow-subtle"><Phone size={16} /></button>
-                                <button className="p-2.5 bg-background border border-border rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle group-hover:scale-110"><MoreHorizontal size={16} /></button>
+                                <button className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle"><Mail size={16} /></button>
+                                <button className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-indigo-500 transition-all shadow-subtle"><Phone size={16} /></button>
+                                <button className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle group-hover:scale-110"><MoreHorizontal size={16} /></button>
                              </div>
                           </td>
                        </tr>
@@ -302,18 +302,18 @@ const Staff = () => {
                                       exit={{ height: 0, opacity: 0 }}
                                       className="bg-slate-50/30 dark:bg-white/[0.01] overflow-hidden"
                                    >
-                                      <div className="p-10 grid grid-cols-1 lg:grid-cols-3 gap-12 border-b border-border/50">
+                                      <div className="p-10 grid grid-cols-1 lg:grid-cols-3 gap-12 border-b border-divider/50">
                                          {/* Staff Intelligence */}
                                          <div className="space-y-8">
                                             <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                                               <Shield size={14} className="text-primary" /> Personnel Intelligence
                                             </h4>
                                             <div className="grid grid-cols-2 gap-4">
-                                               <div className="p-4 rounded-2xl bg-white dark:bg-card border border-border shadow-subtle">
+                                               <div className="p-4 rounded-2xl bg-white dark:bg-card border border-divider shadow-subtle">
                                                   <p className="text-[9px] font-black text-text-muted uppercase mb-1">Joined Date</p>
                                                   <p className="text-[12px] font-bold text-text-primary italic">{s.joined}</p>
                                                </div>
-                                               <div className="p-4 rounded-2xl bg-white dark:bg-card border border-border shadow-subtle">
+                                               <div className="p-4 rounded-2xl bg-white dark:bg-card border border-divider shadow-subtle">
                                                   <p className="text-[9px] font-black text-text-muted uppercase mb-1">Emp. Type</p>
                                                   <p className="text-[12px] font-bold text-emerald-500 italic">Full Time</p>
                                                </div>
@@ -322,7 +322,7 @@ const Staff = () => {
                                                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Skill Manifest</p>
                                                <div className="flex flex-wrap gap-2">
                                                   {s.skills.map((skill, i) => (
-                                                    <span key={i} className="px-3 py-1 rounded-lg bg-background border border-border text-[9px] font-black text-text-primary uppercase tracking-tighter italic">{skill}</span>
+                                                    <span key={i} className="px-3 py-1 rounded-lg bg-background border border-divider text-[9px] font-black text-text-primary uppercase tracking-tighter italic">{skill}</span>
                                                   ))}
                                                </div>
                                             </div>
@@ -334,14 +334,14 @@ const Staff = () => {
                                               <Zap size={14} className="text-warning" /> Operational Context
                                             </h4>
                                             <div className="space-y-4">
-                                               <div className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-card border border-border shadow-subtle">
+                                               <div className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-card border border-divider shadow-subtle">
                                                   <div className="flex items-center gap-3">
                                                      <CheckCircle2 size={16} className="text-emerald-500" />
                                                      <span className="text-[11px] font-bold text-text-primary">Open Protocols</span>
                                                   </div>
                                                   <span className="text-[12px] font-black text-text-primary italic">{s.tasks}</span>
                                                </div>
-                                               <div className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-card border border-border shadow-subtle">
+                                               <div className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-card border border-divider shadow-subtle">
                                                   <div className="flex items-center gap-3">
                                                      <AlertCircle size={16} className="text-rose-500" />
                                                      <span className="text-[11px] font-bold text-text-primary">Escalated Issues</span>
@@ -358,7 +358,7 @@ const Staff = () => {
                                             </h4>
                                             <div className="grid grid-cols-1 gap-3">
                                                <button onClick={() => handleProtocolAssign(s.name)} className="w-full py-4 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all">Assign Protocol</button>
-                                               <button onClick={() => handlePerformanceReview(s.name)} className="w-full py-4 bg-white dark:bg-card border border-border text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Performance Review</button>
+                                               <button onClick={() => handlePerformanceReview(s.name)} className="w-full py-4 bg-white dark:bg-card border border-divider text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Performance Review</button>
                                                <button onClick={() => handleOffboard(s.name)} className="w-full py-4 bg-rose-500/5 text-rose-500 border border-rose-500/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all">Offboard Personnel</button>
                                             </div>
                                          </div>

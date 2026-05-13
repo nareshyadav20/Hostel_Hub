@@ -137,12 +137,12 @@ const Complaints = () => {
       </div>
 
       {/* --- COMMAND BAR --- */}
-      <div className="sticky top-0 z-40 py-4 bg-background/80 backdrop-blur-xl border-b border-border/50 -mx-4 px-4 flex flex-col lg:flex-row gap-6">
+      <div className="sticky top-0 z-40 py-4 bg-background/80 backdrop-blur-xl border-b border-divider/50 -mx-4 px-4 flex flex-col lg:flex-row gap-6">
          <div className="flex-1 relative flex items-center group">
             <Search className="absolute left-4 text-text-muted group-focus-within:text-primary transition-all duration-300" size={18} />
             <input 
                type="text" 
-               className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-subtle"
+               className="w-full bg-card border border-divider rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-subtle"
                placeholder="Search tickets by Subject, Tenant, or ID..."
                value={searchTerm}
                onChange={(e) => setSearchTerm(e.target.value)}
@@ -150,7 +150,7 @@ const Complaints = () => {
          </div>
          
          <div className="flex items-center gap-4 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
-            <div className="flex bg-card p-1.5 rounded-2xl border border-border shadow-subtle shrink-0">
+            <div className="flex bg-card p-1.5 rounded-2xl border border-divider shadow-subtle shrink-0">
                {['All', 'Open', 'In Progress', 'Resolved'].map((status) => (
                  <button
                    key={status}
@@ -166,22 +166,22 @@ const Complaints = () => {
 
             <div className="h-10 w-px bg-border mx-2 shrink-0" />
 
-            <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
+            <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-divider rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
                <Filter size={14} strokeWidth={3} /> Intelligence Filter
             </button>
          </div>
       </div>
 
       {/* --- COMPLAINT MANIFEST (TABULAR) --- */}
-      <div className="card-classic overflow-hidden border border-border/50 shadow-premium bg-white/50 dark:bg-card/50">
+      <div className="card-classic overflow-hidden border border-divider/50 shadow-premium bg-white/50 dark:bg-card/50">
          <div className="overflow-x-auto scrollbar-hide">
             <table className="w-full text-left border-collapse whitespace-nowrap">
                <thead>
-                  <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-border sticky top-0 z-20 backdrop-blur-md">
+                  <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-divider sticky top-0 z-20 backdrop-blur-md">
                      <th className="py-5 px-8 w-12">
                         <input 
                           type="checkbox" 
-                          className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 transition-all cursor-pointer"
+                          className="w-4 h-4 rounded border-divider text-primary focus:ring-primary/20 transition-all cursor-pointer"
                           onChange={(e) => {
                             if (e.target.checked) setSelectedTickets(complaints.map(b => b.id));
                             else setSelectedTickets([]);
@@ -217,7 +217,7 @@ const Complaints = () => {
                                  if (selectedTickets.includes(c.id)) setSelectedTickets(selectedTickets.filter(id => id !== c.id));
                                  else setSelectedTickets([...selectedTickets, c.id]);
                                }}
-                               className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 transition-all cursor-pointer"
+                               className="w-4 h-4 rounded border-divider text-primary focus:ring-primary/20 transition-all cursor-pointer"
                              />
                           </td>
                           <td className="py-5 px-4">
@@ -270,17 +270,17 @@ const Complaints = () => {
                                       exit={{ height: 0, opacity: 0 }}
                                       className="bg-slate-50/30 dark:bg-white/[0.01] overflow-hidden"
                                    >
-                                      <div className="p-10 grid grid-cols-1 lg:grid-cols-3 gap-12 border-b border-border/50">
+                                      <div className="p-10 grid grid-cols-1 lg:grid-cols-3 gap-12 border-b border-divider/50">
                                          <div className="space-y-8">
                                             <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                                               <Building size={14} className="text-primary" /> Case Parameters
                                             </h4>
                                             <div className="space-y-4">
-                                               <div className="p-4 rounded-2xl bg-white dark:bg-card border border-border shadow-subtle">
+                                               <div className="p-4 rounded-2xl bg-white dark:bg-card border border-divider shadow-subtle">
                                                   <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-1">Issue Description</p>
                                                   <p className="text-[12px] font-medium text-text-primary leading-relaxed">{c.description}</p>
                                                </div>
-                                               <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-card border border-border shadow-subtle">
+                                               <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-card border border-divider shadow-subtle">
                                                   <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary"><User size={16} /></div>
                                                   <div>
                                                      <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">Assigned Specialist</p>
@@ -316,7 +316,7 @@ const Complaints = () => {
                                                <button className="w-full py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all group">
                                                   Resolve Ticket <CheckCircle size={14} className="inline ml-1 group-hover:scale-110 transition-transform" />
                                                </button>
-                                               <button className="w-full py-4 bg-white dark:bg-card border border-border text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Reassign Specialist</button>
+                                               <button className="w-full py-4 bg-white dark:bg-card border border-divider text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Reassign Specialist</button>
                                                <button className="w-full py-4 bg-primary/5 text-primary border border-primary/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all">Notify Tenant</button>
                                             </div>
                                          </div>
@@ -338,13 +338,13 @@ const Complaints = () => {
          <div className="flex items-center gap-4">
             <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Showing 4 of 48 reports</span>
             <div className="h-4 w-px bg-border" />
-            <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-1.5 shadow-subtle">
+            <div className="flex items-center gap-2 bg-background border border-divider rounded-xl px-3 py-1.5 shadow-subtle">
                <FileText size={14} className="text-primary" />
                <button className="text-[10px] font-black uppercase tracking-widest text-text-secondary">Generate Audit Log</button>
             </div>
          </div>
          <div className="flex items-center gap-2">
-            <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-border rounded-xl text-text-muted opacity-50 cursor-not-allowed italic">Prev Manifest</button>
+            <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-divider rounded-xl text-text-muted opacity-50 cursor-not-allowed italic">Prev Manifest</button>
             <div className="flex gap-1">
                {[1, 2, 3].map((p, i) => (
                  <button key={i} className={`w-8 h-8 rounded-lg text-[10px] font-black flex items-center justify-center transition-all ${p === 1 ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-text-muted hover:text-text-primary hover:bg-background'}`}>
@@ -352,7 +352,7 @@ const Complaints = () => {
                  </button>
                ))}
             </div>
-            <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-border rounded-xl text-text-secondary hover:border-primary hover:text-primary transition-all shadow-subtle italic">Next Manifest</button>
+            <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-divider rounded-xl text-text-secondary hover:border-primary hover:text-primary transition-all shadow-subtle italic">Next Manifest</button>
          </div>
       </div>
     </div>

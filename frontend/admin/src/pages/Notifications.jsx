@@ -102,7 +102,7 @@ const Notifications = () => {
           <p className="text-sm text-text-muted mt-1 font-medium italic">Command center for administrative alerts and global broadcasts</p>
         </div>
         
-        <div className="flex bg-card p-1.5 rounded-2xl border border-border shadow-subtle shrink-0 self-start lg:self-center">
+        <div className="flex bg-card p-1.5 rounded-2xl border border-divider shadow-subtle shrink-0 self-start lg:self-center">
           <button
             onClick={() => setActiveTab('inbox')}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
@@ -140,14 +140,14 @@ const Notifications = () => {
                   <Search className="absolute left-4 text-text-muted group-focus-within:text-primary transition-all duration-300" size={18} />
                   <input 
                      type="text" 
-                     className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-subtle"
+                     className="w-full bg-card border border-divider rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-subtle"
                      placeholder="Search alerts by Tenant, Issue, or ID..."
                      value={searchTerm}
                      onChange={(e) => setSearchTerm(e.target.value)}
                   />
                </div>
                <div className="flex items-center gap-3">
-                  <div className="flex bg-card p-1.5 rounded-2xl border border-border shadow-subtle overflow-x-auto scrollbar-hide">
+                  <div className="flex bg-card p-1.5 rounded-2xl border border-divider shadow-subtle overflow-x-auto scrollbar-hide">
                      {['All', 'Payment', 'Issue', 'System'].map((f) => (
                        <button
                          key={f}
@@ -160,7 +160,7 @@ const Notifications = () => {
                        </button>
                      ))}
                   </div>
-                  <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
+                  <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-divider rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
                      <CheckCircle2 size={16} /> Mark All Read
                   </button>
                </div>
@@ -180,7 +180,7 @@ const Notifications = () => {
                       onClick={() => setExpandedId(expandedId === n.id ? null : n.id)}
                       className={`card-classic p-6 flex flex-col lg:flex-row lg:items-center gap-6 cursor-pointer hover:shadow-glow transition-all duration-300 border-l-4 ${!n.read ? 'border-l-primary bg-primary/5 dark:bg-primary/[0.02]' : 'border-l-transparent'}`}
                     >
-                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-subtle bg-card border border-border`}>
+                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-subtle bg-card border border-divider`}>
                           {getTypeIcon(n.type)}
                        </div>
                        <div className="flex-1 min-w-0">
@@ -194,9 +194,9 @@ const Notifications = () => {
                           <p className="text-[12px] font-medium text-text-secondary mt-0.5 line-clamp-1">{n.desc}</p>
                        </div>
                        <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="p-2.5 bg-background border border-border rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle"><Mail size={16} /></button>
-                          <button className="p-2.5 bg-background border border-border rounded-xl text-text-muted hover:text-indigo-500 transition-all shadow-subtle"><Archive size={16} /></button>
-                          <button className="p-2.5 bg-background border border-border rounded-xl text-text-muted hover:text-rose-500 transition-all shadow-subtle"><Trash2 size={16} /></button>
+                          <button className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle"><Mail size={16} /></button>
+                          <button className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-indigo-500 transition-all shadow-subtle"><Archive size={16} /></button>
+                          <button className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-rose-500 transition-all shadow-subtle"><Trash2 size={16} /></button>
                        </div>
                     </div>
 
@@ -208,15 +208,15 @@ const Notifications = () => {
                             exit={{ height: 0, opacity: 0 }}
                             className="overflow-hidden"
                           >
-                             <div className="p-8 mx-4 bg-slate-50 dark:bg-white/[0.01] border-x border-b border-border/50 rounded-b-3xl space-y-6">
-                                <div className="p-6 rounded-2xl bg-white dark:bg-card border border-border shadow-subtle">
+                             <div className="p-8 mx-4 bg-slate-50 dark:bg-white/[0.01] border-x border-b border-divider/50 rounded-b-3xl space-y-6">
+                                <div className="p-6 rounded-2xl bg-white dark:bg-card border border-divider shadow-subtle">
                                    <p className="text-[13px] font-medium text-text-primary leading-relaxed italic">"{n.desc}"</p>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-4">
                                    <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20">
                                       Resolve Action <ArrowUpRight size={14} />
                                    </button>
-                                   <button className="flex items-center gap-2 px-6 py-2.5 bg-card border border-border rounded-xl text-[10px] font-black uppercase tracking-widest text-text-primary hover:border-primary transition-all">
+                                   <button className="flex items-center gap-2 px-6 py-2.5 bg-card border border-divider rounded-xl text-[10px] font-black uppercase tracking-widest text-text-primary hover:border-primary transition-all">
                                       View {n.type} Manifest
                                    </button>
                                    <div className="ml-auto flex items-center gap-4 text-[10px] font-black text-text-muted uppercase tracking-widest">
@@ -241,7 +241,7 @@ const Notifications = () => {
           >
              {/* Compose Form */}
              <div className="lg:col-span-8 card-classic p-10 space-y-8">
-                <div className="flex items-center gap-4 pb-6 border-b border-border/50">
+                <div className="flex items-center gap-4 pb-6 border-b border-divider/50">
                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/10">
                       <Send size={24} strokeWidth={2.5} />
                    </div>
@@ -257,7 +257,7 @@ const Notifications = () => {
                          <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Target Segment</label>
                          <div className="relative group">
                             <Target className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-all" size={16} />
-                            <select className="w-full bg-background border border-border rounded-xl py-3 pl-12 pr-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary">
+                            <select className="w-full bg-background border border-divider rounded-xl py-3 pl-12 pr-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary">
                                <option>All Users (14,250)</option>
                                <option>Tenants Only (12,100)</option>
                                <option>Owners Only (2,150)</option>
@@ -269,7 +269,7 @@ const Notifications = () => {
                          <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Priority Protocol</label>
                          <div className="relative group">
                             <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-amber-500 transition-all" size={16} />
-                            <select className="w-full bg-background border border-border rounded-xl py-3 pl-12 pr-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500 transition-all text-text-primary">
+                            <select className="w-full bg-background border border-divider rounded-xl py-3 pl-12 pr-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500 transition-all text-text-primary">
                                <option>Standard Distribution</option>
                                <option>High Velocity (Push)</option>
                                <option>Critical (Push + Email)</option>
@@ -283,7 +283,7 @@ const Notifications = () => {
                       <input 
                          type="text" 
                          placeholder="e.g. System Maintenance Window - Pune Cluster"
-                         className="w-full bg-background border border-border rounded-xl py-3 px-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary"
+                         className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary"
                       />
                    </div>
 
@@ -292,7 +292,7 @@ const Notifications = () => {
                       <textarea 
                          rows={5}
                          placeholder="Enter the notification payload details..."
-                         className="w-full bg-background border border-border rounded-xl py-4 px-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary resize-none"
+                         className="w-full bg-background border border-divider rounded-xl py-4 px-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary resize-none"
                       />
                    </div>
 
@@ -310,7 +310,7 @@ const Notifications = () => {
                    </h3>
                    <div className="space-y-4">
                       {history.map(h => (
-                        <div key={h.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-border/50 space-y-3">
+                        <div key={h.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-divider/50 space-y-3">
                            <div className="flex justify-between items-start">
                               <h4 className="text-[11px] font-black text-text-primary uppercase tracking-tight">{h.title}</h4>
                               <span className="text-[9px] font-bold text-text-muted italic">{h.time}</span>
@@ -337,7 +337,7 @@ const Notifications = () => {
                          <span className="text-[11px] font-bold text-text-muted">Delivery Rate</span>
                          <span className="text-xl font-black text-emerald-500 italic">99.8%</span>
                       </div>
-                      <div className="pt-4 border-t border-border/50">
+                      <div className="pt-4 border-t border-divider/50">
                          <p className="text-[10px] font-bold text-text-muted leading-relaxed italic">Broadcast manifest history is archived for 90 days. System logs contain deeper transmission diagnostics.</p>
                       </div>
                    </div>

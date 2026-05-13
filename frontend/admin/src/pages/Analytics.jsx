@@ -106,7 +106,7 @@ const Analytics = () => {
               <p className="text-xs text-text-muted mt-1">Comparing Actual vs AI-Predicted Performance</p>
             </div>
             <div className="flex items-center gap-2">
-              <button className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-md bg-background border border-border text-text-secondary hover:bg-text-primary/5 transition-colors">
+              <button className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-md bg-background border border-divider text-text-secondary hover:bg-text-primary/5 transition-colors">
                 <Calendar size={12} className="inline mr-2" /> {range}
               </button>
               <button className="p-1.5 rounded-md bg-primary text-white hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20">
@@ -167,7 +167,7 @@ const Analytics = () => {
             
             <div className="mt-8 space-y-3">
               {OCCUPANCY_MIX.map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-background border border-border group hover:border-primary/30 transition-colors">
+                <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-background border border-divider group hover:border-primary/30 transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ background: item.color }}></div>
                     <span className="text-xs font-semibold text-text-secondary group-hover:text-text-primary transition-colors">{item.name} Units</span>
@@ -198,7 +198,7 @@ const Analytics = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {PREDICTIONS.map((pred) => (
-              <div key={pred.id} className="p-5 rounded-2xl bg-background border border-border hover:border-primary/40 transition-all group relative overflow-hidden">
+              <div key={pred.id} className="p-5 rounded-2xl bg-background border border-divider hover:border-primary/40 transition-all group relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                   <Brain size={80} />
                 </div>
