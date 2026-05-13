@@ -1,4 +1,5 @@
 const ConfidentialReport = require('../models/ConfidentialReport');
+const socketService = require('../utils/socketService');
 
 // POST /api/confidential-reports — submit a new report
 const createReport = async (req, res) => {
@@ -17,9 +18,15 @@ const createReport = async (req, res) => {
       location: location || 'N/A',
       priority: priority || 'Medium',
       submittedBy: submittedBy || 'Tenant',
+      user: req.body.userId,
+      tenant: req.body.tenantId
     });
 
     const saved = await report.save();
+    
+    // Real-time notification for owner
+    socketService.emitToOwner('confidentialReportCreated', saved);
+    
     res.status(201).json({ message: 'Report submitted successfully.', report: saved });
   } catch (err) {
     console.error('Error creating confidential report:', err);
@@ -55,6 +62,11 @@ const updateReportStatus = async (req, res) => {
     }
 
     res.status(200).json({ message: 'Status updated.', report });
+
+    // Real-time notification for tenant
+    if (report.tenant) {
+      socketService.emitToOwner('confidentialReportUpdated', report); // Emit globally for now
+    }
   } catch (err) {
     console.error('Error updating report status:', err);
     res.status(500).json({ message: 'Server error while updating status.' });

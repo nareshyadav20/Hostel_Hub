@@ -18,4 +18,7 @@ router.post('/wishlist', auth, controller.addToWishlist);
 router.get('/wishlist', auth, controller.getMyWishlist);
 router.delete('/wishlist/:id', auth, controller.removeFromWishlist);
 
+// Profile
+router.get('/complete-profile', auth, controller.getCompleteProfile);
+
 module.exports = router;
