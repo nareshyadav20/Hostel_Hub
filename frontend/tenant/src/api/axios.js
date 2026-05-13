@@ -21,7 +21,7 @@ API.interceptors.response.use(
       // Clear stale auth data on unauthorized access
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      
+
       // Force redirect to login if not already there
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login?expired=true';

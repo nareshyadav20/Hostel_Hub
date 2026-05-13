@@ -20,7 +20,8 @@ exports.createCommunityReport = async (req, res) => {
     const report = await CommunityReport.create({
       ...req.body,
       tenant: tenant._id,
-      user: req.user.id
+      user: req.user.id,
+      buildingId: tenant.buildingId
     });
     res.status(201).json(report);
   } catch (error) {

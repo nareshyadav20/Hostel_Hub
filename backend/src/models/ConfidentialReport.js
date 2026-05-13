@@ -40,6 +40,14 @@ const confidentialReportSchema = new mongoose.Schema(
     },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
+    building: { type: mongoose.Schema.Types.ObjectId, ref: 'Building', required: true },
+    isFlagged: { type: Boolean, default: false },
+    flagStatus: { 
+      type: String, 
+      enum: ['None', 'Flagged', 'High Priority', 'Escalated', 'Under Investigation'],
+      default: 'None'
+    },
+    isHidden: { type: Boolean, default: false },
   },
   {
     timestamps: true,
@@ -47,4 +55,4 @@ const confidentialReportSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model('ConfidentialReport', confidentialReportSchema);
+module.exports = mongoose.models.ConfidentialReport || mongoose.model('ConfidentialReport', confidentialReportSchema);

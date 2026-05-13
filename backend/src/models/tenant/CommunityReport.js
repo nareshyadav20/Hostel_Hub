@@ -7,7 +7,8 @@ const communityReportSchema = new mongoose.Schema({
   description: { type: String, required: true },
   tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   status: { type: String, enum: ['Open', 'Resolved'], default: 'Open' }
 }, { timestamps: true, collection: 'LostFound' });
 
-module.exports = mongoose.model('CommunityReport', communityReportSchema);
+module.exports = mongoose.models.CommunityReport || mongoose.model('CommunityReport', communityReportSchema);

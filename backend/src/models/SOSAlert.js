@@ -37,4 +37,4 @@ const sosAlertSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model('SOSAlert', sosAlertSchema);
+module.exports = mongoose.models.SOSAlert || mongoose.model('SOSAlert', sosAlertSchema);
