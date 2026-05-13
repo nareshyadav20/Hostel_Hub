@@ -14,6 +14,10 @@ const roomSchema = new mongoose.Schema({
   facing:     { type: String, default: 'Road' },
   floorType:  { type: String, default: 'Tiles' }, // Marble, Tiles, Wooden
   windowCount: { type: Number, default: 1 },
+  ventilationScore: { type: Number, default: 4.5 },
+  naturalLightScore: { type: Number, default: 4.5 },
+  noiseLevel: { type: String, default: 'Low' },
+  studyFriendly: { type: Boolean, default: true },
   furniture:  [{ type: String }], // Bed, Table, Cupboard, Mirror
   amenities:  [{ type: String }],
   images:     [{ type: String }],

@@ -15,8 +15,14 @@ const complaintSchema = new mongoose.Schema({
   },
   priority: {
     type: String,
-    enum: ['Low', 'Medium', 'High'],
+    enum: ['Low', 'Medium', 'High', 'Critical'],
     default: 'Medium'
+  },
+  escalationLevel: { type: Number, default: 0 }, // 0: Normal, 1: Delayed, 2: Emergency
+  resolutionAnalytics: {
+    timeToResolve: { type: Number }, // in minutes
+    feedbackRating: { type: Number },
+    reopenCount: { type: Number, default: 0 }
   },
   assignedTo: { type: String }, // Staff name or ID
   tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: true },

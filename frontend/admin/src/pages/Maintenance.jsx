@@ -6,7 +6,7 @@ import {
   ArrowUpRight, Users, LayoutGrid, List, FileText,
   CreditCard, ExternalLink, ShieldCheck, Zap,
   Droplets, Lightbulb, Thermometer, ShieldAlert,
-  Trash2, Edit, MessageSquare, ArrowLeft, Plus
+  Trash2, Edit, MessageSquare, ArrowLeft, Plus, TrendingUp
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -90,8 +90,8 @@ const Maintenance = () => {
   const stats = [
     { label: 'Active Tasks', value: '24', icon: <Wrench />, color: 'primary', desc: 'In resolution' },
     { label: 'Critical Ops', value: '03', icon: <AlertCircle />, color: 'danger', desc: 'Immediate focus' },
-    { label: 'Pending Parts', value: '08', icon: <Clock />, color: 'warning', desc: 'Waiting for inventory' },
-    { label: 'Completed (24h)', value: '12', icon: <CheckCircle2 />, color: 'success', desc: 'Tasks closed' },
+    { label: 'Res. Efficiency', value: '94%', icon: <TrendingUp />, color: 'success', desc: 'SLA Compliant' },
+    { label: 'Avg Time', value: '4.2h', icon: <Clock />, color: 'indigo', desc: 'Resolution velocity' },
   ];
 
   const getCategoryIcon = (cat) => {

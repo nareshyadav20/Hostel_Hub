@@ -8,6 +8,11 @@ const buildingSchema = new mongoose.Schema({
   genderType:    { type: String, enum: ['Boys', 'Girls', 'Mixed'], default: 'Mixed' },
   category:      { type: String, enum: ['Student', 'Professional', 'Mixed'], default: 'Mixed' },
   rating:        { type: Number, default: 4.5 },
+  safetyRating:  { type: Number, default: 4.5 },
+  hygieneRating: { type: Number, default: 4.5 },
+  occupancyPercentage: { type: Number, default: 0 },
+  cctvStatus:    { type: String, default: 'Operational' },
+  wifiAvailability: { type: String, default: 'Available' },
   amenities:     [{ type: String }],
   policies:      {
     smoking: { type: String, default: 'Not Allowed' },

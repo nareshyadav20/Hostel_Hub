@@ -1,22 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, Filter, Download, UserPlus, Users, Building2,
   Briefcase, Shield, Star, Calendar, Activity,
   TrendingUp, AlertCircle, Zap, MessageSquare,
   Trash2, Edit, ChevronDown, ArrowLeft, Mail, Phone,
-  MoreHorizontal, CheckCircle2
+  MoreHorizontal, CheckCircle2, Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../context/ThemeContext';
+import axios from 'axios';
+
+const API = 'http://localhost:5000/api/admin';
 
 const Staff = () => {
   const navigate = useNavigate();
-  const { isDark } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('All');
   const [expandedId, setExpandedId] = useState(null);
   const [selectedStaff, setSelectedStaff] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [platformStats, setPlatformStats] = useState(null);
 
   const handleOnboard = () => alert("Staff Onboarding protocol initiated.");
   const handleExport = () => alert("Exporting HR Personnel Manifest...");
@@ -29,66 +33,28 @@ const Staff = () => {
     }
   };
 
-  const [staff] = useState([
-    { 
-      id: 'EMP-2021', 
-      name: 'Sanjay Kumar', 
-      role: 'Admin', 
-      property: 'Sapphire PG', 
-      rating: 4.8, 
-      status: 'Active', 
-      joined: '12 Jan 2023', 
-      tasks: 12,
-      email: 'sanjay.k@staynest.com',
-      phone: '+91 98765 43210',
-      skills: ['Operations', 'Conflict Res', 'Finance']
-    },
-    { 
-      id: 'EMP-2022', 
-      name: 'Anita Rao', 
-      role: 'Finance', 
-      property: 'Elite Living', 
-      rating: 4.9, 
-      status: 'Active', 
-      joined: '05 Mar 2023', 
-      tasks: 8,
-      email: 'anita.r@staynest.com',
-      phone: '+91 98765 43211',
-      skills: ['Accounting', 'Audit', 'Taxation']
-    },
-    { 
-      id: 'EMP-2023', 
-      name: 'Vikram Das', 
-      role: 'Maintenance', 
-      property: 'Tech Park PG', 
-      rating: 4.5, 
-      status: 'On Leave', 
-      joined: '22 Feb 2023', 
-      tasks: 4,
-      email: 'vikram.d@staynest.com',
-      phone: '+91 98765 43212',
-      skills: ['Plumbing', 'Electrical', 'HVAC']
-    },
-    { 
-      id: 'EMP-2024', 
-      name: 'Meera Iyer', 
-      role: 'Admin', 
-      property: 'Sapphire PG', 
-      rating: 4.7, 
-      status: 'Active', 
-      joined: '15 May 2023', 
-      tasks: 22,
-      email: 'meera.i@staynest.com',
-      phone: '+91 98765 43213',
-      skills: ['Hospitality', 'Audit', 'HR']
-    },
-  ]);
+  const fetchStaff = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {};
+      if (searchTerm) params.search = searchTerm;
+      const [staffRes, statsRes] = await Promise.all([
+        axios.get(`${API}/staff`, { params }),
+        axios.get(`${API}/stats`)
+      ]);
+      setStaff(staffRes.data.staff || []);
+      setPlatformStats(statsRes.data);
+    } catch (err) { console.error('Failed to fetch staff:', err); }
+    finally { setLoading(false); }
+  }, [searchTerm]);
+
+  useEffect(() => { fetchStaff(); }, [fetchStaff]);
 
   const stats = [
-    { label: 'Total Personnel', value: '124', sub: 'Global Staff Count', icon: <Users size={20} />, color: 'primary' },
-    { label: 'Active Manifest', value: '108', sub: '92% On-Duty Rate', icon: <Activity size={20} />, color: 'success' },
-    { label: 'Dept Distribution', value: '06', sub: 'Functional Clusters', icon: <Briefcase size={20} />, color: 'accent' },
-    { label: 'On Leave', value: '16', sub: 'Scheduled Absences', icon: <Calendar size={20} />, color: 'warning' },
+    { label: 'Total Personnel', value: platformStats?.totalStaff ?? '—', sub: 'Global Staff Count', icon: <Users size={20} />, color: 'primary' },
+    { label: 'Active Manifest', value: staff.filter(s => s.status === 'Active' || s.status === 'active').length || '—', sub: 'On-Duty Rate', icon: <Activity size={20} />, color: 'success' },
+    { label: 'Open Complaints', value: platformStats?.openComplaints ?? '—', sub: 'Needs Attention', icon: <AlertCircle size={20} />, color: 'warning' },
+    { label: 'Total Tenants', value: platformStats?.totalTenants ?? '—', sub: 'Residents Managed', icon: <Briefcase size={20} />, color: 'accent' },
   ];
 
   const getRoleColor = (role) => {
@@ -204,7 +170,7 @@ const Staff = () => {
                           type="checkbox" 
                           className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 transition-all cursor-pointer"
                           onChange={(e) => {
-                            if (e.target.checked) setSelectedStaff(staff.map(s => s.id));
+                            if (e.target.checked) setSelectedStaff(staff.map(s => s._id));
                             else setSelectedStaff([]);
                           }}
                         />
@@ -218,25 +184,36 @@ const Staff = () => {
                   </tr>
                </thead>
                <tbody className="divide-y divide-border/30">
-                  {staff
+                  {loading ? (
+                    <tr><td colSpan={7} className="py-16 text-center">
+                      <div className="flex items-center justify-center gap-3 text-text-muted">
+                        <Loader2 size={20} className="animate-spin text-primary" />
+                        <span className="text-sm font-bold">Loading staff from database...</span>
+                      </div>
+                    </td></tr>
+                  ) : staff.length === 0 ? (
+                    <tr><td colSpan={7} className="py-16 text-center">
+                      <p className="text-text-muted font-bold">No staff records found</p>
+                    </td></tr>
+                  ) : staff
                     .filter(s => {
-                       const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.id.toLowerCase().includes(searchTerm.toLowerCase());
+                       const matchesSearch = (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (s._id || '').toLowerCase().includes(searchTerm.toLowerCase());
                        const matchesRole = filterRole === 'All' || s.role === filterRole;
                        return matchesSearch && matchesRole;
                     })
                     .map((s) => (
-                    <React.Fragment key={s.id}>
+                    <React.Fragment key={s._id || s._id}>
                        <tr 
-                         onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
-                         className={`group hover:bg-slate-50/50 dark:hover:bg-white/1 transition-all cursor-pointer ${expandedId === s.id ? 'bg-primary/5' : ''}`}
+                         onClick={() => setExpandedId(expandedId === s._id ? null : s._id)}
+                         className={`group hover:bg-slate-50/50 dark:hover:bg-white/1 transition-all cursor-pointer ${expandedId === s._id ? 'bg-primary/5' : ''}`}
                        >
                           <td className="py-5 px-8" onClick={(e) => e.stopPropagation()}>
                              <input 
                                type="checkbox" 
-                               checked={selectedStaff.includes(s.id)}
+                               checked={selectedStaff.includes(s._id)}
                                onChange={() => {
-                                 if (selectedStaff.includes(s.id)) setSelectedStaff(selectedStaff.filter(id => id !== s.id));
-                                 else setSelectedStaff([...selectedStaff, s.id]);
+                                 if (selectedStaff.includes(s._id)) setSelectedStaff(selectedStaff.filter(id => id !== s._id));
+                                 else setSelectedStaff([...selectedStaff, s._id]);
                                }}
                                className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 transition-all cursor-pointer"
                              />
@@ -251,7 +228,7 @@ const Staff = () => {
                                 </div>
                                 <div>
                                    <p className="text-[13px] font-black text-text-primary uppercase tracking-tight">{s.name}</p>
-                                   <p className="text-[10px] font-bold text-text-muted italic">{s.id}</p>
+                                   <p className="text-[10px] font-bold text-text-muted italic">{s._id}</p>
                                 </div>
                              </div>
                           </td>
@@ -293,7 +270,7 @@ const Staff = () => {
                        </tr>
 
                        <AnimatePresence>
-                          {expandedId === s.id && (
+                          {expandedId === s._id && (
                              <tr>
                                 <td colSpan={7} className="p-0 border-none">
                                    <motion.div 

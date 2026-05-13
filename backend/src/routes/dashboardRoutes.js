@@ -9,6 +9,10 @@ router.get('/alerts', dashboardController.getAlertsAndInsights);
 router.get('/complaints', dashboardController.getComplaintsStats);
 router.get('/mess', dashboardController.getMessStats);
 router.get('/staff', dashboardController.getStaffStats);
+router.get('/inventory', dashboardController.getInventoryStats);
+router.get('/owners', dashboardController.getOwnerStats);
+router.get('/notifications', dashboardController.getNotifications);
 router.get('/activity', dashboardController.getLiveActivity);
+router.get('/buildings', dashboardController.getBuildings);
 
 module.exports = router;

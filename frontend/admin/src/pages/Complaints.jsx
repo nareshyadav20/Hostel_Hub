@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, Filter, AlertTriangle, CheckCircle, Clock, 
   MessageSquare, MoreHorizontal, User, Building, Trash2,
   ChevronRight, Download, FileText, Calendar, 
   Wrench, DollarSign, Volume2, ShieldAlert, Edit, Mail,
-  CheckCircle2, XCircle, Zap, ExternalLink, ArrowLeft
+  CheckCircle2, XCircle, Zap, ExternalLink, ArrowLeft, Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
+
+const API = 'http://localhost:5000/api/admin';
 
 const Complaints = () => {
   const navigate = useNavigate();
@@ -15,109 +18,69 @@ const Complaints = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedId, setExpandedId] = useState(null);
   const [selectedTickets, setSelectedTickets] = useState([]);
+  const [complaints, setComplaints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [platformStats, setPlatformStats] = useState(null);
+  const [total, setTotal] = useState(0);
 
-  const [complaints] = useState([
-    { 
-      id: 'CMP-101', 
-      tenant: 'Arjun Das', 
-      room: '102',
-      property: 'Sapphire PG', 
-      issue: 'AC Leaking in Room 102', 
-      category: 'Maintenance',
-      priority: 'High', 
-      status: 'Open', 
-      time: '2h ago',
-      date: '12 May 2024',
-      assignedTo: 'Suresh Kumar',
-      description: 'Water is dripping from the indoor unit, potentially damaging the wooden floor below. Requires immediate attention.',
-      history: [
-        { status: 'Opened', time: '10:15 AM', note: 'Tenant reported issue via portal.' },
-        { status: 'Assigned', time: '11:00 AM', note: 'Assigned to Suresh (Maintenance Head).' }
-      ]
-    },
-    { 
-      id: 'CMP-102', 
-      tenant: 'Neha Sharma', 
-      room: '305',
-      property: 'Elite Living', 
-      issue: 'Wi-Fi connectivity issues', 
-      category: 'IT/Utility',
-      priority: 'Medium', 
-      status: 'In Progress', 
-      time: '5h ago',
-      date: '12 May 2024',
-      assignedTo: 'Rajesh V.',
-      description: 'Frequent disconnects in the west wing of the 3rd floor. Signal strength is weak.',
-      history: [
-        { status: 'Opened', time: '08:00 AM', note: 'Tenant reported intermittent connection.' },
-        { status: 'In Progress', time: '09:30 AM', note: 'Router reset performed, testing cables.' }
-      ]
-    },
-    { 
-      id: 'CMP-103', 
-      tenant: 'Vikram Singh', 
-      room: 'B-04',
-      property: 'Tech Park PG', 
-      issue: 'Water heater not working', 
-      category: 'Maintenance',
-      priority: 'High', 
-      status: 'Resolved', 
-      time: '1d ago',
-      date: '11 May 2024',
-      assignedTo: 'Anita M.',
-      description: 'Geyser in the attached bathroom is not heating. Power light is on but no heat.',
-      history: [
-        { status: 'Opened', time: 'Yesterday', note: 'Urgent request for hot water.' },
-        { status: 'Resolved', time: 'Yesterday', note: 'Heating element replaced. Verified by tenant.' }
-      ]
-    },
-    { 
-      id: 'CMP-104', 
-      tenant: 'Rahul Mehta', 
-      room: '412',
-      property: 'Sapphire PG', 
-      issue: 'Broken window latch', 
-      category: 'Security',
-      priority: 'Low', 
-      status: 'Open', 
-      time: '3h ago',
-      date: '12 May 2024',
-      assignedTo: 'Suresh Kumar',
-      description: 'The window latch is loose and doesn\'t lock properly. Safety concern for personal belongings.',
-      history: [
-        { status: 'Opened', time: '09:45 AM', note: 'Logged as minor maintenance.' }
-      ]
-    },
-  ]);
+  const fetchComplaints = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {};
+      if (activeFilter !== 'All') params.status = activeFilter;
+      if (searchTerm) params.search = searchTerm;
+
+      const [complaintsRes, statsRes] = await Promise.all([
+        axios.get(`${API}/complaints`, { params }),
+        axios.get(`${API}/stats`)
+      ]);
+      setComplaints(complaintsRes.data.complaints || []);
+      setTotal(complaintsRes.data.total || 0);
+      setPlatformStats(statsRes.data);
+    } catch (err) { console.error('Failed to fetch complaints:', err); }
+    finally { setLoading(false); }
+  }, [activeFilter, searchTerm]);
+
+  useEffect(() => { fetchComplaints(); }, [fetchComplaints]);
+
+  const handleResolve = async (id) => {
+    try {
+      await axios.patch(`${API}/complaints/${id}`, { status: 'Resolved' });
+      fetchComplaints();
+    } catch (err) { console.error(err); }
+  };
 
   const stats = [
-    { label: 'Total Tickets', value: '48', icon: <MessageSquare size={20} />, color: 'primary', desc: 'Active this month' },
-    { label: 'Critical Issues', value: '05', icon: <AlertTriangle size={20} />, color: 'danger', desc: 'High priority' },
-    { label: 'In Resolution', value: '12', icon: <Clock size={20} />, color: 'warning', desc: 'Pending action' },
-    { label: 'Resolved (24h)', value: '31', icon: <CheckCircle size={20} />, color: 'success', desc: 'Completed tasks' }
+    { label: 'Total Tickets', value: platformStats?.totalComplaints ?? '—', icon: <MessageSquare size={20} />, color: 'primary', desc: 'All records' },
+    { label: 'Open Issues', value: platformStats?.openComplaints ?? '—', icon: <AlertTriangle size={20} />, color: 'danger', desc: 'Needs action' },
+    { label: 'Total Tenants', value: platformStats?.totalTenants ?? '—', icon: <Clock size={20} />, color: 'warning', desc: 'Platform-wide' },
+    { label: 'Total Staff', value: platformStats?.totalStaff ?? '—', icon: <CheckCircle size={20} />, color: 'success', desc: 'Available' }
   ];
 
   const getCategoryIcon = (cat) => {
     switch(cat) {
       case 'Maintenance': return <Wrench size={16} className="text-indigo-500" />;
-      case 'IT/Utility': return <Zap size={16} className="text-primary" />;
-      case 'Security': return <ShieldAlert size={16} className="text-rose-500" />;
-      case 'Billing': return <DollarSign size={16} className="text-emerald-500" />;
+      case 'WiFi / IT': return <Zap size={16} className="text-primary" />;
+      case 'Plumbing': return <Wrench size={16} className="text-blue-500" />;
+      case 'Electrical': return <Zap size={16} className="text-amber-500" />;
+      case 'Housekeeping': return <ShieldAlert size={16} className="text-emerald-500" />;
       default: return <Volume2 size={16} className="text-slate-500" />;
     }
   };
 
+  const getTimeAgo = (date) => {
+    if (!date) return '—';
+    const diff = Date.now() - new Date(date).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ago`;
+  };
+
   return (
     <div className="space-y-10 pb-20">
-      
-      {/* --- BACK NAVIGATION --- */}
-      <button 
-        onClick={() => navigate('/dashboard')}
-        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group"
-      >
-        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-        Back to Dashboard
-      </button>
 
       {/* --- KPI HUD --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -143,7 +106,7 @@ const Complaints = () => {
             <input 
                type="text" 
                className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-subtle"
-               placeholder="Search tickets by Subject, Tenant, or ID..."
+               placeholder="Search tickets by Subject, Category, or Description..."
                value={searchTerm}
                onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -151,7 +114,7 @@ const Complaints = () => {
          
          <div className="flex items-center gap-4 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
             <div className="flex bg-card p-1.5 rounded-2xl border border-border shadow-subtle shrink-0">
-               {['All', 'Open', 'In Progress', 'Resolved'].map((status) => (
+               {['All', 'Pending', 'In Progress', 'Resolved'].map((status) => (
                  <button
                    key={status}
                    onClick={() => setActiveFilter(status)}
@@ -163,12 +126,6 @@ const Complaints = () => {
                  </button>
                ))}
             </div>
-
-            <div className="h-10 w-px bg-border mx-2 shrink-0" />
-
-            <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-border rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
-               <Filter size={14} strokeWidth={3} /> Intelligence Filter
-            </button>
          </div>
       </div>
 
@@ -183,12 +140,12 @@ const Complaints = () => {
                           type="checkbox" 
                           className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 transition-all cursor-pointer"
                           onChange={(e) => {
-                            if (e.target.checked) setSelectedTickets(complaints.map(b => b.id));
+                            if (e.target.checked) setSelectedTickets(complaints.map(b => b._id));
                             else setSelectedTickets([]);
                           }}
                         />
                      </th>
-                     <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Issue / Ticket ID</th>
+                     <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Issue / Title</th>
                      <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Reporter Info</th>
                      <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Category</th>
                      <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Priority</th>
@@ -197,51 +154,62 @@ const Complaints = () => {
                   </tr>
                </thead>
                <tbody className="divide-y divide-border/30">
-                  {complaints
-                    .filter(c => {
-                       const matchesSearch = c.issue.toLowerCase().includes(searchTerm.toLowerCase()) || c.id.toLowerCase().includes(searchTerm.toLowerCase()) || c.tenant.toLowerCase().includes(searchTerm.toLowerCase());
-                       const matchesStatus = activeFilter === 'All' || c.status === activeFilter;
-                       return matchesSearch && matchesStatus;
-                    })
-                    .map((c) => (
-                    <React.Fragment key={c.id}>
+                  {loading ? (
+                    <tr><td colSpan={7} className="py-16 text-center">
+                      <div className="flex items-center justify-center gap-3 text-text-muted">
+                        <Loader2 size={20} className="animate-spin text-primary" />
+                        <span className="text-sm font-bold">Loading complaints from database...</span>
+                      </div>
+                    </td></tr>
+                  ) : complaints.length === 0 ? (
+                    <tr><td colSpan={7} className="py-16 text-center">
+                      <div className="flex flex-col items-center gap-2 text-text-muted">
+                        <CheckCircle2 size={32} className="text-success/40" />
+                        <p className="font-bold">No complaints found</p>
+                        <p className="text-sm">All clear — or try adjusting your filters.</p>
+                      </div>
+                    </td></tr>
+                  ) : complaints.map((c) => (
+                    <React.Fragment key={c._id}>
                        <tr 
-                         onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
-                         className={`group hover:bg-slate-50/50 dark:hover:bg-white/1 transition-all cursor-pointer ${expandedId === c.id ? 'bg-primary/5' : ''}`}
+                         onClick={() => setExpandedId(expandedId === c._id ? null : c._id)}
+                         className={`group hover:bg-slate-50/50 dark:hover:bg-white/1 transition-all cursor-pointer ${expandedId === c._id ? 'bg-primary/5' : ''}`}
                        >
                           <td className="py-5 px-8" onClick={(e) => e.stopPropagation()}>
                              <input 
                                type="checkbox" 
-                               checked={selectedTickets.includes(c.id)}
+                               checked={selectedTickets.includes(c._id)}
                                onChange={() => {
-                                 if (selectedTickets.includes(c.id)) setSelectedTickets(selectedTickets.filter(id => id !== c.id));
-                                 else setSelectedTickets([...selectedTickets, c.id]);
+                                 if (selectedTickets.includes(c._id)) setSelectedTickets(selectedTickets.filter(id => id !== c._id));
+                                 else setSelectedTickets([...selectedTickets, c._id]);
                                }}
                                className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 transition-all cursor-pointer"
                              />
                           </td>
                           <td className="py-5 px-4">
                              <div>
-                                <p className="text-[13px] font-black text-text-primary uppercase tracking-tight">{c.issue}</p>
-                                <p className="text-[10px] font-bold text-text-muted italic">{c.id} • Logged {c.time}</p>
+                                <p className="text-[13px] font-black text-text-primary uppercase tracking-tight">{c.title}</p>
+                                <p className="text-[10px] font-bold text-text-muted italic">{getTimeAgo(c.createdAt)}</p>
                              </div>
                           </td>
                           <td className="py-5 px-4">
                              <div className="flex flex-col">
-                                <span className="text-[12px] font-black text-text-primary italic">{c.tenant}</span>
-                                <span className="text-[10px] font-bold text-text-muted uppercase tracking-tighter">Room {c.room} • {c.property}</span>
+                                <span className="text-[12px] font-black text-text-primary italic">{c.tenant?.name || '—'}</span>
+                                <span className="text-[10px] font-bold text-text-muted uppercase tracking-tighter">
+                                  {c.tenant?.room ? `Room ${c.tenant.room}` : ''} {c.buildingId?.name ? `• ${c.buildingId.name}` : ''}
+                                </span>
                              </div>
                           </td>
                           <td className="py-5 px-4">
                              <div className="flex items-center gap-2">
                                 {getCategoryIcon(c.category)}
-                                <span className="text-[11px] font-black text-text-primary italic">{c.category}</span>
+                                <span className="text-[11px] font-black text-text-primary italic">{c.category || '—'}</span>
                              </div>
                           </td>
                           <td className="py-5 px-4">
                              <div className="flex items-center gap-2">
-                                <div className={`w-1.5 h-1.5 rounded-full ${c.priority === 'High' ? 'bg-rose-500 animate-pulse' : c.priority === 'Medium' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                                <span className={`text-[10px] font-black uppercase tracking-widest ${c.priority === 'High' ? 'text-rose-500' : 'text-text-muted'}`}>{c.priority}</span>
+                                <div className={`w-1.5 h-1.5 rounded-full ${c.priority === 'High' || c.priority === 'Critical' ? 'bg-rose-500 animate-pulse' : c.priority === 'Medium' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                                <span className={`text-[10px] font-black uppercase tracking-widest ${c.priority === 'High' || c.priority === 'Critical' ? 'text-rose-500' : 'text-text-muted'}`}>{c.priority || 'Medium'}</span>
                              </div>
                           </td>
                           <td className="py-5 px-4">
@@ -253,15 +221,18 @@ const Complaints = () => {
                           </td>
                           <td className="py-5 px-8 text-right">
                              <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button className="p-2 text-text-muted hover:text-primary transition-all"><Edit size={16} /></button>
-                                <button className="p-2 text-text-muted hover:text-indigo-500 transition-all"><MessageSquare size={16} /></button>
-                                <button className="p-2 text-text-muted hover:text-rose-500 transition-all"><Trash2 size={16} /></button>
+                                {c.status !== 'Resolved' && (
+                                  <button onClick={(e) => { e.stopPropagation(); handleResolve(c._id); }} className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-xl transition-all" title="Resolve">
+                                    <CheckCircle size={16} />
+                                  </button>
+                                )}
+                                <button className="p-2 text-text-muted hover:text-primary transition-all"><MessageSquare size={16} /></button>
                              </div>
                           </td>
                        </tr>
                        
                        <AnimatePresence>
-                          {expandedId === c.id && (
+                          {expandedId === c._id && (
                              <tr>
                                 <td colSpan={7} className="p-0 border-none">
                                    <motion.div 
@@ -270,52 +241,35 @@ const Complaints = () => {
                                       exit={{ height: 0, opacity: 0 }}
                                       className="bg-slate-50/30 dark:bg-white/[0.01] overflow-hidden"
                                    >
-                                      <div className="p-10 grid grid-cols-1 lg:grid-cols-3 gap-12 border-b border-border/50">
-                                         <div className="space-y-8">
+                                      <div className="p-10 grid grid-cols-1 lg:grid-cols-2 gap-12 border-b border-border/50">
+                                         <div className="space-y-6">
                                             <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
-                                              <Building size={14} className="text-primary" /> Case Parameters
+                                              <Building size={14} className="text-primary" /> Case Details
                                             </h4>
-                                            <div className="space-y-4">
-                                               <div className="p-4 rounded-2xl bg-white dark:bg-card border border-border shadow-subtle">
-                                                  <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-1">Issue Description</p>
-                                                  <p className="text-[12px] font-medium text-text-primary leading-relaxed">{c.description}</p>
-                                               </div>
-                                               <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-card border border-border shadow-subtle">
-                                                  <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary"><User size={16} /></div>
-                                                  <div>
-                                                     <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">Assigned Specialist</p>
-                                                     <p className="text-[12px] font-black text-text-primary">{c.assignedTo}</p>
-                                                  </div>
-                                               </div>
+                                            <div className="p-4 rounded-2xl bg-white dark:bg-card border border-border shadow-subtle">
+                                               <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-1">Description</p>
+                                               <p className="text-[12px] font-medium text-text-primary leading-relaxed">{c.description || 'No description provided.'}</p>
                                             </div>
+                                            {c.assignedTo && (
+                                              <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-card border border-border shadow-subtle">
+                                                 <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary"><User size={16} /></div>
+                                                 <div>
+                                                    <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">Assigned To</p>
+                                                    <p className="text-[12px] font-black text-text-primary">{c.assignedTo}</p>
+                                                 </div>
+                                              </div>
+                                            )}
                                          </div>
-
-                                         <div className="space-y-8">
+                                         <div className="space-y-6">
                                             <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
-                                              <Clock size={14} className="text-warning" /> Resolution Pulse
-                                            </h4>
-                                            <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-border">
-                                               {c.history.map((h, i) => (
-                                                  <div key={i} className="relative">
-                                                     <div className="absolute -left-[20px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary border-4 border-background shadow-[0_0_0_4px_rgba(var(--color-primary),0.1)]" />
-                                                     <div className="flex justify-between items-start">
-                                                        <span className="text-[11px] font-black text-text-primary uppercase tracking-tight">{h.status}</span>
-                                                        <span className="text-[9px] font-bold text-text-muted">{h.time}</span>
-                                                     </div>
-                                                     <p className="text-[10px] text-text-muted mt-1 italic">"{h.note}"</p>
-                                                  </div>
-                                               ))}
-                                            </div>
-                                         </div>
-
-                                         <div className="space-y-8">
-                                            <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
-                                              <CheckCircle2 size={14} className="text-success" /> Decision Matrix
+                                              <CheckCircle2 size={14} className="text-success" /> Actions
                                             </h4>
                                             <div className="grid grid-cols-1 gap-3">
-                                               <button className="w-full py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all group">
-                                                  Resolve Ticket <CheckCircle size={14} className="inline ml-1 group-hover:scale-110 transition-transform" />
-                                               </button>
+                                               {c.status !== 'Resolved' && (
+                                                 <button onClick={() => handleResolve(c._id)} className="w-full py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all">
+                                                    Resolve Ticket <CheckCircle size={14} className="inline ml-1" />
+                                                 </button>
+                                               )}
                                                <button className="w-full py-4 bg-white dark:bg-card border border-border text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Reassign Specialist</button>
                                                <button className="w-full py-4 bg-primary/5 text-primary border border-primary/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all">Notify Tenant</button>
                                             </div>
@@ -333,26 +287,14 @@ const Complaints = () => {
          </div>
       </div>
 
-      {/* --- PAGINATION --- */}
-      <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-6 p-6 card-classic bg-slate-50/50 dark:bg-white/2">
-         <div className="flex items-center gap-4">
-            <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Showing 4 of 48 reports</span>
-            <div className="h-4 w-px bg-border" />
-            <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-1.5 shadow-subtle">
-               <FileText size={14} className="text-primary" />
-               <button className="text-[10px] font-black uppercase tracking-widest text-text-secondary">Generate Audit Log</button>
-            </div>
-         </div>
-         <div className="flex items-center gap-2">
-            <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-border rounded-xl text-text-muted opacity-50 cursor-not-allowed italic">Prev Manifest</button>
-            <div className="flex gap-1">
-               {[1, 2, 3].map((p, i) => (
-                 <button key={i} className={`w-8 h-8 rounded-lg text-[10px] font-black flex items-center justify-center transition-all ${p === 1 ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-text-muted hover:text-text-primary hover:bg-background'}`}>
-                   {p}
-                 </button>
-               ))}
-            </div>
-            <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-border rounded-xl text-text-secondary hover:border-primary hover:text-primary transition-all shadow-subtle italic">Next Manifest</button>
+      {/* --- FOOTER --- */}
+      <div className="mt-10 flex items-center justify-between p-6 card-classic bg-slate-50/50 dark:bg-white/2">
+         <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">
+           Showing {complaints.length} of {total} reports
+         </span>
+         <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-1.5 shadow-subtle">
+            <FileText size={14} className="text-primary" />
+            <button className="text-[10px] font-black uppercase tracking-widest text-text-secondary">Generate Audit Log</button>
          </div>
       </div>
     </div>

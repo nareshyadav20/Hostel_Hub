@@ -10,6 +10,18 @@ const staffSchema = new mongoose.Schema({
   salary: { type: Number, default: 0 },
   performance: { type: Number, default: 4.5 },
   shift: { type: String, default: 'Full Time' },
+  shiftAnalytics: {
+    avgTaskCompletionTime: { type: Number }, // in minutes
+    shiftConsistency: { type: Number, default: 100 }
+  },
+  performanceIndicators: [{
+    label: String,
+    score: Number
+  }],
+  smartTaskTracking: {
+    activeTaskCount: { type: Number, default: 0 },
+    overdueTaskCount: { type: Number, default: 0 }
+  },
   joinedDate: { type: Date, default: Date.now },
   documents: [{
     name: String,

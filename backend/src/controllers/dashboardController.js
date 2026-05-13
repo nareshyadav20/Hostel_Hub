@@ -6,6 +6,9 @@ const Complaint = require('../models/Complaint');
 const User = require('../models/User');
 const MessMenu = require('../models/MessMenu');
 const MessAttendance = require('../models/MessAttendance');
+const Inventory = require('../models/Inventory');
+const Staff = require('../models/Staff');
+const OwnerProfile = require('../models/OwnerProfile');
 
 // ─── Helper: Validate & cast buildingId ──────────────────────────────────────
 const parseId = (id) => {
@@ -54,6 +57,16 @@ exports.getSummaryKPIs = async (req, res) => {
     const occupancyRate = totalBeds > 0 ? parseFloat(((occupiedBeds / totalBeds) * 100).toFixed(1)) : 0;
 
     const totalTenants = await Tenant.countDocuments(oid ? { buildingId: oid } : {});
+    const pendingTenants = await Tenant.countDocuments({ status: 'Pending', ...(oid && { buildingId: oid }) });
+
+    const ownerStats = await OwnerProfile.aggregate([
+      { $group: {
+        _id: null,
+        total: { $sum: 1 },
+        pending: { $sum: { $cond: [{ $eq: ['$verificationStatus', 'Pending'] }, 1, 0] } }
+      }}
+    ]);
+    const os = ownerStats[0] || { total: 0, pending: 0 };
 
     const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(); endOfDay.setHours(23, 59, 59, 999);
@@ -102,6 +115,9 @@ exports.getSummaryKPIs = async (req, res) => {
       healthScore: 85,
       buildingCount,
       totalTenants,
+      pendingTenants,
+      totalOwners: os.total,
+      pendingOwners: os.pending,
       complaintsToday,
       checkinsToday,
       checkoutsToday: 0, // Placeholder
@@ -118,7 +134,7 @@ exports.getSummaryKPIs = async (req, res) => {
 exports.getRevenueAnalytics = async (req, res) => {
   try {
     const oid = parseId(req.query.buildingId);
-    const payments = await Payment.find(oid ? { buildingId: oid } : {});
+    const payments = await Payment.find(oid ? { buildingId: oid } : {}).populate('tenantId', 'name').lean();
 
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dailyRevenue = days.map((name, i) => {
@@ -130,8 +146,35 @@ exports.getRevenueAnalytics = async (req, res) => {
     const pendingRent = payments.filter(p => ['Pending', 'Due'].includes(p.status)).reduce((sum, p) => sum + p.amount, 0);
     const tenantCount = await Tenant.countDocuments(oid ? { buildingId: oid } : {});
 
+    // Recent and Upcoming Manifests
+    const recentTransactions = payments
+      .filter(p => p.status === 'Paid')
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5)
+      .map(p => ({
+        id: p._id.toString().slice(-4),
+        name: p.tenantId?.name || 'N/A',
+        type: p.type || 'Rent Payment',
+        amount: `₹${p.amount?.toLocaleString()}`,
+        status: p.status,
+        date: p.date
+      }));
+
+    const upcomingDues = payments
+      .filter(p => ['Pending', 'Due'].includes(p.status))
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(0, 5)
+      .map(p => ({
+        name: p.tenantId?.name || 'N/A',
+        amount: `₹${p.amount?.toLocaleString()}`,
+        date: new Date(p.date).toLocaleDateString(),
+        status: p.status
+      }));
+
     res.json({
       dailyRevenue,
+      recentTransactions,
+      upcomingDues,
       monthlyRevenue: [
         { name: 'Prev Month', revenue: collectedRent * 0.8, expenses: collectedRent * 0.2 },
         { name: 'Current', revenue: collectedRent, expenses: collectedRent * 0.25 }
@@ -305,17 +348,93 @@ exports.getMessStats = async (req, res) => {
 // ─── GET /api/dashboard/staff ────────────────────────────────────────────────
 exports.getStaffStats = async (req, res) => {
   try {
-    const staff = await User.find({ role: { $in: ['STAFF', 'WARDEN'] } }, 'name role').lean();
+    const oid = parseId(req.query.buildingId);
+    const staff = await Staff.find(oid ? { buildingId: oid } : {}).lean();
+    
     res.json({
       totalStaff: staff.length,
-      tasksAssigned: 0,
-      tasksCompleted: 0,
-      tasksPending: 0,
-      efficiencyScore: 100,
-      staffList: staff.map(s => ({ name: s.name, role: s.role, score: 100 }))
+      activeStaff: staff.filter(s => s.status === 'Active').length,
+      onLeave: staff.filter(s => s.status === 'On Leave').length,
+      avgAttendance: staff.length > 0 ? staff.reduce((acc, s) => acc + (s.attendance?.percentage || 0), 0) / staff.length : 0,
+      tasksAssigned: staff.reduce((acc, s) => acc + (s.smartTaskTracking?.activeTaskCount || 0), 0),
+      tasksCompleted: staff.reduce((acc, s) => acc + (s.tasks?.filter(t => t.status === 'COMPLETED').length || 0), 0),
+      efficiencyScore: 92,
+      staffList: staff.map(s => ({ 
+        name: s.name, 
+        role: s.role, 
+        performance: s.performance,
+        status: s.status 
+      }))
     });
   } catch (error) {
     console.error('Staff Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ─── GET /api/dashboard/inventory ───────────────────────────────────────────
+exports.getInventoryStats = async (req, res) => {
+  try {
+    const oid = parseId(req.query.buildingId);
+    const inventory = await Inventory.find(oid ? { buildingId: oid } : {}).lean();
+    
+    res.json({
+      totalItems: inventory.length,
+      lowStock: inventory.filter(i => i.stock <= i.minThreshold).length,
+      outOfStock: inventory.filter(i => i.stock === 0).length,
+      expiringSoon: inventory.filter(i => i.expiryDate && new Date(i.expiryDate) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)).length,
+      categories: [
+        { name: 'Consumables', count: inventory.filter(i => i.type === 'Consumable').length },
+        { name: 'Assets', count: inventory.filter(i => i.type === 'Asset').length }
+      ],
+      alerts: inventory.filter(i => i.stock <= i.minThreshold).map(i => ({
+        name: i.name,
+        stock: i.stock,
+        threshold: i.minThreshold
+      }))
+    });
+  } catch (error) {
+    console.error('Inventory Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ─── GET /api/dashboard/owners ───────────────────────────────────────────────
+exports.getOwnerStats = async (req, res) => {
+  try {
+    const owners = await OwnerProfile.find({}).lean();
+    const buildings = await Building.find({}).lean();
+    
+    res.json({
+      totalOwners: owners.length,
+      verifiedOwners: owners.filter(o => o.verificationStatus === 'Verified').length,
+      pendingOwners: owners.filter(o => o.verificationStatus === 'Pending').length,
+      topPerformers: owners.sort((a, b) => b.hostelRatings - a.hostelRatings).slice(0, 5).map(o => ({
+        name: o.personalInfo?.fullName || 'N/A',
+        rating: o.hostelRatings,
+        revenue: o.revenueGenerated
+      })),
+      revenueTrend: owners.reduce((acc, o) => acc + (o.revenueGenerated || 0), 0)
+    });
+  } catch (error) {
+    console.error('Owner Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ─── GET /api/dashboard/notifications ───────────────────────────────────────
+exports.getNotifications = async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+    const notifications = await db.collection('owner_notifications')
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .toArray();
+      
+    res.json(notifications);
+  } catch (error) {
+    console.error('Notifications Error:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -353,6 +472,17 @@ exports.getLiveActivity = async (req, res) => {
     res.json(activity);
   } catch (error) {
     console.error('Activity Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ─── GET /api/dashboard/buildings ───────────────────────────────────────────
+exports.getBuildings = async (req, res) => {
+  try {
+    const buildings = await Building.find({}).lean();
+    res.json(buildings);
+  } catch (error) {
+    console.error('Buildings Error:', error);
     res.status(500).json({ error: error.message });
   }
 };

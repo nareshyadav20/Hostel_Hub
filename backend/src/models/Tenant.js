@@ -27,6 +27,18 @@ const tenantSchema = new mongoose.Schema({
     default: 'basic' 
   },
   aadhaarNumber: { type: String },
+  preferences: {
+    studyFriendly: { type: Boolean, default: true },
+    quietZone: { type: Boolean, default: false },
+    food: { type: String, enum: ['Veg', 'Non-Veg', 'Both'], default: 'Both' }
+  },
+  compatibilityScore: { type: Number, default: 85 },
+  kycStatus: { type: String, enum: ['Verified', 'Pending', 'Rejected'], default: 'Pending' },
+  emergencyContacts: [{
+    name: String,
+    relation: String,
+    phone: String
+  }],
   docs: [{
     name: String,
     url: String,

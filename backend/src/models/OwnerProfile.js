@@ -87,6 +87,14 @@ const ownerProfileSchema = new mongoose.Schema({
 
   // 7. Advanced
   profileCompleteness: { type: Number, default: 0 },
+  verificationStatus: { type: String, enum: ['Verified', 'Pending', 'Rejected'], default: 'Pending' },
+  hostelRatings: { type: Number, default: 4.5 },
+  subscriptionPlan: { type: String, default: 'Standard' },
+  revenueGenerated: { type: Number, default: 0 },
+  tenantCount: { type: Number, default: 0 },
+  complaintRatio: { type: Number, default: 0 },
+  safetyScore: { type: Number, default: 4.5 },
+  hygieneScore: { type: Number, default: 4.5 },
   activityLogs: [{
     action: { type: String },
     description: { type: String },
