@@ -99,6 +99,7 @@ app.use('/api/tenant-portal', require('./routes/tenantPortalRoutes'));
 app.use('/api/services', require('./routes/serviceRoutes'));
 app.use('/api/confidential-reports', require('./routes/confidentialReportRoutes'));
 app.use('/api/procurement', procurementRoutes);
+app.use('/api/community', require('./routes/communityRoutes'));
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

@@ -34,15 +34,25 @@ const Safety = () => {
   const startHolding = () => {
     setIsHolding(true);
     let start = Date.now();
-    timerRef.current = setInterval(() => {
+    timerRef.current = setInterval(async () => {
       let elapsed = Date.now() - start;
       let progress = Math.min((elapsed / 2000) * 100, 100);
       setSosProgress(progress);
       if (progress >= 100) {
         clearInterval(timerRef.current);
-        sirenRef.current.loop = true;
-        sirenRef.current.play().catch(e => console.log('Audio failed'));
-        alert('🚨 SOS ALERT SENT!');
+        try {
+          await API.post('/tenant-portal/sos-alerts', {
+            type: 'Emergency',
+            message: 'SOS Alert triggered by tenant',
+            location: 'Unknown Location (SOS Button)'
+          });
+          sirenRef.current.loop = true;
+          sirenRef.current.play().catch(e => console.log('Audio failed'));
+          alert('🚨 SOS ALERT SENT TO MANAGEMENT!');
+        } catch (err) {
+          console.error('Failed to send SOS alert:', err);
+          alert('Failed to send SOS alert. Please try again or call emergency services.');
+        }
         setSosProgress(0);
         setIsHolding(false);
       }

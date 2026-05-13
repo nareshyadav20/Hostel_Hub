@@ -430,6 +430,19 @@ export const api = {
   // Tenants - delete
   deleteTenant: async (id) => {
     await axios.delete(`${API_URL}/tenants/${id}`);
+  },
+  // Community Hub
+  getLostFound: async () => {
+    const res = await axios.get(`${API_URL}/community/lost-found`);
+    return handleId(res.data);
+  },
+  getSOSAlerts: async () => {
+    const res = await axios.get(`${API_URL}/community/sos`);
+    return handleId(res.data);
+  },
+  getConfidentialReports: async () => {
+    const res = await axios.get(`${API_URL}/confidential-reports`);
+    return handleId(res.data);
   }
 };
 

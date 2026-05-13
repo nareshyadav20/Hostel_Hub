@@ -8,6 +8,6 @@ const communityReportSchema = new mongoose.Schema({
   tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   status: { type: String, enum: ['Open', 'Resolved'], default: 'Open' }
-}, { timestamps: true });
+}, { timestamps: true, collection: 'LostFound' });
 
 module.exports = mongoose.model('CommunityReport', communityReportSchema);

@@ -1,6 +1,7 @@
 const CommunityReport = require('../models/tenant/CommunityReport');
 const Reward = require('../models/tenant/Reward');
 const Wishlist = require('../models/tenant/Wishlist');
+const SOSAlert = require('../models/SOSAlert');
 const { getOrCreateTenant } = require('../utils/tenantHelper');
 
 // --- Community Reports ---
@@ -24,6 +25,21 @@ exports.getCommunityReports = async (req, res) => {
     res.status(200).json(reports);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching reports', error: error.message });
+  }
+};
+
+// --- SOS Alerts ---
+exports.createSOSAlert = async (req, res) => {
+  try {
+    const tenant = await getOrCreateTenant(req.user);
+    const alert = await SOSAlert.create({
+      ...req.body,
+      reportedBy: tenant.name || 'Tenant',
+      buildingId: tenant.buildingId
+    });
+    res.status(201).json(alert);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating SOS alert', error: error.message });
   }
 };
 

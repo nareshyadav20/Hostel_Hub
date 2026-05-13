@@ -38,22 +38,16 @@ const Community = () => {
   const fetchCommunityData = async () => {
     setIsLoading(true);
     try {
-      // Mocking Lost & Found and SOS for now as they might not have backend yet
-      // But fetching Confidential Reports from real backend
-      const res = await fetch(`http://localhost:5000/api/confidential-reports`);
-      const reports = await res.json();
+      const [lostFound, sos, reports] = await Promise.all([
+        api.getLostFound(),
+        api.getSOSAlerts(),
+        api.getConfidentialReports()
+      ]);
       
       setData({
-        lostFound: [
-          { id: 1, item: 'iPhone 13', type: 'Lost', location: 'Mess Hall', date: '2026-05-12', status: 'Pending', reportedBy: 'Rahul S.' },
-          { id: 2, item: 'Blue Wallet', type: 'Found', location: 'Entrance Gate', date: '2026-05-11', status: 'Claimed', reportedBy: 'Staff Member' },
-          { id: 3, item: 'Keys with Keychain', type: 'Found', location: 'Room 302 Balcony', date: '2026-05-10', status: 'Available', reportedBy: 'Anjali P.' },
-        ],
-        sos: [
-          { id: 1, type: 'Medical', message: 'Severe chest pain reported in Room 405', location: 'Floor 4', time: '5 mins ago', status: 'Active' },
-          { id: 2, type: 'Security', message: 'Suspicious person seen near backdoor', location: 'Perimeter', time: '1 hour ago', status: 'Resolved' },
-        ],
-        confidentialReports: Array.isArray(reports) ? reports : []
+        lostFound: lostFound || [],
+        sos: sos || [],
+        confidentialReports: reports || []
       });
     } catch (err) {
       console.error('Failed to fetch community data:', err);
@@ -116,7 +110,7 @@ const Community = () => {
                     <span className={`badge ${item.type.toLowerCase()}`}>{item.type}</span>
                     <span className="date">{item.date}</span>
                   </div>
-                  <h3>{item.item}</h3>
+                  <h3>{item.title || item.item}</h3>
                   <div className="details">
                     <p><MapPin size={14} /> {item.location}</p>
                     <p><Users size={14} /> {item.reportedBy}</p>
@@ -146,7 +140,7 @@ const Community = () => {
                   <div className="sos-info">
                     <div className="sos-header">
                       <h4>{alert.type} Emergency</h4>
-                      <span className="time">{alert.time}</span>
+                      <span className="time">{new Date(alert.createdAt).toLocaleTimeString()}</span>
                     </div>
                     <p>{alert.message}</p>
                     <div className="sos-location">
