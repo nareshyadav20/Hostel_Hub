@@ -28,6 +28,12 @@ app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
+    
+    // Auto-allow all localhost/127.0.0.1 origins for easier development
+    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:') || origin === 'http://localhost' || origin === 'http://127.0.0.1') {
+      return callback(null, true);
+    }
+
     const allowed = allowedOrigins.some(o => 
       typeof o === 'string' ? o === origin : o.test(origin)
     );
@@ -75,6 +81,7 @@ require('./models/Notification');
 require('./models/PurchaseRequest');
 require('./models/PurchaseOrder');
 require('./models/Booking');
+require('./models/ConfidentialReport');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -168,6 +175,22 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+const startServer = (p) => {
+  const port = parseInt(p);
+  server.listen(port, () => {
+    console.log(`✅ Server is running on port ${port}`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`⚠️  Port ${port} is in use. Trying port ${port + 1}...`);
+      server.close();
+      startServer(port + 1);
+    } else {
+      console.error('Server error:', err);
+    }
+  });
+};
+
+startServer(Number(PORT) || 5000);
+

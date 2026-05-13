@@ -440,10 +440,46 @@ export const api = {
     const res = await axios.get(`${API_URL}/community/sos`);
     return handleId(res.data);
   },
-  getConfidentialReports: async () => {
-    const res = await axios.get(`${API_URL}/confidential-reports`);
-    return handleId(res.data);
+  resolveSOSAlert: async (id) => {
+    const res = await axios.patch(`${API_URL}/community/sos/${id}/resolve`);
+    return res.data;
+  },
+  dispatchSOSAlert: async (id) => {
+    const res = await axios.patch(`${API_URL}/community/sos/${id}/dispatch`);
+    return res.data;
+  },
+  updateLostFoundStatus: async (id, status) => {
+    const res = await axios.patch(`${API_URL}/community/lost-found/${id}/status`, { status });
+    return res.data;
+  },
+  getConfidentialReports: async (params = {}) => {
+    const res = await axios.get(`${API_URL}/confidential-reports`, { params });
+    return {
+      reports: handleId(res.data.reports || []),
+      pagination: res.data.pagination
+    };
+  },
+  updateConfidentialReportStatus: async (id, status) => {
+    const res = await axios.patch(`${API_URL}/confidential-reports/${id}/status`, { status });
+    return handleId(res.data.report);
+  },
+  flagConfidentialReport: async (id, isFlagged, flagStatus) => {
+    const res = await axios.patch(`${API_URL}/confidential-reports/${id}/flag`, { isFlagged, flagStatus });
+    return handleId(res.data.report);
+  },
+  deleteConfidentialReport: async (id) => {
+    const res = await axios.delete(`${API_URL}/confidential-reports/${id}`);
+    return res.data;
+  },
+  debugConfidentialReports: async () => {
+    const res = await axios.get(`${API_URL}/confidential-reports/debug`);
+    return res.data;
+  },
+  hideConfidentialReport: async (id, isHidden) => {
+    const res = await axios.patch(`${API_URL}/confidential-reports/${id}/hide`, { isHidden });
+    return handleId(res.data.report);
   }
 };
 
 window.api = api;
+// end of file test
