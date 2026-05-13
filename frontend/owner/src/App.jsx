@@ -16,6 +16,7 @@ import Inventory from './pages/Inventory';
 import Notifications from './pages/Notifications';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import Community from './pages/Community';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -44,6 +45,7 @@ function App() {
         <Route path="/owner/building/:buildingId/notifications" element={<Layout><Notifications /></Layout>} />
         <Route path="/owner/building/:buildingId/reports" element={<Layout><Reports /></Layout>} />
         <Route path="/owner/building/:buildingId/settings" element={<Layout><Settings /></Layout>} />
+        <Route path="/owner/building/:buildingId/community" element={<Layout><Community /></Layout>} />
         
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/dashboard" element={<Navigate to="/owner/portfolio" />} />
