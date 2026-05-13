@@ -2,7 +2,9 @@ const Laundry = require('../models/Laundry');
 const RoomCleaning = require('../models/tenant/RoomCleaning');
 const Visitor = require('../models/tenant/Visitor');
 const Leave = require('../models/tenant/Leave');
+const Complaint = require('../models/Complaint');
 const { getOrCreateTenant } = require('../utils/tenantHelper');
+const socketService = require('../utils/socketService');
 
 // Helper to get tenant profile
 const getTenantProfile = async (userData) => {
@@ -25,6 +27,26 @@ exports.createLaundryOrder = async (req, res) => {
       tenant: tenant._id,
       user: req.user.id
     });
+
+    // Also create a Complaint record for Service Hub
+    await Complaint.create({
+      title: `Laundry Order #${orderNumber}`,
+      description: `Pickup for ${items.map(i => `${i.count}x ${i.name}`).join(', ')}`,
+      category: 'Laundry',
+      priority: 'Medium',
+      tenant: tenant._id,
+      user: req.user.id,
+      buildingId: tenant.buildingId?._id || tenant.buildingId
+    });
+
+    // Real-time update for owner
+    if (tenant.buildingId) {
+      socketService.emitUpdate(tenant.buildingId.toString(), 'complaintCreated', {
+        complaint: { title: `Laundry Order #${orderNumber}`, category: 'Laundry' },
+        tenantName: tenant.name
+      });
+    }
+
     console.log('✅ Laundry Order Saved:', laundry._id);
     res.status(201).json(laundry);
   } catch (error) {
@@ -56,6 +78,26 @@ exports.scheduleCleaning = async (req, res) => {
       tenant: tenant._id,
       user: req.user.id
     });
+
+    // Also create a Complaint record for Service Hub
+    await Complaint.create({
+      title: `Room Cleaning Request`,
+      description: `Scheduled for ${new Date(date).toLocaleDateString()} at slot: ${slot}`,
+      category: 'Cleaning',
+      priority: 'Low',
+      tenant: tenant._id,
+      user: req.user.id,
+      buildingId: tenant.buildingId?._id || tenant.buildingId
+    });
+
+    // Real-time update for owner
+    if (tenant.buildingId) {
+      socketService.emitUpdate(tenant.buildingId.toString(), 'complaintCreated', {
+        complaint: { title: `Room Cleaning Request`, category: 'Cleaning' },
+        tenantName: tenant.name
+      });
+    }
+
     console.log('✅ Cleaning Scheduled:', cleaning._id);
     res.status(201).json(cleaning);
   } catch (error) {
@@ -88,6 +130,26 @@ exports.createVisitorAccess = async (req, res) => {
       tenant: tenant._id,
       user: req.user.id
     });
+
+    // Also create a Complaint record for Service Hub
+    await Complaint.create({
+      title: `Visitor Pass: ${name}`,
+      description: `Relationship: ${relation}. Expected arrival: ${new Date(arrivalDate).toLocaleString()}`,
+      category: 'Visitor',
+      priority: 'Medium',
+      tenant: tenant._id,
+      user: req.user.id,
+      buildingId: tenant.buildingId?._id || tenant.buildingId
+    });
+
+    // Real-time update for owner
+    if (tenant.buildingId) {
+      socketService.emitUpdate(tenant.buildingId.toString(), 'complaintCreated', {
+        complaint: { title: `Visitor Pass: ${name}`, category: 'Visitor' },
+        tenantName: tenant.name
+      });
+    }
+
     console.log('✅ Visitor Access Saved:', visitor._id);
     res.status(201).json(visitor);
   } catch (error) {
@@ -120,6 +182,26 @@ exports.submitLeaveNotice = async (req, res) => {
       tenant: tenant._id,
       user: req.user.id
     });
+
+    // Also create a Complaint record for Service Hub
+    await Complaint.create({
+      title: `Leave Notice`,
+      description: `From ${new Date(fromDate).toLocaleDateString()} to ${new Date(toDate).toLocaleDateString()}. Reason: ${reason}`,
+      category: 'Leave',
+      priority: 'Medium',
+      tenant: tenant._id,
+      user: req.user.id,
+      buildingId: tenant.buildingId?._id || tenant.buildingId
+    });
+
+    // Real-time update for owner
+    if (tenant.buildingId) {
+      socketService.emitUpdate(tenant.buildingId.toString(), 'complaintCreated', {
+        complaint: { title: `Leave Notice`, category: 'Leave' },
+        tenantName: tenant.name
+      });
+    }
+
     console.log('✅ Leave Saved:', leave._id);
     res.status(201).json(leave);
   } catch (error) {
