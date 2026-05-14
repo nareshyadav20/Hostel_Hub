@@ -224,13 +224,24 @@ const Layout = ({ children }) => {
   const getNotifIcon = (cat) => {
     switch (cat?.toLowerCase()) {
       case 'rent':
-      case 'payment': return '💰';
+      case 'payment':
+      case 'reminder':
+      case 'overdue': return '💰';
       case 'maintenance':
-      case 'complaint': return '🛠️';
+      case 'complaint':
+      case 'allocation': return '🛠️';
       case 'security':
-      case 'sos': return '🛡️';
+      case 'sos':
+      case 'alert': return '🛡️';
+      case 'mess':
+      case 'mess update': return '🍛';
+      case 'community':
+      case 'announcement': return '📢';
+      case 'team':
+      case 'staff': return '👤';
       case 'services': return '🧺';
       case 'reward': return '🎁';
+      case 'lost & found': return '🔍';
       default: return '🔔';
     }
   };

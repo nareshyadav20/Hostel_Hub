@@ -32,6 +32,11 @@ const buildingSchema = new mongoose.Schema({
     hasCCTVAi:            { type: Boolean, default: false },
     targetComfortScore:   { type: Number, default: 90 }
   },
+  notificationSettings: {
+    autoRentReminders: { type: Boolean, default: true },
+    autoComplaintEscalations: { type: Boolean, default: true },
+    reminderDays: [{ type: Number, default: [7, 3, 1, 0] }]
+  },
   status:     { type: String, enum: ['Active', 'Draft', 'Inactive'], default: 'Active' },
   lastStep:   { type: Number, default: 1 },
   draftData:  { type: mongoose.Schema.Types.Mixed },

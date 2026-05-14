@@ -23,6 +23,7 @@ const notificationSchema = new mongoose.Schema({
   isRead: { type: Boolean, default: false },
   archived: { type: Boolean, default: false },
   createdBy: { type: String }, // User ID or system
+  automatedId: { type: String, unique: true, sparse: true }, // For duplicate prevention in scheduling
   
   // Actions
   actionLink: { type: String }, 

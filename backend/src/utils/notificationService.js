@@ -21,6 +21,12 @@ const createNotification = async (data) => {
       }
     }
 
+    // Duplicate Prevention for Automated Tasks
+    if (data.automatedId) {
+      const existing = await Notification.findOne({ automatedId: data.automatedId });
+      if (existing) return existing;
+    }
+
     const notification = new Notification(notificationData);
     
     await notification.save();

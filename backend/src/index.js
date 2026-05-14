@@ -11,6 +11,10 @@ dotenv.config();
 // Connect to MongoDB
 connectDB();
 
+// Initialize Background Schedulers
+const { initScheduler } = require('./utils/schedulerService');
+initScheduler();
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 

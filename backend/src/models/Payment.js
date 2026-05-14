@@ -10,6 +10,7 @@ const paymentSchema = new mongoose.Schema({
     default: 'Paid'
   },
   date: { type: Date, default: Date.now },
+  dueDate: { type: Date }, // For automated reminders
   month: { type: String }, // e.g. "May 2026"
   type: { 
     type: String, 
