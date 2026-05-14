@@ -9,7 +9,7 @@ exports.getInventory = async (req, res) => {
 
     const { buildingId } = req.query;
     let query;
-    
+
     if (buildingId) {
       const isOwned = bIds.some(id => id.toString() === buildingId);
       if (!isOwned) return res.status(403).json({ error: 'Access denied to this building.' });
@@ -28,7 +28,7 @@ exports.getInventory = async (req, res) => {
 exports.addInventoryItem = async (req, res) => {
   try {
     const data = { ...req.body, lastUpdatedBy: req.user.id };
-    
+
     // Auto-map type based on common hostel categories if not provided
     if (!data.type) {
       if (data.categoryId === 'CAT-FURN' || data.categoryId === 'CAT-ELEC' || data.category === 'Furniture' || data.category === 'Electronics') {
@@ -40,13 +40,13 @@ exports.addInventoryItem = async (req, res) => {
 
     const newItem = new Inventory(data);
     await newItem.save();
-    
+
     // Real-time update using socketService
     if (data.buildingId) {
       socketService.emitUpdate(data.buildingId, 'inventoryAdded', newItem);
     }
     socketService.emitToOwner('inventoryAdded', newItem);
-    
+
     res.status(201).json(newItem);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -57,7 +57,7 @@ exports.updateInventoryItem = async (req, res) => {
   try {
     const item = await Inventory.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!item) return res.status(404).json({ message: 'Item not found' });
-    
+
     // Real-time update using socketService
     if (item.buildingId) {
       socketService.emitUpdate(item.buildingId.toString(), 'inventoryUpdated', item);
@@ -79,7 +79,7 @@ exports.updateInventoryItem = async (req, res) => {
         actionLink: '/inventory'
       });
     }
-    
+
     res.json(item);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -90,15 +90,15 @@ exports.deleteInventoryItem = async (req, res) => {
   try {
     const item = await Inventory.findById(req.params.id);
     if (!item) return res.status(404).json({ error: 'Item not found' });
-    
+
     await Inventory.findByIdAndDelete(req.params.id);
-    
+
     // Real-time update using socketService
     if (item.buildingId) {
       socketService.emitUpdate(item.buildingId, 'inventoryDeleted', req.params.id);
     }
     socketService.emitToOwner('inventoryDeleted', req.params.id);
-    
+
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: error.message });
