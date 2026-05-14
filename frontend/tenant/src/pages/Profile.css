@@ -714,24 +714,105 @@
 }
 
 @media (max-width: 768px) {
+  .profile-container {
+    padding: 0.5rem;
+  }
+  
   .profile-main-card-premium {
     flex-direction: column;
     text-align: center;
+    padding: 1.5rem !important;
+    gap: 1rem;
   }
+  
+  .profile-avatar-large {
+    width: 80px;
+    height: 80px;
+    font-size: 2.5rem;
+  }
+  
+  .user-name {
+    font-size: 1.5rem;
+  }
+  
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+
   .room-info-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 1rem;
   }
+
   .scores-grid {
     grid-template-columns: 1fr;
   }
+
   .emergency-contacts-grid {
     grid-template-columns: 1fr;
   }
+  
+  .stay-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    text-align: left;
+  }
+  
+  .stay-icon {
+    width: 48px;
+    height: 48px;
+  }
+
   .payment-summary-main {
     flex-direction: column;
     text-align: center;
+    gap: 1rem;
   }
+
   .stay-meta-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .transaction-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .tx-amount {
+    align-self: flex-start;
+  }
+  
+  .activity-card {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem !important;
+  }
+  
+  .activity-type-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+  
+  .safety-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .incident-item {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem !important;
+  }
+  
+  .profile-tabs-nav {
+    padding: 0.5rem !important;
+  }
+  
+  .tab-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
   }
 }

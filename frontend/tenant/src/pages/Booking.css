@@ -632,6 +632,135 @@
   letter-spacing: -1px;
 }
 
+.payment-methods-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.payment-method-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.payment-method-card:hover {
+  border-color: var(--primary-light);
+  background: var(--bg-primary);
+}
+
+.payment-method-card.selected {
+  border-color: var(--primary);
+  background: rgba(22, 163, 74, 0.05);
+}
+
+.pm-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.payment-method-card.selected .pm-icon {
+  background: var(--primary);
+  color: white;
+}
+
+.pm-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.pm-check {
+  position: absolute;
+  right: 1rem;
+  color: var(--primary);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.3s ease;
+}
+
+.payment-method-card.selected .pm-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.payment-method-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.payment-method-details {
+  padding: 1.25rem;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+  background: var(--bg-tertiary);
+  border: 2px solid var(--primary-light);
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+  position: relative;
+  z-index: 0;
+}
+
+.payment-method-card {
+  z-index: 1; /* keep above details to hide seam */
+}
+
+.fade-in-down {
+  animation: fadeInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.card-input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.card-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.card-input.half {
+  flex: 1;
+}
+
 .flow-footer {
   margin-top: 4rem;
   padding-top: 2rem;
