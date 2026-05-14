@@ -149,24 +149,26 @@ io.on('connection', (socket) => {
 
   socket.on('joinBuilding', (buildingId) => {
     if (buildingId) {
-      socket.join(buildingId.toString());
-      console.log(`Socket ${socket.id} joined building room: ${buildingId}`);
+      const roomId = `building_${buildingId.toString()}`;
+      socket.join(roomId);
+      console.log(`Socket ${socket.id} joined building room: ${roomId}`);
     }
   });
 
   socket.on('joinOwner', (ownerId) => {
     if (ownerId) {
-      socket.join(`owner_${ownerId}`);
-      console.log(`Socket ${socket.id} joined owner personal room: owner_${ownerId}`);
+      const roomId = `owner_${ownerId.toString()}`;
+      socket.join(roomId);
+      console.log(`Socket ${socket.id} joined owner room: ${roomId}`);
     }
     socket.join('owners');
-    console.log(`Socket ${socket.id} joined global owners room`);
   });
 
-  socket.on('joinTenant', (tenantId) => {
-    if (tenantId) {
-      socket.join(`tenant_${tenantId}`);
-      console.log(`Socket ${socket.id} joined tenant room: tenant_${tenantId}`);
+  socket.on('joinTenant', (userId) => {
+    if (userId) {
+      const roomId = `tenant_${userId.toString()}`;
+      socket.join(roomId);
+      console.log(`Socket ${socket.id} joined tenant room: ${roomId}`);
     }
   });
 

@@ -9,44 +9,62 @@ const setIo = (socketIo) => {
 };
 
 /**
- * Emit a real-time event to a specific room (buildingId) or globally
- * @param {string} buildingId - The building ID to target (optional)
+ * Emit an event to a specific user based on their ID and role
+ * @param {string} userId - The user ID (mongo _id)
+ * @param {string} role - 'tenant' or 'owner'
  * @param {string} event - The event name
  * @param {object} data - The data to send
+ */
+const emitToUser = (userId, role, event, data) => {
+  if (io && userId) {
+    const roomId = `${role.toLowerCase()}_${userId.toString()}`;
+    io.to(roomId).emit(event, data);
+    console.log(`Socket emitted [User Room: ${roomId}]: ${event}`);
+  }
+};
+
+/**
+ * Emit an event to a specific building room
+ * @param {string} buildingId - The building ID
+ * @param {string} event - The event name
+ * @param {object} data - The data to send
+ */
+const emitToRoom = (buildingId, event, data) => {
+  if (io && buildingId) {
+    const roomId = `building_${buildingId.toString()}`;
+    io.to(roomId).emit(event, data);
+    console.log(`Socket emitted [Building Room: ${roomId}]: ${event}`);
+  }
+};
+
+/**
+ * Emit a real-time event to a specific room or globally (Legacy support)
  */
 const emitUpdate = (buildingId, event, data) => {
   if (io) {
     if (buildingId) {
-      // Ensure buildingId is a string if it's an ObjectId
-      const roomId = buildingId.toString();
-      io.to(roomId).emit(event, data);
-      console.log(`Socket emitted [Room: ${roomId}]: ${event}`);
+      emitToRoom(buildingId, event, data);
     } else {
       io.emit(event, data);
       console.log(`Socket emitted [Global]: ${event}`);
     }
-  } else {
-    console.warn(`Socket.IO not initialized. Could not emit: ${event}`);
   }
 };
 
 /**
  * Emit an event specifically to the owner dashboard
- * @param {string} event - The event name
- * @param {object} data - The data to send
  */
 const emitToOwner = (event, data) => {
   if (io) {
-    // Emit to the global 'owners' room — all owner dashboards receive this
     io.to('owners').emit(event, data);
-    // Also emit globally as fallback so nothing is missed
-    io.emit(event, data);
-    console.log(`Socket emitted to Owners room: ${event}`);
+    console.log(`Socket emitted to Owners group: ${event}`);
   }
 };
 
 module.exports = {
   setIo,
   emitUpdate,
-  emitToOwner
+  emitToOwner,
+  emitToUser,
+  emitToRoom
 };

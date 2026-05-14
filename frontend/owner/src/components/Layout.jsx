@@ -17,7 +17,7 @@ import { api } from '../mockData';
 import Sidebar from './Sidebar';
 import ThemeToggle from './ThemeToggle';
 import ProfileDropdown from './ProfileDropdown';
-import useNotifications from '../hooks/useNotifications';
+import { useNotifications } from '../context/NotificationContext';
 import socket, { connectSocket } from '../utils/socket';
 import './Layout.css';
 
@@ -153,7 +153,6 @@ const Layout = ({ children }) => {
   const dropdownRef = useRef(null);
   const [activeToasts, setActiveToasts] = useState([]);
 
-  // Step 1: Persistent context
   const [activeBuildingId, setActiveBuildingId] = useState(
     urlBuildingId || localStorage.getItem('selectedBuildingId')
   );
@@ -163,36 +162,27 @@ const Layout = ({ children }) => {
     unreadCount, 
     markAsRead, 
     markAllAsRead, 
-    deleteNotification 
-  } = useNotifications(activeBuildingId);
+    deleteNotification,
+    setActiveBuildingId: setContextBuildingId 
+  } = useNotifications();
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowNotifDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Step 2: Initialize socket connection and listen for notifications
+  // Sync activeBuildingId with context
   useEffect(() => {
     if (activeBuildingId) {
-      connectSocket(activeBuildingId);
+      setContextBuildingId(activeBuildingId);
     }
+  }, [activeBuildingId, setContextBuildingId]);
 
+  // Toast Listener (Still needed here for UI)
+  useEffect(() => {
     const handleNewNotif = (notif) => {
-      // Only show toast if it's for current building or global
-      if (!notif.buildingId || notif.buildingId === activeBuildingId) {
-        setActiveToasts(prev => [...prev, { ...notif, toastId: Date.now() }]);
-      }
+      // Show toast
+      setActiveToasts(prev => [...prev, { ...notif, toastId: Date.now() }]);
     };
     
     socket.on('newNotification', handleNewNotif);
     return () => socket.off('newNotification', handleNewNotif);
-  }, [activeBuildingId]);
+  }, []);
 
   useEffect(() => {
     api.getBuildings().then(data => {

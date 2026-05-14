@@ -20,9 +20,17 @@ const createNotification = async (data) => {
     await notification.save();
 
     // Real-time update via Socket.IO
-    if (data.buildingId) {
-      socketService.emitUpdate(data.buildingId.toString(), 'newNotification', notification);
-    } else {
+    // 1. Target specific user if receiverId is provided
+    if (data.receiverId && data.receiverRole) {
+      socketService.emitToUser(data.receiverId, data.receiverRole, 'newNotification', notification);
+    } 
+    // 2. Target building room if buildingId is provided (broadcast to building)
+    else if (data.buildingId) {
+      socketService.emitToRoom(data.buildingId, 'newNotification', notification);
+    }
+    
+    // 3. Fallback/Dual-emit for Owners if it's an owner notification
+    if (data.portalType === 'Owner' || data.owner) {
       socketService.emitToOwner('newNotification', notification);
     }
 

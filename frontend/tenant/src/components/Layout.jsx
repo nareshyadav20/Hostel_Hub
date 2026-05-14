@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bot, Send, X, Sparkles } from 'lucide-react';
+import { Bot, Send, Sparkles, Bell, ShieldAlert, AlertTriangle, CheckCircle, Info, X, ChevronRight, Clock } from 'lucide-react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import ThemeToggle from './ThemeToggle';
@@ -7,12 +7,78 @@ import BottomNav from './BottomNav';
 import './Layout.css';
 import API from '../api/axios';
 import socket from '../utils/socket';
+import { useNotifications } from '../context/NotificationContext';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// ── Toast Component ───────────────────────────────────────────
+const Toast = ({ notification, onClose }) => {
+  const getIcon = (type) => {
+    switch (type) {
+      case 'error': return <ShieldAlert size={20} color="#EF4444" />;
+      case 'warning': return <AlertTriangle size={20} color="#F59E0B" />;
+      case 'success': return <CheckCircle size={20} color="#10B981" />;
+      default: return <Info size={20} color="#3B82F6" />;
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(onClose, 5000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 100, scale: 0.9 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+      style={{
+        background: 'var(--bg-primary)',
+        border: '1px solid var(--border-color)',
+        borderRadius: '16px',
+        padding: '1rem',
+        boxShadow: 'var(--shadow-lg)',
+        display: 'flex',
+        gap: '1rem',
+        width: '320px',
+        position: 'relative',
+        overflow: 'hidden',
+        pointerEvents: 'auto'
+      }}
+    >
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        height: '3px',
+        background: 'var(--accent-primary)',
+        width: '100%',
+        animation: 'toast-progress 5s linear forwards'
+      }} />
+      <div style={{ flexShrink: 0, marginTop: '2px' }}>
+        {getIcon(notification.type)}
+      </div>
+      <div style={{ flex: 1 }}>
+        <h4 style={{ fontSize: '0.9rem', fontWeight: '800', margin: '0 0 0.25rem 0', color: 'var(--text-primary)' }}>
+          {notification.title}
+        </h4>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>
+          {notification.message}
+        </p>
+      </div>
+      <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px', alignSelf: 'flex-start' }}>
+        <X size={16} />
+      </button>
+    </motion.div>
+  );
+};
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [aiMessage, setAiMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [activeToasts, setActiveToasts] = useState([]);
+  
   const [aiChat, setAiChat] = useState([
     { role: 'assistant', content: 'Hi! I am your Livora Hostel AI. I can help you with room bookings, mess menus, or any other facility details. How can I assist you today?' }
   ]);
@@ -20,32 +86,38 @@ const Layout = ({ children }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isLoggedIn = !!token && !!user.name;
 
-  // Notification State
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  // Use global notification context
+  const { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead, 
+    refresh: fetchNotifications 
+  } = useNotifications();
+
+  // Toast Listener
+  useEffect(() => {
+    const handleNewNotif = (notif) => {
+      setActiveToasts(prev => [...prev, { ...notif, toastId: Date.now() }]);
+    };
+    
+    socket.on('newNotification', handleNewNotif);
+    return () => socket.off('newNotification', handleNewNotif);
+  }, []);
+
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const notifRef = React.useRef(null);
 
-  const fetchNotifications = async () => {
-    if (!isLoggedIn) return;
-    try {
-      const res = await API.get('/notifications');
-      setNotifications(res.data || []);
-      setUnreadCount((res.data || []).filter(n => !n.isRead).length);
-    } catch (err) {
-      console.error('Failed to fetch notifications:', err);
-    }
-  };
-
   useEffect(() => {
-    fetchNotifications();
-    socket.on('newNotification', fetchNotifications);
-    socket.on('complaintStatusChanged', fetchNotifications);
-    return () => {
-      socket.off('newNotification');
-      socket.off('complaintStatusChanged');
-    };
-  }, [isLoggedIn]);
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes toast-progress {
+        from { width: 100%; }
+        to { width: 0%; }
+      }
+    `;
+    document.head.appendChild(style);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -158,6 +230,19 @@ const Layout = ({ children }) => {
 
   return (
     <div className="layout-root">
+      {/* Toast Container */}
+      <div style={{ position: 'fixed', top: '24px', right: '24px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '12px', pointerEvents: 'none' }}>
+        <AnimatePresence>
+          {activeToasts.map(toast => (
+            <Toast 
+              key={toast.toastId} 
+              notification={toast} 
+              onClose={() => setActiveToasts(prev => prev.filter(t => t.toastId !== toast.toastId))} 
+            />
+          ))}
+        </AnimatePresence>
+      </div>
+
       {isLoggedIn && <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />}
       {isSidebarOpen && <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>}
 
@@ -191,10 +276,7 @@ const Layout = ({ children }) => {
                       <div className="dropdown-header" style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h4 style={{ margin: 0, fontSize: '1rem' }}>Notifications</h4>
                         {unreadCount > 0 && (
-                          <button onClick={async () => {
-                            await API.post('/notifications/mark-all-read', { category: 'all' });
-                            fetchNotifications();
-                          }} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>Mark all read</button>
+                          <button onClick={markAllAsRead} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>Mark all read</button>
                         )}
                       </div>
                       <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
@@ -205,8 +287,7 @@ const Layout = ({ children }) => {
                             <div key={i} style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', background: n.isRead ? 'transparent' : 'rgba(16,185,129,0.05)', display: 'flex', gap: '1rem', cursor: 'pointer' }}
                               onClick={async () => {
                                 if (!n.isRead) {
-                                  await API.patch(`/notifications/${n._id}/read`);
-                                  fetchNotifications();
+                                  markAsRead(n._id || n.id);
                                 }
                                 setShowNotifDropdown(false);
                                 if (n.moduleName === 'Complaints') navigate('/complaints');

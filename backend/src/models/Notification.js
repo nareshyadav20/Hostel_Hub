@@ -10,7 +10,11 @@ const notificationSchema = new mongoose.Schema({
   priority: { type: String, enum: ['High', 'Medium', 'Low'], default: 'Medium' },
   type: { type: String, enum: ['info', 'warning', 'success', 'error'], default: 'info' },
   
-  // IDs for Context
+  // Target Targeting
+  receiverId: { type: String }, // Can be userId, tenantId, or buildingId
+  receiverRole: { type: String, enum: ['Tenant', 'Staff', 'Owner', 'All'], default: 'All' },
+  
+  // IDs for Context (Keeping for compatibility)
   buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building', required: true },
   roomId: { type: String },
   tenantId: { type: String },

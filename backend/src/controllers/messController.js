@@ -62,6 +62,20 @@ exports.updateMenu = async (req, res) => {
             indicator: "Updated Just Now"
         });
 
+        // Create notification for tenants
+        const notificationService = require('../utils/notificationService');
+        await notificationService.createNotification({
+            moduleName: 'Mess',
+            portalType: 'Tenant',
+            category: 'Menu Update',
+            title: 'Mess Menu Updated',
+            message: `The ${plan} plan menu for ${day} has been updated.`,
+            priority: 'Medium',
+            type: 'info',
+            buildingId,
+            actionLink: '/mess'
+        });
+
         res.json(menu);
     } catch (err) {
         res.status(500).json({ message: err.message });
