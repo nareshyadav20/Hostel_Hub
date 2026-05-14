@@ -226,7 +226,6 @@ const Profile = () => {
         {activeTab === 'overview' && profile && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             <ActivityLog logs={profile.activityLogs || []} />
-            <BrandingCard profile={profile} onSave={(data) => handleUpdate('businessDetails', data)} />
           </div>
         )}
       </div>
@@ -702,25 +701,5 @@ const ActivityLog = ({ logs }) => {
   );
 };
 
-const BrandingCard = ({ profile, onSave }) => {
-  const [data, setData] = useState(profile?.businessDetails || {});
-
-  return (
-    <div className="card" style={{ padding: '2rem', borderRadius: '24px', background: 'linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary))' }}>
-      <h3 style={{ fontWeight: '900', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-        <Sparkles size={20} color="#f59e0b" /> Branding
-      </h3>
-      <div className="input-group" style={{ marginBottom: '1.2rem' }}>
-        <label>Logo URL</label>
-        <input type="text" value={data.logoUrl || ''} onChange={(e) => setData({...data, logoUrl: e.target.value})} placeholder="https://..." />
-      </div>
-      <div className="input-group" style={{ marginBottom: '1.2rem' }}>
-        <label>Tagline</label>
-        <input type="text" value={data.tagline || ''} onChange={(e) => setData({...data, tagline: e.target.value})} placeholder="Premium Living..." />
-      </div>
-      <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => onSave(data)}>Update Branding</button>
-    </div>
-  );
-};
 
 export default Profile;
