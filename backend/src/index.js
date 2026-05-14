@@ -82,6 +82,7 @@ require('./models/PurchaseRequest');
 require('./models/PurchaseOrder');
 require('./models/Booking');
 require('./models/ConfidentialReport');
+require('./models/SosAlert');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);

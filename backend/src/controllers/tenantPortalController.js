@@ -1,7 +1,7 @@
 const CommunityReport = require('../models/tenant/CommunityReport');
 const Reward = require('../models/tenant/Reward');
 const Wishlist = require('../models/tenant/Wishlist');
-const SOSAlert = require('../models/SOSAlert');
+const SosAlert = require('../models/SosAlert');
 const Tenant = require('../models/Tenant');
 const Payment = require('../models/Payment');
 const Complaint = require('../models/Complaint');
@@ -58,7 +58,7 @@ exports.getCommunityReports = async (req, res) => {
 exports.createSOSAlert = async (req, res) => {
   try {
     const tenant = await getOrCreateTenant(req.user);
-    const alert = await SOSAlert.create({
+    const alert = await SosAlert.create({
       ...req.body,
       reportedBy: tenant.name || 'Tenant',
       buildingId: tenant.buildingId,
@@ -183,7 +183,7 @@ exports.getCompleteProfile = async (req, res) => {
       Leave.find({ user: req.user.id }).sort({ createdAt: -1 }),
       RoomTransfer.find({ user: req.user.id }).sort({ createdAt: -1 }),
       ConfidentialReport.find({ tenant: tenant._id }).sort({ createdAt: -1 }),
-      SOSAlert.find({ tenant: tenant._id }).sort({ createdAt: -1 }),
+      SosAlert.find({ tenant: tenant._id }).sort({ createdAt: -1 }),
       Reward.findOne({ user: req.user.id })
     ]);
 
