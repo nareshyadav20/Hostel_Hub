@@ -50,8 +50,23 @@ exports.createTransfer = async (req, res) => {
 
     // Real-time sync: Notify owner portal of new transfer request
     const socketService = require('../utils/socketService');
+    const notificationService = require('../utils/notificationService');
+    
+    await notificationService.createNotification({
+      moduleName: 'Rooms',
+      portalType: 'Owner',
+      category: 'Room Transfer',
+      title: 'New Transfer Request',
+      message: `${tenant.name} requested transfer from ${tenant.room || 'N/A'} to ${newRoom}. Reason: ${reason}`,
+      priority: 'Medium',
+      type: 'info',
+      buildingId,
+      tenantId: tenant._id,
+      actionLink: '/transfers'
+    });
+
     socketService.emitToOwner('transferCreated', { transfer, tenantName: tenant.name });
-    if (buildingId) socketService.emitUpdate(buildingId, 'transferCreated', { transfer, tenantName: tenant.name });
+    if (buildingId) socketService.emitUpdate(buildingId.toString(), 'transferCreated', { transfer, tenantName: tenant.name });
 
     res.status(201).json(transfer);
   } catch (err) {
@@ -123,8 +138,22 @@ exports.updateTransferStatus = async (req, res) => {
 
     // Real-time sync: Notify tenant portal of status update instantly
     const socketService = require('../utils/socketService');
+    const notificationService = require('../utils/notificationService');
     const updatedTransfer = transfer.toObject();
-    if (transfer.buildingId) socketService.emitUpdate(transfer.buildingId, 'transferStatusChanged', updatedTransfer);
+    
+    await notificationService.createNotification({
+      moduleName: 'Rooms',
+      portalType: 'Tenant',
+      category: 'Room Transfer',
+      title: 'Transfer Request Update',
+      message: `Your room transfer request to ${transfer.newRoom} has been ${status}.`,
+      type: status === 'ACCEPTED' || status === 'Approved' ? 'success' : 'error',
+      buildingId: transfer.buildingId,
+      tenantId: transfer.tenant._id,
+      createdBy: req.user.id
+    });
+
+    if (transfer.buildingId) socketService.emitUpdate(transfer.buildingId.toString(), 'transferStatusChanged', updatedTransfer);
     // Global emit so tenant catches status change regardless of which room they joined
     socketService.emitToOwner('transferStatusChanged', updatedTransfer);
 

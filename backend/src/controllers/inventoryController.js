@@ -56,12 +56,29 @@ exports.addInventoryItem = async (req, res) => {
 exports.updateInventoryItem = async (req, res) => {
   try {
     const item = await Inventory.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!item) return res.status(404).json({ message: 'Item not found' });
     
     // Real-time update using socketService
-    if (item && item.buildingId) {
-      socketService.emitUpdate(item.buildingId, 'inventoryUpdated', item);
+    if (item.buildingId) {
+      socketService.emitUpdate(item.buildingId.toString(), 'inventoryUpdated', item);
     }
     socketService.emitToOwner('inventoryUpdated', item);
+
+    // Check for Low Stock Notification
+    if (item.stock <= item.minThreshold) {
+      const notificationService = require('../utils/notificationService');
+      await notificationService.createNotification({
+        moduleName: 'Inventory',
+        portalType: 'Owner',
+        category: 'Procurement',
+        title: item.stock <= 0 ? 'OUT OF STOCK' : 'Low Stock Alert',
+        message: `${item.name} stock is ${item.stock} ${item.unit}. Minimum threshold is ${item.minThreshold}.`,
+        priority: item.stock <= 0 ? 'High' : 'Medium',
+        type: item.stock <= 0 ? 'error' : 'warning',
+        buildingId: item.buildingId,
+        actionLink: '/inventory'
+      });
+    }
     
     res.json(item);
   } catch (error) {

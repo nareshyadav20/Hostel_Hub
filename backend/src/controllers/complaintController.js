@@ -91,9 +91,24 @@ exports.createComplaint = async (req, res) => {
 
     // Real-time synchronization for Owner
     if (buildingId) {
-      socketService.emitUpdate(buildingId, 'complaintCreated', {
+      socketService.emitUpdate(buildingId.toString(), 'complaintCreated', {
         complaint,
         tenantName: tenant.name
+      });
+      
+      // Create Persistent Notification for Owner
+      await notificationService.createNotification({
+        moduleName: 'Complaints',
+        portalType: 'Owner',
+        category: category || 'Maintenance',
+        title: 'New Complaint Raised',
+        message: `${tenant.name} from Room ${tenant.room || 'N/A'} raised: ${title}`,
+        priority: priority || 'Medium',
+        type: 'warning',
+        buildingId,
+        tenantId: tenant._id,
+        roomId: roomId ? roomId.toString() : null,
+        actionLink: `/complaints`
       });
     }
     socketService.emitToOwner('complaintCreated', {
@@ -137,9 +152,13 @@ exports.updateComplaintStatus = async (req, res) => {
     await notificationService.createNotification({
       title: 'Complaint Status Updated',
       message: `Your complaint "${complaint.title}" is now ${status}.`,
-      type: 'COMPLAINT',
+      moduleName: 'Complaints',
+      portalType: 'Tenant',
+      category: 'Maintenance',
+      type: 'info',
       buildingId: complaint.buildingId,
-      userId: complaint.user._id
+      tenantId: complaint.tenant._id,
+      createdBy: req.user.id
     });
 
     res.status(200).json(complaint);

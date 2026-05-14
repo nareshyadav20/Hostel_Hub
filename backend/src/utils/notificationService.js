@@ -1,4 +1,5 @@
 const Notification = require('../models/Notification');
+const socketService = require('./socketService');
 
 let io;
 
@@ -19,10 +20,10 @@ const createNotification = async (data) => {
     await notification.save();
 
     // Real-time update via Socket.IO
-    if (io) {
-      // Emit to the specific building's room or globally to all owners
-      io.to(data.buildingId).emit('newNotification', notification);
-      io.emit('notificationUpdate', { type: 'NEW', notification });
+    if (data.buildingId) {
+      socketService.emitUpdate(data.buildingId.toString(), 'newNotification', notification);
+    } else {
+      socketService.emitToOwner('newNotification', notification);
     }
 
     return notification;
@@ -32,10 +33,26 @@ const createNotification = async (data) => {
   }
 };
 
+/**
+ * Specifically for system-triggered or critical alerts
+ */
+const createSystemAlert = async (buildingId, title, message, priority = 'High', type = 'warning') => {
+  return await createNotification({
+    moduleName: 'System',
+    portalType: 'Owner',
+    category: 'Alert',
+    title,
+    message,
+    priority,
+    type,
+    buildingId
+  });
+};
+
 const getNotifications = async (buildingId, filters = {}) => {
   try {
     const query = { buildingId, archived: false, ...filters };
-    return await Notification.find(query).sort({ createdAt: -1 });
+    return await Notification.find(query).sort({ createdAt: -1 }).limit(50);
   } catch (error) {
     console.error('Error fetching notifications:', error);
     return [];
@@ -51,6 +68,15 @@ const markAsRead = async (notificationId) => {
   }
 };
 
+const markAllAsRead = async (buildingId) => {
+  try {
+    return await Notification.updateMany({ buildingId, isRead: false }, { isRead: true });
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    return null;
+  }
+};
+
 const getUnreadCount = async (buildingId) => {
   try {
     return await Notification.countDocuments({ buildingId, isRead: false, archived: false });
@@ -62,7 +88,9 @@ const getUnreadCount = async (buildingId) => {
 module.exports = {
   setIo,
   createNotification,
+  createSystemAlert,
   getNotifications,
   markAsRead,
+  markAllAsRead,
   getUnreadCount
 };

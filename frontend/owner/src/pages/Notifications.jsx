@@ -6,23 +6,33 @@ import {
   Trash2, X, Archive, Eye, Zap, 
   Smartphone, Mail, AlertTriangle, 
   Info, CreditCard, Box, MessageSquare, 
-  Users, Shield, FileText, LayoutGrid, User, Briefcase, Send, CheckCircle
+  Users, Shield, FileText, LayoutGrid, User, Briefcase, Send, CheckCircle, Clock, ExternalLink
 } from 'lucide-react';
 import { api } from '../mockData';
 import socket, { connectSocket } from '../utils/socket';
+import useNotifications from '../hooks/useNotifications';
 
 const Notifications = () => {
   const { buildingId: urlBuildingId } = useParams();
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
 
-  const [notifications, setNotifications] = useState([]);
+  const { 
+    notifications, 
+    setNotifications,
+    unreadCount, 
+    setUnreadCount,
+    loading: isLoading,
+    markAsRead: handleMarkAsRead,
+    markAllAsRead: handleMarkAllRead,
+    deleteNotification: handleDelete,
+    refresh: fetchNotifications
+  } = useNotifications(activeBuildingId);
+
   const [activeTab, setActiveTab] = useState('all'); 
   const [activePortal, setActivePortal] = useState('All'); 
   const [filterPriority, setFilterPriority] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   
   // Composer State
   const [isComposerOpen, setIsComposerOpen] = useState(false);
@@ -39,55 +49,32 @@ const Notifications = () => {
 
   const categories = [
     { id: 'all', name: 'All', icon: <LayoutGrid size={18} /> },
+    { id: 'Safety', name: 'SOS Alerts', icon: <Shield size={18} /> },
     { id: 'Payments', name: 'Payments', icon: <CreditCard size={18} /> },
+    { id: 'Complaints', name: 'Complaints', icon: <MessageSquare size={18} /> },
+    { id: 'Laundry', name: 'Laundry', icon: <Zap size={18} /> },
+    { id: 'Cleaning', name: 'Cleaning', icon: <Box size={18} /> },
+    { id: 'Visitor', name: 'Visitors', icon: <Users size={18} /> },
+    { id: 'Leave', name: 'Leave Notices', icon: <FileText size={18} /> },
     { id: 'Rooms', name: 'Rooms', icon: <Box size={18} /> },
     { id: 'Inventory', name: 'Inventory', icon: <Box size={18} /> },
-    { id: 'Complaints', name: 'Complaints', icon: <MessageSquare size={18} /> },
     { id: 'Staff', name: 'Staff', icon: <Briefcase size={18} /> },
-    { id: 'Hygiene', name: 'Hygiene', icon: <Zap size={18} /> },
-    { id: 'Tenants', name: 'Tenants', icon: <Users size={18} /> },
-    { id: 'Security', name: 'Security', icon: <Shield size={18} /> },
-    { id: 'Reports', name: 'Reports', icon: <FileText size={18} /> },
   ];
 
   const portals = ['All', 'Tenant', 'Staff', 'Owner'];
 
   useEffect(() => {
-    if (activeBuildingId) {
-      fetchNotifications();
-    }
-
-    // Use centralized socket — joins owners room automatically
-    connectSocket(activeBuildingId);
-
-    socket.on('newNotification', (newNotif) => {
-      setNotifications(prev => [newNotif, ...prev]);
-      setUnreadCount(prev => prev + 1);
-    });
+    // Listen for module-specific events to refresh list
     socket.on('complaintCreated', () => fetchNotifications());
     socket.on('tenantAdded', () => fetchNotifications());
     socket.on('bookingCreated', () => fetchNotifications());
 
     return () => {
-      socket.off('newNotification');
       socket.off('complaintCreated');
       socket.off('tenantAdded');
       socket.off('bookingCreated');
     };
-  }, [activeBuildingId]);
-
-  const fetchNotifications = async () => {
-    setIsLoading(true);
-    try {
-      const data = await api.getNotifications(activeBuildingId);
-      setNotifications(data || []);
-      setUnreadCount((data || []).filter(n => !n.isRead).length);
-    } catch (err) {
-      console.error('Failed to fetch notifications:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [fetchNotifications]);
 
   const handleSeed = async () => {
     try {
@@ -132,41 +119,10 @@ const Notifications = () => {
       );
   }, [notifications, activeTab, activePortal, filterPriority, searchQuery]);
 
-  const handleMarkAsRead = async (id) => {
-    try {
-      await api.markNotificationRead(id);
-      setNotifications(prev => prev.map(n => (n.id === id || n._id === id) ? { ...n, isRead: true } : n));
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (err) {
-      console.error('Failed to mark read:', err);
-    }
-  };
-
-  const handleMarkAllRead = async () => {
-    try {
-      await api.markAllNotificationsRead(activeBuildingId);
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-      setUnreadCount(0);
-    } catch (err) {
-      console.error('Failed to mark all read:', err);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await api.deleteNotification(id);
-      setNotifications(prev => prev.filter(n => n.id !== id && n._id !== id));
-      const removed = notifications.find(n => n.id === id || n._id === id);
-      if (removed && !removed.isRead) setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (err) {
-      console.error('Failed to delete:', err);
-    }
-  };
-
   const handleArchive = async (id) => {
     try {
       await api.archiveNotification(id);
-      setNotifications(prev => prev.filter(n => n.id !== id && n._id !== id));
+      fetchNotifications();
     } catch (err) {
       console.error('Failed to archive:', err);
     }
@@ -290,7 +246,7 @@ const Notifications = () => {
                   boxShadow: n.isRead ? 'none' : 'var(--shadow-md)', border: '1px solid var(--border-color)', display: 'flex', gap: '1.2rem', position: 'relative'
                 }}
               >
-                <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: n.isRead ? 'var(--bg-tertiary)' : 'var(--accent-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: n.isRead ? 'var(--text-muted)' : 'var(--accent-primary)', flexShrink: 0 }}>
+                <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: n.priority === 'High' ? 'rgba(239, 68, 68, 0.1)' : (n.isRead ? 'var(--bg-tertiary)' : 'var(--accent-primary-light)'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: n.priority === 'High' ? '#EF4444' : (n.isRead ? 'var(--text-muted)' : 'var(--accent-primary)'), flexShrink: 0 }}>
                   {getModuleIcon(n.moduleName)}
                 </div>
                 <div style={{ flex: 1 }}>
@@ -299,12 +255,15 @@ const Notifications = () => {
                       {getPortalBadge(n.portalType)}
                       <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{n.moduleName}</span>
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Clock size={12} /> {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '0.3rem', color: n.isRead ? 'var(--text-secondary)' : 'var(--text-primary)' }}>{n.title}</h3>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '0.3rem', color: n.isRead ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
+                    {n.priority === 'High' && '🚨 '}{n.title}
+                  </h3>
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.5 }}>{n.message}</p>
-                  <div style={{ display: 'flex', gap: '0.8rem' }}>
-                    {!n.isRead && <button onClick={() => handleMarkAsRead(n.id || n._id)} className="btn-notif-action"><Check size={14} /> Mark read</button>}
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {!n.isRead && <button onClick={() => handleMarkAsRead(n.id || n._id)} className="btn-notif-action"><CheckCircle size={14} /> Mark read</button>}
+                    {n.actionLink && <button onClick={() => navigate(n.actionLink)} className="btn-notif-action" style={{ color: 'var(--accent-primary)' }}><ExternalLink size={14} /> Take Action</button>}
                     <button onClick={() => handleArchive(n.id || n._id)} className="btn-notif-action"><Archive size={14} /> Archive</button>
                   </div>
                 </div>

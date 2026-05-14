@@ -23,6 +23,22 @@ exports.createCommunityReport = async (req, res) => {
       user: req.user.id,
       buildingId: tenant.buildingId
     });
+
+    // Notify Owner
+    const notificationService = require('../utils/notificationService');
+    await notificationService.createNotification({
+      moduleName: 'Community',
+      portalType: 'Owner',
+      category: 'Community Report',
+      title: 'New Community Report',
+      message: `${tenant.name} posted a community report: ${req.body.title || 'General'}`,
+      priority: 'Medium',
+      type: 'info',
+      buildingId: tenant.buildingId,
+      tenantId: tenant._id,
+      actionLink: '/community'
+    });
+
     res.status(201).json(report);
   } catch (error) {
     res.status(500).json({ message: 'Error creating community report', error: error.message });
@@ -52,9 +68,29 @@ exports.createSOSAlert = async (req, res) => {
 
     // Real-time SOS notification for owner and safety teams
     const socketService = require('../utils/socketService');
+    const notificationService = require('../utils/notificationService');
+    
+    // Persistent Notification
+    await notificationService.createNotification({
+      moduleName: 'Safety',
+      portalType: 'Owner',
+      category: 'SOS Alert',
+      title: '🔴 HIGH PRIORITY SOS ALERT',
+      message: `EMERGENCY: ${tenant.name} triggered SOS from Room ${tenant.room || 'N/A'}. Details: ${req.body.emergencyType || 'General Emergency'}`,
+      priority: 'High',
+      type: 'error',
+      buildingId: tenant.buildingId,
+      tenantId: tenant._id,
+      actionLink: '/sos'
+    });
+
     socketService.emitToOwner('sosCreated', { alert, tenantName: tenant.name });
     if (tenant.buildingId) {
       socketService.emitUpdate(tenant.buildingId.toString(), 'sosCreated', { alert, tenantName: tenant.name });
+      socketService.emitUpdate(tenant.buildingId.toString(), 'newNotification', { 
+        title: '🔴 SOS ALERT', 
+        message: `${tenant.name} needs help!` 
+      });
     }
 
     res.status(201).json(alert);

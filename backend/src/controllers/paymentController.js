@@ -28,10 +28,22 @@ const createPayment = async (req, res) => {
     const populated = await Payment.findById(payment._id).populate('tenantId');
     
     // Real-time updates
+    const notificationService = require('../utils/notificationService');
     socketService.emitUpdate(buildingId, 'paymentAdded', populated);
     socketService.emitUpdate(buildingId, 'dashboardStatsUpdated', {});
 
-    res.status(201).json(populated);
+    await notificationService.createNotification({
+      moduleName: 'Payments',
+      portalType: 'Owner',
+      category: 'Rent Payment',
+      title: 'Payment Received',
+      message: `${populated.tenantId?.name || 'Tenant'} paid ₹${amount} for ${month}`,
+      priority: 'Medium',
+      type: 'success',
+      buildingId,
+      tenantId: populated.tenantId?._id,
+      actionLink: '/payments'
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

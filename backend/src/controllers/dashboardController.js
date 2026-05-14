@@ -88,7 +88,7 @@ exports.getSummaryKPIs = async (req, res) => {
 
     const occupancyScore = Math.min(40, (occupancyRate / 100) * 40);
     const paymentScore = Math.max(0, 30 - (pendingPaymentsCount * 1.5));
-    const maintenanceScore = Math.max(0, 20 - (maintenanceRooms * 2));
+    const maintenanceScore = Math.max(0, 20 - (maintenanceRoomsCount * 2));
     const healthScore = Math.round(occupancyScore + paymentScore + maintenanceScore + 10);
 
     // 5. Daily Activity Stats
