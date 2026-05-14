@@ -59,11 +59,15 @@ const Mess = () => {
         console.log('🔄 Mess Menu Updated in Real-time');
         fetchMessData();
       });
+      socket.on('tenantUpdated', () => {
+        console.log('🔄 Mess Plan updated by Owner');
+        fetchMessData();
+      });
     }
 
     return () => {
       socket.off('menuUpdated');
-      disconnectSocket();
+      socket.off('tenantUpdated');
     };
   }, []);
 

@@ -418,7 +418,27 @@ export const api = {
     const res = await axios.get(`${API_URL}/reports`, { params: { buildingId: bId } });
     return res.data;
   },
-  // Notifications - extra methods
+  // Notifications
+  getNotifications: async (bId) => {
+    const res = await axios.get(`${API_URL}/notifications`, { params: { buildingId: bId } });
+    return handleId(res.data);
+  },
+  sendNotification: async (data) => {
+    const res = await axios.post(`${API_URL}/notifications`, data);
+    return handleId(res.data);
+  },
+  markNotificationRead: async (id) => {
+    const res = await axios.patch(`${API_URL}/notifications/${id}/read`);
+    return res.data;
+  },
+  markAllNotificationsRead: async (bId) => {
+    const res = await axios.post(`${API_URL}/notifications/mark-all-read`, { buildingId: bId });
+    return res.data;
+  },
+  deleteNotification: async (id) => {
+    const res = await axios.delete(`${API_URL}/notifications/${id}`);
+    return res.data;
+  },
   seedNotifications: async (bId) => {
     const res = await axios.post(`${API_URL}/notifications/seed`, { buildingId: bId });
     return res.data;

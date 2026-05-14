@@ -59,10 +59,15 @@ function Dashboard() {
     });
     // Refresh if owner updates hostel/room info
     socket.on('dashboardStatsUpdated', fetchDashboardData);
+    socket.on('tenantUpdated', () => {
+      console.log('🔄 Profile/Room updated by Owner');
+      fetchDashboardData();
+    });
 
     return () => {
       socket.off('complaintStatusChanged');
       socket.off('dashboardStatsUpdated');
+      socket.off('tenantUpdated');
     };
   }, []);
 

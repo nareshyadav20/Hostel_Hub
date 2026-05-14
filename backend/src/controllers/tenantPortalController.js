@@ -36,6 +36,20 @@ exports.createCommunityReport = async (req, res) => {
       actionLink: '/community'
     });
 
+    // Notify all tenants if it's a "Found" item
+    if (req.body.type === 'Found') {
+      await notificationService.createNotification({
+        portalType: 'Tenant',
+        moduleName: 'Community',
+        category: 'Lost & Found',
+        title: 'New Item Found!',
+        message: `Someone found a "${req.body.title}" in the building. Check the Community Hub if it's yours!`,
+        priority: 'Medium',
+        buildingId: tenant.buildingId,
+        actionLink: '/community'
+      });
+    }
+
     res.status(201).json(report);
   } catch (error) {
     res.status(500).json({ message: 'Error creating community report', error: error.message });

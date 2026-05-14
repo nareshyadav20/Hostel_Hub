@@ -27,14 +27,19 @@ const createNotification = async (data) => {
 
     // Real-time update via Socket.IO
     if (io) {
-      // Emit to the specific building's room
-      if (data.buildingId) io.to(data.buildingId.toString()).emit('newNotification', notification);
+      // Emit to specific tenant if targeted (Most specific)
+      if (data.tenantId) {
+        io.to(`tenant_${data.tenantId.toString()}`).emit('newNotification', notification);
+      } 
+      // Otherwise emit to the building's room (General broadcast)
+      else if (data.buildingId) {
+        io.to(data.buildingId.toString()).emit('newNotification', notification);
+      }
       
-      // Emit to specific tenant if targeted
-      if (data.tenantId) io.to(`tenant_${data.tenantId}`).emit('newNotification', notification);
-      
-      // Global update for generic stats
-      io.emit('notificationUpdate', { type: 'NEW', notification });
+      // If it's for all portals or specific ones, emit accordingly
+      if (data.portalType === 'All') {
+        io.emit('notificationUpdate', { type: 'NEW', notification });
+      }
     }
 
     return notification;

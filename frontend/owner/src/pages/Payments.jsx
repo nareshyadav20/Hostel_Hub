@@ -164,6 +164,54 @@ const Payments = () => {
     }
   };
 
+  const handleSendReminder = async (p) => {
+    try {
+      const tId = typeof p.tenantId === 'object' ? p.tenantId?._id : p.tenantId;
+      await api.sendNotification({
+        title: 'Payment Reminder',
+        message: `Hi ${p.tenantName}, this is a reminder for your ${p.type} payment of ₹${p.amount.toLocaleString()} which is ${p.status}. Please pay as soon as possible.`,
+        tenantId: tId,
+        portalType: 'Tenant',
+        moduleName: 'Payments',
+        category: 'Reminder',
+        buildingId: activeBuildingId,
+        priority: 'High',
+        type: 'warning',
+        actionLink: '/payments'
+      });
+      alert('Reminder sent successfully!');
+    } catch (err) {
+      alert('Failed to send reminder: ' + err.message);
+    }
+  };
+
+  const handleBulkReminders = async () => {
+    try {
+      const overdueOnes = payments.filter(p => p.status === 'Overdue');
+      if (overdueOnes.length === 0) return alert('No overdue accounts found.');
+      
+      for (const p of overdueOnes) {
+        const tId = typeof p.tenantId === 'object' ? p.tenantId?._id : p.tenantId;
+        await api.sendNotification({
+          title: 'Urgent: Payment Overdue',
+          message: `Dear ${p.tenantName}, your ${p.type} payment of ₹${p.amount.toLocaleString()} is overdue. Please settle this immediately to avoid penalties.`,
+          tenantId: tId,
+          portalType: 'Tenant',
+          moduleName: 'Payments',
+          category: 'Overdue',
+          buildingId: activeBuildingId,
+          priority: 'High',
+          type: 'error',
+          actionLink: '/payments'
+        });
+      }
+      setBulkOpen(false);
+      alert(`${overdueOnes.length} reminders sent successfully!`);
+    } catch (err) {
+      alert('Failed to send bulk reminders: ' + err.message);
+    }
+  };
+
   const iStyle = { padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', width: '100%', outline: 'none', fontSize: '0.9rem' };
   const modalBase = { position: 'fixed', top: '10%', left: '50%', x: '-50%', width: '90%', maxWidth: '520px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '85vh', overflowY: 'auto' };
 
@@ -407,7 +455,7 @@ const Payments = () => {
                     <Download size={18} /> Download Invoice
                   </button>
                 ) : (
-                  <button className="btn" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontWeight: '700', background: '#FEF3C7', color: '#D97706', border: '1px solid #F59E0B' }}>
+                  <button onClick={() => handleSendReminder(detailsItem)} className="btn" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontWeight: '700', background: '#FEF3C7', color: '#D97706', border: '1px solid #F59E0B' }}>
                     <Bell size={18} /> Send Reminder
                   </button>
                 )}
@@ -488,7 +536,7 @@ const Payments = () => {
               <h2 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '1rem' }}>Bulk Reminders</h2>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Send SMS & Email reminders to all <b>{overdueTenants}</b> overdue accounts?</p>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <button className="btn btn-primary" onClick={() => setBulkOpen(false)} style={{ flex: 1, padding: '1rem', background: '#F59E0B', fontWeight: '800' }}>Send All</button>
+                <button className="btn btn-primary" onClick={handleBulkReminders} style={{ flex: 1, padding: '1rem', background: '#F59E0B', fontWeight: '800' }}>Send All</button>
                 <button className="btn" onClick={() => setBulkOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Cancel</button>
               </div>
             </motion.div>

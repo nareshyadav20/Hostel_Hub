@@ -58,11 +58,16 @@ const Payments = () => {
         fetchPaymentInfo();
       });
       socket.on('dashboardStatsUpdated', fetchPaymentInfo);
+      socket.on('tenantUpdated', () => {
+        console.log('🔄 Tenant Profile updated by Owner');
+        fetchPaymentInfo();
+      });
     }
 
     return () => {
       socket.off('paymentAdded');
       socket.off('dashboardStatsUpdated');
+      socket.off('tenantUpdated');
       // No disconnectSocket here as it's global layout based
     };
   }, []);

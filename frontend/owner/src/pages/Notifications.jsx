@@ -26,7 +26,13 @@ const Notifications = () => {
   
   // Composer State
   const [isComposerOpen, setIsComposerOpen] = useState(false);
-  const [composerData, setComposerData] = useState({ title: '', message: '', target: 'All Tenants' });
+  const [composerData, setComposerData] = useState({ 
+    title: '', 
+    message: '', 
+    target: 'All Tenants',
+    priority: 'Medium',
+    type: 'info'
+  });
 
   const [notifSettings, setNotifSettings] = useState({
     payments: { enabled: true, priority: 'high', delivery: ['in-app', 'sms'] },
@@ -110,12 +116,12 @@ const Notifications = () => {
         moduleName: 'Owner',
         category: 'Announcement',
         buildingId: activeBuildingId,
-        priority: 'Medium',
-        type: 'info'
+        priority: composerData.priority,
+        type: composerData.type
       });
       fetchNotifications();
       setIsComposerOpen(false);
-      setComposerData({ title: '', message: '', target: 'All Tenants' });
+      setComposerData({ title: '', message: '', target: 'All Tenants', priority: 'Medium', type: 'info' });
     } catch (err) {
       console.error('Error sending notification:', err);
     }
@@ -340,6 +346,25 @@ const Notifications = () => {
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Title</label>
                   <input type="text" placeholder="e.g. Mess Update, Maintenance Notice" value={composerData.title} onChange={e => setComposerData({...composerData, title: e.target.value})} style={inputStyle} required />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Priority</label>
+                    <select value={composerData.priority} onChange={e => setComposerData({...composerData, priority: e.target.value})} style={inputStyle}>
+                      <option value="High">High (🚨 Urgent)</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Low">Low</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Alert Type</label>
+                    <select value={composerData.type} onChange={e => setComposerData({...composerData, type: e.target.value})} style={inputStyle}>
+                      <option value="info">Info (Blue)</option>
+                      <option value="warning">Warning (Yellow)</option>
+                      <option value="success">Success (Green)</option>
+                      <option value="error">Emergency (Red)</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Message</label>
