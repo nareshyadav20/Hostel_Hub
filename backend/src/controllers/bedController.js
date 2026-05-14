@@ -75,6 +75,30 @@ const updateBed = async (req, res) => {
         ownerId: req.user.id,
         type: 'BED_STATUS_CHANGE'
       });
+
+      // If tenant was just assigned, notify them and trigger profile sync
+      if (req.body.tenant && req.body.status === 'OCCUPIED') {
+        const notificationService = require('../utils/notificationService');
+        await notificationService.createNotification({
+          portalType: 'Tenant',
+          moduleName: 'Rooms',
+          category: 'Allocation',
+          title: 'Room Allocated!',
+          message: `Congratulations! You have been allocated Bed ${updated.bedNumber} in Room ${bed.room.roomNumber}. Welcome to ${bed.room.floor.building.name}!`,
+          priority: 'High',
+          type: 'success',
+          buildingId: buildingId,
+          tenantId: req.body.tenant,
+          actionLink: '/dashboard'
+        });
+
+        // Trigger real-time profile sync for the specific tenant
+        socketService.emitToRoom(`tenant_${req.body.tenant}`, 'tenantUpdated', { 
+          message: 'Your room allocation has been updated',
+          roomId: bed.room._id,
+          bedId: updated._id
+        });
+      }
     }
 
     res.status(200).json(updated);

@@ -11,17 +11,29 @@ const setIo = (socketIo) => {
  */
 const createNotification = async (data) => {
   try {
-    const notification = new Notification({
-      ...data,
-      isRead: false,
-    });
+    const notificationData = { ...data, isRead: false };
+
+    // Auto-prefix actionLink for Owners if it's a relative path
+    if (data.portalType === 'Owner' && data.actionLink && !data.actionLink.startsWith('/owner/')) {
+      const bId = data.buildingId?._id || data.buildingId;
+      if (bId) {
+        notificationData.actionLink = `/owner/building/${bId}${data.actionLink}`;
+      }
+    }
+
+    const notification = new Notification(notificationData);
     
     await notification.save();
 
     // Real-time update via Socket.IO
     if (io) {
-      // Emit to the specific building's room or globally to all owners
-      io.to(data.buildingId).emit('newNotification', notification);
+      // Emit to the specific building's room
+      if (data.buildingId) io.to(data.buildingId.toString()).emit('newNotification', notification);
+      
+      // Emit to specific tenant if targeted
+      if (data.tenantId) io.to(`tenant_${data.tenantId}`).emit('newNotification', notification);
+      
+      // Global update for generic stats
       io.emit('notificationUpdate', { type: 'NEW', notification });
     }
 

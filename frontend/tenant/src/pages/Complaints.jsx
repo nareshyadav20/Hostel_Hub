@@ -10,6 +10,8 @@ const Complaints = () => {
   const [loading, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState(null);
   const [formData, setFormData] = useState({ title: '', category: 'Maintenance', description: '' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     fetchComplaints();
@@ -63,6 +65,18 @@ const Complaints = () => {
       setTimeout(() => setToastMsg(null), 5000);
     } finally { 
       setSubmitting(false); 
+    }
+  };
+
+  // Pagination Logic
+  const totalPages = Math.ceil(complaints.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentComplaints = complaints.slice(indexOfFirstItem, indexOfLastItem);
+
+  const paginate = (pageNumber) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
     }
   };
 
@@ -136,11 +150,11 @@ const Complaints = () => {
                 <th>Status</th>
               </tr>
             </thead>
-            <tbody>
+             <tbody>
               {complaints.length === 0 ? (
                 <tr><td colSpan="4" className="td-empty">Everything is working perfectly! No active tickets found.</td></tr>
               ) : (
-                complaints.map(item => (
+                currentComplaints.map(item => (
                   <tr key={item._id}>
                     <td className="td-date">{new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
                     <td className="td-info">
@@ -162,13 +176,43 @@ const Complaints = () => {
               )}
             </tbody>
           </table>
+
+          {totalPages > 1 && (
+            <div className="pagination-controls-premium">
+              <button 
+                className={`pg-btn ${currentPage === 1 ? 'disabled' : ''}`}
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              <div className="pg-numbers">
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button 
+                    key={i + 1} 
+                    className={`pg-num ${currentPage === i + 1 ? 'active' : ''}`}
+                    onClick={() => paginate(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+              <button 
+                className={`pg-btn ${currentPage === totalPages ? 'disabled' : ''}`}
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="mobile-cards-view">
           {complaints.length === 0 ? (
             <div className="td-empty">Everything is working perfectly!</div>
           ) : (
-            complaints.map(item => (
+            currentComplaints.map(item => (
               <div key={item._id} className="mobile-ticket-card">
                 <div className="mobile-card-top">
                   <span className="m-date">{new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>

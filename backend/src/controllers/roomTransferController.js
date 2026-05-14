@@ -1,38 +1,39 @@
 const RoomTransfer = require('../models/RoomTransfer');
 const Tenant = require('../models/Tenant');
 const Building = require('../models/Building');
+const notificationService = require('../utils/notificationService');
 
 exports.createTransfer = async (req, res) => {
   try {
     const { newRoom, reason } = req.body;
     let tenant = await Tenant.findOne({ email: req.user.email });
-    
+
     if (!tenant) {
-        const User = require('../models/User');
-        const user = await User.findById(req.user.id);
-        if (!user) return res.status(404).json({ message: 'User not found' });
-        
-        tenant = await Tenant.create({
-          name: user.name,
-          email: user.email,
-          phone: user.phone || 'N/A',
-          emergencyContact: 'N/A',
-          status: 'PENDING'
-        });
+      const User = require('../models/User');
+      const user = await User.findById(req.user.id);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      tenant = await Tenant.create({
+        name: user.name,
+        email: user.email,
+        phone: user.phone || 'N/A',
+        emergencyContact: 'N/A',
+        status: 'PENDING'
+      });
     }
 
     let buildingId = tenant.buildingId;
     if (!buildingId && tenant.room) {
       const Room = require('../models/Room');
       const Floor = require('../models/Floor');
-      
-      const roomObj = await Room.findOne({ 
+
+      const roomObj = await Room.findOne({
         $or: [
           { _id: require('mongoose').Types.ObjectId.isValid(tenant.room) ? tenant.room : null },
           { roomNumber: tenant.room }
         ]
       }).populate('floor');
-      
+
       if (roomObj && roomObj.floor) {
         buildingId = roomObj.floor.building;
       }
@@ -52,6 +53,18 @@ exports.createTransfer = async (req, res) => {
     const socketService = require('../utils/socketService');
     socketService.emitToOwner('transferCreated', { transfer, tenantName: tenant.name });
     if (buildingId) socketService.emitUpdate(buildingId, 'transferCreated', { transfer, tenantName: tenant.name });
+
+    // Notify Owner
+    await notificationService.createNotification({
+      portalType: 'Owner',
+      moduleName: 'Room Transfers',
+      category: 'Maintenance',
+      title: 'New Transfer Request',
+      message: `Tenant ${tenant.name} requested a transfer to Room ${transfer.newRoom}`,
+      priority: 'Medium',
+      buildingId: buildingId,
+      actionLink: '/transfers'
+    });
 
     res.status(201).json(transfer);
   } catch (err) {
@@ -104,7 +117,7 @@ exports.getAllTransfers = async (req, res) => {
 exports.updateTransferStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    
+
     const transfer = await RoomTransfer.findById(req.params.id).populate('tenant', 'name email');
     if (!transfer) return res.status(404).json({ message: 'Transfer request not found' });
 
@@ -116,9 +129,9 @@ exports.updateTransferStatus = async (req, res) => {
 
     transfer.status = status;
     await transfer.save();
-    
+
     if (status === 'ACCEPTED' || status === 'Approved') {
-        await Tenant.findByIdAndUpdate(transfer.tenant._id, { room: transfer.newRoom });
+      await Tenant.findByIdAndUpdate(transfer.tenant._id, { room: transfer.newRoom });
     }
 
     // Real-time sync: Notify tenant portal of status update instantly
@@ -127,6 +140,20 @@ exports.updateTransferStatus = async (req, res) => {
     if (transfer.buildingId) socketService.emitUpdate(transfer.buildingId, 'transferStatusChanged', updatedTransfer);
     // Global emit so tenant catches status change regardless of which room they joined
     socketService.emitToOwner('transferStatusChanged', updatedTransfer);
+
+    // Notify Tenant
+    await notificationService.createNotification({
+      portalType: 'Tenant',
+      moduleName: 'Room Transfers',
+      category: 'Maintenance',
+      title: 'Transfer Request Update',
+      message: `Your room transfer request to ${transfer.newRoom} has been ${status}.`,
+      priority: 'Medium',
+      type: status === 'ACCEPTED' || status === 'Approved' ? 'success' : 'info',
+      buildingId: transfer.buildingId,
+      tenantId: transfer.tenant?._id || transfer.tenant,
+      actionLink: '/transfers'
+    });
 
     res.json(transfer);
   } catch (err) {

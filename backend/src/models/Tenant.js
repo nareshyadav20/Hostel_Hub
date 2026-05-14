@@ -5,6 +5,7 @@ const tenantSchema = new mongoose.Schema({
   email: { type: String, required: true },
   phone: { type: String, required: true },
   emergencyContact: { type: String, required: true },
+  profilePic: { type: String },
    room: { type: String }, // Room number/name
    roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
    bedId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bed' },

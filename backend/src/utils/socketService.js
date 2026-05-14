@@ -31,6 +31,19 @@ const emitUpdate = (buildingId, event, data) => {
 };
 
 /**
+ * Emit an event to a specific room
+ * @param {string} room - The room name
+ * @param {string} event - The event name
+ * @param {object} data - The data to send
+ */
+const emitToRoom = (room, event, data) => {
+  if (io && room) {
+    io.to(room).emit(event, data);
+    console.log(`Socket emitted to [Room: ${room}]: ${event}`);
+  }
+};
+
+/**
  * Emit an event specifically to the owner dashboard
  * @param {string} event - The event name
  * @param {object} data - The data to send
@@ -48,5 +61,6 @@ const emitToOwner = (event, data) => {
 module.exports = {
   setIo,
   emitUpdate,
+  emitToRoom,
   emitToOwner
 };

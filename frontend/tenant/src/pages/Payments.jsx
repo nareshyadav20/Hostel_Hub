@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
+import Modal from '../components/Modal';
 import './Payments.css';
+import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 
 const Payments = () => {
   const navigate = useNavigate();
@@ -11,6 +13,13 @@ const Payments = () => {
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const [modal, setModal] = useState({ show: false, type: 'success', title: '', message: '', onConfirm: null, onCancel: null });
+
+  const showModal = (config) => setModal({ ...config, show: true });
+  const closeModal = () => setModal(prev => ({ ...prev, show: false }));
+
 
   useEffect(() => {
     const fetchPaymentInfo = async () => {
@@ -39,7 +48,77 @@ const Payments = () => {
       }
     };
     fetchPaymentInfo();
+
+    // Connect to real-time sync
+    const buildingId = localStorage.getItem('buildingId');
+    if (buildingId) {
+      connectSocket(buildingId);
+      socket.on('paymentAdded', () => {
+        console.log('🔄 Payment Records Updated in Real-time');
+        fetchPaymentInfo();
+      });
+      socket.on('dashboardStatsUpdated', fetchPaymentInfo);
+    }
+
+    return () => {
+      socket.off('paymentAdded');
+      socket.off('dashboardStatsUpdated');
+      // No disconnectSocket here as it's global layout based
+    };
   }, []);
+
+  const handlePayRent = async () => {
+    showModal({
+      type: 'confirm',
+      title: 'Rent Payment',
+      message: 'Are you sure you want to proceed with the rent payment? This transaction will be recorded instantly.',
+      confirmText: 'Yes, Pay Now',
+      onConfirm: async () => {
+        closeModal();
+        try {
+          setLoading(true);
+          await API.post('/tenant-portal/pay-rent');
+          showModal({
+            type: 'success',
+            title: 'Success',
+            message: 'Payment completed successfully!',
+            onConfirm: () => {
+              closeModal();
+              window.location.reload();
+            }
+          });
+        } catch (err) {
+          console.error('Error paying rent:', err);
+          showModal({
+            type: 'error',
+            title: 'Payment Error',
+            message: 'We could not process your payment at this moment.',
+            onConfirm: closeModal
+          });
+        } finally {
+          setLoading(false);
+        }
+      },
+      onCancel: closeModal
+    });
+  };
+
+  const handleSendParentLink = () => {
+    if (!parentNumber || parentNumber.length < 10) {
+      showModal({
+        type: 'error',
+        title: 'Invalid Number',
+        message: 'Please enter a valid 10-digit WhatsApp number.',
+        onConfirm: closeModal
+      });
+      return;
+    }
+    const msg = `Hi, this is a secure payment link for ${tenantData?.name}'s rent at Livora: ${window.location.origin}/pay/${tenantData?._id}`;
+    window.open(`https://wa.me/91${parentNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+    setShowParentModal(false);
+    setParentNumber('');
+  };
+
 
   if (loading) return (
     <div className="staynest-dashboard loading-state">
@@ -52,15 +131,16 @@ const Payments = () => {
     .filter(inv => inv.status === 'Paid' || inv.status === 'Success')
     .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
 
-  const handleSendParentLink = () => {
-    if (!parentNumber || parentNumber.length < 10) {
-      alert('Please enter a valid WhatsApp number');
-      return;
+  // Pagination Logic
+  const totalPages = Math.ceil(invoices.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentInvoices = invoices.slice(indexOfFirstItem, indexOfLastItem);
+
+  const paginate = (pageNumber) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
     }
-    const msg = `Hi, this is a secure payment link for ${tenantData?.name}'s rent at Livora: ${window.location.origin}/pay/${tenantData?._id}`;
-    window.open(`https://wa.me/91${parentNumber}?text=${encodeURIComponent(msg)}`, '_blank');
-    setShowParentModal(false);
-    setParentNumber('');
   };
 
   return (
@@ -128,7 +208,7 @@ const Payments = () => {
             <span className="stat-label">Pending Rent</span>
             <h2 className="stat-value">₹{invoices.filter(i => i.status === 'Pending').reduce((sum, i) => sum + i.amount, 0).toLocaleString()}</h2>
             {invoices.some(i => i.status === 'Pending') && (
-              <button className="btn-pay-now">Pay Now</button>
+              <button className="btn-pay-now" onClick={handlePayRent}>Pay Now</button>
             )}
           </div>
           <div className="stat-icon-bg">
@@ -163,7 +243,7 @@ const Payments = () => {
               </tr>
             </thead>
             <tbody>
-              {invoices.map(invoice => (
+              {currentInvoices.map(invoice => (
                 <tr key={invoice.id}>
                   <td className="td-date">{invoice.date}</td>
                   <td className="td-id">
@@ -185,10 +265,40 @@ const Payments = () => {
               ))}
             </tbody>
           </table>
+          
+          {totalPages > 1 && (
+            <div className="pagination-controls-premium">
+              <button 
+                className={`pg-btn ${currentPage === 1 ? 'disabled' : ''}`}
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              <div className="pg-numbers">
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button 
+                    key={i + 1} 
+                    className={`pg-num ${currentPage === i + 1 ? 'active' : ''}`}
+                    onClick={() => paginate(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+              <button 
+                className={`pg-btn ${currentPage === totalPages ? 'disabled' : ''}`}
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="mobile-cards-view">
-          {invoices.map(invoice => (
+          {currentInvoices.map(invoice => (
             <div key={invoice.id} className="mobile-transaction-card">
               <div className="mobile-card-top">
                 <span className="m-date">{invoice.date}</span>
@@ -304,8 +414,10 @@ const Payments = () => {
           </div>
         </div>
       )}
+      <Modal {...modal} />
     </div>
   );
 };
+
 
 export default Payments;

@@ -3,6 +3,7 @@ const Tenant = require('../models/Tenant');
 const Hostel = require('../models/Hostel');
 const Bed = require('../models/Bed');
 const Room = require('../models/Room');
+const Building = require('../models/Building');
 const mongoose = require('mongoose');
 const socketService = require('../utils/socketService');
 const notificationService = require('../utils/notificationService');
@@ -11,19 +12,19 @@ exports.createComplaint = async (req, res) => {
   try {
     const { title, description, category, priority, tenantId, buildingId: bodyBuildingId } = req.body;
     let tenant;
-    
+
     if (tenantId) {
       tenant = await Tenant.findById(tenantId);
     } else {
       tenant = await Tenant.findOne({ email: req.user.email });
     }
-    
+
     // If tenant profile is missing, create it
     if (!tenant) {
       const User = require('../models/User');
       const user = await User.findById(req.user.id);
       if (!user) return res.status(404).json({ message: 'User not found' });
-      
+
       tenant = await Tenant.create({
         name: user.name,
         email: user.email,
@@ -57,13 +58,13 @@ exports.createComplaint = async (req, res) => {
 
     // If still no buildingId, check legacy fields or pre-assigned
     if (!buildingId && tenant.room) {
-      const roomObj = await Room.findOne({ 
+      const roomObj = await Room.findOne({
         $or: [
           { _id: mongoose.Types.ObjectId.isValid(tenant.room) ? tenant.room : null },
           { roomNumber: tenant.room }
         ]
       }).populate({ path: 'floor' });
-      
+
       if (roomObj) {
         roomId = roomObj._id;
         if (roomObj.floor) buildingId = roomObj.floor.building;
@@ -101,6 +102,18 @@ exports.createComplaint = async (req, res) => {
       tenantName: tenant.name
     });
 
+    // Notify Owner
+    await notificationService.createNotification({
+      portalType: 'Owner',
+      moduleName: 'Complaints',
+      category: complaint.category || 'General',
+      title: 'New Complaint Received',
+      message: `Tenant ${tenant.name} raised a complaint: ${complaint.title}`,
+      priority: complaint.priority || 'Medium',
+      buildingId: buildingId,
+      actionLink: '/complaints'
+    });
+
     res.status(201).json(complaint);
   } catch (error) {
     res.status(500).json({ message: 'Failed to create complaint', error: error.message });
@@ -122,7 +135,7 @@ exports.updateComplaintStatus = async (req, res) => {
     const { status, assignedTo } = req.body;
     const update = { status };
     if (assignedTo) update.assignedTo = assignedTo;
-    
+
     const complaint = await Complaint.findByIdAndUpdate(id, update, { new: true })
       .populate('user', 'name email')
       .populate('tenant', 'name email');
@@ -133,13 +146,42 @@ exports.updateComplaintStatus = async (req, res) => {
     // Also emit globally so all tenants receive their own update
     socketService.emitToOwner('complaintStatusChanged', complaint);
 
-    // Create notification for tenant
+    // Enhanced Notifications for Tenant
+    let notifTitle = 'Complaint Status Updated';
+    let notifMsg = `Your complaint "${complaint.title}" is now ${status}.`;
+    let notifType = 'info';
+    let priority = complaint.priority || 'Medium';
+
+    if (status === 'Resolved') {
+      notifTitle = 'Complaint Resolved';
+      notifMsg = `Great news! Your complaint "${complaint.title}" has been resolved.`;
+      notifType = 'success';
+    } else if (status === 'In Progress') {
+      notifTitle = 'Work Started';
+      notifMsg = `Maintenance team has started working on your complaint: "${complaint.title}".`;
+      notifType = 'warning';
+    } else if (status === 'Rejected') {
+      notifTitle = 'Complaint Update';
+      notifMsg = `Your complaint "${complaint.title}" could not be processed as submitted. Please check for details.`;
+      notifType = 'error';
+      priority = 'High';
+    }
+
+    if (assignedTo) {
+      notifMsg += ` Assigned to: ${assignedTo}.`;
+    }
+
     await notificationService.createNotification({
-      title: 'Complaint Status Updated',
-      message: `Your complaint "${complaint.title}" is now ${status}.`,
-      type: 'COMPLAINT',
+      portalType: 'Tenant',
+      moduleName: 'Complaints',
+      category: complaint.category || 'General',
+      title: notifTitle,
+      message: notifMsg,
+      priority: priority,
+      type: notifType,
       buildingId: complaint.buildingId,
-      userId: complaint.user._id
+      tenantId: complaint.tenant?._id || complaint.tenant,
+      actionLink: '/complaints'
     });
 
     res.status(200).json(complaint);

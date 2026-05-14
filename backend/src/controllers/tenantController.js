@@ -75,9 +75,25 @@ const updateTenant = async (req, res) => {
     
     if (tenant) {
       socketService.emitUpdate(tenant.buildingId, 'tenantUpdated', tenant);
+      socketService.emitToRoom(`tenant_${tenant._id}`, 'tenantUpdated', tenant);
       socketService.emitUpdate(tenant.buildingId, 'dashboardStatsUpdated', {});
+
+      // Notification for Tenant
+      const notificationService = require('../utils/notificationService');
+      await notificationService.createNotification({
+        portalType: 'Tenant',
+        moduleName: 'Profile',
+        category: 'Account',
+        title: 'Profile Updated',
+        message: 'Your profile has been updated by the administrator. Please review your stay details.',
+        priority: 'Low',
+        type: 'info',
+        buildingId: tenant.buildingId,
+        tenantId: tenant._id,
+        actionLink: '/profile'
+      });
     }
-    
+
     res.status(200).json(tenant);
   } catch (err) {
     res.status(400).json({ error: err.message });

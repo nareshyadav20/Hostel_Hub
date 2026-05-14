@@ -5,6 +5,7 @@ const Leave = require('../models/tenant/Leave');
 const Complaint = require('../models/Complaint');
 const { getOrCreateTenant } = require('../utils/tenantHelper');
 const socketService = require('../utils/socketService');
+const notificationService = require('../utils/notificationService');
 
 // Helper to get tenant profile
 const getTenantProfile = async (userData) => {
@@ -46,6 +47,30 @@ exports.createLaundryOrder = async (req, res) => {
         tenantName: tenant.name
       });
     }
+
+    // Notifications
+    await notificationService.createNotification({
+      portalType: 'Tenant',
+      moduleName: 'Laundry',
+      category: 'Services',
+      title: 'Laundry Order Placed',
+      message: `Your laundry order #${orderNumber} has been placed successfully.`,
+      priority: 'Low',
+      buildingId: tenant.buildingId,
+      tenantId: tenant._id,
+      actionLink: '/services'
+    });
+
+    await notificationService.createNotification({
+      portalType: 'Owner',
+      moduleName: 'Laundry',
+      category: 'Services',
+      title: 'New Laundry Order',
+      message: `Tenant ${tenant.name} placed laundry order #${orderNumber}`,
+      priority: 'Low',
+      buildingId: tenant.buildingId,
+      actionLink: '/services'
+    });
 
     console.log('✅ Laundry Order Saved:', laundry._id);
     res.status(201).json(laundry);
@@ -97,6 +122,30 @@ exports.scheduleCleaning = async (req, res) => {
         tenantName: tenant.name
       });
     }
+
+    // Notifications
+    await notificationService.createNotification({
+      portalType: 'Tenant',
+      moduleName: 'Cleaning',
+      category: 'Services',
+      title: 'Cleaning Scheduled',
+      message: `Room cleaning scheduled for ${new Date(date).toLocaleDateString()} at ${slot}.`,
+      priority: 'Low',
+      buildingId: tenant.buildingId,
+      tenantId: tenant._id,
+      actionLink: '/services'
+    });
+
+    await notificationService.createNotification({
+      portalType: 'Owner',
+      moduleName: 'Cleaning',
+      category: 'Services',
+      title: 'Cleaning Request',
+      message: `Tenant ${tenant.name} requested room cleaning.`,
+      priority: 'Low',
+      buildingId: tenant.buildingId,
+      actionLink: '/services'
+    });
 
     console.log('✅ Cleaning Scheduled:', cleaning._id);
     res.status(201).json(cleaning);
@@ -150,6 +199,30 @@ exports.createVisitorAccess = async (req, res) => {
       });
     }
 
+    // Notifications
+    await notificationService.createNotification({
+      portalType: 'Tenant',
+      moduleName: 'Visitor',
+      category: 'Security',
+      title: 'Visitor Pass Created',
+      message: `Pass created for ${name}. Expected arrival: ${new Date(arrivalDate).toLocaleDateString()}`,
+      priority: 'Medium',
+      buildingId: tenant.buildingId,
+      tenantId: tenant._id,
+      actionLink: '/services'
+    });
+
+    await notificationService.createNotification({
+      portalType: 'Owner',
+      moduleName: 'Visitor',
+      category: 'Security',
+      title: 'New Visitor Pass',
+      message: `Tenant ${tenant.name} created a pass for ${name}.`,
+      priority: 'Medium',
+      buildingId: tenant.buildingId,
+      actionLink: '/services'
+    });
+
     console.log('✅ Visitor Access Saved:', visitor._id);
     res.status(201).json(visitor);
   } catch (error) {
@@ -201,6 +274,30 @@ exports.submitLeaveNotice = async (req, res) => {
         tenantName: tenant.name
       });
     }
+
+    // Notifications
+    await notificationService.createNotification({
+      portalType: 'Tenant',
+      moduleName: 'Leave',
+      category: 'Services',
+      title: 'Leave Notice Submitted',
+      message: `Your leave notice from ${new Date(fromDate).toLocaleDateString()} has been recorded.`,
+      priority: 'Medium',
+      buildingId: tenant.buildingId,
+      tenantId: tenant._id,
+      actionLink: '/services'
+    });
+
+    await notificationService.createNotification({
+      portalType: 'Owner',
+      moduleName: 'Leave',
+      category: 'Services',
+      title: 'New Leave Notice',
+      message: `Tenant ${tenant.name} submitted a leave notice.`,
+      priority: 'Medium',
+      buildingId: tenant.buildingId,
+      actionLink: '/services'
+    });
 
     console.log('✅ Leave Saved:', leave._id);
     res.status(201).json(leave);

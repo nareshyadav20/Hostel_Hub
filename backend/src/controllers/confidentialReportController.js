@@ -1,20 +1,21 @@
 const ConfidentialReport = require('../models/ConfidentialReport');
 const socketService = require('../utils/socketService');
+const notificationService = require('../utils/notificationService');
 
 // POST /api/confidential-reports — submit a new report (Tenant)
 const createReport = async (req, res) => {
   try {
-    let { 
-      title, 
-      description, 
-      category, 
-      priority, 
-      submittedBy, 
-      classification, 
-      location, 
+    let {
+      title,
+      description,
+      category,
+      priority,
+      submittedBy,
+      classification,
+      location,
       buildingId,
       userId,
-      tenantId 
+      tenantId
     } = req.body;
 
     // If missing, try to get from tenant profile (for Safety.jsx)
@@ -45,10 +46,35 @@ const createReport = async (req, res) => {
     });
 
     const saved = await report.save();
-    
+
     // Real-time notification for owner
     socketService.emitToOwner('confidentialReportCreated', saved);
-    
+
+    // Notify Owner
+    await notificationService.createNotification({
+      portalType: 'Owner',
+      moduleName: 'Safety',
+      category: 'Alert',
+      title: 'New Confidential Report',
+      message: `A new ${saved.classification} report has been submitted.`,
+      priority: saved.priority || 'High',
+      buildingId: saved.building,
+      actionLink: '/safety'
+    });
+
+    // Notify Tenant
+    await notificationService.createNotification({
+      portalType: 'Tenant',
+      moduleName: 'Safety',
+      category: 'Alert',
+      title: 'Report Submitted',
+      message: 'Your confidential report has been received and will be reviewed shortly.',
+      priority: 'Low',
+      buildingId: saved.building,
+      tenantId: saved.tenant,
+      actionLink: '/safety'
+    });
+
     res.status(201).json({ message: 'Report submitted successfully.', report: saved });
   } catch (err) {
     console.error('Error creating confidential report:', err);
@@ -62,7 +88,7 @@ const getAllReports = async (req, res) => {
     const { page = 1, limit = 10, search, category, priority, status, includeHidden = 'false' } = req.query;
 
     const query = {};
-    
+
     // Don't filter by building — owner sees all reports in the system.
     // Building-level filtering is enforced at the tenant submission level.
     if (includeHidden !== 'true') query.isHidden = { $ne: true };
@@ -80,7 +106,7 @@ const getAllReports = async (req, res) => {
     if (status) query.status = status;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    
+
     const reports = await ConfidentialReport.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -121,7 +147,20 @@ const updateReportStatus = async (req, res) => {
     }
 
     socketService.emitToOwner('confidentialReportUpdated', report);
-    
+
+    // Notify Tenant
+    await notificationService.createNotification({
+      portalType: 'Tenant',
+      moduleName: 'Safety',
+      category: 'Alert',
+      title: 'Safety Report Update',
+      message: `The status of your report "${report.title}" has been updated to ${status}.`,
+      priority: report.priority || 'Medium',
+      buildingId: report.building,
+      tenantId: report.tenant,
+      actionLink: '/safety'
+    });
+
     res.status(200).json({ message: 'Status updated.', report });
   } catch (err) {
     console.error('Error updating report status:', err);
@@ -137,7 +176,7 @@ const flagReport = async (req, res) => {
 
     const report = await ConfidentialReport.findByIdAndUpdate(
       id,
-      { 
+      {
         isFlagged: isFlagged !== undefined ? isFlagged : true,
         flagStatus: flagStatus || 'Flagged'
       },
@@ -149,7 +188,7 @@ const flagReport = async (req, res) => {
     }
 
     socketService.emitToOwner('confidentialReportUpdated', report);
-    
+
     res.status(200).json({ message: 'Report flagged successfully.', report });
   } catch (err) {
     console.error('Error flagging report:', err);
@@ -169,7 +208,7 @@ const deleteReport = async (req, res) => {
     }
 
     socketService.emitToOwner('confidentialReportDeleted', { id });
-    
+
     res.status(200).json({ message: 'Report deleted successfully.' });
   } catch (err) {
     console.error('Error deleting report:', err);
@@ -194,7 +233,7 @@ const hideReport = async (req, res) => {
     }
 
     socketService.emitToOwner('confidentialReportUpdated', report);
-    
+
     res.status(200).json({ message: isHidden ? 'Report hidden.' : 'Report restored.', report });
   } catch (err) {
     console.error('Error hiding report:', err);
@@ -207,7 +246,7 @@ const getMyReports = async (req, res) => {
   try {
     const Tenant = require('../models/Tenant');
     const tenant = await Tenant.findOne({ email: req.user.email });
-    
+
     if (!tenant) {
       return res.status(404).json({ message: 'Tenant profile not found.' });
     }
@@ -220,9 +259,9 @@ const getMyReports = async (req, res) => {
   }
 };
 
-module.exports = { 
-  createReport, 
-  getAllReports, 
+module.exports = {
+  createReport,
+  getAllReports,
   updateReportStatus,
   flagReport,
   deleteReport,

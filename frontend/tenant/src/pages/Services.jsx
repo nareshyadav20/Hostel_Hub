@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import API from '../api/axios';
+import Modal from '../components/Modal';
 import './Services.css';
+import socket, { connectSocket } from '../utils/socket';
 
 const Services = () => {
   const [activeTab, setActiveTab] = useState('cleaning');
@@ -11,6 +13,13 @@ const Services = () => {
   const [laundryHistory, setLaundryHistory] = useState([]);
   const [visitorHistory, setVisitorHistory] = useState([]);
   const [leaveHistory, setLeaveHistory] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const [modal, setModal] = useState({ show: false, type: 'success', title: '', message: '' });
+
+  const showModal = (config) => setModal({ ...config, show: true });
+  const closeModal = () => setModal(prev => ({ ...prev, show: false }));
+
 
   const [cleaningForm, setCleaningForm] = useState({ date: '', slot: 'Morning (10 AM - 12 PM)' });
   const [visitorForm, setVisitorForm] = useState({ name: '', relation: '', arrival: '' });
@@ -56,7 +65,22 @@ const Services = () => {
     }
   ];
 
-  useEffect(() => { fetchHistory(); }, [activeTab]);
+  useEffect(() => { 
+    fetchHistory(); 
+    
+    const bId = localStorage.getItem('buildingId');
+    if (bId) {
+      connectSocket(bId);
+      socket.on('complaintStatusChanged', () => {
+        console.log('🔄 Service history refreshing...');
+        fetchHistory();
+      });
+    }
+
+    return () => {
+      socket.off('complaintStatusChanged');
+    };
+  }, [activeTab]);
 
   const fetchHistory = async () => {
     setLoadingHistory(true);
@@ -93,14 +117,51 @@ const Services = () => {
         payload = { items, pickupDate: new Date() }; endpoint = '/services/laundry'; 
       }
       await API.post(endpoint, payload);
-      alert('Request submitted successfully!');
+      showModal({
+        type: 'success',
+        title: 'Request Received',
+        message: 'Your service request has been successfully submitted to our team.',
+        onConfirm: closeModal
+      });
       fetchHistory();
     } catch (err) { 
-      alert('Submission failed. Please try again.'); 
+      showModal({
+        type: 'error',
+        title: 'Submission Failed',
+        message: 'We could not process your request at this moment. Please try again.',
+        onConfirm: closeModal
+      });
     } finally { 
       setIsSubmitting(false); 
     }
   };
+
+  // Pagination Logic
+  const getActiveHistory = () => {
+    if (activeTab === 'cleaning') return cleaningHistory;
+    if (activeTab === 'laundry') return laundryHistory;
+    if (activeTab === 'visitor') return visitorHistory;
+    if (activeTab === 'leave') return leaveHistory;
+    return [];
+  };
+
+  const currentData = getActiveHistory();
+  const totalPages = Math.ceil(currentData.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const pagedHistory = currentData.slice(indexOfFirstItem, indexOfLastItem);
+
+  const paginate = (pageNumber) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
+  // Reset pagination when tab changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
+
 
   return (
     <div className="services-page">
@@ -223,7 +284,7 @@ const Services = () => {
                <div className="mini-loader">Loading records...</div>
              ) : (
                <>
-                 {activeTab === 'cleaning' && cleaningHistory.length > 0 ? cleaningHistory.map(h => (
+                 {activeTab === 'cleaning' && pagedHistory.length > 0 ? pagedHistory.map(h => (
                    <div key={h._id} className="timeline-item">
                      <div className="timeline-main">
                         <span className="timeline-date">{new Date(h.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
@@ -233,7 +294,7 @@ const Services = () => {
                    </div>
                  )) : activeTab === 'cleaning' && <div className="empty-history">No cleaning requests found.</div>}
 
-                 {activeTab === 'laundry' && laundryHistory.length > 0 ? laundryHistory.map(h => (
+                 {activeTab === 'laundry' && pagedHistory.length > 0 ? pagedHistory.map(h => (
                    <div key={h._id} className="timeline-item">
                      <div className="timeline-main">
                         <span className="timeline-date">Order #{h.orderNumber || h._id.slice(-6).toUpperCase()}</span>
@@ -244,15 +305,37 @@ const Services = () => {
                  )) : activeTab === 'laundry' && <div className="empty-history">No laundry orders found.</div>}
 
                  {(activeTab === 'visitor' || activeTab === 'leave') && <div className="empty-history">Records will appear here once submitted.</div>}
+                 
+                 {totalPages > 1 && (
+                   <div className="pagination-controls-premium mini">
+                     <button 
+                       className={`pg-btn ${currentPage === 1 ? 'disabled' : ''}`}
+                       onClick={() => paginate(currentPage - 1)}
+                       disabled={currentPage === 1}
+                     >
+                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                     </button>
+                     <span className="pg-status">{currentPage} of {totalPages}</span>
+                     <button 
+                       className={`pg-btn ${currentPage === totalPages ? 'disabled' : ''}`}
+                       onClick={() => paginate(currentPage + 1)}
+                       disabled={currentPage === totalPages}
+                     >
+                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                     </button>
+                   </div>
+                 )}
                </>
+
              )}
           </div>
         </div>
       </div>
 
-
+      <Modal {...modal} />
     </div>
   );
 };
+
 
 export default Services;

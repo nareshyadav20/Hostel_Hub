@@ -20,6 +20,7 @@ import Services from './pages/Services';
 import Community from './pages/Community';
 import Safety from './pages/Safety';
 import Profile from './pages/Profile';
+import Notifications from './pages/Notifications';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Terms from './pages/Terms';
@@ -44,7 +45,7 @@ function App() {
       localStorage.clear();
       sessionStorage.clear();
       localStorage.setItem('app_version', APP_VERSION);
-      
+
       // Clear all cookies as well
       document.cookie.split(";").forEach((c) => {
         document.cookie = c
@@ -60,7 +61,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={localStorage.getItem('token') ? <Navigate to="/dashboard" replace /> : <Home />} />
         <Route path="/explore" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -71,24 +72,25 @@ function App() {
         <Route path="/privacy" element={<Privacy />} />
 
         {/* Public browsing routes */}
-        <Route path="/search"          element={<Layout><Search /></Layout>} />
-        <Route path="/listing/:id"     element={<Layout><Listing /></Layout>} />
+        <Route path="/search" element={<Layout><Search /></Layout>} />
+        <Route path="/listing/:id" element={<Layout><Listing /></Layout>} />
 
         {/* Protected portal routes */}
-        <Route path="/dashboard"  element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-        <Route path="/wishlist"   element={<ProtectedRoute><Layout><Wishlist /></Layout></ProtectedRoute>} />
-        <Route path="/booking"            element={<ProtectedRoute><Layout><Booking /></Layout></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+        <Route path="/wishlist" element={<ProtectedRoute><Layout><Wishlist /></Layout></ProtectedRoute>} />
+        <Route path="/booking" element={<ProtectedRoute><Layout><Booking /></Layout></ProtectedRoute>} />
         <Route path="/booking/:buildingId" element={<ProtectedRoute><Layout><Booking /></Layout></ProtectedRoute>} />
-        <Route path="/payments"   element={<ProtectedRoute><Layout><Payments /></Layout></ProtectedRoute>} />
-        <Route path="/mess"       element={<ProtectedRoute><Layout><Mess /></Layout></ProtectedRoute>} />
-        <Route path="/rewards"    element={<ProtectedRoute><Layout><Rewards /></Layout></ProtectedRoute>} />
+        <Route path="/payments" element={<ProtectedRoute><Layout><Payments /></Layout></ProtectedRoute>} />
+        <Route path="/mess" element={<ProtectedRoute><Layout><Mess /></Layout></ProtectedRoute>} />
+        <Route path="/rewards" element={<ProtectedRoute><Layout><Rewards /></Layout></ProtectedRoute>} />
         <Route path="/complaints" element={<ProtectedRoute><Layout><Complaints /></Layout></ProtectedRoute>} />
-        <Route path="/transfers"  element={<ProtectedRoute><Layout><Transfers /></Layout></ProtectedRoute>} />
-        <Route path="/discounts"  element={<ProtectedRoute><Layout><Discounts /></Layout></ProtectedRoute>} />
-        <Route path="/services"   element={<ProtectedRoute><Layout><Services /></Layout></ProtectedRoute>} />
-        <Route path="/community"  element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />
-        <Route path="/safety"     element={<ProtectedRoute><Layout><Safety /></Layout></ProtectedRoute>} />
-        <Route path="/profile"    element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
+        <Route path="/transfers" element={<ProtectedRoute><Layout><Transfers /></Layout></ProtectedRoute>} />
+        <Route path="/discounts" element={<ProtectedRoute><Layout><Discounts /></Layout></ProtectedRoute>} />
+        <Route path="/services" element={<ProtectedRoute><Layout><Services /></Layout></ProtectedRoute>} />
+        <Route path="/community" element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />
+        <Route path="/safety" element={<ProtectedRoute><Layout><Safety /></Layout></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><Layout><Notifications /></Layout></ProtectedRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

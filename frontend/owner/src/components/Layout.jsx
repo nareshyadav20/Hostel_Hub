@@ -5,7 +5,10 @@ import { api, backendOnline } from '../mockData';
 import Sidebar from './Sidebar';
 import ThemeToggle from './ThemeToggle';
 import ProfileDropdown from './ProfileDropdown';
+import NotificationToast from './NotificationToast';
 import './Layout.css';
+import API from '../api/axios';
+import socket, { connectSocket } from '../utils/socket';
 
 // ── tiny hook: polls /api/ping every 30 s to track backend status ──
 function useBackendStatus() {
@@ -74,6 +77,10 @@ const Layout = ({ children }) => {
   const { buildingId: urlBuildingId } = useParams();
   const navigate = useNavigate();
   const [buildings, setBuildings] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const [activeToast, setActiveToast] = useState(null);
   const backendStatus = useBackendStatus();
 
   // Step 1: Persistent context
@@ -116,15 +123,34 @@ const Layout = ({ children }) => {
   }, [buildings, activeBuildingId, urlBuildingId, navigate]);
 
   useEffect(() => {
-    if (urlBuildingId) {
-      const isValid = buildings.length === 0 || buildings.some(b => (b.id || b._id) === urlBuildingId);
-      if (isValid) {
-        localStorage.setItem('selectedBuildingId', urlBuildingId);
-        setActiveBuildingId(urlBuildingId);
-        console.log("Selected Building ID saved:", urlBuildingId);
-      }
+    if (activeBuildingId) {
+      fetchNotifications();
+      connectSocket(activeBuildingId);
+      
+      socket.on('newNotification', (notif) => {
+        if (notif.portalType === 'Owner' || notif.portalType === 'All') {
+          setNotifications(prev => [notif, ...prev]);
+          setUnreadCount(prev => prev + 1);
+          setActiveToast(notif);
+        }
+      });
+
+      return () => {
+        socket.off('newNotification');
+      };
     }
-  }, [urlBuildingId, buildings]);
+  }, [activeBuildingId]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await API.get(`/notifications?buildingId=${activeBuildingId}`);
+      const data = res.data || [];
+      setNotifications(data);
+      setUnreadCount(data.filter(n => !n.isRead).length);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    }
+  };
 
   return (
     <div className="layout">
@@ -187,12 +213,64 @@ const Layout = ({ children }) => {
           {/* ── Right side: theme + bell + profile ── */}
           <div className="user-profile" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <ThemeToggle />
-            <div className="notifications" style={{ color: 'var(--text-secondary)', cursor: 'pointer' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
+            <div className="notifications-wrapper" style={{ position: 'relative' }}>
+              <div className={`notifications ${unreadCount > 0 ? 'has-unread' : ''}`} 
+                onClick={() => setShowNotifDropdown(!showNotifDropdown)}
+                style={{ color: 'var(--text-secondary)', cursor: 'pointer', position: 'relative' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+              </div>
+
+              <AnimatePresence>
+                {showNotifDropdown && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="notif-dropdown glass-card"
+                  >
+                    <div className="dropdown-header">
+                      <h4>Recent Notifications</h4>
+                      {unreadCount > 0 && (
+                        <button onClick={async () => {
+                          await API.post('/notifications/mark-all-read', { category: 'all', buildingId: activeBuildingId });
+                          fetchNotifications();
+                        }}>Mark all read</button>
+                      )}
+                    </div>
+                    <div className="dropdown-list">
+                      {notifications.length === 0 ? (
+                        <div className="empty-notif">No new notifications</div>
+                      ) : (
+                        notifications.slice(0, 5).map((n, i) => (
+                          <div key={i} className={`dropdown-item ${n.isRead ? 'read' : 'unread'}`}
+                            onClick={async () => {
+                              if (!n.isRead) {
+                                await API.patch(`/notifications/${n._id}/read`);
+                                fetchNotifications();
+                              }
+                              setShowNotifDropdown(false);
+                              if (n.actionLink) navigate(n.actionLink);
+                            }}>
+                            <div className="notif-icon">{n.category === 'Rent' ? '💰' : '🔔'}</div>
+                            <div className="notif-text">
+                              <h5>{n.title}</h5>
+                              <p>{n.message}</p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="dropdown-footer">
+                      <button onClick={() => { setShowNotifDropdown(false); navigate(`/owner/building/${activeBuildingId}/notifications`); }}>View All</button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             <ProfileDropdown />
           </div>
@@ -202,6 +280,15 @@ const Layout = ({ children }) => {
           {children}
         </div>
       </main>
+
+      <AnimatePresence>
+        {activeToast && (
+          <NotificationToast 
+            notification={activeToast} 
+            onClose={() => setActiveToast(null)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

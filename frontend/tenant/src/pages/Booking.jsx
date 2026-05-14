@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import API from '../api/axios';
+import Modal from '../components/Modal';
 import './Booking.css';
 
 const Booking = () => {
@@ -17,6 +18,11 @@ const Booking = () => {
   const [bookings, setBookings] = useState([]);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
+  const [modal, setModal] = useState({ show: false, type: 'info', title: '', message: '' });
+
+  const showModal = (config) => setModal({ ...config, show: true });
+  const closeModal = () => setModal(prev => ({ ...prev, show: false }));
+
 
   const basePrice = hostel?.startingPrice || 9000;
 
@@ -266,9 +272,15 @@ const Booking = () => {
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         Invoice
                       </button>
-                      <button className="btn-primary-small" onClick={() => alert('Manage booking features coming soon!')}>
+                      <button className="btn-primary-small" onClick={() => showModal({
+                        type: 'info',
+                        title: 'Coming Soon',
+                        message: 'Advanced booking management features are currently under development. You will be able to modify your stay, request extensions, or view detailed logs here soon.',
+                        onConfirm: closeModal
+                      })}>
                         Manage
                       </button>
+
                     </div>
                   </div>
                 </div>
@@ -491,8 +503,10 @@ const Booking = () => {
           </div>
         )}
       </div>
+      <Modal {...modal} />
     </div>
   );
 };
+
 
 export default Booking;

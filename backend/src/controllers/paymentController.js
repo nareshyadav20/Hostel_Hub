@@ -2,6 +2,7 @@ const Payment = require('../models/Payment');
 const Tenant = require('../models/Tenant');
 const Building = require('../models/Building');
 const socketService = require('../utils/socketService');
+const notificationService = require('../utils/notificationService');
 
 const createPayment = async (req, res) => {
   try {
@@ -26,10 +27,24 @@ const createPayment = async (req, res) => {
 
     // Populate before sending back
     const populated = await Payment.findById(payment._id).populate('tenantId');
-    
+
     // Real-time updates
     socketService.emitUpdate(buildingId, 'paymentAdded', populated);
     socketService.emitUpdate(buildingId, 'dashboardStatsUpdated', {});
+
+    // Notification for Tenant
+    await notificationService.createNotification({
+      portalType: 'Tenant',
+      moduleName: 'Payments',
+      category: 'Rent',
+      title: 'Payment Received',
+      message: `We've received your payment of ₹${amount} for ${month || 'this month'}.`,
+      priority: 'Low',
+      type: 'success',
+      buildingId,
+      tenantId,
+      actionLink: '/payments'
+    });
 
     res.status(201).json(populated);
   } catch (error) {
@@ -55,7 +70,7 @@ const getAllPayments = async (req, res) => {
     } else {
       query = { buildingId: { $in: buildingIds } };
     }
-    
+
     // 3. Find payments scoped to the query
     const payments = await Payment.find(query)
       .populate({ path: 'tenantId', select: 'name room' })
@@ -81,10 +96,24 @@ const updatePaymentStatus = async (req, res) => {
   try {
     const payment = await Payment.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }).populate('tenantId');
     if (!payment) return res.status(404).json({ message: 'Payment not found' });
-    
+
     // Real-time updates
     socketService.emitUpdate(payment.buildingId, 'paymentUpdated', payment);
     socketService.emitUpdate(payment.buildingId, 'dashboardStatsUpdated', {});
+
+    // Notification for Tenant on status change
+    await notificationService.createNotification({
+      portalType: 'Tenant',
+      moduleName: 'Payments',
+      category: 'Rent',
+      title: 'Payment Status Updated',
+      message: `Your payment of ₹${payment.amount} is now ${req.body.status}.`,
+      priority: 'Medium',
+      type: req.body.status === 'Paid' ? 'success' : 'info',
+      buildingId: payment.buildingId,
+      tenantId: payment.tenantId?._id || payment.tenantId,
+      actionLink: '/payments'
+    });
 
     res.status(200).json(payment);
   } catch (error) {
@@ -92,4 +121,30 @@ const updatePaymentStatus = async (req, res) => {
   }
 };
 
-module.exports = { createPayment, getAllPayments, getMyPayments, updatePaymentStatus };
+const sendPaymentReminders = async (req, res) => {
+  try {
+    const { buildingId, dueDate, amount, month } = req.body;
+    if (!buildingId) return res.status(400).json({ message: 'buildingId is required' });
+
+    // In a real system, we'd loop through tenants who haven't paid
+    // For this implementation, we broadcast to all tenants in the building
+    await notificationService.createNotification({
+      portalType: 'Tenant',
+      moduleName: 'Payments',
+      category: 'Reminder',
+      title: 'Rent Due Reminder',
+      message: `Your rent of ₹${amount || '5,000'} for ${month || 'this month'} is due on ${dueDate || 'the 5th'}. Please pay on time to avoid late fees.`,
+      priority: 'High',
+      type: 'warning',
+      buildingId,
+      target: 'All Tenants',
+      actionLink: '/payments'
+    });
+
+    res.status(200).json({ message: 'Reminders sent to all tenants' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { createPayment, getAllPayments, getMyPayments, updatePaymentStatus, sendPaymentReminders };

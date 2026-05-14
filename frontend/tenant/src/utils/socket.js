@@ -34,9 +34,15 @@ export const connectSocket = (buildingId) => {
     });
   } else {
     // Already connected — rejoin rooms to ensure membership
-    if (buildingId) socket.emit('joinBuilding', buildingId);
-    const tenantId = localStorage.getItem('tenantId');
-    if (tenantId) socket.emit('joinTenant', tenantId);
+    if (buildingId) {
+      socket.emit('joinBuilding', buildingId);
+      console.log('📡 Re-joining building room:', buildingId);
+    }
+    const tId = localStorage.getItem('tenantId');
+    if (tId) {
+      socket.emit('joinTenant', tId);
+      console.log('📡 Re-joining tenant room:', tId);
+    }
   }
 };
 

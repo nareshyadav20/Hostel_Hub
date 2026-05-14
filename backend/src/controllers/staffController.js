@@ -25,6 +25,23 @@ exports.createStaff = async (req, res) => {
   try {
     const staff = new Staff(req.body);
     await staff.save();
+
+    // Notify all tenants in the building
+    if (staff.buildingId) {
+      const notificationService = require('../utils/notificationService');
+      await notificationService.createNotification({
+        portalType: 'Tenant',
+        moduleName: 'Staff',
+        category: 'Team',
+        title: 'New Team Member Joined!',
+        message: `${staff.name} has joined the ${staff.role} team at your building. Feel free to reach out for assistance.`,
+        priority: 'Low',
+        type: 'info',
+        buildingId: staff.buildingId,
+        actionLink: '/about'
+      });
+    }
+
     res.status(201).json(staff);
   } catch (error) {
     res.status(400).json({ message: error.message });

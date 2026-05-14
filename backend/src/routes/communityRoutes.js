@@ -51,6 +51,22 @@ router.get('/sos', async (req, res) => {
 router.patch('/sos/:id/resolve', async (req, res) => {
   try {
     const alert = await SOSAlert.findByIdAndUpdate(req.params.id, { status: 'Resolved' }, { new: true });
+    
+    // Notify tenant
+    const notificationService = require('../utils/notificationService');
+    await notificationService.createNotification({
+      portalType: 'Tenant',
+      moduleName: 'Security',
+      category: 'SOS',
+      title: 'SOS Alert Resolved',
+      message: 'Your SOS alert has been marked as resolved by the security team.',
+      priority: 'Low',
+      type: 'success',
+      buildingId: alert.buildingId,
+      tenantId: alert.tenant,
+      actionLink: '/safety'
+    });
+
     res.json(alert);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -61,7 +77,22 @@ router.patch('/sos/:id/resolve', async (req, res) => {
 router.patch('/sos/:id/dispatch', async (req, res) => {
   try {
     const alert = await SOSAlert.findById(req.params.id);
-    // In a real app, this would trigger an SMS/Push to emergency services
+    
+    // Notify tenant
+    const notificationService = require('../utils/notificationService');
+    await notificationService.createNotification({
+      portalType: 'Tenant',
+      moduleName: 'Security',
+      category: 'SOS',
+      title: 'Emergency Help Dispatched',
+      message: 'A security team has been dispatched to your location. Stay calm.',
+      priority: 'High',
+      type: 'error',
+      buildingId: alert.buildingId,
+      tenantId: alert.tenant,
+      actionLink: '/safety'
+    });
+
     res.json({ message: 'Dispatch signal sent', alert });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -72,6 +103,22 @@ router.patch('/sos/:id/dispatch', async (req, res) => {
 router.patch('/lost-found/:id/status', async (req, res) => {
   try {
     const report = await CommunityReport.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
+    
+    // Notify tenant
+    const notificationService = require('../utils/notificationService');
+    await notificationService.createNotification({
+      portalType: 'Tenant',
+      moduleName: 'Community',
+      category: 'Lost & Found',
+      title: 'Item Report Updated',
+      message: `Your report for "${report.title || report.item}" is now marked as ${req.body.status}.`,
+      priority: 'Medium',
+      type: 'info',
+      buildingId: report.buildingId,
+      tenantId: report.tenant,
+      actionLink: '/community'
+    });
+
     res.json(report);
   } catch (err) {
     res.status(500).json({ message: err.message });

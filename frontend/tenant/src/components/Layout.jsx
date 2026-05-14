@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Bot, Send, X, Sparkles } from 'lucide-react';
+import { Bot, Send, X, Sparkles, BellRing, User, CreditCard, Shield, LogOut } from 'lucide-react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import ThemeToggle from './ThemeToggle';
 import BottomNav from './BottomNav';
+import NotificationToast from './NotificationToast';
 import './Layout.css';
+import './DropdownRefined.css';
 import API from '../api/axios';
-import socket from '../utils/socket';
+import socket, { connectSocket } from '../utils/socket';
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
@@ -16,20 +18,25 @@ const Layout = ({ children }) => {
   const [aiChat, setAiChat] = useState([
     { role: 'assistant', content: 'Hi! I am your Livora Hostel AI. I can help you with room bookings, mess menus, or any other facility details. How can I assist you today?' }
   ]);
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
+  const [tenantProfile, setTenantProfile] = useState(JSON.parse(localStorage.getItem('tenantProfile') || '{}'));
   const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isLoggedIn = !!token && !!user.name;
 
   // Notification State
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const [activeToast, setActiveToast] = useState(null);
   const notifRef = React.useRef(null);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (bIdOverride) => {
     if (!isLoggedIn) return;
     try {
-      const res = await API.get('/notifications');
+      const bId = bIdOverride || localStorage.getItem('buildingId');
+      if (!bId || bId === 'null' || bId === 'undefined') return;
+      
+      const res = await API.get('/notifications', { params: { buildingId: bId } });
       setNotifications(res.data || []);
       setUnreadCount((res.data || []).filter(n => !n.isRead).length);
     } catch (err) {
@@ -37,15 +44,91 @@ const Layout = ({ children }) => {
     }
   };
 
+  const fetchProfile = async () => {
+    if (!token) return;
+    try {
+      const res = await API.get('/auth/me');
+      if (res.data) {
+        localStorage.setItem('user', JSON.stringify(res.data));
+        setUser(res.data);
+        if (res.data.tenantProfile) {
+          localStorage.setItem('tenantProfile', JSON.stringify(res.data.tenantProfile));
+          localStorage.setItem('tenantId', String(res.data.tenantProfile._id));
+          const bId = String(res.data.tenantProfile.buildingId?._id || res.data.tenantProfile.buildingId);
+          localStorage.setItem('buildingId', bId);
+          setTenantProfile(res.data.tenantProfile);
+          // Fetch notifications immediately after getting buildingId
+          fetchNotifications(bId);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch profile in layout:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
   useEffect(() => {
     fetchNotifications();
-    socket.on('newNotification', fetchNotifications);
-    socket.on('complaintStatusChanged', fetchNotifications);
-    return () => {
-      socket.off('newNotification');
-      socket.off('complaintStatusChanged');
+    
+    const handleNewNotif = (notif) => {
+      if (notif.portalType === 'Tenant' || notif.portalType === 'All') {
+        fetchNotifications();
+        setActiveToast(notif);
+      }
     };
-  }, [isLoggedIn]);
+
+    const bId = localStorage.getItem('buildingId');
+    const tId = localStorage.getItem('tenantId');
+
+    if (isLoggedIn) {
+      connectSocket(bId);
+      if (tId) socket.emit('joinTenant', tId);
+      if (bId) socket.emit('joinBuilding', bId);
+    }
+
+    const handleTenantUpdate = async (updatedData) => {
+      try {
+        // If data was sent via socket, use it, otherwise fetch
+        const profile = updatedData || (await API.get('/auth/me')).data;
+        if (profile) {
+          localStorage.setItem('user', JSON.stringify(profile));
+          setUser(profile);
+          // If it's a full profile update (from tenant controller)
+          if (profile.tenantProfile) {
+            localStorage.setItem('tenantProfile', JSON.stringify(profile.tenantProfile));
+            setTenantProfile(profile.tenantProfile);
+          }
+        }
+      } catch (err) { console.error('Failed to sync profile:', err); }
+    };
+
+    socket.on('newNotification', handleNewNotif);
+    socket.on('complaintStatusChanged', fetchNotifications);
+    socket.on('tenantUpdated', handleTenantUpdate);
+    
+    return () => {
+      socket.off('newNotification', handleNewNotif);
+      socket.off('complaintStatusChanged', fetchNotifications);
+      socket.off('tenantUpdated', handleTenantUpdate);
+    };
+  }, [isLoggedIn, user._id, tenantProfile?._id, tenantProfile?.buildingId]);
+
+  // Click outside detection for dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -127,6 +210,31 @@ const Layout = ({ children }) => {
     }, 1200);
   };
 
+  const formatTime = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    const now = new Date();
+    const diff = now - d;
+    if (diff < 60000) return 'Just now';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    return d.toLocaleDateString([], { day: '2-digit', month: 'short' });
+  };
+
+  const getNotifIcon = (cat) => {
+    switch (cat?.toLowerCase()) {
+      case 'rent':
+      case 'payment': return '💰';
+      case 'maintenance':
+      case 'complaint': return '🛠️';
+      case 'security':
+      case 'sos': return '🛡️';
+      case 'services': return '🧺';
+      case 'reward': return '🎁';
+      default: return '🔔';
+    }
+  };
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -178,54 +286,83 @@ const Layout = ({ children }) => {
             {isLoggedIn ? (
               <>
                 <div className="notifications-container" ref={notifRef} style={{ position: 'relative' }}>
-                  <div className="notifications" onClick={() => setShowNotifDropdown(!showNotifDropdown)}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div className={`notifications ${unreadCount > 0 ? 'has-unread' : ''}`} onClick={() => {
+                    setShowNotifDropdown(!showNotifDropdown);
+                    setShowDropdown(false); // Close other dropdown
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                       <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
-                    {unreadCount > 0 && <span className="notification-badge" style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#EF4444', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '10px', fontWeight: 'bold' }}>{unreadCount}</span>}
+                    {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
                   </div>
 
                   {showNotifDropdown && (
-                    <div className="profile-dropdown glass-card" style={{ right: '-50px', width: '320px', padding: '0', overflow: 'hidden' }}>
-                      <div className="dropdown-header" style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h4 style={{ margin: 0, fontSize: '1rem' }}>Notifications</h4>
+                    <div className="notif-dropdown-premium glass-card">
+                      <div className="dropdown-header">
+                        <div className="header-title-box">
+                          <BellRing size={18} className="header-icon" />
+                          <h4>Notifications</h4>
+                        </div>
                         {unreadCount > 0 && (
-                          <button onClick={async () => {
+                          <button className="btn-mark-read" onClick={async (e) => {
+                            e.stopPropagation();
                             await API.post('/notifications/mark-all-read', { category: 'all' });
                             fetchNotifications();
-                          }} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>Mark all read</button>
+                          }}>Mark all as read</button>
                         )}
                       </div>
-                      <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                      <div className="dropdown-scroll-area">
                         {notifications.length === 0 ? (
-                          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>No notifications yet</div>
+                          <div className="empty-notif-state">
+                            <div className="empty-icon">🔔</div>
+                            <p>No new notifications</p>
+                            <span>We'll notify you when something happens</span>
+                          </div>
                         ) : (
-                          notifications.map((n, i) => (
-                            <div key={i} style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', background: n.isRead ? 'transparent' : 'rgba(16,185,129,0.05)', display: 'flex', gap: '1rem', cursor: 'pointer' }}
+                          notifications.slice(0, 8).map((n, i) => (
+                            <div key={n._id || i} 
+                              className={`notif-item-premium ${n.isRead ? 'read' : 'unread'}`}
                               onClick={async () => {
                                 if (!n.isRead) {
                                   await API.patch(`/notifications/${n._id}/read`);
                                   fetchNotifications();
                                 }
                                 setShowNotifDropdown(false);
-                                if (n.moduleName === 'Complaints') navigate('/complaints');
+                                if (n.actionLink) navigate(n.actionLink);
+                                else if (n.moduleName === 'Complaints') navigate('/complaints');
                               }}>
-                              <div style={{ flex: 1 }}>
-                                <h5 style={{ margin: '0 0 0.3rem 0', fontSize: '0.9rem', color: 'var(--text-primary)' }}>{n.title}</h5>
-                                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{n.message}</p>
+                              <div className={`notif-type-icon ${n.priority?.toLowerCase() || 'medium'}`}>
+                                {getNotifIcon(n.category)}
                               </div>
-                              {!n.isRead && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)', alignSelf: 'center' }}></div>}
+                              <div className="notif-content-box">
+                                <div className="notif-meta">
+                                  <span className="notif-module">{n.moduleName}</span>
+                                  <span className="notif-time">{formatTime(n.createdAt)}</span>
+                                </div>
+                                <h5 className="notif-title-text">{n.title}</h5>
+                                <p className="notif-msg-text">{n.message}</p>
+                              </div>
+                              {!n.isRead && <div className="unread-indicator"></div>}
                             </div>
                           ))
                         )}
+                      </div>
+                      <div className="dropdown-footer-premium">
+                        <button onClick={() => { setShowNotifDropdown(false); navigate('/notifications'); }}>
+                          View All Notifications 
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
                       </div>
                     </div>
                   )}
                 </div>
 
                 <div className="avatar-container" ref={dropdownRef}>
-                  <div className="profile-mini-box" onClick={() => setShowDropdown(!showDropdown)}>
+                  <div className="profile-mini-box" onClick={() => {
+                    setShowDropdown(!showDropdown);
+                    setShowNotifDropdown(false); // Close other dropdown
+                  }}>
                     <div className="profile-text">
                       <span className="p-name">{user.name || 'Guest User'}</span>
                       <span className="p-role">Premium Resident</span>
@@ -239,65 +376,64 @@ const Layout = ({ children }) => {
                   </div>
 
                   {showDropdown && (
-                    <div className="profile-dropdown glass-card">
-                      <div className="dropdown-header">
-                        <div className="dropdown-avatar-large">
-                          {user.name ? user.name[0].toUpperCase() : 'U'}
+                    <div className="profile-dropdown-premium glass-card">
+                      <div className="dropdown-user-header">
+                        <div className="avatar-large-wrapper">
+                          <img 
+                            src={user.profileImage || `https://ui-avatars.com/api/?name=${user.name || 'User'}&background=10b981&color=fff`} 
+                            alt="Large Profile" 
+                            className="avatar-img-large"
+                          />
+                          <div className="status-online-dot"></div>
                         </div>
-                        <div className="dropdown-user-info">
-                          <h4>{user.name || 'uma'}</h4>
-                          <p>{user.email || 'uma@gmail.com'}</p>
+                        <div className="user-details-box">
+                          <h4>{user.name || 'Resident'}</h4>
+                          <p>{user.email || 'resident@livora.com'}</p>
+                          <span className="role-badge">Premium Resident</span>
                         </div>
                       </div>
-                      <div className="dropdown-divider"></div>
-
-                      {user.profileCompletion && user.profileCompletion < 100 && (
-                        <div className="setup-progress-card">
-                          <div className="setup-progress-header">
-                            <span>Setup Progress</span>
-                            <span className="setup-percent">{user.profileCompletion}%</span>
-                          </div>
-                          <div className="setup-progress-bar">
-                            <div className="setup-progress-fill" style={{ width: `${user.profileCompletion}%` }}></div>
-                          </div>
-
-                          {user.profileCompletion < 50 && (
-                            <button className="btn-primary-small" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
-                              Complete Profile
-                            </button>
-                          )}
-                          {user.profileCompletion === 50 && (
-                            <div className="setup-next-step">
-                              Next: Book a Room to Verify ID
+                      
+                      <div className="dropdown-menu-list">
+                        {user.profileCompletion && user.profileCompletion < 100 && (
+                          <div className="setup-progress-card">
+                            <div className="setup-progress-header">
+                              <span>Setup Progress</span>
+                              <span className="setup-percent">{user.profileCompletion}%</span>
                             </div>
-                          )}
-                        </div>
-                      )}
+                            <div className="setup-progress-bar">
+                              <div className="setup-progress-fill" style={{ width: `${user.profileCompletion}%` }}></div>
+                            </div>
 
-                      <div className="dropdown-divider"></div>
-                      <button className="dropdown-item" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                          <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                        Profile
-                      </button>
-                      <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/payments'); }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                          <line x1="1" y1="10" x2="23" y2="10"></line>
-                        </svg>
-                        Payments
-                      </button>
-                      <div className="dropdown-divider"></div>
-                      <button className="dropdown-item logout" onClick={handleLogout}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                          <polyline points="16 17 21 12 16 7"></polyline>
-                          <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                        Logout
-                      </button>
+                            {user.profileCompletion < 50 && (
+                              <button className="btn-primary-small" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
+                                Complete Profile
+                              </button>
+                            )}
+                            {user.profileCompletion === 50 && (
+                              <div className="setup-next-step">
+                                Next: Book a Room to Verify ID
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <button className="menu-item-premium" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
+                          <div className="item-icon-box"><User size={18} /></div>
+                          <span>My Profile</span>
+                        </button>
+                        <button className="menu-item-premium" onClick={() => { setShowDropdown(false); navigate('/payments'); }}>
+                          <div className="item-icon-box"><CreditCard size={18} /></div>
+                          <span>Billing & Payments</span>
+                        </button>
+                        <button className="menu-item-premium" onClick={() => { setShowDropdown(false); navigate('/safety'); }}>
+                          <div className="item-icon-box"><Shield size={18} /></div>
+                          <span>Safety & Security</span>
+                        </button>
+                        <div className="menu-divider"></div>
+                        <button className="menu-item-premium logout" onClick={handleLogout}>
+                          <div className="item-icon-box"><LogOut size={18} /></div>
+                          <span>Logout Session</span>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -429,6 +565,13 @@ const Layout = ({ children }) => {
         )}
 
         {isLoggedIn && <BottomNav />}
+        
+        {activeToast && (
+          <NotificationToast 
+            notification={activeToast} 
+            onClose={() => setActiveToast(null)} 
+          />
+        )}
 
         {showProfileModal && (
           <div className="modal-overlay">
@@ -491,6 +634,12 @@ const Layout = ({ children }) => {
               </form>
             </div>
           </div>
+        )}
+        {activeToast && (
+          <NotificationToast 
+            notification={activeToast} 
+            onClose={() => setActiveToast(null)} 
+          />
         )}
       </main>
     </div>
