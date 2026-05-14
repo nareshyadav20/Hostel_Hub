@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const CommunityReport = require('../models/tenant/CommunityReport');
-const SosAlert = require('../models/sosAlert');
+const SosAlert = require('../models/SosAlert');
 const Building = require('../models/Building');
 
 // Get all community reports (Lost & Found)
