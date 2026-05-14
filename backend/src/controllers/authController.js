@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const socketService = require('../utils/socketService');
 
 const register = async (req, res) => {
   const { email, password, name, role, phone } = req.body;
@@ -12,12 +13,31 @@ const register = async (req, res) => {
     if (role === 'TENANT') {
       const Tenant = require('../models/Tenant');
       // Create a default tenant profile so they can raise complaints immediately
-      await Tenant.create({ 
+      const newTenant = await Tenant.create({ 
         name, 
         email, 
         phone: phone || 'N/A', 
         emergencyContact: 'N/A', 
         status: 'PENDING' 
+      });
+      
+      // Notify owner dashboard of new signup in real-time
+      socketService.emitToOwner('tenantAdded', { _id: newTenant._id, name: newTenant.name, email: newTenant.email, status: 'PENDING' });
+      socketService.emitToOwner('dashboardStatsUpdated', {});
+
+      const token = jwt.sign({ id: user._id, role: user.role, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+      return res.status(201).json({ 
+        user, 
+        token, 
+        tenantProfile: {
+          _id: newTenant._id,
+          name: newTenant.name,
+          email: newTenant.email,
+          phone: newTenant.phone,
+          buildingId: null,
+          status: 'PENDING',
+          messPlan: 'basic'
+        }
       });
     }
 
@@ -55,7 +75,25 @@ const login = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id, role: user.role, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.status(200).json({ user, token, tenantProfile });
+    res.status(200).json({ 
+      user, 
+      token, 
+      tenantProfile: tenantProfile ? {
+        _id: tenantProfile._id,
+        name: tenantProfile.name,
+        email: tenantProfile.email,
+        phone: tenantProfile.phone,
+        room: tenantProfile.room,
+        buildingId: tenantProfile.buildingId,
+        status: tenantProfile.status,
+        messPlan: tenantProfile.messPlan,
+        vegNonVegPreference: tenantProfile.vegNonVegPreference,
+        budgetRange: tenantProfile.budgetRange,
+        sleepTiming: tenantProfile.sleepTiming,
+        primaryLanguage: tenantProfile.primaryLanguage,
+        targetStayDuration: tenantProfile.targetStayDuration
+      } : null
+    });
   } catch (error) {
     res.status(500).json({ message: 'Something went wrong', error: error.message });
   }

@@ -7,6 +7,9 @@ const auth = require('../utils/authMiddleware');
 router.post('/community-reports', auth, controller.createCommunityReport);
 router.get('/community-reports', auth, controller.getCommunityReports);
 
+// SOS Alerts
+router.post('/sos-alerts', auth, controller.createSOSAlert);
+
 // Rewards
 router.get('/rewards/me', auth, controller.getMyRewards);
 
@@ -14,5 +17,8 @@ router.get('/rewards/me', auth, controller.getMyRewards);
 router.post('/wishlist', auth, controller.addToWishlist);
 router.get('/wishlist', auth, controller.getMyWishlist);
 router.delete('/wishlist/:id', auth, controller.removeFromWishlist);
+
+// Profile
+router.get('/complete-profile', auth, controller.getCompleteProfile);
 
 module.exports = router;

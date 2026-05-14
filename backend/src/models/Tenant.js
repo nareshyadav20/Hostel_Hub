@@ -31,7 +31,32 @@ const tenantSchema = new mongoose.Schema({
     name: String,
     url: String,
     verified: { type: Boolean, default: false }
-  }]
-}, { timestamps: true, collection: 'owner_tenants' });
+  }],
+
+  // Food Preference Management (Step 8)
+  vegNonVegPreference: { type: String, enum: ['Veg', 'Non-Veg', 'Vegan', 'Eggetarian', 'Any'], default: 'Any' },
+  allergyTracking: [{ type: String }],
+  favoriteMeals: [{ type: String }],
+  mealFeedback: { type: String },
+
+  // Tenant Experience Features (Step 10)
+  roommateCompatibilityScore: { type: Number, default: 0 },
+  occupation: { type: String },
+  organization: { type: String },
+  budgetRange: { type: String },
+  sleepTiming: { type: String },
+  primaryLanguage: { type: String },
+  targetStayDuration: { type: String },
+
+  // Bed Preference Matching (Step 20)
+  preferences: {
+    windowSide: { type: Boolean, default: false },
+    lowerBunk: { type: Boolean, default: false },
+    quietArea: { type: Boolean, default: false },
+    nearChargingPort: { type: Boolean, default: false },
+    studyFriendlyZone: { type: Boolean, default: false }
+  }
+
+}, { timestamps: true, collection: 'tenants' });
 
 module.exports = mongoose.models.Tenant || mongoose.model('Tenant', tenantSchema);

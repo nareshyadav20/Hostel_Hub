@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../api/axios';
 import './Transfers.css';
+import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 
 const Transfers = () => {
   const [showForm, setShowForm] = useState(false);
@@ -15,7 +16,7 @@ const Transfers = () => {
       try {
         const [profileRes, transfersRes] = await Promise.all([
           API.get('/tenants/me').catch(() => ({ data: { name: 'Valued Resident', room: 'Awaiting Assignment' } })),
-          API.get('/transfers/me').catch(() => ({ data: [
+          API.get('/room-transfers/me').catch(() => ({ data: [
             { _id: '1', oldRoom: '302-A', newRoom: '405-B', createdAt: new Date().toISOString(), status: 'Approved', reason: 'Better ventilation needed.' },
             { _id: '2', oldRoom: '201-C', newRoom: '102-A', createdAt: new Date().toISOString(), status: 'Pending', reason: 'Closer to elevators.' }
           ]}))
@@ -29,13 +30,25 @@ const Transfers = () => {
       }
     };
     fetchData();
+
+    // Real-time: listen for owner approval/rejection instantly
+    const buildingId = localStorage.getItem('buildingId');
+    connectSocket(buildingId);
+    socket.on('transferStatusChanged', (updated) => {
+      console.log('🔄 Transfer status updated in real-time');
+      setTransfers(prev => prev.map(t => t._id === updated._id ? { ...t, status: updated.status } : t));
+    });
+
+    return () => {
+      socket.off('transferStatusChanged');
+    };
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const response = await API.post('/transfers', { ...formData, name: tenantData?.name, oldRoom: tenantData?.room });
+      const response = await API.post('/room-transfers', { ...formData, name: tenantData?.name, oldRoom: tenantData?.room });
       setTransfers([response.data, ...transfers]);
       setShowForm(false);
       setFormData({ newRoom: '', reason: '' });

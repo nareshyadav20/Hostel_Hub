@@ -48,6 +48,11 @@ exports.createTransfer = async (req, res) => {
       status: 'PENDING'
     });
 
+    // Real-time sync: Notify owner portal of new transfer request
+    const socketService = require('../utils/socketService');
+    socketService.emitToOwner('transferCreated', { transfer, tenantName: tenant.name });
+    if (buildingId) socketService.emitUpdate(buildingId, 'transferCreated', { transfer, tenantName: tenant.name });
+
     res.status(201).json(transfer);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -65,12 +70,30 @@ exports.getMyTransfers = async (req, res) => {
 
 exports.getAllTransfers = async (req, res) => {
   try {
-    // Owner filter
+    // Owner filter — ensure only owner's buildings are visible
     const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
     const bIds = ownerBuildings.map(b => b._id);
 
-    const transfers = await RoomTransfer.find({ buildingId: { $in: bIds } })
-      .populate('tenant', 'name room email')
+    // Optional single-building filter from query param
+    const { buildingId } = req.query;
+    let query;
+    if (buildingId) {
+      const isOwned = bIds.some(id => id.toString() === buildingId);
+      if (!isOwned) return res.status(403).json({ message: 'Access denied to this building.' });
+      query = { buildingId };
+    } else {
+      // Include unassigned transfers so new tenant requests are visible to owner
+      query = {
+        $or: [
+          { buildingId: { $in: bIds } },
+          { buildingId: null },
+          { buildingId: { $exists: false } }
+        ]
+      };
+    }
+
+    const transfers = await RoomTransfer.find(query)
+      .populate('tenant', 'name room email phone')
       .sort({ createdAt: -1 });
     res.json(transfers);
   } catch (err) {
@@ -82,19 +105,28 @@ exports.updateTransferStatus = async (req, res) => {
   try {
     const { status } = req.body;
     
-    // Check ownership before update
-    const transfer = await RoomTransfer.findById(req.params.id);
+    const transfer = await RoomTransfer.findById(req.params.id).populate('tenant', 'name email');
     if (!transfer) return res.status(404).json({ message: 'Transfer request not found' });
 
-    const building = await Building.findOne({ _id: transfer.buildingId, owner: req.user.id });
-    if (!building) return res.status(403).json({ message: 'Unauthorized to update this transfer' });
+    // Allow update if owner owns the building OR if no building is assigned yet
+    if (transfer.buildingId) {
+      const building = await Building.findOne({ _id: transfer.buildingId, owner: req.user.id });
+      if (!building) return res.status(403).json({ message: 'Unauthorized to update this transfer' });
+    }
 
     transfer.status = status;
     await transfer.save();
     
-    if (status === 'ACCEPTED') {
-        await Tenant.findByIdAndUpdate(transfer.tenant, { room: transfer.newRoom });
+    if (status === 'ACCEPTED' || status === 'Approved') {
+        await Tenant.findByIdAndUpdate(transfer.tenant._id, { room: transfer.newRoom });
     }
+
+    // Real-time sync: Notify tenant portal of status update instantly
+    const socketService = require('../utils/socketService');
+    const updatedTransfer = transfer.toObject();
+    if (transfer.buildingId) socketService.emitUpdate(transfer.buildingId, 'transferStatusChanged', updatedTransfer);
+    // Global emit so tenant catches status change regardless of which room they joined
+    socketService.emitToOwner('transferStatusChanged', updatedTransfer);
 
     res.json(transfer);
   } catch (err) {

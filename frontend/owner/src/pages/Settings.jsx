@@ -128,8 +128,7 @@ const Settings = () => {
     setIsSaving(true);
     setMsg({ type: '', text: '' });
     try {
-      const updated = await api.updateSettings(settings);
-      setSettings({ ...updated, buildingId: activeBuildingId });
+      await api.updateSettings(settings, activeBuildingId);
       setMsg({ type: 'success', text: 'Settings updated successfully!' });
       setTimeout(() => setMsg({ type: '', text: '' }), 3000);
     } catch (err) {
@@ -162,7 +161,7 @@ const Settings = () => {
   };
 
   if (isLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading System Settings...</div>;
-  if (!settings) return <div style={{ padding: '2rem', textAlign: 'center' }}>No settings found. Please refresh.</div>;
+  if (!settings) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--accent-primary)' }}>Failed to load settings or no settings available.</div>;
 
   const tabs = [
     { id: 'general', name: 'General', icon: <Building size={18} /> },

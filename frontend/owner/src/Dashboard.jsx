@@ -37,7 +37,7 @@ function Dashboard() {
         api.getDashboardMess(activeBuildingId),
         api.getDashboardStaff(activeBuildingId),
         api.getDashboardActivity(activeBuildingId),
-        api.getTenants()
+        api.getTenants(activeBuildingId)
       ]);
 
       const [summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenants] = results.map(r => r.status === 'fulfilled' ? r.value : null);
@@ -80,10 +80,27 @@ function Dashboard() {
         fetchData();
       });
 
+      socket.on('tenantAdded', () => {
+        console.log('👤 New tenant registered — refreshing dashboard');
+        fetchData();
+      });
+
+      socket.on('transferCreated', () => {
+        console.log('🔄 New transfer request — refreshing dashboard');
+        fetchData();
+      });
+
+      socket.on('paymentCompleted', () => {
+        fetchData();
+      });
+
       return () => {
         socket.off('dashboardStatsUpdated');
         socket.off('complaintCreated');
         socket.off('bookingCreated');
+        socket.off('tenantAdded');
+        socket.off('transferCreated');
+        socket.off('paymentCompleted');
         disconnectSocket();
       };
     }

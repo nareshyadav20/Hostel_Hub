@@ -37,9 +37,11 @@ const emitUpdate = (buildingId, event, data) => {
  */
 const emitToOwner = (event, data) => {
   if (io) {
-    // Owners can join a specific 'owners' room or we emit globally if filtered by ownerId on client
+    // Emit to the global 'owners' room — all owner dashboards receive this
+    io.to('owners').emit(event, data);
+    // Also emit globally as fallback so nothing is missed
     io.emit(event, data);
-    console.log(`Socket emitted to Owners: ${event}`);
+    console.log(`Socket emitted to Owners room: ${event}`);
   }
 };
 

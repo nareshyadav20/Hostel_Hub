@@ -34,9 +34,9 @@ exports.createComplaint = async (req, res) => {
     }
 
     // Robust hierarchy mapping
-    let buildingId = bodyBuildingId || tenant.buildingId;
-    let roomId = null;
-    let bedId = null;
+    let buildingId = bodyBuildingId || (tenant.buildingId?._id || tenant.buildingId);
+    let roomId = tenant.roomId?._id || tenant.roomId || null;
+    let bedId = tenant.bedId?._id || tenant.bedId || null;
     let hostelId = null;
 
     // Try to find bed assignment first
@@ -90,7 +90,13 @@ exports.createComplaint = async (req, res) => {
     });
 
     // Real-time synchronization for Owner
-    socketService.emitUpdate(null, 'complaintCreated', {
+    if (buildingId) {
+      socketService.emitUpdate(buildingId, 'complaintCreated', {
+        complaint,
+        tenantName: tenant.name
+      });
+    }
+    socketService.emitToOwner('complaintCreated', {
       complaint,
       tenantName: tenant.name
     });
@@ -118,10 +124,14 @@ exports.updateComplaintStatus = async (req, res) => {
     if (assignedTo) update.assignedTo = assignedTo;
     
     const complaint = await Complaint.findByIdAndUpdate(id, update, { new: true })
-      .populate('user', 'name email');
+      .populate('user', 'name email')
+      .populate('tenant', 'name email');
 
-    // Real-time synchronization for Tenant
-    socketService.emitUpdate(complaint.buildingId, 'complaintStatusChanged', complaint);
+    // Real-time synchronization for Tenant — emit globally since tenant may not have buildingId
+    const buildingIdStr = complaint.buildingId ? complaint.buildingId.toString() : null;
+    if (buildingIdStr) socketService.emitUpdate(buildingIdStr, 'complaintStatusChanged', complaint);
+    // Also emit globally so all tenants receive their own update
+    socketService.emitToOwner('complaintStatusChanged', complaint);
 
     // Create notification for tenant
     await notificationService.createNotification({
@@ -152,10 +162,14 @@ exports.getAllComplaints = async (req, res) => {
     if (!buildingId && !hostelId && req.user) {
       try {
         const Building = require('../models/Building');
-        const ownerBuildings = await Building.find({}, '_id').lean();
+        const ownerBuildings = await Building.find({ owner: req.user.id }, '_id').lean();
         const buildingIds = ownerBuildings.map(b => b._id);
         if (buildingIds.length > 0) {
-          query.buildingId = { $in: buildingIds };
+          query.$or = [
+            { buildingId: { $in: buildingIds } },
+            { buildingId: null },
+            { buildingId: { $exists: false } }
+          ];
         }
         // If no buildings found, query is empty — returns all complaints
       } catch (_e) {

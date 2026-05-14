@@ -1,5 +1,10 @@
 const OwnerProfile = require('../models/OwnerProfile');
 const User = require('../models/User');
+const Building = require('../models/Building');
+const Room = require('../models/Room');
+const Tenant = require('../models/Tenant');
+const Staff = require('../models/Staff');
+const Floor = require('../models/Floor');
 
 exports.getProfile = async (req, res) => {
   try {
@@ -8,6 +13,10 @@ exports.getProfile = async (req, res) => {
     if (!profile) {
       // Fetch basic info from User model to seed the profile
       const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found for this profile' });
+      }
+      
       profile = await OwnerProfile.create({
         userId: req.user.id,
         personalInfo: {
@@ -77,6 +86,70 @@ exports.uploadDocument = async (req, res) => {
       { new: true }
     );
     res.status(200).json(profile);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getStats = async (req, res) => {
+  try {
+    const ownerId = req.user.id || req.user._id;
+    if (!ownerId) return res.status(401).json({ message: 'User ID not found in token' });
+    const ownerBuildings = await Building.find({ owner: ownerId });
+    const bIds = ownerBuildings.map(b => b._id);
+    
+    // Explicitly get Floor IDs first to avoid nested query issues
+    const floors = await Floor.find({ building: { $in: bIds } }).select('_id');
+    const fIds = floors.map(f => f._id);
+
+    const [rooms, totalTenants, totalStaff, staffList] = await Promise.all([
+      Room.find({ floor: { $in: fIds } }),
+      Tenant.countDocuments({ buildingId: { $in: bIds } }),
+      Staff.countDocuments({ buildingId: { $in: bIds } }),
+      Staff.find({ buildingId: { $in: bIds } }).select('performance')
+    ]);
+
+    const totalBeds = rooms.reduce((acc, r) => acc + (r.capacity || 0), 0);
+    const occupancyRate = totalBeds > 0 ? Math.round((totalTenants / totalBeds) * 100) : 0;
+    
+    // Intelligence Score Calculation
+    const buildingsWithSmart = ownerBuildings.filter(b => b.smartConfig);
+    const smartFeatureCount = buildingsWithSmart.reduce((acc, b) => {
+      const config = b.smartConfig;
+      return acc + (config.hasSmartAccess ? 1 : 0) + (config.hasClimateControl ? 1 : 0) + 
+             (config.hasAirQualityMonitor ? 1 : 0) + (config.hasAIHygiene ? 1 : 0) + (config.hasCCTVAi ? 1 : 0);
+    }, 0);
+    const maxPossibleFeatures = ownerBuildings.length * 5;
+    const intelligenceScore = maxPossibleFeatures > 0 ? Math.round((smartFeatureCount / maxPossibleFeatures) * 100) : 45;
+
+    const avgRating = staffList.length > 0 
+      ? staffList.reduce((s, st) => s + (st.performance || 0), 0) / staffList.length 
+      : 5;
+
+    res.json({
+      totalBuildings: ownerBuildings.length,
+      activeTenants: totalTenants,
+      totalRooms: rooms.length,
+      totalBeds: totalBeds,
+      occupiedBeds: totalTenants,
+      occupancyRate: occupancyRate,
+      intelligenceScore: intelligenceScore,
+      monthlyRevenue: totalTenants * 8500, // Normalized average rent
+      expectedMonthlyRevenue: totalBeds * 8500,
+      profileCompleteness: 85, // Placeholder for now or calculate
+      verifiedProperties: ownerBuildings.filter(b => b.status === 'Active').length,
+      totalStaff: totalStaff,
+      ratings: parseFloat(avgRating.toFixed(1))
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getHistory = async (req, res) => {
+  try {
+    const profile = await OwnerProfile.findOne({ userId: req.user.id });
+    res.json(profile?.activityLogs || []);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -1,19 +1,31 @@
 const Room = require('../models/Room');
 const Floor = require('../models/Floor');
 const Building = require('../models/Building');
+const SystemSettings = require('../models/SystemSettings');
 
 const createRoom = async (req, res) => {
   try {
-    const { floorId, roomNumber, roomType, capacity, rentAmount, securityDeposit, noticePeriod, isAC, washroomType, balcony, facing, floorType, windowCount, furniture, images } = req.body;
+    const { floorId, roomNumber, roomType, capacity, rentAmount, securityDeposit, noticePeriod, isAC, washroomType, balcony, facing, floorType, windowCount, furniture, images, ...smartFeatures } = req.body;
     
     const floor = await Floor.findById(floorId).populate('building');
     if (!floor || floor.building.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Floor not found or unauthorized' });
     }
 
+    // Fetch owner settings for defaults
+    const settings = await SystemSettings.findOne({ owner: req.user.id });
+    const finalRent = rentAmount || (settings ? settings.rentSettings.defaultRent[roomType?.toLowerCase()] || settings.rentSettings.defaultRent.shared : 5000);
+    const finalDeposit = securityDeposit || (settings ? settings.rentSettings.securityDeposit : 5000);
+
     const room = await Room.create({ 
-      roomNumber, roomType, capacity, rentAmount, securityDeposit, noticePeriod,
+      roomNumber, 
+      roomType: roomType || 'Shared', 
+      capacity: capacity || 1, 
+      rentAmount: finalRent, 
+      securityDeposit: finalDeposit, 
+      noticePeriod: noticePeriod || 30,
       isAC, washroomType, balcony, facing, floorType, windowCount, furniture, images: images||[], 
+      ...smartFeatures,
       floor: floorId 
     });
     floor.rooms.push(room._id);

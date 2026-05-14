@@ -75,8 +75,8 @@
 }
 
 .point-card.balance .point-icon-bg { background: var(--primary-light); color: var(--primary); }
-.point-card.earned .point-icon-bg { background: #f0fdf4; color: #16a34a; }
-.point-card.used .point-icon-bg { background: #fff7ed; color: #ea580c; }
+.point-card.earned .point-icon-bg { background: rgba(22, 163, 74, 0.1); color: #16a34a; }
+.point-card.used .point-icon-bg { background: rgba(234, 88, 12, 0.1); color: #ea580c; }
 
 .point-label {
   display: block;
@@ -154,7 +154,7 @@
 .cta-card.referral { border-left: 6px solid #16a34a; }
 
 .btn-secondary.copied {
-  background: #f0fdf4;
+  background: rgba(22, 163, 74, 0.1);
   color: #16a34a;
   border-color: #16a34a;
 }

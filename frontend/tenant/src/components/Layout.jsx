@@ -5,6 +5,8 @@ import Sidebar from './Sidebar';
 import ThemeToggle from './ThemeToggle';
 import BottomNav from './BottomNav';
 import './Layout.css';
+import API from '../api/axios';
+import socket from '../utils/socket';
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
@@ -17,6 +19,33 @@ const Layout = ({ children }) => {
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isLoggedIn = !!token && !!user.name;
+
+  // Notification State
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const notifRef = React.useRef(null);
+
+  const fetchNotifications = async () => {
+    if (!isLoggedIn) return;
+    try {
+      const res = await API.get('/notifications');
+      setNotifications(res.data || []);
+      setUnreadCount((res.data || []).filter(n => !n.isRead).length);
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    socket.on('newNotification', fetchNotifications);
+    socket.on('complaintStatusChanged', fetchNotifications);
+    return () => {
+      socket.off('newNotification');
+      socket.off('complaintStatusChanged');
+    };
+  }, [isLoggedIn]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -148,11 +177,51 @@ const Layout = ({ children }) => {
             <ThemeToggle />
             {isLoggedIn ? (
               <>
-                <div className="notifications">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                  </svg>
+                <div className="notifications-container" ref={notifRef} style={{ position: 'relative' }}>
+                  <div className="notifications" onClick={() => setShowNotifDropdown(!showNotifDropdown)}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    {unreadCount > 0 && <span className="notification-badge" style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#EF4444', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '10px', fontWeight: 'bold' }}>{unreadCount}</span>}
+                  </div>
+
+                  {showNotifDropdown && (
+                    <div className="profile-dropdown glass-card" style={{ right: '-50px', width: '320px', padding: '0', overflow: 'hidden' }}>
+                      <div className="dropdown-header" style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h4 style={{ margin: 0, fontSize: '1rem' }}>Notifications</h4>
+                        {unreadCount > 0 && (
+                          <button onClick={async () => {
+                            await API.post('/notifications/mark-all-read', { category: 'all' });
+                            fetchNotifications();
+                          }} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>Mark all read</button>
+                        )}
+                      </div>
+                      <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                        {notifications.length === 0 ? (
+                          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>No notifications yet</div>
+                        ) : (
+                          notifications.map((n, i) => (
+                            <div key={i} style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', background: n.isRead ? 'transparent' : 'rgba(16,185,129,0.05)', display: 'flex', gap: '1rem', cursor: 'pointer' }}
+                              onClick={async () => {
+                                if (!n.isRead) {
+                                  await API.patch(`/notifications/${n._id}/read`);
+                                  fetchNotifications();
+                                }
+                                setShowNotifDropdown(false);
+                                if (n.moduleName === 'Complaints') navigate('/complaints');
+                              }}>
+                              <div style={{ flex: 1 }}>
+                                <h5 style={{ margin: '0 0 0.3rem 0', fontSize: '0.9rem', color: 'var(--text-primary)' }}>{n.title}</h5>
+                                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{n.message}</p>
+                              </div>
+                              {!n.isRead && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)', alignSelf: 'center' }}></div>}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="avatar-container" ref={dropdownRef}>
@@ -248,7 +317,7 @@ const Layout = ({ children }) => {
           </div>
 
           <footer className="layout-footer">
-            <p>© 2024 StayNest All rights reserved.</p>
+            <p>© 2026 Livora All rights reserved.</p>
           </footer>
         </div>
 

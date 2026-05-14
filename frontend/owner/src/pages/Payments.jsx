@@ -90,17 +90,13 @@ const Payments = () => {
     console.log("Payments module fetching for ID:", activeBuildingId);
     try {
       const [tData, pData] = await Promise.all([
-        api.getTenants(),
-        api.getPayments()
+        api.getTenants(activeBuildingId),
+        api.getPayments(activeBuildingId)
       ]);
 
-      // Filter by buildingId
-      const filteredTenants = activeBuildingId
-        ? (tData || []).filter(t => {
-          const bId = typeof t.buildingId === 'object' ? t.buildingId._id : t.buildingId;
-          return bId === activeBuildingId;
-        })
-        : (tData || []);
+      // Server already filters by building, so no extra client filter needed.
+      // Still normalize for safety:
+      const filteredTenants = tData || [];
 
       setTenants(filteredTenants);
 
@@ -117,14 +113,8 @@ const Payments = () => {
           };
         });
 
-      // Filter enriched payments by those that belong to the active building's tenants
-      const tIds = new Set(filteredTenants.map(t => t.id || t._id));
-      const buildingPayments = activeBuildingId
-        ? enriched.filter(p => {
-          const tId = typeof p.tenantId === 'object' ? p.tenantId._id : p.tenantId;
-          return tIds.has(tId);
-        })
-        : enriched;
+      // Server already filtered payments by building, so use all enriched payments
+      const buildingPayments = enriched;
 
       setPayments(buildingPayments.sort((a, b) => new Date(b.date) - new Date(a.date)));
     } catch (err) {

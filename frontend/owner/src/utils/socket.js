@@ -15,16 +15,26 @@ export const connectSocket = (id, type = 'building') => {
     
     socket.on('connect', () => {
       console.log('✅ Owner Portal: Connected to Real-time Sync Server');
-      if (type === 'building') {
+      // Always join global owners room to receive all tenant events
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      socket.emit('joinOwner', user._id || 'owner');
+
+      // Also join building-specific room if buildingId provided
+      if (id && type === 'building') {
         socket.emit('joinBuilding', id);
-      } else if (type === 'owner') {
-        socket.emit('joinOwner', id);
       }
     });
 
     socket.on('connect_error', (error) => {
       console.error('❌ Socket connection error:', error);
     });
+  } else {
+    // Already connected — still join owner room in case it wasn't joined
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    socket.emit('joinOwner', user._id || 'owner');
+    if (id && type === 'building') {
+      socket.emit('joinBuilding', id);
+    }
   }
 };
 

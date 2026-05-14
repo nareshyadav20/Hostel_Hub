@@ -51,7 +51,7 @@ const Listing = () => {
 
   React.useEffect(() => {
     const fetchHostel = () => {
-      API.get(`/buildings/${id}`).then(res => setHostel(res.data)).catch(console.error);
+      API.get(`/buildings/public/${id}`).then(res => setHostel(res.data)).catch(console.error);
     };
 
     fetchHostel();
@@ -99,13 +99,13 @@ const Listing = () => {
     <div className="lst-page">
       {/* 1. Header & Gallery */}
       <header className="lst-header">
-        <h1 className="lst-title">Livora Premium Boys Hostel</h1>
+        <h1 className="lst-title">{hostel?.name || 'Livora Premium Hostel'}</h1>
         <div className="lst-meta">
-          <span className="lst-badge rating">⭐ 4.8</span>
-          <span className="lst-badge category">🎓 Students</span>
-          <span className="lst-badge gender">👨 Boys</span>
-          <span>📍 Koramangala, Bangalore</span>
-          <span className="lst-badge premium-tag"><Star size={12} fill="currentColor" /> Student Favorite</span>
+          <span className="lst-badge rating">⭐ {hostel?.rating || '4.8'}</span>
+          <span className="lst-badge category">🎓 {hostel?.category || 'Students'}</span>
+          <span className="lst-badge gender">👨 {hostel?.genderType || 'Boys'}</span>
+          <span>📍 {hostel?.address || 'Koramangala, Bangalore'}</span>
+          {hostel?.popularityLabel && <span className="lst-badge premium-tag"><Star size={12} fill="currentColor" /> {hostel.popularityLabel}</span>}
           <span className="lst-badge premium-tag"><ShieldCheck size={12} /> Verified Property</span>
         </div>
         
@@ -121,7 +121,7 @@ const Listing = () => {
       </header>
 
       <div className="lst-gallery">
-        <div className="lst-img-main"><img src={images[0]} alt="Main" className="lst-img" /></div>
+        <div className="lst-img-main"><img src={hostel?.images?.[0] || images[0]} alt="Main" className="lst-img" /></div>
       </div>
       {/* 2. Nav Tabs */}
       <div className="lst-nav-wrap">

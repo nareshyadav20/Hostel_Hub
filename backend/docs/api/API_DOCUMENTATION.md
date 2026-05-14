@@ -201,4 +201,10 @@ try {
 - **Database:** ✅ Verified (MongoDB with Mongoose)
 - **Protected Routes:** ✅ Verified (Most routes under `/api` except Auth)
 - **Image Uploads:** ✅ Verified (Base64/URL support in JSON and Multipart enabled)
-- **Missing Endpoints Fix**: ⚠️ Found `tenantPortalRoutes` not registered in `index.js`. Please ensure you add `app.use('/api/tenant-portal', tenantPortalRoutes);` in `index.js` to enable them.
+- **Missing Endpoints Fix**: ⚠️ Found `tenantPortalRoutes` not registered in `index.js`. Please ensure you add the following in `backend/index.js`:
+
+```javascript
+app.use('/api/tenant-portal', tenantPortalRoutes);
+```
+
+to enable them.

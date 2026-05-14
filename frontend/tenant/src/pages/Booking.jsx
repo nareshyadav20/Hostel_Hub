@@ -17,6 +17,7 @@ const Booking = () => {
   const [bookings, setBookings] = useState([]);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('UPI');
 
   const basePrice = hostel?.startingPrice || 9000;
 
@@ -63,14 +64,24 @@ const Booking = () => {
     const fetchInitialData = async () => {
       const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
       setUser(storedUser);
+      const tenantId = localStorage.getItem('tenantId') || storedUser.id || storedUser._id;
+      
       try {
+        // If we have a tenant ID, check if they already have a confirmed booking/residency
+        if (tenantId && buildingId) {
+          const profileRes = await API.get('/tenants/me').catch(() => null);
+          if (profileRes?.data?.buildingId) {
+             setApiError("Active Residency Found: You are already registered at a hostel. A resident can only have one active stay at a time.");
+             return;
+          }
+        }
+
         if (buildingId) {
-          const res = await API.get(`/buildings/${buildingId}`);
+          const res = await API.get(`/buildings/public/${buildingId}`);
           setHostel(res.data);
         } else {
-          const res = await API.get(`/bookings/me?tenantId=${storedUser.id || storedUser._id}`).catch(() => ({ data: [
-            { _id: '1', buildingId: { name: 'Alpha Tower' }, category: 'Luxury 2 Sharing', moveInDate: '2026-05-15', totalAmount: 24000, status: 'Confirmed' }
-          ]}));
+          // Now using JWT token for identification - no query param needed
+          const res = await API.get('/bookings/me');
           setBookings(res.data || []);
         }
       } catch (err) { 
@@ -449,6 +460,80 @@ const Booking = () => {
                </div>
             </div>
 
+            <div className="payment-options-section fade-in">
+              <h3 className="section-title" style={{ fontSize: '1.5rem', marginTop: '2rem' }}>Payment Method</h3>
+              <div className="payment-methods-grid">
+                {[
+                  { id: 'PhonePe', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg> },
+                  { id: 'UPI', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg> },
+                  { id: 'Debit Card', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg> },
+                  { id: 'Credit Card', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg> },
+                  { id: 'Net Banking', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg> },
+                  { id: 'Cash', icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> }
+                ].map(method => (
+                  <div key={method.id} className="payment-method-wrapper">
+                    <label className={`payment-method-card ${paymentMethod === method.id ? 'selected' : ''}`}>
+                      <input 
+                        type="radio" 
+                        name="paymentMethod" 
+                        value={method.id} 
+                        checked={paymentMethod === method.id}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        style={{ display: 'none' }}
+                      />
+                      <div className="pm-icon">{method.icon}</div>
+                      <span className="pm-name">{method.id}</span>
+                      <div className="pm-check">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </div>
+                    </label>
+                    
+                    {paymentMethod === method.id && (method.id === 'Debit Card' || method.id === 'Credit Card') && (
+                      <div className="payment-method-details fade-in-down">
+                         <div className="card-input-container">
+                            <input type="text" placeholder="Card Number (0000 0000 0000 0000)" className="card-input" maxLength="19" />
+                            <div className="card-row">
+                               <input type="text" placeholder="MM/YY" className="card-input half" maxLength="5" />
+                               <input type="password" placeholder="CVV" className="card-input half" maxLength="3" />
+                            </div>
+                            <input type="text" placeholder="Name on Card" className="card-input" />
+                         </div>
+                      </div>
+                    )}
+
+                    {paymentMethod === method.id && (method.id === 'UPI' || method.id === 'PhonePe') && (
+                      <div className="payment-method-details fade-in-down">
+                         <div className="card-input-container">
+                            <input type="text" placeholder={`Enter ${method.id} ID (e.g., username@upi)`} className="card-input" />
+                         </div>
+                      </div>
+                    )}
+                    
+                    {paymentMethod === method.id && method.id === 'Net Banking' && (
+                      <div className="payment-method-details fade-in-down">
+                         <div className="card-input-container">
+                            <select className="card-input">
+                               <option value="">Select your Bank</option>
+                               <option value="sbi">State Bank of India</option>
+                               <option value="hdfc">HDFC Bank</option>
+                               <option value="icici">ICICI Bank</option>
+                               <option value="axis">Axis Bank</option>
+                            </select>
+                         </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {apiError && (
+              <div className="error-alert-pro fade-in" style={{ marginTop: '2rem', marginBottom: 0 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span>{apiError}</span>
+              </div>
+            )}
+
             <div className="flow-footer dual">
               <button className="btn-secondary-pro" onClick={() => setStep(2)}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -457,12 +542,6 @@ const Booking = () => {
                 </svg>
                 Go Back
               </button>
-              {apiError && (
-                <div className="error-alert-pro fade-in">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                  <span>{apiError}</span>
-                </div>
-              )}
 
               <button className="btn-primary btn-large checkout-color" disabled={bookingLoading} onClick={handleBooking}>
                 {bookingLoading ? (
