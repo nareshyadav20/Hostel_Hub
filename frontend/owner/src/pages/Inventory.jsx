@@ -248,7 +248,7 @@ const InventoryManagement = () => {
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id === selectedCategory ? 'All' : cat.id)}
                   style={{
-                    padding: '1.5rem', borderRadius: '24px', border: 'none', cursor: 'pointer',
+                    padding: '1.5rem', borderRadius: '24px', cursor: 'pointer',
                     background: selectedCategory === cat.id ? cat.color : '#FFFFFF',
                     boxShadow: '0 4px 10px rgba(0,0,0,0.02)', textAlign: 'left', transition: '0.3s',
                     border: selectedCategory === cat.id ? `2px solid ${cat.color}` : '2px solid #F1F5F9',
