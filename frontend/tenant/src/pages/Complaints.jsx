@@ -10,6 +10,8 @@ const Complaints = () => {
   const [loading, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState(null);
   const [formData, setFormData] = useState({ title: '', category: 'Maintenance', description: '' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     fetchComplaints();
@@ -72,6 +74,15 @@ const Complaints = () => {
       <p>Synchronizing help desk records...</p>
     </div>
   );
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentComplaints = complaints.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(complaints.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
   return (
     <div className="complaints-page">
@@ -137,10 +148,10 @@ const Complaints = () => {
               </tr>
             </thead>
             <tbody>
-              {complaints.length === 0 ? (
+              {currentComplaints.length === 0 ? (
                 <tr><td colSpan="4" className="td-empty">Everything is working perfectly! No active tickets found.</td></tr>
               ) : (
-                complaints.map(item => (
+                currentComplaints.map(item => (
                   <tr key={item._id}>
                     <td className="td-date">{new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
                     <td className="td-info">
@@ -165,10 +176,10 @@ const Complaints = () => {
         </div>
 
         <div className="mobile-cards-view">
-          {complaints.length === 0 ? (
+          {currentComplaints.length === 0 ? (
             <div className="td-empty">Everything is working perfectly!</div>
           ) : (
-            complaints.map(item => (
+            currentComplaints.map(item => (
               <div key={item._id} className="mobile-ticket-card">
                 <div className="mobile-card-top">
                   <span className="m-date">{new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
@@ -185,6 +196,50 @@ const Complaints = () => {
             ))
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="pagination-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderTop: '1px solid #E2E8F0', marginTop: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '600' }}>
+              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, complaints.length)} of {complaints.length} entries
+            </span>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button 
+                onClick={() => handlePageChange(currentPage - 1)} 
+                disabled={currentPage === 1}
+                style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: currentPage === 1 ? '#F8FAFC' : '#FFFFFF', color: currentPage === 1 ? '#CBD5E1' : '#475569', fontWeight: '600', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                Previous
+              </button>
+              
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    key={index + 1}
+                    onClick={() => handlePageChange(index + 1)}
+                    style={{
+                      width: '36px', height: '36px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      border: currentPage === index + 1 ? 'none' : '1px solid #E2E8F0',
+                      background: currentPage === index + 1 ? 'var(--accent-primary)' : '#FFFFFF',
+                      color: currentPage === index + 1 ? '#FFFFFF' : '#475569',
+                      fontWeight: '700', cursor: 'pointer'
+                    }}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button 
+                onClick={() => handlePageChange(currentPage + 1)} 
+                disabled={currentPage === totalPages}
+                style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: currentPage === totalPages ? '#F8FAFC' : '#FFFFFF', color: currentPage === totalPages ? '#CBD5E1' : '#475569', fontWeight: '600', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {showForm && (
