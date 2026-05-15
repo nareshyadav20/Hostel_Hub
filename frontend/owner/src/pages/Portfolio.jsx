@@ -273,7 +273,7 @@ const Portfolio = () => {
         locationCity: formData.city || 'Bengaluru',
         description: extendedDesc,
         amenities: formData.amenities || [],
-        images: formData.coverImage ? [formData.coverImage] : [],
+        images: formData.gallery?.length > 0 ? formData.gallery : (formData.coverImage ? [formData.coverImage] : []),
         startingPrice: parseInt(formData.rentBed) || 5000,
         genderType: formData.gender === 'Co-living (Both)' ? 'Mixed' : formData.gender || 'Mixed',
         category: formData.propertyType === 'Co-living' ? 'Luxury' : (formData.propertyType === 'PG' ? 'Student' : 'Professional'),
@@ -464,8 +464,52 @@ const Portfolio = () => {
             <textarea rows={3} value={formData.shortDesc} onChange={e => setFormData({...formData, shortDesc: e.target.value})} placeholder="Provide a premium summary of your property..." />
           </div>
           <div className="input-group">
-            <label>Cover Image URL</label>
-            <input value={formData.coverImage} onChange={e => setFormData({...formData, coverImage: e.target.value})} placeholder="https://images.unsplash.com/..." />
+            <label>Building Photos (Select up to 10)</label>
+            <input 
+              type="file" 
+              multiple 
+              accept="image/*" 
+              onChange={async (e) => {
+                if (!e.target.files.length) return;
+                
+                // Ensure we have a draft ID before uploading, or auto-save one quickly
+                let bId = activeDraftId;
+                if (!bId && formData.name) {
+                   bId = await saveDraftToBackend(formData, currentStep);
+                }
+
+                const files = Array.from(e.target.files);
+                const fd = new FormData();
+                if (bId) fd.append('buildingId', bId);
+                files.forEach(f => fd.append('photos', f));
+                try {
+                  setDraftMsg('⏳ Uploading photos...');
+                  const res = await api.uploadPhotos(fd);
+                  const newImages = res.photoUrls || [];
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    gallery: [...(prev.gallery || []), ...newImages],
+                    coverImage: prev.coverImage || newImages[0] || '' 
+                  }));
+                  setDraftMsg('✅ Photos uploaded successfully!');
+                  setTimeout(() => setDraftMsg(''), 2500);
+                } catch (err) {
+                  console.error('Upload failed', err);
+                  setDraftMsg('⚠️ Photo upload failed');
+                  setTimeout(() => setDraftMsg(''), 2500);
+                }
+              }} 
+            />
+            {formData.gallery && formData.gallery.length > 0 ? (
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                {formData.gallery.map((img, i) => (
+                  <img key={i} src={`http://localhost:5000${img}`} alt={`Upload ${i}`} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: formData.coverImage === img ? '2px solid var(--accent-primary)' : '1px solid #e2e8f0' }} onClick={() => setFormData({...formData, coverImage: img})} title="Click to set as cover" />
+                ))}
+              </div>
+            ) : formData.coverImage && (
+               <img src={formData.coverImage.startsWith('http') ? formData.coverImage : `http://localhost:5000${formData.coverImage}`} alt="Cover" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', marginTop: '0.5rem' }} />
+            )}
+            <small style={{ color: '#64748B', fontSize: '0.75rem', marginTop: '0.25rem' }}>Upload images directly. Click an image to set as cover.</small>
           </div>
         </div>
       );
@@ -1456,11 +1500,16 @@ const BuildingCard = ({ building, onNavigate, onRefresh }) => {
   const [deleteError, setDeleteError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const images = useMemo(() => [
-    building.images?.[0] || 'https://images.unsplash.com/photo-1555854817-5b2260d19dca?auto=format&fit=crop&q=80&w=800',
-    'https://images.unsplash.com/photo-1522770179533-24471fcdba45?auto=format&fit=crop&q=80&w=800',
-    'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=800'
-  ], [building.images]);
+  const images = useMemo(() => {
+    if (building.images && building.images.length > 0) {
+      return building.images.map(img => img.startsWith('http') ? img : `http://localhost:5000${img}`);
+    }
+    return [
+      'https://images.unsplash.com/photo-1555854817-5b2260d19dca?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1522770179533-24471fcdba45?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=800'
+    ];
+  }, [building.images]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -1512,6 +1561,18 @@ const BuildingCard = ({ building, onNavigate, onRefresh }) => {
         
         {/* Overlays */}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.8) 100%)' }} />
+        
+        {/* Navigation Arrows */}
+        {images.length > 1 && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0.5rem', zIndex: 10 }}>
+            <button onClick={(e) => { e.stopPropagation(); setImgIdx(prev => (prev - 1 + images.length) % images.length); }} style={{ background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)', color: '#1E293B' }}>
+              <ChevronLeft size={20} />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); setImgIdx(prev => (prev + 1) % images.length); }} style={{ background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)', color: '#1E293B' }}>
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
         
         {/* Badges */}
         <div style={{ position: 'absolute', top: '1.25rem', left: '1.25rem', zIndex: 5, display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>

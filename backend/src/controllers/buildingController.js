@@ -3,6 +3,7 @@ const Floor = require('../models/Floor');
 const Room = require('../models/Room');
 const Bed = require('../models/Bed');
 const Tenant = require('../models/Tenant');
+const BuildingPhoto = require('../models/BuildingPhoto');
 
 const createBuilding = async (req, res) => {
   try {
@@ -199,6 +200,28 @@ const getPublicBuildingById = async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
+const uploadPhotos = async (req, res) => {
+  try {
+    const { buildingId } = req.body;
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+    const photoUrls = req.files.map(file => `/uploads/${file.filename}`);
+    
+    if (buildingId) {
+      const photoDocs = photoUrls.map(url => ({
+        buildingId,
+        photoUrl: url
+      }));
+      await BuildingPhoto.insertMany(photoDocs);
+    }
+    
+    res.status(200).json({ message: 'Photos uploaded successfully', photoUrls });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = { 
   createBuilding, 
   getBuildings, 
@@ -207,5 +230,6 @@ module.exports = {
   deleteBuilding, 
   bulkCreateBuildings,
   getPublicBuildings,
-  getPublicBuildingById
+  getPublicBuildingById,
+  uploadPhotos
 };

@@ -324,6 +324,14 @@ export const api = {
   deleteBuilding: async (id) => {
     await axios.delete(`${API_URL}/buildings/${id}`);
   },
+  uploadPhotos: async (formData) => {
+    const res = await axios.post(`${API_URL}/buildings/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return res.data;
+  },
   addFloor: async (data) => {
     const res = await axios.post(`${API_URL}/floors`, data);
     return handleId(res.data);

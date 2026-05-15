@@ -240,39 +240,141 @@ const Booking = () => {
 
                   <div className="booking-footer-pro">
                     <div className="booking-id-tag">ID: {b._id.slice(-8).toUpperCase()}</div>
-                    <div className="booking-actions-pro">
-                      <button className="btn-secondary-small" onClick={() => {
-                        const html = `<!DOCTYPE html><html><head><title>Receipt ${b._id}</title>
-                        <style>body{font-family:Arial,sans-serif;max-width:500px;margin:40px auto;padding:2rem;border:2px solid #e5e7eb;border-radius:12px}
-                        h1{color:#2563eb;margin:0}h2{margin:0;font-size:1rem;color:#6b7280}.divider{border:none;border-top:1px solid #e5e7eb;margin:1rem 0}
-                        .row{display:flex;justify-content:space-between;margin:0.5rem 0;font-size:0.95rem}
-                        .total{font-size:1.2rem;font-weight:800;color:#059669}.footer{text-align:center;color:#9ca3af;font-size:0.8rem;margin-top:1.5rem}</style>
-                        </head><body>
-                        <h1>HostelHub</h1><p style="color:#6b7280;margin-top:0.25rem">Transaction Receipt</p>
-                        <hr class="divider"/>
-                        <div class="row"><span><b>${b._id.slice(-8).toUpperCase()}</b></span><span>${new Date(b.moveInDate).toLocaleDateString()}</span></div>
-                        <hr class="divider"/>
-                        <div class="row"><span>Tenant</span><span><b>${user?.name || 'Tenant'}</b></span></div>
-                        <div class="row"><span>Plan / Type</span><span>${b.category}</span></div>
-                        <hr class="divider"/>
-                        <div class="row total"><span>Total Amount</span><span>₹${b.totalAmount?.toLocaleString()}</span></div>
-                        <hr class="divider"/>
-                        <p class="footer">Thank you for your payment · HostelHub Management System</p>
-                        </body></html>`;
-                        const win = window.open('', '_blank');
-                        win.document.write(html);
-                        win.document.close();
-                        win.print();
+                    <button className="btn-download-full" onClick={() => {
+                        const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice_${b._id.slice(-8)}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; line-height: 1.6; background: #fff; }
+        .invoice-container { max-width: 800px; margin: auto; border: 1px solid #e2e8f0; padding: 50px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 60px; }
+        .logo { font-size: 28px; font-weight: 800; color: #4f46e5; letter-spacing: -1px; }
+        .invoice-label { font-size: 36px; font-weight: 800; color: #0f172a; margin: 0; }
+        .status-badge { display: inline-block; padding: 6px 16px; background: #dcfce7; color: #15803d; border-radius: 100px; font-size: 14px; font-weight: 700; margin-top: 10px; text-transform: uppercase; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 50px; }
+        .info-block h4 { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px; margin-top: 0; }
+        .info-block p { margin: 0; font-weight: 600; font-size: 16px; }
+        .table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        .table th { text-align: left; padding: 16px; border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 13px; font-weight: 700; text-transform: uppercase; }
+        .table td { padding: 20px 16px; border-bottom: 1px solid #f1f5f9; font-weight: 600; }
+        .total-section { margin-left: auto; width: 300px; }
+        .total-row { display: flex; justify-content: space-between; padding: 10px 0; }
+        .grand-total { font-size: 24px; font-weight: 800; color: #4f46e5; border-top: 2px solid #e2e8f0; margin-top: 10px; padding-top: 15px; }
+        .footer { text-align: center; margin-top: 80px; color: #94a3b8; font-size: 14px; border-top: 1px solid #f1f5f9; padding-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <div class="header">
+            <div>
+                <div class="logo">Livora Residency</div>
+                <p style="color: #64748b; margin-top: 5px; font-weight: 500;">Premium Managed Accommodations</p>
+            </div>
+            <div style="text-align: right;">
+                <h1 class="invoice-label">INVOICE</h1>
+                <div class="status-badge">${b.status}</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="info-block">
+                <h4>Resident Details</h4>
+                <p>${user?.name || 'Valued Resident'}</p>
+                <p style="font-weight: 400; color: #64748b; font-size: 14px;">${user?.email || ''}</p>
+            </div>
+            <div class="info-block" style="text-align: right;">
+                <h4>Invoice Details</h4>
+                <p>#INV-${b._id.slice(-8).toUpperCase()}</p>
+                <p style="font-weight: 400; color: #64748b; font-size: 14px;">Date: ${new Date().toLocaleDateString('en-IN')}</p>
+            </div>
+        </div>
+
+        <div class="info-block" style="margin-bottom: 40px;">
+            <h4>Property</h4>
+            <p>${b.buildingId?.name || 'HostelHub Network Property'}</p>
+            <p style="font-weight: 400; color: #64748b; font-size: 14px;">${b.buildingId?.location || 'Premium Managed Residence'}</p>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Plan</th>
+                    <th style="text-align: right;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Hostel Accommodation Booking Fee<br/><small style="color: #64748b; font-weight: 400;">Move-in: ${new Date(b.moveInDate).toLocaleDateString()}</small></td>
+                    <td>${b.category}</td>
+                    <td style="text-align: right;">₹${(b.totalAmount/2).toLocaleString()}</td>
+                </tr>
+                <tr>
+                    <td>Refundable Security Deposit<br/><small style="color: #64748b; font-weight: 400;">Interest-free refundable amount</small></td>
+                    <td>—</td>
+                    <td style="text-align: right;">₹${(b.totalAmount/2).toLocaleString()}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="total-section">
+            <div class="total-row">
+                <span style="color: #64748b;">Subtotal</span>
+                <span>₹${b.totalAmount?.toLocaleString()}</span>
+            </div>
+            <div class="total-row">
+                <span style="color: #64748b;">GST (0%)</span>
+                <span>₹0</span>
+            </div>
+            <div class="total-row grand-total">
+                <span>Total Paid</span>
+                <span>₹${b.totalAmount?.toLocaleString()}</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>This is a computer-generated document. No signature required.</p>
+            <p style="margin-top: 10px;">Thank you for choosing <strong>Livora Residency</strong> for your premium stay.</p>
+        </div>
+    </div>
+</body>
+</html>`;
+                        const element = document.createElement('div');
+                        element.innerHTML = html;
+                        
+                        // Dynamically load html2pdf if not present
+                        if (!window.html2pdf) {
+                          const script = document.createElement('script');
+                          script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+                          script.onload = () => {
+                            generatePDF(element, b._id.slice(-8));
+                          };
+                          document.head.appendChild(script);
+                        } else {
+                          generatePDF(element, b._id.slice(-8));
+                        }
+                        
+                        function generatePDF(el, id) {
+                           const opt = {
+                             margin:       0,
+                             filename:     `Invoice_${id.toUpperCase()}.pdf`,
+                             image:        { type: 'jpeg', quality: 0.98 },
+                             html2canvas:  { scale: 2, useCORS: true },
+                             jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                           };
+                           // Use html2pdf to automatically save the file
+                           window.html2pdf().set(opt).from(el).save();
+                        }
                       }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        Invoice
-                      </button>
-                      <button className="btn-primary-small" onClick={() => alert('Manage booking features coming soon!')}>
-                        Manage
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Download Invoice (PDF)
                       </button>
                     </div>
                   </div>
-                </div>
               ))}
             </div>
           )}
