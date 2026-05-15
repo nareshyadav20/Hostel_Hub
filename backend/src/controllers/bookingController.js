@@ -13,7 +13,8 @@ const createBooking = async (req, res) => {
       securityDeposit, 
       onboardingFee, 
       totalAmount, 
-      method 
+      method,
+      proofId 
     } = req.body;
 
     // Validate ObjectIds — helper function
@@ -48,7 +49,8 @@ const createBooking = async (req, res) => {
       totalAmount: totalAmount || 0,
       paymentMethod: method || 'UPI',
       status: 'Confirmed',
-      userId: tenantId || req.user.id || 'guest'
+      userId: tenantId || req.user.id || 'guest',
+      proofId: isValidObjectId(proofId) ? proofId : undefined
     };
 
     const finalTenantId = tenantId || req.user.id;
@@ -58,6 +60,13 @@ const createBooking = async (req, res) => {
     const booking = new Booking(bookingData);
     await booking.save();
     console.log('✅ Booking created:', booking._id);
+
+    // If proofId was provided, backlink the proof to this booking
+    if (isValidObjectId(proofId)) {
+      const TenantProof = require('../models/TenantProof');
+      await TenantProof.findByIdAndUpdate(proofId, { bookingId: booking._id });
+      console.log('✅ TenantProof linked to booking');
+    }
 
     // Update Tenant profile automatically so dashboard reflects changes
     if (isValidObjectId(tenantId)) {
