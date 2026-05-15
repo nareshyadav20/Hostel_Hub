@@ -5,6 +5,6 @@ const buildingPhotoSchema = new mongoose.Schema({
   photoUrl: { type: String, required: true },
   isCover: { type: Boolean, default: false },
   uploadedAt: { type: Date, default: Date.now }
-});
+}, { collection: 'buildingphotos' });
 
 module.exports = mongoose.model('BuildingPhoto', buildingPhotoSchema);

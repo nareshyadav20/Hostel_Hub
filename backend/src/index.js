@@ -89,6 +89,7 @@ require('./models/ConfidentialReport');
 require('./models/SosAlert');
 require('./models/TenantPhoto');
 require('./models/OwnerPhoto');
+require('./models/BuildingPhoto');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);

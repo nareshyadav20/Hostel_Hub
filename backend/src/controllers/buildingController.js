@@ -32,6 +32,16 @@ const createBuilding = async (req, res) => {
       draftData,
       owner: req.user.id
     });
+
+    // Sync photos to BuildingPhoto collection
+    if (images && images.length > 0) {
+      const photoDocs = images.map(url => ({
+        buildingId: building._id,
+        photoUrl: url
+      }));
+      await BuildingPhoto.insertMany(photoDocs);
+    }
+
     res.status(201).json(building);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
@@ -64,6 +74,16 @@ const updateBuilding = async (req, res) => {
     const building = await Building.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!building) return res.status(404).json({ error: 'Building not found' });
     
+    // Sync new photos to BuildingPhoto collection
+    if (req.body.images && Array.isArray(req.body.images)) {
+      for (const url of req.body.images) {
+        const exists = await BuildingPhoto.findOne({ buildingId: building._id, photoUrl: url });
+        if (!exists) {
+          await BuildingPhoto.create({ buildingId: building._id, photoUrl: url });
+        }
+      }
+    }
+
     // Real-time synchronization
     const socketService = require('../utils/socketService');
     socketService.emitUpdate(building._id, 'hostelUpdated', building);
@@ -213,7 +233,9 @@ const uploadPhotos = async (req, res) => {
         buildingId,
         photoUrl: url
       }));
-      await BuildingPhoto.insertMany(photoDocs);
+      await BuildingPhoto.insertMany(photoDocs, { ordered: false }).catch(err => {
+        console.warn('[DEBUG] BuildingPhoto partial insertion warning:', err.message);
+      });
     }
     
     res.status(200).json({ message: 'Photos uploaded successfully', photoUrls });
