@@ -5,6 +5,7 @@ const Room = require('../models/Room');
 const Tenant = require('../models/Tenant');
 const Staff = require('../models/Staff');
 const Floor = require('../models/Floor');
+const OwnerPhoto = require('../models/OwnerPhoto');
 
 exports.getProfile = async (req, res) => {
   try {
@@ -29,7 +30,12 @@ exports.getProfile = async (req, res) => {
       });
     }
     
-    res.status(200).json(profile);
+    const photoRecord = await OwnerPhoto.findOne({ ownerId: req.user.id }).sort({ createdAt: -1 });
+    
+    res.status(200).json({ 
+      ...profile.toObject(), 
+      photo: photoRecord ? photoRecord.photoUrl : null 
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -150,6 +156,31 @@ exports.getHistory = async (req, res) => {
   try {
     const profile = await OwnerProfile.findOne({ userId: req.user.id });
     res.json(profile?.activityLogs || []);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.uploadPhoto = async (req, res) => {
+  try {
+    const { photoUrl } = req.body;
+    if (!photoUrl) return res.status(400).json({ message: 'Photo URL is required' });
+
+    const photo = await OwnerPhoto.create({
+      ownerId: req.user.id,
+      photoUrl
+    });
+
+    res.status(201).json({ message: 'Photo uploaded successfully', photo });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getOwnerPhoto = async (req, res) => {
+  try {
+    const photo = await OwnerPhoto.findOne({ ownerId: req.user.id }).sort({ createdAt: -1 });
+    res.status(200).json({ photo: photo ? photo.photoUrl : null });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
