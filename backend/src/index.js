@@ -83,6 +83,8 @@ require('./models/PurchaseOrder');
 require('./models/Booking');
 require('./models/ConfidentialReport');
 require('./models/SosAlert');
+require('./models/TenantPhoto');
+require('./models/OwnerPhoto');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);

@@ -65,6 +65,14 @@ export const api = {
     const res = await axios.post(`${API_URL}/owner/documents`, doc);
     return res.data;
   },
+  uploadOwnerPhoto: async (photoUrl) => {
+    const res = await axios.post(`${API_URL}/owner/profile/photo`, { photoUrl });
+    return res.data;
+  },
+  getOwnerPhoto: async () => {
+    const res = await axios.get(`${API_URL}/owner/profile/photo`);
+    return res.data;
+  },
 
   // Buildings & Infrastructure
   getBuildings: async () => {

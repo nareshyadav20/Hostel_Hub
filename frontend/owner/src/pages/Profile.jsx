@@ -30,6 +30,14 @@ const Profile = () => {
       ]);
       setProfile(profileData);
       setStats(statsData);
+      
+      // Update profile with photo if available in separate model but already included in profileData by getProfile
+      if (profileData.photo) {
+        setProfile(prev => ({
+          ...prev,
+          personalInfo: { ...prev.personalInfo, profilePhotoUrl: profileData.photo }
+        }));
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
       setMessage({ type: 'error', text: 'Failed to load profile data.' });
@@ -58,15 +66,33 @@ const Profile = () => {
     const file = event.target.files[0];
     if (!file) return;
 
+    if (file.size > 2 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Photo size should be less than 2MB' });
+      return;
+    }
+
     setSaving(true);
-    // Simulate manual upload delay
-    setTimeout(async () => {
-      const mockUrl = URL.createObjectURL(file);
-      await handleUpdate('personalInfo', { ...profile.personalInfo, profilePhotoUrl: mockUrl });
-      setMessage({ type: 'success', text: 'Profile photo updated!' });
-      setTimeout(() => setMessage(null), 3000);
-      setSaving(false);
-    }, 1000);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        const base64String = reader.result;
+        await api.uploadOwnerPhoto(base64String);
+        
+        setProfile(prev => ({
+          ...prev,
+          personalInfo: { ...prev.personalInfo, profilePhotoUrl: base64String }
+        }));
+        
+        setMessage({ type: 'success', text: 'Profile photo updated!' });
+        setTimeout(() => setMessage(null), 3000);
+      } catch (error) {
+        console.error('Error uploading photo:', error);
+        setMessage({ type: 'error', text: 'Failed to upload photo.' });
+      } finally {
+        setSaving(false);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleKYCUpload = async (type, event) => {
