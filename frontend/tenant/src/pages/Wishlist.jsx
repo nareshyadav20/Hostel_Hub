@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../api/axios';
 import './Wishlist.css';
+import ImageModal from '../components/ImageModal';
 
 const Wishlist = () => {
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -70,7 +72,14 @@ const Wishlist = () => {
         <div className="wishlist-grid">
           {wishlist.map((hostel) => (
             <div key={hostel._id} className="wishlist-card-premium">
-              <div className="card-image-section" style={{ backgroundImage: `url(${hostel.hostelImage})` }}>
+              <div 
+                className="card-image-section" 
+                style={{ 
+                  backgroundImage: `url(${hostel.hostelImage && hostel.hostelImage.startsWith('/uploads') ? `http://localhost:5000${hostel.hostelImage}` : hostel.hostelImage})`,
+                  cursor: 'zoom-in'
+                }}
+                onClick={() => setModalInfo({ isOpen: true, image: hostel.hostelImage && hostel.hostelImage.startsWith('/uploads') ? `http://localhost:5000${hostel.hostelImage}` : hostel.hostelImage })}
+              >
                 <div className="card-overlay-badges">
                   <span className="availability-badge">Available</span>
                   <button className="remove-btn-overlay" onClick={() => handleRemove(hostel._id)} title="Remove from wishlist">
@@ -121,6 +130,11 @@ const Wishlist = () => {
           ))}
         </div>
       )}
+      <ImageModal 
+        isOpen={modalInfo.isOpen} 
+        image={modalInfo.image} 
+        onClose={() => setModalInfo({ isOpen: false, image: '' })} 
+      />
     </div>
   );
 };

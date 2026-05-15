@@ -10,6 +10,7 @@ import {
 import API from '../api/axios';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 import './Listing.css';
+import ImageModal from '../components/ImageModal';
 
 const Listing = () => {
   const navigate = useNavigate();
@@ -48,6 +49,7 @@ const Listing = () => {
 
   const [hostel, setHostel] = useState(null);
   const [menuUpdateInfo, setMenuUpdateInfo] = useState('');
+  const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
 
   React.useEffect(() => {
     const fetchHostel = () => {
@@ -121,7 +123,20 @@ const Listing = () => {
       </header>
 
       <div className="lst-gallery">
-        <div className="lst-img-main"><img src={hostel?.images?.[0] || images[0]} alt="Main" className="lst-img" /></div>
+        <div 
+          className="lst-img-main" 
+          onClick={() => {
+            const imgSrc = hostel?.images && hostel.images[0] ? (hostel.images[0].startsWith('http') ? hostel.images[0] : `http://localhost:5000${hostel.images[0]}`) : images[0];
+            setModalInfo({ isOpen: true, image: imgSrc });
+          }}
+          style={{ cursor: 'zoom-in' }}
+        >
+          <img 
+            src={hostel?.images && hostel.images[0] ? (hostel.images[0].startsWith('http') ? hostel.images[0] : `http://localhost:5000${hostel.images[0]}`) : images[0]} 
+            alt="Main" 
+            className="lst-img" 
+          />
+        </div>
       </div>
       {/* 2. Nav Tabs */}
       <div className="lst-nav-wrap">
@@ -564,7 +579,12 @@ const Listing = () => {
               <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: 'var(--lst-text-muted)', fontWeight: 600 }}>
                 🔒 Secure payment powered by Livora Finance
               </div>
-            </div>
+              <ImageModal 
+        isOpen={modalInfo.isOpen} 
+        image={modalInfo.image} 
+        onClose={() => setModalInfo({ isOpen: false, image: '' })} 
+      />
+    </div>
           </div>
         </div>
 

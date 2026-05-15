@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import API from '../api/axios';
 import './Search.css';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
+import ImageModal from '../components/ImageModal';
 
 const ICONS = {
   Search: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
@@ -15,9 +16,9 @@ const ICONS = {
 };
 
 
-const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => (
+const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => (
   <div className="search-hostel-card-pro">
-    <div className="card-media-side">
+    <div className="card-media-side" onClick={() => onImageClick(hostel.image)} style={{ cursor: 'zoom-in' }}>
       <img src={hostel.image} alt={hostel.name} className="hostel-main-img" />
       <div className="card-image-overlays">
         <div className="badge-row-top">
@@ -96,6 +97,7 @@ const Search = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
   const hostelsPerPage = 5;
 
   const fetchHostels = async () => {
@@ -121,7 +123,7 @@ const Search = () => {
           rating: b.rating || (4.0 + Math.random()).toFixed(1),
           popularityLabel: b.rating > 4.6 ? 'High Demand' : null,
           occupancy: '70%',
-          image: b.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
+          image: b.images && b.images[0] ? (b.images[0].startsWith('http') ? b.images[0] : `http://localhost:5000${b.images[0]}`) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
           amenities: b.amenities || []
         }));
       }
@@ -325,7 +327,15 @@ const Search = () => {
           ) : (
             <>
               <div className="results-grid-pro">
-                {currentHostels.map(h => <HostelCard key={h.id} hostel={h} isWishlisted={isWishlisted(h.id)} toggleWishlist={toggleWishlist} />)}
+                {currentHostels.map(h => (
+                  <HostelCard 
+                    key={h.id} 
+                    hostel={h} 
+                    isWishlisted={isWishlisted(h.id)} 
+                    toggleWishlist={toggleWishlist} 
+                    onImageClick={(img) => setModalInfo({ isOpen: true, image: img })}
+                  />
+                ))}
               </div>
               
               {totalPages > 1 && (
@@ -363,6 +373,12 @@ const Search = () => {
           )}
         </main>
       </div>
+
+      <ImageModal 
+        isOpen={modalInfo.isOpen} 
+        image={modalInfo.image} 
+        onClose={() => setModalInfo({ isOpen: false, image: '' })} 
+      />
     </div>
   );
 };

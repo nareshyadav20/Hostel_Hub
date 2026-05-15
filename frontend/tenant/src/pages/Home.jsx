@@ -13,6 +13,7 @@ import bondEasy from '../assets/bond_easy.png';
 import stayEasy from '../assets/stay_easy.png';
 import studentCat from '../assets/student_cat.png';
 import professionalCat from '../assets/professional_cat.png';
+import ImageModal from '../components/ImageModal';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const Home = () => {
   const [rooms, setRooms] = useState([]);
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
   const [isTypeOpen, setIsTypeOpen] = useState(false);
+  const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
   const searchBarRef = useRef(null);
 
   const fetchRooms = async () => {
@@ -33,7 +35,7 @@ const Home = () => {
         id: b._id,
         badge: b.popularityLabel || (i === 0 ? 'Premium' : i === 1 ? 'Popular' : 'New'),
         badgeColor: i === 0 ? '#4F46E5' : i === 1 ? '#10B981' : '#F59E0B',
-        img: b.images && b.images[0] ? b.images[0] : extReal,
+        img: b.images && b.images[0] ? (b.images[0].startsWith('http') ? b.images[0] : `http://localhost:5000${b.images[0]}`) : extReal,
         name: b.name,
         loc: b.address + ', ' + b.locationCity,
         price: `₹${b.startingPrice?.toLocaleString() || '9,000'}`,
@@ -413,7 +415,7 @@ const Home = () => {
         <div className="hv2-rooms-grid">
           {rooms.map(room => (
             <div key={room.id} className="hv2-room-card">
-              <div className="hv2-room-img-box">
+              <div className="hv2-room-img-box" onClick={() => setModalInfo({ isOpen: true, image: room.img })} style={{ cursor: 'zoom-in' }}>
                 <img src={room.img} alt={room.name} className="hv2-room-img" />
                 <span className="hv2-room-badge" style={{ background: room.badgeColor }}>{room.badge}</span>
                 <span className="hv2-trending-badge">🔥 Trending</span>
@@ -570,6 +572,12 @@ const Home = () => {
           <p>© 2026 Livora. All rights reserved.</p>
         </div>
       </footer>
+
+      <ImageModal 
+        isOpen={modalInfo.isOpen} 
+        image={modalInfo.image} 
+        onClose={() => setModalInfo({ isOpen: false, image: '' })} 
+      />
 
       {/* ── WHATSAPP FLOATING BUTTON ── */}
       <a href="https://wa.me/919876543213" target="_blank" rel="noreferrer" className="hv2-whatsapp-fab" title="Chat with us on WhatsApp">
