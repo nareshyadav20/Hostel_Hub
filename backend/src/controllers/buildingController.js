@@ -216,7 +216,12 @@ const getPublicBuildingById = async (req, res) => {
   try {
     const building = await Building.findOne({ _id: req.params.id, status: { $ne: 'Draft' } }).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
     if (!building) return res.status(404).json({ error: 'Building not found' });
-    res.status(200).json(building);
+    
+    // Fetch filled beds for this building
+    const BedFilling = require('../models/BedFilling');
+    const filledBeds = await BedFilling.find({ buildingId: building._id, status: 'Occupied' });
+
+    res.status(200).json({ ...building.toObject(), filledBeds });
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 

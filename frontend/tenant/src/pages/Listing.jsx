@@ -266,14 +266,14 @@ const Listing = () => {
 
               <div style={{ display: 'flex', gap: '20px', marginBottom: '16px', fontSize: '14px', fontWeight: 700 }}>
                 <span>Total Beds: {selectedSharing}</span>
-                <span style={{ color: 'var(--lst-success)' }}>Available: {selectedSharing === 1 ? 1 : 1}</span>
-                <span style={{ color: 'var(--lst-danger)' }}>Occupied: {selectedSharing === 1 ? 0 : selectedSharing - 1}</span>
+                <span style={{ color: 'var(--lst-success)' }}>Available: {selectedSharing - (hostel?.filledBeds?.filter(b => b.sharingType === selectedSharing).length || 0)}</span>
+                <span style={{ color: 'var(--lst-danger)' }}>Occupied: {hostel?.filledBeds?.filter(b => b.sharingType === selectedSharing).length || 0}</span>
               </div>
 
               <div className="lst-bed-list">
                 {Array.from({ length: selectedSharing }).map((_, i) => {
                   const bedNum = i + 1;
-                  const isFilled = selectedSharing > 1 && bedNum === 1; // Bed 1 is filled if sharing > 1
+                  const isFilled = hostel?.filledBeds?.some(b => b.sharingType === selectedSharing && b.bedNumber === bedNum);
                   return (
                     <div key={bedNum}
                       className={`lst-bed-row ${isFilled ? 'occupied' : (selectedBed === bedNum ? 'selected' : '')}`}
@@ -311,7 +311,7 @@ const Listing = () => {
             <div className="lst-bed-cards-v2">
               {Array.from({ length: selectedSharing }).map((_, i) => {
                 const bedNum = i + 1;
-                const isOccupied = selectedSharing > 1 && bedNum === 1;
+                const isOccupied = hostel?.filledBeds?.some(b => b.sharingType === selectedSharing && b.bedNumber === bedNum);
                 const isSelected = selectedBed === bedNum;
                 const isExpanded = expandedBed === bedNum;
 

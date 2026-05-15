@@ -1092,6 +1092,7 @@ const Portfolio = () => {
                   building={b} 
                   onNavigate={() => navigate(`/owner/building/${b.id}/dashboard`)} 
                   onRefresh={() => { fetchData(); loadDrafts(); }}
+                  onImageClick={(img) => setModalInfo({ isOpen: true, image: img })}
                 />
               ))
             ) : (
@@ -1509,7 +1510,7 @@ const Portfolio = () => {
   );
 };
 
-const BuildingCard = ({ building, onNavigate, onRefresh }) => {
+const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick }) => {
   const [imgIdx, setImgIdx] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
@@ -1587,6 +1588,17 @@ const BuildingCard = ({ building, onNavigate, onRefresh }) => {
               <ChevronRight size={20} />
             </button>
           </div>
+        )}
+
+        {/* View Full Screen Button */}
+        {onImageClick && (
+          <button 
+            onClick={(e) => { e.stopPropagation(); onImageClick(images[imgIdx]); }}
+            style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', zIndex: 10, background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-in', backdropFilter: 'blur(4px)', color: '#1E293B' }}
+            title="View Full Image"
+          >
+            <Search size={16} />
+          </button>
         )}
         
         {/* Badges */}

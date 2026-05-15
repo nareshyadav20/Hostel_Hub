@@ -13,7 +13,9 @@ const createBooking = async (req, res) => {
       securityDeposit, 
       onboardingFee, 
       totalAmount, 
-      method 
+      method,
+      bedNumber,
+      sharingType
     } = req.body;
 
     // Validate ObjectIds — helper function
@@ -83,6 +85,21 @@ const createBooking = async (req, res) => {
       } else {
         console.warn('⚠️ Could not find Tenant profile to update');
       }
+    }
+
+    // Record the bed filling if bed data is provided
+    if (isValidObjectId(buildingId) && bedNumber && sharingType) {
+      const BedFilling = require('../models/BedFilling');
+      const bedFill = new BedFilling({
+        buildingId,
+        tenantId: finalTenantId,
+        category: category || 'Standard',
+        sharingType: sharingType,
+        bedNumber: bedNumber,
+        status: 'Occupied'
+      });
+      await bedFill.save();
+      console.log('✅ Bed filling recorded for bed:', bedNumber, 'sharing:', sharingType);
     }
 
     // Create a payment record for the booking
