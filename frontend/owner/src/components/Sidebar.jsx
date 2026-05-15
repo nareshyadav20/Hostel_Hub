@@ -36,6 +36,7 @@ const Sidebar = () => {
     { name: 'Inventory', path: `/owner/building/${activeBuildingId}/inventory`, icon: <PackageOpen {...iconProps} /> },
     { name: 'Reports', path: `/owner/building/${activeBuildingId}/reports`, icon: <BarChart3 {...iconProps} /> },
     { name: 'Settings', path: `/owner/building/${activeBuildingId}/settings`, icon: <Settings {...iconProps} /> },
+    { name: 'Community Hub', path: `/owner/building/${activeBuildingId}/community`, icon: <UsersRound {...iconProps} /> },
     { name: 'Notifications', path: `/owner/building/${activeBuildingId}/notifications`, icon: <BellRing {...iconProps} /> },
     { name: 'Profile', path: `/owner/building/${activeBuildingId}/profile`, icon: <User {...iconProps} /> },
   ];
@@ -43,7 +44,7 @@ const Sidebar = () => {
   return (
     <aside className="sidebar">
       <div className="sidebar-header" style={{ paddingBottom: '1rem' }}>
-        <h2 className="logo">StayNest</h2>
+        <h2 className="logo">Livora</h2>
       </div>
       <div style={{ padding: '0 1.5rem', marginBottom: '1.5rem' }}>
         <Link to="/owner/portfolio" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>

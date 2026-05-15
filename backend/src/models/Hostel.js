@@ -11,6 +11,6 @@ const hostelSchema = new mongoose.Schema({
     status: { type: String, enum: ['ACTIVE', 'EXPIRED', 'CANCELLED'], default: 'ACTIVE' },
     validUntil: { type: Date }
   }
-}, { timestamps: true, collection: 'owner_hostels' });
+}, { timestamps: true, collection: 'hostels' });
 
 module.exports = mongoose.model('Hostel', hostelSchema);

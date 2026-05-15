@@ -4,6 +4,8 @@ const Hostel = require('../models/Hostel');
 const Bed = require('../models/Bed');
 const Room = require('../models/Room');
 const mongoose = require('mongoose');
+const socketService = require('../utils/socketService');
+const notificationService = require('../utils/notificationService');
 
 exports.createComplaint = async (req, res) => {
   try {
@@ -32,9 +34,9 @@ exports.createComplaint = async (req, res) => {
     }
 
     // Robust hierarchy mapping
-    let buildingId = bodyBuildingId || tenant.buildingId;
-    let roomId = null;
-    let bedId = null;
+    let buildingId = bodyBuildingId || (tenant.buildingId?._id || tenant.buildingId);
+    let roomId = tenant.roomId?._id || tenant.roomId || null;
+    let bedId = tenant.bedId?._id || tenant.bedId || null;
     let hostelId = null;
 
     // Try to find bed assignment first
@@ -87,6 +89,33 @@ exports.createComplaint = async (req, res) => {
       bedId
     });
 
+    // Real-time synchronization for Owner
+    if (buildingId) {
+      socketService.emitUpdate(buildingId.toString(), 'complaintCreated', {
+        complaint,
+        tenantName: tenant.name
+      });
+      
+      // Create Persistent Notification for Owner
+      await notificationService.createNotification({
+        moduleName: 'Complaints',
+        portalType: 'Owner',
+        category: category || 'Maintenance',
+        title: 'New Complaint Raised',
+        message: `${tenant.name} from Room ${tenant.room || 'N/A'} raised: ${title}`,
+        priority: priority || 'Medium',
+        type: 'warning',
+        buildingId,
+        tenantId: tenant._id,
+        roomId: roomId ? roomId.toString() : null,
+        actionLink: `/complaints`
+      });
+    }
+    socketService.emitToOwner('complaintCreated', {
+      complaint,
+      tenantName: tenant.name
+    });
+
     res.status(201).json(complaint);
   } catch (error) {
     res.status(500).json({ message: 'Failed to create complaint', error: error.message });
@@ -109,7 +138,29 @@ exports.updateComplaintStatus = async (req, res) => {
     const update = { status };
     if (assignedTo) update.assignedTo = assignedTo;
     
-    const complaint = await Complaint.findByIdAndUpdate(id, update, { new: true });
+    const complaint = await Complaint.findByIdAndUpdate(id, update, { new: true })
+      .populate('user', 'name email')
+      .populate('tenant', 'name email');
+
+    // Real-time synchronization for Tenant — emit globally since tenant may not have buildingId
+    const buildingIdStr = complaint.buildingId ? complaint.buildingId.toString() : null;
+    if (buildingIdStr) socketService.emitUpdate(buildingIdStr, 'complaintStatusChanged', complaint);
+    // Also emit globally so all tenants receive their own update
+    socketService.emitToOwner('complaintStatusChanged', complaint);
+
+    // Create notification for tenant
+    await notificationService.createNotification({
+      title: 'Complaint Status Updated',
+      message: `Your complaint "${complaint.title}" is now ${status}.`,
+      moduleName: 'Complaints',
+      portalType: 'Tenant',
+      category: 'Maintenance',
+      type: 'info',
+      buildingId: complaint.buildingId,
+      tenantId: complaint.tenant._id,
+      createdBy: req.user.id
+    });
+
     res.status(200).json(complaint);
   } catch (error) {
     res.status(500).json({ message: 'Failed to update complaint', error: error.message });
@@ -130,10 +181,14 @@ exports.getAllComplaints = async (req, res) => {
     if (!buildingId && !hostelId && req.user) {
       try {
         const Building = require('../models/Building');
-        const ownerBuildings = await Building.find({}, '_id').lean();
+        const ownerBuildings = await Building.find({ owner: req.user.id }, '_id').lean();
         const buildingIds = ownerBuildings.map(b => b._id);
         if (buildingIds.length > 0) {
-          query.buildingId = { $in: buildingIds };
+          query.$or = [
+            { buildingId: { $in: buildingIds } },
+            { buildingId: null },
+            { buildingId: { $exists: false } }
+          ];
         }
         // If no buildings found, query is empty — returns all complaints
       } catch (_e) {

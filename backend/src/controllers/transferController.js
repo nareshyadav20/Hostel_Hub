@@ -1,4 +1,4 @@
-const Transfer = require('../models/tenant/Transfer');
+const Transfer = require('../models/RoomTransfer');
 const { getOrCreateTenant } = require('../utils/tenantHelper');
 
 exports.createTransfer = async (req, res) => {

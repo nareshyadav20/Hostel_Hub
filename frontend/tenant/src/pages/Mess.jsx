@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../api/axios';
 import './Mess.css';
+import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 
 const Mess = () => {
   const [rating, setRating] = useState(0);
@@ -10,50 +11,60 @@ const Mess = () => {
   const [loading, setLoading] = useState(true);
   const [attendanceStatus, setAttendanceStatus] = useState('dining'); // 'dining' or 'skipped'
 
-  useEffect(() => {
-    const fetchMessData = async () => {
-      try {
-        const [profileRes] = await Promise.all([API.get('/tenants/me')]);
-        setTenantPlan(profileRes.data.messPlan || 'Basic');
-        
-        const fallbackMenu = [
-          { day: 'Monday', breakfast: 'Poha & Jalebi', lunch: 'Rajma Chawal', dinner: 'Paneer Butter Masala' },
-          { day: 'Tuesday', breakfast: 'Idli Sambar', lunch: 'Chole Bhature', dinner: 'Dal Tadka' },
-          { day: 'Wednesday', breakfast: 'Aloo Paratha', lunch: 'Veg Biryani', dinner: 'Mix Veg' },
-          { day: 'Thursday', breakfast: 'Upma', lunch: 'Kadhi Pakora', dinner: 'Egg Curry' },
-          { day: 'Friday', breakfast: 'Masala Dosa', lunch: 'Dal Makhani', dinner: 'Chicken Curry' },
-          { day: 'Saturday', breakfast: 'Puri Sabzi', lunch: 'Veg Fried Rice', dinner: 'Aloo Gobi' },
-          { day: 'Sunday', breakfast: 'Bread Omelette', lunch: 'Special Thali', dinner: 'Matar Paneer' }
-        ];
-        setWeeklyMenu(fallbackMenu);
-        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-        setTodayMenu(fallbackMenu.find(m => m.day === today) || fallbackMenu[0]);
-      } catch (err) {
-        console.error('Error fetching mess data, using fallback data:', err);
-        
-        // Fallback Mock Data for Mess
-        const fallbackMenu = [
-          { day: 'Monday', breakfast: 'Poha & Jalebi', lunch: 'Rajma Chawal', dinner: 'Paneer Butter Masala & Roti', plan: 'basic' },
-          { day: 'Tuesday', breakfast: 'Idli Sambar', lunch: 'Chole Bhature', dinner: 'Dal Tadka & Jeera Rice', plan: 'basic' },
-          { day: 'Wednesday', breakfast: 'Aloo Paratha', lunch: 'Veg Biryani', dinner: 'Mix Veg & Roti', plan: 'basic' },
-          { day: 'Thursday', breakfast: 'Upma', lunch: 'Kadhi Pakora', dinner: 'Egg Curry & Rice', plan: 'basic' },
-          { day: 'Friday', breakfast: 'Masala Dosa', lunch: 'Dal Makhani', dinner: 'Chicken Curry & Roti', plan: 'basic' },
-          { day: 'Saturday', breakfast: 'Puri Sabzi', lunch: 'Veg Fried Rice', dinner: 'Aloo Gobi & Roti', plan: 'basic' },
-          { day: 'Sunday', breakfast: 'Bread Omelette', lunch: 'Special Thali', dinner: 'Matar Paneer & Pulao', plan: 'basic' }
-        ];
-        
-        setWeeklyMenu(fallbackMenu);
-        
-        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-        const todayItem = fallbackMenu.find(m => m.day === today);
-        if (todayItem) {
-          setTodayMenu(todayItem);
-        }
-      } finally {
-        setLoading(false);
+  const fetchMessData = async () => {
+    try {
+      const bId = localStorage.getItem('buildingId');
+      const [profileRes, menuRes] = await Promise.all([
+        API.get('/tenants/me'),
+        bId ? API.get(`/mess/menu?buildingId=${bId}`).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })
+      ]);
+      
+      setTenantPlan(profileRes.data.messPlan || 'Standard');
+      
+      let finalMenu = menuRes.data && menuRes.data.length > 0 ? menuRes.data : [];
+      
+      const fallbackMenu = [
+        { day: 'Monday', breakfast: 'Poha & Jalebi', lunch: 'Rajma Chawal', dinner: 'Paneer Butter Masala' },
+        { day: 'Tuesday', breakfast: 'Idli Sambar', lunch: 'Chole Bhature', dinner: 'Dal Tadka' },
+        { day: 'Wednesday', breakfast: 'Aloo Paratha', lunch: 'Veg Biryani', dinner: 'Mix Veg' },
+        { day: 'Thursday', breakfast: 'Upma', lunch: 'Kadhi Pakora', dinner: 'Egg Curry' },
+        { day: 'Friday', breakfast: 'Masala Dosa', lunch: 'Dal Makhani', dinner: 'Chicken Curry' },
+        { day: 'Saturday', breakfast: 'Puri Sabzi', lunch: 'Veg Fried Rice', dinner: 'Aloo Gobi' },
+        { day: 'Sunday', breakfast: 'Bread Omelette', lunch: 'Special Thali', dinner: 'Matar Paneer' }
+      ];
+
+      if (finalMenu.length === 0) {
+        finalMenu = fallbackMenu;
       }
-    };
+      
+      setWeeklyMenu(finalMenu);
+      const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+      const todayItem = finalMenu.find(m => m.day === today) || finalMenu[0];
+      setTodayMenu(todayItem);
+    } catch (err) {
+      console.error('Error fetching mess data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchMessData();
+
+    const buildingId = localStorage.getItem('buildingId');
+    if (buildingId) {
+      connectSocket(buildingId);
+
+      socket.on('menuUpdated', () => {
+        console.log('🔄 Mess Menu Updated in Real-time');
+        fetchMessData();
+      });
+    }
+
+    return () => {
+      socket.off('menuUpdated');
+      disconnectSocket();
+    };
   }, []);
 
   const handleSkipMeal = () => {
@@ -98,36 +109,36 @@ const Mess = () => {
 
           <div className="meal-segments">
             {[
-              { 
-                type: 'Breakfast', 
-                menu: todayMenu.breakfast, 
+              {
+                type: 'Breakfast',
+                menu: todayMenu.breakfast,
                 time: '08:30 - 10:00',
                 color: '#3b82f6',
                 icon: (
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/>
+                    <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3" />
                   </svg>
                 )
               },
-              { 
-                type: 'Lunch', 
-                menu: todayMenu.lunch, 
+              {
+                type: 'Lunch',
+                menu: todayMenu.lunch,
                 time: '12:30 - 14:30',
                 color: '#ef4444',
                 icon: (
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>
+                    <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7" />
                   </svg>
                 )
               },
-              { 
-                type: 'Dinner', 
-                menu: todayMenu.dinner, 
+              {
+                type: 'Dinner',
+                menu: todayMenu.dinner,
                 time: '20:00 - 21:30',
                 color: '#16a34a',
                 icon: (
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/>
+                    <circle cx="12" cy="12" r="10" /><path d="M12 2v20M2 12h20" />
                   </svg>
                 )
               }
@@ -160,8 +171,8 @@ const Mess = () => {
                 { val: 4, color: '#84cc16', label: 'Great', emoji: '😋' },
                 { val: 5, color: '#22c55e', label: 'Perfect', emoji: '🤩' }
               ].map((item) => (
-                <button 
-                  key={item.val} 
+                <button
+                  key={item.val}
                   className={`rating-btn ${rating === item.val ? 'active' : ''}`}
                   onClick={() => setRating(item.val)}
                   style={{ '--rating-color': item.color }}
@@ -189,14 +200,14 @@ const Mess = () => {
             <div className="attendance-visual">
               <div className="action-icon-bg">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"></polyline>
+                  <circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 15"></polyline>
                 </svg>
               </div>
               <h3>Mark Presence</h3>
               <p>Notify the kitchen if you'll be dining today or skipping.</p>
-              
+
               <div className="attendance-toggle-group">
-                <button 
+                <button
                   className={`att-btn dining ${attendanceStatus === 'dining' ? 'active' : ''}`}
                   onClick={handleDining}
                 >
@@ -205,7 +216,7 @@ const Mess = () => {
                   </svg>
                   I will be dining
                 </button>
-                <button 
+                <button
                   className={`att-btn skip ${attendanceStatus === 'skipped' ? 'active' : ''}`}
                   onClick={handleSkipMeal}
                 >
@@ -217,14 +228,14 @@ const Mess = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="sustainability-box">
-               <div className="tip-icon-pro">
-                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-                 </svg>
-               </div>
-               <p><strong>Sustainability Tip:</strong> Skipping meals 2 hours in advance helps us significantly reduce food waste.</p>
+              <div className="tip-icon-pro">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+              </div>
+              <p><strong>Sustainability Tip:</strong> Skipping meals 2 hours in advance helps us significantly reduce food waste.</p>
             </div>
           </div>
         </div>
@@ -242,7 +253,7 @@ const Mess = () => {
           </div>
           <h3 className="sn-card-title">Weekly Nutrition Schedule</h3>
         </div>
-        
+
         <div className="table-overflow">
           <table className="weekly-table-premium">
             <thead>

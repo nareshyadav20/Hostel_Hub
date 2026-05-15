@@ -95,7 +95,7 @@ const Notifications = () => {
         Back to Dashboard
       </button>
 
-      {/* --- ELITE HEADER --- */
+      {/* --- ELITE HEADER --- */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-black text-text-primary tracking-tight uppercase italic">Notification Engine</h1>

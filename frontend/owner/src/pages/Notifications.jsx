@@ -6,21 +6,37 @@ import {
   Trash2, X, Archive, Eye, Zap, 
   Smartphone, Mail, AlertTriangle, 
   Info, CreditCard, Box, MessageSquare, 
-  Users, Shield, FileText, LayoutGrid, User, Briefcase
+  Users, Shield, FileText, LayoutGrid, User, Briefcase, Send, CheckCircle, Clock, ExternalLink
 } from 'lucide-react';
 import { api } from '../mockData';
-import { io } from 'socket.io-client';
+import socket, { connectSocket } from '../utils/socket';
+import useNotifications from '../hooks/useNotifications';
 
 const Notifications = () => {
-  const { buildingId } = useParams();
-  const [notifications, setNotifications] = useState([]);
+  const { buildingId: urlBuildingId } = useParams();
+  const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
+
+  const { 
+    notifications, 
+    setNotifications,
+    unreadCount, 
+    setUnreadCount,
+    loading: isLoading,
+    markAsRead: handleMarkAsRead,
+    markAllAsRead: handleMarkAllRead,
+    deleteNotification: handleDelete,
+    refresh: fetchNotifications
+  } = useNotifications(activeBuildingId);
+
   const [activeTab, setActiveTab] = useState('all'); 
   const [activePortal, setActivePortal] = useState('All'); 
   const [filterPriority, setFilterPriority] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  
+  // Composer State
+  const [isComposerOpen, setIsComposerOpen] = useState(false);
+  const [composerData, setComposerData] = useState({ title: '', message: '', target: 'All Tenants' });
 
   const [notifSettings, setNotifSettings] = useState({
     payments: { enabled: true, priority: 'high', delivery: ['in-app', 'sms'] },
@@ -33,58 +49,68 @@ const Notifications = () => {
 
   const categories = [
     { id: 'all', name: 'All', icon: <LayoutGrid size={18} /> },
+    { id: 'Safety', name: 'SOS Alerts', icon: <Shield size={18} /> },
     { id: 'Payments', name: 'Payments', icon: <CreditCard size={18} /> },
+    { id: 'Complaints', name: 'Complaints', icon: <MessageSquare size={18} /> },
+    { id: 'Laundry', name: 'Laundry', icon: <Zap size={18} /> },
+    { id: 'Cleaning', name: 'Cleaning', icon: <Box size={18} /> },
+    { id: 'Visitor', name: 'Visitors', icon: <Users size={18} /> },
+    { id: 'Leave', name: 'Leave Notices', icon: <FileText size={18} /> },
     { id: 'Rooms', name: 'Rooms', icon: <Box size={18} /> },
     { id: 'Inventory', name: 'Inventory', icon: <Box size={18} /> },
-    { id: 'Complaints', name: 'Complaints', icon: <MessageSquare size={18} /> },
     { id: 'Staff', name: 'Staff', icon: <Briefcase size={18} /> },
-    { id: 'Hygiene', name: 'Hygiene', icon: <Zap size={18} /> },
-    { id: 'Tenants', name: 'Tenants', icon: <Users size={18} /> },
-    { id: 'Security', name: 'Security', icon: <Shield size={18} /> },
-    { id: 'Reports', name: 'Reports', icon: <FileText size={18} /> },
   ];
 
   const portals = ['All', 'Tenant', 'Staff', 'Owner'];
 
   useEffect(() => {
-    if (buildingId) {
-      fetchNotifications();
-      const socketUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
-      const socket = io(socketUrl);
-      socket.emit('joinBuilding', buildingId);
-      socket.on('newNotification', (newNotif) => {
-        setNotifications(prev => [newNotif, ...prev]);
-        setUnreadCount(prev => prev + 1);
-      });
-      return () => socket.disconnect();
-    }
-  }, [buildingId]);
+    // Listen for module-specific events to refresh list
+    socket.on('complaintCreated', () => fetchNotifications());
+    socket.on('tenantAdded', () => fetchNotifications());
+    socket.on('bookingCreated', () => fetchNotifications());
 
-  const fetchNotifications = async () => {
-    setIsLoading(true);
-    try {
-      const data = await api.getNotifications(buildingId);
-      setNotifications(data);
-      setUnreadCount(data.filter(n => !n.isRead).length);
-    } catch (err) {
-      console.error('Failed to fetch notifications:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      socket.off('complaintCreated');
+      socket.off('tenantAdded');
+      socket.off('bookingCreated');
+    };
+  }, [fetchNotifications]);
 
   const handleSeed = async () => {
     try {
-      await api.seedNotifications(buildingId);
+      await api.seedNotifications(activeBuildingId);
       fetchNotifications();
     } catch (err) {
       console.error('Failed to seed notifications:', err);
     }
   };
 
+  const handleSend = async (e) => {
+    e.preventDefault();
+    try {
+      const portalType = composerData.target === 'Staff Members' ? 'Staff' : 'Tenant';
+      await api.sendNotification({
+        title: composerData.title,
+        message: composerData.message,
+        target: composerData.target,
+        portalType,
+        moduleName: 'Owner',
+        category: 'Announcement',
+        buildingId: activeBuildingId,
+        priority: 'Medium',
+        type: 'info'
+      });
+      fetchNotifications();
+      setIsComposerOpen(false);
+      setComposerData({ title: '', message: '', target: 'All Tenants' });
+    } catch (err) {
+      console.error('Error sending notification:', err);
+    }
+  };
+
   const filteredNotifications = useMemo(() => {
     return notifications
-      .filter(n => activeTab === 'all' || n.moduleName === activeTab)
+      .filter(n => activeTab === 'all' || n.moduleName === activeTab || n.category === activeTab)
       .filter(n => activePortal === 'All' || n.portalType === activePortal)
       .filter(n => filterPriority === 'all' || n.priority === filterPriority)
       .filter(n => 
@@ -93,41 +119,10 @@ const Notifications = () => {
       );
   }, [notifications, activeTab, activePortal, filterPriority, searchQuery]);
 
-  const handleMarkAsRead = async (id) => {
-    try {
-      await api.markNotificationRead(id);
-      setNotifications(prev => prev.map(n => (n.id === id || n._id === id) ? { ...n, isRead: true } : n));
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (err) {
-      console.error('Failed to mark read:', err);
-    }
-  };
-
-  const handleMarkAllRead = async () => {
-    try {
-      await api.markAllNotificationsRead(buildingId);
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-      setUnreadCount(0);
-    } catch (err) {
-      console.error('Failed to mark all read:', err);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await api.deleteNotification(id);
-      setNotifications(prev => prev.filter(n => n.id !== id && n._id !== id));
-      const removed = notifications.find(n => n.id === id || n._id === id);
-      if (removed && !removed.isRead) setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (err) {
-      console.error('Failed to delete:', err);
-    }
-  };
-
   const handleArchive = async (id) => {
     try {
       await api.archiveNotification(id);
-      setNotifications(prev => prev.filter(n => n.id !== id && n._id !== id));
+      fetchNotifications();
     } catch (err) {
       console.error('Failed to archive:', err);
     }
@@ -166,6 +161,8 @@ const Notifications = () => {
     );
   };
 
+  const inputStyle = { padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', width: '100%' };
+
   return (
     <div className="notifications-page" style={{ padding: '2rem' }}>
       <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -178,6 +175,9 @@ const Notifications = () => {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={() => setIsComposerOpen(true)} className="btn" style={{ background: '#10B981', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Send size={18} /> Compose Alert
+          </button>
           <button onClick={handleSeed} className="btn" style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Zap size={18} /> Simulate Alerts
           </button>
@@ -246,7 +246,7 @@ const Notifications = () => {
                   boxShadow: n.isRead ? 'none' : 'var(--shadow-md)', border: '1px solid var(--border-color)', display: 'flex', gap: '1.2rem', position: 'relative'
                 }}
               >
-                <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: n.isRead ? 'var(--bg-tertiary)' : 'var(--accent-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: n.isRead ? 'var(--text-muted)' : 'var(--accent-primary)', flexShrink: 0 }}>
+                <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: n.priority === 'High' ? 'rgba(239, 68, 68, 0.1)' : (n.isRead ? 'var(--bg-tertiary)' : 'var(--accent-primary-light)'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: n.priority === 'High' ? '#EF4444' : (n.isRead ? 'var(--text-muted)' : 'var(--accent-primary)'), flexShrink: 0 }}>
                   {getModuleIcon(n.moduleName)}
                 </div>
                 <div style={{ flex: 1 }}>
@@ -255,12 +255,15 @@ const Notifications = () => {
                       {getPortalBadge(n.portalType)}
                       <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{n.moduleName}</span>
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Clock size={12} /> {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '0.3rem', color: n.isRead ? 'var(--text-secondary)' : 'var(--text-primary)' }}>{n.title}</h3>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '0.3rem', color: n.isRead ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
+                    {n.priority === 'High' && '🚨 '}{n.title}
+                  </h3>
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.5 }}>{n.message}</p>
-                  <div style={{ display: 'flex', gap: '0.8rem' }}>
-                    {!n.isRead && <button onClick={() => handleMarkAsRead(n.id || n._id)} className="btn-notif-action"><Check size={14} /> Mark read</button>}
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {!n.isRead && <button onClick={() => handleMarkAsRead(n.id || n._id)} className="btn-notif-action"><CheckCircle size={14} /> Mark read</button>}
+                    {n.actionLink && <button onClick={() => navigate(n.actionLink)} className="btn-notif-action" style={{ color: 'var(--accent-primary)' }}><ExternalLink size={14} /> Take Action</button>}
                     <button onClick={() => handleArchive(n.id || n._id)} className="btn-notif-action"><Archive size={14} /> Archive</button>
                   </div>
                 </div>
@@ -275,6 +278,40 @@ const Notifications = () => {
           )}
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {isComposerOpen && (
+          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' }} onClick={() => setIsComposerOpen(false)} />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ position: 'relative', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '900' }}>Send Broadcast Alert</h2>
+                <X style={{ cursor: 'pointer' }} onClick={() => setIsComposerOpen(false)} />
+              </div>
+              <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Target Audience</label>
+                  <select value={composerData.target} onChange={e => setComposerData({...composerData, target: e.target.value})} style={inputStyle}>
+                    <option>All Tenants</option>
+                    <option>Staff Members</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Title</label>
+                  <input type="text" placeholder="e.g. Mess Update, Maintenance Notice" value={composerData.title} onChange={e => setComposerData({...composerData, title: e.target.value})} style={inputStyle} required />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Message</label>
+                  <textarea rows="4" placeholder="Type your message here..." value={composerData.message} onChange={e => setComposerData({...composerData, message: e.target.value})} style={inputStyle} required />
+                </div>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem', background: 'var(--accent-primary)', border: 'none', color: 'white', fontWeight: '800', borderRadius: '12px' }}>
+                  Send Broadcast
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isSettingsOpen && (

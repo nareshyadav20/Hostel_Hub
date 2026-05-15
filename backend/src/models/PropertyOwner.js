@@ -38,7 +38,7 @@ const buildingSchema = new mongoose.Schema({
   floors: [floorSchema]
 }, { 
   timestamps: true,
-  collection: 'owner_properties' // Explicitly set the collection name as requested
+  collection: 'properties' // Explicitly set the collection name as requested
 });
 
 module.exports = mongoose.model('PropertyOwner', buildingSchema);

@@ -94,9 +94,9 @@ const systemSettingsSchema = new mongoose.Schema({
   themeSettings: {
     mode: { type: String, enum: ['LIGHT', 'DARK'], default: 'DARK' }
   },
-  
-  // Link to a specific building
-  buildingId: { type: String, required: true }
+  // Link to a specific building and owner
+  buildingId: { type: String, required: true },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 }, { timestamps: true, collection: 'systemsettings' });
 
 module.exports = mongoose.model('SystemSettings', systemSettingsSchema);

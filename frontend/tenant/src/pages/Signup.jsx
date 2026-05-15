@@ -40,8 +40,18 @@ const Signup = () => {
         role: 'TENANT'
       });
 
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      const { user, token, tenantProfile } = response.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      if (tenantProfile) {
+        localStorage.setItem('tenantProfile', JSON.stringify(tenantProfile));
+        if (tenantProfile.buildingId) {
+          localStorage.setItem('buildingId', String(tenantProfile.buildingId));
+        }
+        if (tenantProfile._id) {
+          localStorage.setItem('tenantId', String(tenantProfile._id));
+        }
+      }
 
       navigate('/dashboard');
     } catch (err) {

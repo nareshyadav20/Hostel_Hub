@@ -275,9 +275,19 @@ a {
   color: var(--primary-dark);
 }
 
+[data-theme='dark'] .sn-badge-green {
+  background: rgba(22, 163, 74, 0.1);
+  color: #4ade80;
+}
+
 .sn-badge-blue {
   background: #e0f2fe;
   color: #0369a1;
+}
+
+[data-theme='dark'] .sn-badge-blue {
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
 }
 
 .sn-badge-orange {
@@ -285,9 +295,19 @@ a {
   color: #9a3412;
 }
 
+[data-theme='dark'] .sn-badge-orange {
+  background: rgba(234, 88, 12, 0.1);
+  color: #fb923c;
+}
+
 .sn-badge-red {
   background: #fee2e2;
   color: #991b1b;
+}
+
+[data-theme='dark'] .sn-badge-red {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
 }
 
 /* Spinners */

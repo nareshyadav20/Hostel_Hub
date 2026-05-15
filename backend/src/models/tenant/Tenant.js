@@ -35,4 +35,4 @@ const tenantSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true, collection: 'tenants' });
 
-module.exports = mongoose.model('Tenant', tenantSchema);
+module.exports = mongoose.models.Tenant || mongoose.model('Tenant', tenantSchema);

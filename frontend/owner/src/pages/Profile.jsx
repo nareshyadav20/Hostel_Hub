@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  User, Briefcase, ShieldCheck, CreditCard, BarChart3, Settings,
-  Camera, CheckCircle2, AlertCircle, Upload, Save, X, Phone, Mail,
+import { 
+  User, Briefcase, ShieldCheck, CreditCard, BarChart3, Settings, 
+  Camera, CheckCircle2, AlertCircle, Upload, Save, X, Phone, Mail, 
   MapPin, Calendar, Building, Hash, FileText, Lock, Bell, Activity,
   Globe, Plus, Trash2, Eye, EyeOff, LayoutDashboard, History, Sparkles,
   Smartphone, Monitor, ChevronRight, ExternalLink, BedDouble, UsersRound
@@ -139,18 +139,18 @@ const Profile = () => {
               profile?.personalInfo?.fullName?.split(' ').map(n => n[0]).join('') || 'O'
             )}
           </div>
-          <label
+          <label 
             htmlFor="profile-photo-input"
             style={{ position: 'absolute', bottom: '0', right: '0', width: '36px', height: '36px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99,102,241,0.4)' }}
           >
             <Camera size={18} />
           </label>
-          <input
-            id="profile-photo-input"
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={handlePhotoUpload}
+          <input 
+            id="profile-photo-input" 
+            type="file" 
+            accept="image/*" 
+            style={{ display: 'none' }} 
+            onChange={handlePhotoUpload} 
             disabled={saving}
           />
         </div>
@@ -170,14 +170,14 @@ const Profile = () => {
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '1rem', margin: 0 }}>{profile?.businessDetails?.businessName || 'Property Owner'}</p>
         </div>
-
+        
         <div style={{ minWidth: '280px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
             <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)' }}>PROFILE STRENGTH</span>
             <span style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--accent-primary)' }}>{profile?.profileCompleteness || 0}%</span>
           </div>
           <div style={{ height: '8px', width: '200px', background: 'var(--bg-tertiary)', borderRadius: '100px', overflow: 'hidden' }}>
-            <motion.div
+            <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${profile?.profileCompleteness || 0}%` }}
               style={{ height: '100%', background: 'linear-gradient(90deg, var(--accent-primary), #818cf8)' }}
@@ -195,7 +195,7 @@ const Profile = () => {
             style={{
               display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1.2rem', borderRadius: '12px',
               border: 'none', background: activeTab === tab.id ? 'var(--bg-primary)' : 'transparent',
-              color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
+              color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-secondary)', 
               fontWeight: '800', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s',
               boxShadow: activeTab === tab.id ? 'var(--shadow-sm)' : 'none'
             }}
@@ -207,11 +207,11 @@ const Profile = () => {
 
       {/* Main Content Area */}
       <div style={{ display: 'grid', gridTemplateColumns: activeTab === 'overview' ? '1fr 340px' : '1fr', gap: '2rem' }}>
-        <motion.div
+        <motion.div 
           key={activeTab}
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="card"
+          className="card" 
           style={{ padding: '2.5rem', borderRadius: '24px' }}
         >
           {activeTab === 'overview' && <OverviewTab profile={profile} stats={stats} setActiveTab={setActiveTab} />}
@@ -226,7 +226,6 @@ const Profile = () => {
         {activeTab === 'overview' && profile && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             <ActivityLog logs={profile.activityLogs || []} />
-            <BrandingCard profile={profile} onSave={(data) => handleUpdate('businessDetails', data)} />
           </div>
         )}
       </div>
@@ -234,10 +233,10 @@ const Profile = () => {
       {/* Message Toast */}
       <AnimatePresence>
         {message && (
-          <motion.div
+          <motion.div 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 1000,
+            style={{ 
+              position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 1000, 
               padding: '1rem 2rem', borderRadius: '12px', background: message.type === 'success' ? '#10B981' : '#EF4444',
               color: 'white', fontWeight: '700', boxShadow: 'var(--shadow-lg)'
             }}
@@ -264,7 +263,7 @@ const OverviewTab = ({ profile, stats, setActiveTab }) => {
           { label: 'Hostels', val: stats?.buildingCount, icon: <Building size={20} />, color: '#6366f1' },
           { label: 'Total Capacity', val: stats?.totalBeds, icon: <BedDouble size={20} />, color: '#8b5cf6' },
           { label: 'Active Tenants', val: stats?.occupiedBeds, icon: <UsersRound size={20} />, color: '#10b981' },
-          { label: 'Monthly Revenue', val: `₹${(stats?.expectedMonthlyRevenue / 1000).toFixed(0)}k`, icon: <CreditCard size={20} />, color: '#f59e0b' }
+          { label: 'Monthly Revenue', val: `₹${(stats?.expectedMonthlyRevenue/1000).toFixed(0)}k`, icon: <CreditCard size={20} />, color: '#f59e0b' }
         ].map((item, i) => (
           <div key={i} className="card" style={{ padding: '1.5rem', background: 'var(--bg-tertiary)', border: 'none', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
             <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${item.color}20`, color: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -286,8 +285,8 @@ const OverviewTab = ({ profile, stats, setActiveTab }) => {
               { label: 'Change Account Password', tab: 'security', icon: <Lock size={18} /> },
               { label: 'View Performance Analytics', tab: 'performance', icon: <BarChart3 size={18} /> }
             ].map((action, i) => (
-              <button
-                key={i}
+              <button 
+                key={i} 
                 onClick={() => setActiveTab(action.tab)}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.2rem', borderRadius: '14px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
                 onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
@@ -325,11 +324,7 @@ const OverviewTab = ({ profile, stats, setActiveTab }) => {
 };
 
 const ProfileTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
-  const [formData, setFormData] = useState(profile.personalInfo);
-
-  useEffect(() => {
-    setFormData(profile.personalInfo);
-  }, [profile.personalInfo, isEditing]);
+  const [formData, setFormData] = useState(profile?.personalInfo || {});
 
   return (
     <div>
@@ -348,7 +343,7 @@ const ProfileTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
         <div className="input-group">
           <label>Full Legal Name</label>
-          <input type="text" disabled={!isEditing} value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} />
+          <input type="text" disabled={!isEditing} value={formData.fullName} onChange={(e) => setFormData({...formData, fullName: e.target.value})} />
         </div>
         <div className="input-group">
           <label>Email ID (Primary)</label>
@@ -363,11 +358,11 @@ const ProfileTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
         </div>
         <div className="input-group">
           <label>Date of Birth</label>
-          <input type="date" disabled={!isEditing} value={formData.dob?.split('T')[0] || ''} onChange={(e) => setFormData({ ...formData, dob: e.target.value })} />
+          <input type="date" disabled={!isEditing} value={formData.dob?.split('T')[0] || ''} onChange={(e) => setFormData({...formData, dob: e.target.value})} />
         </div>
         <div className="input-group">
           <label>Gender</label>
-          <select disabled={!isEditing} value={formData.gender || 'Male'} onChange={(e) => setFormData({ ...formData, gender: e.target.value })} style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+          <select disabled={!isEditing} value={formData.gender || 'Male'} onChange={(e) => setFormData({...formData, gender: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
             <option>Male</option>
             <option>Female</option>
             <option>Other</option>
@@ -375,29 +370,15 @@ const ProfileTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
         </div>
         <div className="input-group">
           <label>Alternate Contact</label>
-          <input type="text" disabled={!isEditing} value={formData.alternateContact} onChange={(e) => setFormData({ ...formData, alternateContact: e.target.value })} />
+          <input type="text" disabled={!isEditing} value={formData.alternateContact} onChange={(e) => setFormData({...formData, alternateContact: e.target.value})} />
         </div>
         <div className="input-group" style={{ gridColumn: 'span 2' }}>
           <label>Residential Address</label>
-          <textarea rows="3" disabled={!isEditing} value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem', gridColumn: 'span 2' }}>
-          <div className="input-group">
-            <label>City</label>
-            <input type="text" disabled={!isEditing} value={formData.city || ''} onChange={(e) => setFormData({...formData, city: e.target.value})} />
-          </div>
-          <div className="input-group">
-            <label>State</label>
-            <input type="text" disabled={!isEditing} value={formData.state || ''} onChange={(e) => setFormData({...formData, state: e.target.value})} />
-          </div>
-          <div className="input-group">
-            <label>Pincode</label>
-            <input type="text" disabled={!isEditing} value={formData.pincode || ''} onChange={(e) => setFormData({...formData, pincode: e.target.value})} />
-          </div>
+          <textarea rows="3" disabled={!isEditing} value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
         </div>
         <div className="input-group" style={{ gridColumn: 'span 2' }}>
           <label>Google Maps Location URL (Optional)</label>
-          <input type="url" disabled={!isEditing} value={formData.googleMapUrl || ''} onChange={(e) => setFormData({...formData, googleMapUrl: e.target.value})} placeholder="https://maps.app.goo.gl/..." />
+          <input type="url" disabled={!isEditing} value={formData.googleMapUrl} onChange={(e) => setFormData({...formData, googleMapUrl: e.target.value})} placeholder="https://maps.app.goo.gl/..." />
         </div>
       </div>
     </div>
@@ -405,11 +386,7 @@ const ProfileTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
 };
 
 const BusinessTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
-  const [formData, setFormData] = useState(profile.businessDetails);
-
-  useEffect(() => {
-    setFormData(profile.businessDetails);
-  }, [profile.businessDetails, isEditing]);
+  const [formData, setFormData] = useState(profile?.businessDetails || {});
 
   return (
     <div>
@@ -428,42 +405,30 @@ const BusinessTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
         <div className="input-group">
           <label>Business Name</label>
-          <input type="text" disabled={!isEditing} value={formData.businessName} onChange={(e) => setFormData({ ...formData, businessName: e.target.value })} />
+          <input type="text" disabled={!isEditing} value={formData.businessName} onChange={(e) => setFormData({...formData, businessName: e.target.value})} />
         </div>
         <div className="input-group">
           <label>Business Type</label>
-          <select disabled={!isEditing} value={formData.businessType} onChange={(e) => setFormData({ ...formData, businessType: e.target.value })} style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+          <select disabled={!isEditing} value={formData.businessType} onChange={(e) => setFormData({...formData, businessType: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
             <option>Individual</option>
             <option>Company</option>
           </select>
         </div>
         <div className="input-group">
           <label>Years of Experience</label>
-          <input type="number" disabled={!isEditing} value={formData.experienceYears} onChange={(e) => setFormData({ ...formData, experienceYears: e.target.value })} />
+          <input type="number" disabled={!isEditing} value={formData.experienceYears} onChange={(e) => setFormData({...formData, experienceYears: e.target.value})} />
         </div>
         <div className="input-group">
           <label>GST Number</label>
-          <input type="text" disabled={!isEditing} value={formData.gstNumber} onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })} />
+          <input type="text" disabled={!isEditing} value={formData.gstNumber} onChange={(e) => setFormData({...formData, gstNumber: e.target.value})} />
         </div>
         <div className="input-group">
           <label>PAN Number (Business)</label>
-          <input type="text" disabled={!isEditing} value={formData.panNumber} onChange={(e) => setFormData({ ...formData, panNumber: e.target.value })} />
-        </div>
-        <div className="input-group">
-          <label>Business Tagline</label>
-          <input type="text" disabled={!isEditing} value={formData.tagline || ''} onChange={(e) => setFormData({...formData, tagline: e.target.value})} placeholder="Premium Living for Professionals" />
-        </div>
-        <div className="input-group">
-          <label>Website URL</label>
-          <input type="url" disabled={!isEditing} value={formData.website || ''} onChange={(e) => setFormData({...formData, website: e.target.value})} placeholder="https://..." />
-        </div>
-        <div className="input-group" style={{ gridColumn: 'span 2' }}>
-          <label>Logo URL</label>
-          <input type="text" disabled={!isEditing} value={formData.logoUrl || ''} onChange={(e) => setFormData({...formData, logoUrl: e.target.value})} placeholder="https://..." />
+          <input type="text" disabled={!isEditing} value={formData.panNumber} onChange={(e) => setFormData({...formData, panNumber: e.target.value})} />
         </div>
         <div className="input-group" style={{ gridColumn: 'span 2' }}>
           <label>Registered Office Address</label>
-          <textarea rows="2" disabled={!isEditing} value={formData.officeAddress || ''} onChange={(e) => setFormData({...formData, officeAddress: e.target.value})} />
+          <textarea rows="2" disabled={!isEditing} value={formData.officeAddress} onChange={(e) => setFormData({...formData, officeAddress: e.target.value})} />
         </div>
       </div>
     </div>
@@ -489,14 +454,14 @@ const KYCTab = ({ profile, onUpload, onDownload }) => {
               </div>
               <h4 style={{ margin: '0 0 0.5rem', fontWeight: '800' }}>{item.title}</h4>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>{item.desc}</p>
-
-              <input
-                id={`file-input-${item.id}`}
-                type="file"
-                style={{ display: 'none' }}
-                onChange={(e) => onUpload(item.title, e)}
+              
+              <input 
+                id={`file-input-${item.id}`} 
+                type="file" 
+                style={{ display: 'none' }} 
+                onChange={(e) => onUpload(item.title, e)} 
               />
-
+              
               {doc ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
@@ -522,11 +487,7 @@ const KYCTab = ({ profile, onUpload, onDownload }) => {
 };
 
 const BankTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
-  const [formData, setFormData] = useState(profile.bankDetails);
-
-  useEffect(() => {
-    setFormData(profile.bankDetails);
-  }, [profile.bankDetails, step]);
+  const [formData, setFormData] = useState(profile?.bankDetails || {});
   const [step, setStep] = useState('view');
   const [otp, setOtp] = useState('');
 
@@ -534,9 +495,9 @@ const BankTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
         <h2 style={{ margin: 0, fontWeight: '900' }}>Payout & Financial Details</h2>
-
+        
         {step === 'view' && <button className="btn btn-primary" onClick={() => setStep('otp')}>Update Details</button>}
-
+        
         {step === 'otp' && (
           <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
             <input type="text" placeholder="Enter OTP (1234)" value={otp} onChange={(e) => setOtp(e.target.value)} style={{ width: '140px', padding: '0.6rem', borderRadius: '8px', border: '1px solid var(--accent-primary)' }} />
@@ -556,23 +517,19 @@ const BankTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
         <div className="input-group">
           <label>Account Holder Name</label>
-          <input type="text" disabled={step !== 'edit'} value={formData.accountHolderName} onChange={(e) => setFormData({ ...formData, accountHolderName: e.target.value })} />
+          <input type="text" disabled={step !== 'edit'} value={formData.accountHolderName} onChange={(e) => setFormData({...formData, accountHolderName: e.target.value})} />
         </div>
         <div className="input-group">
           <label>Bank Name</label>
-          <input type="text" disabled={step !== 'edit'} value={formData.bankName} onChange={(e) => setFormData({ ...formData, bankName: e.target.value })} />
+          <input type="text" disabled={step !== 'edit'} value={formData.bankName} onChange={(e) => setFormData({...formData, bankName: e.target.value})} />
         </div>
         <div className="input-group">
           <label>Account Number</label>
-          <input type={step === 'edit' ? 'text' : 'password'} disabled={step !== 'edit'} value={formData.accountNumber} onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })} />
+          <input type={step === 'edit' ? 'text' : 'password'} disabled={step !== 'edit'} value={formData.accountNumber} onChange={(e) => setFormData({...formData, accountNumber: e.target.value})} />
         </div>
         <div className="input-group">
           <label>IFSC Code</label>
-          <input type="text" disabled={step !== 'edit'} value={formData.ifscCode || ''} onChange={(e) => setFormData({...formData, ifscCode: e.target.value})} />
-        </div>
-        <div className="input-group">
-          <label>UPI ID (For Instant Payouts)</label>
-          <input type="text" disabled={step !== 'edit'} value={formData.upiId || ''} onChange={(e) => setFormData({...formData, upiId: e.target.value})} placeholder="username@upi" />
+          <input type="text" disabled={step !== 'edit'} value={formData.ifscCode} onChange={(e) => setFormData({...formData, ifscCode: e.target.value})} />
         </div>
       </div>
     </div>
@@ -609,7 +566,7 @@ const PerformanceTab = ({ stats }) => {
 };
 
 const SecurityTab = ({ profile, onUpdate, onSecurityUpdate, onLogoutSession }) => {
-  const [settings, setSettings] = useState(profile.notificationSettings);
+  const [settings, setSettings] = useState(profile?.notificationSettings || {});
 
   const toggle = (section, channel) => {
     const updated = { ...settings, [section]: { ...settings[section], [channel]: !settings[section][channel] } };
@@ -624,7 +581,7 @@ const SecurityTab = ({ profile, onUpdate, onSecurityUpdate, onLogoutSession }) =
   return (
     <div>
       <h2 style={{ fontWeight: '900', marginBottom: '2.5rem' }}>Security & Notifications</h2>
-
+      
       <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
         <section>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -640,7 +597,7 @@ const SecurityTab = ({ profile, onUpdate, onSecurityUpdate, onLogoutSession }) =
               <h4 style={{ fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>TWO-FACTOR AUTHENTICATION (2FA)</h4>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Adds an extra layer of protection to your account.</p>
             </div>
-            <div
+            <div 
               onClick={() => onSecurityUpdate({ ...profile.securitySettings, twoFactorEnabled: !profile.securitySettings.twoFactorEnabled })}
               style={{ width: '56px', height: '30px', borderRadius: '100px', background: profile.securitySettings.twoFactorEnabled ? '#10B981' : '#CBD5E1', position: 'relative', cursor: 'pointer', transition: 'all 0.3s ease' }}
             >
@@ -744,25 +701,5 @@ const ActivityLog = ({ logs }) => {
   );
 };
 
-const BrandingCard = ({ profile, onSave }) => {
-  const [data, setData] = useState(profile.businessDetails);
-
-  return (
-    <div className="card" style={{ padding: '2rem', borderRadius: '24px', background: 'linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary))' }}>
-      <h3 style={{ fontWeight: '900', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-        <Sparkles size={20} color="#f59e0b" /> Branding
-      </h3>
-      <div className="input-group" style={{ marginBottom: '1.2rem' }}>
-        <label>Logo URL</label>
-        <input type="text" value={data.logoUrl || ''} onChange={(e) => setData({ ...data, logoUrl: e.target.value })} placeholder="https://..." />
-      </div>
-      <div className="input-group" style={{ marginBottom: '1.2rem' }}>
-        <label>Tagline</label>
-        <input type="text" value={data.tagline || ''} onChange={(e) => setData({ ...data, tagline: e.target.value })} placeholder="Premium Living..." />
-      </div>
-      <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => onSave(data)}>Update Branding</button>
-    </div>
-  );
-};
 
 export default Profile;

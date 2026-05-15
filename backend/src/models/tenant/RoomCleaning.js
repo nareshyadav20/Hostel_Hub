@@ -4,7 +4,7 @@ const roomCleaningSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   slot: { 
     type: String, 
-    enum: ['Morning (10 AM - 12 PM)', 'Afternoon (2 PM - 4 PM)'],
+    enum: ['Morning (10 AM - 12 PM)', 'Afternoon (2 PM - 4 PM)', 'Evening (5 PM - 7 PM)'],
     required: true 
   },
   status: { 

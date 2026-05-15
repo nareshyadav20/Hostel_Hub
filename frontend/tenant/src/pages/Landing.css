@@ -871,3 +871,70 @@
     font-size: 0.8rem;
   }
 }
+
+/* ─── Dark Mode Overrides ─── */
+[data-theme='dark'] .filters-sidebar {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .sidebar-header,
+[data-theme='dark'] .filter-section {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .radio-custom,
+[data-theme='dark'] .checkbox-custom {
+  border-color: #334155;
+}
+
+[data-theme='dark'] .price-select {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+[data-theme='dark'] .locality-search {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .locality-chip:not(.view-more) {
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .locality-chip:hover:not(.view-more) {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .hostel-card-vertical {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .amenities-row-v span {
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .price-booking-row-v {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .btn-view-v {
+  background: #1e293b;
+  color: #f1f5f9;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .btn-view-v:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+[data-theme='dark'] .zolo-search-trigger {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+}
