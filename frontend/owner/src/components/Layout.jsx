@@ -347,7 +347,7 @@ const Layout = ({ children }) => {
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     style={{
                       position: 'absolute', top: 'calc(100% + 10px)', right: 0,
-                      width: '380px', background: 'var(--bg-primary)',
+                      width: '90vw', maxWidth: '380px', background: 'var(--bg-primary)',
                       borderRadius: '20px', border: '1px solid var(--border-color)',
                       boxShadow: 'var(--shadow-xl)', zIndex: 1000,
                       overflow: 'hidden'

@@ -15,53 +15,73 @@
 }
 
 .card {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition-normal);
+  background: color-mix(in srgb, var(--bg-primary) 85%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid color-mix(in srgb, var(--border-color) 40%, transparent);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-xl);
-  border-color: var(--border-color);
+  transform: translateY(-4px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+  border-color: color-mix(in srgb, var(--accent-primary) 30%, transparent);
+}
+
+.card:hover::before {
+  opacity: 1;
 }
 
 h1, h2, h3 {
   color: var(--text-primary);
   margin-bottom: 1rem;
+  letter-spacing: -0.02em;
 }
 
 p {
   color: var(--text-secondary);
+  line-height: 1.6;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  font-weight: 600;
-  transition: var(--transition-normal);
+  padding: 0.85rem 1.8rem;
+  border-radius: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   gap: 0.6rem;
   cursor: pointer;
   border: 1px solid transparent;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .btn-primary {
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--accent-primary) 60%, transparent);
 }
 
 .btn-primary:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+  transform: translateY(-2px) scale(1.02);
+  filter: brightness(1.1);
+  box-shadow: 0 12px 25px -8px color-mix(in srgb, var(--accent-primary) 80%, transparent);
 }
 
 .btn-secondary {
@@ -109,5 +129,105 @@ p {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* =========================================================
+   GLOBAL RESPONSIVENESS & OVERFLOW HANDLING
+   ========================================================= */
+
+/* Prevent horizontal scroll globally */
+html, body, #root {
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  width: 100% !important;
+}
+
+/* Ensure all elements respect viewport boundaries */
+* {
+  box-sizing: border-box !important;
+  max-width: 100vw;
+}
+
+/* Make Recharts scale cleanly without overflowing */
+.recharts-wrapper, .recharts-surface {
+  max-width: 100% !important;
+  height: auto !important;
+}
+.recharts-responsive-container {
+  min-height: 200px;
+}
+
+/* Ensure tables do not overflow their containers */
+table {
+  width: 100% !important;
+  display: table;
+  white-space: nowrap;
+}
+
+.table-container, [style*="overflow-x: auto" i], [style*="overflowX: 'auto'" i] {
+  width: 100% !important;
+  max-width: 100vw !important;
+  display: block !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Protect cards and containers from breaking viewport */
+.card, .modal-overlay > div {
+  max-width: 100% !important;
+  overflow: hidden;
+}
+
+/* Responsive Grid & Layout Overrides for Mobile/Tablet/Small Laptop */
+@media screen and (max-width: 1280px) {
+  /* ULTIMATE OVERFLOW FIX: Force all flex/grid children to shrink below content size */
+  * {
+    min-width: 0 !important;
+  }
+
+  /* Aggressively collapse ALL inline grids to single column */
+  [style*="grid-template-columns" i] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    width: 100% !important;
+  }
+
+  /* Force all flex containers to wrap if they contain large children */
+  [style*="display: flex" i] {
+    max-width: 100vw !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* Prevent any explicit widths from causing overflow */
+  [style*="width:" i], [style*="min-width:" i] {
+    max-width: 100vw !important;
+  }
+
+  /* Specific fix for flex containers acting as sidebars or headers */
+  .dashboard-container, main, section, .layout, .main-content {
+    padding: 1rem !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Fix text wrapping and long strings */
+  p, h1, h2, h3, h4, h5, h6, span {
+    word-break: break-word;
+    white-space: normal;
+  }
+  /* Make filter/action buttons stack if needed */
+  div[style*="display: flex" i][style*="gap: 1rem" i] {
+    flex-wrap: wrap;
+  }
+}
+
+/* Ultra-wide Screen Optimizations */
+@media screen and (min-width: 1600px) {
+  .dashboard-container {
+    max-width: 1400px !important;
+  }
 }
 

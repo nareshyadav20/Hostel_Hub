@@ -48,23 +48,21 @@ const Notifications = () => {
   });
 
   const categories = [
-    { id: 'all', name: 'All', icon: <LayoutGrid size={18} /> },
+    { id: 'all', name: 'All Activities', icon: <LayoutGrid size={18} /> },
     { id: 'Safety', name: 'SOS Alerts', icon: <Shield size={18} /> },
-    { id: 'Payments', name: 'Payments', icon: <CreditCard size={18} /> },
-    { id: 'Complaints', name: 'Complaints', icon: <MessageSquare size={18} /> },
+    { id: 'Payments', name: 'Transactions', icon: <CreditCard size={18} /> },
+    { id: 'Complaints', name: 'Resolutions', icon: <MessageSquare size={18} /> },
     { id: 'Laundry', name: 'Laundry', icon: <Zap size={18} /> },
-    { id: 'Cleaning', name: 'Cleaning', icon: <Box size={18} /> },
-    { id: 'Visitor', name: 'Visitors', icon: <Users size={18} /> },
-    { id: 'Leave', name: 'Leave Notices', icon: <FileText size={18} /> },
-    { id: 'Rooms', name: 'Rooms', icon: <Box size={18} /> },
-    { id: 'Inventory', name: 'Inventory', icon: <Box size={18} /> },
-    { id: 'Staff', name: 'Staff', icon: <Briefcase size={18} /> },
+    { id: 'Cleaning', name: 'Sanitation', icon: <Box size={18} /> },
+    { id: 'Visitor', name: 'Guests', icon: <Users size={18} /> },
+    { id: 'Leave', name: 'Movements', icon: <FileText size={18} /> },
+    { id: 'Rooms', name: 'Assets', icon: <Box size={18} /> },
+    { id: 'Staff', name: 'Human Capital', icon: <Briefcase size={18} /> },
   ];
 
   const portals = ['All', 'Tenant', 'Staff', 'Owner'];
 
   useEffect(() => {
-    // Listen for module-specific events to refresh list
     socket.on('complaintCreated', () => fetchNotifications());
     socket.on('tenantAdded', () => fetchNotifications());
     socket.on('bookingCreated', () => fetchNotifications());
@@ -98,247 +96,379 @@ const Notifications = () => {
         category: 'Announcement',
         buildingId: activeBuildingId,
         priority: 'Medium',
-        type: 'info'
       });
-      fetchNotifications();
       setIsComposerOpen(false);
       setComposerData({ title: '', message: '', target: 'All Tenants' });
-    } catch (err) {
-      console.error('Error sending notification:', err);
-    }
-  };
-
-  const filteredNotifications = useMemo(() => {
-    return notifications
-      .filter(n => activeTab === 'all' || n.moduleName === activeTab || n.category === activeTab)
-      .filter(n => activePortal === 'All' || n.portalType === activePortal)
-      .filter(n => filterPriority === 'all' || n.priority === filterPriority)
-      .filter(n => 
-        (n.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-         n.message?.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-  }, [notifications, activeTab, activePortal, filterPriority, searchQuery]);
-
-  const handleArchive = async (id) => {
-    try {
-      await api.archiveNotification(id);
       fetchNotifications();
     } catch (err) {
-      console.error('Failed to archive:', err);
+      console.error('Failed to send announcement:', err);
     }
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority?.toLowerCase()) {
+  const filteredNotifs = useMemo(() => {
+    return notifications.filter(n => {
+      const matchesSearch = n.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           n.message?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesTab = activeTab === 'all' || n.category === activeTab || n.moduleName === activeTab;
+      const matchesPortal = activePortal === 'All' || n.portalType === activePortal;
+      const matchesPriority = filterPriority === 'all' || n.priority?.toLowerCase() === filterPriority;
+      return matchesSearch && matchesTab && matchesPortal && matchesPriority;
+    });
+  }, [notifications, searchQuery, activeTab, activePortal, filterPriority]);
+
+  const getPriorityColor = (p) => {
+    switch (p?.toLowerCase()) {
       case 'high': return '#EF4444';
       case 'medium': return '#F59E0B';
-      case 'low': return '#3B82F6';
-      default: return 'var(--text-muted)';
+      case 'low': return '#10B981';
+      default: return '#64748B';
     }
   };
 
-  const getModuleIcon = (module) => {
-    const cat = categories.find(c => c.id === module);
-    return cat ? cat.icon : <Bell size={18} />;
+  const getCategoryIcon = (cat) => {
+    const category = categories.find(c => c.id === cat);
+    return category ? category.icon : <Bell size={18} />;
   };
-
-  const getPortalBadge = (portal) => {
-    const colors = {
-      'Tenant': { bg: 'rgba(16, 185, 129, 0.1)', color: '#10B981', icon: <User size={12} /> },
-      'Staff': { bg: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6', icon: <Briefcase size={12} /> },
-      'Owner': { bg: 'rgba(14, 165, 233, 0.1)', color: '#0EA5E9', icon: <Shield size={12} /> },
-    };
-    const style = colors[portal] || colors['Owner'];
-    return (
-      <span style={{ 
-        display: 'flex', alignItems: 'center', gap: '0.3rem', 
-        padding: '0.2rem 0.6rem', borderRadius: '100px', 
-        background: style.bg, color: style.color, 
-        fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase'
-      }}>
-        {style.icon} {portal}
-      </span>
-    );
-  };
-
-  const inputStyle = { padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', width: '100%' };
 
   return (
-    <div className="notifications-page" style={{ padding: '2rem' }}>
-      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="notifications-page" style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '5rem' }}>
+      
+      {/* Premium Header */}
+      <header style={{ 
+        marginBottom: '3rem', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        padding: '2rem',
+        borderRadius: '32px',
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
+        border: '1px solid rgba(0,0,0,0.03)',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.02)'
+      }}>
         <div>
-          <h1 style={{ fontSize: '2.4rem', fontWeight: '900', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-            Notification Hub
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: '500' }}>
-            Centralized alerts from Tenants, Staff, and Operations.
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', marginBottom: '0.4rem' }}>
+             <div style={{ position: 'relative' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 10px 25px rgba(99, 102, 241, 0.3)' }}>
+                  <Bell size={28} />
+                </div>
+                {unreadCount > 0 && (
+                  <div style={{ position: 'absolute', top: '-8px', right: '-8px', padding: '0.3rem 0.6rem', borderRadius: '100px', background: '#EF4444', color: 'white', fontSize: '0.75rem', fontWeight: '900', border: '3px solid white', boxShadow: '0 4px 10px rgba(239, 68, 68, 0.4)' }}>
+                    {unreadCount}
+                  </div>
+                )}
+             </div>
+             <div>
+                <h1 style={{ fontSize: '2.2rem', fontWeight: '950', margin: 0, letterSpacing: '-0.03em' }}>Alert Command Center</h1>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: '600', margin: 0 }}>System-wide events and direct outreach logic.</p>
+             </div>
+          </div>
         </div>
+
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button onClick={() => setIsComposerOpen(true)} className="btn" style={{ background: '#10B981', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Send size={18} /> Compose Alert
+          <button 
+            onClick={() => setIsComposerOpen(true)} 
+            className="btn btn-primary" 
+            style={{ 
+              padding: '0.9rem 1.8rem', borderRadius: '16px', fontWeight: '900', 
+              display: 'flex', alignItems: 'center', gap: '0.8rem' 
+            }}
+          >
+            <Send size={20} /> Broadcast Message
           </button>
-          <button onClick={handleSeed} className="btn" style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Zap size={18} /> Simulate Alerts
-          </button>
-          <button onClick={() => setIsSettingsOpen(true)} className="btn" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Settings size={18} /> Settings
-          </button>
-          <button onClick={handleMarkAllRead} className="btn btn-secondary">
-            Mark all read
+          <button 
+            onClick={() => setIsSettingsOpen(true)} 
+            className="btn" 
+            style={{ 
+              width: '52px', height: '52px', borderRadius: '16px', background: 'white', 
+              border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', 
+              justifyContent: 'center', color: '#475569', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' 
+            }}
+          >
+            <Settings size={22} />
           </button>
         </div>
       </header>
 
-      <div style={{ background: 'var(--bg-secondary)', padding: '1.5rem', borderRadius: '24px', marginBottom: '2rem', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '1.5rem' }}>
-          <div style={{ position: 'relative' }}>
-            <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
-            <input
-              type="text"
-              placeholder="Search notifications..."
+      {/* Control Bar */}
+      <div className="card" style={{ 
+        padding: '1.2rem', borderRadius: '24px', marginBottom: '2.5rem', 
+        background: '#ffffff', border: '1px solid #F1F5F9',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.02)',
+        display: 'flex', flexDirection: 'column', gap: '1.5rem'
+      }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Search style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} size={20} />
+            <input 
+              type="text" 
+              placeholder="Filter through intelligence logs..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 3rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', outline: 'none' }}
+              style={{ 
+                width: '100%', padding: '1rem 1.2rem 1rem 3.5rem', borderRadius: '16px', 
+                border: '1px solid #E2E8F0', background: '#F8FAFC', fontSize: '0.95rem',
+                fontWeight: '700', outline: 'none'
+              }}
             />
           </div>
-          <select value={activePortal} onChange={(e) => setActivePortal(e.target.value)} style={{ padding: '0.8rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontWeight: '700' }}>
-             {portals.map(p => <option key={p} value={p}>{p} Portal</option>)}
-          </select>
-          <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} style={{ padding: '0.8rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontWeight: '700' }}>
-             <option value="all">All Priorities</option>
-             <option value="High">High Priority</option>
-             <option value="Medium">Medium Priority</option>
-             <option value="Low">Low Priority</option>
-          </select>
+          <div style={{ display: 'flex', background: '#F1F5F9', padding: '0.4rem', borderRadius: '14px', gap: '0.4rem' }}>
+            {portals.map(p => (
+              <button 
+                key={p}
+                onClick={() => setActivePortal(p)}
+                style={{ 
+                  padding: '0.6rem 1.2rem', borderRadius: '100px', border: 'none', 
+                  fontSize: '0.85rem', fontWeight: '800',
+                  background: activePortal === p ? 'white' : 'transparent',
+                  color: activePortal === p ? 'var(--accent-primary)' : '#64748B',
+                  cursor: 'pointer', boxShadow: activePortal === p ? '0 4px 12px rgba(0,0,0,0.05)' : 'none'
+                }}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.3rem', padding: '0.4rem', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px solid var(--border-color)', overflowX: 'auto', whiteSpace: 'nowrap' }}>
-          {categories.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveTab(cat.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.8rem', borderRadius: '10px', border: 'none',
-                background: activeTab === cat.id ? 'var(--accent-primary)' : 'transparent',
-                color: activeTab === cat.id ? 'white' : 'var(--text-secondary)',
-                cursor: 'pointer', transition: 'all 0.2s ease', fontWeight: '700', flexShrink: 0
-              }}
-            >
-              {cat.icon} <span style={{ fontSize: '0.75rem' }}>{cat.name}</span>
-            </button>
-          ))}
+        <div style={{ display: 'flex', gap: '0.8rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none' }}>
+           {categories.map(cat => (
+             <button 
+               key={cat.id}
+               onClick={() => setActiveTab(cat.id)}
+               style={{ 
+                 display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1.2rem', 
+                 whiteSpace: 'nowrap', borderRadius: '100px', fontSize: '0.85rem', fontWeight: '800',
+                 background: activeTab === cat.id ? 'var(--accent-primary)' : '#ffffff',
+                 color: activeTab === cat.id ? '#ffffff' : '#475569',
+                 border: `1px solid ${activeTab === cat.id ? 'var(--accent-primary)' : '#E2E8F0'}`,
+                 cursor: 'pointer', transition: 'all 0.2s'
+               }}
+             >
+                {cat.icon} {cat.name}
+             </button>
+           ))}
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', gap: '1.2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 1rem' }}>
+         <h3 style={{ fontSize: '1.1rem', fontWeight: '900', color: 'var(--text-primary)', margin: 0 }}>
+            {filteredNotifs.length} Stream Logs
+         </h3>
+         <div style={{ display: 'flex', gap: '1rem' }}>
+            <button onClick={handleMarkAllRead} className="btn" style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--accent-primary)', background: 'transparent', padding: '0.4rem 0.8rem' }}>
+               <CheckCircle size={16} /> Mark all read
+            </button>
+            <button onClick={handleSeed} className="btn" style={{ fontSize: '0.8rem', fontWeight: '800', color: '#64748B', background: 'transparent', padding: '0.4rem 0.8rem' }}>
+               <Zap size={16} /> Regenerate Logs
+            </button>
+         </div>
+      </div>
+
+      {/* Notifications List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <AnimatePresence mode="popLayout">
-          {filteredNotifications.length > 0 ? (
-            filteredNotifications.map((n, idx) => (
-              <motion.div
+          {filteredNotifs.length === 0 ? (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: '8rem 2rem', textAlign: 'center', background: '#F8FAFC', borderRadius: '32px', border: '1px dashed #CBD5E1' }}>
+              <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 2rem', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+                 <Bell size={40} color="#94A3B8" />
+              </div>
+              <h3 style={{ fontWeight: '900', color: '#1E293B', marginBottom: '0.5rem' }}>Silence in the Hub</h3>
+              <p style={{ color: '#64748B', fontWeight: '600', maxWidth: '320px', margin: '0 auto' }}>All systems are optimal. No critical alerts pending your review.</p>
+            </motion.div>
+          ) : (
+            filteredNotifs.map((n) => (
+              <motion.div 
                 key={n.id || n._id}
                 layout
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                style={{
-                  background: 'var(--bg-secondary)', borderRadius: '20px', padding: '1.25rem', borderLeft: `5px solid ${getPriorityColor(n.priority)}`,
-                  boxShadow: n.isRead ? 'none' : 'var(--shadow-md)', border: '1px solid var(--border-color)', display: 'flex', gap: '1.2rem', position: 'relative'
+                className="card"
+                style={{ 
+                  padding: '1.5rem', borderRadius: '24px', background: n.read || n.isRead ? '#ffffff' : '#F9FAFF',
+                  border: `1px solid ${n.read || n.isRead ? '#F1F5F9' : '#E0E7FF'}`,
+                  borderLeft: `6px solid ${getPriorityColor(n.priority)}`,
+                  display: 'flex', gap: '1.5rem', alignItems: 'flex-start',
+                  boxShadow: n.read || n.isRead ? '0 4px 12px rgba(0,0,0,0.01)' : '0 10px 20px rgba(99, 102, 241, 0.05)',
+                  position: 'relative', overflow: 'hidden'
                 }}
               >
-                <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: n.priority === 'High' ? 'rgba(239, 68, 68, 0.1)' : (n.isRead ? 'var(--bg-tertiary)' : 'var(--accent-primary-light)'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: n.priority === 'High' ? '#EF4444' : (n.isRead ? 'var(--text-muted)' : 'var(--accent-primary)'), flexShrink: 0 }}>
-                  {getModuleIcon(n.moduleName)}
+                {!(n.read || n.isRead) && <div style={{ position: 'absolute', top: '1rem', right: '1rem', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)' }} />}
+                
+                <div style={{ 
+                  padding: '1rem', borderRadius: '16px', 
+                  background: n.read || n.isRead ? '#F8FAFC' : '#EEF2FF', 
+                  color: n.read || n.isRead ? '#94A3B8' : 'var(--accent-primary)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  {getCategoryIcon(n.category || n.moduleName)}
                 </div>
+
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      {getPortalBadge(n.portalType)}
-                      <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{n.moduleName}</span>
-                    </div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Clock size={12} /> {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', color: '#1E293B' }}>{n.title}</h4>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                       <Clock size={12} /> {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '0.3rem', color: n.isRead ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
-                    {n.priority === 'High' && '🚨 '}{n.title}
-                  </h3>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.5 }}>{n.message}</p>
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    {!n.isRead && <button onClick={() => handleMarkAsRead(n.id || n._id)} className="btn-notif-action"><CheckCircle size={14} /> Mark read</button>}
-                    {n.actionLink && <button onClick={() => navigate(n.actionLink)} className="btn-notif-action" style={{ color: 'var(--accent-primary)' }}><ExternalLink size={14} /> Take Action</button>}
-                    <button onClick={() => handleArchive(n.id || n._id)} className="btn-notif-action"><Archive size={14} /> Archive</button>
+                  <p style={{ margin: '0 0 1rem 0', color: '#475569', fontSize: '0.95rem', fontWeight: '600', lineHeight: '1.5' }}>{n.message}</p>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: '900', padding: '0.3rem 0.7rem', borderRadius: '6px', background: '#F1F5F9', color: '#475569', textTransform: 'uppercase' }}>
+                       {n.portalType} PORTAL
+                    </div>
+                    {(n.link || n.actionLink) && (
+                      <a href={n.link || n.actionLink} style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--accent-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                         Investigate <ExternalLink size={14} />
+                      </a>
+                    )}
                   </div>
                 </div>
-                <button onClick={() => handleDelete(n.id || n._id)} style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><Trash2 size={16} /></button>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                   {!(n.read || n.isRead) && (
+                     <button onClick={() => handleMarkAsRead(n.id || n._id)} className="btn" style={{ padding: '0.6rem', borderRadius: '12px', background: '#EEF2FF', color: 'var(--accent-primary)', border: 'none' }} title="Mark as read">
+                       <Check size={18} />
+                     </button>
+                   )}
+                   <button onClick={() => handleDelete(n.id || n._id)} className="btn" style={{ padding: '0.6rem', borderRadius: '12px', background: '#FFF1F2', color: '#EF4444', border: 'none' }} title="Purge log">
+                     <Trash2 size={18} />
+                   </button>
+                </div>
               </motion.div>
             ))
-          ) : (
-            <div style={{ textAlign: 'center', padding: '5rem', gridColumn: '1 / -1' }}>
-              <Bell size={40} color="var(--text-muted)" style={{ margin: '0 auto 1rem' }} />
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>All caught up!</h2>
-            </div>
           )}
         </AnimatePresence>
       </div>
 
+      {/* Composer Modal - Redesigned */}
       <AnimatePresence>
         {isComposerOpen && (
-          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' }} onClick={() => setIsComposerOpen(false)} />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ position: 'relative', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: '900' }}>Send Broadcast Alert</h2>
-                <X style={{ cursor: 'pointer' }} onClick={() => setIsComposerOpen(false)} />
+          <div className="modal-overlay" style={{ 
+            position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', 
+            backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', 
+            alignItems: 'center', justifyContent: 'center', padding: '1.5rem'
+          }}>
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="card" 
+              style={{ width: '100%', maxWidth: '600px', padding: '3rem', borderRadius: '32px', background: 'white', border: '1px solid #E2E8F0', boxShadow: '0 40px 100px rgba(0,0,0,0.1)' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+                <div>
+                   <h2 style={{ fontSize: '1.8rem', fontWeight: '950', margin: 0, letterSpacing: '-0.02em' }}>Intelligence Composer</h2>
+                   <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '600', margin: '0.2rem 0 0 0' }}>Dispatch critical data to the ecosystem.</p>
+                </div>
+                <button onClick={() => setIsComposerOpen(false)} style={{ background: '#F8FAFC', border: 'none', padding: '0.8rem', borderRadius: '14px', cursor: 'pointer', color: '#94A3B8' }}><X size={20}/></button>
               </div>
-              <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+
+              <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Target Audience</label>
-                  <select value={composerData.target} onChange={e => setComposerData({...composerData, target: e.target.value})} style={inputStyle}>
-                    <option>All Tenants</option>
-                    <option>Staff Members</option>
-                  </select>
+                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#475569', marginBottom: '0.6rem' }}>Target Audience</label>
+                   <select 
+                     value={composerData.target}
+                     onChange={(e) => setComposerData({...composerData, target: e.target.value})}
+                     style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', background: '#F8FAFC', fontWeight: '700', fontSize: '0.95rem' }}
+                   >
+                     <option>All Tenants</option>
+                     <option>Staff Members</option>
+                     <option>Building A Residents</option>
+                   </select>
                 </div>
+
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Title</label>
-                  <input type="text" placeholder="e.g. Mess Update, Maintenance Notice" value={composerData.title} onChange={e => setComposerData({...composerData, title: e.target.value})} style={inputStyle} required />
+                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#475569', marginBottom: '0.6rem' }}>Dispatch Title</label>
+                   <input 
+                     type="text" 
+                     placeholder="e.g. Infrastructure Maintenance Notice"
+                     value={composerData.title}
+                     onChange={(e) => setComposerData({...composerData, title: e.target.value})}
+                     style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', background: '#F8FAFC', fontWeight: '700', fontSize: '0.95rem' }}
+                     required
+                   />
                 </div>
+
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Message</label>
-                  <textarea rows="4" placeholder="Type your message here..." value={composerData.message} onChange={e => setComposerData({...composerData, message: e.target.value})} style={inputStyle} required />
+                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#475569', marginBottom: '0.6rem' }}>Telemetry Content</label>
+                   <textarea 
+                     placeholder="Provide detailed context for the recipients..."
+                     value={composerData.message}
+                     onChange={(e) => setComposerData({...composerData, message: e.target.value})}
+                     style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', background: '#F8FAFC', fontWeight: '700', fontSize: '0.95rem', height: '140px', resize: 'none' }}
+                     required
+                   />
                 </div>
-                <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem', background: 'var(--accent-primary)', border: 'none', color: 'white', fontWeight: '800', borderRadius: '12px' }}>
-                  Send Broadcast
-                </button>
+
+                <div style={{ display: 'flex', gap: '1.2rem', marginTop: '1rem' }}>
+                  <button type="button" onClick={() => setIsComposerOpen(false)} style={{ flex: 1, padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', background: 'white', fontWeight: '800', color: '#475569', cursor: 'pointer' }}>Discard</button>
+                  <button type="submit" className="btn btn-primary" style={{ flex: 2, padding: '1rem', borderRadius: '14px', fontWeight: '900', fontSize: '1rem' }}>Deploy Broadcast</button>
+                </div>
               </form>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
+      {/* Settings Modal - Redesigned */}
       <AnimatePresence>
         {isSettingsOpen && (
-          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' }} onClick={() => setIsSettingsOpen(false)} />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ position: 'relative', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto' }}>
-               <h2 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '1rem' }}>Hub Settings</h2>
-               {Object.entries(notifSettings).map(([key, config]) => (
-                 <div key={key} style={{ marginBottom: '1rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ textTransform: 'capitalize', fontWeight: '700' }}>{key}</span>
-                      <input type="checkbox" checked={config.enabled} onChange={e => setNotifSettings({...notifSettings, [key]: {...config, enabled: e.target.checked}})} />
+          <div className="modal-overlay" style={{ 
+            position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', 
+            backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', 
+            alignItems: 'center', justifyContent: 'center', padding: '1.5rem'
+          }}>
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, x: 50 }}
+              animate={{ scale: 1, opacity: 1, x: 0 }}
+              exit={{ scale: 0.95, opacity: 0, x: 50 }}
+              className="card" 
+              style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', padding: '2.5rem', borderRadius: '32px', background: 'white', boxShadow: '0 40px 100px rgba(0,0,0,0.1)' }}
+            >
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '950', margin: 0 }}>Alert Preferences</h2>
+                <button onClick={() => setIsSettingsOpen(false)} style={{ background: '#F8FAFC', border: 'none', padding: '0.6rem', borderRadius: '12px', cursor: 'pointer' }}><X size={18}/></button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {Object.entries(notifSettings).map(([key, value]) => (
+                  <div key={key} style={{ padding: '1.5rem', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #F1F5F9' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <h4 style={{ margin: 0, textTransform: 'capitalize', fontWeight: '900', fontSize: '1rem', color: '#1E293B' }}>{key} Module</h4>
+                      <input 
+                        type="checkbox" 
+                        checked={value.enabled} 
+                        onChange={() => setNotifSettings({
+                          ...notifSettings,
+                          [key]: { ...value, enabled: !value.enabled }
+                        })}
+                        style={{ width: '20px', height: '20px', accentColor: 'var(--accent-primary)' }}
+                      />
                     </div>
-                 </div>
-               ))}
-               <button onClick={() => setIsSettingsOpen(false)} className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>Close</button>
+                    <div style={{ display: 'flex', gap: '0.6rem' }}>
+                       {['in-app', 'sms', 'email'].map(type => (
+                         <div key={type} style={{ fontSize: '0.7rem', fontWeight: '900', padding: '0.3rem 0.6rem', borderRadius: '6px', background: value.delivery.includes(type) ? 'var(--accent-primary)' : 'white', color: value.delivery.includes(type) ? 'white' : '#94A3B8', border: '1px solid #E2E8F0', textTransform: 'uppercase' }}>
+                            {type}
+                         </div>
+                       ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button 
+                onClick={() => setIsSettingsOpen(false)} 
+                className="btn btn-primary" 
+                style={{ width: '100%', marginTop: '2.5rem', padding: '1rem', borderRadius: '14px', fontWeight: '900' }}
+              >
+                Sync Preferences
+              </button>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-
-      <style>{`
-        .btn-notif-action { background: transparent; border: none; display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); cursor: pointer; }
-        .btn-notif-action:hover { color: var(--text-primary); }
-      `}</style>
     </div>
   );
 };
-
 export default Notifications;
