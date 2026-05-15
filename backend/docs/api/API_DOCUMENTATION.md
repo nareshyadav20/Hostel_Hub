@@ -1,6 +1,6 @@
 # Hostel Hub - Full API Documentation v2.0 (Production Ready)
 
-**Base URL:** `https://hostel-hub-1-0835.onrender.com`
+**Base URL:** `https://livora-hostel-hub.onrender.com`
 **Version:** 1.0.0
 **Support:** Naresh Yadav (Backend Lead)
 
