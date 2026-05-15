@@ -60,7 +60,13 @@ const getAllPayments = async (req, res) => {
     // 2. If specific buildingId is requested, validate ownership
     const { buildingId } = req.query;
     let query;
-    if (buildingId) {
+
+    const isValidBuildingId = buildingId && 
+                             buildingId !== 'undefined' && 
+                             buildingId !== 'null' && 
+                             require('mongoose').Types.ObjectId.isValid(buildingId);
+
+    if (isValidBuildingId) {
       const isOwned = buildingIds.some(id => id.toString() === buildingId);
       if (!isOwned) return res.status(403).json({ error: 'Access denied to this building.' });
       query = { buildingId };

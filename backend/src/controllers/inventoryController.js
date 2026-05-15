@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Inventory = require('../models/Inventory');
 const Building = require('../models/Building');
 const socketService = require('../utils/socketService');
@@ -10,11 +11,18 @@ exports.getInventory = async (req, res) => {
     const { buildingId } = req.query;
     let query;
 
-    if (buildingId) {
+    // Robust check for buildingId (handling "undefined" or "null" strings from frontend)
+    const isValidBuildingId = buildingId && 
+                             buildingId !== 'undefined' && 
+                             buildingId !== 'null' && 
+                             mongoose.Types.ObjectId.isValid(buildingId);
+
+    if (isValidBuildingId) {
       const isOwned = bIds.some(id => id.toString() === buildingId);
       if (!isOwned) return res.status(403).json({ error: 'Access denied to this building.' });
       query = { buildingId };
     } else {
+      // Fallback: Show all inventory for all owner buildings
       query = { buildingId: { $in: bIds } };
     }
 

@@ -14,6 +14,17 @@ const inventorySchema = new mongoose.Schema({
   status: { type: String, default: 'Available' },
   inUse: { type: Number, default: 0 },
   damaged: { type: Number, default: 0 },
+  expiryDate: { type: Date },
+  vendorName: { type: String },
+  buyPrice: { type: Number, default: 0 },
+  salePrice: { type: Number, default: 0 },
+  tax: { type: Number, default: 0 },
+  history: [{
+    action: { type: String },
+    quantity: { type: Number },
+    date: { type: Date, default: Date.now },
+    notes: { type: String }
+  }],
   buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   lastUpdatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true, collection: 'inventorys' });

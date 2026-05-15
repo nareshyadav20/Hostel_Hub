@@ -3,7 +3,18 @@ const Staff = require('../models/Staff');
 exports.getAllStaff = async (req, res) => {
   try {
     const { buildingId } = req.query;
-    const query = buildingId ? { buildingId } : {};
+    let query = {};
+    
+    const isValidId = buildingId && buildingId !== 'undefined' && buildingId !== 'null' && require('mongoose').Types.ObjectId.isValid(buildingId);
+
+    if (isValidId) {
+      query = { buildingId };
+    } else {
+      const Building = require('../models/Building');
+      const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+      const bIds = ownerBuildings.map(b => b._id);
+      query = { buildingId: { $in: bIds } };
+    }
     const staff = await Staff.find(query);
     res.status(200).json({ staffList: staff, totalStaff: staff.length });
   } catch (error) {

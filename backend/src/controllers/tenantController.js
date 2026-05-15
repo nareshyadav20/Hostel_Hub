@@ -32,7 +32,13 @@ const getTenants = async (req, res) => {
     // If a specific buildingId is requested, validate ownership then filter
     const { buildingId } = req.query;
     let query;
-    if (buildingId) {
+
+    const isValidId = buildingId && 
+                     buildingId !== 'undefined' && 
+                     buildingId !== 'null' && 
+                     require('mongoose').Types.ObjectId.isValid(buildingId);
+
+    if (isValidId) {
       const isOwned = buildingIds.some(id => id.toString() === buildingId);
       if (!isOwned) return res.status(403).json({ error: 'Access denied to this building.' });
       query = { buildingId };

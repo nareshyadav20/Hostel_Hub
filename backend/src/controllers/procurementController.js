@@ -9,7 +9,12 @@ exports.getProcurementData = async (req, res) => {
     const bIds = ownerBuildings.map(b => b._id);
 
     let query;
-    if (buildingId) {
+    const isValidBuildingId = buildingId && 
+                             buildingId !== 'undefined' && 
+                             buildingId !== 'null' && 
+                             require('mongoose').Types.ObjectId.isValid(buildingId);
+
+    if (isValidBuildingId) {
       if (!bIds.some(id => id.toString() === buildingId)) return res.status(403).json({ error: 'Denied' });
       query = { buildingId };
     } else {

@@ -39,7 +39,8 @@ exports.getSummaryKPIs = async (req, res) => {
   try {
     const { buildingId } = req.query;
     const mongoose = require('mongoose');
-    const matchQuery = buildingId ? { _id: new mongoose.Types.ObjectId(buildingId) } : {};
+    const isValidId = buildingId && buildingId !== 'undefined' && buildingId !== 'null' && mongoose.Types.ObjectId.isValid(buildingId);
+    const matchQuery = isValidId ? { _id: new mongoose.Types.ObjectId(buildingId) } : {};
 
     // 1. Optimized Aggregation for Hierarchy Stats
     const stats = await Building.aggregate([
@@ -96,7 +97,7 @@ exports.getSummaryKPIs = async (req, res) => {
     const endOfDay = new Date(); endOfDay.setHours(23,59,59,999);
     
     const paymentStats = await Payment.aggregate([
-      { $match: buildingId ? { buildingId: new mongoose.Types.ObjectId(buildingId) } : {} },
+      { $match: isValidId ? { buildingId: new mongoose.Types.ObjectId(buildingId) } : {} },
       {
         $group: {
           _id: null,
