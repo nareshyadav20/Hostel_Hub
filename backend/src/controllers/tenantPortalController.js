@@ -11,6 +11,7 @@ const Visitor = require('../models/tenant/Visitor');
 const Leave = require('../models/tenant/Leave');
 const RoomTransfer = require('../models/RoomTransfer');
 const ConfidentialReport = require('../models/ConfidentialReport');
+const TenantPhoto = require('../models/TenantPhoto');
 const { getOrCreateTenant } = require('../utils/tenantHelper');
 
 // --- Community Reports ---
@@ -173,7 +174,8 @@ exports.getCompleteProfile = async (req, res) => {
       transfers,
       confidentialReports,
       sosAlerts,
-      existingRewards
+      existingRewards,
+      latestPhoto
     ] = await Promise.all([
       Payment.find({ tenantId: tenant._id }).sort({ createdAt: -1 }),
       Complaint.find({ tenant: tenant._id }).sort({ createdAt: -1 }),
@@ -184,7 +186,8 @@ exports.getCompleteProfile = async (req, res) => {
       RoomTransfer.find({ user: req.user.id }).sort({ createdAt: -1 }),
       ConfidentialReport.find({ tenant: tenant._id }).sort({ createdAt: -1 }),
       SosAlert.find({ tenant: tenant._id }).sort({ createdAt: -1 }),
-      Reward.findOne({ user: req.user.id })
+      Reward.findOne({ user: req.user.id }),
+      TenantPhoto.findOne({ tenantId: tenant._id }).sort({ createdAt: -1 })
     ]);
 
     let rewards = existingRewards;
@@ -210,9 +213,34 @@ exports.getCompleteProfile = async (req, res) => {
         confidentialReports,
         sosAlerts
       },
-      rewards
+      rewards,
+      photo: latestPhoto ? latestPhoto.photoUrl : null
     });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching complete profile', error: error.message });
+  }
+};
+
+// --- Profile Photo Upload ---
+exports.uploadPhoto = async (req, res) => {
+  try {
+    const tenant = await getOrCreateTenant(req.user);
+    const { photoUrl } = req.body;
+
+    if (!photoUrl) {
+      return res.status(400).json({ message: 'Photo URL (base64 or link) is required' });
+    }
+
+    const photoRecord = await TenantPhoto.create({
+      tenantId: tenant._id,
+      photoUrl: photoUrl
+    });
+
+    res.status(201).json({ 
+      message: 'Profile photo uploaded successfully', 
+      photo: photoRecord 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error uploading photo', error: error.message });
   }
 };

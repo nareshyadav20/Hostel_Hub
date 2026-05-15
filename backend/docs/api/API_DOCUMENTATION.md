@@ -193,6 +193,16 @@ try {
 }
 ```
 
+## 👤 Profile & Account
+- **Get Complete Profile**
+  `GET /api/tenant-portal/complete-profile`
+  Returns all tenant data including payments, history, and current profile photo.
+
+- **Upload Profile Photo**
+  `POST /api/tenant-portal/upload-photo`
+  **Body:** `{ "photoUrl": "base64_string_or_url" }`
+  **Storage:** Collection `tenant_photo`
+
 ---
 
 ## 🛠️ PROJECT AUDIT & SECURITY

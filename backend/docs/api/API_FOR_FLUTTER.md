@@ -226,12 +226,19 @@
   ```json
   { "type": "...", "details": "...", "location": "..." }
   ```
+
+### 1️⃣1️⃣ Upload Profile Photo
+- **Method**: `POST`
+- **Endpoint**: `/api/tenant-portal/upload-photo`
+- **Auth**: Required
+- **Request Body**
+  ```json
+  { "photoUrl": "data:image/jpeg;base64,..." }
+  ```
 - **Dio call**
   ```dart
-  final resp = await dio.post('/api/tenant-portal/community-reports', data: {
-    'type': type,
-    'details': details,
-    'location': location,
+  final resp = await dio.post('/api/tenant-portal/upload-photo', data: {
+    'photoUrl': base64String, // or a hosted URL
   });
   ```
 

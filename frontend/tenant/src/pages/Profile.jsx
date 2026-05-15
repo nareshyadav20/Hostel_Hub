@@ -8,6 +8,11 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [error, setError] = useState(null);
+  
+  // Pagination State
+  const [activityPage, setActivityPage] = useState(1);
+  const [safetyPage, setSafetyPage] = useState(1);
+  const itemsPerPage = 5;
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -27,7 +32,6 @@ const Profile = () => {
 
     // Setup Socket.io Real-time Synchronization
     const buildingId = localStorage.getItem('buildingId');
-    const tenantId = localStorage.getItem('tenantId');
     
     if (buildingId) {
       connectSocket(buildingId);
@@ -45,6 +49,7 @@ const Profile = () => {
       socket.on('serviceUpdated', handleRealtimeUpdate);
       socket.on('rewardAdded', handleRealtimeUpdate);
       socket.on('transferStatusChanged', handleRealtimeUpdate);
+      socket.on('photoUpdated', handleRealtimeUpdate);
 
       return () => {
         socket.off('complaintUpdated', handleRealtimeUpdate);
@@ -55,9 +60,45 @@ const Profile = () => {
         socket.off('serviceUpdated', handleRealtimeUpdate);
         socket.off('rewardAdded', handleRealtimeUpdate);
         socket.off('transferStatusChanged', handleRealtimeUpdate);
+        socket.off('photoUpdated', handleRealtimeUpdate);
       };
     }
   }, [fetchProfile]);
+
+  useEffect(() => {
+    setActivityPage(1);
+    setSafetyPage(1);
+  }, [activeTab]);
+
+  const [uploading, setUploading] = useState(false);
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate size (e.g., 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Photo size should be less than 2MB');
+      return;
+    }
+
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        const base64String = reader.result;
+        await API.post('/tenant-portal/upload-photo', { photoUrl: base64String });
+        fetchProfile(); // Refresh to show new photo
+        alert('Profile photo updated successfully!');
+      } catch (err) {
+        console.error('Error uploading photo:', err);
+        alert('Failed to upload photo. Please try again.');
+      } finally {
+        setUploading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   if (loading) return (
     <div className="profile-loading">
@@ -102,7 +143,7 @@ const Profile = () => {
     }
   };
 
-  const { tenant, payments, complaints, history, rewards } = profileData;
+  const { tenant, payments, complaints, history, rewards, photo } = profileData;
 
   const renderOverview = () => (
     <div className="profile-tab-content fade-in">
@@ -317,12 +358,15 @@ const Profile = () => {
       ...complaints.map(item => ({ ...item, type: 'Complaint', icon: '⚠️', label: item.title }))
     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+    const totalPages = Math.ceil(timeline.length / itemsPerPage);
+    const paginatedTimeline = timeline.slice((activityPage - 1) * itemsPerPage, activityPage * itemsPerPage);
+
     return (
       <div className="profile-tab-content fade-in">
         <h2 className="section-title">Workflow Activity History</h2>
         <div className="activity-timeline">
-          {timeline.length > 0 ? (
-            timeline.map((item, i) => (
+          {paginatedTimeline.length > 0 ? (
+            paginatedTimeline.map((item, i) => (
               <div key={item._id || i} className="activity-card sn-card">
                 <div className="activity-type-icon">{item.icon}</div>
                 <div className="activity-content">
@@ -352,75 +396,139 @@ const Profile = () => {
             <div className="empty-state">Your activity history is currently empty.</div>
           )}
         </div>
+
+        {totalPages > 1 && (
+          <div className="pagination-controls">
+            <button 
+              disabled={activityPage === 1} 
+              onClick={() => setActivityPage(prev => prev - 1)}
+              className="pagi-btn"
+            >
+              Previous
+            </button>
+            <span className="pagi-info">Page {activityPage} of {totalPages}</span>
+            <button 
+              disabled={activityPage === totalPages} 
+              onClick={() => setActivityPage(prev => prev + 1)}
+              className="pagi-btn"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     );
   };
 
-  const renderSafety = () => (
-    <div className="profile-tab-content fade-in">
-      <div className="safety-summary-grid">
-        <div className="sn-card safety-stat-card">
-          <div className="card-header-icon red">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M10.29 3.86L1.82 18C1.445 18.63 1.9 19.43 2.62 19.43H21.38C22.1 19.43 22.555 18.63 22.18 18L13.71 3.86C13.33 3.22 12.67 3.22 12.29 3.86Z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
+  const renderSafety = () => {
+    const safetyLog = [...history.sosAlerts, ...history.confidentialReports]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const totalPages = Math.ceil(safetyLog.length / itemsPerPage);
+    const paginatedSafetyLog = safetyLog.slice((safetyPage - 1) * itemsPerPage, safetyPage * itemsPerPage);
+
+    return (
+      <div className="profile-tab-content fade-in">
+        <div className="safety-summary-grid">
+          <div className="sn-card safety-stat-card">
+            <div className="card-header-icon red">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M10.29 3.86L1.82 18C1.445 18.63 1.9 19.43 2.62 19.43H21.38C22.1 19.43 22.555 18.63 22.18 18L13.71 3.86C13.33 3.22 12.67 3.22 12.29 3.86Z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <h3>SOS Alerts Raised</h3>
+            <p className="stat-val">{history.sosAlerts?.length || 0}</p>
           </div>
-          <h3>SOS Alerts Raised</h3>
-          <p className="stat-val">{history.sosAlerts?.length || 0}</p>
+
+          <div className="sn-card safety-stat-card">
+            <div className="card-header-icon blue">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <h3>Confidential Reports</h3>
+            <p className="stat-val">{history.confidentialReports?.length || 0}</p>
+          </div>
         </div>
 
-        <div className="sn-card safety-stat-card">
-          <div className="card-header-icon blue">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-          </div>
-          <h3>Confidential Reports</h3>
-          <p className="stat-val">{history.confidentialReports?.length || 0}</p>
-        </div>
-      </div>
-
-      <div className="safety-activity-list">
-        <h2 className="section-title">Safety & Incident Log</h2>
-        <div className="incident-timeline">
-          {[...history.sosAlerts, ...history.confidentialReports]
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .map((item, i) => (
-              <div key={item._id || i} className="incident-item sn-card">
-                <div className="incident-icon">
-                  {item.message ? '🆘' : '🕵️'}
-                </div>
-                <div className="incident-content">
-                  <h4>{item.message || item.title || 'Confidential Report'}</h4>
-                  <p>{item.location ? `Location: ${item.location}` : item.description}</p>
-                  <div className="incident-footer">
-                    <span className="date">{new Date(item.createdAt).toLocaleString()}</span>
-                    <span className={`status-pill ${item.status?.toLowerCase().replace(' ', '-') || 'active'}`}>{item.status || 'Active'}</span>
+        <div className="safety-activity-list">
+          <h2 className="section-title">Safety & Incident Log</h2>
+          <div className="incident-timeline">
+            {paginatedSafetyLog.map((item, i) => (
+                <div key={item._id || i} className="incident-item sn-card">
+                  <div className="incident-icon">
+                    {item.message ? '🆘' : '🕵️'}
+                  </div>
+                  <div className="incident-content">
+                    <h4>{item.message || item.title || 'Confidential Report'}</h4>
+                    <p>{item.location ? `Location: ${item.location}` : item.description}</p>
+                    <div className="incident-footer">
+                      <span className="date">{new Date(item.createdAt).toLocaleString()}</span>
+                      <span className={`status-pill ${item.status?.toLowerCase().replace(' ', '-') || 'active'}`}>{item.status || 'Active'}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          }
-          {history.sosAlerts.length === 0 && history.confidentialReports.length === 0 && (
-            <div className="empty-state">No safety incidents reported. You're safe!</div>
+              ))
+            }
+            {safetyLog.length === 0 && (
+              <div className="empty-state">No safety incidents reported. You're safe!</div>
+            )}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="pagination-controls">
+              <button 
+                disabled={safetyPage === 1} 
+                onClick={() => setSafetyPage(prev => prev - 1)}
+                className="pagi-btn"
+              >
+                Previous
+              </button>
+              <span className="pagi-info">Page {safetyPage} of {totalPages}</span>
+              <button 
+                disabled={safetyPage === totalPages} 
+                onClick={() => setSafetyPage(prev => prev + 1)}
+                className="pagi-btn"
+              >
+                Next
+              </button>
+            </div>
           )}
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="profile-container">
       <div className="profile-hero">
         <div className="profile-main-sidebar">
           <div className="profile-main-card-premium sn-card">
-            <div className="profile-avatar-large">
-              {tenant.name?.charAt(0)}
+            <div className="profile-avatar-large" onClick={() => document.getElementById('photo-upload-input').click()} style={{ cursor: 'pointer', overflow: 'hidden' }}>
+              {photo ? (
+                <img src={photo} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                tenant.name?.charAt(0)
+              )}
+              {uploading && <div className="avatar-loader"></div>}
               <div className="online-indicator"></div>
+              <div className="avatar-edit-overlay">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+              </div>
             </div>
+            <input 
+              type="file" 
+              id="photo-upload-input" 
+              style={{ display: 'none' }} 
+              accept="image/*"
+              onChange={handlePhotoUpload}
+            />
             <h1 className="user-name">{tenant.name}</h1>
             <p className="user-id">RES-ID: {tenant._id?.slice(-8).toUpperCase()}</p>
             <div className="premium-badge">
