@@ -307,7 +307,6 @@ const Profile = () => {
               <label>Pending Dues</label>
               <p className="due-date">₹{pendingAmount.toLocaleString()}</p>
             </div>
-            <button className="btn-pay-now">Pay Now</button>
           </div>
         </div>
 
@@ -315,7 +314,7 @@ const Profile = () => {
           <h2 className="section-title">Transaction Timeline</h2>
           <div className="transaction-list">
             {payments.length > 0 ? (
-              payments.map((payment, i) => (
+              payments.slice((activityPage - 1) * itemsPerPage, activityPage * itemsPerPage).map((payment, i) => (
                 <div key={payment._id || i} className="transaction-item">
                   <div className="tx-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -342,6 +341,21 @@ const Profile = () => {
               <div className="empty-state">No payment records found.</div>
             )}
           </div>
+
+          {Math.ceil(payments.length / itemsPerPage) > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 0', borderTop: '1px solid #E2E8F0', marginTop: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '600' }}>
+                Showing {(activityPage - 1) * itemsPerPage + 1}–{Math.min(activityPage * itemsPerPage, payments.length)} of {payments.length} entries
+              </span>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <button onClick={() => setActivityPage(p => p - 1)} disabled={activityPage === 1} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: activityPage === 1 ? '#F8FAFC' : '#fff', color: activityPage === 1 ? '#CBD5E1' : '#475569', fontWeight: '600', cursor: activityPage === 1 ? 'not-allowed' : 'pointer' }}>Previous</button>
+                {[...Array(Math.ceil(payments.length / itemsPerPage))].map((_, i) => (
+                  <button key={i+1} onClick={() => setActivityPage(i+1)} style={{ width: '36px', height: '36px', borderRadius: '8px', border: activityPage === i+1 ? 'none' : '1px solid #E2E8F0', background: activityPage === i+1 ? 'var(--accent-primary)' : '#fff', color: activityPage === i+1 ? '#fff' : '#475569', fontWeight: '700', cursor: 'pointer' }}>{i+1}</button>
+                ))}
+                <button onClick={() => setActivityPage(p => p + 1)} disabled={activityPage === Math.ceil(payments.length / itemsPerPage)} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: activityPage === Math.ceil(payments.length / itemsPerPage) ? '#F8FAFC' : '#fff', color: activityPage === Math.ceil(payments.length / itemsPerPage) ? '#CBD5E1' : '#475569', fontWeight: '600', cursor: activityPage === Math.ceil(payments.length / itemsPerPage) ? 'not-allowed' : 'pointer' }}>Next</button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

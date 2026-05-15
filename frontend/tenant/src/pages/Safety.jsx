@@ -9,6 +9,8 @@ const Safety = () => {
   const [reports, setReports] = useState([]);
   const [loadingReports, setLoadingReports] = useState(true);
   const [selectedReport, setSelectedReport] = useState(null);
+  const [reportPage, setReportPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
   const timerRef = useRef(null);
   const sirenRef = useRef(new Audio('https://www.soundjay.com/emergency/sounds/siren-1.mp3'));
 
@@ -341,7 +343,7 @@ const Safety = () => {
               ) : reports.length === 0 ? (
                 <tr><td colSpan="5" className="td-empty">No reports found.</td></tr>
               ) : (
-                reports.map(report => (
+                reports.slice((reportPage - 1) * ITEMS_PER_PAGE, reportPage * ITEMS_PER_PAGE).map(report => (
                   <tr key={report._id}>
                     <td className="td-date">
                       {new Date(report.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -369,6 +371,21 @@ const Safety = () => {
             </tbody>
           </table>
         </div>
+
+        {!loadingReports && Math.ceil(reports.length / ITEMS_PER_PAGE) > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 1.5rem', borderTop: '1px solid #E2E8F0', flexWrap: 'wrap', gap: '1rem' }}>
+            <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '600' }}>
+              Showing {(reportPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(reportPage * ITEMS_PER_PAGE, reports.length)} of {reports.length} entries
+            </span>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button onClick={() => setReportPage(p => p - 1)} disabled={reportPage === 1} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: reportPage === 1 ? '#F8FAFC' : '#fff', color: reportPage === 1 ? '#CBD5E1' : '#475569', fontWeight: '600', cursor: reportPage === 1 ? 'not-allowed' : 'pointer' }}>Previous</button>
+              {[...Array(Math.ceil(reports.length / ITEMS_PER_PAGE))].map((_, i) => (
+                <button key={i+1} onClick={() => setReportPage(i+1)} style={{ width: '36px', height: '36px', borderRadius: '8px', border: reportPage === i+1 ? 'none' : '1px solid #E2E8F0', background: reportPage === i+1 ? 'var(--accent-primary)' : '#fff', color: reportPage === i+1 ? '#fff' : '#475569', fontWeight: '700', cursor: 'pointer' }}>{i+1}</button>
+              ))}
+              <button onClick={() => setReportPage(p => p + 1)} disabled={reportPage === Math.ceil(reports.length / ITEMS_PER_PAGE)} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: reportPage === Math.ceil(reports.length / ITEMS_PER_PAGE) ? '#F8FAFC' : '#fff', color: reportPage === Math.ceil(reports.length / ITEMS_PER_PAGE) ? '#CBD5E1' : '#475569', fontWeight: '600', cursor: reportPage === Math.ceil(reports.length / ITEMS_PER_PAGE) ? 'not-allowed' : 'pointer' }}>Next</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Report Details Modal */}
