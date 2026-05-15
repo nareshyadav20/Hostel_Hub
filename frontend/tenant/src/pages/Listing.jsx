@@ -571,7 +571,7 @@ const Listing = () => {
               <button 
                 className="lst-btn-reserve" 
                 disabled={!selectedBed}
-                onClick={() => navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed } })}
+                onClick={() => navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed, basePrice } })}
                 style={{ width: '100%', padding: '20px', fontSize: '18px' }}
               >
                 Reserve Your Bed Now

@@ -14,7 +14,9 @@ const createBooking = async (req, res) => {
       onboardingFee, 
       totalAmount, 
       method,
-      proofId 
+      proofId,
+      bedNumber,
+      sharingType
     } = req.body;
 
     // Validate ObjectIds — helper function

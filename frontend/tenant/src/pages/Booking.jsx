@@ -28,7 +28,8 @@ const Booking = () => {
   const [apiError, setApiError] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('UPI');
 
-  const basePrice = hostel?.startingPrice || 9000;
+  const passedBasePrice = location.state?.basePrice;
+  const basePrice = passedBasePrice || hostel?.startingPrice || 9000;
 
   const roomOptions = [
     { 
@@ -147,7 +148,9 @@ const Booking = () => {
       category: currentRoom.name,
       moveInDate: formData.moveInDate,
       totalAmount: amount,
-      proofId
+      proofId,
+      bedNumber: passedBed,
+      sharingType: passedSharing
     };
 
     console.log("[Booking] Outgoing Payload:", payload);
