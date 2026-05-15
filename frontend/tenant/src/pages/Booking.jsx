@@ -22,6 +22,9 @@ const Booking = () => {
   const [formData, setFormData] = useState({ roomType: initialRoomType, moveInDate: '', agreementSigned: false, idProof: null, profilePhoto: null });
   const [bookings, setBookings] = useState([]);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [uploadingProofs, setUploadingProofs] = useState(false);
+  const [proofUploadStatus, setProofUploadStatus] = useState(null); // 'success' | 'error' | null
+  const [proofId, setProofId] = useState(null);
   const [apiError, setApiError] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('UPI');
 
@@ -144,8 +147,7 @@ const Booking = () => {
       category: currentRoom.name,
       moveInDate: formData.moveInDate,
       totalAmount: amount,
-      bedNumber: passedBed,
-      sharingType: passedSharing
+      proofId
     };
 
     console.log("[Booking] Outgoing Payload:", payload);
@@ -499,9 +501,10 @@ const Booking = () => {
                   </div>
                   <div className="upload-info">
                     <h4>ID Proof (Aadhaar/PAN)</h4>
-                    <p>{formData.idProof || 'Click to upload document'}</p>
+                    <p>{formData.idProof ? formData.idProof.name : 'Click to upload document'}</p>
+                    {formData.idProof && <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: '700' }}>✓ File selected</span>}
                   </div>
-                  <input type="file" ref={idUploadRef} style={{ display: 'none' }} onChange={e => setFormData({...formData, idProof: e.target.files[0]?.name})} />
+                  <input type="file" ref={idUploadRef} accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => setFormData({...formData, idProof: e.target.files[0] || null})} />
                </div>
 
                <div className={`upload-card-premium ${formData.profilePhoto ? 'uploaded' : ''}`} onClick={() => photoUploadRef.current.click()}>
@@ -510,9 +513,10 @@ const Booking = () => {
                   </div>
                   <div className="upload-info">
                     <h4>Profile Photograph</h4>
-                    <p>{formData.profilePhoto || 'Click to upload photo'}</p>
+                    <p>{formData.profilePhoto ? formData.profilePhoto.name : 'Click to upload photo'}</p>
+                    {formData.profilePhoto && <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: '700' }}>✓ File selected</span>}
                   </div>
-                  <input type="file" ref={photoUploadRef} style={{ display: 'none' }} onChange={e => setFormData({...formData, profilePhoto: e.target.files[0]?.name})} />
+                  <input type="file" ref={photoUploadRef} accept="image/*" style={{ display: 'none' }} onChange={e => setFormData({...formData, profilePhoto: e.target.files[0] || null})} />
                </div>
             </div>
 
@@ -524,6 +528,17 @@ const Booking = () => {
               </label>
             </div>
 
+            {proofUploadStatus === 'error' && (
+              <div style={{ margin: '1rem 0 0', padding: '0.9rem 1.25rem', borderRadius: '12px', background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontSize: '0.88rem', fontWeight: '600' }}>
+                ⚠️ Document upload failed. You can still proceed — proofs can be re-submitted later.
+              </div>
+            )}
+            {proofUploadStatus === 'success' && (
+              <div style={{ margin: '1rem 0 0', padding: '0.9rem 1.25rem', borderRadius: '12px', background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D', fontSize: '0.88rem', fontWeight: '600' }}>
+                ✅ Documents uploaded and saved securely.
+              </div>
+            )}
+
             <div className="flow-footer dual">
               <button className="btn-secondary-pro" onClick={() => setStep(1)}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -532,12 +547,45 @@ const Booking = () => {
                 </svg>
                 Go Back
               </button>
-              <button className="btn-primary btn-large" disabled={!formData.agreementSigned || !formData.idProof} onClick={() => setStep(3)}>
-                Next: Payment Summary
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                  <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
+              <button
+                className="btn-primary btn-large"
+                disabled={!formData.agreementSigned || !formData.idProof || uploadingProofs}
+                onClick={async () => {
+                  setUploadingProofs(true);
+                  setProofUploadStatus(null);
+                  try {
+                    const fd = new FormData();
+                    fd.append('idProof', formData.idProof);
+                    if (formData.profilePhoto) fd.append('profilePhoto', formData.profilePhoto);
+                    if (buildingId) fd.append('buildingId', buildingId);
+                    const token = localStorage.getItem('token');
+                    await fetch('http://localhost:5000/api/tenant-proofs/upload', {
+                      method: 'POST',
+                      headers: { Authorization: `Bearer ${token}` },
+                      body: fd
+                    }).then(async r => {
+                      if (!r.ok) throw new Error(await r.text());
+                      const data = await r.json();
+                      if (data.proofId) setProofId(data.proofId);
+                      return data;
+                    });
+                    setProofUploadStatus('success');
+                  } catch (err) {
+                    console.error('[TenantProof] Upload failed:', err);
+                    setProofUploadStatus('error');
+                  } finally {
+                    setUploadingProofs(false);
+                    setStep(3);
+                  }
+                }}
+              >
+                {uploadingProofs ? 'Uploading...' : 'Next: Payment Summary'}
+                {!uploadingProofs && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                )}
               </button>
             </div>
           </div>

@@ -90,6 +90,7 @@ require('./models/SosAlert');
 require('./models/TenantPhoto');
 require('./models/OwnerPhoto');
 require('./models/BuildingPhoto');
+require('./models/TenantProof');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -115,6 +116,7 @@ app.use('/api/services', require('./routes/serviceRoutes'));
 app.use('/api/confidential-reports', require('./routes/confidentialReportRoutes'));
 app.use('/api/procurement', procurementRoutes);
 app.use('/api/community', require('./routes/communityRoutes'));
+app.use('/api/tenant-proofs', require('./routes/tenantProofRoutes'));
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
