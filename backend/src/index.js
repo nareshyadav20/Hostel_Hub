@@ -47,6 +47,10 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+
 const buildingRoutes = require('./routes/buildingRoutes');
 const floorRoutes = require('./routes/floorRoutes');
 const roomRoutes = require('./routes/roomRoutes');
@@ -83,6 +87,9 @@ require('./models/PurchaseOrder');
 require('./models/Booking');
 require('./models/ConfidentialReport');
 require('./models/SosAlert');
+require('./models/TenantPhoto');
+require('./models/OwnerPhoto');
+require('./models/BuildingPhoto');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);

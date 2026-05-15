@@ -65,6 +65,14 @@ export const api = {
     const res = await axios.post(`${API_URL}/owner/documents`, doc);
     return res.data;
   },
+  uploadOwnerPhoto: async (photoUrl) => {
+    const res = await axios.post(`${API_URL}/owner/profile/photo`, { photoUrl });
+    return res.data;
+  },
+  getOwnerPhoto: async () => {
+    const res = await axios.get(`${API_URL}/owner/profile/photo`);
+    return res.data;
+  },
 
   // Buildings & Infrastructure
   getBuildings: async () => {
@@ -323,6 +331,14 @@ export const api = {
   },
   deleteBuilding: async (id) => {
     await axios.delete(`${API_URL}/buildings/${id}`);
+  },
+  uploadPhotos: async (formData) => {
+    const res = await axios.post(`${API_URL}/buildings/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return res.data;
   },
   addFloor: async (data) => {
     const res = await axios.post(`${API_URL}/floors`, data);

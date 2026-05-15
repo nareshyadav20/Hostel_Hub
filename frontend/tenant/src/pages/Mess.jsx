@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import API from '../api/axios';
 import './Mess.css';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
+import { ChevronLeft, ChevronRight, Search, Filter, Calendar, Clock, AlertTriangle, Coffee, Utensils, Moon } from 'lucide-react';
 
 const Mess = () => {
   const [rating, setRating] = useState(0);
@@ -10,6 +11,10 @@ const Mess = () => {
   const [tenantPlan, setTenantPlan] = useState('Standard');
   const [loading, setLoading] = useState(true);
   const [attendanceStatus, setAttendanceStatus] = useState('dining'); // 'dining' or 'skipped'
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 7;
 
   const fetchMessData = async () => {
     try {
@@ -265,8 +270,8 @@ const Mess = () => {
               </tr>
             </thead>
             <tbody>
-              {weeklyMenu.map((m, i) => (
-                <tr key={i}>
+              {weeklyMenu.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((m, i) => (
+                <tr key={i} className="fade-in">
                   <td className="td-day">{m.day}</td>
                   <td className="td-dish">{m.breakfast}</td>
                   <td className="td-dish">{m.lunch}</td>
@@ -275,6 +280,40 @@ const Mess = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="pagination-controls-premium">
+          <div className="pagination-info">
+            Showing <span>{(currentPage - 1) * itemsPerPage + 1}</span> - <span>{Math.min(currentPage * itemsPerPage, weeklyMenu.length)}</span> of <span>{weeklyMenu.length}</span> Days
+          </div>
+          <div className="pagination-btns">
+            <button 
+              className={`p-btn ${currentPage === 1 ? 'disabled' : ''}`}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <div className="p-pages">
+              {Array.from({ length: Math.ceil(weeklyMenu.length / itemsPerPage) }).map((_, i) => (
+                <button 
+                  key={i}
+                  className={`p-page-num ${currentPage === i + 1 ? 'active' : ''}`}
+                  onClick={() => setCurrentPage(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            <button 
+              className={`p-btn ${currentPage === Math.ceil(weeklyMenu.length / itemsPerPage) ? 'disabled' : ''}`}
+              onClick={() => setCurrentPage(p => Math.min(Math.ceil(weeklyMenu.length / itemsPerPage), p + 1))}
+              disabled={currentPage === Math.ceil(weeklyMenu.length / itemsPerPage)}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       </div>
     </div>
