@@ -12,8 +12,9 @@ import {
   ShieldCheck, BookOpen, Coffee, Gamepad, Fingerprint, Droplets,
   Armchair, ClipboardList, Star, ChevronRight, ChevronLeft,
   Smartphone, UserCheck, Briefcase, FileText, Calendar, Clock,
-  Heart, Home, ArrowLeft, Settings, Trash2
+  Heart, Home, ArrowLeft, Settings, Trash2, ChevronUp
 } from 'lucide-react';
+import ImageModal from '../components/ImageModal';
 import { api } from '../mockData';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 import { clearAllCache } from '../cache';
@@ -92,6 +93,7 @@ const Portfolio = () => {
   const [showDrafts, setShowDrafts] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null); // { id, name, type: 'draft' | 'property' }
   const [isDeletingItem, setIsDeletingItem] = useState(false);
+  const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
   
   const [searchTerm, setSearchTerm] = useState('');
   const [occupancyFilter, setOccupancyFilter] = useState('All');
@@ -503,13 +505,26 @@ const Portfolio = () => {
             {formData.gallery && formData.gallery.length > 0 ? (
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
                 {formData.gallery.map((img, i) => (
-                  <img key={i} src={`http://localhost:5000${img}`} alt={`Upload ${i}`} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: formData.coverImage === img ? '2px solid var(--accent-primary)' : '1px solid #e2e8f0' }} onClick={() => setFormData({...formData, coverImage: img})} title="Click to set as cover" />
+                  <img 
+                    key={i} 
+                    src={`http://localhost:5000${img}`} 
+                    alt={`Upload ${i}`} 
+                    style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: formData.coverImage === img ? '2px solid var(--accent-primary)' : '1px solid #e2e8f0', cursor: 'zoom-in' }} 
+                    onClick={() => setModalInfo({ isOpen: true, image: `http://localhost:5000${img}` })}
+                    onDoubleClick={() => setFormData({...formData, coverImage: img})}
+                    title="Click to preview, double-click to set as cover" 
+                  />
                 ))}
               </div>
             ) : formData.coverImage && (
-               <img src={formData.coverImage.startsWith('http') ? formData.coverImage : `http://localhost:5000${formData.coverImage}`} alt="Cover" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', marginTop: '0.5rem' }} />
+               <img 
+                 src={formData.coverImage.startsWith('http') ? formData.coverImage : `http://localhost:5000${formData.coverImage}`} 
+                 alt="Cover" 
+                 style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', marginTop: '0.5rem', cursor: 'zoom-in' }} 
+                 onClick={() => setModalInfo({ isOpen: true, image: formData.coverImage.startsWith('http') ? formData.coverImage : `http://localhost:5000${formData.coverImage}` })}
+               />
             )}
-            <small style={{ color: '#64748B', fontSize: '0.75rem', marginTop: '0.25rem' }}>Upload images directly. Click an image to set as cover.</small>
+            <small style={{ color: '#64748B', fontSize: '0.75rem', marginTop: '0.25rem' }}>Click an image to preview. Double-click to set as cover.</small>
           </div>
         </div>
       );
@@ -1077,6 +1092,7 @@ const Portfolio = () => {
                   building={b} 
                   onNavigate={() => navigate(`/owner/building/${b.id}/dashboard`)} 
                   onRefresh={() => { fetchData(); loadDrafts(); }}
+                  onImageClick={(img) => setModalInfo({ isOpen: true, image: img })}
                 />
               ))
             ) : (
@@ -1494,7 +1510,7 @@ const Portfolio = () => {
   );
 };
 
-const BuildingCard = ({ building, onNavigate, onRefresh }) => {
+const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick }) => {
   const [imgIdx, setImgIdx] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
@@ -1572,6 +1588,17 @@ const BuildingCard = ({ building, onNavigate, onRefresh }) => {
               <ChevronRight size={20} />
             </button>
           </div>
+        )}
+
+        {/* View Full Screen Button */}
+        {onImageClick && (
+          <button 
+            onClick={(e) => { e.stopPropagation(); onImageClick(images[imgIdx]); }}
+            style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', zIndex: 10, background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-in', backdropFilter: 'blur(4px)', color: '#1E293B' }}
+            title="View Full Image"
+          >
+            <Search size={16} />
+          </button>
         )}
         
         {/* Badges */}

@@ -1,19 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import API from '../api/axios';
 import './Booking.css';
 
 const Booking = () => {
   const navigate = useNavigate();
   const { buildingId } = useParams();
+  const location = useLocation();
   const idUploadRef = useRef(null);
   const photoUploadRef = useRef(null);
+  
+  // Map passed state to room type
+  const passedSharing = location.state?.selectedSharing || 2;
+  const passedBed = location.state?.selectedBed || 1;
+  const initialRoomType = passedSharing === 1 ? 'Single' : (passedSharing === 3 ? 'Triple' : 'Double');
   
   const [user, setUser] = useState({});
   const [step, setStep] = useState(1);
   const [hostel, setHostel] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [formData, setFormData] = useState({ roomType: 'Double', moveInDate: '', agreementSigned: false, idProof: null, profilePhoto: null });
+  const [formData, setFormData] = useState({ roomType: initialRoomType, moveInDate: '', agreementSigned: false, idProof: null, profilePhoto: null });
   const [bookings, setBookings] = useState([]);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [uploadingProofs, setUploadingProofs] = useState(false);
@@ -22,7 +28,8 @@ const Booking = () => {
   const [apiError, setApiError] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('UPI');
 
-  const basePrice = hostel?.startingPrice || 9000;
+  const passedBasePrice = location.state?.basePrice;
+  const basePrice = passedBasePrice || hostel?.startingPrice || 9000;
 
   const roomOptions = [
     { 
@@ -101,7 +108,7 @@ const Booking = () => {
   const handleBooking = async () => {
     setApiError(null);
     const tenantId = user?._id || user?.id;
-    const amount = (parseInt(currentRoom.price) * 2);
+    const amount = parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + 3000 + 799;
 
     console.log("[Booking] Debug Info:", { 
       tenantId, 
@@ -141,7 +148,9 @@ const Booking = () => {
       category: currentRoom.name,
       moveInDate: formData.moveInDate,
       totalAmount: amount,
-      proofId
+      proofId,
+      bedNumber: passedBed,
+      sharingType: passedSharing
     };
 
     console.log("[Booking] Outgoing Payload:", payload);
@@ -595,20 +604,28 @@ const Booking = () => {
                  <span className="item-value">{currentRoom.name}</span>
                </div>
                <div className="summary-item-row">
-                 <span className="item-label">Monthly Rent</span>
+                 <span className="item-label">Room Rent</span>
                  <span className="item-value">₹{parseInt(currentRoom.price).toLocaleString()}</span>
                </div>
                <div className="summary-item-row">
-                 <span className="item-label">Refundable Security Deposit</span>
-                 <span className="item-value">₹{parseInt(currentRoom.price).toLocaleString()}</span>
+                 <span className="item-label">Security Deposit</span>
+                 <span className="item-value">₹{parseInt(currentRoom.deposit || currentRoom.price).toLocaleString()}</span>
+               </div>
+               <div className="summary-item-row">
+                 <span className="item-label">Food (Monthly)</span>
+                 <span className="item-value">₹3,000</span>
+               </div>
+               <div className="summary-item-row">
+                 <span className="item-label">Maintenance</span>
+                 <span className="item-value">₹799</span>
                </div>
                <div className="summary-divider"></div>
                <div className="summary-total-row">
                  <div className="total-label-group">
-                   <span className="total-label">Total Payable Now</span>
-                   <span className="total-subtitle">Inc. security deposit & first month rent</span>
+                   <span className="total-label">Total Due (Move-in)</span>
+                   <span className="total-subtitle">Rent + Deposit + Food + Maintenance</span>
                  </div>
-                 <span className="total-amount-val">₹{(parseInt(currentRoom.price) * 2).toLocaleString()}</span>
+                 <span className="total-amount-val">₹{(parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + 3000 + 799).toLocaleString()}</span>
                </div>
             </div>
 

@@ -10,6 +10,7 @@ import {
 import API from '../api/axios';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 import './Listing.css';
+import ImageModal from '../components/ImageModal';
 
 const Listing = () => {
   const navigate = useNavigate();
@@ -48,6 +49,7 @@ const Listing = () => {
 
   const [hostel, setHostel] = useState(null);
   const [menuUpdateInfo, setMenuUpdateInfo] = useState('');
+  const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
 
   React.useEffect(() => {
     const fetchHostel = () => {
@@ -121,7 +123,20 @@ const Listing = () => {
       </header>
 
       <div className="lst-gallery">
-        <div className="lst-img-main"><img src={hostel?.images?.[0] || images[0]} alt="Main" className="lst-img" /></div>
+        <div 
+          className="lst-img-main" 
+          onClick={() => {
+            const imgSrc = hostel?.images && hostel.images[0] ? (hostel.images[0].startsWith('http') ? hostel.images[0] : `http://localhost:5000${hostel.images[0]}`) : images[0];
+            setModalInfo({ isOpen: true, image: imgSrc });
+          }}
+          style={{ cursor: 'zoom-in' }}
+        >
+          <img 
+            src={hostel?.images && hostel.images[0] ? (hostel.images[0].startsWith('http') ? hostel.images[0] : `http://localhost:5000${hostel.images[0]}`) : images[0]} 
+            alt="Main" 
+            className="lst-img" 
+          />
+        </div>
       </div>
       {/* 2. Nav Tabs */}
       <div className="lst-nav-wrap">
@@ -251,14 +266,14 @@ const Listing = () => {
 
               <div style={{ display: 'flex', gap: '20px', marginBottom: '16px', fontSize: '14px', fontWeight: 700 }}>
                 <span>Total Beds: {selectedSharing}</span>
-                <span style={{ color: 'var(--lst-success)' }}>Available: {selectedSharing === 1 ? 1 : 1}</span>
-                <span style={{ color: 'var(--lst-danger)' }}>Occupied: {selectedSharing === 1 ? 0 : selectedSharing - 1}</span>
+                <span style={{ color: 'var(--lst-success)' }}>Available: {selectedSharing - (hostel?.filledBeds?.filter(b => b.sharingType === selectedSharing).length || 0)}</span>
+                <span style={{ color: 'var(--lst-danger)' }}>Occupied: {hostel?.filledBeds?.filter(b => b.sharingType === selectedSharing).length || 0}</span>
               </div>
 
               <div className="lst-bed-list">
                 {Array.from({ length: selectedSharing }).map((_, i) => {
                   const bedNum = i + 1;
-                  const isFilled = selectedSharing > 1 && bedNum === 1; // Bed 1 is filled if sharing > 1
+                  const isFilled = hostel?.filledBeds?.some(b => b.sharingType === selectedSharing && b.bedNumber === bedNum);
                   return (
                     <div key={bedNum}
                       className={`lst-bed-row ${isFilled ? 'occupied' : (selectedBed === bedNum ? 'selected' : '')}`}
@@ -296,7 +311,7 @@ const Listing = () => {
             <div className="lst-bed-cards-v2">
               {Array.from({ length: selectedSharing }).map((_, i) => {
                 const bedNum = i + 1;
-                const isOccupied = selectedSharing > 1 && bedNum === 1;
+                const isOccupied = hostel?.filledBeds?.some(b => b.sharingType === selectedSharing && b.bedNumber === bedNum);
                 const isSelected = selectedBed === bedNum;
                 const isExpanded = expandedBed === bedNum;
 
@@ -556,7 +571,7 @@ const Listing = () => {
               <button 
                 className="lst-btn-reserve" 
                 disabled={!selectedBed}
-                onClick={() => navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed } })}
+                onClick={() => navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed, basePrice } })}
                 style={{ width: '100%', padding: '20px', fontSize: '18px' }}
               >
                 Reserve Your Bed Now
@@ -564,7 +579,12 @@ const Listing = () => {
               <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: 'var(--lst-text-muted)', fontWeight: 600 }}>
                 🔒 Secure payment powered by Livora Finance
               </div>
-            </div>
+              <ImageModal 
+        isOpen={modalInfo.isOpen} 
+        image={modalInfo.image} 
+        onClose={() => setModalInfo({ isOpen: false, image: '' })} 
+      />
+    </div>
           </div>
         </div>
 
