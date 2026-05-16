@@ -4,9 +4,23 @@ const Notification = require('../models/Notification');
 exports.getNotifications = async (req, res) => {
   try {
     const { buildingId, portalType, moduleName, priority, isRead } = req.query;
-    const filters = {};
+    const filters = { archived: false };
+    const mongoose = require('mongoose');
     
-    // Support for both portals
+    if (buildingId) {
+      const bIdStr = buildingId.toString();
+      filters.$and = filters.$and || [];
+      filters.$and.push({
+        $or: [
+          { buildingId: bIdStr },
+          { buildingId: mongoose.Types.ObjectId.isValid(bIdStr) ? new mongoose.Types.ObjectId(bIdStr) : null },
+          { buildingId: { $exists: false } },
+          { buildingId: null }
+        ]
+      });
+    }
+
+    // Role-based targeting
     if (req.user.role === 'TENANT') {
       const { getOrCreateTenant } = require('../utils/tenantHelper');
       const tenant = await getOrCreateTenant(req.user);
@@ -19,23 +33,38 @@ exports.getNotifications = async (req, res) => {
       ];
       filters.portalType = 'Tenant';
     } else {
+      // Owner sees:
+      // 1. Notifications explicitly for 'Owner' portal
+      // 2. Notifications where they are the 'owner'
+      // 3. Any notification targeting their building (Management oversight)
       filters.$or = [
         { owner: req.user.id },
-        { portalType: 'Owner' }
+        { portalType: 'Owner' },
+        { buildingId: filters.buildingId }
       ];
+      // If they are filtering by portalType specifically, apply it
       if (portalType) filters.portalType = portalType;
     }
     
+    // Additional filters from query
+    if (portalType && req.user.role !== 'TENANT') filters.portalType = portalType;
     if (moduleName) filters.moduleName = moduleName;
     if (priority) filters.priority = priority;
     if (isRead !== undefined) filters.isRead = isRead === 'true';
 
-    console.log('Fetching notifications with filters:', filters);
-    const notifications = await notificationService.getNotifications(buildingId, filters);
-    console.log(`Found ${notifications.length} notifications`);
+    console.log('🔍 FETCH_NOTIFICATIONS:', {
+      userRole: req.user.role,
+      userId: req.user.id,
+      filters
+    });
+
+    const notifications = await Notification.find(filters).sort({ createdAt: -1 }).limit(100);
+    console.log(`✅ FETCH_SUCCESS: Found ${notifications.length} notifications`);
+    
+    // Transform _id to id for frontend compatibility if needed (handleId does this in frontend but let's be safe)
     res.json(notifications);
   } catch (error) {
-    console.error('Error in getNotifications:', error);
+    console.error('❌ FETCH_ERROR:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -43,7 +72,21 @@ exports.getNotifications = async (req, res) => {
 exports.getUnreadCount = async (req, res) => {
   try {
     const { buildingId } = req.query;
-    const query = { buildingId, isRead: false, archived: false };
+    const query = { isRead: false, archived: false };
+    const mongoose = require('mongoose');
+    
+    if (buildingId) {
+      const bIdStr = buildingId.toString();
+      query.$and = query.$and || [];
+      query.$and.push({
+        $or: [
+          { buildingId: bIdStr },
+          { buildingId: mongoose.Types.ObjectId.isValid(bIdStr) ? new mongoose.Types.ObjectId(bIdStr) : null },
+          { buildingId: { $exists: false } },
+          { buildingId: null }
+        ]
+      });
+    }
     
     if (req.user.role === 'TENANT') {
       const { getOrCreateTenant } = require('../utils/tenantHelper');
@@ -59,7 +102,8 @@ exports.getUnreadCount = async (req, res) => {
     } else {
       query.$or = [
         { owner: req.user.id },
-        { portalType: 'Owner' }
+        { portalType: 'Owner' },
+        { buildingId: query.buildingId }
       ];
     }
     
@@ -179,7 +223,48 @@ exports.seedNotifications = async (req, res) => {
     const { buildingId } = req.body;
     if (!buildingId) return res.status(400).json({ message: 'buildingId is required' });
 
-    const samples = [];
+    const samples = [
+      {
+        moduleName: 'Mess',
+        portalType: 'Owner',
+        category: 'Attendance',
+        title: 'Attendance Confirmation',
+        message: 'Rahul (Room 204) has confirmed attendance for Dinner tonight in Livora Building.',
+        priority: 'Low',
+        type: 'info',
+        buildingId
+      },
+      {
+        moduleName: 'Mess',
+        portalType: 'Owner',
+        category: 'Attendance',
+        title: 'Meal Skipped',
+        message: 'Priya (Room 105) has opted to skip Breakfast tomorrow to reduce waste.',
+        priority: 'Medium',
+        type: 'warning',
+        buildingId
+      },
+      {
+        moduleName: 'Payments',
+        portalType: 'Owner',
+        category: 'Rent',
+        title: 'Payment Received',
+        message: 'Rent payment of ₹8,500 received from Rahul via UPI.',
+        priority: 'High',
+        type: 'success',
+        buildingId
+      },
+      {
+        moduleName: 'Complaints',
+        portalType: 'Owner',
+        category: 'Plumbing',
+        title: 'New Maintenance Request',
+        message: '🚨 Leaking Tap: Room 204 reported a water leak in the washroom.',
+        priority: 'High',
+        type: 'error',
+        buildingId
+      }
+    ];
 
     for (const s of samples) {
       await notificationService.createNotification(s);

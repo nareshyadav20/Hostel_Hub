@@ -18,14 +18,22 @@ const createNotification = async (data) => {
     });
     
     await notification.save();
+    console.log('📝 Notification saved to DB:', {
+      id: notification._id,
+      module: notification.moduleName,
+      portal: notification.portalType,
+      building: notification.buildingId
+    });
 
     // Real-time update via Socket.IO
     // 1. Target specific user if receiverId is provided
     if (data.receiverId && data.receiverRole) {
+      console.log('📡 Emitting to user:', data.receiverId);
       socketService.emitToUser(data.receiverId, data.receiverRole, 'newNotification', notification);
     } 
     // 2. Target building room if buildingId is provided (broadcast to building)
-    else if (data.buildingId) {
+    // ONLY if it's NOT an Owner-exclusive notification to prevent Tenants from seeing it
+    else if (data.buildingId && data.portalType !== 'Owner') {
       socketService.emitToRoom(data.buildingId, 'newNotification', notification);
     }
     

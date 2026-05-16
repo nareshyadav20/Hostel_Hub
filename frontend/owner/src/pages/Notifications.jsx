@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { api } from '../mockData';
 import socket, { connectSocket } from '../utils/socket';
-import useNotifications from '../hooks/useNotifications';
+import { useNotifications } from '../context/NotificationContext';
 
 const Notifications = () => {
   const { buildingId: urlBuildingId } = useParams();
@@ -26,9 +26,12 @@ const Notifications = () => {
     markAllAsRead: handleMarkAllRead,
     deleteNotification: handleDelete,
     refresh: fetchNotifications
-  } = useNotifications(activeBuildingId);
+  } = useNotifications();
 
-  const [activeTab, setActiveTab] = useState('all'); 
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('category') || 'all';
+  }); 
   const [activePortal, setActivePortal] = useState('All'); 
   const [filterPriority, setFilterPriority] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,19 +72,9 @@ const Notifications = () => {
   const portals = ['All', 'Tenant', 'Staff', 'Owner'];
 
   useEffect(() => {
-    // Listen for module-specific events to refresh list
-    socket.on('complaintCreated', () => fetchNotifications());
-    socket.on('tenantAdded', () => fetchNotifications());
-    socket.on('bookingCreated', () => fetchNotifications());
-    socket.on('attendanceUpdated', () => fetchNotifications());
-
-    return () => {
-      socket.off('complaintCreated');
-      socket.off('tenantAdded');
-      socket.off('bookingCreated');
-      socket.off('attendanceUpdated');
-    };
-  }, [fetchNotifications]);
+    // Rely on NotificationContext for real-time updates to the notifications array.
+    // We only need to refresh if something external happens that doesn't trigger a newNotification.
+  }, []);
 
   const handleSeed = async () => {
     try {
@@ -125,6 +118,13 @@ const Notifications = () => {
          n.message?.toLowerCase().includes(searchQuery.toLowerCase()))
       );
   }, [notifications, activeTab, activePortal, filterPriority, searchQuery]);
+  
+  console.log('📊 NOTIFICATIONS_FILTER:', {
+    total: notifications.length,
+    filtered: filteredNotifications.length,
+    activeTab,
+    activePortal
+  });
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -234,16 +234,26 @@ const Notifications = () => {
               key={cat.id}
               onClick={() => setActiveTab(cat.id)}
               style={{
-                display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.8rem', borderRadius: '10px', border: 'none',
+                display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', borderRadius: '12px', border: 'none',
                 background: activeTab === cat.id ? 'var(--accent-primary)' : 'transparent',
                 color: activeTab === cat.id ? 'white' : 'var(--text-secondary)',
-                cursor: 'pointer', transition: 'all 0.2s ease', fontWeight: '700', flexShrink: 0
+                cursor: 'pointer', transition: 'all 0.2s ease', fontWeight: '800', flexShrink: 0,
+                boxShadow: activeTab === cat.id ? '0 4px 12px rgba(var(--accent-primary-rgb), 0.2)' : 'none'
               }}
             >
-              {cat.icon} <span style={{ fontSize: '0.75rem' }}>{cat.name}</span>
+              {cat.icon} <span style={{ fontSize: '0.8rem' }}>{cat.name}</span>
             </button>
           ))}
         </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+        <button 
+          onClick={handleSeed} 
+          style={{ background: 'transparent', border: '1px dashed var(--border-color)', color: 'var(--text-muted)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '600', cursor: 'pointer' }}
+        >
+          Seed Sample Notifications
+        </button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

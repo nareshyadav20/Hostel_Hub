@@ -164,15 +164,22 @@ const Layout = ({ children }) => {
     markAsRead, 
     markAllAsRead, 
     deleteNotification,
-    setActiveBuildingId: setContextBuildingId 
+    setActiveBuildingId: setContextBuildingId,
+    activeBuildingId: contextBuildingId // Get current context ID
   } = useNotifications();
 
-  // Sync activeBuildingId with context
+  // Sync activeBuildingId with context ONLY if it differs
   useEffect(() => {
-    if (activeBuildingId) {
+    if (activeBuildingId && activeBuildingId !== contextBuildingId) {
       setContextBuildingId(activeBuildingId);
     }
-  }, [activeBuildingId, setContextBuildingId]);
+  }, [activeBuildingId, contextBuildingId, setContextBuildingId]);
+
+  console.log('🔔 Layout Notifications State:', { 
+    count: notifications.length, 
+    unread: unreadCount,
+    activeBuildingId 
+  });
 
   // Toast Listener (Still needed here for UI)
   useEffect(() => {

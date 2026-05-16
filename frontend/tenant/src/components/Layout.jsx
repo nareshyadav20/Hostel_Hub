@@ -98,7 +98,10 @@ const Layout = ({ children }) => {
   // Toast Listener
   useEffect(() => {
     const handleNewNotif = (notif) => {
-      setActiveToasts(prev => [...prev, { ...notif, toastId: Date.now() }]);
+      // ONLY show if it's meant for Tenants
+      if (notif.portalType === 'Tenant' || notif.portalType === 'All') {
+        setActiveToasts(prev => [...prev, { ...notif, toastId: Date.now() }]);
+      }
     };
     
     socket.on('newNotification', handleNewNotif);

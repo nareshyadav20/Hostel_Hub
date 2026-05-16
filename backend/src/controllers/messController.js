@@ -91,9 +91,7 @@ exports.updateMenu = async (req, res) => {
 
 exports.getAttendance = async (req, res) => {
     try {
-        const { buildingId, date } = req.query; // date format: YYYY-MM-DD
-        if (!buildingId || !date) return res.status(400).json({ message: 'buildingId and date are required' });
-
+        const { buildingId, date } = req.query;
         const attendance = await MessAttendance.find({ buildingId, date });
         res.json(attendance);
     } catch (err) {
@@ -105,17 +103,26 @@ exports.updateAttendance = async (req, res) => {
     try {
         const { tenantId, buildingId, date, meal, status } = req.body;
         
-        const update = { [meal]: status };
+        // Find existing attendance or create new
+        let attendance = await MessAttendance.findOne({ tenantId, buildingId, date });
         
-        const attendance = await MessAttendance.findOneAndUpdate(
-            { tenantId, date, buildingId },
-            { $set: update },
-            { new: true, upsert: true }
-        );
+        if (!attendance) {
+            attendance = new MessAttendance({
+                tenantId,
+                buildingId,
+                date,
+                [meal]: status
+            });
+        } else {
+            attendance[meal] = status;
+        }
+        
+        await attendance.save();
 
-        // Real-time synchronization
+        // Real-time notification for both Tenant (local update) and Owner (analytics)
         const updatePayload = {
             tenantId,
+            buildingId,
             date,
             meal,
             status,
@@ -146,7 +153,7 @@ exports.updateAttendance = async (req, res) => {
             priority: status ? 'Low' : 'Medium', // Medium priority for skipped meals to help with waste reduction
             type: 'info',
             buildingId,
-            actionLink: '/mess'
+            actionLink: `/owner/building/${buildingId}/notifications?category=Mess`
         });
         
         res.json(attendance);
@@ -176,20 +183,6 @@ exports.markAllAttendance = async (req, res) => {
             meal,
             status: true,
             isBulk: true
-        });
-
-        // Optional: Trigger building-wide announcement notification
-        const notificationService = require('../utils/notificationService');
-        await notificationService.createNotification({
-            moduleName: 'Mess',
-            portalType: 'Tenant',
-            category: 'Attendance',
-            title: 'Mess Attendance Updated',
-            message: `Attendance for ${meal} today has been updated for all residents.`,
-            priority: 'Low',
-            type: 'info',
-            buildingId,
-            actionLink: '/mess'
         });
 
         res.json(updated);
