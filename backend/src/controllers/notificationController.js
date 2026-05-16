@@ -36,13 +36,36 @@ exports.getNotifications = async (req, res) => {
       // Owner sees:
       // 1. Notifications explicitly for 'Owner' portal
       // 2. Notifications where they are the 'owner'
-      // 3. Any notification targeting their building (Management oversight)
+      // 3. Any notification targeting buildings they own
+      
+      const Building = require('../models/Building');
+      const ownerBuildings = await Building.find({ owner: req.user.id }, '_id').lean();
+      const buildingIds = ownerBuildings.map(b => b._id);
+      
+      const ownerIdStr = req.user.id.toString();
+      const ownerIdObj = mongoose.Types.ObjectId.isValid(ownerIdStr) ? new mongoose.Types.ObjectId(ownerIdStr) : null;
+
+      // START WITH A BROAD SCOPE FOR OWNERS
       filters.$or = [
-        { owner: req.user.id },
         { portalType: 'Owner' },
-        { buildingId: filters.buildingId }
+        { owner: ownerIdStr },
+        { buildingId: { $in: buildingIds } }
       ];
-      // If they are filtering by portalType specifically, apply it
+      if (ownerIdObj) filters.$or.push({ owner: ownerIdObj });
+
+      // If a specific buildingId was requested, we MUST respect it but keep portalType: 'Owner' alerts visible
+      if (buildingId) {
+        const bIdStr = buildingId.toString();
+        const bIdObj = mongoose.Types.ObjectId.isValid(bIdStr) ? new mongoose.Types.ObjectId(bIdStr) : null;
+        
+        filters.$or = [
+          { portalType: 'Owner' }, // Always allow general owner alerts
+          { buildingId: bIdStr }
+        ];
+        if (bIdObj) filters.$or.push({ buildingId: bIdObj });
+      }
+      
+      // If they are filtering by portalType specifically, apply it as a top-level constraint
       if (portalType) filters.portalType = portalType;
     }
     
@@ -52,23 +75,23 @@ exports.getNotifications = async (req, res) => {
     if (priority) filters.priority = priority;
     if (isRead !== undefined) filters.isRead = isRead === 'true';
 
-    console.log('🔍 FETCH_NOTIFICATIONS:', {
-      userRole: req.user.role,
-      userId: req.user.id,
-      filters
-    });
-
+    console.log('📡 [DB_FETCH] Processing request for Owner Hub...');
     const notifications = await Notification.find(filters).sort({ createdAt: -1 }).limit(100);
-    console.log(`✅ FETCH_SUCCESS: Found ${notifications.length} notifications`);
+    
+    console.log(`✅ [DB_FETCH] Query successful. Found ${notifications.length} persistent records.`);
     if (notifications.length > 0) {
-      console.log('🔍 SAMPLE_NOTIF:', {
+      console.log('📊 [DB_FETCH] TOP_RECORD_DIAGNOSTICS:', {
         title: notifications[0].title,
-        portalType: notifications[0].portalType,
-        buildingId: notifications[0].buildingId
+        module: notifications[0].moduleName,
+        portal: notifications[0].portalType,
+        building: notifications[0].buildingId,
+        id: notifications[0]._id,
+        timestamp: notifications[0].createdAt
       });
+    } else {
+      console.warn('⚠️ [DB_FETCH] Warning: No persistent notifications found for this query.');
     }
     
-    // Transform _id to id for frontend compatibility if needed (handleId does this in frontend but let's be safe)
     res.json(notifications);
   } catch (error) {
     console.error('❌ FETCH_ERROR:', error);
@@ -107,10 +130,14 @@ exports.getUnreadCount = async (req, res) => {
       ];
       query.portalType = 'Tenant';
     } else {
+      const bIdStr = buildingId ? buildingId.toString() : null;
+      const bIdObj = (bIdStr && mongoose.Types.ObjectId.isValid(bIdStr)) ? new mongoose.Types.ObjectId(bIdStr) : null;
+
       query.$or = [
         { owner: req.user.id },
         { portalType: 'Owner' },
-        { buildingId: query.buildingId }
+        { buildingId: bIdStr },
+        { buildingId: bIdObj }
       ];
     }
     

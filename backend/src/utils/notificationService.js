@@ -11,46 +11,56 @@ const setIo = (socketIo) => {
  * Centralized function to create notifications from any module
  */
 const createNotification = async (data) => {
+  console.log('⚡ [DB_PERSISTENCE] Starting notification creation for:', data.title);
   try {
+    if (!data.moduleName || !data.portalType || !data.title || !data.message) {
+      console.warn('❌ [DB_PERSISTENCE] Missing required fields in payload:', data);
+    }
+
+    // Ensure buildingId is a valid ObjectId if possible
+    let finalData = { ...data };
+    const mongoose = require('mongoose');
+    if (data.buildingId && mongoose.Types.ObjectId.isValid(data.buildingId)) {
+      finalData.buildingId = new mongoose.Types.ObjectId(data.buildingId);
+    }
+
     const notification = new Notification({
-      ...data,
+      ...finalData,
       isRead: false,
     });
     
+    console.log('📝 [DB_PERSISTENCE] Attempting to save to MongoDB Atlas...');
     await notification.save();
-    console.log('📦 DB_SAVE_COMPLETE:', {
-      _id: notification._id,
-      title: notification.title,
-      buildingId: notification.buildingId,
-      portalType: notification.portalType
-    });
-    console.log('📝 Notification saved to DB:', {
+    
+    console.log('✅ [DB_PERSISTENCE] SUCCESS! Notification persisted physically in DB.');
+    console.log('📎 [DB_PERSISTENCE] Document Details:', {
       id: notification._id,
       module: notification.moduleName,
       portal: notification.portalType,
-      building: notification.buildingId
+      category: notification.category,
+      buildingId: notification.buildingId,
+      createdAt: notification.createdAt
     });
 
-    // Real-time update via Socket.IO
-    // 1. Target specific user if receiverId is provided
+    // Real-time update via Socket.IO (Happens AFTER successful DB save)
     if (data.receiverId && data.receiverRole) {
-      console.log('📡 Emitting to user:', data.receiverId);
       socketService.emitToUser(data.receiverId, data.receiverRole, 'newNotification', notification);
     } 
-    // 2. Target building room if buildingId is provided (broadcast to building)
-    // ONLY if it's NOT an Owner-exclusive notification to prevent Tenants from seeing it
     else if (data.buildingId && data.portalType !== 'Owner') {
       socketService.emitToRoom(data.buildingId, 'newNotification', notification);
     }
     
-    // 3. Fallback/Dual-emit for Owners if it's an owner notification
     if (data.portalType === 'Owner' || data.owner) {
       socketService.emitToOwner('newNotification', notification);
     }
 
     return notification;
   } catch (error) {
-    console.error('Error creating notification:', error);
+    console.error('🔥 [DB_PERSISTENCE] CRITICAL SAVE FAILURE:', {
+      error: error.message,
+      stack: error.stack,
+      attemptedData: data
+    });
     return null;
   }
 };

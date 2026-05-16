@@ -68,15 +68,21 @@ exports.updateMenu = async (req, res) => {
         if (breakfast) updatedMeals.push(`Breakfast: ${breakfast}`);
         if (lunch) updatedMeals.push(`Lunch: ${lunch}`);
         if (dinner) updatedMeals.push(`Dinner: ${dinner}`);
-        
+        // Ensure we have a valid buildingId for the notification
+        const finalBuildingId = buildingId || (tenant.buildingId?._id || tenant.buildingId);
+
+        if (!finalBuildingId) {
+            console.warn('⚠️ No buildingId found for attendance notification');
+        }
+
         const mealSummary = updatedMeals.join(' | ');
 
         await notificationService.createNotification({
             moduleName: 'Mess',
             portalType: 'Tenant',
             category: 'Menu Update',
-            title: `Mess Menu: ${day} Updated`,
-            message: `The ${plan} plan menu for ${day} has been updated. ${mealSummary}`,
+            title: `Mess Menu Updated`,
+            message: `The menu for today has been updated. ${mealSummary}`,
             priority: 'Medium',
             type: 'info',
             buildingId,
@@ -132,13 +138,28 @@ exports.updateAttendance = async (req, res) => {
         socketService.emitToRoom(buildingId, 'attendanceUpdated', updatePayload);
         socketService.emitToOwner('attendanceUpdated', updatePayload);
 
-        // Get tenant details for enriched Owner notification
-        const notificationService = require('../utils/notificationService');
+        const MessLog = require('../models/MessLog');
         const Tenant = require('../models/Tenant');
         const Building = require('../models/Building');
+        const notificationService = require('../utils/notificationService');
         
         const tenant = await Tenant.findById(tenantId);
-        const building = await Building.findById(buildingId);
+        
+        // Save to permanent MessLog collection
+        await MessLog.create({
+            tenantId,
+            buildingId: buildingId || tenant?.buildingId,
+            tenantName: tenant?.name || 'Unknown',
+            roomNumber: tenant?.room || 'N/A',
+            meal,
+            status,
+            date
+        });
+        
+        // CRITICAL: Ensure we have a valid buildingId for the notification
+        const finalBuildingId = buildingId || (tenant?.buildingId?._id || tenant?.buildingId);
+        
+        const building = finalBuildingId ? await Building.findById(finalBuildingId) : null;
         
         const tenantName = tenant ? tenant.name : 'A resident';
         const roomNumber = (tenant && tenant.room) ? ` (Room ${tenant.room})` : '';
@@ -151,10 +172,10 @@ exports.updateAttendance = async (req, res) => {
             category: 'Attendance',
             title: `Attendance ${status ? 'Confirmed' : 'Skipped'}`,
             message: `${tenantName}${roomNumber} has opted to ${status ? 'attend' : 'skip'} ${meal} on ${new Date(date).toLocaleDateString()}${buildingName}.`,
-            priority: status ? 'Low' : 'Medium', // Medium priority for skipped meals to help with waste reduction
+            priority: status ? 'Low' : 'Medium',
             type: 'info',
-            buildingId,
-            actionLink: `/owner/building/${buildingId}/notifications?category=Mess`
+            buildingId: finalBuildingId,
+            actionLink: `/owner/building/${finalBuildingId}/notifications?category=Mess`
         });
         
         res.json(attendance);

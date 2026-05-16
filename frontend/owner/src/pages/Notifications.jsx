@@ -403,6 +403,12 @@ const Notifications = () => {
         )}
       </AnimatePresence>
 
+      {/* Temporary Debug View */}
+      <div style={{ marginTop: '4rem', padding: '1rem', background: '#000', color: '#0f0', borderRadius: '12px', fontSize: '0.7rem', fontFamily: 'monospace' }}>
+        <h4>DEBUG: Raw Notifications ({notifications.length})</h4>
+        <pre>{JSON.stringify(notifications.slice(0, 5).map(n => ({ title: n.title, module: n.moduleName, building: n.buildingId, portal: n.portalType })), null, 2)}</pre>
+      </div>
+
       <style>{`
         .btn-notif-action { background: transparent; border: none; display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); cursor: pointer; }
         .btn-notif-action:hover { color: var(--text-primary); }

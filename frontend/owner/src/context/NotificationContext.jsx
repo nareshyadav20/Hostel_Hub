@@ -44,6 +44,8 @@ export const NotificationProvider = ({ children }) => {
   }, [activeBuildingId, fetchNotifications]);
 
   useEffect(() => {
+    if (!socket) return;
+
     const handleNewNotification = (notification) => {
       // Check if it's for the current building or global/owner
       const notifBuildingId = notification.buildingId?.toString();
@@ -84,7 +86,7 @@ export const NotificationProvider = ({ children }) => {
 
     socket.on('newNotification', handleNewNotification);
     return () => socket.off('newNotification', handleNewNotification);
-  }, [activeBuildingId]);
+  }, [socket, activeBuildingId]);
 
   const markAsRead = async (id) => {
     try {
