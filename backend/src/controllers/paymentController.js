@@ -81,8 +81,32 @@ const getAllPayments = async (req, res) => {
 
 const getMyPayments = async (req, res) => {
   try {
-    const tenantId = req.query.tenantId || req.user.id;
-    const payments = await Payment.find({ tenantId }).sort({ date: -1 });
+    const email = req.user.email;
+    const userIdFromToken = req.user.id;
+    
+    const User = require('../models/User');
+
+    // Find all possible IDs
+    const [relatedTenants, relatedUsers] = await Promise.all([
+      Tenant.find({ email }).select('_id'),
+      User.find({ email }).select('_id')
+    ]);
+
+    const allAssociatedIds = [
+      ...relatedTenants.map(t => t._id),
+      ...relatedUsers.map(u => u._id)
+    ];
+
+    if (userIdFromToken && !allAssociatedIds.some(id => id.toString() === userIdFromToken)) {
+      allAssociatedIds.push(userIdFromToken);
+    }
+    
+    const passedTenantId = req.query.tenantId;
+    if (passedTenantId && !allAssociatedIds.some(id => id.toString() === passedTenantId)) {
+        allAssociatedIds.push(passedTenantId);
+    }
+
+    const payments = await Payment.find({ tenantId: { $in: allAssociatedIds } }).sort({ date: -1 });
     res.status(200).json(payments);
   } catch (error) {
     res.status(500).json({ error: error.message });
