@@ -11,6 +11,10 @@ const Payments = () => {
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const fetchPaymentInfo = async () => {
@@ -63,6 +67,11 @@ const Payments = () => {
     setParentNumber('');
   };
 
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentInvoices = invoices.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(invoices.length / itemsPerPage);
+
   return (
     <div className="payments-page">
       <header className="payments-header">
@@ -111,7 +120,7 @@ const Payments = () => {
         <div className="sn-card stat-card-premium balance">
           <div className="stat-content">
             <span className="stat-label">Total Invested</span>
-            <h2 className="stat-value">₹{invoices.filter(i => i.status === 'Paid').reduce((sum, i) => sum + i.amount, 0).toLocaleString()}</h2>
+            <h2 className="stat-value">₹{invoices.filter(i => i.status === 'Paid' || i.status === 'Success').reduce((sum, i) => sum + i.amount, 0).toLocaleString()}</h2>
           </div>
           <div className="stat-icon-bg">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -163,7 +172,7 @@ const Payments = () => {
               </tr>
             </thead>
             <tbody>
-              {invoices.map(invoice => (
+              {currentInvoices.map(invoice => (
                 <tr key={invoice.id}>
                   <td className="td-date">{invoice.date}</td>
                   <td className="td-id">
@@ -173,7 +182,7 @@ const Payments = () => {
                   <td>
                     <span className={`status-pill ${invoice.status.toLowerCase()}`}>
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
-                        {invoice.status === 'Paid' ? <polyline points="20 6 9 17 4 12"></polyline> : <circle cx="12" cy="12" r="10"></circle>}
+                        {invoice.status === 'Paid' || invoice.status === 'Success' ? <polyline points="20 6 9 17 4 12"></polyline> : <circle cx="12" cy="12" r="10"></circle>}
                       </svg>
                       {invoice.status}
                     </span>
@@ -188,7 +197,7 @@ const Payments = () => {
         </div>
 
         <div className="mobile-cards-view">
-          {invoices.map(invoice => (
+          {currentInvoices.map(invoice => (
             <div key={invoice.id} className="mobile-transaction-card">
               <div className="mobile-card-top">
                 <span className="m-date">{invoice.date}</span>
@@ -207,6 +216,45 @@ const Payments = () => {
             </div>
           ))}
         </div>
+
+        {/* Premium Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="pagination-container">
+            <button 
+              className="pagination-btn prev" 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+              Prev
+            </button>
+            
+            <div className="pagination-pages">
+              {[...Array(totalPages)].map((_, index) => (
+                <button 
+                  key={index + 1}
+                  className={`page-number ${currentPage === index + 1 ? 'active' : ''}`}
+                  onClick={() => setCurrentPage(index + 1)}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
+
+            <button 
+              className="pagination-btn next" 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
       {showParentModal && (

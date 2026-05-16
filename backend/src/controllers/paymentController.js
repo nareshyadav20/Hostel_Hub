@@ -24,6 +24,15 @@ const createPayment = async (req, res) => {
 
     await payment.save();
 
+    // Update tenant status if it's a rent payment
+    if (type === 'Rent' && (status === 'Paid' || !status)) {
+      await Tenant.findByIdAndUpdate(tenantId, { 
+        rentStatus: 'PAID',
+        lastPayment: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      });
+      socketService.emitUpdate(buildingId, 'tenantUpdated', { _id: tenantId, rentStatus: 'PAID' });
+    }
+
     // Populate before sending back
     const populated = await Payment.findById(payment._id).populate('tenantId');
     

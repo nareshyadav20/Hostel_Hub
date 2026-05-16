@@ -88,7 +88,9 @@ const createBooking = async (req, res) => {
           status: 'ACTIVE',
           room: 'TBD (Assigning)',
           occupation: category,
-          rent: totalAmount / 2 
+          rent: totalAmount / 2,
+          rentStatus: 'PAID',
+          lastPayment: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
         });
         console.log('✅ Tenant profile updated with booking info');
       } else {
@@ -101,7 +103,7 @@ const createBooking = async (req, res) => {
       const BedFilling = require('../models/BedFilling');
       const bedFill = new BedFilling({
         buildingId,
-        tenantId: finalTenantId,
+        tenantId: tenant ? tenant._id : finalTenantId,
         category: category || 'Standard',
         sharingType: sharingType,
         bedNumber: bedNumber,
@@ -123,19 +125,24 @@ const createBooking = async (req, res) => {
       month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
     };
 
-    if (isValidObjectId(tenantId)) paymentData.tenantId = tenantId;
+    // CRITICAL: Link payment to the ACTUAL Tenant Profile ID, not the User ID
+    const actualTenantId = tenant ? tenant._id : finalTenantId;
+    if (isValidObjectId(actualTenantId)) paymentData.tenantId = actualTenantId;
     if (isValidObjectId(buildingId)) paymentData.buildingId = buildingId;
 
     const payment = new Payment(paymentData);
     await payment.save();
     console.log('✅ Payment created:', payment._id);
 
+    // Populate for real-time update
+    const populatedPayment = await Payment.findById(payment._id).populate('tenantId');
+
     // Real-time synchronization
     // Emit booking created to owner portal
-    socketService.emitUpdate(null, 'bookingCreated', { booking, payment });
+    socketService.emitUpdate(null, 'bookingCreated', { booking, payment: populatedPayment });
     
     // Emit payment completed
-    socketService.emitUpdate(buildingId, 'paymentCompleted', payment);
+    socketService.emitUpdate(buildingId, 'paymentCompleted', populatedPayment);
     
     // Emit bed status updated (since booking usually occupies a bed)
     socketService.emitUpdate(buildingId, 'bedStatusUpdated', { status: 'Occupied' });
