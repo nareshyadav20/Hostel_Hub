@@ -8,13 +8,21 @@ exports.getNotifications = async (req, res) => {
     
     // Support for both portals
     if (req.user.role === 'TENANT') {
+      const { getOrCreateTenant } = require('../utils/tenantHelper');
+      const tenant = await getOrCreateTenant(req.user);
+      const tenantId = tenant?._id || req.user.id;
+      
       filters.$or = [
-        { tenantId: req.user.tenantId || req.user.id },
-        { target: 'All Tenants', buildingId }
+        { tenantId: tenantId.toString() },
+        { receiverId: tenantId.toString() },
+        { target: 'All Tenants' }
       ];
       filters.portalType = 'Tenant';
     } else {
-      filters.owner = req.user.id;
+      filters.$or = [
+        { owner: req.user.id },
+        { portalType: 'Owner' }
+      ];
       if (portalType) filters.portalType = portalType;
     }
     
@@ -22,9 +30,12 @@ exports.getNotifications = async (req, res) => {
     if (priority) filters.priority = priority;
     if (isRead !== undefined) filters.isRead = isRead === 'true';
 
+    console.log('Fetching notifications with filters:', filters);
     const notifications = await notificationService.getNotifications(buildingId, filters);
+    console.log(`Found ${notifications.length} notifications`);
     res.json(notifications);
   } catch (error) {
+    console.error('Error in getNotifications:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -35,13 +46,21 @@ exports.getUnreadCount = async (req, res) => {
     const query = { buildingId, isRead: false, archived: false };
     
     if (req.user.role === 'TENANT') {
+      const { getOrCreateTenant } = require('../utils/tenantHelper');
+      const tenant = await getOrCreateTenant(req.user);
+      const tenantId = tenant?._id || req.user.id;
+
       query.$or = [
-        { tenantId: req.user.tenantId || req.user.id },
+        { tenantId: tenantId.toString() },
+        { receiverId: tenantId.toString() },
         { target: 'All Tenants' }
       ];
       query.portalType = 'Tenant';
     } else {
-      query.owner = req.user.id;
+      query.$or = [
+        { owner: req.user.id },
+        { portalType: 'Owner' }
+      ];
     }
     
     const count = await Notification.countDocuments(query);
@@ -67,9 +86,13 @@ exports.markAsRead = async (req, res) => {
   try {
     const query = { _id: req.params.id };
     if (req.user.role === 'TENANT') {
-      query.$or = [{ tenantId: req.user.tenantId || req.user.id }, { target: 'All Tenants' }];
+      const { getOrCreateTenant } = require('../utils/tenantHelper');
+      const tenant = await getOrCreateTenant(req.user);
+      const tenantId = tenant?._id || req.user.id;
+      query.$or = [{ tenantId: tenantId.toString() }, { receiverId: tenantId.toString() }, { target: 'All Tenants' }];
     } else {
-      query.owner = req.user.id;
+      // For owners, allow marking if they own it or if it's meant for the Owner portal
+      query.$or = [{ owner: req.user.id }, { portalType: 'Owner' }];
     }
     
     const notification = await Notification.findOneAndUpdate(
@@ -90,9 +113,12 @@ exports.markAllAsRead = async (req, res) => {
     const query = { isRead: false };
     
     if (req.user.role === 'TENANT') {
-      query.$or = [{ tenantId: req.user.tenantId || req.user.id }, { target: 'All Tenants' }];
+      const { getOrCreateTenant } = require('../utils/tenantHelper');
+      const tenant = await getOrCreateTenant(req.user);
+      const tenantId = tenant?._id || req.user.id;
+      query.$or = [{ tenantId: tenantId.toString() }, { receiverId: tenantId.toString() }, { target: 'All Tenants' }];
     } else {
-      query.owner = req.user.id;
+      query.$or = [{ owner: req.user.id }, { portalType: 'Owner' }];
     }
     
     if (category && category !== 'all') query.category = category;
@@ -109,9 +135,12 @@ exports.archiveNotification = async (req, res) => {
   try {
     const query = { _id: req.params.id };
     if (req.user.role === 'TENANT') {
-      query.$or = [{ tenantId: req.user.tenantId || req.user.id }, { target: 'All Tenants' }];
+      const { getOrCreateTenant } = require('../utils/tenantHelper');
+      const tenant = await getOrCreateTenant(req.user);
+      const tenantId = tenant?._id || req.user.id;
+      query.$or = [{ tenantId: tenantId.toString() }, { receiverId: tenantId.toString() }, { target: 'All Tenants' }];
     } else {
-      query.owner = req.user.id;
+      query.$or = [{ owner: req.user.id }, { portalType: 'Owner' }];
     }
     
     const notification = await Notification.findOneAndUpdate(
@@ -129,9 +158,12 @@ exports.deleteNotification = async (req, res) => {
   try {
     const query = { _id: req.params.id };
     if (req.user.role === 'TENANT') {
-      query.$or = [{ tenantId: req.user.tenantId || req.user.id }, { target: 'All Tenants' }];
+      const { getOrCreateTenant } = require('../utils/tenantHelper');
+      const tenant = await getOrCreateTenant(req.user);
+      const tenantId = tenant?._id || req.user.id;
+      query.$or = [{ tenantId: tenantId.toString() }, { receiverId: tenantId.toString() }, { target: 'All Tenants' }];
     } else {
-      query.owner = req.user.id;
+      query.$or = [{ owner: req.user.id }, { portalType: 'Owner' }];
     }
     
     const result = await Notification.deleteOne(query);
@@ -147,13 +179,7 @@ exports.seedNotifications = async (req, res) => {
     const { buildingId } = req.body;
     if (!buildingId) return res.status(400).json({ message: 'buildingId is required' });
 
-    const samples = [
-      { buildingId, owner: req.user.id, portalType: 'Tenant', moduleName: 'Payments', category: 'Rent', title: 'Rent Received', message: 'Tenant Rahul paid ₹8,500 via UPI.', priority: 'Medium' },
-      { buildingId, owner: req.user.id, portalType: 'Tenant', moduleName: 'Complaints', category: 'Maintenance', title: 'Leaking Tap', message: 'Room 204 reported a water leak in the washroom.', priority: 'High' },
-      { buildingId, owner: req.user.id, portalType: 'Staff', moduleName: 'Hygiene', category: 'Inspection', title: 'Cleaning Missed', message: 'Floor 2 cleaning was not logged today.', priority: 'Medium' },
-      { buildingId, owner: req.user.id, portalType: 'Owner', moduleName: 'Inventory', category: 'Procurement', title: 'Low Stock', message: 'Rice stock is below 10kg. Please reorder.', priority: 'High' },
-      { buildingId, owner: req.user.id, portalType: 'Owner', moduleName: 'Security', category: 'Alert', title: 'Late Entry', message: '3 tenants entered after 11:00 PM.', priority: 'Low' },
-    ];
+    const samples = [];
 
     for (const s of samples) {
       await notificationService.createNotification(s);

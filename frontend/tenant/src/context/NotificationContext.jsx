@@ -15,7 +15,8 @@ export const NotificationProvider = ({ children }) => {
     if (!isLoggedIn) return;
     try {
       setLoading(true);
-      const res = await API.get('/notifications');
+      const buildingId = localStorage.getItem('buildingId');
+      const res = await API.get('/notifications', { params: { buildingId } });
       const list = res.data || [];
       setNotifications(list);
       setUnreadCount(list.filter(n => !n.isRead).length);
@@ -58,10 +59,16 @@ export const NotificationProvider = ({ children }) => {
 
     socket.on('newNotification', handleNewNotification);
     socket.on('complaintStatusChanged', fetchNotifications);
+    socket.on('paymentUpdated', fetchNotifications);
+    socket.on('transferStatusChanged', fetchNotifications);
+    socket.on('menuUpdated', fetchNotifications);
     
     return () => {
       socket.off('newNotification', handleNewNotification);
       socket.off('complaintStatusChanged', fetchNotifications);
+      socket.off('paymentUpdated', fetchNotifications);
+      socket.off('transferStatusChanged', fetchNotifications);
+      socket.off('menuUpdated', fetchNotifications);
     };
   }, [isLoggedIn, fetchNotifications]);
 

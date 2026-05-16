@@ -3,13 +3,13 @@ const MessAttendance = require('../models/MessAttendance');
 const socketService = require('../utils/socketService');
 
 const DEFAULT_MENU = {
-    Monday: { breakfast: 'Idli, Sambar', lunch: 'Rice, Dal, Veg Fry', dinner: 'Roti, Paneer Masala' },
-    Tuesday: { breakfast: 'Poha, Jalebi', lunch: 'Rajma Chawal, Papad', dinner: 'Aloo Gobi, Roti' },
-    Wednesday: { breakfast: 'Aloo Paratha', lunch: 'Veg Biryani, Raita', dinner: 'Chole Bhature' },
-    Thursday: { breakfast: 'Upma, Chutney', lunch: 'Kadi Pakoda, Rice', dinner: 'Mushroom Peas' },
-    Friday: { breakfast: 'Masala Dosa', lunch: 'Dal Makhani, Rice', dinner: 'Egg Curry' },
-    Saturday: { breakfast: 'Puri Sabzi', lunch: 'Mix Veg, Roti', dinner: 'Veg Pulao' },
-    Sunday: { breakfast: 'Chole Poori', lunch: 'Special Thali', dinner: 'Light Khichdi' }
+    Monday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Tuesday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Wednesday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Thursday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Friday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Saturday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Sunday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' }
 };
 
 const PLANS = ['basic', 'standard', 'premium'];
@@ -64,12 +64,19 @@ exports.updateMenu = async (req, res) => {
 
         // Create notification for tenants
         const notificationService = require('../utils/notificationService');
+        const updatedMeals = [];
+        if (breakfast) updatedMeals.push(`Breakfast: ${breakfast}`);
+        if (lunch) updatedMeals.push(`Lunch: ${lunch}`);
+        if (dinner) updatedMeals.push(`Dinner: ${dinner}`);
+        
+        const mealSummary = updatedMeals.join(' | ');
+
         await notificationService.createNotification({
             moduleName: 'Mess',
             portalType: 'Tenant',
             category: 'Menu Update',
-            title: 'Mess Menu Updated',
-            message: `The ${plan} plan menu for ${day} has been updated.`,
+            title: `Mess Menu: ${day} Updated`,
+            message: `The ${plan} plan menu for ${day} has been updated. ${mealSummary}`,
             priority: 'Medium',
             type: 'info',
             buildingId,
@@ -105,6 +112,42 @@ exports.updateAttendance = async (req, res) => {
             { $set: update },
             { new: true, upsert: true }
         );
+
+        // Real-time synchronization
+        const updatePayload = {
+            tenantId,
+            date,
+            meal,
+            status,
+            attendance
+        };
+        socketService.emitToRoom(buildingId, 'attendanceUpdated', updatePayload);
+        socketService.emitToOwner('attendanceUpdated', updatePayload);
+
+        // Get tenant details for enriched Owner notification
+        const notificationService = require('../utils/notificationService');
+        const Tenant = require('../models/Tenant');
+        const Building = require('../models/Building');
+        
+        const tenant = await Tenant.findById(tenantId);
+        const building = await Building.findById(buildingId);
+        
+        const tenantName = tenant ? tenant.name : 'A resident';
+        const roomNumber = (tenant && tenant.room) ? ` (Room ${tenant.room})` : '';
+        const buildingName = building ? ` at ${building.name}` : '';
+
+        // EXCLUSIVE Owner Notification
+        await notificationService.createNotification({
+            moduleName: 'Mess',
+            portalType: 'Owner',
+            category: 'Attendance',
+            title: `Attendance ${status ? 'Confirmed' : 'Skipped'}`,
+            message: `${tenantName}${roomNumber} has opted to ${status ? 'attend' : 'skip'} ${meal} on ${new Date(date).toLocaleDateString()}${buildingName}.`,
+            priority: status ? 'Low' : 'Medium', // Medium priority for skipped meals to help with waste reduction
+            type: 'info',
+            buildingId,
+            actionLink: '/mess'
+        });
         
         res.json(attendance);
     } catch (err) {
@@ -126,6 +169,29 @@ exports.markAllAttendance = async (req, res) => {
 
         await MessAttendance.bulkWrite(operations);
         const updated = await MessAttendance.find({ buildingId, date });
+
+        // Real-time synchronization for the whole building
+        socketService.emitToRoom(buildingId, 'attendanceUpdated', {
+            date,
+            meal,
+            status: true,
+            isBulk: true
+        });
+
+        // Optional: Trigger building-wide announcement notification
+        const notificationService = require('../utils/notificationService');
+        await notificationService.createNotification({
+            moduleName: 'Mess',
+            portalType: 'Tenant',
+            category: 'Attendance',
+            title: 'Mess Attendance Updated',
+            message: `Attendance for ${meal} today has been updated for all residents.`,
+            priority: 'Low',
+            type: 'info',
+            buildingId,
+            actionLink: '/mess'
+        });
+
         res.json(updated);
     } catch (err) {
         res.status(500).json({ message: err.message });

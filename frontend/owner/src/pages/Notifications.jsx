@@ -6,7 +6,7 @@ import {
   Trash2, X, Archive, Eye, Zap, 
   Smartphone, Mail, AlertTriangle, 
   Info, CreditCard, Box, MessageSquare, 
-  Users, Shield, FileText, LayoutGrid, User, Briefcase, Send, CheckCircle, Clock, ExternalLink
+  Users, Shield, FileText, LayoutGrid, User, Briefcase, Send, CheckCircle, Clock, ExternalLink, Utensils
 } from 'lucide-react';
 import { api } from '../mockData';
 import socket, { connectSocket } from '../utils/socket';
@@ -34,6 +34,10 @@ const Notifications = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
   // Composer State
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [composerData, setComposerData] = useState({ title: '', message: '', target: 'All Tenants' });
@@ -49,6 +53,7 @@ const Notifications = () => {
 
   const categories = [
     { id: 'all', name: 'All', icon: <LayoutGrid size={18} /> },
+    { id: 'Mess', name: 'Mess', icon: <Utensils size={18} /> },
     { id: 'Safety', name: 'SOS Alerts', icon: <Shield size={18} /> },
     { id: 'Payments', name: 'Payments', icon: <CreditCard size={18} /> },
     { id: 'Complaints', name: 'Complaints', icon: <MessageSquare size={18} /> },
@@ -68,11 +73,13 @@ const Notifications = () => {
     socket.on('complaintCreated', () => fetchNotifications());
     socket.on('tenantAdded', () => fetchNotifications());
     socket.on('bookingCreated', () => fetchNotifications());
+    socket.on('attendanceUpdated', () => fetchNotifications());
 
     return () => {
       socket.off('complaintCreated');
       socket.off('tenantAdded');
       socket.off('bookingCreated');
+      socket.off('attendanceUpdated');
     };
   }, [fetchNotifications]);
 
@@ -118,6 +125,17 @@ const Notifications = () => {
          n.message?.toLowerCase().includes(searchQuery.toLowerCase()))
       );
   }, [notifications, activeTab, activePortal, filterPriority, searchQuery]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, activePortal, filterPriority, searchQuery]);
+
+  const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
+  const paginatedNotifications = filteredNotifications.slice(
+    (currentPage - 1) * itemsPerPage, 
+    currentPage * itemsPerPage
+  );
 
   const handleArchive = async (id) => {
     try {
@@ -178,9 +196,6 @@ const Notifications = () => {
           <button onClick={() => setIsComposerOpen(true)} className="btn" style={{ background: '#10B981', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Send size={18} /> Compose Alert
           </button>
-          <button onClick={handleSeed} className="btn" style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Zap size={18} /> Simulate Alerts
-          </button>
           <button onClick={() => setIsSettingsOpen(true)} className="btn" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Settings size={18} /> Settings
           </button>
@@ -231,10 +246,10 @@ const Notifications = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', gap: '1.2rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <AnimatePresence mode="popLayout">
-          {filteredNotifications.length > 0 ? (
-            filteredNotifications.map((n, idx) => (
+          {paginatedNotifications.length > 0 ? (
+            paginatedNotifications.map((n, idx) => (
               <motion.div
                 key={n.id || n._id}
                 layout
@@ -255,7 +270,10 @@ const Notifications = () => {
                       {getPortalBadge(n.portalType)}
                       <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{n.moduleName}</span>
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Clock size={12} /> {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Clock size={12} /> {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <button onClick={() => handleDelete(n.id || n._id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Delete Notification"><Trash2 size={16} /></button>
+                    </div>
                   </div>
                   <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '0.3rem', color: n.isRead ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
                     {n.priority === 'High' && '🚨 '}{n.title}
@@ -267,7 +285,6 @@ const Notifications = () => {
                     <button onClick={() => handleArchive(n.id || n._id)} className="btn-notif-action"><Archive size={14} /> Archive</button>
                   </div>
                 </div>
-                <button onClick={() => handleDelete(n.id || n._id)} style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><Trash2 size={16} /></button>
               </motion.div>
             ))
           ) : (
@@ -278,6 +295,49 @@ const Notifications = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '2.5rem' }}>
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            style={{
+              padding: '0.5rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)',
+              background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontWeight: '700',
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1
+            }}
+          >
+            Prev
+          </button>
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              style={{
+                width: '38px', height: '38px', borderRadius: '12px', border: 'none',
+                background: currentPage === i + 1 ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                color: currentPage === i + 1 ? 'white' : 'var(--text-primary)',
+                fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s ease',
+                boxShadow: currentPage === i + 1 ? '0 4px 10px rgba(16,185,129,0.2)' : 'none'
+              }}
+            >
+              {i + 1}
+            </button>
+          ))}
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            style={{
+              padding: '0.5rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)',
+              background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontWeight: '700',
+              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       <AnimatePresence>
         {isComposerOpen && (

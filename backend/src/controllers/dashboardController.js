@@ -128,7 +128,7 @@ exports.getSummaryKPIs = async (req, res) => {
       pendingPaymentsCount: ps.pendingCount, 
       pendingPaymentsAmount: ps.pendingAmount,
       maintenanceRooms: maintenanceRoomsCount,
-      healthScore: 85, 
+      healthScore, 
       buildingCount,
       totalTenants,
       complaintsToday: await Complaint.countDocuments({ 

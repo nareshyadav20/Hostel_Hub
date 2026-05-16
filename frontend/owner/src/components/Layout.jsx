@@ -11,7 +11,8 @@ import {
   Info, 
   ShieldAlert,
   ChevronRight,
-  X
+  X,
+  Utensils
 } from 'lucide-react';
 import { api } from '../mockData';
 import Sidebar from './Sidebar';
@@ -374,7 +375,7 @@ const Layout = ({ children }) => {
                               color: n.type === 'error' ? '#EF4444' : 'var(--accent-primary)',
                               flexShrink: 0
                             }}>
-                              {n.category === 'SOS Alert' ? <ShieldAlert size={20} /> : <Bell size={20} />}
+                              {n.category === 'SOS Alert' ? <ShieldAlert size={20} /> : n.moduleName === 'Mess' ? <Utensils size={20} /> : <Bell size={20} />}
                             </div>
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

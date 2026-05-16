@@ -4,6 +4,7 @@ import { Utensils, Calendar as CalendarIcon, Users, Edit3, ArrowRight, Sun, Coff
 import { api } from '../mockData';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import socket from '../utils/socket';
 
 const Mess = () => {
   const { buildingId: urlBuildingId } = useParams();
@@ -97,32 +98,52 @@ const Mess = () => {
   // Format today's date as YYYY-MM-DD for backend
   const todayDate = new Date().toISOString().split('T')[0];
 
+  const fetchAttendanceData = async () => {
+    try {
+      if (buildingId) {
+        const attData = await api.getMessAttendance(buildingId, todayDate);
+        const attMap = {};
+        (attData || []).forEach(rec => {
+          attMap[rec.tenantId] = {
+            breakfast: rec.breakfast || false,
+            lunch: rec.lunch || false,
+            dinner: rec.dinner || false
+          };
+        });
+        setAttendance(prev => ({ ...prev, [today]: attMap }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const t = await api.getTenants(activeBuildingId);
         const filteredTenants = (t || []).filter(x => x.buildingId === activeBuildingId || !activeBuildingId);
         setTenants(filteredTenants);
-
-        // Load today's attendance from backend
-        if (buildingId) {
-          const attData = await api.getMessAttendance(buildingId, todayDate);
-          const attMap = {};
-          (attData || []).forEach(rec => {
-            attMap[rec.tenantId] = {
-              breakfast: rec.breakfast || false,
-              lunch: rec.lunch || false,
-              dinner: rec.dinner || false
-            };
-          });
-          setAttendance({ [today]: attMap });
-        }
+        await fetchAttendanceData();
       } catch (err) {
         console.error(err);
       }
     };
     fetchData();
   }, [activeBuildingId, buildingId]);
+
+  useEffect(() => {
+    const handleAttendanceUpdate = (data) => {
+      // Refresh the dashboard if the update is for today
+      if (data.date === todayDate) {
+        fetchAttendanceData();
+      }
+    };
+    
+    socket.on('attendanceUpdated', handleAttendanceUpdate);
+    return () => {
+      socket.off('attendanceUpdated', handleAttendanceUpdate);
+    };
+  }, [buildingId, todayDate]);
 
   const [editForm, setEditForm] = useState({ breakfast: '', lunch: '', dinner: '' });
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
