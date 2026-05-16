@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Package, Search, Plus, AlertTriangle, Trash2, Edit, History,
   MapPin, ShoppingCart, Utensils, Brush, Hammer, MoreVertical,
   ChevronRight, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2,
-  AlertCircle, X, Save, Filter, ChevronLeft
+  AlertCircle, X, Save, Filter, ChevronLeft, Download, Printer, FileText,
+  Eye, ShieldCheck, Camera, Send, User, TrendingUp, BarChart, StickyNote,
+  Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../mockData';
@@ -12,80 +14,78 @@ import socket, { connectSocket } from '../utils/socket';
 
 // --- CONFIGURATION ---
 const CATEGORIES = [
-  { id: 'Groceries', name: 'Groceries', icon: <Utensils size={20} />, color: '#FF6B6B', bg: '#FFF5F5' },
-  { id: 'Cleaning', name: 'Cleaning Supplies', icon: <Brush size={20} />, color: '#4DABF7', bg: '#E7F5FF' },
-  { id: 'Kitchen', name: 'Kitchen Equipment', icon: <Hammer size={20} />, color: '#51CF66', bg: '#EBFBEE' },
-  { id: 'Miscellaneous', name: 'Miscellaneous', icon: <Package size={20} />, color: '#FCC419', bg: '#FFF9DB' }
+  { 
+    id: 'Groceries', name: 'Groceries', icon: <Utensils size={18} />, color: '#00A859', bg: '#E8F5E9',
+    subCategories: ['Grains', 'Vegetables', 'Fruits', 'Dairy', 'Spices']
+  },
+  { 
+    id: 'Cleaning', name: 'Cleaning Supplies', icon: <Brush size={18} />, color: '#4DABF7', bg: '#E7F5FF',
+    subCategories: ['Floor Cleaners', 'Detergents', 'Sanitizers', 'Tools']
+  },
+  { 
+    id: 'Kitchen', name: 'Kitchen Equipment', icon: <Hammer size={18} />, color: '#F59E0B', bg: '#FFFBEB',
+    subCategories: ['Utensils', 'Electronics', 'Storage', 'Cutlery']
+  },
+  { 
+    id: 'Miscellaneous', name: 'Miscellaneous', icon: <Package size={18} />, color: '#64748B', bg: '#F1F5F9',
+    subCategories: ['Stationery', 'Medical', 'Bedding', 'Other']
+  }
 ];
 
-const InventoryManagement = () => {
+const TABS = [
+  { id: 'master', name: 'INVENTORY MASTER', icon: <Package size={18} /> },
+  { id: 'damage', name: 'DAMAGE ENTRIES', icon: <AlertTriangle size={18} /> },
+  { id: 'deductions', name: '$ DEDUCTIONS', icon: <ArrowDownRight size={18} /> },
+  { id: 'reports', name: 'REPORTS & ANALYTICS', icon: <FileText size={18} /> }
+];
+
+const InventoryManagement = ({ initialTab = 'master' }) => {
   const { buildingId: urlBuildingId } = useParams();
+  const navigate = useNavigate();
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
 
-  // Data States
-  const [inventory, setInventory] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activities, setActivities] = useState([]);
-  const [activityPage, setActivityPage] = useState(0);
-  const activitiesPerPage = 5;
-
-  // Pagination States
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const ROWS_PER_PAGE_OPTIONS = [5, 10, 20, 50];
-
   // UI States
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedSubCategory, setSelectedSubCategory] = useState('All');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDamageModalOpen, setIsDamageModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [showLowStockOnly, setShowLowStockOnly] = useState(false);
-  const [notifications, setNotifications] = useState([]);
+  
+  // Data States
+  const [inventory, setInventory] = useState([]);
+  const [damageEntries, setDamageEntries] = useState([
+    { id: 'VK-AP-HUB-DMG-0003', date: '18 Apr 26', product: 'Basmati Rice 5kg', reportedBy: 'Abhiram', qty: 2, type: 'DAMAGED', loss: 796, status: 'PENDING' },
+    { id: 'VK-AP-HUB-DMG-0002', date: '15 Apr 26', product: 'Liquid Detergent', reportedBy: 'Suresh', qty: 1, type: 'EXPIRED', loss: 450, status: 'APPROVED' },
+  ]);
+  const [deductions, setDeductions] = useState([
+    { id: 'DED-001', date: '19 Apr 26', item: 'Broken Window Pan', person: 'Rahul (T-102)', amount: 1500, reason: 'Accidental Damage', status: 'PENDING' },
+    { id: 'DED-002', date: '17 Apr 26', item: 'Electric Kettle', person: 'Staff: Anita', amount: 850, reason: 'Improper Handling', status: 'PAID' },
+  ]);
+  const [reports, setReports] = useState([
+    { id: 'REP-001', name: 'Monthly Stock Audit - April', date: '01 May 26', type: 'PDF', size: '2.4 MB' },
+    { id: 'REP-002', name: 'Damage Loss Analytics Q1', date: '15 Apr 26', type: 'EXCEL', size: '1.1 MB' },
+    { id: 'REP-003', name: 'Vendor Procurement Summary', date: '10 Apr 26', type: 'PDF', size: '850 KB' },
+  ]);
+  const [loading, setLoading] = useState(true);
 
+  // Form State
   const [formData, setFormData] = useState({
-    name: '',
-    category: 'Groceries',
-    stock: 0,
-    minThreshold: 5,
-    unit: 'Kg',
-    location: '',
+    name: '', 
+    category: 'Groceries', 
+    subCategory: 'Grains',
+    stock: 0, 
+    minThreshold: 5, 
+    unit: 'Kg', 
+    location: '', 
+    notes: '',
     lastPurchased: new Date().toISOString().split('T')[0]
   });
 
-  // Fetch Data
   useEffect(() => {
     fetchInventory();
-    if (activeBuildingId) {
-      connectSocket(activeBuildingId);
-
-      const handleAdd = (item) => {
-        setInventory(prev => {
-          // Check for existing to prevent duplicates (4x bug fix)
-          const exists = prev.find(i => (i._id === item._id || i.id === item.id));
-          if (exists) return prev;
-          return [item, ...prev];
-        });
-        addActivity(`${item.name} added to inventory`, 'plus');
-      };
-      const handleUpdate = (updated) => {
-        setInventory(prev => prev.map(i => (i._id === updated._id || i.id === updated.id) ? updated : i));
-        addActivity(`${updated.name} stock updated`, 'update');
-      };
-      const handleDelete = (id) => {
-        setInventory(prev => prev.filter(i => i._id !== id && i.id !== id));
-        addActivity(`Item removed from inventory`, 'delete');
-      };
-
-      socket.on('inventoryAdded', handleAdd);
-      socket.on('inventoryUpdated', handleUpdate);
-      socket.on('inventoryDeleted', handleDelete);
-
-      return () => {
-        socket.off('inventoryAdded', handleAdd);
-        socket.off('inventoryUpdated', handleUpdate);
-        socket.off('inventoryDeleted', handleDelete);
-      };
-    }
+    if (activeBuildingId) connectSocket(activeBuildingId);
   }, [activeBuildingId]);
 
   const fetchInventory = async () => {
@@ -93,12 +93,6 @@ const InventoryManagement = () => {
     try {
       const data = await api.getInventory(activeBuildingId);
       setInventory(data || []);
-      // Initialize some activities if empty
-      setActivities([
-        { id: 1, text: 'Rice stock updated to 50kg', type: 'update', time: '2 mins ago' },
-        { id: 2, text: 'Kitchen oil added', type: 'plus', time: '1 hour ago' },
-        { id: 3, text: 'Soap stock reduced', type: 'update', time: '3 hours ago' }
-      ]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -106,556 +100,560 @@ const InventoryManagement = () => {
     }
   };
 
-  const addActivity = (text, type) => {
-    setActivities(prev => [{ id: Date.now(), text, type, time: 'Just now' }, ...prev].slice(0, 10));
-  };
-
-  const triggerNotification = (msg, color = 'blue') => {
-    setNotifications(prev => [{ msg, color, id: Date.now() }, ...prev]);
-    setTimeout(() => setNotifications(prev => prev.slice(0, -1)), 5000);
-  };
-
-  // Logic
   const filteredInventory = useMemo(() => {
     return inventory.filter(item => {
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory || item.categoryId === selectedCategory;
-      const matchesLowStock = showLowStockOnly ? item.stock <= item.minThreshold : true;
-      return matchesSearch && matchesCategory && matchesLowStock;
+      const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
+      const matchesSubCategory = selectedSubCategory === 'All' || item.subCategory === selectedSubCategory;
+      return matchesSearch && matchesCategory && matchesSubCategory;
     });
-  }, [inventory, searchQuery, selectedCategory, showLowStockOnly]);
+  }, [inventory, searchQuery, selectedCategory, selectedSubCategory]);
 
-  const totalPages = Math.ceil(filteredInventory.length / rowsPerPage);
-  const paginatedInventory = filteredInventory.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
-
-  const stats = useMemo(() => ({
-    total: inventory.length,
-    lowStock: inventory.filter(i => i.stock > 0 && i.stock <= i.minThreshold).length,
-    outOfStock: inventory.filter(i => i.stock <= 0).length,
-    monthlyUsage: 145 // Mocked for simplicity
-  }), [inventory]);
+  const stats = useMemo(() => {
+    if (activeTab === 'damage') {
+      return [
+        { label: 'TOTAL ENTRIES', value: damageEntries.length, color: '#6366F1', bg: '#EEF2FF' },
+        { label: 'PENDING REVIEW', value: damageEntries.filter(e => e.status === 'PENDING').length, color: '#F59E0B', bg: '#FFFBEB' },
+        { label: 'APPROVED', value: damageEntries.filter(e => e.status === 'APPROVED').length, color: '#10B981', bg: '#ECFDF5' },
+        { label: 'TOTAL LOSS', value: `₹${damageEntries.reduce((acc, curr) => acc + curr.loss, 0)}`, color: '#EF4444', bg: '#FEF2F2' }
+      ];
+    }
+    if (activeTab === 'deductions') {
+      return [
+        { label: 'TOTAL DEDUCTIONS', value: deductions.length, color: '#6366F1', bg: '#EEF2FF' },
+        { label: 'PENDING COLLECTION', value: deductions.filter(d => d.status === 'PENDING').length, color: '#F59E0B', bg: '#FFFBEB' },
+        { label: 'RECOVERED', value: deductions.filter(d => d.status === 'PAID').length, color: '#10B981', bg: '#ECFDF5' },
+        { label: 'TOTAL AMOUNT', value: `₹${deductions.reduce((acc, curr) => acc + curr.amount, 0)}`, color: '#00A859', bg: '#E8F5E9' }
+      ];
+    }
+    if (activeTab === 'reports') {
+      return [
+        { label: 'TOTAL REPORTS', value: reports.length, color: '#6366F1', bg: '#EEF2FF' },
+        { label: 'DOWNLOADS (MONTH)', value: '142', color: '#10B981', bg: '#ECFDF5' },
+        { label: 'AUTO-GENERATED', value: '12', color: '#F59E0B', bg: '#FFFBEB' },
+        { label: 'DATA ACCURACY', value: '99.8%', color: '#00A859', bg: '#E8F5E9' }
+      ];
+    }
+    return [
+      { label: 'TOTAL ITEMS', value: inventory.length, color: '#00A859', bg: '#E8F5E9' },
+      { label: 'LOW STOCK', value: inventory.filter(i => i.stock <= i.minThreshold && i.stock > 0).length, color: '#F59E0B', bg: '#FFFBEB' },
+      { label: 'OUT OF STOCK', value: inventory.filter(i => i.stock <= 0).length, color: '#EF4444', bg: '#FEF2F2' },
+      { label: 'CATEGORIES', value: CATEGORIES.length, color: '#6366F1', bg: '#EEF2FF' }
+    ];
+  }, [inventory, damageEntries, deductions, reports, activeTab]);
 
   const handleSave = async (e) => {
     e.preventDefault();
     try {
       if (selectedItem) {
         await api.updateInventoryItem(selectedItem.id || selectedItem._id, formData);
-        // Socket will handle setInventory
-        triggerNotification('Item updated successfully', 'green');
       } else {
         await api.addInventoryItem({ ...formData, buildingId: activeBuildingId });
-        // Socket will handle setInventory
-        triggerNotification('Item added successfully', 'green');
       }
       setIsAddModalOpen(false);
-      setSelectedItem(null);
-      setFormData({ name: '', category: 'Groceries', stock: 0, minThreshold: 5, unit: 'Kg', location: '', lastPurchased: new Date().toISOString().split('T')[0] });
+      fetchInventory();
     } catch (err) {
-      triggerNotification('Operation failed', 'red');
+      console.error(err);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Remove this item?')) return;
-    try {
-      await api.deleteInventoryItem(id);
-      setInventory(prev => prev.filter(i => i.id !== id && i._id !== id));
-      triggerNotification('Item removed', 'slate');
-    } catch (err) {
-      triggerNotification('Delete failed', 'red');
-    }
-  };
-
-  const openEdit = (item) => {
-    setSelectedItem(item);
+  const handleCategoryChange = (catId) => {
+    const cat = CATEGORIES.find(c => c.id === catId);
     setFormData({
-      name: item.name,
-      category: item.category || item.categoryId || 'Groceries',
-      stock: item.stock,
-      minThreshold: item.minThreshold,
-      unit: item.unit,
-      location: item.location || '',
-      lastPurchased: item.lastPurchased || new Date().toISOString().split('T')[0]
+      ...formData,
+      category: catId,
+      subCategory: cat ? cat.subCategories[0] : ''
     });
-    setIsAddModalOpen(true);
   };
 
   return (
-    <div className="inventory-page-v2" style={{ padding: '2rem', background: '#FDFDFF', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+    <div className="inventory-v3">
+      {/* 1. TOP HEADER */}
+      <header className="page-header">
+        <div className="header-left">
+          <button className="back-btn" onClick={() => navigate(-1)}><ChevronLeft size={20} /></button>
+          <div className="header-title-area">
+            <h1>
+              {activeTab === 'master' ? 'Inventory Master' : 
+               activeTab === 'damage' ? 'Damage Tracking' : 
+               activeTab === 'deductions' ? 'Financial Deductions' : 
+               'Reports & Analytics'}
+            </h1>
+            <p>Track hostel supplies, consumables and financial recovery with precision.</p>
+          </div>
+        </div>
+        <div className="header-actions">
+          <button className="icon-btn"><FileText size={18} /></button>
+          <button className="icon-btn"><Printer size={18} /></button>
+          <button className="icon-btn"><Download size={18} /></button>
+          {activeTab === 'master' && (
+            <button className="primary-btn" onClick={() => { setSelectedItem(null); setIsAddModalOpen(true); }}>
+              <Plus size={20} /> ADD ITEM
+            </button>
+          )}
+          {activeTab === 'damage' && (
+            <button className="primary-btn damage" onClick={() => setIsDamageModalOpen(true)}>
+              <Plus size={20} /> REPORT DAMAGE
+            </button>
+          )}
+        </div>
+      </header>
 
-      {/* 1. PAGE HEADER */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', margin: 0, letterSpacing: '-0.03em' }}>Inventory Management</h1>
-          <p style={{ color: '#64748B', fontSize: '1.1rem', fontWeight: '500', marginTop: '0.4rem' }}>Track groceries, kitchen items, and hostel supplies in real-time.</p>
-        </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button
-            onClick={() => { setShowLowStockOnly(!showLowStockOnly); setSelectedCategory('All'); }}
-            style={{
-              padding: '0.8rem 1.5rem', borderRadius: '14px', border: 'none', fontWeight: '800',
-              background: showLowStockOnly ? '#FFF1F2' : '#F8FAFC',
-              color: showLowStockOnly ? '#E11D48' : '#475569',
-              display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer',
-              transition: '0.3s', border: showLowStockOnly ? '1px solid #FECACA' : '1px solid #E2E8F0'
-            }}
+      {/* 2. TAB NAVIGATION */}
+      <nav className="tab-nav">
+        {TABS.map(tab => (
+          <button 
+            key={tab.id} 
+            className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => { setActiveTab(tab.id); setSearchQuery(''); }}
           >
-            <AlertTriangle size={20} /> Low Stock Alerts
+            {tab.icon} {tab.name}
           </button>
-          <button
-            onClick={() => { setSelectedItem(null); setIsAddModalOpen(true); }}
-            style={{
-              padding: '0.8rem 1.8rem', borderRadius: '14px', border: 'none', fontWeight: '900',
-              background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
-              color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer',
-              boxShadow: '0 8px 16px rgba(79, 70, 229, 0.2)', transition: '0.3s'
-            }}
-          >
-            <Plus size={22} /> Add Item
-          </button>
-        </div>
+        ))}
+      </nav>
+
+      {/* 3. STATS CARDS */}
+      <div className="stats-grid">
+        {stats.map((stat, i) => (
+          <div key={i} className="stat-card" style={{ '--accent': stat.color, '--bg': stat.bg }}>
+            <div className="stat-info">
+              <span className="stat-label">{stat.label}</span>
+              <h2 className="stat-value">{stat.value}</h2>
+            </div>
+            <div className="stat-trend"><ArrowUpRight size={14} /> 12%</div>
+          </div>
+        ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '2rem' }} className="main-grid">
-
-        <div className="content-side">
-          {/* 2. TOP SUMMARY CARDS */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }} className="stats-grid">
-            {[
-              { label: 'Total Items', value: stats.total, color: '#6366F1', icon: <Package />, bg: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)' },
-              { label: 'Low Stock', value: stats.lowStock, color: '#F59E0B', icon: <AlertTriangle />, bg: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)' },
-              { label: 'Out of Stock', value: stats.outOfStock, color: '#EF4444', icon: <AlertCircle />, bg: 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)' },
-              { label: 'Monthly Usage', value: stats.monthlyUsage, color: '#10B981', icon: <ArrowUpRight />, bg: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)' }
-            ].map((s, i) => (
-              <motion.div whileHover={{ y: -5 }} key={i} style={{ padding: '1.5rem', borderRadius: '24px', background: '#FFFFFF', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: s.bg, color: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {s.icon}
-                </div>
-                <div>
-                  <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.02em' }}>{s.label}</p>
-                  <h2 style={{ margin: 0, fontSize: '1.8rem', fontWeight: '900', color: '#0F172A' }}>{s.value}</h2>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* 3. INVENTORY CATEGORIES */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.2rem', marginBottom: '2.5rem' }} className="categories-grid">
-            {CATEGORIES.map(cat => {
-              const count = inventory.filter(i => i.category === cat.id || i.categoryId === cat.id).length;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id === selectedCategory ? 'All' : cat.id)}
-                  style={{
-                    padding: '1.5rem', borderRadius: '24px', cursor: 'pointer',
-                    background: selectedCategory === cat.id ? cat.color : '#FFFFFF',
-                    boxShadow: '0 4px 10px rgba(0,0,0,0.02)', textAlign: 'left', transition: '0.3s',
-                    border: selectedCategory === cat.id ? `2px solid ${cat.color}` : '2px solid #F1F5F9',
-                    display: 'flex', flexDirection: 'column', gap: '1rem'
-                  }}
-                >
-                  <div style={{
-                    width: '40px', height: '40px', borderRadius: '12px',
-                    background: selectedCategory === cat.id ? 'rgba(255,255,255,0.2)' : cat.bg,
-                    color: selectedCategory === cat.id ? '#FFFFFF' : cat.color,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                  }}>
-                    {cat.icon}
-                  </div>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: selectedCategory === cat.id ? '#FFFFFF' : '#0F172A' }}>{cat.name}</h3>
-                    <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '600', color: selectedCategory === cat.id ? 'rgba(255,255,255,0.8)' : '#64748B' }}>{count} Items Available</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* 4. MAIN INVENTORY TABLE */}
-          <div style={{ background: '#FFFFFF', borderRadius: '28px', border: '1px solid #F1F5F9', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-              <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
-                <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-                <input
-                  type="text" placeholder="Search inventory..." value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                  style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 3rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none', background: '#F8FAFC', fontWeight: '600' }}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '0.8rem' }}>
-                <select 
-                  value={rowsPerPage} onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                  style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#475569', fontWeight: '700', outline: 'none', cursor: 'pointer' }}
-                >
-                  {ROWS_PER_PAGE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt} per page</option>)}
-                </select>
-                <button style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: '#FFFFFF', color: '#475569', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Filter size={18} /> Filter
-                </button>
-              </div>
+      {/* 4. MAIN CONTENT AREA */}
+      <div className="content-card">
+        {activeTab !== 'reports' && (
+          <div className="table-filters">
+            <div className="search-box">
+              <Search size={18} />
+              <input 
+                type="text" 
+                placeholder={`Search ${activeTab === 'damage' ? 'entries' : activeTab === 'deductions' ? 'deductions' : 'products'}...`} 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
             </div>
-
-            <div style={{ overflowX: 'auto', marginTop: '1rem' }}>
-              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 0.8rem' }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', color: '#94A3B8', fontSize: '0.85rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    <th style={{ padding: '1rem 1.5rem', background: 'linear-gradient(90deg, #F8FAFC 0%, transparent 100%)', borderRadius: '12px 0 0 12px' }}>Item Details</th>
-                    <th style={{ padding: '1rem' }}>Category</th>
-                    <th style={{ padding: '1rem' }}>Current Stock</th>
-                    <th style={{ padding: '1rem' }}>Health Status</th>
-                    <th style={{ padding: '1rem' }}>Last Action</th>
-                    <th style={{ padding: '1rem 1.5rem', textAlign: 'right', background: 'linear-gradient(-90deg, #F8FAFC 0%, transparent 100%)', borderRadius: '0 12px 12px 0' }}>Management</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedInventory.map(item => {
-                    const isLow = item.stock <= item.minThreshold && item.stock > 0;
-                    const isOut = item.stock <= 0;
-                    const cat = CATEGORIES.find(c => c.id === item.category || c.id === item.categoryId) || CATEGORIES[0];
-
-                    return (
-                      <motion.tr
-                        layout
-                        key={item.id || item._id}
-                        className="inventory-table-row"
-                        style={{
-                          background: '#FFFFFF',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-                          transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                          cursor: 'default'
-                        }}
-                      >
-                        <td style={{ padding: '1.5rem', borderRadius: '20px 0 0 20px', borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9', borderLeft: '1px solid #F1F5F9' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
-                            <div style={{
-                              width: '52px', height: '52px', borderRadius: '16px',
-                              background: cat.bg, color: cat.color,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              boxShadow: `0 4px 12px ${cat.color}15`
-                            }}>
-                              {cat.icon}
-                            </div>
-                            <div>
-                              <p style={{ margin: 0, fontWeight: '900', color: '#0F172A', fontSize: '1.1rem' }}>{item.name}</p>
-                              <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                <MapPin size={12} /> {item.location || 'Main Storage'}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td style={{ padding: '1.5rem 1rem', borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9' }}>
-                          <span style={{
-                            padding: '0.5rem 1rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: '800',
-                            background: cat.bg, color: cat.color, border: `1px solid ${cat.color}20`
-                          }}>
-                            {cat.name}
-                          </span>
-                        </td>
-                        <td style={{ padding: '1.5rem 1rem', borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9' }}>
-                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.3rem' }}>
-                            <span style={{ fontWeight: '950', color: isOut ? '#EF4444' : (isLow ? '#F59E0B' : '#0F172A'), fontSize: '1.4rem' }}>{item.stock}</span>
-                            <span style={{ color: '#94A3B8', fontSize: '0.9rem', fontWeight: '700' }}>{item.unit}</span>
-                          </div>
-                          <div style={{ width: '80px', height: '6px', background: '#F1F5F9', borderRadius: '10px', marginTop: '0.6rem', overflow: 'hidden' }}>
-                            <div style={{
-                              width: `${Math.min((item.stock / (item.minThreshold * 3)) * 100, 100)}%`,
-                              height: '100%',
-                              background: isOut ? '#EF4444' : (isLow ? '#F59E0B' : '#10B981'),
-                              borderRadius: '10px'
-                            }} />
-                          </div>
-                        </td>
-                        <td style={{ padding: '1.5rem 1rem', borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9' }}>
-                          <div style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.6rem 1rem', borderRadius: '14px', fontSize: '0.8rem', fontWeight: '900',
-                            background: isOut ? '#FEF2F2' : (isLow ? '#FFFBEB' : '#ECFDF5'),
-                            color: isOut ? '#EF4444' : (isLow ? '#D97706' : '#10B981'),
-                            border: `1px solid ${isOut ? '#FEE2E2' : (isLow ? '#FEF3C7' : '#D1FAE5')}`
-                          }}>
-                            {isOut ? <AlertCircle size={16} /> : (isLow ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />)}
-                            {isOut ? 'Refill Now' : (isLow ? 'Low Level' : 'Healthy')}
-                          </div>
-                        </td>
-                        <td style={{ padding: '1.5rem 1rem', borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9', color: '#64748B', fontWeight: '700', fontSize: '0.9rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Clock size={14} style={{ opacity: 0.6 }} />
-                            {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short' }) : 'Today'}
-                          </div>
-                        </td>
-                        <td style={{ padding: '1.5rem', borderRadius: '0 20px 20px 0', borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9', borderRight: '1px solid #F1F5F9', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'flex-end' }}>
-                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => openEdit(item)} style={{ width: '40px', height: '40px', borderRadius: '12px', border: 'none', background: '#EEF2FF', color: '#6366F1', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit size={18} /></motion.button>
-                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleDelete(item.id || item._id)} style={{ width: '40px', height: '40px', borderRadius: '12px', border: 'none', background: '#FEF2F2', color: '#EF4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={18} /></motion.button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    );
-                  })}
-                  {paginatedInventory.length === 0 && (
-                    <tr>
-                      <td colSpan="6" style={{ textAlign: 'center', padding: '3rem' }}>
-                        <p style={{ color: '#94A3B8', fontWeight: '600' }}>No items found matching your criteria.</p>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* PAGINATION CONTROLS */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #F1F5F9' }}>
-              <div style={{ fontSize: '0.9rem', color: '#64748B', fontWeight: '600' }}>
-                Showing <span style={{ color: '#0F172A', fontWeight: '800' }}>{(currentPage - 1) * rowsPerPage + 1}</span> to <span style={{ color: '#0F172A', fontWeight: '800' }}>{Math.min(currentPage * rowsPerPage, filteredInventory.length)}</span> of <span style={{ color: '#0F172A', fontWeight: '800' }}>{filteredInventory.length}</span> items
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <button 
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  style={{ padding: '0.6rem 1rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: currentPage === 1 ? '#F8FAFC' : '#FFFFFF', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', color: '#475569', fontWeight: '700' }}
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <div style={{ display: 'flex', gap: '0.4rem' }}>
-                  {[...Array(totalPages)].map((_, i) => (
-                    <button 
-                      key={i} 
-                      onClick={() => setCurrentPage(i + 1)}
-                      style={{ 
-                        width: '36px', height: '36px', borderRadius: '10px', border: 'none', 
-                        background: currentPage === i + 1 ? '#6366F1' : 'transparent',
-                        color: currentPage === i + 1 ? '#FFFFFF' : '#64748B',
-                        fontWeight: '800', cursor: 'pointer'
-                      }}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
-                <button 
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  style={{ padding: '0.6rem 1rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: (currentPage === totalPages || totalPages === 0) ? '#F8FAFC' : '#FFFFFF', cursor: (currentPage === totalPages || totalPages === 0) ? 'not-allowed' : 'pointer', color: '#475569', fontWeight: '700' }}
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="sidebar-side">
-          {/* 5. LOW STOCK ALERT SECTION */}
-          <div style={{ background: '#FFFFFF', borderRadius: '28px', border: '1px solid #F1F5F9', padding: '1.5rem', marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: '900', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.5rem' }}>
-              <AlertTriangle size={18} color="#F59E0B" /> Low Stock Alerts
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-              {inventory.filter(i => i.stock <= i.minThreshold).length > 0 ? (
-                inventory.filter(i => i.stock <= i.minThreshold).slice(0, 5).map((item, idx) => (
-                  <div key={idx} style={{ padding: '1rem', borderRadius: '16px', background: item.stock <= 0 ? '#FFF1F2' : '#FFFBEB', border: `1px solid ${item.stock <= 0 ? '#FECACA' : '#FEF3C7'}`, display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <AlertTriangle size={14} color={item.stock <= 0 ? '#E11D48' : '#D97706'} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: item.stock <= 0 ? '#991B1B' : '#92400E' }}>{item.name} stock is {item.stock <= 0 ? 'empty' : 'low'}</p>
-                      <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '600', color: item.stock <= 0 ? '#EF4444' : '#F59E0B' }}>Action required</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div style={{ textAlign: 'center', padding: '1.5rem', color: '#94A3B8' }}>
-                  <CheckCircle2 size={32} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
-                  <p style={{ fontSize: '0.85rem', fontWeight: '600' }}>All stock levels healthy</p>
-                </div>
+            <div className="filter-actions">
+              <select className="filter-select">
+                <option>All Status</option>
+                <option>Active / Paid</option>
+                <option>Inactive / Pending</option>
+              </select>
+              {activeTab === 'master' && (
+                <>
+                  <select className="filter-select" onChange={e => { setSelectedCategory(e.target.value); setSelectedSubCategory('All'); }}>
+                    <option value="All">All Categories</option>
+                    {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  <select className="filter-select" onChange={e => setSelectedSubCategory(e.target.value)} value={selectedSubCategory}>
+                    <option value="All">All Sub Categories</option>
+                    {selectedCategory !== 'All' && CATEGORIES.find(c => c.id === selectedCategory)?.subCategories.map(sub => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </select>
+                </>
               )}
             </div>
           </div>
+        )}
 
-          <div style={{ background: '#FFFFFF', borderRadius: '28px', border: '1px solid #F1F5F9', padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: '900', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.5rem' }}>
-              <Clock size={18} color="#6366F1" /> Recent Activity
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', position: 'relative', minHeight: '320px' }}>
-              <div style={{ position: 'absolute', left: '11px', top: '5px', bottom: '5px', width: '2px', background: 'linear-gradient(to bottom, #EEF2FF 0%, #E0E7FF 50%, #EEF2FF 100%)' }} />
-              {activities.slice(activityPage * activitiesPerPage, (activityPage + 1) * activitiesPerPage).map((act, i) => (
-                <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} key={act.id} style={{ display: 'flex', gap: '1.2rem', position: 'relative', zIndex: 1 }}>
-                  <div style={{
-                    width: '24px', height: '24px', borderRadius: '50%', background: '#FFFFFF',
-                    border: `2px solid ${act.type === 'plus' ? '#10B981' : (act.type === 'delete' ? '#EF4444' : '#6366F1')}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: '0 0 10px rgba(0,0,0,0.05)'
-                  }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: act.type === 'plus' ? '#10B981' : (act.type === 'delete' ? '#EF4444' : '#6366F1') }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: '#1E293B' }}>{act.text}</p>
-                    <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '600', color: '#94A3B8', marginTop: '2px' }}>{act.time}</p>
-                  </div>
-                </motion.div>
+        <div className="table-container">
+          <table className="custom-table">
+            <thead>
+              {activeTab === 'master' && (
+                <tr>
+                  <th>PRODUCT & CATEGORY</th>
+                  <th>PRICING & TAX</th>
+                  <th>STOCK DISTRIBUTION</th>
+                  <th>STATUS</th>
+                  <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                </tr>
+              )}
+              {activeTab === 'damage' && (
+                <tr>
+                  <th>ID / DATE</th>
+                  <th>PRODUCT</th>
+                  <th>REPORTED BY</th>
+                  <th>QTY</th>
+                  <th>TYPE</th>
+                  <th>LOSS</th>
+                  <th>STATUS</th>
+                  <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                </tr>
+              )}
+              {activeTab === 'deductions' && (
+                <tr>
+                  <th>DEDUCTION ID</th>
+                  <th>ITEM / REASON</th>
+                  <th>RESPONSIBLE PERSON</th>
+                  <th>AMOUNT</th>
+                  <th>DATE</th>
+                  <th>STATUS</th>
+                  <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                </tr>
+              )}
+              {activeTab === 'reports' && (
+                <tr>
+                  <th>REPORT NAME</th>
+                  <th>GENERATED ON</th>
+                  <th>TYPE</th>
+                  <th>FILE SIZE</th>
+                  <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                </tr>
+              )}
+            </thead>
+            <tbody>
+              {activeTab === 'master' && filteredInventory.map(item => (
+                <tr key={item.id}>
+                  <td>
+                    <div className="cell-product">
+                      <div className="product-img">{item.name[0]}</div>
+                      <div>
+                        <div className="product-name">{item.name}</div>
+                        <div className="cell-sub">{item.category} {item.subCategory ? `• ${item.subCategory}` : ''}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="cell-main">₹{item.price || '0.00'} <span className="cell-sub">0%</span></div>
+                    <div className="cell-sub">Tax Inclusive</div>
+                  </td>
+                  <td>
+                    <div className="stock-dist">
+                      <div className="dist-item">
+                        <span className="dist-val">{item.stock}</span>
+                        <span className="dist-label">STORE</span>
+                      </div>
+                      <div className="dist-item">
+                        <span className="dist-val">0</span>
+                        <span className="dist-label">USED</span>
+                      </div>
+                      <div className="dist-item total">
+                        <span className="dist-val">{item.stock}</span>
+                        <span className="dist-label">TOTAL</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className={`toggle-switch ${item.stock > 0 ? 'active' : ''}`}></div>
+                  </td>
+                  <td>
+                    <div className="action-btns">
+                      <button className="action-btn" onClick={() => { setSelectedItem(item); setFormData(item); setIsAddModalOpen(true); }}><Edit size={16} /></button>
+                      <button className="action-btn delete"><Trash2 size={16} /></button>
+                    </div>
+                  </td>
+                </tr>
               ))}
-              {activities.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '3rem 0', color: '#94A3B8' }}>
-                  <Clock size={30} style={{ opacity: 0.3, marginBottom: '0.5rem' }} />
-                  <p style={{ fontSize: '0.8rem', fontWeight: '600' }}>No recent activities</p>
-                </div>
-              )}
-            </div>
 
-            {/* Pagination for Activity */}
-            {activities.length > activitiesPerPage && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #F1F5F9' }}>
-                <button
-                  disabled={activityPage === 0}
-                  onClick={() => setActivityPage(p => Math.max(0, p - 1))}
-                  style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #E2E8F0', background: activityPage === 0 ? '#F8FAFC' : '#FFFFFF', cursor: activityPage === 0 ? 'default' : 'pointer', color: activityPage === 0 ? '#CBD5E1' : '#475569' }}
-                >
-                  <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} />
-                </button>
-                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#94A3B8' }}>
-                  {activityPage + 1} / {Math.ceil(activities.length / activitiesPerPage)}
-                </span>
-                <button
-                  disabled={(activityPage + 1) * activitiesPerPage >= activities.length}
-                  onClick={() => setActivityPage(p => p + 1)}
-                  style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #E2E8F0', background: (activityPage + 1) * activitiesPerPage >= activities.length ? '#F8FAFC' : '#FFFFFF', cursor: (activityPage + 1) * activitiesPerPage >= activities.length ? 'default' : 'pointer', color: (activityPage + 1) * activitiesPerPage >= activities.length ? '#CBD5E1' : '#475569' }}
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-            )}
-          </div>
+              {activeTab === 'damage' && damageEntries.map(entry => (
+                <tr key={entry.id}>
+                  <td>
+                    <div className="cell-id">{entry.id}</div>
+                    <div className="cell-sub">{entry.date}</div>
+                  </td>
+                  <td>
+                    <div className="cell-product">
+                      <div className="product-img">{entry.product[0]}</div>
+                      <div className="product-name">{entry.product}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="cell-main">{entry.reportedBy}</div>
+                    <div className="cell-sub"><ShieldCheck size={12} /> VERIFIED</div>
+                  </td>
+                  <td><span className="qty-badge">{entry.qty}</span></td>
+                  <td><span className="type-badge damaged">{entry.type}</span></td>
+                  <td><span className="loss-val">₹{entry.loss}</span></td>
+                  <td><span className={`status-pill ${entry.status.toLowerCase()}`}>{entry.status}</span></td>
+                  <td>
+                    <div className="action-btns">
+                      <button className="action-btn"><Eye size={16} /></button>
+                      <button className="action-btn verify"><ShieldCheck size={16} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+              {activeTab === 'deductions' && deductions.map(ded => (
+                <tr key={ded.id}>
+                  <td><div className="cell-id">{ded.id}</div></td>
+                  <td>
+                    <div className="cell-main">{ded.item}</div>
+                    <div className="cell-sub">{ded.reason}</div>
+                  </td>
+                  <td>
+                    <div className="cell-main">{ded.person}</div>
+                    <div className="cell-sub">Liability Confirmed</div>
+                  </td>
+                  <td><span className="loss-val" style={{ color: '#0F172A' }}>₹{ded.amount}</span></td>
+                  <td><div className="cell-sub">{ded.date}</div></td>
+                  <td><span className={`status-pill ${ded.status.toLowerCase()}`}>{ded.status}</span></td>
+                  <td>
+                    <div className="action-btns">
+                      <button className="action-btn"><FileText size={16} /></button>
+                      <button className="action-btn verify"><CheckCircle2 size={16} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+              {activeTab === 'reports' && reports.map(rep => (
+                <tr key={rep.id}>
+                  <td>
+                    <div className="cell-product">
+                      <div className="product-img" style={{ background: rep.type === 'PDF' ? '#FEE2E2' : '#E0F2FE', color: rep.type === 'PDF' ? '#EF4444' : '#0EA5E9' }}>
+                        {rep.type === 'PDF' ? 'P' : 'X'}
+                      </div>
+                      <div className="product-name">{rep.name}</div>
+                    </div>
+                  </td>
+                  <td><div className="cell-sub">{rep.date}</div></td>
+                  <td><span className="type-badge" style={{ background: '#F1F5F9', color: '#64748B' }}>{rep.type}</span></td>
+                  <td><div className="cell-sub">{rep.size}</div></td>
+                  <td>
+                    <div className="action-btns">
+                      <button className="action-btn"><Download size={16} /></button>
+                      <button className="action-btn"><Eye size={16} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* 6. ADD/EDIT MODAL */}
+      {/* ANALYTICS SECTION */}
+      {activeTab === 'reports' && (
+        <div className="analytics-section" style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+          <div className="content-card">
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <TrendingUp size={20} color="#00A859" /> Stock Consumption Trend
+            </h3>
+            <div style={{ height: '200px', display: 'flex', alignItems: 'flex-end', gap: '1rem', padding: '1rem' }}>
+              {[60, 40, 85, 30, 95, 70, 55].map((h, i) => (
+                <div key={i} style={{ flex: 1, background: 'var(--primary-green)', height: `${h}%`, borderRadius: '4px 4px 0 0', opacity: 0.2 + (h/100) }} />
+              ))}
+            </div>
+          </div>
+          <div className="content-card">
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <BarChart size={20} color="#6366F1" /> Category Distribution
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              {CATEGORIES.map(cat => (
+                <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748B', width: '80px' }}>{cat.name}</span>
+                  <div style={{ flex: 1, height: '8px', background: '#F1F5F9', borderRadius: '10px', overflow: 'hidden' }}>
+                    <div style={{ width: `${Math.random() * 80 + 20}%`, height: '100%', background: cat.color }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODALS */}
       <AnimatePresence>
         {isAddModalOpen && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAddModalOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(8px)' }} />
-            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} style={{ position: 'relative', width: '100%', maxWidth: '700px', background: '#FFFFFF', borderRadius: '40px', boxShadow: '0 40px 100px -12px rgba(15, 23, 42, 0.3)', padding: '3rem', zIndex: 1001, overflow: 'hidden' }}>
-              {/* Colorful background accent */}
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '8px', background: 'linear-gradient(90deg, #6366F1, #A855F7, #EC4899)' }} />
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Plus size={28} color="#6366F1" />
-                  </div>
-                  <div>
-                    <h2 style={{ margin: 0, fontSize: '1.8rem', fontWeight: '950', color: '#0F172A', letterSpacing: '-0.02em' }}>{selectedItem ? 'Refine Item Details' : 'Add New Material'}</h2>
-                    <p style={{ margin: 0, fontSize: '0.95rem', color: '#64748B', fontWeight: '600' }}>Populate your hostel registry with precision.</p>
-                  </div>
-                </div>
-                <button onClick={() => setIsAddModalOpen(false)} style={{ padding: '0.8rem', borderRadius: '50%', border: 'none', background: '#F8FAFC', color: '#94A3B8', cursor: 'pointer', transition: '0.2s' }}><X size={24} /></button>
+          <div className="modal-overlay">
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="modal-content large">
+              <div className="modal-header">
+                <div className="header-badge"><Package size={16} /> ITEM DRAFTING</div>
+                <h2>{selectedItem ? 'Edit Existing Item' : 'Create New Inventory SKU'}</h2>
+                <button className="close-btn" onClick={() => setIsAddModalOpen(false)}><X size={24} /></button>
               </div>
-
-              <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
-                <div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: '800', color: '#334155', marginBottom: '0.8rem' }}>
-                    <Package size={16} color="#6366F1" /> Item Name
-                  </label>
-                  <input required type="text" placeholder="e.g. Premium Basmati Rice" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={{ width: '100%', padding: '1.2rem', borderRadius: '20px', border: '2px solid #F1F5F9', outline: 'none', background: '#F8FAFC', fontWeight: '700', fontSize: '1rem', transition: '0.3s' }} className="modal-input" />
+              <div className="modal-body">
+                <div className="modal-info-box">
+                  <Info size={16} /> <span>Tip: Define sub-categories to track stock more granularly across hostel floors.</span>
                 </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: '800', color: '#334155', marginBottom: '0.8rem' }}>
-                      <Filter size={16} color="#4DABF7" /> Category
-                    </label>
-                    <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} style={{ width: '100%', padding: '1.2rem', borderRadius: '20px', border: '2px solid #F1F5F9', outline: 'none', background: '#F8FAFC', fontWeight: '700', fontSize: '1rem', cursor: 'pointer' }}>
-                      {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: '800', color: '#334155', marginBottom: '0.8rem' }}>
-                      <ShoppingCart size={16} color="#51CF66" /> Initial Stock & Unit
-                    </label>
-                    <div style={{ display: 'flex', gap: '0.8rem' }}>
-                      <input required type="number" min="0" value={formData.stock} onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) })} style={{ flex: 1, padding: '1.2rem', borderRadius: '20px', border: '2px solid #F1F5F9', outline: 'none', background: '#F8FAFC', fontWeight: '700', fontSize: '1rem' }} className="modal-input" />
-                      <input required type="text" placeholder="Kg" value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} style={{ width: '80px', padding: '1.2rem', borderRadius: '20px', border: '2px solid #F1F5F9', outline: 'none', background: '#F8FAFC', fontWeight: '700', fontSize: '1rem', textAlign: 'center' }} className="modal-input" />
+                <form className="inventory-form" onSubmit={handleSave}>
+                  <div className="form-row">
+                    <div className="form-group full">
+                      <label>DISPLAY NAME *</label>
+                      <input 
+                        required type="text" placeholder="e.g. Premium Basmati Rice" 
+                        value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+                      />
                     </div>
                   </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: '800', color: '#334155', marginBottom: '0.8rem' }}>
-                      <AlertTriangle size={16} color="#FCC419" /> Minimum Threshold
-                    </label>
-                    <input required type="number" min="1" value={formData.minThreshold} onChange={e => setFormData({ ...formData, minThreshold: parseInt(e.target.value) })} style={{ width: '100%', padding: '1.2rem', borderRadius: '20px', border: '2px solid #F1F5F9', outline: 'none', background: '#F8FAFC', fontWeight: '700', fontSize: '1rem' }} className="modal-input" />
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>MAIN CATEGORY *</label>
+                      <select value={formData.category} onChange={e => handleCategoryChange(e.target.value)}>
+                        {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>SUB CATEGORY *</label>
+                      <select 
+                        value={formData.subCategory} 
+                        onChange={e => setFormData({...formData, subCategory: e.target.value})}
+                      >
+                        {CATEGORIES.find(c => c.id === formData.category)?.subCategories.map(sub => (
+                          <option key={sub} value={sub}>{sub}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: '800', color: '#334155', marginBottom: '0.8rem' }}>
-                      <Clock size={16} color="#A855F7" /> Purchase Date
-                    </label>
-                    <input type="date" value={formData.lastPurchased} onChange={e => setFormData({ ...formData, lastPurchased: e.target.value })} style={{ width: '100%', padding: '1.2rem', borderRadius: '20px', border: '2px solid #F1F5F9', outline: 'none', background: '#F8FAFC', fontWeight: '700', fontSize: '1rem' }} className="modal-input" />
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>UNIT TYPE *</label>
+                      <select value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})}>
+                        <option>Kg</option><option>Liters</option><option>Pieces</option><option>Boxes</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>INITIAL STOCK *</label>
+                      <input 
+                        required type="number" min="0" value={formData.stock} 
+                        onChange={e => setFormData({...formData, stock: parseInt(e.target.value)})}
+                      />
+                    </div>
                   </div>
-                </div>
+                  <div className="form-group full">
+                    <label>CUSTOM NOTES (EXTRA DETAILS) <StickyNote size={14} style={{ marginLeft: '4px', verticalAlign: 'middle' }} /></label>
+                    <textarea 
+                      placeholder="Add any specific instructions, vendor details, or floor-wise distribution notes here..."
+                      value={formData.notes}
+                      onChange={e => setFormData({...formData, notes: e.target.value})}
+                      style={{ height: '120px' }}
+                    ></textarea>
+                  </div>
+                  <div className="form-footer">
+                    <button type="button" className="secondary-btn" onClick={() => setIsAddModalOpen(false)}>DISCARD</button>
+                    <button type="submit" className="primary-btn">
+                      <Save size={18} /> {selectedItem ? 'UPDATE ITEM' : 'ADD TO INVENTORY'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
 
-                <div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: '800', color: '#334155', marginBottom: '0.8rem' }}>
-                    <MapPin size={16} color="#FF6B6B" /> Precise Location
-                  </label>
-                  <input type="text" placeholder="e.g. Ground Floor, Storage Room 01, Shelf B" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} style={{ width: '100%', padding: '1.2rem', borderRadius: '20px', border: '2px solid #F1F5F9', outline: 'none', background: '#F8FAFC', fontWeight: '700', fontSize: '1rem' }} className="modal-input" />
-                </div>
-
-                <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem' }}>
-                  <button type="button" onClick={() => setIsAddModalOpen(false)} style={{ flex: 1, padding: '1.2rem', borderRadius: '22px', border: '2px solid #F1F5F9', background: '#FFFFFF', color: '#64748B', fontWeight: '850', cursor: 'pointer', transition: '0.3s' }} className="modal-cancel-btn">Discard</button>
-                  <button type="submit" style={{ flex: 2, padding: '1.2rem', borderRadius: '22px', border: 'none', background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)', color: '#FFFFFF', fontWeight: '950', fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.3)', transition: '0.3s' }} className="modal-save-btn">
-                    <Save size={24} /> {selectedItem ? 'Sync Updates' : 'Publish to Registry'}
+        {isDamageModalOpen && (
+          <div className="modal-overlay">
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="modal-content medium">
+              <div className="modal-header">
+                <div className="header-hint"><AlertTriangle size={16} /> REPORT NEW DAMAGE</div>
+                <button className="close-btn" onClick={() => setIsDamageModalOpen(false)}><X size={24} /></button>
+              </div>
+              <div className="modal-body">
+                <div className="damage-form-box">
+                  <div className="form-group full">
+                    <label>SELECT PRODUCT *</label>
+                    <div className="search-input-box">
+                      <Search size={18} />
+                      <input type="text" placeholder="Search product..." />
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>QUANTITY *</label>
+                      <input type="number" defaultValue="0" />
+                    </div>
+                    <div className="form-group">
+                      <label>DAMAGE TYPE *</label>
+                      <select><option>Damaged</option><option>Expired</option><option>Lost</option></select>
+                    </div>
+                  </div>
+                  <button className="submit-damage-btn">
+                    <Send size={18} /> SUBMIT DAMAGE REPORT
                   </button>
                 </div>
-              </form>
+              </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      <style>{`
-        .modal-input:focus { border-color: #6366F1 !important; background: #FFFFFF !important; box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.1); }
-        .modal-cancel-btn:hover { background: #F8FAFC; color: #0F172A; border-color: #CBD5E1; }
-        .modal-save-btn:hover { transform: translateY(-3px); box-shadow: 0 20px 40px rgba(79, 70, 229, 0.4) !important; }
-
-        .inventory-table-row:hover { 
-          transform: scale(1.005);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important;
-          z-index: 10;
-        }
-        .inventory-table-row td {
-          transition: all 0.3s ease;
-          font-family: 'Inter', sans-serif;
-          letter-spacing: -0.01em;
-        }
-        .inventory-table-row:hover td {
-          border-color: #E2E8F0 !important;
-          background: #FDFDFF;
-        }
-        
-        table thead th {
-          font-family: 'Poppins', sans-serif;
-          letter-spacing: 0.05em;
-        }
-        
-        .inventory-page-v2 {
-          font-family: 'Inter', sans-serif;
-        }
-        
-        h1, h2, h3 {
-          font-family: 'Poppins', sans-serif;
-        }
-
-        @media (max-width: 1200px) {
-          .main-grid { grid-template-columns: 1fr !important; }
-        }
-        @media (max-width: 900px) {
-          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .categories-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        }
-        @media (max-width: 600px) {
-          .stats-grid { grid-template-columns: 1fr !important; }
-          .categories-grid { grid-template-columns: 1fr !important; }
-        }
-        select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2em; }
+      <style jsx="true">{`
+        .inventory-v3 { padding: 1.5rem 2.5rem; background: #F8FAFB; min-height: 100vh; font-family: 'Inter', sans-serif; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .header-left { display: flex; align-items: center; gap: 1.5rem; }
+        .back-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid #E2E8F0; background: white; display: flex; align-items: center; justify-content: center; color: #64748B; cursor: pointer; }
+        .header-title-area h1 { font-size: 1.5rem; font-weight: 800; color: #1E293B; margin: 0; }
+        .header-title-area p { font-size: 0.85rem; color: #94A3B8; margin: 0.2rem 0 0; font-weight: 500; }
+        .header-actions { display: flex; gap: 0.8rem; align-items: center; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid #E2E8F0; background: white; color: #64748B; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .primary-btn { padding: 0.7rem 1.5rem; border-radius: 10px; border: none; background: var(--primary-green); color: white; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+        .primary-btn.damage { background: #EF4444; }
+        .tab-nav { display: flex; gap: 2rem; border-bottom: 1px solid #E2E8F0; margin-bottom: 2rem; }
+        .tab-item { padding: 1rem 0; background: transparent; border: none; color: #94A3B8; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 0.6rem; cursor: pointer; position: relative; }
+        .tab-item.active { color: var(--primary-green); }
+        .tab-item.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--primary-green); }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: flex-start; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-label { font-size: 0.7rem; font-weight: 800; color: #94A3B8; letter-spacing: 0.05em; }
+        .stat-value { font-size: 1.8rem; font-weight: 800; color: #1E293B; margin: 0.5rem 0 0; }
+        .stat-trend { font-size: 0.75rem; font-weight: 700; padding: 0.3rem 0.6rem; border-radius: 8px; background: var(--bg); color: var(--accent); display: flex; align-items: center; gap: 0.3rem; }
+        .content-card { background: white; border-radius: 24px; border: 1px solid #F1F5F9; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
+        .table-filters { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .search-box { position: relative; width: 400px; }
+        .search-box svg { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94A3B8; }
+        .search-box input { width: 100%; padding: 0.8rem 1rem 0.8rem 3rem; border-radius: 12px; border: 1px solid #E2E8F0; background: #F8FAFB; font-weight: 500; outline: none; }
+        .filter-actions { display: flex; gap: 1rem; }
+        .filter-select { padding: 0.7rem 1rem; border-radius: 10px; border: 1px solid #E2E8F0; background: white; font-weight: 600; color: #475569; font-size: 0.85rem; outline: none; }
+        .custom-table { width: 100%; border-collapse: collapse; }
+        .custom-table th { text-align: left; padding: 1rem; font-size: 0.7rem; font-weight: 800; color: #94A3B8; letter-spacing: 0.05em; border-bottom: 1px solid #F1F5F9; }
+        .custom-table td { padding: 1.2rem 1rem; border-bottom: 1px solid #F1F5F9; }
+        .cell-id { font-weight: 700; color: #1E293B; font-size: 0.9rem; }
+        .cell-sub { font-size: 0.75rem; color: #94A3B8; font-weight: 600; }
+        .cell-main { font-weight: 700; color: #1E293B; font-size: 0.95rem; }
+        .cell-product { display: flex; align-items: center; gap: 1rem; }
+        .product-img { width: 40px; height: 40px; background: #F1F5F9; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #64748B; font-size: 1.2rem; }
+        .product-name { font-weight: 700; color: #1E293B; font-size: 0.95rem; }
+        .qty-badge { background: #F1F5F9; padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 700; color: #475569; }
+        .type-badge { padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.75rem; font-weight: 800; }
+        .type-badge.damaged { background: #FEF2F2; color: #EF4444; }
+        .loss-val { font-weight: 800; color: #EF4444; }
+        .status-pill { padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.7rem; font-weight: 800; }
+        .status-pill.pending { background: #FFFBEB; color: #D97706; }
+        .status-pill.paid, .status-pill.approved { background: #ECFDF5; color: #10B981; }
+        .action-btns { display: flex; gap: 0.5rem; justify-content: flex-end; }
+        .action-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #E2E8F0; background: white; color: #64748B; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .action-btn.verify { color: var(--primary-green); background: #E8F5E9; border-color: #C8E6C9; }
+        .action-btn.delete { color: #EF4444; background: #FEF2F2; border-color: #FEE2E2; }
+        .stock-dist { display: flex; gap: 1rem; }
+        .dist-item { display: flex; flex-direction: column; align-items: center; min-width: 40px; }
+        .dist-val { font-weight: 800; color: #1E293B; font-size: 0.9rem; }
+        .dist-label { font-size: 0.6rem; color: #94A3B8; font-weight: 800; }
+        .dist-item.total .dist-val { color: var(--primary-green); }
+        .toggle-switch { width: 40px; height: 22px; background: #E2E8F0; border-radius: 20px; position: relative; }
+        .toggle-switch.active { background: var(--primary-green); }
+        .toggle-switch::before { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
+        .toggle-switch.active::before { transform: translateX(18px); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; border-radius: 32px; box-shadow: 0 40px 100px -12px rgba(0,0,0,0.25); overflow: hidden; width: 90%; }
+        .modal-content.large { max-width: 800px; }
+        .modal-content.medium { max-width: 500px; }
+        .modal-header { padding: 1.5rem 2.5rem; border-bottom: 1px solid #F1F5F9; }
+        .header-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: #E8F5E9; color: var(--primary-green); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .modal-header h2 { font-size: 1.4rem; font-weight: 900; color: #0F172A; margin: 0; }
+        .close-btn { position: absolute; top: 1.5rem; right: 1.5rem; background: transparent; border: none; color: #94A3B8; cursor: pointer; }
+        .modal-body { padding: 2.5rem; }
+        .modal-info-box { background: #EEF2FF; border: 1px solid #E0E7FF; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.8rem; color: #6366F1; font-size: 0.85rem; font-weight: 600; }
+        .inventory-form { display: flex; flex-direction: column; gap: 1.5rem; }
+        .form-row { display: flex; gap: 1.5rem; }
+        .form-group { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+        .form-group.full { width: 100%; }
+        .form-group label { font-size: 0.7rem; font-weight: 800; color: #94A3B8; letter-spacing: 0.05em; }
+        .form-group input, .form-group select, .form-group textarea { padding: 1rem; border-radius: 12px; border: 1px solid #E2E8F0; background: #F8FAFB; font-weight: 600; font-size: 0.9rem; outline: none; transition: 0.2s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary-green); background: white; box-shadow: 0 0 0 4px var(--primary-green-light); }
+        .form-group textarea { height: 100px; resize: none; }
+        .form-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
+        .secondary-btn { padding: 0.8rem 1.8rem; border-radius: 12px; border: 1px solid #E2E8F0; background: white; color: #64748B; font-weight: 700; cursor: pointer; }
+        .submit-damage-btn { margin-top: 1rem; padding: 1.2rem; border-radius: 16px; border: none; background: #FDA4AF; color: white; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.8rem; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
+        .submit-damage-btn:hover { background: #F43F5E; }
       `}</style>
     </div>
   );

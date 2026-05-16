@@ -42,6 +42,7 @@ function App() {
         <Route path="/owner/building/:buildingId/mess" element={<Layout><Mess /></Layout>} />
         <Route path="/owner/building/:buildingId/complaints" element={<Layout><Complaints /></Layout>} />
         <Route path="/owner/building/:buildingId/inventory" element={<Layout><Inventory /></Layout>} />
+        <Route path="/owner/building/:buildingId/inventory/damage" element={<Layout><Inventory initialTab="damage" /></Layout>} />
         <Route path="/owner/building/:buildingId/notifications" element={<Layout><Notifications /></Layout>} />
         <Route path="/owner/building/:buildingId/reports" element={<Layout><Reports /></Layout>} />
         <Route path="/owner/building/:buildingId/settings" element={<Layout><Settings /></Layout>} />

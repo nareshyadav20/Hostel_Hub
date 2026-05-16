@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink, useParams, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useParams, Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Building2, 
@@ -19,9 +19,8 @@ import './Sidebar.css';
 
 const Sidebar = () => {
   const { buildingId: urlBuildingId } = useParams();
-  const iconProps = { size: 22, strokeWidth: 2.5 };
+  const iconProps = { size: 20, strokeWidth: 2 };
 
-  // Restore context from localStorage if URL doesn't have it (e.g. on Profile page)
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
 
   const menuItems = [
@@ -31,41 +30,51 @@ const Sidebar = () => {
     { name: 'Tenants', path: `/owner/building/${activeBuildingId}/tenants`, icon: <UsersRound {...iconProps} /> },
     { name: 'Payments', path: `/owner/building/${activeBuildingId}/payments`, icon: <Banknote {...iconProps} /> },
     { name: 'Staff', path: `/owner/building/${activeBuildingId}/staff`, icon: <Briefcase {...iconProps} /> },
+    { name: 'Inventory', path: `/owner/building/${activeBuildingId}/inventory`, icon: <PackageOpen {...iconProps} /> },
     { name: 'Mess Menu', path: `/owner/building/${activeBuildingId}/mess`, icon: <UtensilsCrossed {...iconProps} /> },
     { name: 'Complaints', path: `/owner/building/${activeBuildingId}/complaints`, icon: <MessageSquareWarning {...iconProps} /> },
-    { name: 'Inventory', path: `/owner/building/${activeBuildingId}/inventory`, icon: <PackageOpen {...iconProps} /> },
-    { name: 'Reports', path: `/owner/building/${activeBuildingId}/reports`, icon: <BarChart3 {...iconProps} /> },
-    { name: 'Settings', path: `/owner/building/${activeBuildingId}/settings`, icon: <Settings {...iconProps} /> },
     { name: 'Community Hub', path: `/owner/building/${activeBuildingId}/community`, icon: <UsersRound {...iconProps} /> },
+    { name: 'Reports', path: `/owner/building/${activeBuildingId}/reports`, icon: <BarChart3 {...iconProps} /> },
     { name: 'Notifications', path: `/owner/building/${activeBuildingId}/notifications`, icon: <BellRing {...iconProps} /> },
+    { name: 'Settings', path: `/owner/building/${activeBuildingId}/settings`, icon: <Settings {...iconProps} /> },
     { name: 'Profile', path: `/owner/building/${activeBuildingId}/profile`, icon: <User {...iconProps} /> },
   ];
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-header" style={{ paddingBottom: '1rem' }}>
-        <h2 className="logo">Livora</h2>
+      <div className="sidebar-header">
+        <div className="brand-logo">
+          <div className="logo-icon">H</div>
+          <div className="logo-text">
+            <span className="logo-main">HostelHub</span>
+            <span className="logo-sub">OWNER PORTAL</span>
+          </div>
+        </div>
       </div>
-      <div style={{ padding: '0 1.5rem', marginBottom: '1.5rem' }}>
-        <Link to="/owner/portfolio" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>
-          &larr; Back to Portfolio
-        </Link>
-      </div>
-      <nav className="sidebar-nav">
+
+      <div className="sidebar-nav">
+        <div className="nav-section-label">MANAGEMENT</div>
         {menuItems.map((item) => (
-          <NavLink 
-            key={item.name} 
-            to={item.path} 
-            className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}
-          >
-            <span className="icon">{item.icon}</span>
-            <span className="label">{item.name}</span>
-          </NavLink>
+          <div key={item.name} className="menu-group">
+            <NavLink 
+              to={item.path} 
+              className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}
+            >
+              <span className="icon">{item.icon}</span>
+              <span className="label">{item.name}</span>
+            </NavLink>
+          </div>
         ))}
-      </nav>
+      </div>
+
       <div className="sidebar-footer">
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textAlign: 'center' }}>
-          Owner Portal v1.0
+        <div className="user-pill">
+          <div className="user-avatar">S</div>
+          <div className="user-info">
+            <div className="user-name">Shiva</div>
+            <div className="user-role">OWNER</div>
+          </div>
+          <Link to="/logout" className="logout-icon"><User size={16} /></Link>
         </div>
       </div>
     </aside>
