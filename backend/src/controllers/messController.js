@@ -102,6 +102,7 @@ exports.getAttendance = async (req, res) => {
 exports.updateAttendance = async (req, res) => {
     try {
         const { tenantId, buildingId, date, meal, status } = req.body;
+        console.log('🍽️ ATTENDANCE_UPDATE_REQUEST:', { tenantId, buildingId, meal, status });
         
         // Find existing attendance or create new
         let attendance = await MessAttendance.findOne({ tenantId, buildingId, date });

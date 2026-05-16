@@ -18,6 +18,12 @@ const createNotification = async (data) => {
     });
     
     await notification.save();
+    console.log('📦 DB_SAVE_COMPLETE:', {
+      _id: notification._id,
+      title: notification.title,
+      buildingId: notification.buildingId,
+      portalType: notification.portalType
+    });
     console.log('📝 Notification saved to DB:', {
       id: notification._id,
       module: notification.moduleName,

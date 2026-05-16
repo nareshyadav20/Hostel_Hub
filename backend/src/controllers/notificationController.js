@@ -60,6 +60,13 @@ exports.getNotifications = async (req, res) => {
 
     const notifications = await Notification.find(filters).sort({ createdAt: -1 }).limit(100);
     console.log(`✅ FETCH_SUCCESS: Found ${notifications.length} notifications`);
+    if (notifications.length > 0) {
+      console.log('🔍 SAMPLE_NOTIF:', {
+        title: notifications[0].title,
+        portalType: notifications[0].portalType,
+        buildingId: notifications[0].buildingId
+      });
+    }
     
     // Transform _id to id for frontend compatibility if needed (handleId does this in frontend but let's be safe)
     res.json(notifications);
