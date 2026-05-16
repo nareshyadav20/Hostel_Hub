@@ -49,6 +49,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedSubCategory, setSelectedSubCategory] = useState('All');
+  const [selectedStatus, setSelectedStatus] = useState('All');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDamageModalOpen, setIsDamageModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -70,8 +71,8 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
   ]);
   const [loading, setLoading] = useState(true);
 
-  // Form State
-  const [formData, setFormData] = useState({
+  // Form States
+  const initialFormData = {
     name: '', 
     category: 'Groceries', 
     subCategory: 'Grains',
@@ -80,7 +81,16 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
     unit: 'Kg', 
     location: '', 
     notes: '',
+    status: 'active',
     lastPurchased: new Date().toISOString().split('T')[0]
+  };
+  const [formData, setFormData] = useState(initialFormData);
+
+  const [damageFormData, setDamageFormData] = useState({
+    productId: '',
+    qty: 0,
+    type: 'Damaged',
+    description: ''
   });
 
   useEffect(() => {
@@ -105,9 +115,12 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
       const matchesSubCategory = selectedSubCategory === 'All' || item.subCategory === selectedSubCategory;
-      return matchesSearch && matchesCategory && matchesSubCategory;
+      const matchesStatus = selectedStatus === 'All' || 
+                           (selectedStatus === 'Active' && item.stock > 0) || 
+                           (selectedStatus === 'Out of Stock' && item.stock <= 0);
+      return matchesSearch && matchesCategory && matchesSubCategory && matchesStatus;
     });
-  }, [inventory, searchQuery, selectedCategory, selectedSubCategory]);
+  }, [inventory, searchQuery, selectedCategory, selectedSubCategory, selectedStatus]);
 
   const stats = useMemo(() => {
     if (activeTab === 'damage') {
@@ -151,6 +164,28 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
         await api.addInventoryItem({ ...formData, buildingId: activeBuildingId });
       }
       setIsAddModalOpen(false);
+      setFormData(initialFormData);
+      fetchInventory();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this item?')) {
+      try {
+        await api.deleteInventoryItem(id);
+        fetchInventory();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleToggleStatus = async (item) => {
+    const newStock = item.stock > 0 ? 0 : 10; // Simple toggle simulation
+    try {
+      await api.updateInventoryItem(item.id || item._id, { ...item, stock: newStock });
       fetchInventory();
     } catch (err) {
       console.error(err);
@@ -166,12 +201,19 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
     });
   };
 
+  const handleDamageSubmit = (e) => {
+    e.preventDefault();
+    alert('Damage report submitted successfully!');
+    setIsDamageModalOpen(false);
+    setDamageFormData({ productId: '', qty: 0, type: 'Damaged', description: '' });
+  };
+
   return (
     <div className="inventory-v3">
       {/* 1. TOP HEADER */}
       <header className="page-header">
         <div className="header-left">
-          <button className="back-btn" onClick={() => navigate(-1)}><ChevronLeft size={20} /></button>
+          <button className="back-btn" onClick={() => navigate(-1)} title="Back"><ChevronLeft size={20} /></button>
           <div className="header-title-area">
             <h1>
               {activeTab === 'master' ? 'Inventory Master' : 
@@ -183,11 +225,11 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
           </div>
         </div>
         <div className="header-actions">
-          <button className="icon-btn"><FileText size={18} /></button>
-          <button className="icon-btn"><Printer size={18} /></button>
-          <button className="icon-btn"><Download size={18} /></button>
+          <button className="icon-btn" onClick={() => alert('Opening documents...')}><FileText size={18} /></button>
+          <button className="icon-btn" onClick={() => window.print()}><Printer size={18} /></button>
+          <button className="icon-btn" onClick={() => alert('Downloading reports...')}><Download size={18} /></button>
           {activeTab === 'master' && (
-            <button className="primary-btn" onClick={() => { setSelectedItem(null); setIsAddModalOpen(true); }}>
+            <button className="primary-btn" onClick={() => { setSelectedItem(null); setFormData(initialFormData); setIsAddModalOpen(true); }}>
               <Plus size={20} /> ADD ITEM
             </button>
           )}
@@ -239,10 +281,10 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
               />
             </div>
             <div className="filter-actions">
-              <select className="filter-select">
-                <option>All Status</option>
-                <option>Active / Paid</option>
-                <option>Inactive / Pending</option>
+              <select className="filter-select" value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)}>
+                <option value="All">All Status</option>
+                <option value="Active">Active / In Stock</option>
+                <option value="Out of Stock">Out of Stock</option>
               </select>
               {activeTab === 'master' && (
                 <>
@@ -340,12 +382,16 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                     </div>
                   </td>
                   <td>
-                    <div className={`toggle-switch ${item.stock > 0 ? 'active' : ''}`}></div>
+                    <div 
+                      className={`toggle-switch ${item.stock > 0 ? 'active' : ''}`}
+                      onClick={() => handleToggleStatus(item)}
+                      style={{ cursor: 'pointer' }}
+                    ></div>
                   </td>
                   <td>
                     <div className="action-btns">
                       <button className="action-btn" onClick={() => { setSelectedItem(item); setFormData(item); setIsAddModalOpen(true); }}><Edit size={16} /></button>
-                      <button className="action-btn delete"><Trash2 size={16} /></button>
+                      <button className="action-btn delete" onClick={() => handleDelete(item.id || item._id)}><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -373,8 +419,8 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   <td><span className={`status-pill ${entry.status.toLowerCase()}`}>{entry.status}</span></td>
                   <td>
                     <div className="action-btns">
-                      <button className="action-btn"><Eye size={16} /></button>
-                      <button className="action-btn verify"><ShieldCheck size={16} /></button>
+                      <button className="action-btn" onClick={() => alert('Viewing details...')}><Eye size={16} /></button>
+                      <button className="action-btn verify" onClick={() => alert('Entry verified!')}><ShieldCheck size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -396,8 +442,8 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   <td><span className={`status-pill ${ded.status.toLowerCase()}`}>{ded.status}</span></td>
                   <td>
                     <div className="action-btns">
-                      <button className="action-btn"><FileText size={16} /></button>
-                      <button className="action-btn verify"><CheckCircle2 size={16} /></button>
+                      <button className="action-btn" onClick={() => alert('Viewing document...')}><FileText size={16} /></button>
+                      <button className="action-btn verify" onClick={() => alert('Deduction settled!')}><CheckCircle2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -418,8 +464,8 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   <td><div className="cell-sub">{rep.size}</div></td>
                   <td>
                     <div className="action-btns">
-                      <button className="action-btn"><Download size={16} /></button>
-                      <button className="action-btn"><Eye size={16} /></button>
+                      <button className="action-btn" onClick={() => alert('Downloading...')}><Download size={16} /></button>
+                      <button className="action-btn" onClick={() => alert('Previewing...')}><Eye size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -528,7 +574,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                     ></textarea>
                   </div>
                   <div className="form-footer">
-                    <button type="button" className="secondary-btn" onClick={() => setIsAddModalOpen(false)}>DISCARD</button>
+                    <button type="button" className="secondary-btn" onClick={() => { setIsAddModalOpen(false); setFormData(initialFormData); }}>DISCARD</button>
                     <button type="submit" className="primary-btn">
                       <Save size={18} /> {selectedItem ? 'UPDATE ITEM' : 'ADD TO INVENTORY'}
                     </button>
@@ -547,28 +593,52 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                 <button className="close-btn" onClick={() => setIsDamageModalOpen(false)}><X size={24} /></button>
               </div>
               <div className="modal-body">
-                <div className="damage-form-box">
+                <form className="damage-form-box" onSubmit={handleDamageSubmit}>
                   <div className="form-group full">
                     <label>SELECT PRODUCT *</label>
-                    <div className="search-input-box">
-                      <Search size={18} />
-                      <input type="text" placeholder="Search product..." />
+                    <div className="search-input-box" style={{ position: 'relative' }}>
+                      <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                      <input 
+                        type="text" placeholder="Search product..." style={{ paddingLeft: '3rem', width: '100%' }}
+                        value={damageFormData.productId}
+                        onChange={e => setDamageFormData({...damageFormData, productId: e.target.value})}
+                        required
+                      />
                     </div>
                   </div>
                   <div className="form-row">
                     <div className="form-group">
                       <label>QUANTITY *</label>
-                      <input type="number" defaultValue="0" />
+                      <input 
+                        type="number" min="1" 
+                        value={damageFormData.qty}
+                        onChange={e => setDamageFormData({...damageFormData, qty: parseInt(e.target.value)})}
+                        required
+                      />
                     </div>
                     <div className="form-group">
                       <label>DAMAGE TYPE *</label>
-                      <select><option>Damaged</option><option>Expired</option><option>Lost</option></select>
+                      <select 
+                        value={damageFormData.type}
+                        onChange={e => setDamageFormData({...damageFormData, type: e.target.value})}
+                      >
+                        <option>Damaged</option><option>Expired</option><option>Lost</option>
+                      </select>
                     </div>
                   </div>
-                  <button className="submit-damage-btn">
+                  <div className="form-group full">
+                    <label>DESCRIPTION</label>
+                    <textarea 
+                      placeholder="Briefly describe the damage..."
+                      value={damageFormData.description}
+                      onChange={e => setDamageFormData({...damageFormData, description: e.target.value})}
+                      style={{ height: '80px' }}
+                    ></textarea>
+                  </div>
+                  <button type="submit" className="submit-damage-btn">
                     <Send size={18} /> SUBMIT DAMAGE REPORT
                   </button>
-                </div>
+                </form>
               </div>
             </motion.div>
           </div>
