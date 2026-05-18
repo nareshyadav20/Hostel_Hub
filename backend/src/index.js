@@ -8,7 +8,56 @@ const authRoutes = require('./routes/authRoutes');
 dotenv.config();
 
 // Connect to MongoDB
-connectDB();
+connectDB().then(() => {
+  // Asynchronous lazy self-migration for owner notifications
+  setTimeout(async () => {
+    try {
+      const Notification = require('./models/Notification');
+      const OwnerNotification = require('./models/OwnerNotification');
+      
+      const count = await Notification.countDocuments({
+        $or: [
+          { portalType: 'Owner' },
+          { receiverRole: 'Owner' },
+          { target: 'Owner' }
+        ]
+      });
+      
+      if (count > 0) {
+        console.log(`📡 [AUTO_MIGRATION] Found ${count} legacy owner notifications. Migrating lazily...`);
+        const oldOwnerNotifs = await Notification.find({
+          $or: [
+            { portalType: 'Owner' },
+            { receiverRole: 'Owner' },
+            { target: 'Owner' }
+          ]
+        }).lean();
+        
+        let migrated = 0;
+        for (const notif of oldOwnerNotifs) {
+          const exists = await OwnerNotification.findOne({ _id: notif._id });
+          if (!exists) {
+            await OwnerNotification.create(notif);
+            migrated++;
+          }
+        }
+        
+        // Remove migrated notifications from the old notifications collection to avoid cluttering
+        await Notification.deleteMany({
+          $or: [
+            { portalType: 'Owner' },
+            { receiverRole: 'Owner' },
+            { target: 'Owner' }
+          ]
+        });
+        
+        console.log(`✅ [AUTO_MIGRATION] Successfully migrated and cleaned up ${migrated} owner notifications!`);
+      }
+    } catch (err) {
+      console.error('⚠️ [AUTO_MIGRATION] Lazy migration failed but continuing:', err.message);
+    }
+  }, 2000); // 2 second delay to avoid delaying startup
+});
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -82,6 +131,7 @@ require('./models/MessAttendance');
 require('./models/Payment');
 require('./models/Staff');
 require('./models/Notification');
+require('./models/OwnerNotification');
 require('./models/PurchaseRequest');
 require('./models/PurchaseOrder');
 require('./models/Booking');
