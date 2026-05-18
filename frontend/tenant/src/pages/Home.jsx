@@ -545,20 +545,22 @@ const Home = () => {
           <h2 className="hv2-section-title">What Our Residents Say</h2>
           <p className="hv2-section-sub">Loved by thousands who call it home</p>
         </div>
-        <div className="hv2-testi-grid">
-          {testimonials.map((t, i) => (
-            <div key={i} className={`hv2-testi-card ${i === 1 ? 'hv2-testi-featured' : ''}`}>
-              <div className="hv2-testi-stars">{'★'.repeat(t.rating)}</div>
-              <p className="hv2-testi-text">{t.text}</p>
-              <div className="hv2-testi-author">
-                <div className="hv2-testi-avatar">{t.name[0]}</div>
-                <div>
-                  <div className="hv2-testi-name">{t.name}</div>
-                  <div className="hv2-testi-role">{t.role}</div>
+        <div className="hv2-testi-container">
+          <div className="hv2-testi-track">
+            {[...testimonials, ...testimonials, ...testimonials].map((t, i) => (
+              <div key={i} className={`hv2-testi-card ${i % testimonials.length === 1 ? 'hv2-testi-featured' : ''}`}>
+                <div className="hv2-testi-stars">{'★'.repeat(t.rating)}</div>
+                <p className="hv2-testi-text">{t.text}</p>
+                <div className="hv2-testi-author">
+                  <div className="hv2-testi-avatar">{t.name[0]}</div>
+                  <div>
+                    <div className="hv2-testi-name">{t.name}</div>
+                    <div className="hv2-testi-role">{t.role}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
