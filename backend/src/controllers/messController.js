@@ -3,13 +3,13 @@ const MessAttendance = require('../models/MessAttendance');
 const socketService = require('../utils/socketService');
 
 const DEFAULT_MENU = {
-    Monday: { breakfast: 'Idli, Sambar', lunch: 'Rice, Dal, Veg Fry', dinner: 'Roti, Paneer Masala' },
-    Tuesday: { breakfast: 'Poha, Jalebi', lunch: 'Rajma Chawal, Papad', dinner: 'Aloo Gobi, Roti' },
-    Wednesday: { breakfast: 'Aloo Paratha', lunch: 'Veg Biryani, Raita', dinner: 'Chole Bhature' },
-    Thursday: { breakfast: 'Upma, Chutney', lunch: 'Kadi Pakoda, Rice', dinner: 'Mushroom Peas' },
-    Friday: { breakfast: 'Masala Dosa', lunch: 'Dal Makhani, Rice', dinner: 'Egg Curry' },
-    Saturday: { breakfast: 'Puri Sabzi', lunch: 'Mix Veg, Roti', dinner: 'Veg Pulao' },
-    Sunday: { breakfast: 'Chole Poori', lunch: 'Special Thali', dinner: 'Light Khichdi' }
+    Monday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Tuesday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Wednesday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Thursday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Friday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Saturday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Sunday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' }
 };
 
 const PLANS = ['basic', 'standard', 'premium'];
@@ -64,12 +64,25 @@ exports.updateMenu = async (req, res) => {
 
         // Create notification for tenants
         const notificationService = require('../utils/notificationService');
+        const updatedMeals = [];
+        if (breakfast) updatedMeals.push(`Breakfast: ${breakfast}`);
+        if (lunch) updatedMeals.push(`Lunch: ${lunch}`);
+        if (dinner) updatedMeals.push(`Dinner: ${dinner}`);
+        // Ensure we have a valid buildingId for the notification
+        const finalBuildingId = buildingId || (tenant.buildingId?._id || tenant.buildingId);
+
+        if (!finalBuildingId) {
+            console.warn('⚠️ No buildingId found for attendance notification');
+        }
+
+        const mealSummary = updatedMeals.join(' | ');
+
         await notificationService.createNotification({
             moduleName: 'Mess',
             portalType: 'Tenant',
             category: 'Menu Update',
-            title: 'Mess Menu Updated',
-            message: `The ${plan} plan menu for ${day} has been updated.`,
+            title: `Mess Menu Updated`,
+            message: `The menu for today has been updated. ${mealSummary}`,
             priority: 'Medium',
             type: 'info',
             buildingId,
@@ -84,9 +97,7 @@ exports.updateMenu = async (req, res) => {
 
 exports.getAttendance = async (req, res) => {
     try {
-        const { buildingId, date } = req.query; // date format: YYYY-MM-DD
-        if (!buildingId || !date) return res.status(400).json({ message: 'buildingId and date are required' });
-
+        const { buildingId, date } = req.query;
         const attendance = await MessAttendance.find({ buildingId, date });
         res.json(attendance);
     } catch (err) {
@@ -97,17 +108,86 @@ exports.getAttendance = async (req, res) => {
 exports.updateAttendance = async (req, res) => {
     try {
         const { tenantId, buildingId, date, meal, status } = req.body;
+        console.log('🍽️ ATTENDANCE_UPDATE_REQUEST:', { tenantId, buildingId, meal, status });
         
-        const update = { [meal]: status };
+        // Find existing attendance or create new
+        let attendance = await MessAttendance.findOne({ tenantId, buildingId, date });
         
-        const attendance = await MessAttendance.findOneAndUpdate(
-            { tenantId, date, buildingId },
-            { $set: update },
-            { new: true, upsert: true }
-        );
+        if (!attendance) {
+            attendance = new MessAttendance({
+                tenantId,
+                buildingId,
+                date,
+                [meal]: status
+            });
+        } else {
+            attendance[meal] = status;
+        }
+        
+        await attendance.save();
+
+        // Real-time notification for both Tenant (local update) and Owner (analytics)
+        const updatePayload = {
+            tenantId,
+            buildingId,
+            date,
+            meal,
+            status,
+            attendance
+        };
+        socketService.emitToRoom(buildingId, 'attendanceUpdated', updatePayload);
+        socketService.emitToOwner('attendanceUpdated', updatePayload);
+
+        console.log('🔍 [DB_PERSISTENCE] Fetching metadata for notification:', { tenantId, buildingId });
+        const MessLog = require('../models/MessLog');
+        const Tenant = require('../models/Tenant');
+        const Building = require('../models/Building');
+        const notificationService = require('../utils/notificationService');
+        
+        const tenant = await Tenant.findById(tenantId);
+        
+        // CRITICAL: Ensure we have a valid buildingId for the notification
+        const finalBuildingId = buildingId || (tenant?.buildingId?._id || tenant?.buildingId);
+
+        // Save to permanent MessLog collection
+        try {
+            await MessLog.create({
+                tenantId,
+                buildingId: finalBuildingId,
+                tenantName: tenant?.name || 'A Resident',
+                roomNumber: tenant?.room || 'N/A',
+                meal,
+                status,
+                date
+            });
+            console.log('✅ [DB_PERSISTENCE] MessLog entry saved.');
+        } catch (logErr) {
+            console.error('⚠️ [DB_PERSISTENCE] MessLog save failed but continuing:', logErr.message);
+        }
+        
+        const building = finalBuildingId ? await Building.findById(finalBuildingId) : null;
+        
+        const tenantName = tenant ? tenant.name : 'A resident';
+        const roomNumber = (tenant && tenant.room) ? ` (Room ${tenant.room})` : '';
+        const buildingName = building ? ` at ${building.name}` : '';
+
+        // EXCLUSIVE Owner Notification
+        console.log('📝 [DB_PERSISTENCE] Calling notificationService.createNotification...');
+        await notificationService.createNotification({
+            moduleName: 'Mess',
+            portalType: 'Owner',
+            category: 'Attendance',
+            title: `Attendance ${status ? 'Confirmed' : 'Skipped'}`,
+            message: `${tenantName}${roomNumber} has opted to ${status ? 'attend' : 'skip'} ${meal} on ${new Date(date).toLocaleDateString()}${buildingName}.`,
+            priority: status ? 'Low' : 'Medium',
+            type: 'info',
+            buildingId: finalBuildingId,
+            actionLink: `/owner/building/${finalBuildingId}/notifications?category=Mess`
+        });
         
         res.json(attendance);
     } catch (err) {
+        console.error('🔥 [DB_PERSISTENCE] updateAttendance FAILED:', err);
         res.status(500).json({ message: err.message });
     }
 };
@@ -126,6 +206,15 @@ exports.markAllAttendance = async (req, res) => {
 
         await MessAttendance.bulkWrite(operations);
         const updated = await MessAttendance.find({ buildingId, date });
+
+        // Real-time synchronization for the whole building
+        socketService.emitToRoom(buildingId, 'attendanceUpdated', {
+            date,
+            meal,
+            status: true,
+            isBulk: true
+        });
+
         res.json(updated);
     } catch (err) {
         res.status(500).json({ message: err.message });

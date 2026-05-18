@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import API from '../api/axios';
 import './Mess.css';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
-import { ChevronLeft, ChevronRight, Search, Filter, Calendar, Clock, AlertTriangle, Coffee, Utensils, Moon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, Filter, Calendar, Clock, AlertTriangle, Coffee, Utensils, Moon, CheckCircle, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Mess = () => {
   const [rating, setRating] = useState(0);
-  const [todayMenu, setTodayMenu] = useState({ breakfast: 'Poha & Tea', lunch: 'Veg Thali', dinner: 'Dal Tadka' });
+  const [todayMenu, setTodayMenu] = useState({ breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' });
   const [weeklyMenu, setWeeklyMenu] = useState([]);
   const [tenantPlan, setTenantPlan] = useState('Standard');
   const [loading, setLoading] = useState(true);
   const [attendanceStatus, setAttendanceStatus] = useState('dining'); // 'dining' or 'skipped'
+  const [feedbackMessage, setFeedbackMessage] = useState(null);
   
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -19,28 +21,37 @@ const Mess = () => {
   const fetchMessData = async () => {
     try {
       const bId = localStorage.getItem('buildingId');
-      const [profileRes, menuRes] = await Promise.all([
+      const todayDate = new Date().toISOString().split('T')[0];
+      
+      const [profileRes, menuRes, attendanceRes] = await Promise.all([
         API.get('/tenants/me'),
-        bId ? API.get(`/mess/menu?buildingId=${bId}`).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })
+        bId ? API.get(`/mess/menu?buildingId=${bId}`).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+        bId ? API.get(`/mess/attendance?buildingId=${bId}&date=${todayDate}`).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })
       ]);
       
-      setTenantPlan(profileRes.data.messPlan || 'Standard');
+      const tenant = profileRes.data;
+      setTenantPlan(tenant.messPlan || 'Standard');
       
+      // Determine attendance status for today
+      const myAttendance = attendanceRes.data.find(a => a.tenantId === tenant._id || a.tenantId === tenant.id);
+      if (myAttendance) {
+        // Simple logic: if any meal is marked true, show dining. 
+        // Or we could check the "next" meal. For now, let's just use a basic sync.
+        setAttendanceStatus(myAttendance.breakfast || myAttendance.lunch || myAttendance.dinner ? 'dining' : 'skipped');
+      }
+
       let finalMenu = menuRes.data && menuRes.data.length > 0 ? menuRes.data : [];
-      
       const fallbackMenu = [
-        { day: 'Monday', breakfast: 'Poha & Jalebi', lunch: 'Rajma Chawal', dinner: 'Paneer Butter Masala' },
-        { day: 'Tuesday', breakfast: 'Idli Sambar', lunch: 'Chole Bhature', dinner: 'Dal Tadka' },
-        { day: 'Wednesday', breakfast: 'Aloo Paratha', lunch: 'Veg Biryani', dinner: 'Mix Veg' },
-        { day: 'Thursday', breakfast: 'Upma', lunch: 'Kadhi Pakora', dinner: 'Egg Curry' },
-        { day: 'Friday', breakfast: 'Masala Dosa', lunch: 'Dal Makhani', dinner: 'Chicken Curry' },
-        { day: 'Saturday', breakfast: 'Puri Sabzi', lunch: 'Veg Fried Rice', dinner: 'Aloo Gobi' },
-        { day: 'Sunday', breakfast: 'Bread Omelette', lunch: 'Special Thali', dinner: 'Matar Paneer' }
+        { day: 'Monday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+        { day: 'Tuesday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+        { day: 'Wednesday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+        { day: 'Thursday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+        { day: 'Friday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+        { day: 'Saturday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+        { day: 'Sunday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' }
       ];
 
-      if (finalMenu.length === 0) {
-        finalMenu = fallbackMenu;
-      }
+      if (finalMenu.length === 0) finalMenu = fallbackMenu;
       
       setWeeklyMenu(finalMenu);
       const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -61,26 +72,59 @@ const Mess = () => {
       connectSocket(buildingId);
 
       socket.on('menuUpdated', () => {
-        console.log('🔄 Mess Menu Updated in Real-time');
+        console.log('🔄 Mess Menu Updated');
+        fetchMessData();
+      });
+
+      socket.on('attendanceUpdated', (data) => {
+        console.log('✅ Attendance Updated', data);
         fetchMessData();
       });
     }
 
     return () => {
       socket.off('menuUpdated');
+      socket.off('attendanceUpdated');
       disconnectSocket();
     };
   }, []);
 
-  const handleSkipMeal = () => {
-    setAttendanceStatus('skipped');
-    alert('You have opted to skip the next meal. Thank you for helping us reduce food waste!');
+  const updateMyAttendance = async (status) => {
+    try {
+      const bId = localStorage.getItem('buildingId');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const tenantId = user.tenantId || user._id;
+      const todayDate = new Date().toISOString().split('T')[0];
+      
+      // Determine which meal to update based on time
+      const hour = new Date().getHours();
+      let meal = 'dinner';
+      if (hour < 11) meal = 'breakfast';
+      else if (hour < 16) meal = 'lunch';
+
+      await API.put('/mess/attendance', {
+        tenantId,
+        buildingId: bId,
+        date: todayDate,
+        meal,
+        status: status === 'dining'
+      });
+      
+      setAttendanceStatus(status);
+      setFeedbackMessage({
+        type: status === 'dining' ? 'success' : 'info',
+        text: status === 'dining' ? 'Attendance marked! Enjoy your meal.' : 'You have opted to skip. Thank you for helping reduce waste!'
+      });
+      setTimeout(() => setFeedbackMessage(null), 4000);
+    } catch (err) {
+      console.error('Failed to update attendance:', err);
+      setFeedbackMessage({ type: 'error', text: 'Failed to update attendance. Please try again.' });
+      setTimeout(() => setFeedbackMessage(null), 4000);
+    }
   };
 
-  const handleDining = () => {
-    setAttendanceStatus('dining');
-    alert('Attendance marked! Enjoy your meal.');
-  };
+  const handleSkipMeal = () => updateMyAttendance('skipped');
+  const handleDining = () => updateMyAttendance('dining');
 
   if (loading) return (
     <div className="staynest-dashboard loading-state">
@@ -210,6 +254,32 @@ const Mess = () => {
               </div>
               <h3>Mark Presence</h3>
               <p>Notify the kitchen if you'll be dining today or skipping.</p>
+
+              <AnimatePresence>
+                {feedbackMessage && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    exit={{ opacity: 0, y: -10 }}
+                    style={{ 
+                      padding: '0.75rem 1rem', 
+                      borderRadius: '12px', 
+                      marginBottom: '1rem',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      background: feedbackMessage.type === 'success' ? '#dcfce7' : feedbackMessage.type === 'error' ? '#fee2e2' : '#e0e7ff',
+                      color: feedbackMessage.type === 'success' ? '#166534' : feedbackMessage.type === 'error' ? '#991b1b' : '#3730a3',
+                      border: `1px solid ${feedbackMessage.type === 'success' ? '#bbf7d0' : feedbackMessage.type === 'error' ? '#fecaca' : '#c7d2fe'}`
+                    }}
+                  >
+                    {feedbackMessage.type === 'success' ? <CheckCircle size={16} /> : feedbackMessage.type === 'error' ? <AlertTriangle size={16} /> : <Info size={16} />}
+                    {feedbackMessage.text}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <div className="attendance-toggle-group">
                 <button

@@ -98,11 +98,28 @@ const Layout = ({ children }) => {
   // Toast Listener
   useEffect(() => {
     const handleNewNotif = (notif) => {
-      setActiveToasts(prev => [...prev, { ...notif, toastId: Date.now() }]);
+      // ONLY show if it's meant for Tenants
+      if (notif.portalType === 'Tenant' || notif.portalType === 'All') {
+        setActiveToasts(prev => [...prev, { ...notif, toastId: Date.now() }]);
+      }
     };
     
     socket.on('newNotification', handleNewNotif);
     return () => socket.off('newNotification', handleNewNotif);
+  }, []);
+
+  // Click outside listener for notifications
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifDropdown(false);
+      }
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
@@ -114,6 +131,14 @@ const Layout = ({ children }) => {
       @keyframes toast-progress {
         from { width: 100%; }
         to { width: 0%; }
+      }
+      @keyframes pulse-badge {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+      }
+      .badge-pulse {
+        animation: pulse-badge 2s infinite;
       }
     `;
     document.head.appendChild(style);
@@ -264,45 +289,75 @@ const Layout = ({ children }) => {
               <>
                 <div className="notifications-container" ref={notifRef} style={{ position: 'relative' }}>
                   <div className="notifications" onClick={() => setShowNotifDropdown(!showNotifDropdown)}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                    </svg>
-                    {unreadCount > 0 && <span className="notification-badge" style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#EF4444', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '10px', fontWeight: 'bold' }}>{unreadCount}</span>}
+                    <Bell size={20} />
+                    {unreadCount > 0 && (
+                      <span className="notification-badge badge-pulse" style={{ 
+                        position: 'absolute', top: '-5px', right: '-5px', 
+                        background: '#EF4444', color: 'white', borderRadius: '50%', 
+                        width: '18px', height: '18px', display: 'flex', 
+                        alignItems: 'center', justifyContent: 'center',
+                        fontSize: '10px', fontWeight: '900' 
+                      }}>
+                        {unreadCount}
+                      </span>
+                    )}
                   </div>
 
-                  {showNotifDropdown && (
-                    <div className="profile-dropdown glass-card" style={{ right: '-50px', width: '320px', padding: '0', overflow: 'hidden' }}>
-                      <div className="dropdown-header" style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h4 style={{ margin: 0, fontSize: '1rem' }}>Notifications</h4>
-                        {unreadCount > 0 && (
-                          <button onClick={markAllAsRead} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>Mark all read</button>
-                        )}
-                      </div>
-                      <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
-                        {notifications.length === 0 ? (
-                          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>No notifications yet</div>
-                        ) : (
-                          notifications.map((n, i) => (
-                            <div key={i} style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', background: n.isRead ? 'transparent' : 'rgba(16,185,129,0.05)', display: 'flex', gap: '1rem', cursor: 'pointer' }}
-                              onClick={async () => {
-                                if (!n.isRead) {
-                                  markAsRead(n._id || n.id);
-                                }
-                                setShowNotifDropdown(false);
-                                if (n.moduleName === 'Complaints') navigate('/complaints');
-                              }}>
-                              <div style={{ flex: 1 }}>
-                                <h5 style={{ margin: '0 0 0.3rem 0', fontSize: '0.9rem', color: 'var(--text-primary)' }}>{n.title}</h5>
-                                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{n.message}</p>
-                              </div>
-                              {!n.isRead && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)', alignSelf: 'center' }}></div>}
+                  <AnimatePresence>
+                    {showNotifDropdown && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="profile-dropdown glass-card" 
+                        style={{ right: '-10px', width: '320px', padding: '0', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}
+                      >
+                        <div className="dropdown-header" style={{ background: 'var(--bg-tertiary)', padding: '1.2rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800' }}>Notifications</h4>
+                          {unreadCount > 0 && (
+                            <button onClick={markAllAsRead} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '800' }}>Mark all read</button>
+                          )}
+                        </div>
+                        <div style={{ maxHeight: '350px', overflowY: 'auto', scrollbarWidth: 'none' }}>
+                          {notifications.length === 0 ? (
+                            <div style={{ padding: '3rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                              <Bell size={40} style={{ opacity: 0.1, marginBottom: '1rem' }} />
+                              <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>All caught up!</p>
                             </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  )}
+                          ) : (
+                            notifications.map((n, i) => (
+                              <div key={i} style={{ padding: '1.25rem', borderBottom: '1px solid var(--border-color)', background: n.isRead ? 'transparent' : 'rgba(99,102,241,0.03)', display: 'flex', gap: '1rem', cursor: 'pointer', transition: '0.2s' }}
+                                onClick={async () => {
+                                  if (!n.isRead) markAsRead(n._id || n.id);
+                                  setShowNotifDropdown(false);
+                                  if (n.moduleName === 'Complaints') navigate('/complaints');
+                                  if (n.moduleName === 'Payments') navigate('/payments');
+                                  if (n.moduleName === 'Mess') navigate('/mess');
+                                }}>
+                                <div style={{ flex: 1 }}>
+                                  <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', fontWeight: '750', color: 'var(--text-primary)' }}>{n.title}</h5>
+                                  <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{n.message}</p>
+                                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem', display: 'block' }}>
+                                    <Clock size={10} style={{ display: 'inline', marginRight: '4px' }} /> 
+                                    {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                                {!n.isRead && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)', alignSelf: 'center', flexShrink: 0 }}></div>}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        <div className="dropdown-footer" style={{ padding: '1rem', textAlign: 'center', borderTop: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
+                          <button 
+                            onClick={() => { setShowNotifDropdown(false); navigate('/notifications'); }}
+                            style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.85rem', cursor: 'pointer', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto' }}
+                          >
+                            View All Notifications
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div className="avatar-container" ref={dropdownRef}>

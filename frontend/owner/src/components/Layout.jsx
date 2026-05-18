@@ -11,7 +11,8 @@ import {
   Info, 
   ShieldAlert,
   ChevronRight,
-  X
+  X,
+  Utensils
 } from 'lucide-react';
 import { api } from '../mockData';
 import Sidebar from './Sidebar';
@@ -163,15 +164,22 @@ const Layout = ({ children }) => {
     markAsRead, 
     markAllAsRead, 
     deleteNotification,
-    setActiveBuildingId: setContextBuildingId 
+    setActiveBuildingId: setContextBuildingId,
+    activeBuildingId: contextBuildingId // Get current context ID
   } = useNotifications();
 
-  // Sync activeBuildingId with context
+  // Sync activeBuildingId with context ONLY if it differs
   useEffect(() => {
-    if (activeBuildingId) {
+    if (activeBuildingId && activeBuildingId !== contextBuildingId) {
       setContextBuildingId(activeBuildingId);
     }
-  }, [activeBuildingId, setContextBuildingId]);
+  }, [activeBuildingId, contextBuildingId, setContextBuildingId]);
+
+  console.log('🔔 Layout Notifications State:', { 
+    count: notifications.length, 
+    unread: unreadCount,
+    activeBuildingId 
+  });
 
   // Toast Listener (Still needed here for UI)
   useEffect(() => {
@@ -374,7 +382,7 @@ const Layout = ({ children }) => {
                               color: n.type === 'error' ? '#EF4444' : 'var(--accent-primary)',
                               flexShrink: 0
                             }}>
-                              {n.category === 'SOS Alert' ? <ShieldAlert size={20} /> : <Bell size={20} />}
+                              {n.category === 'SOS Alert' ? <ShieldAlert size={20} /> : n.moduleName === 'Mess' ? <Utensils size={20} /> : <Bell size={20} />}
                             </div>
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

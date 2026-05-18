@@ -143,6 +143,22 @@ const updateReportStatus = async (req, res) => {
 
     socketService.emitToOwner('confidentialReportUpdated', report);
     
+    // Create notification for tenant
+    const notificationService = require('../utils/notificationService');
+    await notificationService.createNotification({
+      moduleName: 'Safety',
+      portalType: 'Tenant',
+      category: 'Confidential Report',
+      title: 'Report Status Updated',
+      message: `Your confidential report "${report.title}" is now ${status}.`,
+      priority: 'Medium',
+      type: 'info',
+      buildingId: report.building,
+      tenantId: report.tenant,
+      createdBy: req.user.id,
+      actionLink: '/safety'
+    });
+
     res.status(200).json({ message: 'Status updated.', report });
   } catch (err) {
     console.error('Error updating report status:', err);

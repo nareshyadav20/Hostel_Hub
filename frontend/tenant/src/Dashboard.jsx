@@ -10,6 +10,7 @@ function Dashboard() {
   const [tenantData, setTenantData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [complaints, setComplaints] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [showWelcomeAlert, setShowWelcomeAlert] = useState(false);
 
   const location = React.useMemo(() => ({ state: window.history.state?.usr }), []);
@@ -18,12 +19,14 @@ function Dashboard() {
     try {
       const [profileRes, complaintsRes] = await Promise.all([
         API.get('/tenants/me'),
-        API.get('/complaints/me').catch(() => ({ data: [] }))
+        API.get('/complaints/me').catch(() => ({ data: [] })),
+        API.get('/notifications?limit=3').catch(() => ({ data: [] }))
       ]);
       
       const profile = profileRes.data;
       setTenantData(profile);
       setComplaints((complaintsRes.data || []).slice(0, 3));
+      setNotifications((notificationsRes.data || []).slice(0, 3));
       
       // Keep local storage in sync for socket and other pages
       if (profile?.buildingId?._id || profile?.buildingId) {
@@ -260,6 +263,39 @@ function Dashboard() {
             </svg>
             View Payment History
           </button>
+        </div>
+
+        {/* Recent Notifications */}
+        <div className="sn-card dash-notif-card">
+          <div className="dash-card-header">
+            <div className="dash-card-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-primary)' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </div>
+            <h4 className="sn-card-title">Recent Updates</h4>
+            <Link to="/notifications" className="dash-card-link">View All</Link>
+          </div>
+
+          {notifications.length === 0 ? (
+            <div className="dash-empty-state">
+              <p>No recent updates. You're all caught up!</p>
+            </div>
+          ) : (
+            <div className="dash-notif-list">
+              {notifications.map(n => (
+                <div key={n._id} className="dash-notif-item" onClick={() => navigate('/notifications')} style={{ cursor: 'pointer' }}>
+                  <div className="dash-notif-dot" style={{ background: n.isRead ? 'var(--border-color)' : 'var(--accent-primary)' }}></div>
+                  <div className="dash-notif-content">
+                    <strong>{n.title}</strong>
+                    <p>{n.message}</p>
+                    <span className="dash-notif-time">{new Date(n.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Complaints */}

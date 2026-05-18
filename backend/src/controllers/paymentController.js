@@ -131,6 +131,22 @@ const updatePaymentStatus = async (req, res) => {
     socketService.emitUpdate(payment.buildingId, 'paymentUpdated', payment);
     socketService.emitUpdate(payment.buildingId, 'dashboardStatsUpdated', {});
 
+    // Create notification for tenant
+    const notificationService = require('../utils/notificationService');
+    await notificationService.createNotification({
+      moduleName: 'Payments',
+      portalType: 'Tenant',
+      category: 'Rent Payment',
+      title: 'Payment Status Updated',
+      message: `Your payment of ₹${payment.amount} has been marked as ${req.body.status}.`,
+      priority: 'Medium',
+      type: req.body.status === 'Paid' ? 'success' : 'info',
+      buildingId: payment.buildingId,
+      tenantId: payment.tenantId?._id || payment.tenantId,
+      createdBy: req.user.id,
+      actionLink: '/payments'
+    });
+
     res.status(200).json(payment);
   } catch (error) {
     res.status(500).json({ error: error.message });
