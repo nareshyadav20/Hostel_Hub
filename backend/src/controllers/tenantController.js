@@ -19,6 +19,12 @@ const createTenant = async (req, res) => {
     
     res.status(201).json(tenant);
   } catch (err) {
+    if (err.code === 11000 && err.keyValue && err.keyValue.email) {
+      return res.status(400).json({ error: 'A tenant with this email address is already registered in the system.' });
+    }
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'A tenant with these details already exists.' });
+    }
     res.status(400).json({ error: err.message });
   }
 };
@@ -65,6 +71,9 @@ const bulkCreateTenants = async (req, res) => {
     
     res.status(201).json(created);
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'One or more tenants already exist with this registered email address.' });
+    }
     res.status(400).json({ error: err.message });
   }
 };
@@ -80,6 +89,12 @@ const updateTenant = async (req, res) => {
     
     res.status(200).json(tenant);
   } catch (err) {
+    if (err.code === 11000 && err.keyValue && err.keyValue.email) {
+      return res.status(400).json({ error: 'Another tenant with this email address is already registered in the system.' });
+    }
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'A tenant with these details already exists.' });
+    }
     res.status(400).json({ error: err.message });
   }
 };

@@ -348,10 +348,10 @@ export function TenantOverviewPanel({ summary, buildingId: propBuildingId }) {
       </div>
       <div style={{ display:'flex', flexDirection:'column', gap:'0.2rem', flex: 1 }}>
         {[
-          { label:'Active Tenants', value:summary.occupiedBeds, color:'var(--text-primary)' },
-          { label:'New This Month', value:`+${summary.newTenantsThisMonth}`, color:'#10B981' },
-          { label:'Leaving Soon', value:summary.tenantsLeavingSoon, color:'#EF4444' },
-          { label:'Renewals Pending', value:summary.renewalsPending, color:'#F59E0B' },
+          { label:'Active Tenants', value:summary.totalTenants, color:'var(--text-primary)' },
+          { label:'New This Month', value: summary.newTenantsThisMonth !== undefined ? `+${summary.newTenantsThisMonth}` : 'N/A', color:'#10B981' },
+          { label:'Leaving Soon', value:summary.tenantsLeavingSoon !== undefined ? summary.tenantsLeavingSoon : 'N/A', color:'#EF4444' },
+          { label:'Renewals Pending', value:summary.renewalsPending !== undefined ? summary.renewalsPending : 'N/A', color:'#F59E0B' },
           { label:'Pending Payments', value:summary.pendingPaymentsCount, color:'#EF4444' },
         ].map((row,i) => (
           <motion.div whileHover={{ backgroundColor: 'var(--bg-tertiary)', x: 4 }} key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.7rem 0.8rem', borderRadius:'8px', cursor:'pointer' }}>
