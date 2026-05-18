@@ -352,6 +352,12 @@ const OverviewTab = ({ profile, stats, setActiveTab }) => {
 const ProfileTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
   const [formData, setFormData] = useState(profile?.personalInfo || {});
 
+  useEffect(() => {
+    if (profile?.personalInfo) {
+      setFormData(profile.personalInfo);
+    }
+  }, [profile]);
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
@@ -369,16 +375,22 @@ const ProfileTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
         <div className="input-group">
           <label>Full Legal Name</label>
-          <input type="text" disabled={!isEditing} value={formData.fullName} onChange={(e) => setFormData({...formData, fullName: e.target.value})} />
+          <input type="text" disabled={!isEditing} value={formData.fullName || ''} onChange={(e) => setFormData({...formData, fullName: e.target.value})} />
         </div>
         <div className="input-group">
           <label>Email ID (Primary)</label>
-          <input type="email" disabled={true} value="owner@hostelhub.com" />
+          <input type="email" disabled={true} value={formData.email || 'owner@hostelhub.com'} />
         </div>
         <div className="input-group">
           <label>Phone Number</label>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <input type="text" disabled={!isEditing} value={profile.phone || '+91 9876543210'} style={{ flex: 1 }} />
+            <input 
+              type="text" 
+              disabled={!isEditing} 
+              value={formData.phone || ''} 
+              onChange={(e) => setFormData({...formData, phone: e.target.value})} 
+              style={{ flex: 1 }} 
+            />
             {!isEditing && <div style={{ display: 'flex', alignItems: 'center', color: '#10b981', fontSize: '0.75rem', fontWeight: '800' }}><CheckCircle2 size={14} /> VERIFIED</div>}
           </div>
         </div>
@@ -396,15 +408,15 @@ const ProfileTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
         </div>
         <div className="input-group">
           <label>Alternate Contact</label>
-          <input type="text" disabled={!isEditing} value={formData.alternateContact} onChange={(e) => setFormData({...formData, alternateContact: e.target.value})} />
+          <input type="text" disabled={!isEditing} value={formData.alternateContact || ''} onChange={(e) => setFormData({...formData, alternateContact: e.target.value})} />
         </div>
         <div className="input-group" style={{ gridColumn: 'span 2' }}>
           <label>Residential Address</label>
-          <textarea rows="3" disabled={!isEditing} value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
+          <textarea rows="3" disabled={!isEditing} value={formData.address || ''} onChange={(e) => setFormData({...formData, address: e.target.value})} />
         </div>
         <div className="input-group" style={{ gridColumn: 'span 2' }}>
           <label>Google Maps Location URL (Optional)</label>
-          <input type="url" disabled={!isEditing} value={formData.googleMapUrl} onChange={(e) => setFormData({...formData, googleMapUrl: e.target.value})} placeholder="https://maps.app.goo.gl/..." />
+          <input type="url" disabled={!isEditing} value={formData.googleMapUrl || ''} onChange={(e) => setFormData({...formData, googleMapUrl: e.target.value})} placeholder="https://maps.app.goo.gl/..." />
         </div>
       </div>
     </div>
@@ -413,6 +425,12 @@ const ProfileTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
 
 const BusinessTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
   const [formData, setFormData] = useState(profile?.businessDetails || {});
+
+  useEffect(() => {
+    if (profile?.businessDetails) {
+      setFormData(profile.businessDetails);
+    }
+  }, [profile]);
 
   return (
     <div>
@@ -431,30 +449,30 @@ const BusinessTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
         <div className="input-group">
           <label>Business Name</label>
-          <input type="text" disabled={!isEditing} value={formData.businessName} onChange={(e) => setFormData({...formData, businessName: e.target.value})} />
+          <input type="text" disabled={!isEditing} value={formData.businessName || ''} onChange={(e) => setFormData({...formData, businessName: e.target.value})} />
         </div>
         <div className="input-group">
           <label>Business Type</label>
-          <select disabled={!isEditing} value={formData.businessType} onChange={(e) => setFormData({...formData, businessType: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+          <select disabled={!isEditing} value={formData.businessType || 'Individual'} onChange={(e) => setFormData({...formData, businessType: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
             <option>Individual</option>
             <option>Company</option>
           </select>
         </div>
         <div className="input-group">
           <label>Years of Experience</label>
-          <input type="number" disabled={!isEditing} value={formData.experienceYears} onChange={(e) => setFormData({...formData, experienceYears: e.target.value})} />
+          <input type="number" disabled={!isEditing} value={formData.experienceYears || ''} onChange={(e) => setFormData({...formData, experienceYears: e.target.value})} />
         </div>
         <div className="input-group">
           <label>GST Number</label>
-          <input type="text" disabled={!isEditing} value={formData.gstNumber} onChange={(e) => setFormData({...formData, gstNumber: e.target.value})} />
+          <input type="text" disabled={!isEditing} value={formData.gstNumber || ''} onChange={(e) => setFormData({...formData, gstNumber: e.target.value})} />
         </div>
         <div className="input-group">
           <label>PAN Number (Business)</label>
-          <input type="text" disabled={!isEditing} value={formData.panNumber} onChange={(e) => setFormData({...formData, panNumber: e.target.value})} />
+          <input type="text" disabled={!isEditing} value={formData.panNumber || ''} onChange={(e) => setFormData({...formData, panNumber: e.target.value})} />
         </div>
         <div className="input-group" style={{ gridColumn: 'span 2' }}>
           <label>Registered Office Address</label>
-          <textarea rows="2" disabled={!isEditing} value={formData.officeAddress} onChange={(e) => setFormData({...formData, officeAddress: e.target.value})} />
+          <textarea rows="2" disabled={!isEditing} value={formData.officeAddress || ''} onChange={(e) => setFormData({...formData, officeAddress: e.target.value})} />
         </div>
       </div>
     </div>
@@ -517,6 +535,12 @@ const BankTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
   const [step, setStep] = useState('view');
   const [otp, setOtp] = useState('');
 
+  useEffect(() => {
+    if (profile?.bankDetails) {
+      setFormData(profile.bankDetails);
+    }
+  }, [profile]);
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
@@ -543,19 +567,19 @@ const BankTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
         <div className="input-group">
           <label>Account Holder Name</label>
-          <input type="text" disabled={step !== 'edit'} value={formData.accountHolderName} onChange={(e) => setFormData({...formData, accountHolderName: e.target.value})} />
+          <input type="text" disabled={step !== 'edit'} value={formData.accountHolderName || ''} onChange={(e) => setFormData({...formData, accountHolderName: e.target.value})} />
         </div>
         <div className="input-group">
           <label>Bank Name</label>
-          <input type="text" disabled={step !== 'edit'} value={formData.bankName} onChange={(e) => setFormData({...formData, bankName: e.target.value})} />
+          <input type="text" disabled={step !== 'edit'} value={formData.bankName || ''} onChange={(e) => setFormData({...formData, bankName: e.target.value})} />
         </div>
         <div className="input-group">
           <label>Account Number</label>
-          <input type={step === 'edit' ? 'text' : 'password'} disabled={step !== 'edit'} value={formData.accountNumber} onChange={(e) => setFormData({...formData, accountNumber: e.target.value})} />
+          <input type={step === 'edit' ? 'text' : 'password'} disabled={step !== 'edit'} value={formData.accountNumber || ''} onChange={(e) => setFormData({...formData, accountNumber: e.target.value})} />
         </div>
         <div className="input-group">
           <label>IFSC Code</label>
-          <input type="text" disabled={step !== 'edit'} value={formData.ifscCode} onChange={(e) => setFormData({...formData, ifscCode: e.target.value})} />
+          <input type="text" disabled={step !== 'edit'} value={formData.ifscCode || ''} onChange={(e) => setFormData({...formData, ifscCode: e.target.value})} />
         </div>
       </div>
     </div>

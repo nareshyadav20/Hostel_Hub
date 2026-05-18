@@ -7,6 +7,8 @@ const ownerProfileSchema = new mongoose.Schema({
   personalInfo: {
     fullName: { type: String },
     dob: { type: Date },
+    phone: { type: String },
+    email: { type: String },
     address: { type: String },
     city: { type: String },
     state: { type: String },

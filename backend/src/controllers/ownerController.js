@@ -10,10 +10,9 @@ const OwnerPhoto = require('../models/OwnerPhoto');
 exports.getProfile = async (req, res) => {
   try {
     let profile = await OwnerProfile.findOne({ userId: req.user.id });
+    const user = await User.findById(req.user.id);
     
     if (!profile) {
-      // Fetch basic info from User model to seed the profile
-      const user = await User.findById(req.user.id);
       if (!user) {
         return res.status(404).json({ message: 'User not found for this profile' });
       }
@@ -22,12 +21,30 @@ exports.getProfile = async (req, res) => {
         userId: req.user.id,
         personalInfo: {
           fullName: user.name,
+          email: user.email,
+          phone: user.phone || '',
           address: ''
         },
         businessDetails: {
           businessName: `${user.name}'s Properties`
         }
       });
+    } else {
+      // Sync basic fields if not already populated in personalInfo
+      let updated = false;
+      if (user) {
+        if (!profile.personalInfo.email) {
+          profile.personalInfo.email = user.email;
+          updated = true;
+        }
+        if (!profile.personalInfo.phone && user.phone) {
+          profile.personalInfo.phone = user.phone;
+          updated = true;
+        }
+        if (updated) {
+          await profile.save();
+        }
+      }
     }
     
     const photoRecord = await OwnerPhoto.findOne({ ownerId: req.user.id }).sort({ createdAt: -1 });
@@ -73,11 +90,30 @@ exports.updateProfile = async (req, res) => {
       { new: true, upsert: true, runValidators: true }
     );
 
+    // Sync back to User model if personalInfo was updated
+    if (updateData.personalInfo) {
+      const userUpdate = {};
+      if (updateData.personalInfo.fullName) {
+        userUpdate.name = updateData.personalInfo.fullName;
+      }
+      if (updateData.personalInfo.phone) {
+        userUpdate.phone = updateData.personalInfo.phone;
+      }
+      if (Object.keys(userUpdate).length > 0) {
+        await User.findByIdAndUpdate(req.user.id, userUpdate);
+      }
+    }
+
     // Recalculate completeness
     profile.profileCompleteness = calculateCompleteness(profile);
     await profile.save();
 
-    res.status(200).json(profile);
+    const photoRecord = await OwnerPhoto.findOne({ ownerId: req.user.id }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      ...profile.toObject(),
+      photo: photoRecord ? photoRecord.photoUrl : null
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -91,7 +127,13 @@ exports.uploadDocument = async (req, res) => {
       { $push: { documents: { name, type, url, status: 'Pending' } } },
       { new: true }
     );
-    res.status(200).json(profile);
+    
+    const photoRecord = await OwnerPhoto.findOne({ ownerId: req.user.id }).sort({ createdAt: -1 });
+    
+    res.status(200).json({
+      ...profile.toObject(),
+      photo: photoRecord ? photoRecord.photoUrl : null
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

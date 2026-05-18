@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
-import { 
-  Bell, Search, Filter, Settings, Check, 
-  Trash2, X, Archive, Eye, Zap, 
-  Smartphone, Mail, AlertTriangle, 
-  Info, CreditCard, Box, MessageSquare, 
+import {
+  Bell, Search, Filter, Settings, Check,
+  Trash2, X, Archive, Eye, Zap,
+  Smartphone, Mail, AlertTriangle,
+  Info, CreditCard, Box, MessageSquare,
   Users, Shield, FileText, LayoutGrid, User, Briefcase, Send, CheckCircle, Clock, ExternalLink, Utensils
 } from 'lucide-react';
 import { api } from '../mockData';
@@ -16,10 +16,10 @@ const Notifications = () => {
   const { buildingId: urlBuildingId } = useParams();
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
 
-  const { 
-    notifications, 
+  const {
+    notifications,
     setNotifications,
-    unreadCount, 
+    unreadCount,
     setUnreadCount,
     loading: isLoading,
     markAsRead: handleMarkAsRead,
@@ -31,12 +31,12 @@ const Notifications = () => {
   const [activeTab, setActiveTab] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('category') || 'all';
-  }); 
-  const [activePortal, setActivePortal] = useState('All'); 
+  });
+  const [activePortal, setActivePortal] = useState('All');
   const [filterPriority, setFilterPriority] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
@@ -113,12 +113,12 @@ const Notifications = () => {
       .filter(n => activeTab === 'all' || n.moduleName === activeTab || n.category === activeTab)
       .filter(n => activePortal === 'All' || n.portalType === activePortal)
       .filter(n => filterPriority === 'all' || n.priority === filterPriority)
-      .filter(n => 
-        (n.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-         n.message?.toLowerCase().includes(searchQuery.toLowerCase()))
+      .filter(n =>
+      (n.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        n.message?.toLowerCase().includes(searchQuery.toLowerCase()))
       );
   }, [notifications, activeTab, activePortal, filterPriority, searchQuery]);
-  
+
   console.log('📊 [RENDER_LOGS] Notifications Page Render:', {
     activeBuildingId,
     activeTab,
@@ -137,7 +137,7 @@ const Notifications = () => {
 
   const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
   const paginatedNotifications = filteredNotifications.slice(
-    (currentPage - 1) * itemsPerPage, 
+    (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
@@ -172,10 +172,10 @@ const Notifications = () => {
     };
     const style = colors[portal] || colors['Owner'];
     return (
-      <span style={{ 
-        display: 'flex', alignItems: 'center', gap: '0.3rem', 
-        padding: '0.2rem 0.6rem', borderRadius: '100px', 
-        background: style.bg, color: style.color, 
+      <span style={{
+        display: 'flex', alignItems: 'center', gap: '0.3rem',
+        padding: '0.2rem 0.6rem', borderRadius: '100px',
+        background: style.bg, color: style.color,
         fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase'
       }}>
         {style.icon} {portal}
@@ -222,13 +222,13 @@ const Notifications = () => {
             />
           </div>
           <select value={activePortal} onChange={(e) => setActivePortal(e.target.value)} style={{ padding: '0.8rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontWeight: '700' }}>
-             {portals.map(p => <option key={p} value={p}>{p} Portal</option>)}
+            {portals.map(p => <option key={p} value={p}>{p} Portal</option>)}
           </select>
           <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} style={{ padding: '0.8rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontWeight: '700' }}>
-             <option value="all">All Priorities</option>
-             <option value="High">High Priority</option>
-             <option value="Medium">Medium Priority</option>
-             <option value="Low">Low Priority</option>
+            <option value="all">All Priorities</option>
+            <option value="High">High Priority</option>
+            <option value="Medium">Medium Priority</option>
+            <option value="Low">Low Priority</option>
           </select>
         </div>
 
@@ -252,8 +252,8 @@ const Notifications = () => {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-        <button 
-          onClick={handleSeed} 
+        <button
+          onClick={handleSeed}
           style={{ background: 'transparent', border: '1px dashed var(--border-color)', color: 'var(--text-muted)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '600', cursor: 'pointer' }}
         >
           Seed Sample Notifications
@@ -365,18 +365,18 @@ const Notifications = () => {
               <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Target Audience</label>
-                  <select value={composerData.target} onChange={e => setComposerData({...composerData, target: e.target.value})} style={inputStyle}>
+                  <select value={composerData.target} onChange={e => setComposerData({ ...composerData, target: e.target.value })} style={inputStyle}>
                     <option>All Tenants</option>
                     <option>Staff Members</option>
                   </select>
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Title</label>
-                  <input type="text" placeholder="e.g. Mess Update, Maintenance Notice" value={composerData.title} onChange={e => setComposerData({...composerData, title: e.target.value})} style={inputStyle} required />
+                  <input type="text" placeholder="e.g. Mess Update, Maintenance Notice" value={composerData.title} onChange={e => setComposerData({ ...composerData, title: e.target.value })} style={inputStyle} required />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Message</label>
-                  <textarea rows="4" placeholder="Type your message here..." value={composerData.message} onChange={e => setComposerData({...composerData, message: e.target.value})} style={inputStyle} required />
+                  <textarea rows="4" placeholder="Type your message here..." value={composerData.message} onChange={e => setComposerData({ ...composerData, message: e.target.value })} style={inputStyle} required />
                 </div>
                 <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem', background: 'var(--accent-primary)', border: 'none', color: 'white', fontWeight: '800', borderRadius: '12px' }}>
                   Send Broadcast
@@ -392,16 +392,16 @@ const Notifications = () => {
           <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' }} onClick={() => setIsSettingsOpen(false)} />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ position: 'relative', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto' }}>
-               <h2 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '1rem' }}>Hub Settings</h2>
-               {Object.entries(notifSettings).map(([key, config]) => (
-                 <div key={key} style={{ marginBottom: '1rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ textTransform: 'capitalize', fontWeight: '700' }}>{key}</span>
-                      <input type="checkbox" checked={config.enabled} onChange={e => setNotifSettings({...notifSettings, [key]: {...config, enabled: e.target.checked}})} />
-                    </div>
-                 </div>
-               ))}
-               <button onClick={() => setIsSettingsOpen(false)} className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>Close</button>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '1rem' }}>Hub Settings</h2>
+              {Object.entries(notifSettings).map(([key, config]) => (
+                <div key={key} style={{ marginBottom: '1rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ textTransform: 'capitalize', fontWeight: '700' }}>{key}</span>
+                    <input type="checkbox" checked={config.enabled} onChange={e => setNotifSettings({ ...notifSettings, [key]: { ...config, enabled: e.target.checked } })} />
+                  </div>
+                </div>
+              ))}
+              <button onClick={() => setIsSettingsOpen(false)} className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>Close</button>
             </motion.div>
           </div>
         )}
