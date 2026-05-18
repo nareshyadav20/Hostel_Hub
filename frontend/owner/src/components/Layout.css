@@ -14,7 +14,7 @@
 .content-header {
   height: 70px;
   padding: 0 2rem;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -22,6 +22,7 @@
   position: sticky;
   top: 0;
   z-index: 90;
+  transition: var(--transition-normal);
 }
 
 .header-empty-space {
@@ -43,8 +44,8 @@
 .avatar {
   width: 40px;
   height: 40px;
-  background: var(--accent-primary);
-  color: var(--bg-primary);
+  background: var(--primary-green);
+  color: #FFFFFF;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -56,6 +57,8 @@
 .content-body {
   padding: 2rem;
   flex: 1;
+  background-color: var(--bg-main);
+  min-height: calc(100vh - 70px);
 }
 
 .hamburger-btn {

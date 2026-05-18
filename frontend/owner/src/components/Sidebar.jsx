@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { NavLink, useParams, Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Building2, 
-  BedDouble, 
-  UsersRound, 
-  Banknote, 
-  Briefcase, 
-  UtensilsCrossed, 
-  MessageSquareWarning, 
-  PackageOpen, 
-  BarChart3, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Building2,
+  BedDouble,
+  UsersRound,
+  Banknote,
+  Briefcase,
+  UtensilsCrossed,
+  MessageSquareWarning,
+  PackageOpen,
+  BarChart3,
+  Settings,
   BellRing,
   User
 } from 'lucide-react';
@@ -56,8 +56,8 @@ const Sidebar = () => {
         <div className="nav-section-label">MANAGEMENT</div>
         {menuItems.map((item) => (
           <div key={item.name} className="menu-group">
-            <NavLink 
-              to={item.path} 
+            <NavLink
+              to={item.path}
               className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}
             >
               <span className="icon">{item.icon}</span>

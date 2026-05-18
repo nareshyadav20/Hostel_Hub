@@ -6,6 +6,7 @@
   --primary-green-dark: #008f4c;
   --bg-main: #F4F7F6;
   --bg-card: #FFFFFF;
+  --bg-tertiary: #F1F5F9;
   --text-main: #1A1C1E;
   --text-muted: #64748B;
   --border-light: #E2E8F0;
@@ -16,7 +17,6 @@
   /* Legacy Sync */
   --bg-primary: #FFFFFF;
   --bg-secondary: #F8FAFB;
-  --bg-tertiary: #F1F5F9;
   --accent-primary: #00A859;
   --accent-primary-rgb: 0, 168, 89;
   --text-primary: #1A1C1E;
@@ -26,12 +26,33 @@
   --transition-normal: all 0.3s ease;
 }
 
+[data-theme='dark'] {
+  --bg-main: #0B0E11;
+  --bg-card: #15191C;
+  --bg-primary: #15191C;
+  --bg-secondary: #1C2126;
+  --bg-tertiary: #242B31;
+  --text-main: #E2E8F0;
+  --text-primary: #E2E8F0;
+  --text-secondary: #94A3B8;
+  --text-muted: #94A3B8;
+  --border-light: #2D3748;
+  --border-color: #2D3748;
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: var(--transition-normal);
+}
+
 /* Portal Specific Styles */
 #root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-main);
 }
 
 .dashboard-container {

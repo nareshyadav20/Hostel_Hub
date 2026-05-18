@@ -6,7 +6,7 @@ import {
   ChevronRight, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2,
   AlertCircle, X, Save, Filter, ChevronLeft, Download, Printer, FileText,
   Eye, ShieldCheck, Camera, Send, User, TrendingUp, BarChart, StickyNote,
-  Info
+  Info, ArrowLeft, ArrowRight, ScanBarcode, Maximize2, LayoutGrid
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../mockData';
@@ -51,6 +51,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
   const [selectedSubCategory, setSelectedSubCategory] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addStep, setAddStep] = useState(1);
   const [isDamageModalOpen, setIsDamageModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   
@@ -112,15 +113,37 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
 
   const filteredInventory = useMemo(() => {
     return inventory.filter(item => {
-      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = (item.name || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
-      const matchesSubCategory = selectedSubCategory === 'All' || item.subCategory === selectedSubCategory;
+      // Support both subCategory (frontend) and subCategoryId (backend)
+      const itemSub = item.subCategory || item.subCategoryId || '';
+      const matchesSubCategory = selectedSubCategory === 'All' || itemSub === selectedSubCategory;
       const matchesStatus = selectedStatus === 'All' || 
                            (selectedStatus === 'Active' && item.stock > 0) || 
                            (selectedStatus === 'Out of Stock' && item.stock <= 0);
       return matchesSearch && matchesCategory && matchesSubCategory && matchesStatus;
     });
   }, [inventory, searchQuery, selectedCategory, selectedSubCategory, selectedStatus]);
+
+  const filteredDamageEntries = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return damageEntries.filter(e =>
+      e.product.toLowerCase().includes(q) ||
+      e.id.toLowerCase().includes(q) ||
+      e.reportedBy.toLowerCase().includes(q) ||
+      e.type.toLowerCase().includes(q)
+    );
+  }, [damageEntries, searchQuery]);
+
+  const filteredDeductions = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return deductions.filter(d =>
+      d.item.toLowerCase().includes(q) ||
+      d.id.toLowerCase().includes(q) ||
+      d.person.toLowerCase().includes(q) ||
+      d.reason.toLowerCase().includes(q)
+    );
+  }, [deductions, searchQuery]);
 
   const stats = useMemo(() => {
     if (activeTab === 'damage') {
@@ -156,18 +179,30 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
   }, [inventory, damageEntries, deductions, reports, activeTab]);
 
   const handleSave = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+    if (!formData.name.trim()) { alert('Please enter a product name.'); return; }
     try {
+      const payload = {
+        ...formData,
+        buildingId: activeBuildingId,
+        // Map subCategory → subCategoryId for backend schema compatibility
+        subCategoryId: formData.subCategory || formData.subCategoryId,
+        // Map price fields correctly
+        price: formData.sellingPrice || formData.price || 0,
+      };
       if (selectedItem) {
-        await api.updateInventoryItem(selectedItem.id || selectedItem._id, formData);
+        await api.updateInventoryItem(selectedItem.id || selectedItem._id, payload);
       } else {
-        await api.addInventoryItem({ ...formData, buildingId: activeBuildingId });
+        await api.addInventoryItem(payload);
       }
       setIsAddModalOpen(false);
+      setAddStep(1);
       setFormData(initialFormData);
+      setSelectedItem(null);
       fetchInventory();
     } catch (err) {
       console.error(err);
+      alert('Error saving item. Please try again.');
     }
   };
 
@@ -203,9 +238,41 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
 
   const handleDamageSubmit = (e) => {
     e.preventDefault();
-    alert('Damage report submitted successfully!');
+    if (!damageFormData.productId.trim()) { alert('Please select a product.'); return; }
+    if (!damageFormData.qty || damageFormData.qty < 1) { alert('Please enter a valid quantity.'); return; }
+    const newEntry = {
+      id: `VK-DMG-${Date.now()}`,
+      date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }),
+      product: damageFormData.productId,
+      reportedBy: 'You',
+      qty: damageFormData.qty,
+      type: damageFormData.type.toUpperCase(),
+      loss: 0,
+      status: 'PENDING'
+    };
+    setDamageEntries(prev => [newEntry, ...prev]);
     setIsDamageModalOpen(false);
     setDamageFormData({ productId: '', qty: 0, type: 'Damaged', description: '' });
+  };
+
+  const handleApproveDamage = (id) => {
+    setDamageEntries(prev => prev.map(e => e.id === id ? { ...e, status: 'APPROVED' } : e));
+  };
+
+  const handleDeleteDamage = (id) => {
+    if (window.confirm('Remove this damage entry?')) {
+      setDamageEntries(prev => prev.filter(e => e.id !== id));
+    }
+  };
+
+  const handleSettleDeduction = (id) => {
+    setDeductions(prev => prev.map(d => d.id === id ? { ...d, status: 'PAID' } : d));
+  };
+
+  const handleDeleteDeduction = (id) => {
+    if (window.confirm('Remove this deduction entry?')) {
+      setDeductions(prev => prev.filter(d => d.id !== id));
+    }
   };
 
   return (
@@ -229,7 +296,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
           <button className="icon-btn" onClick={() => window.print()}><Printer size={18} /></button>
           <button className="icon-btn" onClick={() => alert('Downloading reports...')}><Download size={18} /></button>
           {activeTab === 'master' && (
-            <button className="primary-btn" onClick={() => { setSelectedItem(null); setFormData(initialFormData); setIsAddModalOpen(true); }}>
+            <button className="primary-btn" onClick={() => { setSelectedItem(null); setFormData(initialFormData); setAddStep(1); setIsAddModalOpen(true); }}>
               <Plus size={20} /> ADD ITEM
             </button>
           )}
@@ -288,7 +355,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
               </select>
               {activeTab === 'master' && (
                 <>
-                  <select className="filter-select" onChange={e => { setSelectedCategory(e.target.value); setSelectedSubCategory('All'); }}>
+                  <select className="filter-select" value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setSelectedSubCategory('All'); }}>
                     <option value="All">All Categories</option>
                     {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
@@ -350,14 +417,29 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
               )}
             </thead>
             <tbody>
-              {activeTab === 'master' && filteredInventory.map(item => (
-                <tr key={item.id}>
+              {/* ── LOADING STATE ── */}
+              {loading && activeTab === 'master' && [1,2,3,4].map(i => (
+                <tr key={i}>
+                  {[1,2,3,4,5].map(j => (
+                    <td key={j}><div className="skeleton-cell" /></td>
+                  ))}
+                </tr>
+              ))}
+
+              {/* ── MASTER TAB ── */}
+              {!loading && activeTab === 'master' && filteredInventory.map(item => (
+                <tr key={item.id || item._id}>
                   <td>
                     <div className="cell-product">
-                      <div className="product-img">{item.name[0]}</div>
+                      <div className="product-img" style={{
+                          background: CATEGORIES.find(c=>c.id===item.category)?.bg || 'var(--bg-secondary)',
+                          color: CATEGORIES.find(c=>c.id===item.category)?.color || 'var(--text-muted)'
+                        }}>
+                        {item.name ? item.name[0].toUpperCase() : '?'}
+                      </div>
                       <div>
                         <div className="product-name">{item.name}</div>
-                        <div className="cell-sub">{item.category} {item.subCategory ? `• ${item.subCategory}` : ''}</div>
+                        <div className="cell-sub">{item.category}{(item.subCategory || item.subCategoryId) ? ` • ${item.subCategory || item.subCategoryId}` : ''}</div>
                       </div>
                     </div>
                   </td>
@@ -382,22 +464,23 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                     </div>
                   </td>
                   <td>
-                    <div 
+                    <div
                       className={`toggle-switch ${item.stock > 0 ? 'active' : ''}`}
                       onClick={() => handleToggleStatus(item)}
                       style={{ cursor: 'pointer' }}
-                    ></div>
+                    />
                   </td>
                   <td>
                     <div className="action-btns">
-                      <button className="action-btn" onClick={() => { setSelectedItem(item); setFormData(item); setIsAddModalOpen(true); }}><Edit size={16} /></button>
-                      <button className="action-btn delete" onClick={() => handleDelete(item.id || item._id)}><Trash2 size={16} /></button>
+                      <button className="action-btn" title="Edit" onClick={() => { setSelectedItem(item); setFormData(item); setAddStep(1); setIsAddModalOpen(true); }}><Edit size={16} /></button>
+                      <button className="action-btn delete" title="Delete" onClick={() => handleDelete(item.id || item._id)}><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
               ))}
 
-              {activeTab === 'damage' && damageEntries.map(entry => (
+              {/* ── DAMAGE TAB ── */}
+              {activeTab === 'damage' && filteredDamageEntries.map(entry => (
                 <tr key={entry.id}>
                   <td>
                     <div className="cell-id">{entry.id}</div>
@@ -405,28 +488,34 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   </td>
                   <td>
                     <div className="cell-product">
-                      <div className="product-img">{entry.product[0]}</div>
+                      <div className="product-img" style={{ background: 'rgba(249,115,22,0.1)', color: '#f97316' }}>{entry.product[0]}</div>
                       <div className="product-name">{entry.product}</div>
                     </div>
                   </td>
                   <td>
                     <div className="cell-main">{entry.reportedBy}</div>
-                    <div className="cell-sub"><ShieldCheck size={12} /> VERIFIED</div>
+                    <div className="cell-sub" style={{ display:'flex', alignItems:'center', gap:'4px' }}><ShieldCheck size={12} /> VERIFIED</div>
                   </td>
                   <td><span className="qty-badge">{entry.qty}</span></td>
-                  <td><span className="type-badge damaged">{entry.type}</span></td>
+                  <td>
+                    <span className="type-badge" style={{
+                      background: entry.type==='DAMAGED' ? 'rgba(249,115,22,0.1)' : entry.type==='EXPIRED' ? 'rgba(139,92,246,0.1)' : 'rgba(239,68,68,0.1)',
+                      color: entry.type==='DAMAGED' ? '#f97316' : entry.type==='EXPIRED' ? '#8b5cf6' : '#ef4444'
+                    }}>{entry.type}</span>
+                  </td>
                   <td><span className="loss-val">₹{entry.loss}</span></td>
                   <td><span className={`status-pill ${entry.status.toLowerCase()}`}>{entry.status}</span></td>
                   <td>
                     <div className="action-btns">
-                      <button className="action-btn" onClick={() => alert('Viewing details...')}><Eye size={16} /></button>
-                      <button className="action-btn verify" onClick={() => alert('Entry verified!')}><ShieldCheck size={16} /></button>
+                      <button className="action-btn verify" title="Approve" onClick={() => handleApproveDamage(entry.id)} style={{ opacity: entry.status === 'APPROVED' ? 0.4 : 1 }} disabled={entry.status === 'APPROVED'}><ShieldCheck size={16} /></button>
+                      <button className="action-btn delete" title="Remove" onClick={() => handleDeleteDamage(entry.id)}><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
               ))}
 
-              {activeTab === 'deductions' && deductions.map(ded => (
+              {/* ── DEDUCTIONS TAB ── */}
+              {activeTab === 'deductions' && filteredDeductions.map(ded => (
                 <tr key={ded.id}>
                   <td><div className="cell-id">{ded.id}</div></td>
                   <td>
@@ -437,41 +526,95 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                     <div className="cell-main">{ded.person}</div>
                     <div className="cell-sub">Liability Confirmed</div>
                   </td>
-                  <td><span className="loss-val" style={{ color: '#0F172A' }}>₹{ded.amount}</span></td>
+                  <td><span className="loss-val">₹{ded.amount}</span></td>
                   <td><div className="cell-sub">{ded.date}</div></td>
                   <td><span className={`status-pill ${ded.status.toLowerCase()}`}>{ded.status}</span></td>
                   <td>
                     <div className="action-btns">
-                      <button className="action-btn" onClick={() => alert('Viewing document...')}><FileText size={16} /></button>
-                      <button className="action-btn verify" onClick={() => alert('Deduction settled!')}><CheckCircle2 size={16} /></button>
+                      <button className="action-btn verify" title="Mark as Paid" onClick={() => handleSettleDeduction(ded.id)} style={{ opacity: ded.status === 'PAID' ? 0.4 : 1 }} disabled={ded.status === 'PAID'}><CheckCircle2 size={16} /></button>
+                      <button className="action-btn delete" title="Remove" onClick={() => handleDeleteDeduction(ded.id)}><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
               ))}
 
+              {/* ── REPORTS TAB ── */}
               {activeTab === 'reports' && reports.map(rep => (
                 <tr key={rep.id}>
                   <td>
                     <div className="cell-product">
-                      <div className="product-img" style={{ background: rep.type === 'PDF' ? '#FEE2E2' : '#E0F2FE', color: rep.type === 'PDF' ? '#EF4444' : '#0EA5E9' }}>
-                        {rep.type === 'PDF' ? 'P' : 'X'}
+                      <div className="product-img" style={{ background: rep.type === 'PDF' ? 'rgba(239,68,68,0.1)' : 'rgba(14,165,233,0.1)', color: rep.type === 'PDF' ? '#EF4444' : '#0EA5E9' }}>
+                        {rep.type === 'PDF' ? '📄' : '📊'}
                       </div>
                       <div className="product-name">{rep.name}</div>
                     </div>
                   </td>
                   <td><div className="cell-sub">{rep.date}</div></td>
-                  <td><span className="type-badge" style={{ background: '#F1F5F9', color: '#64748B' }}>{rep.type}</span></td>
+                  <td><span className="type-badge" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{rep.type}</span></td>
                   <td><div className="cell-sub">{rep.size}</div></td>
                   <td>
                     <div className="action-btns">
-                      <button className="action-btn" onClick={() => alert('Downloading...')}><Download size={16} /></button>
-                      <button className="action-btn" onClick={() => alert('Previewing...')}><Eye size={16} /></button>
+                      <button className="action-btn" title="Download" onClick={() => { const a = document.createElement('a'); a.href = '#'; a.download = rep.name; a.click(); }}><Download size={16} /></button>
+                      <button className="action-btn" title="Preview" onClick={() => alert(`Preview: ${rep.name}\nSize: ${rep.size}\nGenerated: ${rep.date}`)}><Eye size={16} /></button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+          {/* ── EMPTY STATES ── */}
+          {!loading && activeTab === 'master' && filteredInventory.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-state-icon">
+                <Package size={48} strokeWidth={1.2} />
+              </div>
+              <h3 className="empty-state-title">
+                {searchQuery || selectedCategory !== 'All' || selectedStatus !== 'All'
+                  ? 'No items match your filters'
+                  : 'No Inventory Items Yet'}
+              </h3>
+              <p className="empty-state-sub">
+                {searchQuery || selectedCategory !== 'All' || selectedStatus !== 'All'
+                  ? 'Try adjusting your search or filter criteria.'
+                  : 'Add your first product to start tracking hostel inventory, stock levels, and procurement.'}
+              </p>
+              {!searchQuery && selectedCategory === 'All' && selectedStatus === 'All' && (
+                <button className="primary-btn" style={{ margin: '0 auto' }}
+                  onClick={() => { setSelectedItem(null); setFormData(initialFormData); setAddStep(1); setIsAddModalOpen(true); }}>
+                  <Plus size={18} /> Add First Item
+                </button>
+              )}
+              {(searchQuery || selectedCategory !== 'All' || selectedStatus !== 'All') && (
+                <button className="empty-reset-btn"
+                  onClick={() => { setSearchQuery(''); setSelectedCategory('All'); setSelectedSubCategory('All'); setSelectedStatus('All'); }}>
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'damage' && filteredDamageEntries.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-state-icon" style={{ background: 'rgba(249,115,22,0.08)', color: '#f97316' }}>
+                <AlertTriangle size={48} strokeWidth={1.2} />
+              </div>
+              <h3 className="empty-state-title">{searchQuery ? 'No matching damage entries' : 'No Damage Entries'}</h3>
+              <p className="empty-state-sub">{searchQuery ? 'Try a different search term.' : 'All inventory items are in good condition. Report any damage using the button above.'}</p>
+              {searchQuery && <button className="empty-reset-btn" onClick={() => setSearchQuery('')}>Clear Search</button>}
+            </div>
+          )}
+
+          {activeTab === 'deductions' && filteredDeductions.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-state-icon" style={{ background: 'rgba(16,185,129,0.08)', color: '#10b981' }}>
+                <CheckCircle2 size={48} strokeWidth={1.2} />
+              </div>
+              <h3 className="empty-state-title">{searchQuery ? 'No matching deductions' : 'No Deductions Recorded'}</h3>
+              <p className="empty-state-sub">{searchQuery ? 'Try a different search term.' : 'No financial deductions have been logged yet.'}</p>
+              {searchQuery && <button className="empty-reset-btn" onClick={() => setSearchQuery('')}>Clear Search</button>}
+            </div>
+          )}
         </div>
       </div>
 
@@ -509,221 +652,356 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
       {/* MODALS */}
       <AnimatePresence>
         {isAddModalOpen && (
-          <div className="modal-overlay">
-            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="modal-content large">
-              <div className="modal-header">
-                <div className="header-badge"><Package size={16} /> ITEM DRAFTING</div>
-                <h2>{selectedItem ? 'Edit Existing Item' : 'Create New Inventory SKU'}</h2>
-                <button className="close-btn" onClick={() => setIsAddModalOpen(false)}><X size={24} /></button>
-              </div>
-              <div className="modal-body">
-                <div className="modal-info-box">
-                  <Info size={16} /> <span>Tip: Define sub-categories to track stock more granularly across hostel floors.</span>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 3000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', overflowY: 'auto', padding: '2rem 1rem' }}>
+            <div style={{ width: '100%', maxWidth: '1040px', background: 'var(--bg-primary)', borderRadius: '12px', boxShadow: '0 25px 60px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', fontFamily: "'Inter', sans-serif", marginBottom: '2rem' }}>
+
+              {/* TOP BAR */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2rem', height: '60px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', borderRadius: '12px 12px 0 0', flexShrink: 0 }}>
+                <button onClick={() => setIsAddModalOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', padding: '7px 14px', borderRadius: '7px', transition: '0.18s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background='var(--bg-tertiary)'; }} onMouseLeave={e => { e.currentTarget.style.background='transparent'; }}>
+                  <ArrowLeft size={15} /> Back to List
+                </button>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Add New Item</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>Inventory Management</div>
                 </div>
-                <form className="inventory-form" onSubmit={handleSave}>
-                  <div className="form-row">
-                    <div className="form-group full">
-                      <label>DISPLAY NAME *</label>
-                      <input 
-                        required type="text" placeholder="e.g. Premium Basmati Rice" 
-                        value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>MAIN CATEGORY *</label>
-                      <select value={formData.category} onChange={e => handleCategoryChange(e.target.value)}>
-                        {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>SUB CATEGORY *</label>
-                      <select 
-                        value={formData.subCategory} 
-                        onChange={e => setFormData({...formData, subCategory: e.target.value})}
-                      >
-                        {CATEGORIES.find(c => c.id === formData.category)?.subCategories.map(sub => (
-                          <option key={sub} value={sub}>{sub}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>UNIT TYPE *</label>
-                      <select value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})}>
-                        <option>Kg</option><option>Liters</option><option>Pieces</option><option>Boxes</option>
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>INITIAL STOCK *</label>
-                      <input 
-                        required type="number" min="0" value={formData.stock} 
-                        onChange={e => setFormData({...formData, stock: parseInt(e.target.value)})}
-                      />
-                    </div>
-                  </div>
-                  <div className="form-group full">
-                    <label>CUSTOM NOTES (EXTRA DETAILS) <StickyNote size={14} style={{ marginLeft: '4px', verticalAlign: 'middle' }} /></label>
-                    <textarea 
-                      placeholder="Add any specific instructions, vendor details, or floor-wise distribution notes here..."
-                      value={formData.notes}
-                      onChange={e => setFormData({...formData, notes: e.target.value})}
-                      style={{ height: '120px' }}
-                    ></textarea>
-                  </div>
-                  <div className="form-footer">
-                    <button type="button" className="secondary-btn" onClick={() => { setIsAddModalOpen(false); setFormData(initialFormData); }}>DISCARD</button>
-                    <button type="submit" className="primary-btn">
-                      <Save size={18} /> {selectedItem ? 'UPDATE ITEM' : 'ADD TO INVENTORY'}
-                    </button>
-                  </div>
-                </form>
+                <button onClick={() => setIsAddModalOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '34px', height: '34px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer', borderRadius: '7px', transition: '0.18s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background='#fee2e2'; e.currentTarget.style.color='#ef4444'; }} onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='var(--text-muted)'; }}>
+                  <X size={18} />
+                </button>
               </div>
-            </motion.div>
+
+              {/* TABS */}
+              <div style={{ display: 'flex', gap: '2rem', padding: '0 2rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-primary)' }}>
+                {[{id:1,label:'Basic Information',icon:<Info size={14}/>},{id:2,label:'Pricing & Stock',icon:<Package size={14}/>}].map(t => (
+                  <div key={t.id} onClick={() => setAddStep ? setAddStep(t.id) : null}
+                    style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '1rem 0', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.04em', color: (addStep||1)===t.id ? 'var(--primary-green)' : 'var(--text-muted)', borderBottom: (addStep||1)===t.id ? '2.5px solid var(--primary-green)' : '2.5px solid transparent', marginBottom: '-1px', transition: '0.18s' }}>
+                    {t.icon} {t.label}
+                  </div>
+                ))}
+              </div>
+
+              {/* CONTENT */}
+              <div style={{ padding: '2rem' }}>
+                {(!addStep || addStep === 1) ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '3rem' }}>
+                    {/* Left */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
+                      <div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Product Visual</div>
+                        <div style={{ width: '100%', aspectRatio: '1/1', background: 'var(--bg-secondary)', border: '2px dashed var(--border-color)', borderRadius: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                          <Camera size={26} /><span>Select Image</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Display Name *</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
+                          <Package size={15} color="var(--text-muted)" />
+                          <input placeholder="e.g. Organic Tomato Ketchup" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+                            style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Barcode / SKU ID</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
+                          <ScanBarcode size={15} color="var(--text-muted)" />
+                          <input placeholder="Scan or type barcode..." style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
+                          <Maximize2 size={13} color="var(--text-muted)" />
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--primary-green)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Initial Stock</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid rgba(0, 168, 89, 0.3)', borderRadius: '8px', background: 'rgba(0, 168, 89, 0.1)' }}>
+                          <Package size={15} color="var(--primary-green)" />
+                          <input type="number" placeholder="0" value={formData.stock} onChange={e => setFormData({...formData, stock: parseInt(e.target.value)||0})}
+                            style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 700, outline: 'none', fontSize: '0.95rem', color: 'var(--primary-green)' }} />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Right */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                        <div>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Category *</div>
+                          <div style={{ position: 'relative' }}>
+                            <select value={formData.category} onChange={e => handleCategoryChange(e.target.value)}
+                              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', appearance: 'none', cursor: 'pointer', background: 'var(--bg-primary)' }}>
+                              {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                            <LayoutGrid size={13} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Sub Category *</div>
+                          <div style={{ position: 'relative' }}>
+                            <select value={formData.subCategory} onChange={e => setFormData({...formData, subCategory: e.target.value})}
+                              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', appearance: 'none', cursor: 'pointer', background: 'var(--bg-primary)' }}>
+                              {CATEGORIES.find(c => c.id === formData.category)?.subCategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                            </select>
+                            <LayoutGrid size={13} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                        <div>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Unit Type *</div>
+                          <select value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})}
+                            style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', cursor: 'pointer', background: 'var(--bg-primary)' }}>
+                            <option>Kg</option><option>Liters</option><option>Pieces</option><option>Boxes</option>
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Unit Value</div>
+                          <input placeholder="e.g. 500 (for 500g)"
+                            style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', boxSizing: 'border-box', background: 'var(--bg-primary)' }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Product Description</div>
+                        <textarea placeholder="Describe the product details..." rows={5} value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})}
+                          style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--bg-primary)' }} />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <button onClick={() => setAddStep && setAddStep(2)}
+                          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', background: 'var(--primary-green)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', letterSpacing: '0.03em' }}
+                          onMouseEnter={e => e.currentTarget.style.background='var(--primary-green-dark)'} onMouseLeave={e => e.currentTarget.style.background='var(--primary-green)'}>
+                          NEXT: PRICING &amp; STOCK <ArrowRight size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
+                      {[{label:'Selling Price *',field:'sellingPrice'},{label:'Purchase Price',field:'purchasePrice'},{label:'Min Threshold',field:'minThreshold'}].map(({label,field}) => (
+                        <div key={field}>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>{label}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
+                            <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>₹</span>
+                            <input type="number" placeholder="0.00" value={formData[field]||''} onChange={e => setFormData({...formData, [field]: e.target.value})}
+                              style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <button onClick={() => setAddStep && setAddStep(1)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>
+                        <ArrowLeft size={14} /> Back
+                      </button>
+                      <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <button onClick={() => { setIsAddModalOpen(false); setFormData(initialFormData); if(setAddStep) setAddStep(1); }}
+                          style={{ padding: '10px 22px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>CANCEL</button>
+                        <button onClick={handleSave}
+                          style={{ padding: '10px 22px', background: 'var(--primary-green)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
+                          onMouseEnter={e => e.currentTarget.style.background='var(--primary-green-dark)'} onMouseLeave={e => e.currentTarget.style.background='var(--primary-green)'}>
+                          SAVE &amp; ADD TO INVENTORY
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
         {isDamageModalOpen && (
-          <div className="modal-overlay">
-            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="modal-content medium">
-              <div className="modal-header">
-                <div className="header-hint"><AlertTriangle size={16} /> REPORT NEW DAMAGE</div>
-                <button className="close-btn" onClick={() => setIsDamageModalOpen(false)}><X size={24} /></button>
-              </div>
-              <div className="modal-body">
-                <form className="damage-form-box" onSubmit={handleDamageSubmit}>
-                  <div className="form-group full">
-                    <label>SELECT PRODUCT *</label>
-                    <div className="search-input-box" style={{ position: 'relative' }}>
-                      <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-                      <input 
-                        type="text" placeholder="Search product..." style={{ paddingLeft: '3rem', width: '100%' }}
-                        value={damageFormData.productId}
-                        onChange={e => setDamageFormData({...damageFormData, productId: e.target.value})}
-                        required
-                      />
-                    </div>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(6px)' }}>
+            <div style={{ width: '100%', maxWidth: '600px', background: 'var(--bg-primary)', borderRadius: '16px', boxShadow: '0 30px 70px rgba(0,0,0,0.25)', overflow: 'hidden', fontFamily: "'Inter', sans-serif" }}>
+
+              {/* Red Header Banner */}
+              <div style={{ background: 'linear-gradient(135deg, #dc2626, #b91c1c)', padding: '1.5rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div style={{ width: '44px', height: '44px', background: 'rgba(255,255,255,0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <AlertTriangle size={22} color="#fff" />
                   </div>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>QUANTITY *</label>
-                      <input 
-                        type="number" min="1" 
+                  <div>
+                    <div style={{ color: '#fff', fontWeight: 800, fontSize: '1rem', letterSpacing: '0.02em' }}>Report Damage Entry</div>
+                    <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.72rem', fontWeight: 500, marginTop: '2px' }}>Log a damaged, expired, or lost inventory item</div>
+                  </div>
+                </div>
+                <button onClick={() => setIsDamageModalOpen(false)}
+                  style={{ width: '34px', height: '34px', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleDamageSubmit} style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
+
+                {/* Product Search */}
+                <div>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Select Product *</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)' }}>
+                    <Search size={16} color="var(--text-muted)" />
+                    <input type="text" placeholder="Search product by name or SKU..."
+                      value={damageFormData.productId}
+                      onChange={e => setDamageFormData({...damageFormData, productId: e.target.value})}
+                      required
+                      style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
+                  </div>
+                </div>
+
+                {/* Damage Type Chips */}
+                <div>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>Damage Type *</div>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    {[
+                      { val: 'Damaged', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)', border: '#fed7aa', emoji: '🔨' },
+                      { val: 'Expired', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)', border: '#ddd6fe', emoji: '⏰' },
+                      { val: 'Lost',    color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', border: '#fecaca', emoji: '❌' },
+                    ].map(t => (
+                      <div key={t.val} onClick={() => setDamageFormData({...damageFormData, type: t.val})}
+                        style={{ flex: 1, padding: '0.9rem 0.5rem', border: `2px solid ${damageFormData.type === t.val ? t.color : 'var(--border-color)'}`, borderRadius: '10px', background: damageFormData.type === t.val ? t.bg : 'var(--bg-primary)', cursor: 'pointer', textAlign: 'center', transition: '0.18s' }}>
+                        <div style={{ fontSize: '1.4rem', marginBottom: '5px' }}>{t.emoji}</div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: damageFormData.type === t.val ? t.color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t.val}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Qty + Loss */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                  <div>
+                    <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Quantity Damaged *</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
+                      <Package size={15} color="var(--text-muted)" />
+                      <input type="number" min="1" placeholder="0"
                         value={damageFormData.qty}
-                        onChange={e => setDamageFormData({...damageFormData, qty: parseInt(e.target.value)})}
+                        onChange={e => setDamageFormData({...damageFormData, qty: parseInt(e.target.value)||0})}
                         required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>DAMAGE TYPE *</label>
-                      <select 
-                        value={damageFormData.type}
-                        onChange={e => setDamageFormData({...damageFormData, type: e.target.value})}
-                      >
-                        <option>Damaged</option><option>Expired</option><option>Lost</option>
-                      </select>
+                        style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 600, outline: 'none', fontSize: '0.95rem', color: 'var(--text-primary)' }} />
                     </div>
                   </div>
-                  <div className="form-group full">
-                    <label>DESCRIPTION</label>
-                    <textarea 
-                      placeholder="Briefly describe the damage..."
-                      value={damageFormData.description}
-                      onChange={e => setDamageFormData({...damageFormData, description: e.target.value})}
-                      style={{ height: '80px' }}
-                    ></textarea>
+                  <div>
+                    <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Estimated Loss (₹)</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)' }}>
+                      <span style={{ color: '#ef4444', fontWeight: 700 }}>₹</span>
+                      <input type="number" placeholder="0.00"
+                        style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 700, outline: 'none', fontSize: '0.95rem', color: '#ef4444' }} />
+                    </div>
                   </div>
-                  <button type="submit" className="submit-damage-btn">
-                    <Send size={18} /> SUBMIT DAMAGE REPORT
+                </div>
+
+                {/* Description */}
+                <div>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Description / Remarks</div>
+                  <textarea placeholder="Describe how the damage occurred, location, or any additional context..."
+                    rows={3} value={damageFormData.description}
+                    onChange={e => setDamageFormData({...damageFormData, description: e.target.value})}
+                    style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--bg-primary)' }} />
+                </div>
+
+                {/* Buttons */}
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)' }}>
+                  <button type="button" onClick={() => setIsDamageModalOpen(false)}
+                    style={{ padding: '10px 22px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>
+                    Cancel
                   </button>
-                </form>
-              </div>
-            </motion.div>
+                  <button type="submit"
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
+                    onMouseEnter={e => e.currentTarget.style.background='#b91c1c'}
+                    onMouseLeave={e => e.currentTarget.style.background='#dc2626'}>
+                    <Send size={15} /> Submit Damage Report
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </AnimatePresence>
 
       <style jsx="true">{`
-        .inventory-v3 { padding: 1.5rem 2.5rem; background: #F8FAFB; min-height: 100vh; font-family: 'Inter', sans-serif; }
+        .inventory-v3 { padding: 1.5rem 2.5rem; background: var(--bg-main); min-height: 100vh; font-family: 'Inter', sans-serif; color: var(--text-primary); }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .header-left { display: flex; align-items: center; gap: 1.5rem; }
-        .back-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid #E2E8F0; background: white; display: flex; align-items: center; justify-content: center; color: #64748B; cursor: pointer; }
-        .header-title-area h1 { font-size: 1.5rem; font-weight: 800; color: #1E293B; margin: 0; }
-        .header-title-area p { font-size: 0.85rem; color: #94A3B8; margin: 0.2rem 0 0; font-weight: 500; }
+        .back-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); cursor: pointer; }
+        .header-title-area h1 { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 0; }
+        .header-title-area p { font-size: 0.85rem; color: var(--text-muted); margin: 0.2rem 0 0; font-weight: 500; }
         .header-actions { display: flex; gap: 0.8rem; align-items: center; }
-        .icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid #E2E8F0; background: white; color: #64748B; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .primary-btn { padding: 0.7rem 1.5rem; border-radius: 10px; border: none; background: var(--primary-green); color: white; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
         .primary-btn.damage { background: #EF4444; }
-        .tab-nav { display: flex; gap: 2rem; border-bottom: 1px solid #E2E8F0; margin-bottom: 2rem; }
-        .tab-item { padding: 1rem 0; background: transparent; border: none; color: #94A3B8; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 0.6rem; cursor: pointer; position: relative; }
+        .tab-nav { display: flex; gap: 2rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem; }
+        .tab-item { padding: 1rem 0; background: transparent; border: none; color: var(--text-muted); font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 0.6rem; cursor: pointer; position: relative; }
         .tab-item.active { color: var(--primary-green); }
         .tab-item.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--primary-green); }
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
-        .stat-card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: flex-start; transition: transform 0.2s; }
+        .stat-card { background: var(--bg-card); padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: flex-start; transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-5px); }
-        .stat-label { font-size: 0.7rem; font-weight: 800; color: #94A3B8; letter-spacing: 0.05em; }
-        .stat-value { font-size: 1.8rem; font-weight: 800; color: #1E293B; margin: 0.5rem 0 0; }
-        .stat-trend { font-size: 0.75rem; font-weight: 700; padding: 0.3rem 0.6rem; border-radius: 8px; background: var(--bg); color: var(--accent); display: flex; align-items: center; gap: 0.3rem; }
-        .content-card { background: white; border-radius: 24px; border: 1px solid #F1F5F9; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
+        .stat-label { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; }
+        .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--text-primary); margin: 0.5rem 0 0; }
+        .stat-trend { font-size: 0.75rem; font-weight: 700; padding: 0.3rem 0.6rem; border-radius: 8px; background: rgba(0,168,89,0.1); color: var(--primary-green); display: flex; align-items: center; gap: 0.3rem; }
+        .content-card { background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border-light); padding: 1.5rem; box-shadow: var(--shadow-soft); }
         .table-filters { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
         .search-box { position: relative; width: 400px; }
-        .search-box svg { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94A3B8; }
-        .search-box input { width: 100%; padding: 0.8rem 1rem 0.8rem 3rem; border-radius: 12px; border: 1px solid #E2E8F0; background: #F8FAFB; font-weight: 500; outline: none; }
+        .search-box svg { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .search-box input { width: 100%; padding: 0.8rem 1rem 0.8rem 3rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-weight: 500; outline: none; }
         .filter-actions { display: flex; gap: 1rem; }
-        .filter-select { padding: 0.7rem 1rem; border-radius: 10px; border: 1px solid #E2E8F0; background: white; font-weight: 600; color: #475569; font-size: 0.85rem; outline: none; }
+        .filter-select { padding: 0.7rem 1rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-primary); font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; outline: none; }
         .custom-table { width: 100%; border-collapse: collapse; }
-        .custom-table th { text-align: left; padding: 1rem; font-size: 0.7rem; font-weight: 800; color: #94A3B8; letter-spacing: 0.05em; border-bottom: 1px solid #F1F5F9; }
-        .custom-table td { padding: 1.2rem 1rem; border-bottom: 1px solid #F1F5F9; }
-        .cell-id { font-weight: 700; color: #1E293B; font-size: 0.9rem; }
-        .cell-sub { font-size: 0.75rem; color: #94A3B8; font-weight: 600; }
-        .cell-main { font-weight: 700; color: #1E293B; font-size: 0.95rem; }
+        .custom-table th { text-align: left; padding: 1rem; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; border-bottom: 1px solid var(--border-light); }
+        .custom-table td { padding: 1.2rem 1rem; border-bottom: 1px solid var(--border-light); }
+        .cell-id { font-weight: 700; color: var(--text-primary); font-size: 0.9rem; }
+        .cell-sub { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+        .cell-main { font-weight: 700; color: var(--text-primary); font-size: 0.95rem; }
         .cell-product { display: flex; align-items: center; gap: 1rem; }
-        .product-img { width: 40px; height: 40px; background: #F1F5F9; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #64748B; font-size: 1.2rem; }
-        .product-name { font-weight: 700; color: #1E293B; font-size: 0.95rem; }
-        .qty-badge { background: #F1F5F9; padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 700; color: #475569; }
+        .product-img { width: 40px; height: 40px; background: var(--bg-secondary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--text-muted); font-size: 1.2rem; }
+        .product-name { font-weight: 700; color: var(--text-primary); font-size: 0.95rem; }
+        .qty-badge { background: var(--bg-secondary); padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 700; color: var(--text-secondary); }
         .type-badge { padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.75rem; font-weight: 800; }
-        .type-badge.damaged { background: #FEF2F2; color: #EF4444; }
+        .type-badge.damaged { background: rgba(249, 115, 22, 0.1); color: #f97316; }
         .loss-val { font-weight: 800; color: #EF4444; }
         .status-pill { padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.7rem; font-weight: 800; }
-        .status-pill.pending { background: #FFFBEB; color: #D97706; }
-        .status-pill.paid, .status-pill.approved { background: #ECFDF5; color: #10B981; }
+        .status-pill.pending { background: rgba(245, 158, 11, 0.1); color: #D97706; }
+        .status-pill.paid, .status-pill.approved { background: rgba(16, 185, 129, 0.1); color: #10B981; }
         .action-btns { display: flex; gap: 0.5rem; justify-content: flex-end; }
-        .action-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #E2E8F0; background: white; color: #64748B; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .action-btn.verify { color: var(--primary-green); background: #E8F5E9; border-color: #C8E6C9; }
-        .action-btn.delete { color: #EF4444; background: #FEF2F2; border-color: #FEE2E2; }
+        .action-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .action-btn.verify { color: var(--primary-green); background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); }
+        .action-btn.delete { color: #EF4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); }
         .stock-dist { display: flex; gap: 1rem; }
         .dist-item { display: flex; flex-direction: column; align-items: center; min-width: 40px; }
-        .dist-val { font-weight: 800; color: #1E293B; font-size: 0.9rem; }
-        .dist-label { font-size: 0.6rem; color: #94A3B8; font-weight: 800; }
+        .dist-val { font-weight: 800; color: var(--text-primary); font-size: 0.9rem; }
+        .dist-label { font-size: 0.6rem; color: var(--text-muted); font-weight: 800; }
         .dist-item.total .dist-val { color: var(--primary-green); }
-        .toggle-switch { width: 40px; height: 22px; background: #E2E8F0; border-radius: 20px; position: relative; }
+        .toggle-switch { width: 40px; height: 22px; background: var(--border-color); border-radius: 20px; position: relative; }
         .toggle-switch.active { background: var(--primary-green); }
-        .toggle-switch::before { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
+        .toggle-switch::before { content: ''; position: absolute; width: 16px; height: 16px; background: var(--bg-primary); border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
         .toggle-switch.active::before { transform: translateX(18px); }
         .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .modal-content { background: white; border-radius: 32px; box-shadow: 0 40px 100px -12px rgba(0,0,0,0.25); overflow: hidden; width: 90%; }
+        .modal-content { background: var(--bg-primary); border-radius: 32px; box-shadow: var(--shadow-soft); overflow: hidden; width: 90%; }
         .modal-content.large { max-width: 800px; }
         .modal-content.medium { max-width: 500px; }
-        .modal-header { padding: 1.5rem 2.5rem; border-bottom: 1px solid #F1F5F9; }
-        .header-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: #E8F5E9; color: var(--primary-green); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 800; margin-bottom: 0.5rem; }
-        .modal-header h2 { font-size: 1.4rem; font-weight: 900; color: #0F172A; margin: 0; }
-        .close-btn { position: absolute; top: 1.5rem; right: 1.5rem; background: transparent; border: none; color: #94A3B8; cursor: pointer; }
+        .modal-header { padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--border-color); }
+        .header-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(16, 185, 129, 0.1); color: var(--primary-green); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .modal-header h2 { font-size: 1.4rem; font-weight: 900; color: var(--text-primary); margin: 0; }
+        .close-btn { position: absolute; top: 1.5rem; right: 1.5rem; background: transparent; border: none; color: var(--text-muted); cursor: pointer; }
         .modal-body { padding: 2.5rem; }
-        .modal-info-box { background: #EEF2FF; border: 1px solid #E0E7FF; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.8rem; color: #6366F1; font-size: 0.85rem; font-weight: 600; }
+        .modal-info-box { background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.8rem; color: #818cf8; font-size: 0.85rem; font-weight: 600; }
         .inventory-form { display: flex; flex-direction: column; gap: 1.5rem; }
         .form-row { display: flex; gap: 1.5rem; }
         .form-group { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
         .form-group.full { width: 100%; }
-        .form-group label { font-size: 0.7rem; font-weight: 800; color: #94A3B8; letter-spacing: 0.05em; }
-        .form-group input, .form-group select, .form-group textarea { padding: 1rem; border-radius: 12px; border: 1px solid #E2E8F0; background: #F8FAFB; font-weight: 600; font-size: 0.9rem; outline: none; transition: 0.2s; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary-green); background: white; box-shadow: 0 0 0 4px var(--primary-green-light); }
+        .form-group label { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; }
+        .form-group input, .form-group select, .form-group textarea { padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-weight: 600; font-size: 0.9rem; outline: none; transition: 0.2s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary-green); background: var(--bg-primary); box-shadow: 0 0 0 4px var(--primary-green-light); }
         .form-group textarea { height: 100px; resize: none; }
         .form-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
-        .secondary-btn { padding: 0.8rem 1.8rem; border-radius: 12px; border: 1px solid #E2E8F0; background: white; color: #64748B; font-weight: 700; cursor: pointer; }
+        .secondary-btn { padding: 0.8rem 1.8rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-weight: 700; cursor: pointer; }
         .submit-damage-btn { margin-top: 1rem; padding: 1.2rem; border-radius: 16px; border: none; background: #FDA4AF; color: white; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.8rem; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
         .submit-damage-btn:hover { background: #F43F5E; }
+        .table-container { overflow-x: auto; }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; text-align: center; gap: 1rem; }
+        .empty-state-icon { width: 96px; height: 96px; border-radius: 24px; background: rgba(0, 168, 89, 0.08); color: var(--primary-green); display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem; }
+        .empty-state-title { font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0; }
+        .empty-state-sub { font-size: 0.85rem; color: var(--text-muted); margin: 0; max-width: 360px; line-height: 1.6; font-weight: 500; }
+        .empty-reset-btn { margin-top: 0.5rem; padding: 0.6rem 1.4rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-secondary); font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: 0.18s; }
+        .empty-reset-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+        .skeleton-cell { height: 20px; border-radius: 6px; background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
       `}</style>
     </div>
   );
