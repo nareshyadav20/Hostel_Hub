@@ -33,8 +33,8 @@ const Payments = () => {
           id: p.invoice || `#INV-${p._id.slice(-6)}`,
           amount: p.amount,
           status: p.status,
-          date: new Date(p.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-          rawDate: p.createdAt
+          date: new Date(p.date || p.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          rawDate: p.date || p.createdAt
         })));
       } catch (err) {
         console.error('Error fetching financial records:', err);

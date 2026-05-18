@@ -3,6 +3,21 @@ import { useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import API from '../api/axios';
 import './Booking.css';
 
+const formatMoveInDate = (dateStr) => {
+  if (!dateStr || dateStr === 'TBD') return 'TBD';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const date = new Date(year, month, day);
+    return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  const parsed = new Date(dateStr);
+  if (isNaN(parsed.getTime())) return dateStr;
+  return parsed.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
 const Booking = () => {
   const navigate = useNavigate();
   const { buildingId } = useParams();
@@ -243,7 +258,7 @@ const Booking = () => {
                   <div className="booking-details-grid">
                     <div className="detail-box">
                       <span className="detail-label">Move-in Date</span>
-                      <span className="detail-value">{new Date(b.moveInDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                      <span className="detail-value">{formatMoveInDate(b.moveInDate)}</span>
                     </div>
                     <div className="detail-box">
                       <span className="detail-label">Total Amount</span>
@@ -322,7 +337,7 @@ const Booking = () => {
             </thead>
             <tbody>
                 <tr>
-                    <td>Hostel Accommodation Booking Fee<br/><small style="color: #64748b; font-weight: 400;">Move-in: ${new Date(b.moveInDate).toLocaleDateString()}</small></td>
+                    <td>Hostel Accommodation Booking Fee<br/><small style="color: #64748b; font-weight: 400;">Move-in: ${formatMoveInDate(b.moveInDate)}</small></td>
                     <td>${b.category}</td>
                     <td style="text-align: right;">₹${(b.totalAmount/2).toLocaleString()}</td>
                 </tr>

@@ -70,13 +70,14 @@ const createBooking = async (req, res) => {
       console.log('✅ TenantProof linked to booking');
     }
 
+    let tenant = null;
     // Update Tenant profile automatically so dashboard reflects changes
     if (isValidObjectId(tenantId)) {
       const Tenant = require('../models/Tenant');
       const User = require('../models/User');
       
       // Find the tenant profile (try direct ID match or via User email)
-      let tenant = await Tenant.findById(tenantId);
+      tenant = await Tenant.findById(tenantId);
       if (!tenant) {
         const user = await User.findById(tenantId);
         if (user) tenant = await Tenant.findOne({ email: user.email });
