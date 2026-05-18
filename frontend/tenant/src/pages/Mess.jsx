@@ -21,7 +21,7 @@ const Mess = () => {
   const fetchMessData = async () => {
     try {
       const bId = localStorage.getItem('buildingId');
-      const todayDate = new Date().toISOString().split('T')[0];
+      const todayDate = new Date().toLocaleDateString('sv-SE');
       
       const [profileRes, menuRes, attendanceRes] = await Promise.all([
         API.get('/tenants/me'),
@@ -32,12 +32,22 @@ const Mess = () => {
       const tenant = profileRes.data;
       setTenantPlan(tenant.messPlan || 'Standard');
       
-      // Determine attendance status for today
+      // Determine attendance status for today's current active meal based on time
       const myAttendance = attendanceRes.data.find(a => a.tenantId === tenant._id || a.tenantId === tenant.id);
       if (myAttendance) {
-        // Simple logic: if any meal is marked true, show dining. 
-        // Or we could check the "next" meal. For now, let's just use a basic sync.
-        setAttendanceStatus(myAttendance.breakfast || myAttendance.lunch || myAttendance.dinner ? 'dining' : 'skipped');
+        const hour = new Date().getHours();
+        let currentMeal = 'dinner';
+        if (hour < 11) currentMeal = 'breakfast';
+        else if (hour < 16) currentMeal = 'lunch';
+
+        const mealStatus = myAttendance[currentMeal];
+        if (mealStatus !== undefined) {
+          setAttendanceStatus(mealStatus ? 'dining' : 'skipped');
+        } else {
+          setAttendanceStatus('dining'); // Default if unmarked
+        }
+      } else {
+        setAttendanceStatus('dining'); // Default if no attendance record today
       }
 
       let finalMenu = menuRes.data && menuRes.data.length > 0 ? menuRes.data : [];
@@ -94,7 +104,7 @@ const Mess = () => {
       const bId = localStorage.getItem('buildingId');
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const tenantId = user.tenantId || user._id;
-      const todayDate = new Date().toISOString().split('T')[0];
+      const todayDate = new Date().toLocaleDateString('sv-SE');
       
       // Determine which meal to update based on time
       const hour = new Date().getHours();

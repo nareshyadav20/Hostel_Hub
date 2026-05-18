@@ -1,4 +1,5 @@
 const Notification = require('../models/Notification');
+const OwnerNotification = require('../models/OwnerNotification');
 const socketService = require('./socketService');
 
 let io;
@@ -24,7 +25,12 @@ const createNotification = async (data) => {
       finalData.buildingId = new mongoose.Types.ObjectId(data.buildingId);
     }
 
-    const notification = new Notification({
+    // Determine target collection
+    const isOwnerNotif = data.portalType === 'Owner' || data.receiverRole === 'Owner' || data.target === 'Owner';
+    const Model = isOwnerNotif ? OwnerNotification : Notification;
+    console.log(`📝 [DB_PERSISTENCE] Target model selected: ${Model.modelName} (Collection: ${Model.collection.name})`);
+
+    const notification = new Model({
       ...finalData,
       isRead: false,
     });

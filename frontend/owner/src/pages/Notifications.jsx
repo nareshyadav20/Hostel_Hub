@@ -119,11 +119,15 @@ const Notifications = () => {
       );
   }, [notifications, activeTab, activePortal, filterPriority, searchQuery]);
   
-  console.log('📊 NOTIFICATIONS_FILTER:', {
-    total: notifications.length,
-    filtered: filteredNotifications.length,
+  console.log('📊 [RENDER_LOGS] Notifications Page Render:', {
+    activeBuildingId,
     activeTab,
-    activePortal
+    activePortal,
+    filterPriority,
+    searchQueryLength: searchQuery?.length || 0,
+    totalNotifications: notifications.length,
+    filteredNotifications: filteredNotifications.length,
+    firstNotificationTitle: filteredNotifications?.[0]?.title || 'none'
   });
 
   // Reset to first page when filters change
