@@ -99,22 +99,29 @@ const Profile = () => {
     const file = event.target.files[0];
     if (!file) return;
 
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Document size should be less than 5MB' });
+      return;
+    }
+
     setSaving(true);
-    // Simulate manual upload delay
-    setTimeout(async () => {
-      const mockUrl = URL.createObjectURL(file);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
       try {
-        const updatedProfile = await api.updateOwnerDocuments({ name: file.name, type, url: mockUrl });
+        const base64String = reader.result;
+        const updatedProfile = await api.updateOwnerDocuments({ name: file.name, type, url: base64String });
         setProfile(updatedProfile);
         setMessage({ type: 'success', text: 'Document uploaded successfully!' });
         setTimeout(() => setMessage(null), 3000);
       } catch (error) {
+        console.error('Error uploading document:', error);
         setMessage({ type: 'error', text: 'Upload failed.' });
         setTimeout(() => setMessage(null), 3000);
       } finally {
         setSaving(false);
       }
-    }, 1500);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSessionLogout = (sessionId) => {
@@ -349,6 +356,34 @@ const OverviewTab = ({ profile, stats, setActiveTab }) => {
   );
 };
 
+const inputStyle = {
+  width: '100%',
+  padding: '0.8rem 1rem',
+  borderRadius: '12px',
+  background: 'var(--bg-tertiary)',
+  border: '1px solid var(--border-color)',
+  color: 'var(--text-primary)',
+  fontSize: '0.95rem',
+  transition: 'all 0.2s ease',
+  outline: 'none'
+};
+
+const disabledInputStyle = {
+  ...inputStyle,
+  opacity: 0.65,
+  cursor: 'not-allowed'
+};
+
+const labelStyle = {
+  fontSize: '0.85rem',
+  fontWeight: '800',
+  color: 'var(--text-muted)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  marginBottom: '0.6rem',
+  display: 'block'
+};
+
 const ProfileTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
   const [formData, setFormData] = useState(profile?.personalInfo || {});
 
@@ -374,49 +409,90 @@ const ProfileTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
         <div className="input-group">
-          <label>Full Legal Name</label>
-          <input type="text" disabled={!isEditing} value={formData.fullName || ''} onChange={(e) => setFormData({...formData, fullName: e.target.value})} />
+          <label style={labelStyle}>Full Legal Name</label>
+          <input 
+            type="text" 
+            disabled={!isEditing} 
+            value={formData.fullName || ''} 
+            onChange={(e) => setFormData({...formData, fullName: e.target.value})} 
+            style={isEditing ? inputStyle : disabledInputStyle}
+          />
         </div>
         <div className="input-group">
-          <label>Email ID (Primary)</label>
-          <input type="email" disabled={true} value={formData.email || 'owner@hostelhub.com'} />
+          <label style={labelStyle}>Email ID (Primary)</label>
+          <input 
+            type="email" 
+            disabled={true} 
+            value={formData.email || 'owner@hostelhub.com'} 
+            style={disabledInputStyle}
+          />
         </div>
         <div className="input-group">
-          <label>Phone Number</label>
+          <label style={labelStyle}>Phone Number</label>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <input 
               type="text" 
               disabled={!isEditing} 
               value={formData.phone || ''} 
               onChange={(e) => setFormData({...formData, phone: e.target.value})} 
-              style={{ flex: 1 }} 
+              style={{ flex: 1, ...(isEditing ? inputStyle : disabledInputStyle) }} 
             />
             {!isEditing && <div style={{ display: 'flex', alignItems: 'center', color: '#10b981', fontSize: '0.75rem', fontWeight: '800' }}><CheckCircle2 size={14} /> VERIFIED</div>}
           </div>
         </div>
         <div className="input-group">
-          <label>Date of Birth</label>
-          <input type="date" disabled={!isEditing} value={formData.dob?.split('T')[0] || ''} onChange={(e) => setFormData({...formData, dob: e.target.value})} />
+          <label style={labelStyle}>Date of Birth</label>
+          <input 
+            type="date" 
+            disabled={!isEditing} 
+            value={formData.dob?.split('T')[0] || ''} 
+            onChange={(e) => setFormData({...formData, dob: e.target.value})} 
+            style={isEditing ? inputStyle : disabledInputStyle}
+          />
         </div>
         <div className="input-group">
-          <label>Gender</label>
-          <select disabled={!isEditing} value={formData.gender || 'Male'} onChange={(e) => setFormData({...formData, gender: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+          <label style={labelStyle}>Gender</label>
+          <select 
+            disabled={!isEditing} 
+            value={formData.gender || 'Male'} 
+            onChange={(e) => setFormData({...formData, gender: e.target.value})} 
+            style={isEditing ? inputStyle : disabledInputStyle}
+          >
             <option>Male</option>
             <option>Female</option>
             <option>Other</option>
           </select>
         </div>
         <div className="input-group">
-          <label>Alternate Contact</label>
-          <input type="text" disabled={!isEditing} value={formData.alternateContact || ''} onChange={(e) => setFormData({...formData, alternateContact: e.target.value})} />
+          <label style={labelStyle}>Alternate Contact</label>
+          <input 
+            type="text" 
+            disabled={!isEditing} 
+            value={formData.alternateContact || ''} 
+            onChange={(e) => setFormData({...formData, alternateContact: e.target.value})} 
+            style={isEditing ? inputStyle : disabledInputStyle}
+          />
         </div>
         <div className="input-group" style={{ gridColumn: 'span 2' }}>
-          <label>Residential Address</label>
-          <textarea rows="3" disabled={!isEditing} value={formData.address || ''} onChange={(e) => setFormData({...formData, address: e.target.value})} />
+          <label style={labelStyle}>Residential Address</label>
+          <textarea 
+            rows="3" 
+            disabled={!isEditing} 
+            value={formData.address || ''} 
+            onChange={(e) => setFormData({...formData, address: e.target.value})} 
+            style={isEditing ? inputStyle : disabledInputStyle}
+          />
         </div>
         <div className="input-group" style={{ gridColumn: 'span 2' }}>
-          <label>Google Maps Location URL (Optional)</label>
-          <input type="url" disabled={!isEditing} value={formData.googleMapUrl || ''} onChange={(e) => setFormData({...formData, googleMapUrl: e.target.value})} placeholder="https://maps.app.goo.gl/..." />
+          <label style={labelStyle}>Google Maps Location URL (Optional)</label>
+          <input 
+            type="url" 
+            disabled={!isEditing} 
+            value={formData.googleMapUrl || ''} 
+            onChange={(e) => setFormData({...formData, googleMapUrl: e.target.value})} 
+            placeholder="https://maps.app.goo.gl/..." 
+            style={isEditing ? inputStyle : disabledInputStyle}
+          />
         </div>
       </div>
     </div>
@@ -448,31 +524,66 @@ const BusinessTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
         <div className="input-group">
-          <label>Business Name</label>
-          <input type="text" disabled={!isEditing} value={formData.businessName || ''} onChange={(e) => setFormData({...formData, businessName: e.target.value})} />
+          <label style={labelStyle}>Business Name</label>
+          <input 
+            type="text" 
+            disabled={!isEditing} 
+            value={formData.businessName || ''} 
+            onChange={(e) => setFormData({...formData, businessName: e.target.value})} 
+            style={isEditing ? inputStyle : disabledInputStyle}
+          />
         </div>
         <div className="input-group">
-          <label>Business Type</label>
-          <select disabled={!isEditing} value={formData.businessType || 'Individual'} onChange={(e) => setFormData({...formData, businessType: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+          <label style={labelStyle}>Business Type</label>
+          <select 
+            disabled={!isEditing} 
+            value={formData.businessType || 'Individual'} 
+            onChange={(e) => setFormData({...formData, businessType: e.target.value})} 
+            style={isEditing ? inputStyle : disabledInputStyle}
+          >
             <option>Individual</option>
             <option>Company</option>
           </select>
         </div>
         <div className="input-group">
-          <label>Years of Experience</label>
-          <input type="number" disabled={!isEditing} value={formData.experienceYears || ''} onChange={(e) => setFormData({...formData, experienceYears: e.target.value})} />
+          <label style={labelStyle}>Years of Experience</label>
+          <input 
+            type="number" 
+            disabled={!isEditing} 
+            value={formData.experienceYears || ''} 
+            onChange={(e) => setFormData({...formData, experienceYears: e.target.value})} 
+            style={isEditing ? inputStyle : disabledInputStyle}
+          />
         </div>
         <div className="input-group">
-          <label>GST Number</label>
-          <input type="text" disabled={!isEditing} value={formData.gstNumber || ''} onChange={(e) => setFormData({...formData, gstNumber: e.target.value})} />
+          <label style={labelStyle}>GST Number</label>
+          <input 
+            type="text" 
+            disabled={!isEditing} 
+            value={formData.gstNumber || ''} 
+            onChange={(e) => setFormData({...formData, gstNumber: e.target.value})} 
+            style={isEditing ? inputStyle : disabledInputStyle}
+          />
         </div>
         <div className="input-group">
-          <label>PAN Number (Business)</label>
-          <input type="text" disabled={!isEditing} value={formData.panNumber || ''} onChange={(e) => setFormData({...formData, panNumber: e.target.value})} />
+          <label style={labelStyle}>PAN Number (Business)</label>
+          <input 
+            type="text" 
+            disabled={!isEditing} 
+            value={formData.panNumber || ''} 
+            onChange={(e) => setFormData({...formData, panNumber: e.target.value})} 
+            style={isEditing ? inputStyle : disabledInputStyle}
+          />
         </div>
         <div className="input-group" style={{ gridColumn: 'span 2' }}>
-          <label>Registered Office Address</label>
-          <textarea rows="2" disabled={!isEditing} value={formData.officeAddress || ''} onChange={(e) => setFormData({...formData, officeAddress: e.target.value})} />
+          <label style={labelStyle}>Registered Office Address</label>
+          <textarea 
+            rows="2" 
+            disabled={!isEditing} 
+            value={formData.officeAddress || ''} 
+            onChange={(e) => setFormData({...formData, officeAddress: e.target.value})} 
+            style={isEditing ? inputStyle : disabledInputStyle}
+          />
         </div>
       </div>
     </div>
@@ -566,20 +677,44 @@ const BankTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5rem' }}>
         <div className="input-group">
-          <label>Account Holder Name</label>
-          <input type="text" disabled={step !== 'edit'} value={formData.accountHolderName || ''} onChange={(e) => setFormData({...formData, accountHolderName: e.target.value})} />
+          <label style={labelStyle}>Account Holder Name</label>
+          <input 
+            type="text" 
+            disabled={step !== 'edit'} 
+            value={formData.accountHolderName || ''} 
+            onChange={(e) => setFormData({...formData, accountHolderName: e.target.value})} 
+            style={step === 'edit' ? inputStyle : disabledInputStyle}
+          />
         </div>
         <div className="input-group">
-          <label>Bank Name</label>
-          <input type="text" disabled={step !== 'edit'} value={formData.bankName || ''} onChange={(e) => setFormData({...formData, bankName: e.target.value})} />
+          <label style={labelStyle}>Bank Name</label>
+          <input 
+            type="text" 
+            disabled={step !== 'edit'} 
+            value={formData.bankName || ''} 
+            onChange={(e) => setFormData({...formData, bankName: e.target.value})} 
+            style={step === 'edit' ? inputStyle : disabledInputStyle}
+          />
         </div>
         <div className="input-group">
-          <label>Account Number</label>
-          <input type={step === 'edit' ? 'text' : 'password'} disabled={step !== 'edit'} value={formData.accountNumber || ''} onChange={(e) => setFormData({...formData, accountNumber: e.target.value})} />
+          <label style={labelStyle}>Account Number</label>
+          <input 
+            type={step === 'edit' ? 'text' : 'password'} 
+            disabled={step !== 'edit'} 
+            value={formData.accountNumber || ''} 
+            onChange={(e) => setFormData({...formData, accountNumber: e.target.value})} 
+            style={step === 'edit' ? inputStyle : disabledInputStyle}
+          />
         </div>
         <div className="input-group">
-          <label>IFSC Code</label>
-          <input type="text" disabled={step !== 'edit'} value={formData.ifscCode || ''} onChange={(e) => setFormData({...formData, ifscCode: e.target.value})} />
+          <label style={labelStyle}>IFSC Code</label>
+          <input 
+            type="text" 
+            disabled={step !== 'edit'} 
+            value={formData.ifscCode || ''} 
+            onChange={(e) => setFormData({...formData, ifscCode: e.target.value})} 
+            style={step === 'edit' ? inputStyle : disabledInputStyle}
+          />
         </div>
       </div>
     </div>
