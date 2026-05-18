@@ -198,6 +198,22 @@ exports.updateAttendance = async (req, res) => {
             buildingId: finalBuildingId,
             actionLink: `/owner/building/${finalBuildingId}/notifications?category=Mess`
         });
+
+        // Tenant Notification
+        console.log('📝 [DB_PERSISTENCE] Calling notificationService.createNotification for Tenant...');
+        await notificationService.createNotification({
+            moduleName: 'Mess',
+            portalType: 'Tenant',
+            category: 'Attendance',
+            title: `Dining Status: ${status ? 'Attending' : 'Skipping'}`,
+            message: `You have successfully marked your presence as "${status ? 'Attending' : 'Skipping'}" for ${meal} today.`,
+            priority: 'Low',
+            type: status ? 'success' : 'info',
+            buildingId: finalBuildingId,
+            receiverId: tenantId,
+            receiverRole: 'Tenant',
+            actionLink: '/tenant/mess'
+        });
         
         res.json(attendance);
     } catch (err) {
