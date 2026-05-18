@@ -4,11 +4,19 @@ import { api } from '../mockData';
 
 const NotificationContext = createContext();
 
-export const NotificationProvider = ({ children }) => {
+export const NotificationProvider = ({ children, activeBuildingId: propBuildingId }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [activeBuildingId, setActiveBuildingId] = useState(localStorage.getItem('selectedBuildingId'));
+  const [activeBuildingId, setActiveBuildingId] = useState(propBuildingId || localStorage.getItem('selectedBuildingId'));
+
+  // Sync state if prop changes (e.g. on navigation or refresh)
+  useEffect(() => {
+    if (propBuildingId && propBuildingId !== activeBuildingId) {
+      console.log('🔄 [CONTEXT_SYNC] Updating activeBuildingId from prop:', propBuildingId);
+      setActiveBuildingId(propBuildingId);
+    }
+  }, [propBuildingId]);
 
   const fetchNotifications = useCallback(async (buildingId) => {
     if (!buildingId) return;
@@ -124,7 +132,9 @@ export const NotificationProvider = ({ children }) => {
   return (
     <NotificationContext.Provider value={{
       notifications,
+      setNotifications,
       unreadCount,
+      setUnreadCount,
       loading,
       activeBuildingId,
       setActiveBuildingId,

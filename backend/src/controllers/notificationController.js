@@ -76,6 +76,7 @@ exports.getNotifications = async (req, res) => {
     if (isRead !== undefined) filters.isRead = isRead === 'true';
 
     console.log('📡 [DB_FETCH] Processing request for Owner Hub...');
+    console.log('📝 [DB_FETCH] FINAL_QUERY_OBJECT:', JSON.stringify(filters, null, 2));
     const notifications = await Notification.find(filters).sort({ createdAt: -1 }).limit(100);
     
     console.log(`✅ [DB_FETCH] Query successful. Found ${notifications.length} persistent records.`);

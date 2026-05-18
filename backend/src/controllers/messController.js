@@ -138,6 +138,7 @@ exports.updateAttendance = async (req, res) => {
         socketService.emitToRoom(buildingId, 'attendanceUpdated', updatePayload);
         socketService.emitToOwner('attendanceUpdated', updatePayload);
 
+        console.log('🔍 [DB_PERSISTENCE] Fetching metadata for notification:', { tenantId, buildingId });
         const MessLog = require('../models/MessLog');
         const Tenant = require('../models/Tenant');
         const Building = require('../models/Building');
@@ -145,19 +146,24 @@ exports.updateAttendance = async (req, res) => {
         
         const tenant = await Tenant.findById(tenantId);
         
-        // Save to permanent MessLog collection
-        await MessLog.create({
-            tenantId,
-            buildingId: buildingId || tenant?.buildingId,
-            tenantName: tenant?.name || 'Unknown',
-            roomNumber: tenant?.room || 'N/A',
-            meal,
-            status,
-            date
-        });
-        
         // CRITICAL: Ensure we have a valid buildingId for the notification
         const finalBuildingId = buildingId || (tenant?.buildingId?._id || tenant?.buildingId);
+
+        // Save to permanent MessLog collection
+        try {
+            await MessLog.create({
+                tenantId,
+                buildingId: finalBuildingId,
+                tenantName: tenant?.name || 'A Resident',
+                roomNumber: tenant?.room || 'N/A',
+                meal,
+                status,
+                date
+            });
+            console.log('✅ [DB_PERSISTENCE] MessLog entry saved.');
+        } catch (logErr) {
+            console.error('⚠️ [DB_PERSISTENCE] MessLog save failed but continuing:', logErr.message);
+        }
         
         const building = finalBuildingId ? await Building.findById(finalBuildingId) : null;
         
@@ -166,6 +172,7 @@ exports.updateAttendance = async (req, res) => {
         const buildingName = building ? ` at ${building.name}` : '';
 
         // EXCLUSIVE Owner Notification
+        console.log('📝 [DB_PERSISTENCE] Calling notificationService.createNotification...');
         await notificationService.createNotification({
             moduleName: 'Mess',
             portalType: 'Owner',
@@ -180,6 +187,7 @@ exports.updateAttendance = async (req, res) => {
         
         res.json(attendance);
     } catch (err) {
+        console.error('🔥 [DB_PERSISTENCE] updateAttendance FAILED:', err);
         res.status(500).json({ message: err.message });
     }
 };
