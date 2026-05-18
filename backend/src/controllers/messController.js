@@ -110,17 +110,35 @@ exports.updateAttendance = async (req, res) => {
         const { tenantId, buildingId, date, meal, status } = req.body;
         console.log('🍽️ ATTENDANCE_UPDATE_REQUEST:', { tenantId, buildingId, meal, status });
         
-        // Find existing attendance or create new
-        let attendance = await MessAttendance.findOne({ tenantId, buildingId, date });
+        const Tenant = require('../models/Tenant');
+        const mongoose = require('mongoose');
+
+        let finalBuildingId = buildingId;
+        
+        // Self-healing fallback: Resolve buildingId from Tenant profile if invalid/missing
+        if (!finalBuildingId || !mongoose.Types.ObjectId.isValid(finalBuildingId)) {
+            const tenantDoc = await Tenant.findById(tenantId);
+            if (tenantDoc) {
+                finalBuildingId = tenantDoc.buildingId?._id || tenantDoc.buildingId;
+            }
+        }
+
+        if (!finalBuildingId || !mongoose.Types.ObjectId.isValid(finalBuildingId)) {
+            return res.status(400).json({ message: 'buildingId is required and could not be resolved.' });
+        }
+
+        // Find existing attendance or create new (querying by unique constraint keys only)
+        let attendance = await MessAttendance.findOne({ tenantId, date });
         
         if (!attendance) {
             attendance = new MessAttendance({
                 tenantId,
-                buildingId,
+                buildingId: finalBuildingId,
                 date,
                 [meal]: status
             });
         } else {
+            attendance.buildingId = finalBuildingId; // Ensure buildingId is synced
             attendance[meal] = status;
         }
         
@@ -129,25 +147,21 @@ exports.updateAttendance = async (req, res) => {
         // Real-time notification for both Tenant (local update) and Owner (analytics)
         const updatePayload = {
             tenantId,
-            buildingId,
+            buildingId: finalBuildingId,
             date,
             meal,
             status,
             attendance
         };
-        socketService.emitToRoom(buildingId, 'attendanceUpdated', updatePayload);
+        socketService.emitToRoom(finalBuildingId, 'attendanceUpdated', updatePayload);
         socketService.emitToOwner('attendanceUpdated', updatePayload);
 
-        console.log('🔍 [DB_PERSISTENCE] Fetching metadata for notification:', { tenantId, buildingId });
+        console.log('🔍 [DB_PERSISTENCE] Fetching metadata for notification:', { tenantId, buildingId: finalBuildingId });
         const MessLog = require('../models/MessLog');
-        const Tenant = require('../models/Tenant');
         const Building = require('../models/Building');
         const notificationService = require('../utils/notificationService');
         
         const tenant = await Tenant.findById(tenantId);
-        
-        // CRITICAL: Ensure we have a valid buildingId for the notification
-        const finalBuildingId = buildingId || (tenant?.buildingId?._id || tenant?.buildingId);
 
         // Save to permanent MessLog collection
         try {

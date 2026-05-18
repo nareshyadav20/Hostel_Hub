@@ -193,7 +193,7 @@ const InventoryManagement = () => {
           <button
             onClick={() => { setShowLowStockOnly(!showLowStockOnly); setSelectedCategory('All'); }}
             style={{
-              padding: '0.8rem 1.5rem', borderRadius: '14px', border: 'none', fontWeight: '800',
+              padding: '0.8rem 1.5rem', borderRadius: '14px', fontWeight: '800',
               background: showLowStockOnly ? '#FFF1F2' : '#F8FAFC',
               color: showLowStockOnly ? '#E11D48' : '#475569',
               display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer',
