@@ -96,7 +96,7 @@ const Mess = () => {
   const [tenants, setTenants] = useState([]);
   const [attendance, setAttendance] = useState({});
   // Format today's date as YYYY-MM-DD for backend
-  const todayDate = new Date().toISOString().split('T')[0];
+  const todayDate = new Date().toLocaleDateString('sv-SE');
 
   const fetchAttendanceData = async () => {
     try {

@@ -1,5 +1,6 @@
 const notificationService = require('../utils/notificationService');
 const Notification = require('../models/Notification');
+const OwnerNotification = require('../models/OwnerNotification');
 
 exports.getNotifications = async (req, res) => {
   try {
@@ -7,21 +8,23 @@ exports.getNotifications = async (req, res) => {
     const filters = { archived: false };
     const mongoose = require('mongoose');
     
-    if (buildingId) {
-      const bIdStr = buildingId.toString();
-      filters.$and = filters.$and || [];
-      filters.$and.push({
-        $or: [
-          { buildingId: bIdStr },
-          { buildingId: mongoose.Types.ObjectId.isValid(bIdStr) ? new mongoose.Types.ObjectId(bIdStr) : null },
-          { buildingId: { $exists: false } },
-          { buildingId: null }
-        ]
-      });
-    }
+    const isTenant = req.user.role === 'TENANT';
+    const Model = isTenant ? Notification : OwnerNotification;
 
-    // Role-based targeting
-    if (req.user.role === 'TENANT') {
+    if (isTenant) {
+      if (buildingId) {
+        const bIdStr = buildingId.toString();
+        filters.$and = filters.$and || [];
+        filters.$and.push({
+          $or: [
+            { buildingId: bIdStr },
+            { buildingId: mongoose.Types.ObjectId.isValid(bIdStr) ? new mongoose.Types.ObjectId(bIdStr) : null },
+            { buildingId: { $exists: false } },
+            { buildingId: null }
+          ]
+        });
+      }
+
       const { getOrCreateTenant } = require('../utils/tenantHelper');
       const tenant = await getOrCreateTenant(req.user);
       const tenantId = tenant?._id || req.user.id;
@@ -33,39 +36,29 @@ exports.getNotifications = async (req, res) => {
       ];
       filters.portalType = 'Tenant';
     } else {
-      // Owner sees:
-      // 1. Notifications explicitly for 'Owner' portal
-      // 2. Notifications where they are the 'owner'
-      // 3. Any notification targeting buildings they own
-      
+      // Owner sees owner-specific notifications from OwnerNotification
       const Building = require('../models/Building');
       const ownerBuildings = await Building.find({ owner: req.user.id }, '_id').lean();
       const buildingIds = ownerBuildings.map(b => b._id);
       
-      const ownerIdStr = req.user.id.toString();
-      const ownerIdObj = mongoose.Types.ObjectId.isValid(ownerIdStr) ? new mongoose.Types.ObjectId(ownerIdStr) : null;
-
-      // START WITH A BROAD SCOPE FOR OWNERS
-      filters.$or = [
-        { portalType: 'Owner' },
-        { owner: ownerIdStr },
-        { buildingId: { $in: buildingIds } }
-      ];
-      if (ownerIdObj) filters.$or.push({ owner: ownerIdObj });
-
-      // If a specific buildingId was requested, we MUST respect it but keep portalType: 'Owner' alerts visible
       if (buildingId) {
         const bIdStr = buildingId.toString();
         const bIdObj = mongoose.Types.ObjectId.isValid(bIdStr) ? new mongoose.Types.ObjectId(bIdStr) : null;
         
         filters.$or = [
-          { portalType: 'Owner' }, // Always allow general owner alerts
-          { buildingId: bIdStr }
+          { buildingId: bIdStr },
+          { buildingId: bIdObj },
+          { buildingId: null },
+          { buildingId: { $exists: false } }
         ];
-        if (bIdObj) filters.$or.push({ buildingId: bIdObj });
+      } else {
+        filters.$or = [
+          { buildingId: { $in: buildingIds } },
+          { buildingId: null },
+          { buildingId: { $exists: false } }
+        ];
       }
       
-      // If they are filtering by portalType specifically, apply it as a top-level constraint
       if (portalType) filters.portalType = portalType;
     }
     
@@ -75,9 +68,9 @@ exports.getNotifications = async (req, res) => {
     if (priority) filters.priority = priority;
     if (isRead !== undefined) filters.isRead = isRead === 'true';
 
-    console.log('📡 [DB_FETCH] Processing request for Owner Hub...');
+    console.log('📡 [DB_FETCH] Processing request for Portal Hub...');
     console.log('📝 [DB_FETCH] FINAL_QUERY_OBJECT:', JSON.stringify(filters, null, 2));
-    const notifications = await Notification.find(filters).sort({ createdAt: -1 }).limit(100);
+    const notifications = await Model.find(filters).sort({ createdAt: -1 }).limit(100);
     
     console.log(`✅ [DB_FETCH] Query successful. Found ${notifications.length} persistent records.`);
     if (notifications.length > 0) {
@@ -106,20 +99,23 @@ exports.getUnreadCount = async (req, res) => {
     const query = { isRead: false, archived: false };
     const mongoose = require('mongoose');
     
-    if (buildingId) {
-      const bIdStr = buildingId.toString();
-      query.$and = query.$and || [];
-      query.$and.push({
-        $or: [
-          { buildingId: bIdStr },
-          { buildingId: mongoose.Types.ObjectId.isValid(bIdStr) ? new mongoose.Types.ObjectId(bIdStr) : null },
-          { buildingId: { $exists: false } },
-          { buildingId: null }
-        ]
-      });
-    }
-    
-    if (req.user.role === 'TENANT') {
+    const isTenant = req.user.role === 'TENANT';
+    const Model = isTenant ? Notification : OwnerNotification;
+
+    if (isTenant) {
+      if (buildingId) {
+        const bIdStr = buildingId.toString();
+        query.$and = query.$and || [];
+        query.$and.push({
+          $or: [
+            { buildingId: bIdStr },
+            { buildingId: mongoose.Types.ObjectId.isValid(bIdStr) ? new mongoose.Types.ObjectId(bIdStr) : null },
+            { buildingId: { $exists: false } },
+            { buildingId: null }
+          ]
+        });
+      }
+      
       const { getOrCreateTenant } = require('../utils/tenantHelper');
       const tenant = await getOrCreateTenant(req.user);
       const tenantId = tenant?._id || req.user.id;
@@ -131,18 +127,29 @@ exports.getUnreadCount = async (req, res) => {
       ];
       query.portalType = 'Tenant';
     } else {
-      const bIdStr = buildingId ? buildingId.toString() : null;
-      const bIdObj = (bIdStr && mongoose.Types.ObjectId.isValid(bIdStr)) ? new mongoose.Types.ObjectId(bIdStr) : null;
+      const Building = require('../models/Building');
+      const ownerBuildings = await Building.find({ owner: req.user.id }, '_id').lean();
+      const buildingIds = ownerBuildings.map(b => b._id);
 
-      query.$or = [
-        { owner: req.user.id },
-        { portalType: 'Owner' },
-        { buildingId: bIdStr },
-        { buildingId: bIdObj }
-      ];
+      if (buildingId) {
+        const bIdStr = buildingId.toString();
+        const bIdObj = (bIdStr && mongoose.Types.ObjectId.isValid(bIdStr)) ? new mongoose.Types.ObjectId(bIdStr) : null;
+        query.$or = [
+          { buildingId: bIdStr },
+          { buildingId: bIdObj },
+          { buildingId: null },
+          { buildingId: { $exists: false } }
+        ];
+      } else {
+        query.$or = [
+          { buildingId: { $in: buildingIds } },
+          { buildingId: null },
+          { buildingId: { $exists: false } }
+        ];
+      }
     }
     
-    const count = await Notification.countDocuments(query);
+    const count = await Model.countDocuments(query);
     res.json({ count });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -164,17 +171,19 @@ exports.createNotification = async (req, res) => {
 exports.markAsRead = async (req, res) => {
   try {
     const query = { _id: req.params.id };
-    if (req.user.role === 'TENANT') {
+    const isTenant = req.user.role === 'TENANT';
+    const Model = isTenant ? Notification : OwnerNotification;
+
+    if (isTenant) {
       const { getOrCreateTenant } = require('../utils/tenantHelper');
       const tenant = await getOrCreateTenant(req.user);
       const tenantId = tenant?._id || req.user.id;
       query.$or = [{ tenantId: tenantId.toString() }, { receiverId: tenantId.toString() }, { target: 'All Tenants' }];
     } else {
-      // For owners, allow marking if they own it or if it's meant for the Owner portal
       query.$or = [{ owner: req.user.id }, { portalType: 'Owner' }];
     }
     
-    const notification = await Notification.findOneAndUpdate(
+    const notification = await Model.findOneAndUpdate(
       query,
       { isRead: true },
       { new: true }
@@ -190,8 +199,10 @@ exports.markAllAsRead = async (req, res) => {
   try {
     const { category, buildingId } = req.body;
     const query = { isRead: false };
+    const isTenant = req.user.role === 'TENANT';
+    const Model = isTenant ? Notification : OwnerNotification;
     
-    if (req.user.role === 'TENANT') {
+    if (isTenant) {
       const { getOrCreateTenant } = require('../utils/tenantHelper');
       const tenant = await getOrCreateTenant(req.user);
       const tenantId = tenant?._id || req.user.id;
@@ -203,7 +214,7 @@ exports.markAllAsRead = async (req, res) => {
     if (category && category !== 'all') query.category = category;
     if (buildingId) query.buildingId = buildingId;
     
-    await Notification.updateMany(query, { isRead: true });
+    await Model.updateMany(query, { isRead: true });
     res.json({ message: 'All notifications marked as read' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -213,7 +224,10 @@ exports.markAllAsRead = async (req, res) => {
 exports.archiveNotification = async (req, res) => {
   try {
     const query = { _id: req.params.id };
-    if (req.user.role === 'TENANT') {
+    const isTenant = req.user.role === 'TENANT';
+    const Model = isTenant ? Notification : OwnerNotification;
+
+    if (isTenant) {
       const { getOrCreateTenant } = require('../utils/tenantHelper');
       const tenant = await getOrCreateTenant(req.user);
       const tenantId = tenant?._id || req.user.id;
@@ -222,7 +236,7 @@ exports.archiveNotification = async (req, res) => {
       query.$or = [{ owner: req.user.id }, { portalType: 'Owner' }];
     }
     
-    const notification = await Notification.findOneAndUpdate(
+    const notification = await Model.findOneAndUpdate(
       query,
       { archived: true },
       { new: true }
@@ -236,7 +250,10 @@ exports.archiveNotification = async (req, res) => {
 exports.deleteNotification = async (req, res) => {
   try {
     const query = { _id: req.params.id };
-    if (req.user.role === 'TENANT') {
+    const isTenant = req.user.role === 'TENANT';
+    const Model = isTenant ? Notification : OwnerNotification;
+
+    if (isTenant) {
       const { getOrCreateTenant } = require('../utils/tenantHelper');
       const tenant = await getOrCreateTenant(req.user);
       const tenantId = tenant?._id || req.user.id;
@@ -245,7 +262,7 @@ exports.deleteNotification = async (req, res) => {
       query.$or = [{ owner: req.user.id }, { portalType: 'Owner' }];
     }
     
-    const result = await Notification.deleteOne(query);
+    const result = await Model.deleteOne(query);
     if (result.deletedCount === 0) return res.status(404).json({ message: 'Notification not found' });
     res.json({ message: 'Notification deleted successfully' });
   } catch (error) {

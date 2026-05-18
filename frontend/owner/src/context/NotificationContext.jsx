@@ -19,23 +19,28 @@ export const NotificationProvider = ({ children, activeBuildingId: propBuildingI
   }, [propBuildingId]);
 
   const fetchNotifications = useCallback(async (buildingId) => {
-    if (!buildingId) return;
+    if (!buildingId) {
+      console.warn('⚠️ [CONTEXT_HYDRATION] Skipped fetch because buildingId is empty');
+      return;
+    }
     try {
+      console.log(`📡 [CONTEXT_HYDRATION] Starting notification fetch API for buildingId: ${buildingId}`);
       setLoading(true);
       const [list, countData] = await Promise.all([
         api.getNotifications(buildingId),
         api.getNotificationUnreadCount(buildingId)
       ]);
-      console.log('📥 API_FETCH_RESULTS:', {
+      console.log('📥 [CONTEXT_HYDRATION] API responses fetched successfully:', {
         buildingId,
         count: list?.length,
-        unread: countData.count,
-        firstNotification: list?.[0]?.title
+        unread: countData?.count,
+        firstNotification: list?.[0]?.title || 'none'
       });
+      console.log('📊 [CONTEXT_HYDRATION] Raw notification records:', list);
       setNotifications(list || []);
-      setUnreadCount(countData.count || 0);
+      setUnreadCount(countData?.count || 0);
     } catch (err) {
-      console.error('Failed to fetch notifications:', err);
+      console.error('🔥 [CONTEXT_HYDRATION] CRITICAL FETCH FAILURE:', err);
     } finally {
       setLoading(false);
     }
@@ -44,7 +49,7 @@ export const NotificationProvider = ({ children, activeBuildingId: propBuildingI
   useEffect(() => {
     let mounted = true;
     if (activeBuildingId) {
-      console.log('🔄 Context switching building:', activeBuildingId);
+      console.log('🔄 [CONTEXT_SYNC] Context switching building:', activeBuildingId);
       fetchNotifications(activeBuildingId);
       connectSocket(activeBuildingId);
     }

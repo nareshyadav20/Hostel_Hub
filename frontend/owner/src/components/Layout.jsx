@@ -175,10 +175,12 @@ const Layout = ({ children }) => {
     }
   }, [activeBuildingId, contextBuildingId, setContextBuildingId]);
 
-  console.log('🔔 Layout Notifications State:', { 
-    count: notifications.length, 
-    unread: unreadCount,
-    activeBuildingId 
+  console.log('🔔 [BELL_LOGS] Layout bell render:', { 
+    notificationsCount: notifications.length, 
+    unreadCount,
+    activeBuildingId,
+    contextBuildingId,
+    urlBuildingId
   });
 
   // Toast Listener (Still needed here for UI)
