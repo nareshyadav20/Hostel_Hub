@@ -312,7 +312,6 @@ const Reports = () => {
         <KPICard title="Occupancy" value={`${p.stats.occupancyRate}%`} icon={<Users size={18}/>} trend={p.stats.occupancyTrend} color="#3B82F6" />
         <KPICard title="Vacant Beds" value={p.stats.vacantBeds} icon={<Home size={18}/>} trend={p.stats.vacantBeds > 5 ? "+Avail" : "-Tight"} color="#F59E0B" />
         <KPICard title="Overdue" value={`₹${p.stats.overdueRevenue.toLocaleString()}`} icon={<AlertCircle size={18}/>} trend={p.stats.overdueRevenue > 5000 ? "+High" : "Low"} color="#EF4444" />
-        <KPICard title="Hygiene" value={p.stats.hygieneScore} icon={<ShieldCheck size={18}/>} trend="Stable" color="#8B5CF6" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '1.5rem' }}>
@@ -324,7 +323,6 @@ const Reports = () => {
             { id: 'occupancy', name: 'Occupancy', icon: <Layers size={16}/> },
             { id: 'tenants', name: 'Tenants', icon: <Users size={16}/> },
             { id: 'complaints', name: 'Complaints', icon: <AlertCircle size={16}/> },
-            { id: 'comfort', name: 'Comfort & Hygiene', icon: <Star size={16}/> },
           ].map(m => (
             <button 
               key={m.id}
@@ -538,90 +536,7 @@ const Reports = () => {
               </motion.div>
             )}
 
-            {/* COMFORT & HYGIENE ANALYTICS */}
-            {selectedReport === 'comfort' && (
-              <motion.div key="comfort" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '2rem' }}>
-                   <div className="card" style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', textAlign: 'center', borderBottom: '4px solid #F59E0B' }}>
-                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>AVG BED COMFORT</p>
-                      <h3 style={{ fontSize: '2rem', margin: '0.5rem 0', color: '#F59E0B' }}>{p.stats.avgBedComfort} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/ 10</span></h3>
-                      <p style={{ margin: 0, fontSize: '0.7rem', color: '#10B981' }}>Top 15% in region</p>
-                   </div>
-                   <div className="card" style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', textAlign: 'center', borderBottom: '4px solid #10B981' }}>
-                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>OVERALL HYGIENE</p>
-                      <h3 style={{ fontSize: '2rem', margin: '0.5rem 0', color: '#10B981' }}>{p.stats.hygieneScore} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/ 5.0</span></h3>
-                      <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Based on latest audits</p>
-                   </div>
-                   <div className="card" style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', textAlign: 'center', borderBottom: '4px solid #0EA5E9' }}>
-                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>VENTILATION INDEX</p>
-                      <h3 style={{ fontSize: '2rem', margin: '0.5rem 0', color: '#0EA5E9' }}>{p.stats.avgVentilation} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/ 10</span></h3>
-                      <p style={{ margin: 0, fontSize: '0.7rem', color: '#10B981' }}>Optimal airflow detected</p>
-                   </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                   <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-tertiary)' }}>
-                      <h4 style={{ fontSize: '0.9rem', marginBottom: '1.2rem', fontWeight: '800' }}>Hygiene & Maintenance Alerts</h4>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                          {data.maintenanceBeds.length === 0 ? (
-                             <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                                <CheckCircle2 size={32} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
-                                <p style={{ fontSize: '0.8rem' }}>No pending maintenance required. All beds are sanitized and in good condition!</p>
-                             </div>
-                          ) : (
-                             data.maintenanceBeds.slice(0, 4).map(alert => (
-                                <div key={alert.id} style={{ padding: '1.2rem', background: 'var(--bg-primary)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1.2rem', borderLeft: `6px solid ${alert.hygieneRating < 3.5 ? '#EF4444' : '#F59E0B'}`, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                                   <div style={{ width: '60px', height: '60px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)', flexShrink: 0 }}>
-                                      <img 
-                                        src={alert.images?.[0] || 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=100&q=80'} 
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                                        alt="Asset" 
-                                      />
-                                   </div>
-                                   <div style={{ flex: 1 }}>
-                                      <h5 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-                                         {alert.hygieneRating < 3.5 ? 'Urgent Sanitization' : 'Maintenance Due'}: Room {alert.room?.roomNumber || 'N/A'} - Bed {alert.bedNumber}
-                                      </h5>
-                                      <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                         {alert.hygieneRating < 3.5 ? `Hygiene rating dropped to ${alert.hygieneRating}.` : `Last sanitized: ${alert.lastSanitized ? new Date(alert.lastSanitized).toLocaleDateString() : 'Never'}`}
-                                      </p>
-                                   </div>
-                                   <button 
-                                      className="btn-primary" 
-                                      style={{ padding: '0.6rem 1rem', fontSize: '0.75rem', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '800' }}
-                                      onClick={async () => {
-                                         await api.markBedSanitized(alert.id);
-                                         fetchData(); 
-                                      }}
-                                   >
-                                      Mark Done
-                                   </button>
-                                </div>
-                             ))
-                          )}
-                       </div>
-                   </div>
-                   <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-tertiary)' }}>
-                       <h4 style={{ fontSize: '0.9rem', marginBottom: '1.2rem', fontWeight: '800' }}>Smart Amenities Distribution</h4>
-                       <div style={{ height: '220px' }}>
-                         <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={1}>
-                           <BarChart layout="vertical" data={[
-                             { name: 'Smart Locks', count: bFilteredRooms.filter(r => r.smartLock).length },
-                             { name: 'Study Zones', count: bFilteredRooms.filter(r => r.studyFriendly).length },
-                             { name: 'AC Units', count: bFilteredRooms.filter(r => r.isAC).length },
-                             { name: 'Energy Efficient', count: bFilteredRooms.filter(r => r.energyEfficient).length }
-                           ]} margin={{ left: 30 }}>
-                             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border-color)" />
-                             <XAxis type="number" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                             <YAxis type="category" dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                             <Tooltip cursor={{ fill: 'var(--bg-primary)', opacity: 0.4 }} />
-                             <Bar dataKey="count" fill="#8B5CF6" radius={[0, 4, 4, 0]} barSize={20} />
-                           </BarChart>
-                         </ResponsiveContainer>
-                       </div>
-                    </div>
-                </div>
-              </motion.div>
-            )}
+
 
           </AnimatePresence>
         </div>

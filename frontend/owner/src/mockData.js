@@ -45,6 +45,7 @@ export const api = {
   },
   updateOwnerProfile: async (data) => {
     const res = await axios.patch(`${API_URL}/owner/profile`, data);
+    cacheSet('owner_profile', res.data);
     return res.data;
   },
   getOwnerStats: async () => {
@@ -63,10 +64,13 @@ export const api = {
   },
   updateOwnerDocuments: async (doc) => {
     const res = await axios.post(`${API_URL}/owner/documents`, doc);
+    cacheSet('owner_profile', res.data);
     return res.data;
   },
   uploadOwnerPhoto: async (photoUrl) => {
     const res = await axios.post(`${API_URL}/owner/profile/photo`, { photoUrl });
+    const cached = cacheGet('owner_profile') || {};
+    cacheSet('owner_profile', { ...cached, photo: photoUrl });
     return res.data;
   },
   getOwnerPhoto: async () => {

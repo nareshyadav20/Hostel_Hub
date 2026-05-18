@@ -20,17 +20,29 @@ const Mess = () => {
 
   const fetchMessData = async () => {
     try {
-      const bId = localStorage.getItem('buildingId');
       const todayDate = new Date().toLocaleDateString('sv-SE');
       
-      const [profileRes, menuRes, attendanceRes] = await Promise.all([
-        API.get('/tenants/me'),
+      // 1. Fetch tenant profile first to resolve the verified building ID and active mess plan
+      const profileRes = await API.get('/tenants/me');
+      const tenant = profileRes.data;
+      
+      const bId = tenant.buildingId?._id || tenant.buildingId || localStorage.getItem('buildingId');
+      
+      // Synchronize correct buildingId to localStorage for socket events and other components
+      if (bId) {
+        localStorage.setItem('buildingId', String(bId));
+        connectSocket(String(bId));
+      }
+      
+      // Normalize plan to lowercase to match DB enum ['basic', 'standard', 'premium']
+      const activePlan = (tenant.messPlan || 'basic').toLowerCase();
+      setTenantPlan(tenant.messPlan || 'basic');
+      
+      // 2. Fetch menu and attendance using the verified building ID
+      const [menuRes, attendanceRes] = await Promise.all([
         bId ? API.get(`/mess/menu?buildingId=${bId}`).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
         bId ? API.get(`/mess/attendance?buildingId=${bId}&date=${todayDate}`).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })
       ]);
-      
-      const tenant = profileRes.data;
-      setTenantPlan(tenant.messPlan || 'Standard');
       
       // Determine attendance status for today's current active meal based on time
       const myAttendance = attendanceRes.data.find(a => a.tenantId === tenant._id || a.tenantId === tenant.id);
@@ -61,7 +73,25 @@ const Mess = () => {
         { day: 'Sunday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' }
       ];
 
-      if (finalMenu.length === 0) finalMenu = fallbackMenu;
+      if (finalMenu.length === 0) {
+        finalMenu = fallbackMenu;
+      } else {
+        // Filter menu items specifically to match the tenant's plan tier
+        finalMenu = finalMenu.filter(m => (m.plan || 'basic').toLowerCase() === activePlan);
+        if (finalMenu.length === 0) finalMenu = fallbackMenu;
+      }
+      
+      // Sort weekly menu chronologically for clean, premium UX
+      const dayOrder = {
+        'Monday': 1,
+        'Tuesday': 2,
+        'Wednesday': 3,
+        'Thursday': 4,
+        'Friday': 5,
+        'Saturday': 6,
+        'Sunday': 7
+      };
+      finalMenu.sort((a, b) => (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99));
       
       setWeeklyMenu(finalMenu);
       const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -77,20 +107,16 @@ const Mess = () => {
   useEffect(() => {
     fetchMessData();
 
-    const buildingId = localStorage.getItem('buildingId');
-    if (buildingId) {
-      connectSocket(buildingId);
+    // Register real-time listeners unconditionally on mount
+    socket.on('menuUpdated', () => {
+      console.log('🔄 Mess Menu Updated');
+      fetchMessData();
+    });
 
-      socket.on('menuUpdated', () => {
-        console.log('🔄 Mess Menu Updated');
-        fetchMessData();
-      });
-
-      socket.on('attendanceUpdated', (data) => {
-        console.log('✅ Attendance Updated', data);
-        fetchMessData();
-      });
-    }
+    socket.on('attendanceUpdated', (data) => {
+      console.log('✅ Attendance Updated', data);
+      fetchMessData();
+    });
 
     return () => {
       socket.off('menuUpdated');
