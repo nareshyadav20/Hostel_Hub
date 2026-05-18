@@ -11,7 +11,6 @@ const Mess = () => {
   const [weeklyMenu, setWeeklyMenu] = useState([]);
   const [tenantPlan, setTenantPlan] = useState('Standard');
   const [loading, setLoading] = useState(true);
-  const [resolvedBuildingId, setResolvedBuildingId] = useState(localStorage.getItem('buildingId'));
   const [attendanceStatus, setAttendanceStatus] = useState('dining'); // 'dining' or 'skipped'
   const [feedbackMessage, setFeedbackMessage] = useState(null);
   
@@ -21,27 +20,17 @@ const Mess = () => {
 
   const fetchMessData = async () => {
     try {
+      const bId = localStorage.getItem('buildingId');
       const todayDate = new Date().toLocaleDateString('sv-SE');
       
-      // 1. Fetch Tenant Profile first
-      const profileRes = await API.get('/tenants/me');
+      const [profileRes, menuRes, attendanceRes] = await Promise.all([
+        API.get('/tenants/me'),
+        bId ? API.get(`/mess/menu?buildingId=${bId}`).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+        bId ? API.get(`/mess/attendance?buildingId=${bId}&date=${todayDate}`).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })
+      ]);
+      
       const tenant = profileRes.data;
       setTenantPlan(tenant.messPlan || 'Standard');
-      
-      // 2. Resolve buildingId from tenant profile dynamically
-      const actualBuildingId = tenant.buildingId?._id || tenant.buildingId;
-      if (actualBuildingId) {
-        localStorage.setItem('buildingId', actualBuildingId);
-        setResolvedBuildingId(actualBuildingId);
-      }
-      
-      const activeBId = actualBuildingId || localStorage.getItem('buildingId');
-
-      // 3. Fetch menu and attendance using the resolved buildingId
-      const [menuRes, attendanceRes] = await Promise.all([
-        activeBId ? API.get(`/mess/menu?buildingId=${activeBId}`).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
-        activeBId ? API.get(`/mess/attendance?buildingId=${activeBId}&date=${todayDate}`).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })
-      ]);
       
       // Determine attendance status for today's current active meal based on time
       const myAttendance = attendanceRes.data.find(a => a.tenantId === tenant._id || a.tenantId === tenant.id);
@@ -112,16 +101,7 @@ const Mess = () => {
 
   const updateMyAttendance = async (status) => {
     try {
-      const bId = resolvedBuildingId || localStorage.getItem('buildingId');
-      if (!bId || bId === 'undefined' || bId === 'null') {
-        setFeedbackMessage({ 
-          type: 'error', 
-          text: 'You must be assigned to a building to manage mess attendance.' 
-        });
-        setTimeout(() => setFeedbackMessage(null), 5000);
-        return;
-      }
-      
+      const bId = localStorage.getItem('buildingId');
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const tenantId = user.tenantId || user._id;
       const todayDate = new Date().toLocaleDateString('sv-SE');
