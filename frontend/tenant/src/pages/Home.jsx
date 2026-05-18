@@ -15,6 +15,37 @@ import studentCat from '../assets/student_cat.png';
 import professionalCat from '../assets/professional_cat.png';
 import ImageModal from '../components/ImageModal';
 
+const CountUpAnimation = ({ endValue, suffix = '', isFloat = false }) => {
+  const [count, setCount] = useState(0);
+  const nodeRef = useRef(null);
+  
+  useEffect(() => {
+    const end = parseFloat(endValue);
+    if (isNaN(end)) return;
+    
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        let startTimestamp = null;
+        const duration = 2000;
+        const step = (timestamp) => {
+          if (!startTimestamp) startTimestamp = timestamp;
+          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+          setCount(progress * end);
+          if (progress < 1) window.requestAnimationFrame(step);
+        };
+        window.requestAnimationFrame(step);
+        observer.disconnect();
+      }
+    }, { threshold: 0.1 });
+    
+    if (nodeRef.current) observer.observe(nodeRef.current);
+    return () => observer.disconnect();
+  }, [endValue]);
+
+  const displayCount = isFloat ? count.toFixed(1) : Math.floor(count);
+  return <span ref={nodeRef}>{displayCount}{suffix}</span>;
+};
+
 const Home = () => {
   const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState('Home');
@@ -27,6 +58,32 @@ const Home = () => {
   const [isTypeOpen, setIsTypeOpen] = useState(false);
   const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
   const searchBarRef = useRef(null);
+
+  const [platformStats, setPlatformStats] = useState({ tenants: 0, properties: 0, cities: 0, rating: '0' });
+
+  const fetchStats = async () => {
+    try {
+      const res = await API.get('/buildings/public/stats');
+      setPlatformStats({
+        tenants: res.data.tenants || 0,
+        properties: res.data.properties || 0,
+        cities: res.data.cities || 0,
+        rating: res.data.rating || '0/5'
+      });
+    } catch (err) {
+      console.error('Failed to load stats', err);
+    }
+  };
+
+  const heroImages = [heroCouple, roomStanza, chairsReal, stayEasy];
+  const [currentHeroImg, setCurrentHeroImg] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentHeroImg((prev) => (prev + 1) % heroImages.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchRooms = async () => {
     try {
@@ -49,12 +106,14 @@ const Home = () => {
 
   useEffect(() => {
     fetchRooms();
+    fetchStats();
 
     // Real-time synchronization
     connectSocket(); // Global room
     socket.on('hostelUpdated', () => {
       console.log('🔄 Hostel Details Updated in Real-time');
       fetchRooms();
+      fetchStats();
     });
 
     return () => {
@@ -128,10 +187,10 @@ const Home = () => {
   };
 
   const stats = [
-    { icon: '👥', value: '10,000+', label: 'Happy Tenants' },
-    { icon: '🏢', value: '500+', label: 'Verified Properties' },
-    { icon: '📍', value: '8+', label: 'Cities' },
-    { icon: '⭐', value: '4.8/5', label: 'Average Rating' },
+    { icon: '👥', value: <CountUpAnimation endValue={platformStats.tenants} suffix="+" />, label: 'Happy Tenants' },
+    { icon: '🏢', value: <CountUpAnimation endValue={platformStats.properties} suffix="+" />, label: 'Verified Properties' },
+    { icon: '📍', value: <CountUpAnimation endValue={platformStats.cities} suffix="+" />, label: 'Cities' },
+    { icon: '⭐', value: <CountUpAnimation endValue={platformStats.rating.split('/')[0]} suffix="/5" isFloat={true} />, label: 'Average Rating' },
   ];
 
   const steps = [
@@ -302,7 +361,7 @@ const Home = () => {
             </div>
             <button className="hv2-search-btn" onClick={handleSearch}>
               <Search size={18} />
-              <span>Search Stays</span>
+              <span>Search</span>
             </button>
           </div>
 
@@ -322,7 +381,7 @@ const Home = () => {
 
         <div className="hv2-hero-right">
           <div className="hv2-hero-img-wrap">
-            <img src={heroCouple} alt="Livora residents" className="hv2-hero-img" />
+            <img src={heroImages[currentHeroImg]} alt="Livora residents" className="hv2-hero-img hv2-slider-anim" style={{ transition: 'opacity 0.5s ease-in-out' }} />
             <div className="hv2-float-badge">
               <div className="hv2-float-info">
                 <div className="hv2-float-num">⭐ 4.9/5</div>
@@ -332,6 +391,24 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* ── STATS BAR ── */}
+      <div className="hv2-stats-wrap">
+        <div className="hv2-stats-bar">
+          {stats.map((s, i) => (
+            <React.Fragment key={i}>
+              <div className="hv2-stat">
+                <div className="hv2-stat-icon-wrap">{s.icon}</div>
+                <div>
+                  <div className="hv2-stat-val">{s.value}</div>
+                  <div className="hv2-stat-lbl">{s.label}</div>
+                </div>
+              </div>
+              {i < stats.length - 1 && <div className="hv2-stat-sep" />}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
 
       {/* ── CATEGORY SELECTION ── */}
       <section className="hv2-categories">
@@ -361,24 +438,6 @@ const Home = () => {
           ))}
         </div>
       </section>
-
-      {/* ── STATS BAR ── */}
-      <div className="hv2-stats-wrap">
-        <div className="hv2-stats-bar">
-          {stats.map((s, i) => (
-            <React.Fragment key={i}>
-              <div className="hv2-stat">
-                <div className="hv2-stat-icon-wrap">{s.icon}</div>
-                <div>
-                  <div className="hv2-stat-val">{s.value}</div>
-                  <div className="hv2-stat-lbl">{s.label}</div>
-                </div>
-              </div>
-              {i < stats.length - 1 && <div className="hv2-stat-sep" />}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
 
       {/* ── HOW IT WORKS ── */}
       <section className="hv2-how" id="how">

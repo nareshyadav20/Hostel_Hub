@@ -5,6 +5,7 @@ const authMiddleware = require('../utils/authMiddleware');
 const router = express.Router();
 
 // Public routes for Tenant Portal
+router.get('/public/stats', buildingController.getPlatformStats);
 router.get('/public', buildingController.getPublicBuildings);
 router.get('/public/:id', buildingController.getPublicBuildingById);
 

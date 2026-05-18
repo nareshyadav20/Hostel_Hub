@@ -249,6 +249,31 @@ const uploadPhotos = async (req, res) => {
   }
 };
 
+const getPlatformStats = async (req, res) => {
+  try {
+    const propertiesCount = await Building.countDocuments({ status: { $ne: 'Draft' } });
+    const tenantsCount = await Tenant.countDocuments();
+    const cities = await Building.distinct('locationCity', { status: { $ne: 'Draft' } });
+    
+    const buildings = await Building.find({ status: { $ne: 'Draft' } }, 'rating');
+    let totalRating = 0;
+    let validRatings = 0;
+    buildings.forEach(b => {
+      if (b.rating) { totalRating += b.rating; validRatings++; }
+    });
+    const avgRating = validRatings > 0 ? (totalRating / validRatings).toFixed(1) : "4.8";
+
+    res.status(200).json({
+      tenants: tenantsCount,
+      properties: propertiesCount,
+      cities: cities.length,
+      rating: `${avgRating}/5`
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = { 
   createBuilding, 
   getBuildings, 
@@ -258,5 +283,6 @@ module.exports = {
   bulkCreateBuildings,
   getPublicBuildings,
   getPublicBuildingById,
-  uploadPhotos
+  uploadPhotos,
+  getPlatformStats
 };
