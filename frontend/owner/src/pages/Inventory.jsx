@@ -14,19 +14,19 @@ import socket, { connectSocket } from '../utils/socket';
 
 // --- CONFIGURATION ---
 const CATEGORIES = [
-  { 
+  {
     id: 'Groceries', name: 'Groceries', icon: <Utensils size={18} />, color: '#00A859', bg: '#E8F5E9',
     subCategories: ['Grains', 'Vegetables', 'Fruits', 'Dairy', 'Spices']
   },
-  { 
+  {
     id: 'Cleaning', name: 'Cleaning Supplies', icon: <Brush size={18} />, color: '#4DABF7', bg: '#E7F5FF',
     subCategories: ['Floor Cleaners', 'Detergents', 'Sanitizers', 'Tools']
   },
-  { 
+  {
     id: 'Kitchen', name: 'Kitchen Equipment', icon: <Hammer size={18} />, color: '#F59E0B', bg: '#FFFBEB',
     subCategories: ['Utensils', 'Electronics', 'Storage', 'Cutlery']
   },
-  { 
+  {
     id: 'Miscellaneous', name: 'Miscellaneous', icon: <Package size={18} />, color: '#64748B', bg: '#F1F5F9',
     subCategories: ['Stationery', 'Medical', 'Bedding', 'Other']
   }
@@ -54,7 +54,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
   const [addStep, setAddStep] = useState(1);
   const [isDamageModalOpen, setIsDamageModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  
+
   // Data States
   const [inventory, setInventory] = useState([]);
   const [damageEntries, setDamageEntries] = useState([
@@ -74,13 +74,13 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
 
   // Form States
   const initialFormData = {
-    name: '', 
-    category: 'Groceries', 
+    name: '',
+    category: 'Groceries',
     subCategory: 'Grains',
-    stock: 0, 
-    minThreshold: 5, 
-    unit: 'Kg', 
-    location: '', 
+    stock: 0,
+    minThreshold: 5,
+    unit: 'Kg',
+    location: '',
     notes: '',
     status: 'active',
     lastPurchased: new Date().toISOString().split('T')[0]
@@ -118,9 +118,9 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
       // Support both subCategory (frontend) and subCategoryId (backend)
       const itemSub = item.subCategory || item.subCategoryId || '';
       const matchesSubCategory = selectedSubCategory === 'All' || itemSub === selectedSubCategory;
-      const matchesStatus = selectedStatus === 'All' || 
-                           (selectedStatus === 'Active' && item.stock > 0) || 
-                           (selectedStatus === 'Out of Stock' && item.stock <= 0);
+      const matchesStatus = selectedStatus === 'All' ||
+        (selectedStatus === 'Active' && item.stock > 0) ||
+        (selectedStatus === 'Out of Stock' && item.stock <= 0);
       return matchesSearch && matchesCategory && matchesSubCategory && matchesStatus;
     });
   }, [inventory, searchQuery, selectedCategory, selectedSubCategory, selectedStatus]);
@@ -283,10 +283,10 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
           <button className="back-btn" onClick={() => navigate(-1)} title="Back"><ChevronLeft size={20} /></button>
           <div className="header-title-area">
             <h1>
-              {activeTab === 'master' ? 'Inventory Master' : 
-               activeTab === 'damage' ? 'Damage Tracking' : 
-               activeTab === 'deductions' ? 'Financial Deductions' : 
-               'Reports & Analytics'}
+              {activeTab === 'master' ? 'Inventory Master' :
+                activeTab === 'damage' ? 'Damage Tracking' :
+                  activeTab === 'deductions' ? 'Financial Deductions' :
+                    'Reports & Analytics'}
             </h1>
             <p>Track hostel supplies, consumables and financial recovery with precision.</p>
           </div>
@@ -311,8 +311,8 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
       {/* 2. TAB NAVIGATION */}
       <nav className="tab-nav">
         {TABS.map(tab => (
-          <button 
-            key={tab.id} 
+          <button
+            key={tab.id}
             className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => { setActiveTab(tab.id); setSearchQuery(''); }}
           >
@@ -340,9 +340,9 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
           <div className="table-filters">
             <div className="search-box">
               <Search size={18} />
-              <input 
-                type="text" 
-                placeholder={`Search ${activeTab === 'damage' ? 'entries' : activeTab === 'deductions' ? 'deductions' : 'products'}...`} 
+              <input
+                type="text"
+                placeholder={`Search ${activeTab === 'damage' ? 'entries' : activeTab === 'deductions' ? 'deductions' : 'products'}...`}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
@@ -418,9 +418,9 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
             </thead>
             <tbody>
               {/* ── LOADING STATE ── */}
-              {loading && activeTab === 'master' && [1,2,3,4].map(i => (
+              {loading && activeTab === 'master' && [1, 2, 3, 4].map(i => (
                 <tr key={i}>
-                  {[1,2,3,4,5].map(j => (
+                  {[1, 2, 3, 4, 5].map(j => (
                     <td key={j}><div className="skeleton-cell" /></td>
                   ))}
                 </tr>
@@ -432,9 +432,9 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   <td>
                     <div className="cell-product">
                       <div className="product-img" style={{
-                          background: CATEGORIES.find(c=>c.id===item.category)?.bg || 'var(--bg-secondary)',
-                          color: CATEGORIES.find(c=>c.id===item.category)?.color || 'var(--text-muted)'
-                        }}>
+                        background: CATEGORIES.find(c => c.id === item.category)?.bg || 'var(--bg-secondary)',
+                        color: CATEGORIES.find(c => c.id === item.category)?.color || 'var(--text-muted)'
+                      }}>
                         {item.name ? item.name[0].toUpperCase() : '?'}
                       </div>
                       <div>
@@ -472,7 +472,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   </td>
                   <td>
                     <div className="action-btns">
-                      <button className="action-btn" title="Edit" onClick={() => { setSelectedItem(item); setFormData(item); setAddStep(1); setIsAddModalOpen(true); }}><Edit size={16} /></button>
+                      <button className="action-btn" title="Edit" onClick={() => { setSelectedItem(item); setFormData({ ...item, sellingPrice: item.sellingPrice || item.price || 0, purchasePrice: item.purchasePrice || 0 }); setAddStep(1); setIsAddModalOpen(true); }}><Edit size={16} /></button>
                       <button className="action-btn delete" title="Delete" onClick={() => handleDelete(item.id || item._id)}><Trash2 size={16} /></button>
                     </div>
                   </td>
@@ -494,13 +494,13 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   </td>
                   <td>
                     <div className="cell-main">{entry.reportedBy}</div>
-                    <div className="cell-sub" style={{ display:'flex', alignItems:'center', gap:'4px' }}><ShieldCheck size={12} /> VERIFIED</div>
+                    <div className="cell-sub" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><ShieldCheck size={12} /> VERIFIED</div>
                   </td>
                   <td><span className="qty-badge">{entry.qty}</span></td>
                   <td>
                     <span className="type-badge" style={{
-                      background: entry.type==='DAMAGED' ? 'rgba(249,115,22,0.1)' : entry.type==='EXPIRED' ? 'rgba(139,92,246,0.1)' : 'rgba(239,68,68,0.1)',
-                      color: entry.type==='DAMAGED' ? '#f97316' : entry.type==='EXPIRED' ? '#8b5cf6' : '#ef4444'
+                      background: entry.type === 'DAMAGED' ? 'rgba(249,115,22,0.1)' : entry.type === 'EXPIRED' ? 'rgba(139,92,246,0.1)' : 'rgba(239,68,68,0.1)',
+                      color: entry.type === 'DAMAGED' ? '#f97316' : entry.type === 'EXPIRED' ? '#8b5cf6' : '#ef4444'
                     }}>{entry.type}</span>
                   </td>
                   <td><span className="loss-val">₹{entry.loss}</span></td>
@@ -627,7 +627,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
             </h3>
             <div style={{ height: '200px', display: 'flex', alignItems: 'flex-end', gap: '1rem', padding: '1rem' }}>
               {[60, 40, 85, 30, 95, 70, 55].map((h, i) => (
-                <div key={i} style={{ flex: 1, background: 'var(--primary-green)', height: `${h}%`, borderRadius: '4px 4px 0 0', opacity: 0.2 + (h/100) }} />
+                <div key={i} style={{ flex: 1, background: 'var(--primary-green)', height: `${h}%`, borderRadius: '4px 4px 0 0', opacity: 0.2 + (h / 100) }} />
               ))}
             </div>
           </div>
@@ -659,7 +659,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2rem', height: '60px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', borderRadius: '12px 12px 0 0', flexShrink: 0 }}>
                 <button onClick={() => setIsAddModalOpen(false)}
                   style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', padding: '7px 14px', borderRadius: '7px', transition: '0.18s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background='var(--bg-tertiary)'; }} onMouseLeave={e => { e.currentTarget.style.background='transparent'; }}>
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-tertiary)'; }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
                   <ArrowLeft size={15} /> Back to List
                 </button>
                 <div style={{ textAlign: 'center' }}>
@@ -668,16 +668,16 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                 </div>
                 <button onClick={() => setIsAddModalOpen(false)}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '34px', height: '34px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer', borderRadius: '7px', transition: '0.18s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background='#fee2e2'; e.currentTarget.style.color='#ef4444'; }} onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='var(--text-muted)'; }}>
+                  onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#ef4444'; }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
                   <X size={18} />
                 </button>
               </div>
 
               {/* TABS */}
               <div style={{ display: 'flex', gap: '2rem', padding: '0 2rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-primary)' }}>
-                {[{id:1,label:'Basic Information',icon:<Info size={14}/>},{id:2,label:'Pricing & Stock',icon:<Package size={14}/>}].map(t => (
+                {[{ id: 1, label: 'Basic Information', icon: <Info size={14} /> }, { id: 2, label: 'Pricing & Stock', icon: <Package size={14} /> }].map(t => (
                   <div key={t.id} onClick={() => setAddStep ? setAddStep(t.id) : null}
-                    style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '1rem 0', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.04em', color: (addStep||1)===t.id ? 'var(--primary-green)' : 'var(--text-muted)', borderBottom: (addStep||1)===t.id ? '2.5px solid var(--primary-green)' : '2.5px solid transparent', marginBottom: '-1px', transition: '0.18s' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '1rem 0', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.04em', color: (addStep || 1) === t.id ? 'var(--primary-green)' : 'var(--text-muted)', borderBottom: (addStep || 1) === t.id ? '2.5px solid var(--primary-green)' : '2.5px solid transparent', marginBottom: '-1px', transition: '0.18s' }}>
                     {t.icon} {t.label}
                   </div>
                 ))}
@@ -699,7 +699,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                         <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Display Name *</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
                           <Package size={15} color="var(--text-muted)" />
-                          <input placeholder="e.g. Organic Tomato Ketchup" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+                          <input placeholder="e.g. Organic Tomato Ketchup" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
                             style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
                         </div>
                       </div>
@@ -715,7 +715,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                         <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--primary-green)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Initial Stock</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid rgba(0, 168, 89, 0.3)', borderRadius: '8px', background: 'rgba(0, 168, 89, 0.1)' }}>
                           <Package size={15} color="var(--primary-green)" />
-                          <input type="number" placeholder="0" value={formData.stock} onChange={e => setFormData({...formData, stock: parseInt(e.target.value)||0})}
+                          <input type="number" placeholder="0" value={formData.stock} onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
                             style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 700, outline: 'none', fontSize: '0.95rem', color: 'var(--primary-green)' }} />
                         </div>
                       </div>
@@ -736,7 +736,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                         <div>
                           <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Sub Category *</div>
                           <div style={{ position: 'relative' }}>
-                            <select value={formData.subCategory} onChange={e => setFormData({...formData, subCategory: e.target.value})}
+                            <select value={formData.subCategory} onChange={e => setFormData({ ...formData, subCategory: e.target.value })}
                               style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', appearance: 'none', cursor: 'pointer', background: 'var(--bg-primary)' }}>
                               {CATEGORIES.find(c => c.id === formData.category)?.subCategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                             </select>
@@ -747,7 +747,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
                         <div>
                           <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Unit Type *</div>
-                          <select value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})}
+                          <select value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })}
                             style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', cursor: 'pointer', background: 'var(--bg-primary)' }}>
                             <option>Kg</option><option>Liters</option><option>Pieces</option><option>Boxes</option>
                           </select>
@@ -760,13 +760,13 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                       </div>
                       <div>
                         <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Product Description</div>
-                        <textarea placeholder="Describe the product details..." rows={5} value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})}
+                        <textarea placeholder="Describe the product details..." rows={5} value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })}
                           style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--bg-primary)' }} />
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <button onClick={() => setAddStep && setAddStep(2)}
                           style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', background: 'var(--primary-green)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', letterSpacing: '0.03em' }}
-                          onMouseEnter={e => e.currentTarget.style.background='var(--primary-green-dark)'} onMouseLeave={e => e.currentTarget.style.background='var(--primary-green)'}>
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-green-dark)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-green)'}>
                           NEXT: PRICING &amp; STOCK <ArrowRight size={14} />
                         </button>
                       </div>
@@ -775,12 +775,12 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
-                      {[{label:'Selling Price *',field:'sellingPrice'},{label:'Purchase Price',field:'purchasePrice'},{label:'Min Threshold',field:'minThreshold'}].map(({label,field}) => (
+                      {[{ label: 'Selling Price *', field: 'sellingPrice' }, { label: 'Purchase Price', field: 'purchasePrice' }, { label: 'Min Threshold', field: 'minThreshold' }].map(({ label, field }) => (
                         <div key={field}>
                           <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>{label}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
                             <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>₹</span>
-                            <input type="number" placeholder="0.00" value={formData[field]||''} onChange={e => setFormData({...formData, [field]: e.target.value})}
+                            <input type="number" placeholder="0.00" value={formData[field] || ''} onChange={e => setFormData({ ...formData, [field]: e.target.value })}
                               style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
                           </div>
                         </div>
@@ -792,11 +792,11 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                         <ArrowLeft size={14} /> Back
                       </button>
                       <div style={{ display: 'flex', gap: '0.75rem' }}>
-                        <button onClick={() => { setIsAddModalOpen(false); setFormData(initialFormData); if(setAddStep) setAddStep(1); }}
+                        <button onClick={() => { setIsAddModalOpen(false); setFormData(initialFormData); if (setAddStep) setAddStep(1); }}
                           style={{ padding: '10px 22px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>CANCEL</button>
                         <button onClick={handleSave}
                           style={{ padding: '10px 22px', background: 'var(--primary-green)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
-                          onMouseEnter={e => e.currentTarget.style.background='var(--primary-green-dark)'} onMouseLeave={e => e.currentTarget.style.background='var(--primary-green)'}>
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-green-dark)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-green)'}>
                           SAVE &amp; ADD TO INVENTORY
                         </button>
                       </div>
@@ -839,7 +839,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                     <Search size={16} color="var(--text-muted)" />
                     <input type="text" placeholder="Search product by name or SKU..."
                       value={damageFormData.productId}
-                      onChange={e => setDamageFormData({...damageFormData, productId: e.target.value})}
+                      onChange={e => setDamageFormData({ ...damageFormData, productId: e.target.value })}
                       required
                       style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
                   </div>
@@ -852,9 +852,9 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                     {[
                       { val: 'Damaged', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)', border: '#fed7aa', emoji: '🔨' },
                       { val: 'Expired', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)', border: '#ddd6fe', emoji: '⏰' },
-                      { val: 'Lost',    color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', border: '#fecaca', emoji: '❌' },
+                      { val: 'Lost', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', border: '#fecaca', emoji: '❌' },
                     ].map(t => (
-                      <div key={t.val} onClick={() => setDamageFormData({...damageFormData, type: t.val})}
+                      <div key={t.val} onClick={() => setDamageFormData({ ...damageFormData, type: t.val })}
                         style={{ flex: 1, padding: '0.9rem 0.5rem', border: `2px solid ${damageFormData.type === t.val ? t.color : 'var(--border-color)'}`, borderRadius: '10px', background: damageFormData.type === t.val ? t.bg : 'var(--bg-primary)', cursor: 'pointer', textAlign: 'center', transition: '0.18s' }}>
                         <div style={{ fontSize: '1.4rem', marginBottom: '5px' }}>{t.emoji}</div>
                         <div style={{ fontSize: '0.75rem', fontWeight: 700, color: damageFormData.type === t.val ? t.color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t.val}</div>
@@ -871,7 +871,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                       <Package size={15} color="var(--text-muted)" />
                       <input type="number" min="1" placeholder="0"
                         value={damageFormData.qty}
-                        onChange={e => setDamageFormData({...damageFormData, qty: parseInt(e.target.value)||0})}
+                        onChange={e => setDamageFormData({ ...damageFormData, qty: parseInt(e.target.value) || 0 })}
                         required
                         style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 600, outline: 'none', fontSize: '0.95rem', color: 'var(--text-primary)' }} />
                     </div>
@@ -891,7 +891,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Description / Remarks</div>
                   <textarea placeholder="Describe how the damage occurred, location, or any additional context..."
                     rows={3} value={damageFormData.description}
-                    onChange={e => setDamageFormData({...damageFormData, description: e.target.value})}
+                    onChange={e => setDamageFormData({ ...damageFormData, description: e.target.value })}
                     style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--bg-primary)' }} />
                 </div>
 
@@ -903,8 +903,8 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   </button>
                   <button type="submit"
                     style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
-                    onMouseEnter={e => e.currentTarget.style.background='#b91c1c'}
-                    onMouseLeave={e => e.currentTarget.style.background='#dc2626'}>
+                    onMouseEnter={e => e.currentTarget.style.background = '#b91c1c'}
+                    onMouseLeave={e => e.currentTarget.style.background = '#dc2626'}>
                     <Send size={15} /> Submit Damage Report
                   </button>
                 </div>

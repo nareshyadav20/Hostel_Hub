@@ -129,6 +129,7 @@ exports.updateAttendance = async (req, res) => {
 
         // Find existing attendance or create new (querying by unique constraint keys only)
         let attendance = await MessAttendance.findOne({ tenantId, date });
+        const previousMealStatus = attendance ? (!!attendance[meal]) : false;
         
         if (!attendance) {
             attendance = new MessAttendance({
@@ -143,6 +144,49 @@ exports.updateAttendance = async (req, res) => {
         }
         
         await attendance.save();
+
+        // Update rewards based on mess attendance change
+        if (status !== previousMealStatus) {
+            try {
+                const Reward = require('../models/tenant/Reward');
+                const pointsToModify = status ? 10 : -10;
+                let reward = await Reward.findOne({ tenant: tenantId });
+                
+                if (!reward) {
+                    const tenantDoc = await Tenant.findById(tenantId);
+                    if (tenantDoc) {
+                        reward = await Reward.create({
+                            tenant: tenantId,
+                            user: tenantDoc.user || tenantId,
+                            points: 100, // Welcome points
+                            lifetimeEarned: 100
+                        });
+                    }
+                }
+                
+                if (reward) {
+                    reward.points = Math.max(0, reward.points + pointsToModify);
+                    if (pointsToModify > 0) {
+                        reward.lifetimeEarned += pointsToModify;
+                        reward.history.push({
+                            reason: `Mess attendance reward for ${meal} on ${date}`,
+                            points: pointsToModify,
+                            type: 'Earned'
+                        });
+                    } else if (pointsToModify < 0) {
+                        reward.history.push({
+                            reason: `Reversed mess attendance reward for ${meal} on ${date}`,
+                            points: pointsToModify,
+                            type: 'Redeemed'
+                        });
+                    }
+                    await reward.save();
+                    console.log(`🎁 [REWARDS] Updated rewards for tenant ${tenantId}: ${pointsToModify} points.`);
+                }
+            } catch (rewardErr) {
+                console.error('⚠️ [REWARDS] Failed to update mess attendance rewards:', rewardErr.message);
+            }
+        }
 
         // Real-time notification for both Tenant (local update) and Owner (analytics)
         const updatePayload = {
@@ -226,6 +270,11 @@ exports.markAllAttendance = async (req, res) => {
     try {
         const { buildingId, date, meal, tenantIds } = req.body;
         
+        const previousAttendances = await MessAttendance.find({ tenantId: { $in: tenantIds }, date });
+        const alreadyAttendingIds = new Set(
+            previousAttendances.filter(a => a[meal] === true).map(a => a.tenantId.toString())
+        );
+
         const operations = tenantIds.map(tId => ({
             updateOne: {
                 filter: { tenantId: tId, date, buildingId },
@@ -236,6 +285,40 @@ exports.markAllAttendance = async (req, res) => {
 
         await MessAttendance.bulkWrite(operations);
         const updated = await MessAttendance.find({ buildingId, date });
+
+        // Reward newly confirmed tenants
+        try {
+            const Reward = require('../models/tenant/Reward');
+            const Tenant = require('../models/Tenant');
+            for (const tId of tenantIds) {
+                if (!alreadyAttendingIds.has(tId.toString())) {
+                    let reward = await Reward.findOne({ tenant: tId });
+                    if (!reward) {
+                        const tenantDoc = await Tenant.findById(tId);
+                        if (tenantDoc) {
+                            reward = await Reward.create({
+                                tenant: tId,
+                                user: tenantDoc.user || tId,
+                                points: 100,
+                                lifetimeEarned: 100
+                            });
+                        }
+                    }
+                    if (reward) {
+                        reward.points += 10;
+                        reward.lifetimeEarned += 10;
+                        reward.history.push({
+                            reason: `Mess attendance reward for ${meal} on ${date} (Marked by Staff)`,
+                            points: 10,
+                            type: 'Earned'
+                        });
+                        await reward.save();
+                    }
+                }
+            }
+        } catch (rewardErr) {
+            console.error('⚠️ [REWARDS] Failed to reward tenants in markAllAttendance:', rewardErr.message);
+        }
 
         // Real-time synchronization for the whole building
         socketService.emitToRoom(buildingId, 'attendanceUpdated', {

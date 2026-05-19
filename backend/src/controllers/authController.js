@@ -3,7 +3,7 @@ const User = require('../models/User');
 const socketService = require('../utils/socketService');
 
 const register = async (req, res) => {
-  const { email, password, name, role, phone } = req.body;
+  const { email, password, name, role, phone, referralCode } = req.body;
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: 'User already exists' });
@@ -20,6 +20,41 @@ const register = async (req, res) => {
         emergencyContact: 'N/A', 
         status: 'PENDING' 
       });
+
+      // Handle referral rewards if referralCode is provided
+      if (referralCode) {
+        try {
+          const mongoose = require('mongoose');
+          if (mongoose.isValidObjectId(referralCode)) {
+            const Reward = require('../models/tenant/Reward');
+            const referrerTenant = await Tenant.findById(referralCode);
+            if (referrerTenant) {
+              let referrerReward = await Reward.findOne({ tenant: referrerTenant._id });
+              if (!referrerReward) {
+                const User = require('../models/User');
+                const referrerUser = await User.findOne({ email: referrerTenant.email });
+                referrerReward = await Reward.create({
+                  tenant: referrerTenant._id,
+                  user: referrerUser ? referrerUser._id : referrerTenant._id,
+                  points: 100, // Welcome points
+                  lifetimeEarned: 100
+                });
+              }
+              referrerReward.points += 200;
+              referrerReward.lifetimeEarned += 200;
+              referrerReward.history.push({
+                reason: `Referral bonus for inviting ${name}`,
+                points: 200,
+                type: 'Earned'
+              });
+              await referrerReward.save();
+              console.log(`🎁 [REWARDS] Credited 200 referral points to referrer ${referrerTenant.name} (${referrerTenant._id})`);
+            }
+          }
+        } catch (rewardErr) {
+          console.error('⚠️ [REWARDS] Failed to reward referrer:', rewardErr.message);
+        }
+      }
       
       // Notify owner dashboard of new signup in real-time
       socketService.emitToOwner('tenantAdded', { _id: newTenant._id, name: newTenant.name, email: newTenant.email, status: 'PENDING' });
