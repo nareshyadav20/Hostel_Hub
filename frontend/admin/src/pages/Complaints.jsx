@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, Filter, AlertTriangle, CheckCircle, Clock, 
   MessageSquare, MoreHorizontal, User, Building, Trash2,
@@ -9,14 +9,16 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import API from '../api/axios';
 
 const Complaints = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-
-  const handleResolveTicket = (id) => showToast(`Ticket ${id} marked as Resolved successfully.`, "success");
-  const handleReassign = (id) => showToast(`Reassigning Specialist for Ticket ${id}...`, "info");
-  const handleNotifyTenant = (id) => showToast(`Notification broadcasted to Tenant for Ticket ${id}.`, "success");
+  
+  const [complaints, setComplaints] = useState([]);
+  const [buildings, setBuildings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
   const [showIntelligencePanel, setShowIntelligencePanel] = useState(false);
   const [intelligenceFilters, setIntelligenceFilters] = useState({
      category: 'All',
@@ -28,96 +30,102 @@ const Complaints = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [selectedTickets, setSelectedTickets] = useState([]);
 
-  const [complaints] = useState([
-    { 
-      id: 'CMP-101', 
-      tenant: 'Arjun Das', 
-      room: '102',
-      property: 'Sapphire PG', 
-      issue: 'AC Leaking in Room 102', 
-      category: 'Maintenance',
-      priority: 'High', 
-      status: 'Open', 
-      time: '2h ago',
-      date: '12 May 2024',
-      assignedTo: 'Suresh Kumar',
-      description: 'Water is dripping from the indoor unit, potentially damaging the wooden floor below. Requires immediate attention.',
-      history: [
-        { status: 'Opened', time: '10:15 AM', note: 'Tenant reported issue via portal.' },
-        { status: 'Assigned', time: '11:00 AM', note: 'Assigned to Suresh (Maintenance Head).' }
-      ]
-    },
-    { 
-      id: 'CMP-102', 
-      tenant: 'Neha Sharma', 
-      room: '305',
-      property: 'Elite Living', 
-      issue: 'Wi-Fi connectivity issues', 
-      category: 'IT/Utility',
-      priority: 'Medium', 
-      status: 'In Progress', 
-      time: '5h ago',
-      date: '12 May 2024',
-      assignedTo: 'Rajesh V.',
-      description: 'Frequent disconnects in the west wing of the 3rd floor. Signal strength is weak.',
-      history: [
-        { status: 'Opened', time: '08:00 AM', note: 'Tenant reported intermittent connection.' },
-        { status: 'In Progress', time: '09:30 AM', note: 'Router reset performed, testing cables.' }
-      ]
-    },
-    { 
-      id: 'CMP-103', 
-      tenant: 'Vikram Singh', 
-      room: 'B-04',
-      property: 'Tech Park PG', 
-      issue: 'Water heater not working', 
-      category: 'Maintenance',
-      priority: 'High', 
-      status: 'Resolved', 
-      time: '1d ago',
-      date: '11 May 2024',
-      assignedTo: 'Anita M.',
-      description: 'Geyser in the attached bathroom is not heating. Power light is on but no heat.',
-      history: [
-        { status: 'Opened', time: 'Yesterday', note: 'Urgent request for hot water.' },
-        { status: 'Resolved', time: 'Yesterday', note: 'Heating element replaced. Verified by tenant.' }
-      ]
-    },
-    { 
-      id: 'CMP-104', 
-      tenant: 'Rahul Mehta', 
-      room: '412',
-      property: 'Sapphire PG', 
-      issue: 'Broken window latch', 
-      category: 'Security',
-      priority: 'Low', 
-      status: 'Open', 
-      time: '3h ago',
-      date: '12 May 2024',
-      assignedTo: 'Suresh Kumar',
-      description: 'The window latch is loose and doesn\'t lock properly. Safety concern for personal belongings.',
-      history: [
-        { status: 'Opened', time: '09:45 AM', note: 'Logged as minor maintenance.' }
-      ]
-    },
-  ]);
+  const fetchComplaintsData = async () => {
+    try {
+      setLoading(true);
+      const [compRes, buildRes] = await Promise.all([
+        API.get('/complaints'),
+        API.get('/buildings')
+      ]);
+      setComplaints(compRes.data || []);
+      setBuildings(buildRes.data || []);
+    } catch (err) {
+      console.error('Error fetching complaints:', err);
+      showToast('Failed to sync complaints from backend.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const stats = [
-    { label: 'Total Tickets', value: '48', icon: <MessageSquare size={20} />, color: 'primary', desc: 'Active this month' },
-    { label: 'Critical Issues', value: '05', icon: <AlertTriangle size={20} />, color: 'danger', desc: 'High priority' },
-    { label: 'In Resolution', value: '12', icon: <Clock size={20} />, color: 'warning', desc: 'Pending action' },
-    { label: 'Resolved (24h)', value: '31', icon: <CheckCircle size={20} />, color: 'success', desc: 'Completed tasks' }
-  ];
+  useEffect(() => {
+    fetchComplaintsData();
+  }, []);
+
+  const handleResolveTicket = async (id) => {
+    try {
+      await API.patch(`/complaints/${id}`, { status: 'Resolved' });
+      showToast(`Ticket resolved successfully.`, "success");
+      fetchComplaintsData();
+    } catch (err) {
+      showToast('Failed to update ticket status.', 'error');
+    }
+  };
+
+  const handleReassign = async (id) => {
+    const technician = prompt("Enter Technician name to assign to this complaint:");
+    if (!technician) return;
+    try {
+      await API.patch(`/complaints/${id}`, { assignedTo: technician, status: 'In Progress' });
+      showToast(`Reassigned to ${technician} successfully.`, "success");
+      fetchComplaintsData();
+    } catch (err) {
+      showToast('Failed to assign technician.', 'error');
+    }
+  };
+
+  const handleNotifyTenant = (id, tenantEmail) => {
+    showToast(`Notification broadcasted to Tenant (${tenantEmail || 'registered email'}) for Ticket ${id}.`, "success");
+  };
 
   const getCategoryIcon = (cat) => {
     switch(cat) {
-      case 'Maintenance': return <Wrench size={16} className="text-indigo-500" />;
-      case 'IT/Utility': return <Zap size={16} className="text-primary" />;
+      case 'Maintenance': 
+      case 'Plumbing': 
+      case 'Electrical': 
+        return <Wrench size={16} className="text-indigo-500" />;
+      case 'WiFi / IT': return <Zap size={16} className="text-primary" />;
       case 'Security': return <ShieldAlert size={16} className="text-rose-500" />;
       case 'Billing': return <DollarSign size={16} className="text-emerald-500" />;
       default: return <Volume2 size={16} className="text-slate-500" />;
     }
   };
+
+  // Compute dynamic stats from fetched data
+  const totalCount = complaints.length;
+  const criticalCount = complaints.filter(c => c.priority === 'High').length;
+  const progressCount = complaints.filter(c => c.status === 'In Progress' || c.status === 'Pending').length;
+  const resolvedCount = complaints.filter(c => c.status === 'Resolved').length;
+
+  const stats = [
+    { label: 'Total Tickets', value: totalCount.toString().padStart(2, '0'), icon: <MessageSquare size={20} />, color: 'primary', desc: 'Total tracked' },
+    { label: 'Critical Issues', value: criticalCount.toString().padStart(2, '0'), icon: <AlertTriangle size={20} />, color: 'danger', desc: 'High priority' },
+    { label: 'Pending / In Progress', value: progressCount.toString().padStart(2, '0'), icon: <Clock size={20} />, color: 'warning', desc: 'Needs action' },
+    { label: 'Resolved Tickets', value: resolvedCount.toString().padStart(2, '0'), icon: <CheckCircle size={20} />, color: 'success', desc: 'Completed tasks' }
+  ];
+
+  const filteredComplaints = complaints.filter(c => {
+    const titleVal = c.title || c.issue || '';
+    const idVal = c._id || '';
+    const tenantName = c.tenant?.name || 'Guest';
+    const buildingName = c.buildingId?.name || 'All Properties';
+
+    const matchesSearch = titleVal.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          idVal.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          tenantName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Status mapping check: DB has 'Pending', 'In Progress', 'Resolved', 'Rejected'
+    const statusMap = c.status === 'Pending' ? 'Open' : c.status;
+    const matchesStatus = activeFilter === 'All' || 
+                          (activeFilter === 'Open' && statusMap === 'Pending') ||
+                          (activeFilter === 'In Progress' && statusMap === 'In Progress') ||
+                          (activeFilter === 'Resolved' && statusMap === 'Resolved');
+
+    const matchesCategory = intelligenceFilters.category === 'All' || c.category === intelligenceFilters.category;
+    const matchesPriority = intelligenceFilters.priority === 'All' || c.priority === intelligenceFilters.priority;
+    const matchesProperty = intelligenceFilters.property === 'All' || c.buildingId?._id === intelligenceFilters.property;
+
+    return matchesSearch && matchesStatus && matchesCategory && matchesPriority && matchesProperty;
+  });
 
   return (
     <div className="space-y-10 pb-20">
@@ -135,8 +143,8 @@ const Complaints = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
           <div key={i} className="card-classic p-6 group hover:shadow-glow transition-all duration-500 relative overflow-hidden">
-             <div className={`absolute -right-4 -bottom-4 w-24 h-24 bg-${stat.color}/5 rounded-full blur-2xl group-hover:bg-${stat.color}/10 transition-all`} />
-             <div className={`w-12 h-12 rounded-2xl bg-${stat.color}/10 text-${stat.color} flex items-center justify-center mb-4 border border-${stat.color}/10`}>
+             <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-card/5 rounded-full blur-2xl group-hover:bg-primary/5 transition-all" />
+             <div className={`w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4 border border-primary/10`}>
                 {stat.icon}
              </div>
              <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">{stat.label}</p>
@@ -209,7 +217,10 @@ const Complaints = () => {
                      >
                         <option value="All">All Categories</option>
                         <option value="Maintenance">Maintenance</option>
-                        <option value="IT/Utility">IT / Utility</option>
+                        <option value="Plumbing">Plumbing</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Housekeeping">Housekeeping</option>
+                        <option value="WiFi / IT">WiFi / IT</option>
                         <option value="Security">Security</option>
                         <option value="Billing">Billing</option>
                      </select>
@@ -239,200 +250,206 @@ const Complaints = () => {
                         onChange={(e) => setIntelligenceFilters({ ...intelligenceFilters, property: e.target.value })}
                      >
                         <option value="All">All Facilities</option>
-                        <option value="Sapphire PG">Sapphire PG</option>
-                        <option value="Elite Living">Elite Living</option>
+                        {buildings.map(b => (
+                          <option key={b._id} value={b._id}>{b.name}</option>
+                        ))}
                       </select>
-                   </div>
-                </div>
-             </motion.div>
-          )}
-       </AnimatePresence>
+                    </div>
+                 </div>
+              </motion.div>
+           )}
+        </AnimatePresence>
   
-
-      {/* --- COMPLAINT MANIFEST (TABULAR) --- */}
-      <div className="card-classic overflow-hidden border border-divider/50 shadow-premium bg-white/50 dark:bg-card/50">
-         <div className="overflow-x-auto scrollbar-hide">
-            <table className="w-full text-left border-collapse whitespace-nowrap">
-               <thead>
-                  <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-divider sticky top-0 z-20 backdrop-blur-md">
-                     <th className="py-5 px-8 w-12">
-                        <input 
-                          type="checkbox" 
-                          className="w-4 h-4 rounded border-divider text-primary focus:ring-primary/20 transition-all cursor-pointer"
-                          onChange={(e) => {
-                            if (e.target.checked) setSelectedTickets(complaints.map(b => b.id));
-                            else setSelectedTickets([]);
-                          }}
-                        />
-                     </th>
-                     <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Issue / Ticket ID</th>
-                     <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Reporter Info</th>
-                     <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Category</th>
-                     <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Priority</th>
-                     <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Status</th>
-                     <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest text-right">Actions</th>
-                  </tr>
-               </thead>
-               <tbody className="divide-y divide-border/30">
-                  {complaints
-                    .filter(c => {
-                       const matchesSearch = c.issue.toLowerCase().includes(searchTerm.toLowerCase()) || c.id.toLowerCase().includes(searchTerm.toLowerCase()) || c.tenant.toLowerCase().includes(searchTerm.toLowerCase());
-                       const matchesStatus = activeFilter === 'All' || c.status === activeFilter;
-                        const matchesCategory = intelligenceFilters.category === 'All' || c.category === intelligenceFilters.category;
-                        const matchesPriority = intelligenceFilters.priority === 'All' || c.priority === intelligenceFilters.priority;
-                        const matchesProperty = intelligenceFilters.property === 'All' || c.property === intelligenceFilters.property;
-                        return matchesSearch && matchesStatus && matchesCategory && matchesPriority && matchesProperty;
-                    })
-                    .map((c) => (
-                    <React.Fragment key={c.id}>
-                       <tr 
-                         onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
-                         className={`group hover:bg-slate-50/50 dark:hover:bg-white/1 transition-all cursor-pointer ${expandedId === c.id ? 'bg-primary/5' : ''}`}
-                       >
-                          <td className="py-5 px-8" onClick={(e) => e.stopPropagation()}>
-                             <input 
-                               type="checkbox" 
-                               checked={selectedTickets.includes(c.id)}
-                               onChange={() => {
-                                 if (selectedTickets.includes(c.id)) setSelectedTickets(selectedTickets.filter(id => id !== c.id));
-                                 else setSelectedTickets([...selectedTickets, c.id]);
-                               }}
-                               className="w-4 h-4 rounded border-divider text-primary focus:ring-primary/20 transition-all cursor-pointer"
-                             />
-                          </td>
-                          <td className="py-5 px-4">
-                             <div>
-                                <p className="text-[13px] font-black text-text-primary uppercase tracking-tight">{c.issue}</p>
-                                <p className="text-[10px] font-bold text-text-muted italic">{c.id} • Logged {c.time}</p>
-                             </div>
-                          </td>
-                          <td className="py-5 px-4">
-                             <div className="flex flex-col">
-                                <span className="text-[12px] font-black text-text-primary italic">{c.tenant}</span>
-                                <span className="text-[10px] font-bold text-text-muted uppercase tracking-tighter">Room {c.room} • {c.property}</span>
-                             </div>
-                          </td>
-                          <td className="py-5 px-4">
-                             <div className="flex items-center gap-2">
-                                {getCategoryIcon(c.category)}
-                                <span className="text-[11px] font-black text-text-primary italic">{c.category}</span>
-                             </div>
-                          </td>
-                          <td className="py-5 px-4">
-                             <div className="flex items-center gap-2">
-                                <div className={`w-1.5 h-1.5 rounded-full ${c.priority === 'High' ? 'bg-rose-500 animate-pulse' : c.priority === 'Medium' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                                <span className={`text-[10px] font-black uppercase tracking-widest ${c.priority === 'High' ? 'text-rose-500' : 'text-text-muted'}`}>{c.priority}</span>
-                             </div>
-                          </td>
-                          <td className="py-5 px-4">
-                             <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm ${
-                               c.status === 'Resolved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
-                               c.status === 'In Progress' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
-                               'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                             }`}>{c.status}</span>
-                          </td>
-                          <td className="py-5 px-8 text-right">
-                             <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button className="p-2 text-text-muted hover:text-primary transition-all"><Edit size={16} /></button>
-                                <button className="p-2 text-text-muted hover:text-indigo-500 transition-all"><MessageSquare size={16} /></button>
-                                <button className="p-2 text-text-muted hover:text-rose-500 transition-all"><Trash2 size={16} /></button>
-                             </div>
-                          </td>
-                       </tr>
-                       
-                       <AnimatePresence>
-                          {expandedId === c.id && (
-                             <tr>
-                                <td colSpan={7} className="p-0 border-none">
-                                   <motion.div 
-                                      initial={{ height: 0, opacity: 0 }}
-                                      animate={{ height: 'auto', opacity: 1 }}
-                                      exit={{ height: 0, opacity: 0 }}
-                                      className="bg-slate-50/30 dark:bg-white/[0.01] overflow-hidden"
-                                   >
-                                      <div className="p-10 grid grid-cols-1 lg:grid-cols-3 gap-12 border-b border-divider/50">
-                                         <div className="space-y-8">
-                                            <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
-                                              <Building size={14} className="text-primary" /> Case Parameters
-                                            </h4>
-                                            <div className="space-y-4">
-                                               <div className="p-4 rounded-2xl bg-white dark:bg-card border border-divider shadow-subtle">
-                                                  <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-1">Issue Description</p>
-                                                  <p className="text-[12px] font-medium text-text-primary leading-relaxed">{c.description}</p>
-                                               </div>
-                                               <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-card border border-divider shadow-subtle">
-                                                  <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary"><User size={16} /></div>
-                                                  <div>
-                                                     <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">Assigned Specialist</p>
-                                                     <p className="text-[12px] font-black text-text-primary">{c.assignedTo}</p>
+      {loading ? (
+        <div className="py-24 text-center">
+          <div className="premium-spinner mx-auto mb-4"></div>
+          <p className="text-sm font-black text-text-muted uppercase tracking-widest">Synchronizing grievance tickets from MongoDB...</p>
+        </div>
+      ) : (
+        /* --- COMPLAINT MANIFEST (TABULAR) --- */
+        <div className="card-classic overflow-hidden border border-divider/50 shadow-premium bg-white/50 dark:bg-card/50">
+           <div className="overflow-x-auto scrollbar-hide">
+              <table className="w-full text-left border-collapse whitespace-nowrap">
+                 <thead>
+                    <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-divider sticky top-0 z-20 backdrop-blur-md">
+                       <th className="py-5 px-8 w-12">
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 rounded border-divider text-primary focus:ring-primary/20 transition-all cursor-pointer"
+                            onChange={(e) => {
+                              if (e.target.checked) setSelectedTickets(filteredComplaints.map(b => b._id));
+                              else setSelectedTickets([]);
+                            }}
+                          />
+                       </th>
+                       <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Issue / Ticket ID</th>
+                       <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Reporter Info</th>
+                       <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Category</th>
+                       <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Priority</th>
+                       <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Status</th>
+                       <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest text-right">Actions</th>
+                    </tr>
+                 </thead>
+                 <tbody className="divide-y divide-border/30">
+                    {filteredComplaints.map((c) => (
+                      <React.Fragment key={c._id}>
+                         <tr 
+                           onClick={() => setExpandedId(expandedId === c._id ? null : c._id)}
+                           className={`group hover:bg-slate-50/50 dark:hover:bg-white/1 transition-all cursor-pointer ${expandedId === c._id ? 'bg-primary/5' : ''}`}
+                         >
+                            <td className="py-5 px-8" onClick={(e) => e.stopPropagation()}>
+                               <input 
+                                 type="checkbox" 
+                                 checked={selectedTickets.includes(c._id)}
+                                 onChange={() => {
+                                   if (selectedTickets.includes(c._id)) setSelectedTickets(selectedTickets.filter(id => id !== c._id));
+                                   else setSelectedTickets([...selectedTickets, c._id]);
+                                 }}
+                                 className="w-4 h-4 rounded border-divider text-primary focus:ring-primary/20 transition-all cursor-pointer"
+                               />
+                            </td>
+                            <td className="py-5 px-4">
+                               <div>
+                                  <p className="text-[13px] font-black text-text-primary uppercase tracking-tight">{c.title || c.issue}</p>
+                                  <p className="text-[10px] font-bold text-text-muted italic">{c._id} • Logged {new Date(c.createdAt).toLocaleDateString()}</p>
+                               </div>
+                            </td>
+                            <td className="py-5 px-4">
+                               <div className="flex flex-col">
+                                  <span className="text-[12px] font-black text-text-primary italic">{c.tenant?.name || 'Guest Tenant'}</span>
+                                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-tighter">Room {c.roomId?.roomNumber || 'N/A'} • {c.buildingId?.name || 'All Properties'}</span>
+                               </div>
+                            </td>
+                            <td className="py-5 px-4">
+                               <div className="flex items-center gap-2">
+                                  {getCategoryIcon(c.category)}
+                                  <span className="text-[11px] font-black text-text-primary italic">{c.category}</span>
+                                </div>
+                             </td>
+                             <td className="py-5 px-4">
+                                <div className="flex items-center gap-2">
+                                   <div className={`w-1.5 h-1.5 rounded-full ${c.priority === 'High' ? 'bg-rose-500 animate-pulse' : c.priority === 'Medium' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                                   <span className={`text-[10px] font-black uppercase tracking-widest ${c.priority === 'High' ? 'text-rose-500' : 'text-text-muted'}`}>{c.priority}</span>
+                                </div>
+                             </td>
+                             <td className="py-5 px-4">
+                                <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm ${
+                                  c.status === 'Resolved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
+                                  c.status === 'In Progress' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
+                                  'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                                }`}>{c.status}</span>
+                             </td>
+                             <td className="py-5 px-8 text-right">
+                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                   <button className="p-2 text-text-muted hover:text-primary transition-all"><Edit size={16} /></button>
+                                   <button className="p-2 text-text-muted hover:text-indigo-500 transition-all"><MessageSquare size={16} /></button>
+                                </div>
+                             </td>
+                          </tr>
+                          
+                          <AnimatePresence>
+                             {expandedId === c._id && (
+                                <tr>
+                                   <td colSpan={7} className="p-0 border-none">
+                                      <motion.div 
+                                         initial={{ height: 0, opacity: 0 }}
+                                         animate={{ height: 'auto', opacity: 1 }}
+                                         exit={{ height: 0, opacity: 0 }}
+                                         className="bg-slate-50/30 dark:bg-white/[0.01] overflow-hidden"
+                                      >
+                                         <div className="p-10 grid grid-cols-1 lg:grid-cols-3 gap-12 border-b border-divider/50">
+                                            <div className="space-y-8">
+                                               <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+                                                 <Building size={14} className="text-primary" /> Case Parameters
+                                               </h4>
+                                               <div className="space-y-4">
+                                                  <div className="p-4 rounded-2xl bg-white dark:bg-card border border-divider shadow-subtle">
+                                                     <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-1">Issue Description</p>
+                                                     <p className="text-[12px] font-medium text-text-primary leading-relaxed">{c.description}</p>
                                                   </div>
-                                               </div>
-                                            </div>
-                                         </div>
-
-                                         <div className="space-y-8">
-                                            <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
-                                              <Clock size={14} className="text-warning" /> Resolution Pulse
-                                            </h4>
-                                            <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-border">
-                                               {c.history.map((h, i) => (
-                                                  <div key={i} className="relative">
-                                                     <div className="absolute -left-[20px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary border-4 border-background shadow-[0_0_0_4px_rgba(var(--color-primary),0.1)]" />
-                                                     <div className="flex justify-between items-start">
-                                                        <span className="text-[11px] font-black text-text-primary uppercase tracking-tight">{h.status}</span>
-                                                        <span className="text-[9px] font-bold text-text-muted">{h.time}</span>
+                                                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-card border border-divider shadow-subtle">
+                                                     <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary"><User size={16} /></div>
+                                                     <div>
+                                                        <p className="text-[9px] font-black text-text-muted uppercase tracking-widest">Assigned Specialist</p>
+                                                        <p className="text-[12px] font-black text-text-primary">{c.assignedTo || 'Unassigned Technician'}</p>
                                                      </div>
-                                                     <p className="text-[10px] text-text-muted mt-1 italic">"{h.note}"</p>
                                                   </div>
-                                               ))}
+                                               </div>
                                             </div>
-                                         </div>
 
-                                         <div className="space-y-8">
-                                            <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
-                                              <CheckCircle2 size={14} className="text-success" /> Decision Matrix
-                                            </h4>
-                                            <div className="grid grid-cols-1 gap-3">
-                                               <button onClick={() => handleResolveTicket(c.id)} className="w-full py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all group">
-                                                  Resolve Ticket <CheckCircle size={14} className="inline ml-1 group-hover:scale-110 transition-transform" />
-                                               </button>
-                                               <button onClick={() => handleReassign(c.id)} className="w-full py-4 bg-white dark:bg-card border border-divider text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Reassign Specialist</button>
-                                               <button onClick={() => handleNotifyTenant(c.id)} className="w-full py-4 bg-primary/5 text-primary border border-primary/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all">Notify Tenant</button>
+                                            <div className="space-y-8">
+                                               <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+                                                 <Clock size={14} className="text-warning" /> Resolution Pulse
+                                               </h4>
+                                               <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-border">
+                                                  <div className="relative">
+                                                     <div className="absolute -left-[20px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary border-4 border-background" />
+                                                     <div className="flex justify-between items-start">
+                                                        <span className="text-[11px] font-black text-text-primary uppercase tracking-tight">Opened</span>
+                                                        <span className="text-[9px] font-bold text-text-muted">{new Date(c.createdAt).toLocaleTimeString()}</span>
+                                                     </div>
+                                                     <p className="text-[10px] text-text-muted mt-1 italic">"Logged via tenant portal."</p>
+                                                  </div>
+                                                  {c.assignedTo && (
+                                                    <div className="relative">
+                                                       <div className="absolute -left-[20px] top-1.5 w-2.5 h-2.5 rounded-full bg-warning border-4 border-background" />
+                                                       <div className="flex justify-between items-start">
+                                                          <span className="text-[11px] font-black text-text-primary uppercase tracking-tight">Assigned</span>
+                                                          <span className="text-[9px] font-bold text-text-muted">In Progress</span>
+                                                       </div>
+                                                       <p className="text-[10px] text-text-muted mt-1 italic">"Assigned to {c.assignedTo}"</p>
+                                                    </div>
+                                                  )}
+                                                  {c.status === 'Resolved' && (
+                                                    <div className="relative">
+                                                       <div className="absolute -left-[20px] top-1.5 w-2.5 h-2.5 rounded-full bg-success border-4 border-background" />
+                                                       <div className="flex justify-between items-start">
+                                                          <span className="text-[11px] font-black text-text-primary uppercase tracking-tight">Resolved</span>
+                                                          <span className="text-[9px] font-bold text-text-muted">Completed</span>
+                                                       </div>
+                                                       <p className="text-[10px] text-text-muted mt-1 italic">"Issue resolved."</p>
+                                                    </div>
+                                                  )}
+                                               </div>
+                                            </div>
+
+                                            <div className="space-y-8">
+                                               <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+                                                 <CheckCircle2 size={14} className="text-success" /> Decision Matrix
+                                               </h4>
+                                               <div className="grid grid-cols-1 gap-3">
+                                                  {c.status !== 'Resolved' && (
+                                                    <button onClick={() => handleResolveTicket(c._id)} className="w-full py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all group">
+                                                       Resolve Ticket <CheckCircle size={14} className="inline ml-1 group-hover:scale-110 transition-transform" />
+                                                    </button>
+                                                  )}
+                                                  <button onClick={() => handleReassign(c._id)} className="w-full py-4 bg-white dark:bg-card border border-divider text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Reassign Specialist</button>
+                                                  <button onClick={() => handleNotifyTenant(c._id, c.tenant?.email)} className="w-full py-4 bg-primary/5 text-primary border border-primary/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all">Notify Tenant</button>
+                                               </div>
                                             </div>
                                          </div>
-                                      </div>
-                                   </motion.div>
-                                </td>
-                             </tr>
-                          )}
-                       </AnimatePresence>
-                    </React.Fragment>
-                  ))}
-               </tbody>
-            </table>
+                                      </motion.div>
+                                   </td>
+                                </tr>
+                             )}
+                          </AnimatePresence>
+                       </React.Fragment>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
          </div>
-      </div>
+      )}
 
       {/* --- PAGINATION --- */}
       <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-6 p-6 card-classic bg-slate-50/50 dark:bg-white/2">
          <div className="flex items-center gap-4">
-            <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Showing 4 of 48 reports</span>
+            <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Showing {filteredComplaints.length} of {totalCount} reports</span>
             <div className="h-4 w-px bg-border" />
             <div className="flex items-center gap-2 bg-background border border-divider rounded-xl px-3 py-1.5 shadow-subtle">
                <FileText size={14} className="text-primary" />
-               <button className="text-[10px] font-black uppercase tracking-widest text-text-secondary">Generate Audit Log</button>
+               <button className="text-[10px] font-black uppercase tracking-widest text-text-secondary" onClick={fetchComplaintsData}>Refresh Dashboard</button>
             </div>
-         </div>
-         <div className="flex items-center gap-2">
-            <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-divider rounded-xl text-text-muted opacity-50 cursor-not-allowed italic">Prev Manifest</button>
-            <div className="flex gap-1">
-               {[1, 2, 3].map((p, i) => (
-                 <button key={i} className={`w-8 h-8 rounded-lg text-[10px] font-black flex items-center justify-center transition-all ${p === 1 ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-text-muted hover:text-text-primary hover:bg-background'}`}>
-                   {p}
-                 </button>
-               ))}
-            </div>
-            <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-divider rounded-xl text-text-secondary hover:border-primary hover:text-primary transition-all shadow-subtle italic">Next Manifest</button>
          </div>
       </div>
     </div>

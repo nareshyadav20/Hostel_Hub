@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { createBooking, getMyBookings, getAllBookings } = require('../controllers/bookingController');
+const { createBooking, getMyBookings, getAllBookings, updateBookingStatus } = require('../controllers/bookingController');
 
 router.post('/', createBooking);
 router.get('/me', getMyBookings);
 router.get('/', getAllBookings);
+router.put('/:id', updateBookingStatus);
 
 module.exports = router;

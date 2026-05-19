@@ -12,6 +12,7 @@ router.patch('/owners/:id/status', adminController.updateOwnerStatus);
 
 // Platform statistics
 router.get('/stats', adminController.getPlatformStats);
+router.get('/analytics', adminController.getPlatformAnalytics);
 
 // Admin profile management
 router.get('/profile', adminController.getAdminProfile);
