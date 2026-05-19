@@ -181,7 +181,7 @@ const Portfolio = () => {
   useEffect(() => {
     if (!isAddModalOpen) return;
     // Only trigger if user has typed something meaningful
-    const hasData = formData.name || formData.addr1 || formData.city || formData.gender || formData.rentBed;
+    const hasData = formData.name || formData.addr1 || formData.city || formData.gender || formData.rentSingle || formData.rentDouble || formData.rentTriple;
     if (!hasData) return;
     const t = setTimeout(() => {
       saveDraftToBackend(formData, currentStep, activeDraftId);
@@ -274,7 +274,7 @@ const Portfolio = () => {
     
     setIsSubmitting(true);
     try {
-      const extendedDesc = `# Property Overview\n**Type:** ${formData.propertyType} | **Gender:** ${formData.gender}\n**Capacity:** ${formData.totalRooms} Rooms, ${formData.totalBeds} Beds\n# Pricing\n- Rent: ₹${formData.rentBed}/bed, ₹${formData.rentRoom}/room\n- Deposit: ₹${formData.deposit}\n# Contact: ${formData.ownerName} (${formData.phone})\n---\n${formData.longDesc || formData.shortDesc || ''}`;
+      const extendedDesc = `# Property Overview\n**Type:** ${formData.propertyType} | **Gender:** ${formData.gender}\n**Capacity:** ${formData.totalRooms} Rooms, ${formData.totalBeds} Beds\n# Pricing\n- Single Rent: ₹${formData.rentSingle}/mo | Double: ₹${formData.rentDouble}/mo | Triple: ₹${formData.rentTriple}/mo\n- Rent per Room: ₹${formData.rentRoom || 'N/A'}/room\n- Deposit: ₹${formData.deposit}\n# Contact: ${formData.ownerName} (${formData.phone})\n---\n${formData.longDesc || formData.shortDesc || ''}`;
 
       const payload = {
         name: formData.name || 'New Hostel',
@@ -283,7 +283,7 @@ const Portfolio = () => {
         description: extendedDesc,
         amenities: formData.amenities || [],
         images: formData.gallery?.length > 0 ? formData.gallery : (formData.coverImage ? [formData.coverImage] : []),
-        startingPrice: parseInt(formData.rentBed) || 5000,
+        startingPrice: parseInt(formData.rentTriple) || parseInt(formData.rentDouble) || parseInt(formData.rentSingle) || 5000,
         securityDeposit: parseInt(formData.deposit) || 0,
         maintenanceCharges: parseInt(formData.maintenance) || 799,
         foodCharges: parseInt(formData.foodCharges) || 3000,
@@ -612,24 +612,14 @@ const Portfolio = () => {
       );
       case 4: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>Rent per Bed *</label><input required type="number" value={formData.rentBed} onChange={e => {
-              const bedVal = e.target.value;
-              setFormData({
-                ...formData,
-                rentBed: bedVal,
-                rentSingle: formData.rentSingle || (bedVal ? (parseInt(bedVal) * 2).toString() : ''),
-                rentDouble: formData.rentDouble || (bedVal ? Math.round(parseInt(bedVal) * 1.3333).toString() : ''),
-                rentTriple: formData.rentTriple || bedVal
-              });
-            }} /></div>
-            <div className="input-group"><label>Rent per Room</label><input type="number" value={formData.rentRoom} onChange={e => setFormData({...formData, rentRoom: e.target.value})} /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+            <div className="input-group"><label>Rent per Room</label><input type="number" value={formData.rentRoom} onChange={e => setFormData({...formData, rentRoom: e.target.value})} placeholder="e.g. 25000" /></div>
           </div>
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>1 Sharing (Single) Rent</label><input type="number" value={formData.rentSingle} onChange={e => setFormData({...formData, rentSingle: e.target.value})} placeholder="e.g. 18000" /></div>
-            <div className="input-group"><label>2 Sharing Rent</label><input type="number" value={formData.rentDouble} onChange={e => setFormData({...formData, rentDouble: e.target.value})} placeholder="e.g. 12000" /></div>
-            <div className="input-group"><label>3 Sharing Rent</label><input type="number" value={formData.rentTriple} onChange={e => setFormData({...formData, rentTriple: e.target.value})} placeholder="e.g. 9000" /></div>
+            <div className="input-group"><label>1 Sharing (Single) Rent *</label><input required type="number" value={formData.rentSingle} onChange={e => setFormData({...formData, rentSingle: e.target.value})} placeholder="e.g. 18000" /></div>
+            <div className="input-group"><label>2 Sharing Rent *</label><input required type="number" value={formData.rentDouble} onChange={e => setFormData({...formData, rentDouble: e.target.value})} placeholder="e.g. 12000" /></div>
+            <div className="input-group"><label>3 Sharing Rent *</label><input required type="number" value={formData.rentTriple} onChange={e => setFormData({...formData, rentTriple: e.target.value})} placeholder="e.g. 9000" /></div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
