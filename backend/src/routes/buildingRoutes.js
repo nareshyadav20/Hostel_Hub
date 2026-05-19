@@ -20,19 +20,8 @@ router.patch('/:id', buildingController.updateBuilding);
 router.delete('/:id', buildingController.deleteBuilding);
 
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const dir = path.join(__dirname, '../../uploads');
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-        cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-        cb(null, `building_${Date.now()}_${file.originalname}`);
-    }
-});
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 router.post('/upload', upload.array('photos', 10), buildingController.uploadPhotos);

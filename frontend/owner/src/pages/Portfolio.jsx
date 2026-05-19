@@ -517,24 +517,27 @@ const Portfolio = () => {
             />
             {formData.gallery && formData.gallery.length > 0 ? (
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-                {formData.gallery.map((img, i) => (
-                  <img
-                    key={i}
-                    src={`http://localhost:5000${img}`}
-                    alt={`Upload ${i}`}
-                    style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: formData.coverImage === img ? '2px solid var(--accent-primary)' : '1px solid #e2e8f0', cursor: 'zoom-in' }}
-                    onClick={() => setModalInfo({ isOpen: true, image: `http://localhost:5000${img}` })}
-                    onDoubleClick={() => setFormData({ ...formData, coverImage: img })}
-                    title="Click to preview, double-click to set as cover"
-                  />
-                ))}
+                {formData.gallery.map((img, i) => {
+                  const fullUrl = (img.startsWith('data:') || img.startsWith('http')) ? img : `http://localhost:5000${img}`;
+                  return (
+                    <img
+                      key={i}
+                      src={fullUrl}
+                      alt={`Upload ${i}`}
+                      style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: formData.coverImage === img ? '2px solid var(--accent-primary)' : '1px solid #e2e8f0', cursor: 'zoom-in' }}
+                      onClick={() => setModalInfo({ isOpen: true, image: fullUrl })}
+                      onDoubleClick={() => setFormData({ ...formData, coverImage: img })}
+                      title="Click to preview, double-click to set as cover"
+                    />
+                  );
+                })}
               </div>
             ) : formData.coverImage && (
               <img
-                src={formData.coverImage.startsWith('http') ? formData.coverImage : `http://localhost:5000${formData.coverImage}`}
+                src={(formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `http://localhost:5000${formData.coverImage}`}
                 alt="Cover"
                 style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', marginTop: '0.5rem', cursor: 'zoom-in' }}
-                onClick={() => setModalInfo({ isOpen: true, image: formData.coverImage.startsWith('http') ? formData.coverImage : `http://localhost:5000${formData.coverImage}` })}
+                onClick={() => setModalInfo({ isOpen: true, image: (formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `http://localhost:5000${formData.coverImage}` })}
               />
             )}
             <small style={{ color: '#64748B', fontSize: '0.75rem', marginTop: '0.25rem' }}>Click an image to preview. Double-click to set as cover.</small>
@@ -1539,7 +1542,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick }) => {
 
   const images = useMemo(() => {
     if (building.images && building.images.length > 0) {
-      return building.images.map(img => img.startsWith('http') ? img : `http://localhost:5000${img}`);
+      return building.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `http://localhost:5000${img}`);
     }
     return [
       'https://images.unsplash.com/photo-1555854817-5b2260d19dca?auto=format&fit=crop&q=80&w=800',

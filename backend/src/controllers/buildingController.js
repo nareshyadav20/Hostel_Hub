@@ -239,7 +239,10 @@ const uploadPhotos = async (req, res) => {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
     }
-    const photoUrls = req.files.map(file => `/uploads/${file.filename}`);
+    const photoUrls = req.files.map(file => {
+      const b64 = file.buffer.toString('base64');
+      return `data:${file.mimetype};base64,${b64}`;
+    });
 
     if (buildingId) {
       const photoDocs = photoUrls.map(url => ({
@@ -249,6 +252,13 @@ const uploadPhotos = async (req, res) => {
       await BuildingPhoto.insertMany(photoDocs, { ordered: false }).catch(err => {
         console.warn('[DEBUG] BuildingPhoto partial insertion warning:', err.message);
       });
+      
+      const building = await Building.findById(buildingId);
+      if (building) {
+        if (!building.images) building.images = [];
+        building.images.push(...photoUrls);
+        await building.save();
+      }
     }
 
     res.status(200).json({ message: 'Photos uploaded successfully', photoUrls });

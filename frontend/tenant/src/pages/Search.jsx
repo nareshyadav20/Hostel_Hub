@@ -16,10 +16,23 @@ const ICONS = {
 };
 
 
-const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => (
+const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
+  const [imgIdx, setImgIdx] = useState(0);
+
+  useEffect(() => {
+    if (!hostel.images || hostel.images.length <= 1) return;
+    const timer = setInterval(() => {
+      setImgIdx(prev => (prev + 1) % hostel.images.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [hostel.images]);
+
+  const currentImage = hostel.images && hostel.images.length > 0 ? hostel.images[imgIdx] : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800';
+
+  return (
   <div className="search-hostel-card-pro">
-    <div className="card-media-side" onClick={() => onImageClick(hostel.image)} style={{ cursor: 'zoom-in' }}>
-      <img src={hostel.image} alt={hostel.name} className="hostel-main-img" />
+    <div className="card-media-side" onClick={() => onImageClick(currentImage)} style={{ cursor: 'zoom-in' }}>
+      <img src={currentImage} alt={hostel.name} className="hostel-main-img" style={{ transition: 'opacity 0.5s ease-in-out' }} />
       <div className="card-image-overlays">
         <div className="badge-row-top">
           {hostel.popularityLabel && <span className="label-demand">{hostel.popularityLabel}</span>}
@@ -73,7 +86,8 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 const Search = () => {
   const navigate = useNavigate();
@@ -123,7 +137,7 @@ const Search = () => {
           rating: b.rating || (4.0 + Math.random()).toFixed(1),
           popularityLabel: b.rating > 4.6 ? 'High Demand' : null,
           occupancy: '70%',
-          image: b.images && b.images[0] ? (b.images[0].startsWith('http') ? b.images[0] : `http://localhost:5000${b.images[0]}`) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
+          images: b.images && b.images.length > 0 ? b.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `http://localhost:5000${img}`) : ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'],
           amenities: b.amenities || []
         }));
       }

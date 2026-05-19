@@ -46,6 +46,44 @@ const CountUpAnimation = ({ endValue, suffix = '', isFloat = false }) => {
   return <span ref={nodeRef}>{displayCount}{suffix}</span>;
 };
 
+const RoomCard = ({ room, wishlist, toggleWishlist, setModalInfo, navigate }) => {
+  const [imgIdx, setImgIdx] = useState(0);
+
+  useEffect(() => {
+    if (!room.images || room.images.length <= 1) return;
+    const timer = setInterval(() => {
+      setImgIdx(prev => (prev + 1) % room.images.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [room.images]);
+
+  const currentImage = room.images && room.images.length > 0 ? room.images[imgIdx] : extReal;
+
+  return (
+    <div className="hv2-room-card">
+      <div className="hv2-room-img-box" onClick={() => setModalInfo({ isOpen: true, image: currentImage })} style={{ cursor: 'zoom-in' }}>
+        <img src={currentImage} alt={room.name} className="hv2-room-img" style={{ transition: 'opacity 0.5s ease-in-out' }} />
+        <span className="hv2-room-badge" style={{ background: room.badgeColor }}>{room.badge}</span>
+        <span className="hv2-trending-badge">🔥 Trending</span>
+        <button className={`hv2-heart ${wishlist.includes(room.id) ? 'liked' : ''}`} onClick={(e) => { e.stopPropagation(); toggleWishlist(room.id); }}>
+          {wishlist.includes(room.id) ? '❤️' : '🤍'}
+        </button>
+      </div>
+      <div className="hv2-room-body">
+        <h4 className="hv2-room-name">{room.name}</h4>
+        <p className="hv2-room-loc">📍 {room.loc}</p>
+        <div className="hv2-amenity-row">
+          {room.amenities.map(a => <span key={a} className="hv2-amenity">{a}</span>)}
+        </div>
+        <div className="hv2-room-footer">
+          <div className="hv2-price-wrap"><span className="hv2-price">{room.price}</span><span className="hv2-per">/mo</span></div>
+          <button className="hv2-details-btn-wide" onClick={(e) => { e.stopPropagation(); navigate(`/listing/${room.id}`); }}>View Details</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Home = () => {
   const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState('Home');
@@ -92,7 +130,7 @@ const Home = () => {
         id: b._id,
         badge: b.popularityLabel || (i === 0 ? 'Premium' : i === 1 ? 'Popular' : 'New'),
         badgeColor: i === 0 ? '#4F46E5' : i === 1 ? '#10B981' : '#F59E0B',
-        img: b.images && b.images[0] ? (b.images[0].startsWith('http') ? b.images[0] : `http://localhost:5000${b.images[0]}`) : extReal,
+        images: b.images && b.images.length > 0 ? b.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `http://localhost:5000${img}`) : [extReal],
         name: b.name,
         loc: b.address + ', ' + b.locationCity,
         price: `₹${b.startingPrice?.toLocaleString() || '9,000'}`,
@@ -478,27 +516,14 @@ const Home = () => {
         </div>
         <div className="hv2-rooms-grid">
           {rooms.map(room => (
-            <div key={room.id} className="hv2-room-card">
-              <div className="hv2-room-img-box" onClick={() => setModalInfo({ isOpen: true, image: room.img })} style={{ cursor: 'zoom-in' }}>
-                <img src={room.img} alt={room.name} className="hv2-room-img" />
-                <span className="hv2-room-badge" style={{ background: room.badgeColor }}>{room.badge}</span>
-                <span className="hv2-trending-badge">🔥 Trending</span>
-                <button className={`hv2-heart ${wishlist.includes(room.id) ? 'liked' : ''}`} onClick={() => toggleWishlist(room.id)}>
-                  {wishlist.includes(room.id) ? '❤️' : '🤍'}
-                </button>
-              </div>
-              <div className="hv2-room-body">
-                <h4 className="hv2-room-name">{room.name}</h4>
-                <p className="hv2-room-loc">📍 {room.loc}</p>
-                <div className="hv2-amenity-row">
-                  {room.amenities.map(a => <span key={a} className="hv2-amenity">{a}</span>)}
-                </div>
-                <div className="hv2-room-footer">
-                  <div className="hv2-price-wrap"><span className="hv2-price">{room.price}</span><span className="hv2-per">/mo</span></div>
-                  <button className="hv2-details-btn-wide" onClick={() => navigate(`/listing/${room.id}`)}>View Details</button>
-                </div>
-              </div>
-            </div>
+            <RoomCard 
+              key={room.id} 
+              room={room} 
+              wishlist={wishlist} 
+              toggleWishlist={toggleWishlist} 
+              setModalInfo={setModalInfo} 
+              navigate={navigate} 
+            />
           ))}
         </div>
       </section>
