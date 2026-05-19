@@ -19,46 +19,83 @@ const parseId = (id) => {
 const getHierarchyCounts = async (buildingIds) => {
   const db = mongoose.connection.db;
 
-  const floors = await db.collection('owner_floors').find(
+  // 1. owner_buildings side
+  const ownerFloors = await db.collection('owner_floors').find(
     { buildingId: { $in: buildingIds } }
   ).toArray();
-  const floorIds = floors.map(f => f._id);
+  const ownerFloorIds = ownerFloors.map(f => f._id);
 
-  const rooms = floorIds.length > 0
-    ? await db.collection('owner_rooms').find({ floor: { $in: floorIds } }).toArray()
+  const ownerRooms = ownerFloorIds.length > 0
+    ? await db.collection('owner_rooms').find({ floor: { $in: ownerFloorIds } }).toArray()
     : [];
-  const roomIds = rooms.map(r => r._id);
-  const maintenanceRoomsCount = rooms.filter(r => r.status === 'Maintenance').length;
+  const ownerRoomIds = ownerRooms.map(r => r._id);
+  const ownerMaintCount = ownerRooms.filter(r => r.status === 'Maintenance').length;
 
-  const totalBeds = roomIds.length > 0
-    ? await db.collection('owner_beds').countDocuments({ roomId: { $in: roomIds } })
+  const ownerBeds = ownerRoomIds.length > 0
+    ? await db.collection('owner_beds').countDocuments({ roomId: { $in: ownerRoomIds } })
     : 0;
-  const occupiedBeds = roomIds.length > 0
-    ? await db.collection('owner_beds').countDocuments({ roomId: { $in: roomIds }, status: 'OCCUPIED' })
+  const ownerOccupied = ownerRoomIds.length > 0
+    ? await db.collection('owner_beds').countDocuments({ roomId: { $in: ownerRoomIds }, status: 'OCCUPIED' })
     : 0;
 
-  return { totalBeds, occupiedBeds, maintenanceRoomsCount, rooms, floorIds };
+  // 2. buildings (raw) side
+  const rawFloors = await db.collection('floors').find(
+    { building: { $in: buildingIds } }
+  ).toArray();
+  const rawFloorIds = rawFloors.map(f => f._id);
+
+  const rawRooms = rawFloorIds.length > 0
+    ? await db.collection('rooms').find({ floor: { $in: rawFloorIds } }).toArray()
+    : [];
+  const rawRoomIds = rawRooms.map(r => r._id);
+  const rawMaintCount = rawRooms.filter(r => r.status === 'Maintenance').length;
+
+  const rawBeds = rawRoomIds.length > 0
+    ? await db.collection('beds').countDocuments({ roomId: { $in: rawRoomIds } })
+    : 0;
+  const rawOccupied = rawRoomIds.length > 0
+    ? await db.collection('beds').countDocuments({ roomId: { $in: rawRoomIds }, status: 'OCCUPIED' })
+    : 0;
+
+  return {
+    totalBeds: ownerBeds + rawBeds,
+    occupiedBeds: ownerOccupied + rawOccupied,
+    maintenanceRoomsCount: ownerMaintCount + rawMaintCount,
+    rooms: [...ownerRooms, ...rawRooms],
+    floorIds: [...ownerFloorIds, ...rawFloorIds]
+  };
 };
 
 // ─── GET /api/dashboard/summary ──────────────────────────────────────────────
 exports.getSummaryKPIs = async (req, res) => {
   try {
     const oid = parseId(req.query.buildingId);
+    const db = mongoose.connection.db;
 
-    const allBuildings = await Building.find(oid ? { _id: oid } : {}, '_id');
-    const buildingIds = allBuildings.map(b => b._id);
-    const buildingCount = buildingIds.length;
+    const allBuildingsOwner = await Building.find(oid ? { _id: oid } : {}, '_id');
+    let buildingIds = allBuildingsOwner.map(b => b._id);
+    let buildingCount = buildingIds.length;
+
+    const rawQuery = oid ? { _id: oid } : {};
+    const rawBuildings = await db.collection('buildings').find(rawQuery, { projection: { _id: 1 } }).toArray();
+    const rawBuildingIds = rawBuildings.map(b => b._id);
+    const rawBuildingCount = rawBuildingIds.length;
+
+    buildingIds = [...buildingIds, ...rawBuildingIds];
+    buildingCount = buildingCount + rawBuildingCount;
 
     const { totalBeds, occupiedBeds, maintenanceRoomsCount } = await getHierarchyCounts(buildingIds);
     const vacantBeds = totalBeds - occupiedBeds;
     const occupancyRate = totalBeds > 0 ? parseFloat(((occupiedBeds / totalBeds) * 100).toFixed(1)) : 0;
 
-    const totalTenants = await Tenant.countDocuments(oid ? { buildingId: oid } : {});
+    const ownerTenantsCount = await Tenant.countDocuments(oid ? { buildingId: oid } : {});
+    const rawTenantsCount = await db.collection('tenants').countDocuments(oid ? { buildingId: oid } : {});
+    const totalTenants = ownerTenantsCount + rawTenantsCount;
 
     const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(); endOfDay.setHours(23, 59, 59, 999);
 
-    const paymentStats = await Payment.aggregate([
+    const paymentStatsOwner = await Payment.aggregate([
       { $match: oid ? { buildingId: oid } : {} },
       {
         $group: {
@@ -80,20 +117,61 @@ exports.getSummaryKPIs = async (req, res) => {
         }
       }
     ]);
-    const ps = paymentStats[0] || { pendingCount: 0, pendingAmount: 0, todayRevenue: 0 };
 
-    const complaintsToday = await Complaint.countDocuments({
+    const paymentStatsRaw = await db.collection('payments').aggregate([
+      { $match: oid ? { buildingId: oid } : {} },
+      {
+        $group: {
+          _id: null,
+          pendingCount: { $sum: { $cond: [{ $in: ['$status', ['Pending', 'Due']] }, 1, 0] } },
+          pendingAmount: { $sum: { $cond: [{ $in: ['$status', ['Pending', 'Due']] }, '$amount', 0] } },
+          todayRevenue: {
+            $sum: {
+              $cond: [
+                { $and: [
+                  { $eq: ['$status', 'Paid'] },
+                  { $gte: ['$date', startOfDay] },
+                  { $lte: ['$date', endOfDay] }
+                ]},
+                '$amount', 0
+              ]
+            }
+          }
+        }
+      }
+    ]).toArray();
+
+    const psOwner = paymentStatsOwner[0] || { pendingCount: 0, pendingAmount: 0, todayRevenue: 0 };
+    const psRaw = paymentStatsRaw[0] || { pendingCount: 0, pendingAmount: 0, todayRevenue: 0 };
+
+    const ps = {
+      pendingCount: psOwner.pendingCount + psRaw.pendingCount,
+      pendingAmount: psOwner.pendingAmount + psRaw.pendingAmount,
+      todayRevenue: psOwner.todayRevenue + psRaw.todayRevenue
+    };
+
+    const ownerComplaintsCount = await Complaint.countDocuments({
       createdAt: { $gte: startOfDay },
       ...(oid && { buildingId: oid })
     });
-
-    const checkinsToday = await Tenant.countDocuments({
+    const rawComplaintsCount = await db.collection('complaints').countDocuments({
       createdAt: { $gte: startOfDay },
       ...(oid && { buildingId: oid })
     });
+    const complaintsToday = ownerComplaintsCount + rawComplaintsCount;
+
+    const ownerCheckinsToday = await Tenant.countDocuments({
+      createdAt: { $gte: startOfDay },
+      ...(oid && { buildingId: oid })
+    });
+    const rawCheckinsToday = await db.collection('tenants').countDocuments({
+      createdAt: { $gte: startOfDay },
+      ...(oid && { buildingId: oid })
+    });
+    const checkinsToday = ownerCheckinsToday + rawCheckinsToday;
 
     const ownerUsersCount = await User.countDocuments({ role: { $regex: /^owner$/i } });
-    const standardUsersOwnerCount = await mongoose.connection.db.collection('users').countDocuments({ role: { $regex: /^owner$/i } });
+    const standardUsersOwnerCount = await db.collection('users').countDocuments({ role: { $regex: /^owner$/i } });
     const ownerCount = ownerUsersCount + standardUsersOwnerCount;
 
     res.json({
@@ -123,7 +201,11 @@ exports.getSummaryKPIs = async (req, res) => {
 exports.getRevenueAnalytics = async (req, res) => {
   try {
     const oid = parseId(req.query.buildingId);
-    const payments = await Payment.find(oid ? { buildingId: oid } : {});
+    const db = mongoose.connection.db;
+
+    const ownerPayments = await Payment.find(oid ? { buildingId: oid } : {}).lean();
+    const rawPayments = await db.collection('payments').find(oid ? { buildingId: oid } : {}).toArray();
+    const payments = [...ownerPayments, ...rawPayments];
 
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dailyRevenue = days.map((name, i) => {
@@ -133,7 +215,10 @@ exports.getRevenueAnalytics = async (req, res) => {
 
     const collectedRent = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + p.amount, 0);
     const pendingRent = payments.filter(p => ['Pending', 'Due'].includes(p.status)).reduce((sum, p) => sum + p.amount, 0);
-    const tenantCount = await Tenant.countDocuments(oid ? { buildingId: oid } : {});
+
+    const ownerTenantsCount = await Tenant.countDocuments(oid ? { buildingId: oid } : {});
+    const rawTenantsCount = await db.collection('tenants').countDocuments(oid ? { buildingId: oid } : {});
+    const tenantCount = ownerTenantsCount + rawTenantsCount;
 
     res.json({
       dailyRevenue,
@@ -162,22 +247,41 @@ exports.getOccupancyStats = async (req, res) => {
     const oid = parseId(req.query.buildingId);
     const db = mongoose.connection.db;
 
-    const buildings = await Building.find(oid ? { _id: oid } : {}, '_id name').lean();
+    const ownerBuildings = await Building.find(oid ? { _id: oid } : {}, '_id name').lean();
+    const rawBuildings = await db.collection('buildings').find(oid ? { _id: oid } : {}, { projection: { _id: 1, name: 1 } }).toArray();
+    const buildings = [...ownerBuildings, ...rawBuildings];
     const buildingIds = buildings.map(b => b._id);
 
-    const floors = await db.collection('owner_floors').find(
+    // owner_floors & owner_rooms & owner_beds
+    const ownerFloors = await db.collection('owner_floors').find(
       { buildingId: { $in: buildingIds } }
     ).toArray();
-    const floorIds = floors.map(f => f._id);
-
-    const rooms = floorIds.length > 0
-      ? await db.collection('owner_rooms').find({ floor: { $in: floorIds } }).toArray()
+    const ownerFloorIds = ownerFloors.map(f => f._id);
+    const ownerRooms = ownerFloorIds.length > 0
+      ? await db.collection('owner_rooms').find({ floor: { $in: ownerFloorIds } }).toArray()
       : [];
-    const roomIds = rooms.map(r => r._id);
-
-    const beds = roomIds.length > 0
-      ? await db.collection('owner_beds').find({ roomId: { $in: roomIds } }).toArray()
+    const ownerRoomIds = ownerRooms.map(r => r._id);
+    const ownerBeds = ownerRoomIds.length > 0
+      ? await db.collection('owner_beds').find({ roomId: { $in: ownerRoomIds } }).toArray()
       : [];
+
+    // floors & rooms & beds
+    const rawFloors = await db.collection('floors').find(
+      { building: { $in: buildingIds } }
+    ).toArray();
+    const rawFloorIds = rawFloors.map(f => f._id);
+    const rawRooms = rawFloorIds.length > 0
+      ? await db.collection('rooms').find({ floor: { $in: rawFloorIds } }).toArray()
+      : [];
+    const rawRoomIds = rawRooms.map(r => r._id);
+    const rawBeds = rawRoomIds.length > 0
+      ? await db.collection('beds').find({ roomId: { $in: rawRoomIds } }).toArray()
+      : [];
+
+    // Merge
+    const floors = [...ownerFloors, ...rawFloors.map(f => ({ ...f, buildingId: f.building }))];
+    const rooms = [...ownerRooms, ...rawRooms];
+    const beds = [...ownerBeds, ...rawBeds];
 
     // Per-building stats
     const buildingWise = buildings.map(b => {
@@ -214,22 +318,35 @@ exports.getOccupancyStats = async (req, res) => {
 exports.getAlertsAndInsights = async (req, res) => {
   try {
     const oid = parseId(req.query.buildingId);
+    const db = mongoose.connection.db;
     const insights = [], alerts = [];
 
-    const highComplaints = await Complaint.find({
+    const highComplaintsOwner = await Complaint.find({
       status: 'Pending',
       priority: 'High',
       ...(oid && { buildingId: oid })
-    });
+    }).lean();
+    const highComplaintsRaw = await db.collection('complaints').find({
+      status: 'Pending',
+      priority: 'High',
+      ...(oid && { buildingId: oid })
+    }).toArray();
+    const highComplaints = [...highComplaintsOwner, ...highComplaintsRaw];
 
     highComplaints.forEach(c => {
       alerts.push({ type: 'complaint', message: `Critical: ${c.title}`, severity: 'high', id: c._id });
     });
 
-    const pendingPayments = await Payment.countDocuments({
+    const pendingPaymentsOwner = await Payment.countDocuments({
       status: { $in: ['Pending', 'Due'] },
       ...(oid && { buildingId: oid })
     });
+    const pendingPaymentsRaw = await db.collection('payments').countDocuments({
+      status: { $in: ['Pending', 'Due'] },
+      ...(oid && { buildingId: oid })
+    });
+    const pendingPayments = pendingPaymentsOwner + pendingPaymentsRaw;
+
     if (pendingPayments > 0) {
       insights.push({ type: 'payment', message: `${pendingPayments} tenants have pending dues.` });
     }
@@ -246,7 +363,11 @@ exports.getComplaintsStats = async (req, res) => {
   try {
     const oid = parseId(req.query.buildingId);
     const query = oid ? { buildingId: oid } : {};
-    const complaints = await Complaint.find(query).lean();
+    const ownerComplaints = await Complaint.find(query).lean();
+    
+    const db = mongoose.connection.db;
+    const rawComplaints = await db.collection('complaints').find(query).toArray();
+    const complaints = [...ownerComplaints, ...rawComplaints];
 
     res.json({
       total: complaints.length,
@@ -330,11 +451,25 @@ exports.getLiveActivity = async (req, res) => {
   try {
     const oid = parseId(req.query.buildingId);
     const query = oid ? { buildingId: oid } : {};
+    const db = mongoose.connection.db;
 
-    const [payments, complaints] = await Promise.all([
+    const [payments, complaints, rawPayments, rawComplaints] = await Promise.all([
       Payment.find(query).sort({ createdAt: -1 }).limit(5).populate('tenantId', 'name').lean(),
-      Complaint.find(query).sort({ createdAt: -1 }).limit(5).populate('tenant', 'name').lean()
+      Complaint.find(query).sort({ createdAt: -1 }).limit(5).populate('tenant', 'name').lean(),
+      db.collection('payments').find(query).sort({ createdAt: -1 }).limit(5).toArray(),
+      db.collection('complaints').find(query).sort({ createdAt: -1 }).limit(5).toArray()
     ]);
+
+    for (let p of rawPayments) {
+      if (p.tenantId) {
+        p.tenantId = await db.collection('tenants').findOne({ _id: p.tenantId });
+      }
+    }
+    for (let c of rawComplaints) {
+      if (c.tenant) {
+        c.tenant = await db.collection('tenants').findOne({ _id: c.tenant });
+      }
+    }
 
     const activity = [
       ...payments.map(p => ({
@@ -343,10 +478,22 @@ exports.getLiveActivity = async (req, res) => {
         time: p.createdAt,
         type: 'payment'
       })),
+      ...rawPayments.map(p => ({
+        icon: '💰',
+        text: `${p.tenantId?.name || 'A Tenant'} paid ₹${p.amount?.toLocaleString()} rent`,
+        time: p.createdAt || p.date,
+        type: 'payment'
+      })),
       ...complaints.map(c => ({
         icon: c.priority === 'High' ? '⚠️' : '🔧',
         text: `${c.title} reported by ${c.tenant?.name || 'A Tenant'}`,
         time: c.createdAt,
+        type: 'complaint'
+      })),
+      ...rawComplaints.map(c => ({
+        icon: c.priority === 'High' ? '⚠️' : '🔧',
+        text: `${c.title} reported by ${c.tenant?.name || 'A Tenant'}`,
+        time: c.createdAt || c.date,
         type: 'complaint'
       }))
     ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 8);

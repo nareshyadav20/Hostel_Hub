@@ -49,6 +49,40 @@ const getBuildings = async (req, res) => {
         } 
       } 
     });
+
+    if (req.user.role === 'SUPER_ADMIN') {
+      const mongoose = require('mongoose');
+      const db = mongoose.connection.db;
+      const rawBuildings = await db.collection('buildings').find({}).toArray();
+      const populatedRawBuildings = [];
+
+      for (const b of rawBuildings) {
+        // Find floors from 'floors' collection
+        const bFloors = await db.collection('floors').find({ building: b._id }).toArray();
+        for (const f of bFloors) {
+          // Find rooms from 'rooms' collection
+          const fRooms = await db.collection('rooms').find({ floor: f._id }).toArray();
+          for (const r of fRooms) {
+            // Find beds from 'beds' collection
+            const rBeds = await db.collection('beds').find({ roomId: r._id }).toArray();
+            for (const bed of rBeds) {
+              // Find tenant from 'tenants' collection
+              if (bed.tenant) {
+                bed.tenant = await db.collection('tenants').findOne({ _id: bed.tenant });
+              }
+            }
+            r.beds = rBeds;
+          }
+          f.rooms = fRooms;
+        }
+        b.floors = bFloors;
+        populatedRawBuildings.push(b);
+      }
+
+      const combined = [...buildings, ...populatedRawBuildings];
+      return res.status(200).json(combined);
+    }
+
     res.status(200).json(buildings);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
@@ -137,7 +171,7 @@ const bulkCreateBuildings = async (req, res) => {
 
 const getBuildingById = async (req, res) => {
   try {
-    const building = await Building.findById(req.params.id).populate({ 
+    let building = await Building.findById(req.params.id).populate({ 
       path: 'floors', 
       populate: { 
         path: 'rooms', 
@@ -147,7 +181,41 @@ const getBuildingById = async (req, res) => {
         } 
       } 
     });
-    if (!building) return res.status(404).json({ error: 'Building not found' });
+
+    if (!building) {
+      const mongoose = require('mongoose');
+      const db = mongoose.connection.db;
+      let objId;
+      try {
+        objId = new mongoose.Types.ObjectId(req.params.id);
+      } catch (e) {
+        return res.status(404).json({ error: 'Building not found' });
+      }
+
+      const b = await db.collection('buildings').findOne({ _id: objId });
+      if (!b) {
+        return res.status(404).json({ error: 'Building not found' });
+      }
+
+      // Populate floors, rooms, beds from 'floors', 'rooms', 'beds'
+      const bFloors = await db.collection('floors').find({ building: b._id }).toArray();
+      for (const f of bFloors) {
+        const fRooms = await db.collection('rooms').find({ floor: f._id }).toArray();
+        for (const r of fRooms) {
+          const rBeds = await db.collection('beds').find({ roomId: r._id }).toArray();
+          for (const bed of rBeds) {
+            if (bed.tenant) {
+              bed.tenant = await db.collection('tenants').findOne({ _id: bed.tenant });
+            }
+          }
+          r.beds = rBeds;
+        }
+        f.rooms = fRooms;
+      }
+      b.floors = bFloors;
+      building = b;
+    }
+
     res.status(200).json(building);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
