@@ -160,6 +160,7 @@ app.use('/api/owner', ownerRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/rewards', require('./routes/rewardsRoutes'));
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/tenant-portal', require('./routes/tenantPortalRoutes'));
 app.use('/api/services', require('./routes/serviceRoutes'));
@@ -219,7 +220,8 @@ io.on('connection', (socket) => {
     if (ownerId) {
       const roomId = `owner_${ownerId.toString()}`;
       socket.join(roomId);
-      console.log(`Socket ${socket.id} joined owner room: ${roomId}`);
+      socket.join(ownerId.toString()); // Direct userId room mapping
+      console.log(`Socket ${socket.id} joined owner room: ${roomId} and user room: ${ownerId}`);
     }
     socket.join('owners');
   });
@@ -228,7 +230,8 @@ io.on('connection', (socket) => {
     if (userId) {
       const roomId = `tenant_${userId.toString()}`;
       socket.join(roomId);
-      console.log(`Socket ${socket.id} joined tenant room: ${roomId}`);
+      socket.join(userId.toString()); // Direct userId room mapping
+      console.log(`Socket ${socket.id} joined tenant room: ${roomId} and user room: ${userId}`);
     }
   });
 

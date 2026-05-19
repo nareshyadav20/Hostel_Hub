@@ -21,38 +21,38 @@ const register = async (req, res) => {
         status: 'PENDING' 
       });
 
-      // Handle referral rewards if referralCode is provided
-      if (referralCode) {
+      // Handle referral rewards if referralCode is provided in body or query
+      const refCode = req.body.referralCode || req.query.ref;
+      if (refCode) {
         try {
-          const mongoose = require('mongoose');
-          if (mongoose.isValidObjectId(referralCode)) {
-            const Reward = require('../models/tenant/Reward');
-            const referrerTenant = await Tenant.findById(referralCode);
-            if (referrerTenant) {
-              let referrerReward = await Reward.findOne({ tenant: referrerTenant._id });
-              if (!referrerReward) {
-                const User = require('../models/User');
-                const referrerUser = await User.findOne({ email: referrerTenant.email });
-                referrerReward = await Reward.create({
-                  tenant: referrerTenant._id,
-                  user: referrerUser ? referrerUser._id : referrerTenant._id,
-                  points: 100, // Welcome points
-                  lifetimeEarned: 100
-                });
-              }
-              referrerReward.points += 200;
-              referrerReward.lifetimeEarned += 200;
-              referrerReward.history.push({
-                reason: `Referral bonus for inviting ${name}`,
-                points: 200,
-                type: 'Earned'
+          const User = require('../models/User');
+          const referrer = await User.findOne({ referralCode: refCode });
+          if (referrer && referrer._id.toString() !== user._id.toString()) {
+            const Referral = require('../models/Referral');
+            // Safely check if duplicate referral entry doesn't exist
+            const duplicate = await Referral.findOne({ referredUserId: user._id });
+            if (!duplicate) {
+              await Referral.create({
+                referrerId: referrer._id,
+                referredUserId: user._id,
+                referralCode: refCode,
+                status: 'PENDING',
+                rewardIssued: false
               });
-              await referrerReward.save();
-              console.log(`🎁 [REWARDS] Credited 200 referral points to referrer ${referrerTenant.name} (${referrerTenant._id})`);
+
+              // Create real-time notification for the referrer
+              const { createNotification } = require('../services/notificationService');
+              await createNotification({
+                userId: referrer._id,
+                title: 'Referral Joined',
+                message: `Your friend ${name} joined using your referral link.`,
+                type: 'REFERRAL_JOIN'
+              });
+              console.log(`🎁 [REFERRALS] Created pending referral tracking for ${name} referred by ${referrer.name}`);
             }
           }
         } catch (rewardErr) {
-          console.error('⚠️ [REWARDS] Failed to reward referrer:', rewardErr.message);
+          console.error('⚠️ [REWARDS] Failed to handle referrer signup:', rewardErr.message);
         }
       }
       

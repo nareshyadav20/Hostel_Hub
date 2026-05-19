@@ -31,6 +31,14 @@ const createPayment = async (req, res) => {
         lastPayment: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
       });
       socketService.emitUpdate(buildingId, 'tenantUpdated', { _id: tenantId, rentStatus: 'PAID' });
+      
+      // Process Referral rewards on first successful rent payment
+      try {
+        const { processFirstRentRewardByTenant } = require('../services/rewardService');
+        await processFirstRentRewardByTenant(tenantId);
+      } catch (err) {
+        console.error('⚠️ [REWARDS] Failed to process referral points:', err.message);
+      }
     }
 
     // Populate before sending back
@@ -126,6 +134,16 @@ const updatePaymentStatus = async (req, res) => {
   try {
     const payment = await Payment.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true }).populate('tenantId');
     if (!payment) return res.status(404).json({ message: 'Payment not found' });
+    
+    // Process Referral rewards if a rent payment status becomes 'Paid'
+    if (payment.type === 'Rent' && req.body.status === 'Paid') {
+      try {
+        const { processFirstRentRewardByTenant } = require('../services/rewardService');
+        await processFirstRentRewardByTenant(payment.tenantId?._id || payment.tenantId);
+      } catch (err) {
+        console.error('⚠️ [REWARDS] Failed to process referral points on update:', err.message);
+      }
+    }
     
     // Real-time updates
     socketService.emitUpdate(payment.buildingId, 'paymentUpdated', payment);

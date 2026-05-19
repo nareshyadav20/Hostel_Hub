@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
+import socket from '../utils/socket';
 import './Rewards.css';
 
 const Rewards = () => {
@@ -13,16 +14,17 @@ const Rewards = () => {
   useEffect(() => {
     const fetchRewards = async () => {
       try {
-        const [profileRes, rewardsRes] = await Promise.all([
+        const [profileRes, walletRes, historyRes] = await Promise.all([
           API.get('/tenants/me'),
-          API.get('/tenant-portal/rewards/me')
+          API.get('/rewards/wallet'),
+          API.get('/rewards/history')
         ]);
         setTenantId(profileRes.data._id);
         setPoints({ 
-          total: rewardsRes.data.points, 
-          earned: rewardsRes.data.lifetimeEarned, 
-          used: rewardsRes.data.used,
-          history: rewardsRes.data.history || []
+          total: walletRes.data.availablePoints, 
+          earned: walletRes.data.lifetimeEarned, 
+          used: walletRes.data.totalRedeemed,
+          history: historyRes.data || []
         });
       } catch (err) { 
         console.error('Error fetching rewards:', err); 
@@ -31,20 +33,48 @@ const Rewards = () => {
       }
     };
     fetchRewards();
+
+    const handleRewardUpdate = (data) => {
+      setPoints(prev => ({
+        ...prev,
+        total: data.availablePoints,
+        earned: data.lifetimeEarned,
+        used: data.totalRedeemed
+      }));
+      // Fetch latest history to update list
+      API.get('/rewards/history').then(res => {
+        setPoints(prev => ({ ...prev, history: res.data || [] }));
+      }).catch(err => console.error(err));
+    };
+
+    socket.on('rewardUpdated', handleRewardUpdate);
+
+    return () => {
+      socket.off('rewardUpdated', handleRewardUpdate);
+    };
   }, []);
 
-  const handleGetReferralLink = () => {
-    const referralLink = `${window.location.origin}/signup?ref=${tenantId || 'livora'}`;
-    const shareMessage = `Hey! I'm staying at Livora, and it's amazing. Join me using my referral link and we both get bonus points: ${referralLink}`;
-    
-    // Copy to clipboard
-    navigator.clipboard.writeText(referralLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
+  const handleGetReferralLink = async () => {
+    try {
+      const res = await API.get('/rewards/referral-link');
+      const { referralLink, referralMessage } = res.data;
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(referralLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
 
-    // Open WhatsApp
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
-    window.open(whatsappUrl, '_blank');
+      // Open WhatsApp
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(referralMessage)}`;
+      window.open(whatsappUrl, '_blank');
+    } catch (err) {
+      console.error('Error generating referral link:', err);
+      const fallbackLink = `${window.location.origin}/signup?ref=${tenantId || 'livora'}`;
+      navigator.clipboard.writeText(fallbackLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent("Hey! Check out Livora: " + fallbackLink)}`, '_blank');
+    }
   };
 
   if (loading) return (
@@ -187,17 +217,21 @@ const Rewards = () => {
           </div>
         ) : (
           <div className="history-list">
-            {[...points.history].reverse().map((item, idx) => (
-              <div className="history-item" key={item._id || idx}>
-                <div className="history-info">
-                  <span className="history-reason">{item.reason}</span>
-                  <span className="history-date">{new Date(item.date).toLocaleDateString()} at {new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            {[...points.history].reverse().map((item, idx) => {
+              const reason = item.description || item.reason || 'Activity Reward';
+              const dateVal = item.createdAt || item.date || new Date();
+              return (
+                <div className="history-item" key={item._id || idx}>
+                  <div className="history-info">
+                    <span className="history-reason">{reason}</span>
+                    <span className="history-date">{new Date(dateVal).toLocaleDateString()} at {new Date(dateVal).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                  <div className={`history-points ${item.points >= 0 ? 'earned' : 'redeemed'}`}>
+                    {item.points >= 0 ? '+' : ''}{item.points} pts
+                  </div>
                 </div>
-                <div className={`history-points ${item.points >= 0 ? 'earned' : 'redeemed'}`}>
-                  {item.points >= 0 ? '+' : ''}{item.points} pts
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

@@ -2,20 +2,21 @@ const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema({
   notificationId: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
-  moduleName: { type: String, required: true }, // e.g. 'Payments', 'Inventory'
-  portalType: { type: String, enum: ['Tenant', 'Staff', 'Owner', 'All'], required: true },
-  category: { type: String, required: true }, // e.g. 'Rent', 'Maintenance'
+  moduleName: { type: String, required: false }, // e.g. 'Payments', 'Inventory'
+  portalType: { type: String, enum: ['Tenant', 'Staff', 'Owner', 'All'], required: false },
+  category: { type: String, required: false }, // e.g. 'Rent', 'Maintenance'
   title: { type: String, required: true },
   message: { type: String, required: true },
   priority: { type: String, enum: ['High', 'Medium', 'Low'], default: 'Medium' },
-  type: { type: String, enum: ['info', 'warning', 'success', 'error'], default: 'info' },
+  type: { type: String, default: 'info' },
   
   // Target Targeting
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   receiverId: { type: String }, // Can be userId, tenantId, or buildingId
   receiverRole: { type: String, enum: ['Tenant', 'Staff', 'Owner', 'All'], default: 'All' },
   
   // IDs for Context (Keeping for compatibility)
-  buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building', required: true },
+  buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building', required: false },
   roomId: { type: String },
   tenantId: { type: String },
   staffId: { type: String },

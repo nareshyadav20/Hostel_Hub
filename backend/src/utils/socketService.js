@@ -19,7 +19,8 @@ const emitToUser = (userId, role, event, data) => {
   if (io && userId) {
     const roomId = `${role.toLowerCase()}_${userId.toString()}`;
     io.to(roomId).emit(event, data);
-    console.log(`Socket emitted [User Room: ${roomId}]: ${event}`);
+    io.to(userId.toString()).emit(event, data); // Plain userId room compatibility
+    console.log(`Socket emitted [User Room: ${roomId} & ${userId.toString()}]: ${event}`);
   }
 };
 
