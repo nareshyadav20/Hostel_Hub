@@ -42,7 +42,7 @@ const Transfers = () => {
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div style={{ animation: 'fadeIn 0.5s ease-out', minHeight: '100vh', background: '#F8FAFC', padding: '0.5rem' }}>
       {/* Responsive Styles Injection */}
       <style>{`
         @media (max-width: 1024px) {
