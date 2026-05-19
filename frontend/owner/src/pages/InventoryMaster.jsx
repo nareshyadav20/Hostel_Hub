@@ -32,6 +32,19 @@ const InventoryMaster = () => {
   const location = useLocation();
   const buildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
 
+  const fileInputRef = React.useRef(null);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAddFormData(prev => ({ ...prev, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const [activePortal, setActivePortal] = useState('master');
   const [activeFilter, setActiveFilter] = useState('ALL ITEMS');
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,7 +57,8 @@ const InventoryMaster = () => {
   
   const [addFormData, setAddFormData] = useState({
     name: '', sku: '', category: '', subCategory: '', unitType: '', unitValue: '', 
-    description: '', sellingPrice: 0, mrpPrice: 0, purchasePrice: 0, gstRate: 0, lowStockLevel: 5, isFreeItem: false
+    description: '', sellingPrice: 0, mrpPrice: 0, purchasePrice: 0, gstRate: 0, lowStockLevel: 5, isFreeItem: false,
+    image: ''
   });
 
   const [damageEntries, setDamageEntries] = useState([
@@ -127,10 +141,64 @@ const InventoryMaster = () => {
               <div className="tab-col-left">
                 <div className="creator-input-group">
                   <label>PRODUCT VISUAL</label>
-                  <div className="upload-box-square">
-                    <Camera size={28} />
-                    <span>SELECT IMAGE</span>
+                  <div 
+                    className="upload-box-square" 
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      cursor: 'pointer',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      border: '2px dashed var(--border-color)',
+                      borderRadius: '8px',
+                      height: '140px',
+                      width: '100%',
+                      background: 'var(--bg-secondary)'
+                    }}
+                  >
+                    {addFormData.image ? (
+                      <>
+                        <img src={addFormData.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <div style={{
+                          position: 'absolute',
+                          inset: 0,
+                          background: 'rgba(0,0,0,0.5)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#fff',
+                          opacity: 0,
+                          transition: 'opacity 0.2s',
+                          gap: '4px',
+                          fontSize: '11px',
+                          fontWeight: 'bold'
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = 1; }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = 0; }}
+                        >
+                          <Camera size={18} />
+                          <span>CHANGE IMAGE</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Camera size={28} />
+                        <span>SELECT IMAGE</span>
+                      </>
+                    )}
                   </div>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    style={{ display: 'none' }} 
+                    accept="image/*" 
+                    onChange={handleImageChange} 
+                  />
                 </div>
 
                 <div className="creator-input-group">

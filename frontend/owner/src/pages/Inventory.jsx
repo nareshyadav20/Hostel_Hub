@@ -44,6 +44,19 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
   const navigate = useNavigate();
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
 
+  const fileInputRef = React.useRef(null);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // UI States
   const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,6 +96,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
     location: '',
     notes: '',
     status: 'active',
+    image: '',
     lastPurchased: new Date().toISOString().split('T')[0]
   };
   const [formData, setFormData] = useState(initialFormData);
@@ -269,10 +283,29 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
     setDeductions(prev => prev.map(d => d.id === id ? { ...d, status: 'PAID' } : d));
   };
 
-  const handleDeleteDeduction = (id) => {
-    if (window.confirm('Remove this deduction entry?')) {
-      setDeductions(prev => prev.filter(d => d.id !== id));
+  const handleDownloadCSV = () => {
+    if (!inventory || inventory.length === 0) {
+      alert('No inventory data available to download.');
+      return;
     }
+    const headers = ['Product Name', 'Category', 'Sub Category', 'Stock', 'Min Threshold', 'Unit'];
+    const rows = inventory.map(item => [
+      `"${(item.name || '').replace(/"/g, '""')}"`,
+      `"${(item.category || '').replace(/"/g, '""')}"`,
+      `"${(item.subCategory || item.subCategoryId || '').replace(/"/g, '""')}"`,
+      item.stock || 0,
+      item.minThreshold || 0,
+      `"${(item.unit || '').replace(/"/g, '""')}"`
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `inventory_report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -280,21 +313,51 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
       {/* 1. TOP HEADER */}
       <header className="page-header">
         <div className="header-left">
-          <button className="back-btn" onClick={() => navigate(-1)} title="Back"><ChevronLeft size={20} /></button>
           <div className="header-title-area">
-            <h1>
-              {activeTab === 'master' ? 'Inventory Master' :
-                activeTab === 'damage' ? 'Damage Tracking' :
-                  activeTab === 'deductions' ? 'Financial Deductions' :
-                    'Reports & Analytics'}
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {activeTab === 'master' && (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+              )}
+              {activeTab === 'damage' && (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+              )}
+              {activeTab === 'deductions' && (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+              )}
+              {activeTab === 'reports' && (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              )}
+              <span>
+                {activeTab === 'master' ? 'Inventory Master' :
+                  activeTab === 'damage' ? 'Damage Tracking' :
+                    activeTab === 'deductions' ? 'Financial Deductions' :
+                      'Reports & Analytics'}
+              </span>
             </h1>
             <p>Track hostel supplies, consumables and financial recovery with precision.</p>
           </div>
         </div>
         <div className="header-actions">
-          <button className="icon-btn" onClick={() => alert('Opening documents...')}><FileText size={18} /></button>
-          <button className="icon-btn" onClick={() => window.print()}><Printer size={18} /></button>
-          <button className="icon-btn" onClick={() => alert('Downloading reports...')}><Download size={18} /></button>
+          <button className="icon-btn" title="View Reports" onClick={() => setActiveTab('reports')}><FileText size={18} /></button>
+          <button className="icon-btn" title="Print Inventory" onClick={() => window.print()}><Printer size={18} /></button>
+          <button className="icon-btn" title="Download CSV Report" onClick={handleDownloadCSV}><Download size={18} /></button>
           {activeTab === 'master' && (
             <button className="primary-btn" onClick={() => { setSelectedItem(null); setFormData(initialFormData); setAddStep(1); setIsAddModalOpen(true); }}>
               <Plus size={20} /> ADD ITEM
@@ -432,10 +495,19 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   <td>
                     <div className="cell-product">
                       <div className="product-img" style={{
-                        background: CATEGORIES.find(c => c.id === item.category)?.bg || 'var(--bg-secondary)',
-                        color: CATEGORIES.find(c => c.id === item.category)?.color || 'var(--text-muted)'
+                        background: item.image ? 'transparent' : (CATEGORIES.find(c => c.id === item.category)?.bg || 'var(--bg-secondary)'),
+                        color: CATEGORIES.find(c => c.id === item.category)?.color || 'var(--text-muted)',
+                        padding: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden'
                       }}>
-                        {item.name ? item.name[0].toUpperCase() : '?'}
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          item.name ? item.name[0].toUpperCase() : '?'
+                        )}
                       </div>
                       <div>
                         <div className="product-name">{item.name}</div>
@@ -691,9 +763,66 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
                       <div>
                         <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Product Visual</div>
-                        <div style={{ width: '100%', aspectRatio: '1/1', background: 'var(--bg-secondary)', border: '2px dashed var(--border-color)', borderRadius: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                          <Camera size={26} /><span>Select Image</span>
+                        <div 
+                          onClick={() => fileInputRef.current?.click()}
+                          style={{ 
+                            width: '100%', 
+                            aspectRatio: '1/1', 
+                            background: 'var(--bg-secondary)', 
+                            border: '2px dashed var(--border-color)', 
+                            borderRadius: '10px', 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            gap: '10px', 
+                            color: 'var(--text-muted)', 
+                            cursor: 'pointer', 
+                            fontSize: '0.72rem', 
+                            fontWeight: 700, 
+                            letterSpacing: '0.05em', 
+                            textTransform: 'uppercase',
+                            position: 'relative',
+                            overflow: 'hidden'
+                          }}
+                        >
+                          {formData.image ? (
+                            <>
+                              <img src={formData.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <div style={{ 
+                                position: 'absolute', 
+                                inset: 0, 
+                                background: 'rgba(0,0,0,0.55)', 
+                                display: 'flex', 
+                                flexDirection: 'column', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                gap: '8px',
+                                opacity: 0,
+                                transition: 'opacity 0.2s',
+                                color: '#fff'
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.opacity = 1; }}
+                              onMouseLeave={e => { e.currentTarget.style.opacity = 0; }}
+                              >
+                                <Camera size={20} />
+                                <span>Change Image</span>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <Camera size={26} />
+                              <span>Select Image</span>
+                            </>
+                          )}
                         </div>
+                        <input 
+                          type="file" 
+                          ref={fileInputRef} 
+                          style={{ display: 'none' }} 
+                          accept="image/*" 
+                          onChange={handleImageChange} 
+                        />
                       </div>
                       <div>
                         <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Display Name *</div>
@@ -1002,6 +1131,110 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
         .empty-reset-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
         .skeleton-cell { height: 20px; border-radius: 6px; background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        @media print {
+          /* Hide sidebar, navigation, headers, filters, actions, pagination, buttons */
+          aside,
+          nav,
+          header,
+          .owner-sidebar,
+          .sidebar,
+          .sidebar-container,
+          .sidebar-menu,
+          [class*="sidebar"],
+          .tab-nav,
+          .header-actions,
+          .table-filters,
+          .stats-grid,
+          .back-btn,
+          .action-btns,
+          .action-btn,
+          th:last-child,
+          td:last-child,
+          .pagination-controls,
+          .empty-reset-btn,
+          button,
+          footer {
+            display: none !important;
+          }
+
+          /* Reset layout widths to 100% for full paper usage */
+          body, html, #root, .app-layout, .main-layout, .content-area, .inventory-v3 {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            color: black !important;
+            min-height: auto !important;
+          }
+
+          .content-card {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            background: white !important;
+            width: 100% !important;
+          }
+
+          /* Custom high fidelity Print Title */
+          .page-header {
+            margin-bottom: 2rem !important;
+            border-bottom: 3px solid #0f172a !important;
+            padding-bottom: 1.5rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+          }
+
+          .header-left {
+            display: block !important;
+          }
+
+          .header-title-area h1 {
+            font-size: 2.5rem !important;
+            color: #0f172a !important;
+            margin: 0 !important;
+            font-weight: 800 !important;
+          }
+
+          .header-title-area p {
+            font-size: 1rem !important;
+            color: #475569 !important;
+            margin-top: 0.5rem !important;
+            font-weight: 500 !important;
+          }
+
+          /* Optimize inventory data table rows and typography */
+          .custom-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin-top: 1rem !important;
+          }
+
+          .custom-table th {
+            border-bottom: 2px solid #0f172a !important;
+            color: #0f172a !important;
+            font-weight: 800 !important;
+            font-size: 10.5pt !important;
+            padding: 10px 8px !important;
+            text-transform: uppercase !important;
+          }
+
+          .custom-table td {
+            border-bottom: 1px solid #cbd5e1 !important;
+            font-size: 9.5pt !important;
+            padding: 12px 8px !important;
+            color: #1e293b !important;
+          }
+
+          /* Assure color fidelity for visual categories */
+          .product-img {
+            border: 1px solid #cbd5e1 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
       `}</style>
     </div>
   );
