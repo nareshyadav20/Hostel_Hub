@@ -8,7 +8,10 @@ const authRoutes = require('./routes/authRoutes');
 dotenv.config();
 
 // Connect to MongoDB
-connectDB();
+connectDB().then(() => {
+  const initAdminProfiles = require('./utils/initAdminProfiles');
+  initAdminProfiles();
+});
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,6 +38,7 @@ const inventoryRoutes = require('./routes/inventoryRoutes');
 const staffRoutes = require('./routes/staffRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const notificationService = require('./utils/notificationService');
 
 // Pre-load all models to ensure they are registered for population
@@ -67,6 +71,7 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

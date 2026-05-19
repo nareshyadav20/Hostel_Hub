@@ -22,10 +22,13 @@ export default {
         danger: 'rgb(var(--danger) / <alpha-value>)',
         background: 'var(--background)',
         surface: 'var(--surface)',
+        card: 'var(--bg-card)',
         divider: 'var(--border)',
         text: {
           main: 'var(--text-main)',
           muted: 'var(--text-muted)',
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
         }
       },
       boxShadow: {

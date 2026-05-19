@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
 import Layout from './components/Layout';
 import './index.css';
 
@@ -29,13 +30,18 @@ import Bookings from './pages/Bookings.jsx';
 import Maintenance from './pages/Maintenance';
 import Support from './pages/Support';
 import Profile from './pages/Profile';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 function App() {
   return (
-    <ThemeProvider>
-      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <ToastProvider>
+      <ThemeProvider>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
-          <Route path="/"              element={<Layout><Dashboard /></Layout>} />
+          <Route path="/login"         element={<Login />} />
+          <Route path="/signup"        element={<Signup />} />
+          <Route path="/"              element={<Navigate to="/login" replace />} />
           <Route path="/dashboard"     element={<Layout><Dashboard /></Layout>} />
           <Route path="/hostels"       element={<Layout><Hostels /></Layout>} />
           <Route path="/owners"        element={<Layout><Owners /></Layout>} />
@@ -72,6 +78,7 @@ function App() {
         </Routes>
       </Router>
     </ThemeProvider>
+   </ToastProvider>
   );
 }
 

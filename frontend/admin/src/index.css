@@ -1,3 +1,4 @@
+@import "@packages/ui-kit/globals.css";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
@@ -5,24 +6,29 @@
 @tailwind utilities;
 
 :root {
-  --primary: 99 102 241;
-  --primary-hex: #6366f1;
-  --secondary: 139 92 246;
-  --secondary-hex: #8b5cf6;
-  --accent: 245 158 11;
-  --accent-hex: #f59e0b;
-  --success: 34 197 94;
+  --primary: 79 70 229; /* Indigo 600 */
+  --primary-hex: #4f46e5;
+  --secondary: 15 23 42; /* Slate 900 */
+  --secondary-hex: #0f172a;
+  --accent: 16 185 129; /* Emerald 500 */
+  --accent-hex: #10b981;
+  --success: 16 185 129; /* Emerald 500 */
   --danger: 239 68 68;
-  --background: #f8fafc;
+  --background: #f8fafc; /* Slate 50 */
   --surface: #ffffff;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
-  --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.02);
-  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 12px 24px rgba(15, 23, 42, 0.06);
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
+  --bg-card: var(--surface);
+  --text-main: #0f172a; /* Slate 900 */
+  --text-muted: #64748b; /* Slate 500 */
+  --text-primary: var(--text-main);
+  --text-secondary: #475569;
+  --border: #e2e8f0; /* Slate 200 */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+  --shadow-premium: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
 }
 
 * {
@@ -58,34 +64,37 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Completely Hidden */
 ::-webkit-scrollbar {
-  width: 6px;
+  display: none !important;
+  width: 0px !important;
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #E5E7EB;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #D1D5DB;
+body, html {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+  overflow-y: auto;
 }
 
 .dark {
-  --background: 2 6 23; /* Slate 950 #020617 */
-  --card: 15 23 42; /* Slate 900 #0F172A */
-  --border: 30 41 59; /* Slate 800 */
-  --text-primary: 248 250 252; /* Slate 50 */
-  --text-secondary: 148 163 184; /* Slate 400 */
-  --text-muted: 100 116 139; /* Slate 500 */
-
+  --background: #020617; /* Slate 950 */
+  --surface: #0f172a; /* Slate 900 */
+  --bg-card: var(--surface);
+  --text-main: #f8fafc; /* Slate 50 */
+  --text-muted: #94a3b8; /* Slate 400 */
+  --text-primary: var(--text-main);
+  --text-secondary: var(--text-muted);
+  --border: #1e293b; /* Slate 800 */
+  
+  --primary: 99 102 241; /* Indigo 500 */
+  --primary-hex: #6366f1;
+  --secondary: 248 250 252;
+  --secondary-hex: #f8fafc;
+  --accent: 34 211 238; /* Cyan 400 */
+  --accent-hex: #22d3ee;
+  
   /* Premium Dark Nexus Elite Compatibility */
-  --accent-primary: #818cf8;
+  --accent-primary: #6366f1;
   --bg-primary: #020617;
   --bg-secondary: #0f172a;
   --bg-tertiary: #1e293b;

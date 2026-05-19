@@ -19,11 +19,15 @@ const createTenant = async (req, res) => {
 
 const getTenants = async (req, res) => {
   try {
-    const Building = require('../models/Building');
-    const userBuildings = await Building.find({ owner: req.user.id }).select('_id');
-    const buildingIds = userBuildings.map(b => b._id);
+    let query = {};
+    if (req.user.role !== 'SUPER_ADMIN') {
+      const Building = require('../models/Building');
+      const userBuildings = await Building.find({ owner: req.user.id }).select('_id');
+      const buildingIds = userBuildings.map(b => b._id);
+      query = { buildingId: { $in: buildingIds } };
+    }
     
-    const tenants = await Tenant.find({ buildingId: { $in: buildingIds } });
+    const tenants = await Tenant.find(query);
     res.status(200).json(tenants);
   } catch (err) {
     res.status(500).json({ error: err.message });

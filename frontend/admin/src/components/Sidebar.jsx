@@ -65,14 +65,14 @@ const Sidebar = ({ collapsed }) => {
       </div>
 
       {/* NAVIGATION */}
-      <div className="flex-1 overflow-y-auto py-6 space-y-0.5 scrollbar-hide">
+      <div className="flex-1 overflow-hidden py-6 space-y-0.5 scrollbar-hide">
         {sections.flatMap(section => section.items).map((item) => (
           <NavLink
             key={item.name}
             to={item.path}
             className={({ isActive }) =>
               `flex items-center gap-3.5 py-3 px-6 transition-all relative group ${isActive
-                ? 'text-primary bg-primary-light/50 font-semibold'
+                ? 'font-semibold text-text-main'
                 : 'text-text-muted hover:text-text-main hover:bg-gray-50'
               } ${collapsed ? 'justify-center px-0' : ''}`
             }

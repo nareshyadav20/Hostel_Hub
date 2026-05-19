@@ -10,18 +10,19 @@ const Complaint = require('./models/Complaint');
 const Payment = require('./models/Payment');
 const MessMenu = require('./models/MessMenu');
 const Inventory = require('./models/Inventory');
+const AdminProfile = require('./models/AdminProfile');
 const bcrypt = require('bcryptjs');
 
 dotenv.config();
 
 const seedData = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/hostel_hub');
+    await mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/hostel_hub');
     console.log('Connected to MongoDB for final production seeding...');
 
     // 1. Clear existing data
     await Promise.all([
-      User.deleteMany({ role: { $in: ['OWNER', 'STAFF', 'TENANT'] } }),
+      User.deleteMany({ role: { $in: ['SUPER_ADMIN', 'OWNER', 'STAFF', 'TENANT'] } }),
       Building.deleteMany({}),
       Floor.deleteMany({}),
       Room.deleteMany({}),
@@ -31,6 +32,7 @@ const seedData = async () => {
       Payment.deleteMany({}),
       MessMenu.deleteMany({}),
       Inventory.deleteMany({}),
+      AdminProfile.deleteMany({}),
       require('./models/Staff').deleteMany({})
     ]);
 
@@ -43,6 +45,31 @@ const seedData = async () => {
       password: ownerPassword,
       role: 'OWNER'
     });
+
+    // Create authentic Admin User with role SUPER_ADMIN
+    const adminPassword = await bcrypt.hash('admin123', salt);
+    const admin = await User.create({
+      name: 'Super Admin',
+      email: 'admin@hostelhub.com',
+      password: adminPassword,
+      role: 'SUPER_ADMIN'
+    });
+    console.log('Created Admin:', admin.email);
+
+    // Create Admin Profile details directly first for SUPER_ADMIN only
+    await AdminProfile.create({
+      userId: admin._id,
+      name: 'Super Admin',
+      email: 'admin@hostelhub.com',
+      phone: '+91 98765 43210',
+      location: 'Bangalore, India',
+      bio: 'Overseeing the entire Livora Hostel Hub ecosystem. Specialized in platform security and administrative intelligence.',
+      avatar: '',
+      password: adminPassword,
+      role: 'SUPER_ADMIN',
+      lastLogin: new Date()
+    });
+    console.log('Stored profile details and login credentials for SUPER_ADMIN in admin_profile collection successfully!');
 
     // 3. Create Staff
     const staffPassword = await bcrypt.hash('staff123', salt);

@@ -7,12 +7,15 @@ import {
   Activity, Lock, Smartphone, RefreshCw, Settings
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import api from '@packages/shared';
+import { useToast } from '../context/ToastContext';
+import API from '../api/axios';
 
 const Profile = () => {
+  const { showToast } = useToast();
   const { isDark, toggle } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({
     name: 'Super Admin',
     email: 'admin@livora.io',
@@ -21,35 +24,114 @@ const Profile = () => {
     location: 'Bangalore, India',
     joined: 'Jan 2024',
     bio: 'Overseeing the entire Livora Hostel Hub ecosystem. Specialized in platform security and administrative intelligence.',
-    avatar: 'SA'
+    avatar: ''
   });
 
-  // Align with data flow pattern
-  useEffect(() => {
-    const fetchProfile = async () => {
-      setLoading(true);
-      try {
-        // Simulating data flow - in real scenario, this would call api.get('/auth/me')
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        if (user.name) {
-          setProfile(prev => ({ ...prev, name: user.name, email: user.email }));
-        }
-      } catch (err) {
-        console.error('Failed to sync profile:', err);
-      } finally {
-        setLoading(false);
+  // Fetch real profile data from backend
+  const fetchProfile = async () => {
+    setLoading(true);
+    try {
+      const res = await API.get('/admin/profile');
+      if (res.data) {
+        setProfile({
+          name: res.data.name || 'Super Admin',
+          email: res.data.email || 'admin@livora.io',
+          phone: res.data.phone || '+91 98765 43210',
+          role: 'Platform Root / Super Administrator',
+          location: res.data.location || 'Bangalore, India',
+          joined: res.data.createdAt ? new Date(res.data.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Jan 2024',
+          bio: res.data.bio || 'Overseeing the entire Livora Hostel Hub ecosystem. Specialized in platform security and administrative intelligence.',
+          avatar: res.data.avatar || ''
+        });
       }
-    };
+    } catch (err) {
+      console.error('Failed to sync profile:', err);
+      showToast('Failed to load profile data from backend.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchProfile();
   }, []);
 
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        showToast("Image size must be less than 2MB.", "error");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result;
+        
+        // Auto-save the avatar directly to backend
+        try {
+          const res = await API.put('/admin/profile', {
+            name: profile.name,
+            email: profile.email,
+            phone: profile.phone,
+            location: profile.location,
+            bio: profile.bio,
+            avatar: base64String
+          });
+          if (res.data) {
+            setProfile(prev => ({ ...prev, avatar: res.data.avatar }));
+            showToast('Profile photo uploaded successfully!', 'success');
+            // Dispatch local event to notify Sidebar or ProfileDropdown
+            window.dispatchEvent(new Event('user-profile-updated'));
+          }
+        } catch (err) {
+          console.error('Failed to upload photo:', err);
+          showToast('Failed to save profile photo to database.', 'error');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSave = async () => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsEditing(false);
-      setLoading(false);
-    }, 800);
+    setSaving(true);
+    try {
+      const res = await API.put('/admin/profile', {
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone,
+        location: profile.location,
+        bio: profile.bio,
+        avatar: profile.avatar
+      });
+      if (res.data) {
+        setProfile(prev => ({
+          ...prev,
+          name: res.data.name,
+          email: res.data.email,
+          phone: res.data.phone,
+          location: res.data.location,
+          bio: res.data.bio,
+          avatar: res.data.avatar
+        }));
+        
+        // Update localStorage user name/email to reflect changes dynamically
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        user.name = res.data.name;
+        user.email = res.data.email;
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        // Dispatch local event to notify Sidebar or ProfileDropdown
+        window.dispatchEvent(new Event('user-profile-updated'));
+        
+        showToast('Profile updated successfully!', 'success');
+        setIsEditing(false);
+      }
+    } catch (err) {
+      console.error('Failed to save profile:', err);
+      showToast('Failed to save profile changes.', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading && !profile.name) {
@@ -71,14 +153,33 @@ const Profile = () => {
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl" />
         
         <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-          <div className="relative group">
-            <div className="w-32 h-32 rounded-2xl bg-primary flex items-center justify-center text-white text-4xl font-bold shadow-xl shadow-primary/20 border-4 border-surface group-hover:scale-105 transition-transform duration-500">
-              {profile.avatar}
-            </div>
-            <button className="absolute bottom-2 right-2 p-2 bg-surface border border-divider rounded-lg shadow-lg text-text-muted hover:text-primary transition-all scale-0 group-hover:scale-100 duration-300">
+          <div 
+            className="relative group cursor-pointer" 
+            onClick={() => document.getElementById('avatar-upload')?.click()}
+            title="Click to upload profile photo"
+          >
+            {profile.avatar ? (
+              <img 
+                src={profile.avatar} 
+                alt="Profile Avatar" 
+                className="w-32 h-32 rounded-2xl object-cover shadow-xl border-4 border-surface group-hover:scale-105 transition-transform duration-500"
+              />
+            ) : (
+              <div className="w-32 h-32 rounded-2xl bg-primary flex items-center justify-center text-white text-4xl font-bold shadow-xl shadow-primary/20 border-4 border-surface group-hover:scale-105 transition-transform duration-500">
+                {profile.name ? profile.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'SA'}
+              </div>
+            )}
+            <div className="absolute bottom-2 right-2 p-2 bg-surface border border-divider rounded-lg shadow-lg text-text-muted hover:text-primary transition-all scale-100 group-hover:scale-110 duration-300">
               <Camera size={16} />
-            </button>
+            </div>
           </div>
+          <input 
+            id="avatar-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
           
           <div className="text-center md:text-left">
             <h1 className="text-3xl font-bold text-text-main tracking-tight">{profile.name}</h1>
@@ -105,18 +206,18 @@ const Profile = () => {
                 className="flex items-center gap-3"
               >
                 <button 
-                  disabled={loading}
+                  disabled={saving}
                   onClick={() => setIsEditing(false)}
                   className="btn btn-secondary"
                 >
                   <X size={18} /> Cancel
                 </button>
                 <button 
-                  disabled={loading}
+                  disabled={saving}
                   onClick={handleSave}
                   className="btn btn-primary"
                 >
-                  {loading ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
+                  {saving ? <RefreshCw className="animate-spin" size={18} /> : <Save size={18} />}
                   Save Changes
                 </button>
               </motion.div>

@@ -92,6 +92,10 @@ exports.getSummaryKPIs = async (req, res) => {
       ...(oid && { buildingId: oid })
     });
 
+    const ownerUsersCount = await User.countDocuments({ role: { $regex: /^owner$/i } });
+    const standardUsersOwnerCount = await mongoose.connection.db.collection('users').countDocuments({ role: { $regex: /^owner$/i } });
+    const ownerCount = ownerUsersCount + standardUsersOwnerCount;
+
     res.json({
       totalBeds, occupiedBeds, vacantBeds, occupancyRate,
       todayRevenue: ps.todayRevenue,
@@ -102,6 +106,7 @@ exports.getSummaryKPIs = async (req, res) => {
       healthScore: 85,
       buildingCount,
       totalTenants,
+      ownerCount,
       complaintsToday,
       checkinsToday,
       checkoutsToday: 0, // Placeholder

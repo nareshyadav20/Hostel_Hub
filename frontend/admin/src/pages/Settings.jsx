@@ -1,21 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Settings as SettingsIcon, Shield, Bell, CreditCard, 
   Globe, Database, User, Save, Lock, Eye, EyeOff, 
   Check, Info, Zap, Smartphone, Mail, Hash,
   Layout, Image, Paintbrush, Activity, Key,
-  Cloud, Terminal, ChevronRight, AlertTriangle, ArrowLeft
+  Cloud, Terminal, ChevronRight, AlertTriangle, ArrowLeft,
+  RefreshCw
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import { useToast } from '../context/ToastContext';
+import API from '../api/axios';
 
 const Settings = () => {
   const navigate = useNavigate();
   const { isDark } = useTheme();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('General');
   const [showPassword, setShowPassword] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [settings, setSettings] = useState({
+    twoFactor: true,
+    sessionPersistence: false,
+    smtpEmailRelay: true,
+    smsGateway: true,
+    webPush: false,
+    paymentOverdue: true,
+    highPriorityIssues: true,
+    staffDailyDigest: false,
+    platformPersona: "StayNest Enterprise Hub",
+    adminEmail: "ops@staynest.com",
+    fiscalUnit: "INR (₹) - Indian Rupee",
+    operationalLanguage: "English (Universal)",
+    invoicingPrefix: "LIV-",
+    taxPercentage: "18%",
+  });
+
+  // Fetch settings from admin_settings collection in backend
+  const fetchSettings = async () => {
+    setLoading(true);
+    try {
+      const res = await API.get('/admin/settings');
+      if (res.data) {
+        setSettings({
+          twoFactor: res.data.twoFactor !== undefined ? res.data.twoFactor : true,
+          sessionPersistence: res.data.sessionPersistence !== undefined ? res.data.sessionPersistence : false,
+          smtpEmailRelay: res.data.smtpEmailRelay !== undefined ? res.data.smtpEmailRelay : true,
+          smsGateway: res.data.smsGateway !== undefined ? res.data.smsGateway : true,
+          webPush: res.data.webPush !== undefined ? res.data.webPush : false,
+          paymentOverdue: res.data.paymentOverdue !== undefined ? res.data.paymentOverdue : true,
+          highPriorityIssues: res.data.highPriorityIssues !== undefined ? res.data.highPriorityIssues : true,
+          staffDailyDigest: res.data.staffDailyDigest !== undefined ? res.data.staffDailyDigest : false,
+          platformPersona: res.data.platformPersona || "StayNest Enterprise Hub",
+          adminEmail: res.data.adminEmail || "ops@staynest.com",
+          fiscalUnit: res.data.fiscalUnit || "INR (₹) - Indian Rupee",
+          operationalLanguage: res.data.operationalLanguage || "English (Universal)",
+          invoicingPrefix: res.data.invoicingPrefix || "LIV-",
+          taxPercentage: res.data.taxPercentage || "18%",
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch settings from backend:', err);
+      showToast('Failed to load settings from database.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const handleInputChange = (field, value) => {
+    setSettings(prev => ({ ...prev, [field]: value }));
+  };
 
   const menuItems = [
     { name: 'General', icon: <SettingsIcon size={18} />, description: 'Platform defaults & system parameters' },
@@ -27,22 +89,51 @@ const Settings = () => {
     { name: 'Identity', icon: <User size={18} />, description: 'Branding & platform persona' },
   ];
 
-  const handleSave = () => {
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await API.put('/admin/settings', settings);
+      if (res.data) {
+        setIsSaved(true);
+        showToast('Platform configurations stored inside admin_settings collection!', 'success');
+        setTimeout(() => setIsSaved(false), 2000);
+      }
+    } catch (err) {
+      console.error('Failed to update settings in backend:', err);
+      showToast('Failed to save settings to backend database.', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const Toggle = ({ enabled, label, sub }) => (
+  const Toggle = ({ name, label, sub }) => (
     <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 dark:bg-white/[0.02] border border-divider/50">
        <div>
           <p className="text-[11px] font-black text-text-primary uppercase tracking-tight">{label}</p>
           <p className="text-[9px] font-bold text-text-muted uppercase italic">{sub}</p>
        </div>
-       <button className={`w-12 h-6 rounded-full relative transition-all duration-300 ${enabled ? 'bg-primary shadow-glow' : 'bg-slate-200 dark:bg-white/10'}`}>
-          <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-300 ${enabled ? 'right-1' : 'left-1'}`} />
+       <button 
+          onClick={() => {
+            setSettings(prev => {
+              const next = { ...prev, [name]: !prev[name] };
+              showToast(`${label} is now ${next[name] ? 'Enabled' : 'Disabled'}.`, 'info');
+              return next;
+            });
+          }}
+          className={`w-12 h-6 rounded-full relative transition-all duration-300 ${settings[name] ? 'bg-primary shadow-glow' : 'bg-slate-200 dark:bg-white/10'}`}
+       >
+          <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-300 ${settings[name] ? 'right-1' : 'left-1'}`} />
        </button>
     </div>
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <RefreshCw className="animate-spin text-primary" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 pb-20 animate-fade">
@@ -143,15 +234,15 @@ const Settings = () => {
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="space-y-3">
                              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Platform Persona</label>
-                             <input type="text" defaultValue="StayNest Enterprise Hub" className="w-full bg-slate-50 dark:bg-white/[0.02] border border-divider rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all" />
+                             <input type="text" value={settings.platformPersona} onChange={(e) => handleInputChange('platformPersona', e.target.value)} className="w-full bg-slate-50 dark:bg-white/[0.02] border border-divider rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all" />
                           </div>
                           <div className="space-y-3">
                              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Administrative Email</label>
-                             <input type="email" defaultValue="ops@staynest.com" className="w-full bg-slate-50 dark:bg-white/[0.02] border border-divider rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all" />
+                             <input type="email" value={settings.adminEmail} onChange={(e) => handleInputChange('adminEmail', e.target.value)} className="w-full bg-slate-50 dark:bg-white/[0.02] border border-divider rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all" />
                           </div>
                           <div className="space-y-3">
                              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Primary Fiscal Unit</label>
-                             <select className="w-full bg-slate-50 dark:bg-white/[0.02] border border-divider rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all">
+                             <select value={settings.fiscalUnit} onChange={(e) => handleInputChange('fiscalUnit', e.target.value)} className="w-full bg-slate-50 dark:bg-white/[0.02] border border-divider rounded-xl py-4 px-6 text-sm font-bold text-text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all">
                                 <option>INR (₹) - Indian Rupee</option>
                                 <option>USD ($) - US Dollar</option>
                              </select>
@@ -169,8 +260,8 @@ const Settings = () => {
                     {activeTab === 'Security' && (
                        <div className="space-y-10">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                             <Toggle enabled={true} label="Two-Factor Protocol" sub="Enforce dual-layer authorization" />
-                             <Toggle enabled={false} label="Session Persistence" sub="Extend login token duration" />
+                             <Toggle name="twoFactor" label="Two-Factor Protocol" sub="Enforce dual-layer authorization" />
+                             <Toggle name="sessionPersistence" label="Session Persistence" sub="Extend login token duration" />
                           </div>
                           <div className="space-y-6">
                              <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
@@ -208,9 +299,9 @@ const Settings = () => {
                                    <Mail size={16} className="text-primary" /> Transmission Channels
                                 </h4>
                                 <div className="space-y-3">
-                                   <Toggle enabled={true} label="SMTP Email Relay" sub="Primary communication vector" />
-                                   <Toggle enabled={true} label="SMS Gateway" sub="Critical urgent alerts" />
-                                   <Toggle enabled={false} label="Web Push" sub="Browser-level HUD alerts" />
+                                   <Toggle name="smtpEmailRelay" label="SMTP Email Relay" sub="Primary communication vector" />
+                                   <Toggle name="smsGateway" label="SMS Gateway" sub="Critical urgent alerts" />
+                                   <Toggle name="webPush" label="Web Push" sub="Browser-level HUD alerts" />
                                 </div>
                              </div>
                              <div className="card-classic p-6 space-y-6 border-dashed">
@@ -218,9 +309,9 @@ const Settings = () => {
                                    <Zap size={16} className="text-warning" /> Trigger Logic
                                 </h4>
                                 <div className="space-y-3">
-                                   <Toggle enabled={true} label="Payment Overdue" sub="Automatic fiscal escalation" />
-                                   <Toggle enabled={true} label="High Priority Issues" sub="Maintenance emergency pulse" />
-                                   <Toggle enabled={false} label="Staff Daily Digest" sub="Global manifest summary" />
+                                   <Toggle name="paymentOverdue" label="Payment Overdue" sub="Automatic fiscal escalation" />
+                                   <Toggle name="highPriorityIssues" label="High Priority Issues" sub="Maintenance emergency pulse" />
+                                   <Toggle name="staffDailyDigest" label="Staff Daily Digest" sub="Global manifest summary" />
                                 </div>
                              </div>
                           </div>
@@ -241,11 +332,11 @@ const Settings = () => {
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">Invoicing Prefix</label>
-                                   <input type="text" defaultValue="LIV-" className="w-full bg-white dark:bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold" />
+                                   <input type="text" value={settings.invoicingPrefix} onChange={(e) => handleInputChange('invoicingPrefix', e.target.value)} className="w-full bg-white dark:bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold" />
                                 </div>
                                 <div className="space-y-2">
                                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">Tax Percentage (GST)</label>
-                                   <input type="text" defaultValue="18%" className="w-full bg-white dark:bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold" />
+                                   <input type="text" value={settings.taxPercentage} onChange={(e) => handleInputChange('taxPercentage', e.target.value)} className="w-full bg-white dark:bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold" />
                                 </div>
                              </div>
                           </div>

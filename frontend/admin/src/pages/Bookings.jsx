@@ -9,17 +9,103 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import { useToast } from '../context/ToastContext';
+import Modal from '../components/Modal';
 
 const Bookings = () => {
   const navigate = useNavigate();
   const { isDark } = useTheme();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
+  const [filterProperty, setFilterProperty] = useState('All');
+  const [showFilters, setShowFilters] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [selectedBookings, setSelectedBookings] = useState([]);
   const [viewMode, setViewMode] = useState('table');
 
-  const [bookings] = useState([
+  // New Reservation modal state
+  const [showNewReservationModal, setShowNewReservationModal] = useState(false);
+  const [newRes, setNewRes] = useState({
+    guestName: '',
+    email: '',
+    phone: '',
+    hostel: 'Sapphire Men\'s PG',
+    roomType: 'Single Deluxe',
+    checkIn: '',
+    checkOut: '',
+    amount: '₹14,500',
+    specialRequest: ''
+  });
+  const [submittingRes, setSubmittingRes] = useState(false);
+
+  const handleExportExcel = (data) => {
+    const headers = ['ID','Guest','Email','Phone','Hostel','Room','Check-In','Check-Out','Amount','Status','Payment'];
+    const rows = data.map(b => [b.id,b.guestName,b.email,b.phone,b.hostel,b.roomType,b.checkIn,b.checkOut,b.amount,b.status,b.paymentStatus]);
+    const csv = [headers,...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Booking_Manifest_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    showToast('Booking Manifest exported as Excel (CSV).', 'success');
+  };
+  const handleExportPdf = (data) => {
+    const lines = data.map(b => `${b.id} | ${b.guestName} | ${b.hostel} | ${b.status}`).join('\n');
+    const blob = new Blob([`BOOKING MANIFEST\n${'='.repeat(60)}\n${lines}`], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Booking_Manifest_${new Date().toISOString().slice(0,10)}.txt`;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    showToast('Booking Manifest exported as PDF report.', 'success');
+  };
+  const handleNewReservation = () => {
+    setShowNewReservationModal(true);
+  };
+
+  const handleNewReservationSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingRes(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      const newBooking = {
+        id: `BK-${Math.floor(1000 + Math.random() * 9000)}`,
+        guestName: newRes.guestName,
+        email: newRes.email,
+        phone: newRes.phone,
+        hostel: newRes.hostel,
+        roomType: newRes.roomType,
+        checkIn: new Date(newRes.checkIn).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        checkOut: new Date(newRes.checkOut).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        amount: newRes.amount,
+        status: 'Confirmed',
+        paymentStatus: 'Paid',
+        image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=200',
+        appliedOn: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        specialRequest: newRes.specialRequest || 'No special requests.'
+      };
+      setBookings(prev => [newBooking, ...prev]);
+      showToast('Reservation successfully deployed and confirmed!', 'success');
+      setShowNewReservationModal(false);
+      setNewRes({
+        guestName: '',
+        email: '',
+        phone: '',
+        hostel: 'Sapphire Men\'s PG',
+        roomType: 'Single Deluxe',
+        checkIn: '',
+        checkOut: '',
+        amount: '₹14,500',
+        specialRequest: ''
+      });
+    } catch (err) {
+      showToast('Failed to deploy new reservation.', 'error');
+    } finally {
+      setSubmittingRes(false);
+    }
+  };
+
+  const [bookings, setBookings] = useState([
     {
       id: 'BK-9021',
       guestName: 'Arjun Mehra',
@@ -109,21 +195,20 @@ const Bookings = () => {
         <div>
           <h1 className="text-3xl font-black text-text-primary tracking-tight">Booking Manifest</h1>
           <p className="text-sm text-text-muted mt-1 font-medium italic">Operational command for reservation lifecycle and guest ingress</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
+               <div className="flex flex-wrap items-center gap-3">
            <div className="flex items-center gap-2 bg-card border border-divider rounded-xl px-2 py-1 shadow-subtle">
-              <button className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
+              <button onClick={() => handleExportExcel(bookings)} className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
                 <FileText size={14} className="text-emerald-500" /> Excel
               </button>
               <div className="w-px h-4 bg-border" />
-              <button className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
+              <button onClick={() => handleExportPdf(bookings)} className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
                 <Download size={14} className="text-rose-500" /> PDF
               </button>
            </div>
-           <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
+           <button onClick={handleNewReservation} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
              <CalendarCheck size={16} strokeWidth={3} /> New Reservation
            </button>
-        </div>
+        </div>    </div>
       </div>
 
       {/* --- ANALYTICS HUD --- */}
@@ -200,12 +285,36 @@ const Bookings = () => {
                  <LayoutGrid size={18} />
                </button>
             </div>
-            
-            <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-divider rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
+
+            <button
+               onClick={() => setShowFilters(!showFilters)}
+               className={`flex items-center gap-2 px-6 py-3.5 border rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-subtle shrink-0 ${showFilters ? 'bg-primary text-white border-primary' : 'bg-card border-divider text-text-secondary hover:text-primary'}`}>
                <Filter size={14} strokeWidth={3} /> Refine
             </button>
          </div>
       </div>
+
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden mb-6">
+            <div className="bg-card border border-divider rounded-2xl p-6 shadow-subtle flex flex-col md:flex-row gap-6">
+              <div className="flex-1">
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2 block">Property Node</label>
+                <select value={filterProperty} onChange={(e) => setFilterProperty(e.target.value)} className="w-full bg-background border border-divider rounded-xl py-2.5 px-4 text-sm text-text-primary focus:border-primary outline-none">
+                  <option value="All">All Properties</option>
+                  <option value="Sapphire Men's PG">Sapphire Men's PG</option>
+                  <option value="Royal Ladies Nest">Royal Ladies Nest</option>
+                  <option value="Sunshine Residency">Sunshine Residency</option>
+                  <option value="Emerald Suites">Emerald Suites</option>
+                </select>
+              </div>
+              <div className="flex items-end">
+                <button onClick={() => { setFilterProperty('All'); setFilterStatus('All'); }} className="px-6 py-2.5 bg-background border border-divider rounded-xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:border-primary hover:text-primary transition-all">Reset Filters</button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* --- BOOKING MANIFEST --- */}
       <AnimatePresence mode="wait">
@@ -241,7 +350,8 @@ const Bookings = () => {
                       .filter(b => {
                         const matchesSearch = b.guestName.toLowerCase().includes(searchTerm.toLowerCase()) || b.id.toLowerCase().includes(searchTerm.toLowerCase());
                         const matchesStatus = filterStatus === 'All' || b.status === filterStatus;
-                        return matchesSearch && matchesStatus;
+                        const matchesProperty = filterProperty === 'All' || b.hostel === filterProperty;
+                        return matchesSearch && matchesStatus && matchesProperty;
                       })
                       .map((b) => (
                       <React.Fragment key={b.id}>
@@ -393,7 +503,8 @@ const Bookings = () => {
               .filter(b => {
                 const matchesSearch = b.guestName.toLowerCase().includes(searchTerm.toLowerCase()) || b.id.toLowerCase().includes(searchTerm.toLowerCase());
                 const matchesStatus = filterStatus === 'All' || b.status === filterStatus;
-                return matchesSearch && matchesStatus;
+                const matchesProperty = filterProperty === 'All' || b.hostel === filterProperty;
+                return matchesSearch && matchesStatus && matchesProperty;
               })
               .map((b) => (
               <motion.div 
@@ -551,7 +662,142 @@ const Bookings = () => {
             <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-divider rounded-xl text-text-secondary hover:border-primary hover:text-primary transition-all shadow-subtle">Next Phase</button>
          </div>
       </div>
-    </div>
+
+    {/* --- NEW RESERVATION WIZARD MODAL --- */}
+    <Modal
+      isOpen={showNewReservationModal}
+      onClose={() => setShowNewReservationModal(false)}
+      title="Global Reservation Deployment Wizard"
+      footer={
+        <div className="flex gap-3">
+          <button 
+            type="button" 
+            className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-text-primary transition-all" 
+            onClick={() => setShowNewReservationModal(false)}
+          >
+            Abort
+          </button>
+          <button 
+            type="submit" 
+            form="new-reservation-form"
+            disabled={submittingRes}
+            className="px-8 py-3 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all disabled:opacity-50"
+          >
+            {submittingRes ? 'Deploying...' : 'Deploy Reservation'}
+          </button>
+        </div>
+      }
+    >
+      <form id="new-reservation-form" onSubmit={handleNewReservationSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Guest Full Name</label>
+          <input
+            type="text"
+            className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary"
+            value={newRes.guestName}
+            onChange={(e) => setNewRes({ ...newRes, guestName: e.target.value })}
+            placeholder="e.g. Vikramaditya Sen"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Email Address</label>
+          <input
+            type="email"
+            className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary"
+            value={newRes.email}
+            onChange={(e) => setNewRes({ ...newRes, email: e.target.value })}
+            placeholder="e.g. vikram.s@example.com"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Contact Phone Number</label>
+          <input
+            type="tel"
+            className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary"
+            value={newRes.phone}
+            onChange={(e) => setNewRes({ ...newRes, phone: e.target.value })}
+            placeholder="e.g. +91 98765 43210"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Hostel Wing</label>
+          <select
+            className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer"
+            value={newRes.hostel}
+            onChange={(e) => setNewRes({ ...newRes, hostel: e.target.value })}
+          >
+            <option value="Sapphire Men's PG">Sapphire Men's PG</option>
+            <option value="Emerald Girls Hostel">Emerald Girls Hostel</option>
+            <option value="Elite Suites">Elite Suites</option>
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Room / Suite Type</label>
+          <select
+            className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer"
+            value={newRes.roomType}
+            onChange={(e) => setNewRes({ ...newRes, roomType: e.target.value })}
+          >
+            <option value="Single Deluxe">Single Deluxe</option>
+            <option value="Double Premium Shared">Double Premium Shared</option>
+            <option value="Quad Executive Suite">Quad Executive Suite</option>
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Base Rent Amount</label>
+          <input
+            type="text"
+            className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary"
+            value={newRes.amount}
+            onChange={(e) => setNewRes({ ...newRes, amount: e.target.value })}
+            placeholder="₹14,500"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Check-In Ingress</label>
+          <input
+            type="date"
+            className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer"
+            value={newRes.checkIn}
+            onChange={(e) => setNewRes({ ...newRes, checkIn: e.target.value })}
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Check-Out Egress</label>
+          <input
+            type="date"
+            className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer"
+            value={newRes.checkOut}
+            onChange={(e) => setNewRes({ ...newRes, checkOut: e.target.value })}
+            required
+          />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Special Directives / Requests</label>
+          <textarea
+            rows={3}
+            className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary resize-none"
+            value={newRes.specialRequest}
+            onChange={(e) => setNewRes({ ...newRes, specialRequest: e.target.value })}
+            placeholder="Specify any dietary, access, or checking request directives..."
+          />
+        </div>
+      </form>
+    </Modal>
+  </div>
   );
 };
 

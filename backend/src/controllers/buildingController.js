@@ -1,6 +1,8 @@
 const Building = require('../models/Building');
 const Floor = require('../models/Floor');
 const Room = require('../models/Room');
+const Bed = require('../models/Bed');
+const Tenant = require('../models/Tenant');
 
 const createBuilding = async (req, res) => {
   try {
@@ -35,10 +37,17 @@ const createBuilding = async (req, res) => {
 
 const getBuildings = async (req, res) => {
   try {
-    console.log('Fetching buildings for user:', req.user.id);
-    const buildings = await Building.find({ owner: req.user.id }).populate({ 
+    console.log('Fetching buildings for user:', req.user.id, 'Role:', req.user.role);
+    const query = req.user.role === 'SUPER_ADMIN' ? {} : { owner: req.user.id };
+    const buildings = await Building.find(query).populate({ 
       path: 'floors', 
-      populate: { path: 'rooms', populate: { path: 'beds' } } 
+      populate: { 
+        path: 'rooms', 
+        populate: { 
+          path: 'beds',
+          populate: { path: 'tenant' }
+        } 
+      } 
     });
     res.status(200).json(buildings);
   } catch (error) { res.status(500).json({ error: error.message }); }
@@ -128,7 +137,16 @@ const bulkCreateBuildings = async (req, res) => {
 
 const getBuildingById = async (req, res) => {
   try {
-    const building = await Building.findById(req.params.id).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
+    const building = await Building.findById(req.params.id).populate({ 
+      path: 'floors', 
+      populate: { 
+        path: 'rooms', 
+        populate: { 
+          path: 'beds',
+          populate: { path: 'tenant' }
+        } 
+      } 
+    });
     if (!building) return res.status(404).json({ error: 'Building not found' });
     res.status(200).json(building);
   } catch (error) { res.status(500).json({ error: error.message }); }

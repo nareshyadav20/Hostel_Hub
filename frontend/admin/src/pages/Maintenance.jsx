@@ -9,24 +9,53 @@ import {
   Trash2, Edit, MessageSquare, ArrowLeft, Plus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import Modal from '../components/Modal';
 
 const Maintenance = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [expandedId, setExpandedId] = useState(null);
   const [selectedTasks, setSelectedTasks] = useState([]);
+
+  // Confirm Dialog State
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+  const triggerConfirm = (title, message, onConfirm) => {
+    setConfirmDialog({ isOpen: true, title, message, onConfirm: () => { onConfirm(); setConfirmDialog(prev => ({ ...prev, isOpen: false })); } });
+  };
+
+  // Modals
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+
  
   const handleRefine = () => alert("Advanced Maintenance Filter Matrix initialized.");
   const handleVerifyClose = (id) => alert(`Task ${id} verified and marked as Resolved.`);
   const handleReassign = (id) => alert(`Reassigning Specialist for Task ${id}...`);
   const handleAbort = (id) => {
-    if(window.confirm(`Are you sure you want to abort operation ${id}?`)) {
-      alert(`Operation ${id} aborted and logged.`);
-    }
+    triggerConfirm(
+      "Abort Operations",
+      `Are you sure you want to abort operation ${id}? This action will halt current service and log it.`,
+      () => showToast(`Operation ${id} aborted and logged.`, "error")
+    );
   };
-  const handleExport = () => alert("Exporting Maintenance Logs Manifest...");
+  const handleExport = () => setShowExportModal(true);
+
+  const executeExport = (format) => {
+    const headers = ['ID', 'Task', 'Category', 'Location', 'Technician', 'Priority', 'Status', 'Date'];
+    const rows = tasks.map(t => [t.id, t.task, t.category, t.location, t.technician, t.priority, t.status, t.date]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Maintenance_Logs_${new Date().toISOString().slice(0,10)}.${format.toLowerCase()}`;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    alert(`Maintenance Logs exported successfully as ${format}.`);
+    setShowExportModal(false);
+  };
 
   const [tasks] = useState([
     {
@@ -129,7 +158,7 @@ const Maintenance = () => {
           >
             <Download size={16} /> Export Logs
           </button>
-          <button className="btn-premium">
+          <button onClick={() => setShowNewTaskModal(true)} className="btn-premium">
             <Plus size={18} strokeWidth={3} /> New Task
           </button>
         </div>
@@ -375,6 +404,105 @@ const Maintenance = () => {
             <button className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-divider rounded-xl text-text-secondary hover:border-primary hover:text-primary transition-all shadow-subtle">Next Phase</button>
          </div>
       </div>
+      {/* --- PREMIUM CONFIRMATION DIALOG --- */}
+      <AnimatePresence>
+        {confirmDialog.isOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-card border border-divider rounded-3xl shadow-2xl p-8 w-full max-w-md text-center"
+              onClick={e => e.stopPropagation()}>
+              <div className="w-16 h-16 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto mb-6">
+                <AlertCircle size={32} />
+              </div>
+              <h3 className="text-xl font-black text-text-primary uppercase tracking-tight mb-2">{confirmDialog.title}</h3>
+              <p className="text-sm text-text-muted mb-8 leading-relaxed">{confirmDialog.message}</p>
+              <div className="flex gap-4">
+                <button onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+                  className="flex-1 py-3.5 bg-slate-50 dark:bg-white/5 border border-divider text-text-secondary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 dark:hover:bg-white/10 transition-all">
+                  Cancel
+                </button>
+                <button onClick={confirmDialog.onConfirm}
+                  className="flex-1 py-3.5 bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition-all">
+                  Confirm
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* --- NEW TASK WIZARD MODAL --- */}
+      <Modal isOpen={showNewTaskModal} onClose={() => setShowNewTaskModal(false)} title="Dispatch Maintenance Task" footer={
+        <div className="flex gap-3">
+           <button type="button" onClick={() => setShowNewTaskModal(false)} className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-text-primary transition-all">Cancel</button>
+           <button type="button" onClick={() => { showToast("Task Dispatched successfully to engineering matrix.", "success"); setShowNewTaskModal(false); }} className="px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all flex items-center gap-2">
+              <Zap size={14} /> Dispatch Protocol
+           </button>
+        </div>
+      }>
+        <form className="space-y-5 py-4">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                 <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Task Title</label>
+                 <input type="text" className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" placeholder="e.g. Broken AC Compressor" />
+              </div>
+              <div className="space-y-2">
+                 <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Location</label>
+                 <input type="text" className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary" placeholder="e.g. Block A - Room 102" />
+              </div>
+           </div>
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                 <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Service Category</label>
+                 <select className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer">
+                    <option>Electrical</option>
+                    <option>Plumbing</option>
+                    <option>HVAC</option>
+                    <option>Carpentry</option>
+                    <option>Appliance Repair</option>
+                 </select>
+              </div>
+              <div className="space-y-2">
+                 <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Priority Matrix</label>
+                 <select className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer">
+                    <option value="Low">Low - Routine</option>
+                    <option value="Medium">Medium - Standard</option>
+                    <option value="High">High - Urgent</option>
+                    <option value="Critical">Critical - Emergency</option>
+                 </select>
+              </div>
+           </div>
+           <div className="space-y-2">
+              <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Detailed Diagnostics / Notes</label>
+              <textarea rows={4} className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary resize-none" placeholder="Provide contextual failure details..." />
+           </div>
+        </form>
+      </Modal>
+
+      {/* --- EXPORT MODAL --- */}
+      <Modal isOpen={showExportModal} onClose={() => setShowExportModal(false)} title="Export Maintenance Matrix">
+        <div className="py-6 space-y-6">
+           <p className="text-sm text-text-muted text-center max-w-sm mx-auto">Select a format to compile and export the active maintenance datagrid.</p>
+           <div className="grid grid-cols-2 gap-4">
+              <button onClick={() => executeExport('CSV')} className="flex flex-col items-center justify-center p-6 border border-divider rounded-2xl bg-card hover:border-primary hover:shadow-glow transition-all group">
+                 <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <FileText size={24} />
+                 </div>
+                 <span className="text-[13px] font-black text-text-primary uppercase tracking-tight">Export as CSV</span>
+                 <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-1">Raw Datagrid</span>
+              </button>
+              <button onClick={() => executeExport('PDF')} className="flex flex-col items-center justify-center p-6 border border-divider rounded-2xl bg-card hover:border-primary hover:shadow-glow transition-all group">
+                 <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <FileText size={24} />
+                 </div>
+                 <span className="text-[13px] font-black text-text-primary uppercase tracking-tight">Export as PDF</span>
+                 <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-1">Formatted Log</span>
+              </button>
+           </div>
+        </div>
+      </Modal>
     </div>
   );
 };

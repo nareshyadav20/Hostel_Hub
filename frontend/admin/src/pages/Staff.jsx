@@ -1,35 +1,135 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, Filter, Download, UserPlus, Users, Building2,
   Briefcase, Shield, Star, Calendar, Activity,
   TrendingUp, AlertCircle, Zap, MessageSquare,
   Trash2, Edit, ChevronDown, ArrowLeft, Mail, Phone,
-  MoreHorizontal, CheckCircle2
+  MoreHorizontal, CheckCircle2, RefreshCw
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import { useToast } from '../context/ToastContext';
+import Modal from '../components/Modal';
+import API from '../api/axios';
 
 const Staff = () => {
   const navigate = useNavigate();
   const { isDark } = useTheme();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('All');
+  const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterProperty, setFilterProperty] = useState('All');
+  const [filterStatus, setFilterStatus] = useState('All');
   const [expandedId, setExpandedId] = useState(null);
   const [selectedStaff, setSelectedStaff] = useState([]);
 
-  const handleOnboard = () => alert("Staff Onboarding protocol initiated.");
-  const handleExport = () => alert("Exporting HR Personnel Manifest...");
-  const handleAnnouncement = () => alert("Global Announcement Composer initialized.");
-  const handleProtocolAssign = (name) => alert(`Assigning new protocol to ${name}...`);
-  const handlePerformanceReview = (name) => alert(`Initializing performance audit for ${name}...`);
-  const handleOffboard = (name) => {
-    if(window.confirm(`Are you sure you want to offboard ${name}? This action is permanent.`)) {
-      alert(`${name} offboarding protocol finalized.`);
+  // Confirmation state
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null
+  });
+
+  const triggerConfirm = (title, message, onConfirm) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  // Announcement modal state
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [announcementTarget, setAnnouncementTarget] = useState('All');
+  const [announcementSubject, setAnnouncementSubject] = useState('');
+  const [announcementMessage, setAnnouncementMessage] = useState('');
+  const [announcing, setAnnouncing] = useState(false);
+
+  // Fetch staff from backend
+  const fetchStaff = async () => {
+    setLoading(true);
+    try {
+      const res = await API.get('/admin/staff');
+      if (res.data && res.data.length > 0) {
+        const mapped = res.data.map((s, i) => ({
+          id: s._id || `EMP-${2021 + i}`,
+          name: s.name || 'Unknown',
+          role: s.role || 'Staff',
+          property: s.buildingId || 'Platform HQ',
+          rating: s.rating || 4.5,
+          status: s.status || 'Active',
+          joined: s.createdAt ? new Date(s.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A',
+          tasks: s.tasks || 0,
+          email: s.email || `${(s.name || 'staff').toLowerCase().replace(' ', '.')}@staynest.com`,
+          phone: s.contact || '+91 00000 00000',
+          salary: s.salary || 0,
+          skills: s.skills || [s.role || 'Operations']
+        }));
+        setStaff(mapped);
+      }
+    } catch (err) {
+      console.error('Failed to fetch staff:', err);
+      showToast('Using cached staff data. Backend unavailable.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const [staff] = useState([
+  useEffect(() => { fetchStaff(); }, []);
+
+  const handleOnboard = () => showToast("Staff Onboarding protocol initiated. Input personnel details.", "info");
+  const handleExport = () => {
+    const headers = ['ID', 'Name', 'Role', 'Property', 'Rating', 'Status', 'Joined', 'Email', 'Phone'];
+    const rows = staff.map(s => [s.id, s.name, s.role, s.property, s.rating, s.status, s.joined, s.email, s.phone]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `HR_Manifest_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("HR Personnel Manifest exported successfully.", "success");
+  };
+  const handleAnnouncement = () => {
+    setShowAnnouncementModal(true);
+  };
+  const handleAnnouncementSubmit = async (e) => {
+    e.preventDefault();
+    setAnnouncing(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      showToast(`Global Notice successfully dispatched to department: ${announcementTarget}!`, "success");
+      setShowAnnouncementModal(false);
+      setAnnouncementSubject('');
+      setAnnouncementMessage('');
+    } catch (err) {
+      showToast("Failed to dispatch broadcast notice.", "error");
+    } finally {
+      setAnnouncing(false);
+    }
+  };
+  const handleProtocolAssign = (name) => showToast(`Assigning new protocol assignment for ${name}...`, "info");
+  const handlePerformanceReview = (name) => showToast(`Initializing performance audit review for ${name}...`, "info");
+  const handleOffboard = (name) => {
+    triggerConfirm(
+      "Confirm Personnel Offboarding",
+      `Are you sure you want to offboard ${name}? This action is permanent and will finalize their service record.`,
+      () => {
+        showToast(`${name} offboarding protocol finalized successfully.`, "success");
+      }
+    );
+  };
+
+  const [staff, setStaff] = useState([
     { 
       id: 'EMP-2021', 
       name: 'Sanjay Kumar', 
@@ -187,11 +287,53 @@ const Staff = () => {
 
             <div className="h-10 w-px bg-border mx-2 shrink-0" />
 
-            <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-divider rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
+            <button 
+               onClick={() => setShowFilters(!showFilters)}
+               className={`flex items-center gap-2 px-6 py-3.5 border rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-subtle shrink-0 ${showFilters ? 'bg-primary text-white border-primary' : 'bg-card border-divider text-text-secondary hover:text-primary'}`}>
                <Filter size={14} strokeWidth={3} /> Filters
             </button>
          </div>
       </div>
+
+      {/* --- ADVANCED FILTERS PANEL --- */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden mb-6 -mt-4"
+          >
+            <div className="bg-card border border-divider rounded-2xl p-6 shadow-subtle grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2 block">Property Node</label>
+                <select 
+                  value={filterProperty}
+                  onChange={(e) => setFilterProperty(e.target.value)}
+                  className="w-full bg-background border border-divider rounded-xl py-2.5 px-4 text-sm text-text-primary focus:border-primary outline-none"
+                >
+                  <option value="All">All Properties</option>
+                  <option value="Sapphire PG">Sapphire PG</option>
+                  <option value="Elite Living">Elite Living</option>
+                  <option value="Tech Park PG">Tech Park PG</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2 block">Status</label>
+                <select 
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="w-full bg-background border border-divider rounded-xl py-2.5 px-4 text-sm text-text-primary focus:border-primary outline-none"
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="Active">Active</option>
+                  <option value="On Leave">On Leave</option>
+                </select>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* --- STAFF MANIFEST --- */}
       <div className="card-classic overflow-hidden border border-divider/50 shadow-premium">
@@ -222,7 +364,9 @@ const Staff = () => {
                     .filter(s => {
                        const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.id.toLowerCase().includes(searchTerm.toLowerCase());
                        const matchesRole = filterRole === 'All' || s.role === filterRole;
-                       return matchesSearch && matchesRole;
+                       const matchesProperty = filterProperty === 'All' || s.property === filterProperty;
+                       const matchesStatus = filterStatus === 'All' || s.status === filterStatus;
+                       return matchesSearch && matchesRole && matchesProperty && matchesStatus;
                     })
                     .map((s) => (
                     <React.Fragment key={s.id}>
@@ -375,7 +519,101 @@ const Staff = () => {
          </div>
       </div>
 
-    </div>
+    {/* --- GLOBAL ANNOUNCEMENT COMPOSER MODAL --- */}
+    <Modal
+      isOpen={showAnnouncementModal}
+      onClose={() => setShowAnnouncementModal(false)}
+      title="Global Announcement Composer"
+      footer={
+        <div className="flex gap-3">
+          <button 
+            type="button" 
+            className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-text-primary transition-all" 
+            onClick={() => setShowAnnouncementModal(false)}
+          >
+            Abort
+          </button>
+          <button 
+            type="submit" 
+            form="announcement-form"
+            disabled={announcing}
+            className="px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {announcing ? 'Broadcasting...' : 'Broadcast Notice'}
+          </button>
+        </div>
+      }
+    >
+      <form id="announcement-form" onSubmit={handleAnnouncementSubmit} className="space-y-6 py-4">
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Target Department Nodes</label>
+          <select
+            className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer"
+            value={announcementTarget}
+            onChange={(e) => setAnnouncementTarget(e.target.value)}
+          >
+            <option value="All">All Staff Nodes (Global)</option>
+            <option value="Admin">Administrative Wing</option>
+            <option value="Finance">Finance Wing</option>
+            <option value="Maintenance">Maintenance & Repairs Wing</option>
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Subject Title</label>
+          <input
+            type="text"
+            className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary"
+            value={announcementSubject}
+            onChange={(e) => setAnnouncementSubject(e.target.value)}
+            placeholder="e.g. Server Downtime / Emergency Briefing"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Notice Message Body</label>
+          <textarea
+            rows={5}
+            className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary resize-none"
+            value={announcementMessage}
+            onChange={(e) => setAnnouncementMessage(e.target.value)}
+            placeholder="Type administrative notice text here..."
+            required
+          />
+        </div>
+      </form>
+    </Modal>
+
+    {/* --- PREMIUM CONFIRMATION DIALOG --- */}
+    <AnimatePresence>
+      {confirmDialog.isOpen && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-card border border-divider rounded-3xl shadow-2xl p-8 w-full max-w-md text-center"
+            onClick={e => e.stopPropagation()}>
+            <div className="w-16 h-16 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto mb-6">
+              <AlertCircle size={32} />
+            </div>
+            <h3 className="text-xl font-black text-text-primary uppercase tracking-tight mb-2">{confirmDialog.title}</h3>
+            <p className="text-sm text-text-muted mb-8 leading-relaxed">{confirmDialog.message}</p>
+            <div className="flex gap-4">
+              <button onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+                className="flex-1 py-3.5 bg-slate-50 dark:bg-white/5 border border-divider text-text-secondary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 dark:hover:bg-white/10 transition-all">
+                Cancel
+              </button>
+              <button onClick={confirmDialog.onConfirm}
+                className="flex-1 py-3.5 bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition-all">
+                Confirm
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
   );
 };
 

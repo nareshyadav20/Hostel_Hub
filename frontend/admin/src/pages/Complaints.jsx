@@ -7,10 +7,22 @@ import {
   CheckCircle2, XCircle, Zap, ExternalLink, ArrowLeft
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Complaints = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
+
+  const handleResolveTicket = (id) => showToast(`Ticket ${id} marked as Resolved successfully.`, "success");
+  const handleReassign = (id) => showToast(`Reassigning Specialist for Ticket ${id}...`, "info");
+  const handleNotifyTenant = (id) => showToast(`Notification broadcasted to Tenant for Ticket ${id}.`, "success");
+  const [showIntelligencePanel, setShowIntelligencePanel] = useState(false);
+  const [intelligenceFilters, setIntelligenceFilters] = useState({
+     category: 'All',
+     priority: 'All',
+     property: 'All'
+  });
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedId, setExpandedId] = useState(null);
@@ -166,11 +178,76 @@ const Complaints = () => {
 
             <div className="h-10 w-px bg-border mx-2 shrink-0" />
 
-            <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-divider rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
+            <button 
+               onClick={() => setShowIntelligencePanel(!showIntelligencePanel)}
+               className={`flex items-center gap-2 px-6 py-3.5 border rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-subtle shrink-0 ${
+                  showIntelligencePanel ? 'bg-primary text-white border-primary' : 'bg-card border-divider text-text-secondary hover:text-primary'
+               }`}
+            >
                <Filter size={14} strokeWidth={3} /> Intelligence Filter
             </button>
          </div>
       </div>
+
+      {/* --- INTELLIGENCE FILTER DRAWER --- */}
+      <AnimatePresence>
+         {showIntelligencePanel && (
+            <motion.div
+               initial={{ height: 0, opacity: 0 }}
+               animate={{ height: 'auto', opacity: 1 }}
+               exit={{ height: 0, opacity: 0 }}
+               className="overflow-hidden mb-8"
+            >
+               <div className="p-6 bg-card border border-divider rounded-2xl shadow-subtle grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Category Filter */}
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] block mb-1">Issue Category</label>
+                     <select
+                        className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer font-bold"
+                        value={intelligenceFilters.category}
+                        onChange={(e) => setIntelligenceFilters({ ...intelligenceFilters, category: e.target.value })}
+                     >
+                        <option value="All">All Categories</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="IT/Utility">IT / Utility</option>
+                        <option value="Security">Security</option>
+                        <option value="Billing">Billing</option>
+                     </select>
+                  </div>
+
+                  {/* Priority Filter */}
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] block mb-1">Criticality Level</label>
+                     <select
+                        className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer font-bold"
+                        value={intelligenceFilters.priority}
+                        onChange={(e) => setIntelligenceFilters({ ...intelligenceFilters, priority: e.target.value })}
+                     >
+                        <option value="All">All Priorities</option>
+                        <option value="High">High Priority</option>
+                        <option value="Medium">Medium Priority</option>
+                        <option value="Low">Low Priority</option>
+                     </select>
+                  </div>
+
+                  {/* Property Wing Filter */}
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] block mb-1">Facility Wing</label>
+                     <select
+                        className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer font-bold"
+                        value={intelligenceFilters.property}
+                        onChange={(e) => setIntelligenceFilters({ ...intelligenceFilters, property: e.target.value })}
+                     >
+                        <option value="All">All Facilities</option>
+                        <option value="Sapphire PG">Sapphire PG</option>
+                        <option value="Elite Living">Elite Living</option>
+                      </select>
+                   </div>
+                </div>
+             </motion.div>
+          )}
+       </AnimatePresence>
+  
 
       {/* --- COMPLAINT MANIFEST (TABULAR) --- */}
       <div className="card-classic overflow-hidden border border-divider/50 shadow-premium bg-white/50 dark:bg-card/50">
@@ -201,7 +278,10 @@ const Complaints = () => {
                     .filter(c => {
                        const matchesSearch = c.issue.toLowerCase().includes(searchTerm.toLowerCase()) || c.id.toLowerCase().includes(searchTerm.toLowerCase()) || c.tenant.toLowerCase().includes(searchTerm.toLowerCase());
                        const matchesStatus = activeFilter === 'All' || c.status === activeFilter;
-                       return matchesSearch && matchesStatus;
+                        const matchesCategory = intelligenceFilters.category === 'All' || c.category === intelligenceFilters.category;
+                        const matchesPriority = intelligenceFilters.priority === 'All' || c.priority === intelligenceFilters.priority;
+                        const matchesProperty = intelligenceFilters.property === 'All' || c.property === intelligenceFilters.property;
+                        return matchesSearch && matchesStatus && matchesCategory && matchesPriority && matchesProperty;
                     })
                     .map((c) => (
                     <React.Fragment key={c.id}>
@@ -313,11 +393,11 @@ const Complaints = () => {
                                               <CheckCircle2 size={14} className="text-success" /> Decision Matrix
                                             </h4>
                                             <div className="grid grid-cols-1 gap-3">
-                                               <button className="w-full py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all group">
+                                               <button onClick={() => handleResolveTicket(c.id)} className="w-full py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all group">
                                                   Resolve Ticket <CheckCircle size={14} className="inline ml-1 group-hover:scale-110 transition-transform" />
                                                </button>
-                                               <button className="w-full py-4 bg-white dark:bg-card border border-divider text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Reassign Specialist</button>
-                                               <button className="w-full py-4 bg-primary/5 text-primary border border-primary/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all">Notify Tenant</button>
+                                               <button onClick={() => handleReassign(c.id)} className="w-full py-4 bg-white dark:bg-card border border-divider text-text-primary rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-primary transition-all">Reassign Specialist</button>
+                                               <button onClick={() => handleNotifyTenant(c.id)} className="w-full py-4 bg-primary/5 text-primary border border-primary/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all">Notify Tenant</button>
                                             </div>
                                          </div>
                                       </div>

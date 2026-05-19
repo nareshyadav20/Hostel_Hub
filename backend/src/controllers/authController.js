@@ -54,6 +54,22 @@ const login = async (req, res) => {
       }
     }
 
+    // For SUPER_ADMIN users: update lastLogin and sync credentials in the admin_profile collection
+    if (user.role === 'SUPER_ADMIN') {
+      const AdminProfile = require('../models/AdminProfile');
+      await AdminProfile.findOneAndUpdate(
+        { userId: user._id },
+        { 
+          name: user.name,
+          email: user.email,
+          password: user.password,
+          role: user.role,
+          lastLogin: new Date()
+        },
+        { upsert: true }
+      );
+    }
+
     const token = jwt.sign({ id: user._id, role: user.role, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.status(200).json({ user, token, tenantProfile });
   } catch (error) {

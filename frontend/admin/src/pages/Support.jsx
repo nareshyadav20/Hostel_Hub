@@ -4,18 +4,69 @@ import {
   ChevronRight, Send, Phone, Mail, Clock,
   DollarSign, Users, Building2, Wrench, Shield,
   ChevronDown, Plus, ExternalLink, HelpCircle,
-  MessageSquare, FileText, CheckCircle2, AlertCircle, ArrowLeft
+  MessageSquare, FileText, CheckCircle2, AlertCircle, ArrowLeft, XCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import { useToast } from '../context/ToastContext';
+import Modal from '../components/Modal';
 
 const Support = () => {
   const navigate = useNavigate();
   const { isDark } = useTheme();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('General');
   const [expandedFaq, setExpandedFaq] = useState(null);
+
+  // Modal states
+  const [showCallModal, setShowCallModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [chatMessages, setChatMessages] = useState([
+    { from: 'agent', text: 'Hello! Welcome to StayNest Admin Support. How can I assist you today?', time: 'Just now' }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [emailForm, setEmailForm] = useState({ department: 'Operations', subject: '', body: '', priority: 'Medium' });
+  const [callDialing, setCallDialing] = useState(false);
+  const [callConnected, setCallConnected] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  const handleCallSupport = () => { setShowCallModal(true); setCallDialing(false); setCallConnected(false); };
+  const handleEmailOps = () => setShowEmailModal(true);
+  const handleLiveChat = () => setShowChatModal(true);
+
+  const initiateCall = () => {
+    setCallDialing(true);
+    setTimeout(() => { setCallDialing(false); setCallConnected(true); }, 2500);
+  };
+
+  const endCall = () => { setCallConnected(false); setShowCallModal(false); showToast('Call session ended.', 'info'); };
+
+  const sendChatMessage = (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    setChatMessages(prev => [...prev, { from: 'user', text: chatInput, time: 'Just now' }]);
+    setChatInput('');
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, { from: 'agent', text: 'Thank you! Our team is reviewing your query. Reference: #SUP-' + Math.floor(Math.random() * 9000 + 1000), time: 'Just now' }]);
+    }, 1200);
+  };
+
+  const sendEmail = async (e) => {
+    e.preventDefault();
+    setSendingEmail(true);
+    await new Promise(r => setTimeout(r, 1500));
+    setSendingEmail(false);
+    setShowEmailModal(false);
+    setEmailForm({ department: 'Operations', subject: '', body: '', priority: 'Medium' });
+    showToast(`Email dispatched to ${emailForm.department} ops team!`, 'success');
+  };
+  const handleTransmit = (e) => {
+    e.preventDefault();
+    showToast("Incident report securely transmitted to tactical ops command.", "success");
+  };
 
   const categories = [
     { id: 'General', label: 'General Info', icon: <HelpCircle size={18} /> },
@@ -76,15 +127,15 @@ const Support = () => {
         </div>
         <div className="flex flex-wrap items-center gap-3">
            <div className="flex items-center gap-2 bg-card border border-divider rounded-xl px-2 py-1 shadow-subtle">
-              <button className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
+              <button onClick={handleCallSupport} className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
                 <Phone size={14} className="text-emerald-500" /> Call Support
               </button>
               <div className="w-px h-4 bg-border" />
-              <button className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
+              <button onClick={handleEmailOps} className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
                 <Mail size={14} className="text-primary" /> Email Ops
               </button>
            </div>
-           <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
+           <button onClick={handleLiveChat} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
              <MessageCircle size={16} strokeWidth={3} /> Start Live Chat
            </button>
         </div>
@@ -93,11 +144,11 @@ const Support = () => {
       {/* --- SUPPORT HUD --- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
          {[
-           { label: 'Knowledge Base', sub: 'Guides, FAQs & Protocols', icon: <BookOpen />, color: 'primary' },
-           { label: 'Contact Support', sub: '24/7 Administrative Help', icon: <MessageSquare />, color: 'success' },
-           { label: 'System Health', sub: 'Technical & API Status', icon: <Shield />, color: 'accent' },
+           { label: 'Knowledge Base', sub: 'Guides, FAQs & Protocols', icon: <BookOpen />, color: 'primary', onClick: () => showToast("Knowledge Base Protocol Manifest opened.", "info") },
+           { label: 'Contact Support', sub: '24/7 Administrative Help', icon: <MessageSquare />, color: 'success', onClick: () => { document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' }); showToast("Support contact channels loaded.", "info"); } },
+           { label: 'System Health', sub: 'Technical & API Status', icon: <Shield />, color: 'accent', onClick: () => showToast("Operational Node Diagnostic: 100% Green Status.", "success") },
          ].map((stat, i) => (
-           <div key={i} className="card-classic p-8 group hover:shadow-glow transition-all duration-500 relative overflow-hidden cursor-pointer">
+           <div key={i} onClick={stat.onClick} className="card-classic p-8 group hover:shadow-glow transition-all duration-500 relative overflow-hidden cursor-pointer">
               <div className={`absolute -right-4 -bottom-4 w-32 h-32 bg-${stat.color}/5 rounded-full blur-3xl group-hover:bg-${stat.color}/10 transition-all`} />
               <div className="flex items-center justify-between mb-6">
                  <div className={`w-14 h-14 rounded-2xl bg-${stat.color}/10 text-${stat.color} flex items-center justify-center border border-${stat.color}/10`}>
@@ -199,8 +250,8 @@ const Support = () => {
                              <div className="pt-4 border-t border-divider/50">
                                 <p className="text-[12px] font-medium text-text-secondary leading-relaxed italic">"{faq.a}"</p>
                                 <div className="mt-6 flex items-center gap-4">
-                                   <button className="px-4 py-2 bg-primary/10 text-primary rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all italic">Protocol Detailed</button>
-                                   <button className="text-[10px] font-black text-text-muted uppercase tracking-widest hover:text-primary transition-all">Was this helpful?</button>
+                                   <button onClick={() => showToast("Opening Detailed System Protocol Guide...", "info")} className="px-4 py-2 bg-primary/10 text-primary rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all italic">Protocol Detailed</button>
+                                   <button onClick={() => showToast("Feedback registered. Thank you!", "success")} className="text-[10px] font-black text-text-muted uppercase tracking-widest hover:text-primary transition-all">Was this helpful?</button>
                                 </div>
                              </div>
                           </motion.div>
@@ -216,11 +267,11 @@ const Support = () => {
                   <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                     <Clock size={14} className="text-warning" /> Support Manifest
                   </h4>
-                  <button className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline italic">View All Tickets</button>
+                  <button onClick={() => showToast("Opening Support Ticket Archive...", "info")} className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline italic">View All Tickets</button>
                </div>
                <div className="divide-y divide-border/50">
                   {tickets.map((t) => (
-                    <div key={t.id} className="p-6 flex items-center justify-between hover:bg-background/50 transition-all cursor-pointer group">
+                    <div key={t.id} onClick={() => showToast(`Opening Ticket Details for ${t.id}...`, "info")} className="p-6 flex items-center justify-between hover:bg-background/50 transition-all cursor-pointer group">
                        <div className="flex items-center gap-6">
                           <div>
                              <p className="text-[10px] font-black text-text-muted uppercase tracking-tighter">{t.id}</p>
@@ -234,7 +285,7 @@ const Support = () => {
                              <span className="text-[9px] font-bold text-text-muted italic">{t.time}</span>
                           </div>
                        </div>
-                       <button className="p-2.5 rounded-xl bg-background border border-divider text-text-muted group-hover:text-primary group-hover:border-primary transition-all">
+                       <button onClick={(e) => { e.stopPropagation(); showToast(`Opening Ticket Details for ${t.id}...`, "info"); }} className="p-2.5 rounded-xl bg-background border border-divider text-text-muted group-hover:text-primary group-hover:border-primary transition-all">
                           <ExternalLink size={16} />
                        </button>
                     </div>
@@ -250,20 +301,99 @@ const Support = () => {
                <div className="relative z-10 max-w-xl">
                   <h3 className="text-xl font-black text-text-primary tracking-tight uppercase italic mb-2">Escalate Issue</h3>
                   <p className="text-[11px] text-text-muted font-bold uppercase tracking-widest mb-8 leading-relaxed">Direct transmission to the administrative response force</p>
-                  <div className="space-y-4">
+                  <form onSubmit={handleTransmit} className="space-y-4">
                      <div className="grid grid-cols-2 gap-4">
-                        <input type="text" placeholder="Personnel Name" className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary" />
-                        <input type="email" placeholder="Auth Email" className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary" />
+                        <input required type="text" placeholder="Personnel Name" className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary" />
+                        <input required type="email" placeholder="Auth Email" className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary" />
                      </div>
-                     <textarea placeholder="Describe the operational anomaly..." rows={3} className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary resize-none" />
-                     <button className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
+                     <textarea required placeholder="Describe the operational anomaly..." rows={3} className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary resize-none" />
+                     <button type="submit" className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
                         <Send size={14} strokeWidth={3} /> Transmit Manifest
                      </button>
-                  </div>
+                  </form>
                </div>
             </div>
          </div>
       </div>
+      {/* Call Support Modal */}
+      <Modal isOpen={showCallModal} onClose={() => setShowCallModal(false)} title="Tactical VoIP Channel">
+        <div className="p-8 text-center space-y-6">
+          <div className="w-24 h-24 rounded-full bg-emerald-500/10 mx-auto flex items-center justify-center relative">
+             <Phone size={40} className="text-emerald-500 relative z-10" />
+             {callDialing && <div className="absolute inset-0 rounded-full border-2 border-emerald-500 animate-ping opacity-50" />}
+             {callConnected && <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-pulse" />}
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-text-primary uppercase tracking-tight">StayNest Elite Support</h3>
+            <p className="text-sm text-text-muted mt-2">{callConnected ? 'Connected - Live Agent' : callDialing ? 'Establishing secure connection...' : 'Ready to initiate call'}</p>
+          </div>
+          <div className="flex justify-center gap-4 pt-4">
+            {!callConnected && !callDialing && (
+               <button onClick={initiateCall} className="px-8 py-3 bg-emerald-500 text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all flex items-center gap-2">
+                 <Phone size={14} /> Connect Now
+               </button>
+            )}
+            {(callDialing || callConnected) && (
+               <button onClick={endCall} className="px-8 py-3 bg-rose-500 text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition-all flex items-center gap-2">
+                 <XCircle size={14} /> End Call
+               </button>
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      {/* Email Ops Modal */}
+      <Modal isOpen={showEmailModal} onClose={() => setShowEmailModal(false)} title="Secure Mail Transmission">
+        <form onSubmit={sendEmail} className="p-6 space-y-5">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Target Division</label>
+            <select value={emailForm.department} onChange={(e) => setEmailForm({...emailForm, department: e.target.value})} className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary text-text-primary cursor-pointer">
+              <option>Operations</option>
+              <option>Technical Support</option>
+              <option>Finance & Billing</option>
+              <option>Legal & Compliance</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Subject</label>
+            <input required type="text" value={emailForm.subject} onChange={(e) => setEmailForm({...emailForm, subject: e.target.value})} className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary text-text-primary" placeholder="Brief subject line" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Message Body</label>
+            <textarea required rows={5} value={emailForm.body} onChange={(e) => setEmailForm({...emailForm, body: e.target.value})} className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary text-text-primary resize-none" placeholder="Provide detailed operational intelligence..." />
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-divider">
+            <button type="button" onClick={() => setShowEmailModal(false)} className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-text-primary transition-all">Cancel</button>
+            <button type="submit" disabled={sendingEmail} className="px-8 py-3 bg-primary text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all disabled:opacity-50 flex items-center gap-2">
+              {sendingEmail ? <span className="animate-pulse">Transmitting...</span> : <><Send size={14} /> Dispatch Mail</>}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Live Chat Modal */}
+      <Modal isOpen={showChatModal} onClose={() => setShowChatModal(false)} title="Live Ops Chat" width="max-w-2xl">
+        <div className="flex flex-col h-[60vh]">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+            {chatMessages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[80%] rounded-2xl p-4 ${msg.from === 'user' ? 'bg-primary text-white rounded-tr-sm' : 'bg-background border border-divider text-text-primary rounded-tl-sm'}`}>
+                   <p className="text-sm leading-relaxed">{msg.text}</p>
+                   <span className={`text-[9px] font-bold block mt-2 uppercase tracking-widest ${msg.from === 'user' ? 'text-primary-100' : 'text-text-muted'}`}>{msg.time}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <form onSubmit={sendChatMessage} className="p-4 border-t border-divider bg-card">
+             <div className="relative flex items-center">
+                <input type="text" value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder="Type your message..." className="w-full bg-background border border-divider rounded-full py-4 pl-6 pr-16 text-sm focus:outline-none focus:border-primary text-text-primary shadow-inner" />
+                <button type="submit" disabled={!chatInput.trim()} className="absolute right-2 p-3 bg-primary text-white rounded-full hover:bg-primary-dark transition-all disabled:opacity-50 shadow-md">
+                   <Send size={16} />
+                </button>
+             </div>
+          </form>
+        </div>
+      </Modal>
     </div>
   );
 };

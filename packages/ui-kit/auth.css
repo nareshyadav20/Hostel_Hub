@@ -4,7 +4,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: url('/src/assets/hero_bg.png') center/cover no-repeat fixed;
+  background: url('/src/assets/hero.png') center/cover no-repeat fixed;
   position: fixed;
   top: 0;
   left: 0;
