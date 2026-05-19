@@ -45,12 +45,15 @@ const Booking = () => {
 
   const passedBasePrice = location.state?.basePrice;
   const basePrice = passedBasePrice || hostel?.startingPrice || 9000;
+  const foodCost = (hostel?.foodCharges !== undefined && hostel?.foodCharges !== null && hostel?.foodCharges > 0) ? hostel.foodCharges : 3000;
+  const maintenanceCost = (hostel?.maintenanceCharges !== undefined && hostel?.maintenanceCharges !== null && hostel?.maintenanceCharges > 0) ? hostel.maintenanceCharges : 799;
 
   const roomOptions = [
     { 
       id: 'Single', 
       name: 'Single Elite', 
-      price: (basePrice * 2).toString(), 
+      price: ((hostel?.rentSingle !== undefined && hostel?.rentSingle !== null && hostel?.rentSingle > 0) ? hostel.rentSingle : (basePrice * 2)).toString(), 
+      deposit: hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0 ? hostel.securityDeposit.toString() : (basePrice * 2).toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -61,7 +64,8 @@ const Booking = () => {
     { 
       id: 'Double', 
       name: 'Luxury 2 Sharing', 
-      price: Math.round(basePrice * 1.3333).toString(), 
+      price: ((hostel?.rentDouble !== undefined && hostel?.rentDouble !== null && hostel?.rentDouble > 0) ? hostel.rentDouble : Math.round(basePrice * 1.3333)).toString(), 
+      deposit: hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0 ? hostel.securityDeposit.toString() : Math.round(basePrice * 1.3333).toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -74,7 +78,8 @@ const Booking = () => {
     { 
       id: 'Triple', 
       name: 'Comfort 3 Sharing', 
-      price: basePrice.toString(), 
+      price: ((hostel?.rentTriple !== undefined && hostel?.rentTriple !== null && hostel?.rentTriple > 0) ? hostel.rentTriple : basePrice).toString(), 
+      deposit: hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0 ? hostel.securityDeposit.toString() : basePrice.toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
@@ -123,7 +128,7 @@ const Booking = () => {
   const handleBooking = async () => {
     setApiError(null);
     const tenantId = user?._id || user?.id;
-    const amount = parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + 3000 + 799;
+    const amount = parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + foodCost + maintenanceCost;
 
     console.log("[Booking] Debug Info:", { 
       tenantId, 
@@ -628,11 +633,11 @@ const Booking = () => {
                </div>
                <div className="summary-item-row">
                  <span className="item-label">Food (Monthly)</span>
-                 <span className="item-value">₹3,000</span>
+                 <span className="item-value">₹{foodCost.toLocaleString()}</span>
                </div>
                <div className="summary-item-row">
                  <span className="item-label">Maintenance</span>
-                 <span className="item-value">₹799</span>
+                 <span className="item-value">₹{maintenanceCost.toLocaleString()}</span>
                </div>
                <div className="summary-divider"></div>
                <div className="summary-total-row">
@@ -640,7 +645,7 @@ const Booking = () => {
                    <span className="total-label">Total Due (Move-in)</span>
                    <span className="total-subtitle">Rent + Deposit + Food + Maintenance</span>
                  </div>
-                 <span className="total-amount-val">₹{(parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + 3000 + 799).toLocaleString()}</span>
+                 <span className="total-amount-val">₹{(parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + foodCost + maintenanceCost).toLocaleString()}</span>
                </div>
             </div>
 

@@ -9,7 +9,9 @@ const createBuilding = async (req, res) => {
   try {
     const { 
       name, address, locationCity, description, amenities, images, 
-      startingPrice, genderType, category, rating, popularityLabel,
+      startingPrice, securityDeposit, maintenanceCharges, foodCharges,
+      rentSingle, rentDouble, rentTriple,
+      genderType, category, rating, popularityLabel,
       policies, staffInfo, status, lastStep, draftData
     } = req.body;
 
@@ -21,6 +23,12 @@ const createBuilding = async (req, res) => {
       amenities: amenities||[], 
       images: images||[],
       startingPrice: startingPrice || 5000,
+      securityDeposit: securityDeposit || 0,
+      maintenanceCharges: maintenanceCharges || 799,
+      foodCharges: foodCharges || 3000,
+      rentSingle,
+      rentDouble,
+      rentTriple,
       genderType: genderType || 'Mixed',
       category: category || 'Student',
       rating: rating || 4.5,

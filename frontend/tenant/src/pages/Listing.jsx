@@ -87,11 +87,34 @@ const Listing = () => {
   }, [id]);
 
   const basePrice = hostel?.startingPrice || 9000;
-  
+  const foodCost = (hostel?.foodCharges !== undefined && hostel?.foodCharges !== null && hostel?.foodCharges > 0) ? hostel.foodCharges : 3000;
+  const maintenanceCost = (hostel?.maintenanceCharges !== undefined && hostel?.maintenanceCharges !== null && hostel?.maintenanceCharges > 0) ? hostel.maintenanceCharges : 799;
+
   const pricingMap = {
-    1: { rent: basePrice * 2, deposit: basePrice * 2, food: 3000, maintenance: 799, name: 'Single Room', desc: 'Private room' },
-    2: { rent: Math.round(basePrice * 1.3333), deposit: Math.round(basePrice * 1.3333), food: 3000, maintenance: 799, name: '2 Sharing', desc: '2 beds per room' },
-    3: { rent: basePrice, deposit: basePrice, food: 3000, maintenance: 799, name: '3 Sharing', desc: '3 beds per room' }
+    1: { 
+      rent: (hostel?.rentSingle !== undefined && hostel?.rentSingle !== null && hostel?.rentSingle > 0) ? hostel.rentSingle : (basePrice * 2), 
+      deposit: (hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0) ? hostel.securityDeposit : (basePrice * 2), 
+      food: foodCost, 
+      maintenance: maintenanceCost, 
+      name: 'Single Room', 
+      desc: 'Private room' 
+    },
+    2: { 
+      rent: (hostel?.rentDouble !== undefined && hostel?.rentDouble !== null && hostel?.rentDouble > 0) ? hostel.rentDouble : Math.round(basePrice * 1.3333), 
+      deposit: (hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0) ? hostel.securityDeposit : Math.round(basePrice * 1.3333), 
+      food: foodCost, 
+      maintenance: maintenanceCost, 
+      name: '2 Sharing', 
+      desc: '2 beds per room' 
+    },
+    3: { 
+      rent: (hostel?.rentTriple !== undefined && hostel?.rentTriple !== null && hostel?.rentTriple > 0) ? hostel.rentTriple : basePrice, 
+      deposit: (hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0) ? hostel.securityDeposit : basePrice, 
+      food: foodCost, 
+      maintenance: maintenanceCost, 
+      name: '3 Sharing', 
+      desc: '3 beds per room' 
+    }
   };
 
   const currentPrice = pricingMap[selectedSharing];
@@ -571,7 +594,7 @@ const Listing = () => {
               <button 
                 className="lst-btn-reserve" 
                 disabled={!selectedBed}
-                onClick={() => navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed, basePrice } })}
+                onClick={() => navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed, basePrice, securityDeposit: currentPrice.deposit } })}
                 style={{ width: '100%', padding: '20px', fontSize: '18px' }}
               >
                 Reserve Your Bed Now
