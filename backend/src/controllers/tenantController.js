@@ -1,4 +1,5 @@
 const Tenant = require('../models/Tenant');
+const socketService = require('../utils/socketService');
 
 const createTenant = async (req, res) => {
   try {
@@ -11,22 +12,46 @@ const createTenant = async (req, res) => {
     }
     const tenant = new Tenant(req.body);
     await tenant.save();
+    
+    // Real-time synchronization
+    socketService.emitUpdate(req.body.buildingId, 'tenantAdded', tenant);
+    socketService.emitUpdate(req.body.buildingId, 'dashboardStatsUpdated', {});
+    
     res.status(201).json(tenant);
   } catch (err) {
+    if (err.code === 11000 && err.keyValue && err.keyValue.email) {
+      return res.status(400).json({ error: 'A tenant with this email address is already registered in the system.' });
+    }
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'A tenant with these details already exists.' });
+    }
     res.status(400).json({ error: err.message });
   }
 };
 
 const getTenants = async (req, res) => {
   try {
-    let query = {};
-    if (req.user.role !== 'SUPER_ADMIN') {
-      const Building = require('../models/Building');
-      const userBuildings = await Building.find({ owner: req.user.id }).select('_id');
-      const buildingIds = userBuildings.map(b => b._id);
-      query = { buildingId: { $in: buildingIds } };
+    const Building = require('../models/Building');
+    const userBuildings = await Building.find({ owner: req.user.id }).select('_id');
+    const buildingIds = userBuildings.map(b => b._id);
+
+    // If a specific buildingId is requested, validate ownership then filter
+    const { buildingId } = req.query;
+    let query;
+    if (buildingId) {
+      const isOwned = buildingIds.some(id => id.toString() === buildingId);
+      if (!isOwned) return res.status(403).json({ error: 'Access denied to this building.' });
+      query = { buildingId };
+    } else {
+      query = { 
+        $or: [
+          { buildingId: { $in: buildingIds } },
+          { buildingId: null },
+          { buildingId: { $exists: false } }
+        ]
+      };
     }
-    
+
     const tenants = await Tenant.find(query);
     res.status(200).json(tenants);
   } catch (err) {
@@ -38,8 +63,17 @@ const bulkCreateTenants = async (req, res) => {
   try {
     const { tenants } = req.body;
     const created = await Tenant.insertMany(tenants);
+    
+    if (tenants.length > 0 && tenants[0].buildingId) {
+      socketService.emitUpdate(tenants[0].buildingId, 'tenantAdded', created);
+      socketService.emitUpdate(tenants[0].buildingId, 'dashboardStatsUpdated', {});
+    }
+    
     res.status(201).json(created);
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'One or more tenants already exist with this registered email address.' });
+    }
     res.status(400).json({ error: err.message });
   }
 };
@@ -47,15 +81,32 @@ const bulkCreateTenants = async (req, res) => {
 const updateTenant = async (req, res) => {
   try {
     const tenant = await Tenant.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    
+    if (tenant) {
+      socketService.emitUpdate(tenant.buildingId, 'tenantUpdated', tenant);
+      socketService.emitUpdate(tenant.buildingId, 'dashboardStatsUpdated', {});
+    }
+    
     res.status(200).json(tenant);
   } catch (err) {
+    if (err.code === 11000 && err.keyValue && err.keyValue.email) {
+      return res.status(400).json({ error: 'Another tenant with this email address is already registered in the system.' });
+    }
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'A tenant with these details already exists.' });
+    }
     res.status(400).json({ error: err.message });
   }
 };
 
 const deleteTenant = async (req, res) => {
   try {
-    await Tenant.findByIdAndDelete(req.params.id);
+    const tenant = await Tenant.findById(req.params.id);
+    if (tenant) {
+      await Tenant.findByIdAndDelete(req.params.id);
+      socketService.emitUpdate(tenant.buildingId, 'tenantDeleted', { id: req.params.id });
+      socketService.emitUpdate(tenant.buildingId, 'dashboardStatsUpdated', {});
+    }
     res.status(200).json({ message: 'Tenant deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -64,7 +115,17 @@ const deleteTenant = async (req, res) => {
 
 const getTenantProfile = async (req, res) => {
   try {
-    const tenant = await Tenant.findOne({ email: req.user.email }); // Simplified for now, linking by email
+    const tenant = await Tenant.findOne({ email: req.user.email })
+      .populate({
+        path: 'roomId',
+        select: 'roomNumber roomType hygieneRating smartLock ventilationScore tempComfortScore studyFriendly'
+      })
+      .populate({
+        path: 'bedId',
+        select: 'bedNumber comfortScore lastSanitized position bedType'
+      })
+      .populate('buildingId', 'name address');
+    
     if (!tenant) return res.status(404).json({ message: 'Tenant profile not found' });
     res.status(200).json(tenant);
   } catch (err) {

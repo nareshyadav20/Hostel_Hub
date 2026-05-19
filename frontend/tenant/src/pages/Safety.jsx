@@ -9,6 +9,8 @@ const Safety = () => {
   const [reports, setReports] = useState([]);
   const [loadingReports, setLoadingReports] = useState(true);
   const [selectedReport, setSelectedReport] = useState(null);
+  const [reportPage, setReportPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
   const timerRef = useRef(null);
   const sirenRef = useRef(new Audio('https://www.soundjay.com/emergency/sounds/siren-1.mp3'));
 
@@ -19,10 +21,7 @@ const Safety = () => {
   const fetchReports = async () => {
     setLoadingReports(true);
     try {
-      const response = await API.get('/confidential-reports/me').catch(() => ({ data: [
-        { _id: '1', classification: 'Theft', location: 'Block A, 203', description: 'Someone took my laptop charger from the common area.', createdAt: new Date().toISOString(), status: 'Under Investigation' },
-        { _id: '2', classification: 'Maintenance', location: 'Mess Hall', createdAt: new Date().toISOString(), description: 'The exhaust fan is making too much noise.', status: 'Resolved' }
-      ]}));
+      const response = await API.get('/confidential-reports/me');
       setReports(response.data || []);
     } catch (err) {
       console.error('Error fetching reports:', err);
@@ -34,15 +33,25 @@ const Safety = () => {
   const startHolding = () => {
     setIsHolding(true);
     let start = Date.now();
-    timerRef.current = setInterval(() => {
+    timerRef.current = setInterval(async () => {
       let elapsed = Date.now() - start;
       let progress = Math.min((elapsed / 2000) * 100, 100);
       setSosProgress(progress);
       if (progress >= 100) {
         clearInterval(timerRef.current);
-        sirenRef.current.loop = true;
-        sirenRef.current.play().catch(e => console.log('Audio failed'));
-        alert('🚨 SOS ALERT SENT!');
+        try {
+          await API.post('/tenant-portal/sos-alerts', {
+            type: 'Emergency',
+            message: 'SOS Alert triggered by tenant',
+            location: 'Unknown Location (SOS Button)'
+          });
+          sirenRef.current.loop = true;
+          sirenRef.current.play().catch(e => console.log('Audio failed'));
+          setStatusMessage({ type: 'success', text: '🚨 SOS ALERT SENT TO MANAGEMENT!' });
+        } catch (err) {
+          console.error('Failed to send SOS alert:', err);
+          setStatusMessage({ type: 'error', text: 'Failed to send SOS alert. Please try again or call emergency services.' });
+        }
         setSosProgress(0);
         setIsHolding(false);
       }
@@ -57,22 +66,43 @@ const Safety = () => {
   };
 
   const [formData, setFormData] = useState({ type: 'Theft', location: '', description: '' });
+  const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
 
   const handleIncidentSubmit = async (e) => {
     e.preventDefault();
     setIncidentSubmitted(true);
+    setStatusMessage({ type: '', text: '' });
+    
+    const buildingId = localStorage.getItem('buildingId');
+    const tenantId = localStorage.getItem('tenantId');
+    const userStr = localStorage.getItem('user');
+    const userId = userStr ? JSON.parse(userStr)._id : null;
+
+    if (!buildingId) {
+      setStatusMessage({ type: 'error', text: 'Error: Building context missing. Please re-login.' });
+      setIncidentSubmitted(false);
+      return;
+    }
+
     try {
       await API.post('/confidential-reports', { 
         classification: formData.type, 
         location: formData.location, 
-        description: formData.description 
+        description: formData.description,
+        buildingId,
+        tenantId,
+        userId
       });
-      alert('Your confidential report has been submitted successfully.');
+      
+      setStatusMessage({ type: 'success', text: 'Your confidential report has been submitted successfully.' });
       setFormData({ type: 'Theft', location: '', description: '' });
       fetchReports();
+      
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => setStatusMessage({ type: '', text: '' }), 5000);
     } catch (err) { 
       console.error('Error reporting:', err); 
-      alert('Failed to submit report. Please try again.');
+      setStatusMessage({ type: 'error', text: 'Failed to submit report. Please try again.' });
     } finally { 
       setIncidentSubmitted(false); 
     }
@@ -123,6 +153,12 @@ const Safety = () => {
           <div className="sos-info">
             <h2>Emergency Alert</h2>
             <p>Notify on-site management and security teams immediately.</p>
+            {statusMessage.type === 'success' && statusMessage.text.includes('SOS') && (
+              <div className="sos-status-inline success">{statusMessage.text}</div>
+            )}
+            {statusMessage.type === 'error' && statusMessage.text.includes('SOS') && (
+              <div className="sos-status-inline error">{statusMessage.text}</div>
+            )}
           </div>
         </div>
 
@@ -242,6 +278,24 @@ const Safety = () => {
                required 
              />
            </div>
+           <div className="form-status-container">
+             {statusMessage.text && !statusMessage.text.includes('SOS') && (
+               <div className={`form-status-msg ${statusMessage.type}`}>
+                 {statusMessage.type === 'success' ? (
+                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                     <polyline points="20 6 9 17 4 12"></polyline>
+                   </svg>
+                 ) : (
+                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                     <circle cx="12" cy="12" r="10"></circle>
+                     <line x1="12" y1="8" x2="12" y2="12"></line>
+                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                   </svg>
+                 )}
+                 {statusMessage.text}
+               </div>
+             )}
+           </div>
            <div className="form-footer-premium">
              <div className="security-assurance">
                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -289,7 +343,7 @@ const Safety = () => {
               ) : reports.length === 0 ? (
                 <tr><td colSpan="5" className="td-empty">No reports found.</td></tr>
               ) : (
-                reports.map(report => (
+                reports.slice((reportPage - 1) * ITEMS_PER_PAGE, reportPage * ITEMS_PER_PAGE).map(report => (
                   <tr key={report._id}>
                     <td className="td-date">
                       {new Date(report.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -317,60 +371,103 @@ const Safety = () => {
             </tbody>
           </table>
         </div>
+
+        {!loadingReports && Math.ceil(reports.length / ITEMS_PER_PAGE) > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 1.5rem', borderTop: '1px solid #E2E8F0', flexWrap: 'wrap', gap: '1rem' }}>
+            <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '600' }}>
+              Showing {(reportPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(reportPage * ITEMS_PER_PAGE, reports.length)} of {reports.length} entries
+            </span>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button onClick={() => setReportPage(p => p - 1)} disabled={reportPage === 1} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: reportPage === 1 ? '#F8FAFC' : '#fff', color: reportPage === 1 ? '#CBD5E1' : '#475569', fontWeight: '600', cursor: reportPage === 1 ? 'not-allowed' : 'pointer' }}>Previous</button>
+              {[...Array(Math.ceil(reports.length / ITEMS_PER_PAGE))].map((_, i) => (
+                <button key={i+1} onClick={() => setReportPage(i+1)} style={{ width: '36px', height: '36px', borderRadius: '8px', border: reportPage === i+1 ? 'none' : '1px solid #E2E8F0', background: reportPage === i+1 ? 'var(--accent-primary)' : '#fff', color: reportPage === i+1 ? '#fff' : '#475569', fontWeight: '700', cursor: 'pointer' }}>{i+1}</button>
+              ))}
+              <button onClick={() => setReportPage(p => p + 1)} disabled={reportPage === Math.ceil(reports.length / ITEMS_PER_PAGE)} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: reportPage === Math.ceil(reports.length / ITEMS_PER_PAGE) ? '#F8FAFC' : '#fff', color: reportPage === Math.ceil(reports.length / ITEMS_PER_PAGE) ? '#CBD5E1' : '#475569', fontWeight: '600', cursor: reportPage === Math.ceil(reports.length / ITEMS_PER_PAGE) ? 'not-allowed' : 'pointer' }}>Next</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Report Details Modal */}
       {selectedReport && (
-        <div className="modal-overlay">
-          <div className="modal-content-standard premium-modal">
+        <div className="modal-overlay" onClick={() => setSelectedReport(null)}>
+          <div className="modal-content-standard premium-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header-pro">
               <div className="modal-title-group">
                 <div className="modal-icon-badge">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
                   </svg>
                 </div>
                 <div>
                   <h3>Report Details</h3>
-                  <p>Ref ID: #{selectedReport._id.toUpperCase()}</p>
+                  <p className="ref-id-pro">Ref ID: #{selectedReport._id.toUpperCase()}</p>
                 </div>
               </div>
-              <button className="close-btn" onClick={() => setSelectedReport(null)}>✕</button>
+              <button className="close-x-pro" onClick={() => setSelectedReport(null)}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
             
             <div className="modal-body-content">
               <div className="detail-grid">
                 <div className="detail-item">
                   <span className="detail-label">Classification</span>
-                  <span className="detail-value">{selectedReport.classification}</span>
+                  <div className="detail-value-group">
+                    <span className="type-badge-large">{selectedReport.classification}</span>
+                  </div>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Status</span>
-                  <span className={`status-pill ${selectedReport.status?.toLowerCase().replace(' ', '-')}`}>
-                    {selectedReport.status}
+                  <span className={`status-pill large ${selectedReport.status?.toLowerCase().replace(' ', '-') || 'pending'}`}>
+                    {selectedReport.status || 'Pending Review'}
                   </span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Location</span>
-                  <span className="detail-value">{selectedReport.location}</span>
+                  <span className="detail-value-iconic">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    {selectedReport.location}
+                  </span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Date Submitted</span>
-                  <span className="detail-value">
+                  <span className="detail-value-iconic">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
                     {new Date(selectedReport.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
                   </span>
                 </div>
               </div>
-              
-              <div className="description-box">
-                <span className="detail-label">Detailed Description</span>
-                <p className="description-text">{selectedReport.description}</p>
-              </div>
 
-              <div className="modal-action-footer">
-                <button className="btn-primary" onClick={() => setSelectedReport(null)}>Close View</button>
+              <div className="description-box-pro">
+                <div className="desc-header">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span>Detailed Description</span>
+                </div>
+                <div className="description-text-pro">
+                  {selectedReport.description}
+                </div>
               </div>
+            </div>
+
+            <div className="modal-footer-pro">
+              <button className="btn-close-pro" onClick={() => setSelectedReport(null)}>
+                Close View
+              </button>
             </div>
           </div>
         </div>

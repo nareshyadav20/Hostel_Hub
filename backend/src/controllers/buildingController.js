@@ -3,23 +3,32 @@ const Floor = require('../models/Floor');
 const Room = require('../models/Room');
 const Bed = require('../models/Bed');
 const Tenant = require('../models/Tenant');
+const BuildingPhoto = require('../models/BuildingPhoto');
 
 const createBuilding = async (req, res) => {
   try {
-    const { 
-      name, address, locationCity, description, amenities, images, 
-      startingPrice, genderType, category, rating, popularityLabel,
+    const {
+      name, address, locationCity, description, amenities, images,
+      startingPrice, securityDeposit, maintenanceCharges, foodCharges,
+      rentSingle, rentDouble, rentTriple,
+      genderType, category, rating, popularityLabel,
       policies, staffInfo, status, lastStep, draftData
     } = req.body;
 
-    const building = await Building.create({ 
-      name: name || 'Untitled Draft', 
-      address, 
+    const building = await Building.create({
+      name: name || 'Untitled Draft',
+      address,
       locationCity: locationCity || 'Bengaluru',
-      description, 
-      amenities: amenities||[], 
-      images: images||[],
+      description,
+      amenities: amenities || [],
+      images: images || [],
       startingPrice: startingPrice || 5000,
+      securityDeposit: securityDeposit || 0,
+      maintenanceCharges: maintenanceCharges || 799,
+      foodCharges: foodCharges || 3000,
+      rentSingle,
+      rentDouble,
+      rentTriple,
       genderType: genderType || 'Mixed',
       category: category || 'Student',
       rating: rating || 4.5,
@@ -31,66 +40,63 @@ const createBuilding = async (req, res) => {
       draftData,
       owner: req.user.id
     });
+
+    // Sync photos to BuildingPhoto collection
+    if (images && images.length > 0) {
+      const photoDocs = images.map(url => ({
+        buildingId: building._id,
+        photoUrl: url
+      }));
+      await BuildingPhoto.insertMany(photoDocs);
+    }
+
     res.status(201).json(building);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
 const getBuildings = async (req, res) => {
   try {
-    console.log('Fetching buildings for user:', req.user.id, 'Role:', req.user.role);
-    const query = req.user.role === 'SUPER_ADMIN' ? {} : { owner: req.user.id };
-    const buildings = await Building.find(query).populate({ 
-      path: 'floors', 
-      populate: { 
-        path: 'rooms', 
-        populate: { 
-          path: 'beds',
-          populate: { path: 'tenant' }
-        } 
-      } 
-    });
-
-    if (req.user.role === 'SUPER_ADMIN') {
-      const mongoose = require('mongoose');
-      const db = mongoose.connection.db;
-      const rawBuildings = await db.collection('buildings').find({}).toArray();
-      const populatedRawBuildings = [];
-
-      for (const b of rawBuildings) {
-        // Find floors from 'floors' collection
-        const bFloors = await db.collection('floors').find({ building: b._id }).toArray();
-        for (const f of bFloors) {
-          // Find rooms from 'rooms' collection
-          const fRooms = await db.collection('rooms').find({ floor: f._id }).toArray();
-          for (const r of fRooms) {
-            // Find beds from 'beds' collection
-            const rBeds = await db.collection('beds').find({ roomId: r._id }).toArray();
-            for (const bed of rBeds) {
-              // Find tenant from 'tenants' collection
-              if (bed.tenant) {
-                bed.tenant = await db.collection('tenants').findOne({ _id: bed.tenant });
-              }
-            }
-            r.beds = rBeds;
-          }
-          f.rooms = fRooms;
-        }
-        b.floors = bFloors;
-        populatedRawBuildings.push(b);
+    const query = { owner: req.user.id };
+    if (req.query.status) {
+      if (req.query.status === 'Active') {
+        query.status = { $ne: 'Draft' };
+      } else {
+        query.status = req.query.status;
       }
-
-      const combined = [...buildings, ...populatedRawBuildings];
-      return res.status(200).json(combined);
     }
-
+    console.log(`[DEBUG] getBuildings query:`, JSON.stringify(query));
+    const buildings = await Building.find(query).populate({
+      path: 'floors',
+      populate: { path: 'rooms', populate: { path: 'beds' } }
+    });
+    console.log(`[DEBUG] Found ${buildings.length} buildings for owner ${req.user.id}`);
     res.status(200).json(buildings);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (error) {
+    console.error(`[DEBUG] getBuildings error:`, error);
+    res.status(500).json({ error: error.message });
+  }
 };
 
 const updateBuilding = async (req, res) => {
   try {
     const building = await Building.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!building) return res.status(404).json({ error: 'Building not found' });
+
+    // Sync new photos to BuildingPhoto collection
+    if (req.body.images && Array.isArray(req.body.images)) {
+      for (const url of req.body.images) {
+        const exists = await BuildingPhoto.findOne({ buildingId: building._id, photoUrl: url });
+        if (!exists) {
+          await BuildingPhoto.create({ buildingId: building._id, photoUrl: url });
+        }
+      }
+    }
+
+    // Real-time synchronization
+    const socketService = require('../utils/socketService');
+    socketService.emitUpdate(building._id, 'hostelUpdated', building);
+    socketService.emitUpdate(null, 'hostelUpdated', building); // Emit globally for landing/search pages
+
     res.status(200).json(building);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
@@ -99,11 +105,36 @@ const deleteBuilding = async (req, res) => {
   try {
     const building = await Building.findById(req.params.id);
     if (!building) return res.status(404).json({ error: 'Building not found' });
-    if (building.floors && building.floors.length > 0)
-      return res.status(400).json({ error: 'Cannot delete building with floors. Delete floors first.' });
+
+    // Perform Cascade Delete
+    // 1. Find all floors in this building
+    const floors = await Floor.find({ building: req.params.id });
+    const floorIds = floors.map(f => f._id);
+
+    // 2. Find all rooms in these floors
+    const rooms = await Room.find({ floor: { $in: floorIds } });
+    const roomIds = rooms.map(r => r._id);
+
+    // 3. Delete all beds in these rooms
+    await Bed.deleteMany({ room: { $in: roomIds } });
+
+    // 4. Delete all rooms
+    await Room.deleteMany({ floor: { $in: floorIds } });
+
+    // 5. Delete all floors
+    await Floor.deleteMany({ building: req.params.id });
+
+    // 6. Delete or update tenants associated with this building
+    await Tenant.deleteMany({ buildingId: req.params.id });
+
+    // 7. Finally delete the building itself
     await Building.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: 'Building deleted successfully' });
-  } catch (error) { res.status(500).json({ error: error.message }); }
+
+    res.status(200).json({ message: 'Building and all associated infrastructure deleted successfully' });
+  } catch (error) {
+    console.error(`[ERROR] deleteBuilding:`, error);
+    res.status(500).json({ error: error.message });
+  }
 };
 
 const bulkCreateBuildings = async (req, res) => {
@@ -113,7 +144,7 @@ const bulkCreateBuildings = async (req, res) => {
 
     for (const bData of buildings) {
       const { name, address, description, floorsCount, acRoomsCount, nonAcRoomsCount, images } = bData;
-      
+
       const building = new Building({ name, address, description, images: images || [] });
       await building.save();
 
@@ -161,7 +192,7 @@ const bulkCreateBuildings = async (req, res) => {
 
       building.floors = createdFloors;
       await building.save();
-      
+
       createdBuildings.push(building);
     }
 
@@ -220,4 +251,99 @@ const getBuildingById = async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
-module.exports = { createBuilding, getBuildings, getBuildingById, updateBuilding, deleteBuilding, bulkCreateBuildings };
+const getPublicBuildings = async (req, res) => {
+  try {
+    const buildings = await Building.find({ status: { $ne: 'Draft' } }).populate({
+      path: 'floors',
+      populate: { path: 'rooms', populate: { path: 'beds' } }
+    });
+    res.status(200).json(buildings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getPublicBuildingById = async (req, res) => {
+  try {
+    const building = await Building.findOne({ _id: req.params.id, status: { $ne: 'Draft' } }).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
+    if (!building) return res.status(404).json({ error: 'Building not found' });
+
+    // Fetch filled beds for this building
+    const BedFilling = require('../models/BedFilling');
+    const filledBeds = await BedFilling.find({ buildingId: building._id, status: 'Occupied' });
+
+    res.status(200).json({ ...building.toObject(), filledBeds });
+  } catch (error) { res.status(500).json({ error: error.message }); }
+};
+
+const uploadPhotos = async (req, res) => {
+  try {
+    const { buildingId } = req.body;
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+    const photoUrls = req.files.map(file => {
+      const b64 = file.buffer.toString('base64');
+      return `data:${file.mimetype};base64,${b64}`;
+    });
+
+    if (buildingId) {
+      const photoDocs = photoUrls.map(url => ({
+        buildingId,
+        photoUrl: url
+      }));
+      await BuildingPhoto.insertMany(photoDocs, { ordered: false }).catch(err => {
+        console.warn('[DEBUG] BuildingPhoto partial insertion warning:', err.message);
+      });
+      
+      const building = await Building.findById(buildingId);
+      if (building) {
+        if (!building.images) building.images = [];
+        building.images.push(...photoUrls);
+        await building.save();
+      }
+    }
+
+    res.status(200).json({ message: 'Photos uploaded successfully', photoUrls });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getPlatformStats = async (req, res) => {
+  try {
+    const propertiesCount = await Building.countDocuments({ status: { $ne: 'Draft' } });
+    const tenantsCount = await Tenant.countDocuments();
+    const cities = await Building.distinct('locationCity', { status: { $ne: 'Draft' } });
+
+    const buildings = await Building.find({ status: { $ne: 'Draft' } }, 'rating');
+    let totalRating = 0;
+    let validRatings = 0;
+    buildings.forEach(b => {
+      if (b.rating) { totalRating += b.rating; validRatings++; }
+    });
+    const avgRating = validRatings > 0 ? (totalRating / validRatings).toFixed(1) : "4.8";
+
+    res.status(200).json({
+      tenants: tenantsCount,
+      properties: propertiesCount,
+      cities: cities.length,
+      rating: `${avgRating}/5`
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = {
+  createBuilding,
+  getBuildings,
+  getBuildingById,
+  updateBuilding,
+  deleteBuilding,
+  bulkCreateBuildings,
+  getPublicBuildings,
+  getPublicBuildingById,
+  uploadPhotos,
+  getPlatformStats
+};

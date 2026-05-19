@@ -1,0 +1,57 @@
+🏢 OWNER BUILDINGS: []
+📝 QUERY FILTER: {
+  "archived": false,
+  "$and": [
+    {
+      "$or": [
+        {
+          "buildingId": "6a06e19188ab1e134078be08"
+        },
+        {
+          "buildingId": "6a06e19188ab1e134078be08"
+        },
+        {
+          "buildingId": {
+            "$exists": false
+          }
+        },
+        {
+          "buildingId": null
+        }
+      ]
+    }
+  ],
+  "$or": [
+    {
+      "portalType": "Owner"
+    },
+    {
+      "buildingId": "6a06e19188ab1e134078be08"
+    },
+    {
+      "buildingId": "6a06e19188ab1e134078be08"
+    }
+  ]
+}
+Original filters - FOUND NOTIFICATIONS COUNT: 90
+ -> Attendance Confirmed | module: Mess | portal: Owner | buildingId: 6a06e19188ab1e134078be08
+ -> Attendance Skipped | module: Mess | portal: Owner | buildingId: 6a06e19188ab1e134078be08
+ -> Attendance Skipped | module: Mess | portal: Owner | buildingId: 6a06e19188ab1e134078be08
+ -> Attendance Confirmed | module: Mess | portal: Owner | buildingId: 6a06e19188ab1e134078be08
+ -> Attendance Confirmed | module: Mess | portal: Owner | buildingId: 6a06e19188ab1e134078be08
+ -> Attendance Confirmed | module: Mess | portal: Owner | buildingId: 6a06e19188ab1e134078be08
+ -> Attendance Confirmed | module: Mess | portal: Owner | buildingId: 6a06e19188ab1e134078be08
+ -> Attendance Confirmed | module: Mess | portal: Owner | buildingId: 6a06e19188ab1e134078be08
+ -> Attendance Confirmed | module: Mess | portal: Owner | buildingId: 6a06e19188ab1e134078be08
+ -> Attendance Confirmed | module: Mess | portal: Owner | buildingId: 6a06e19188ab1e134078be08
+All Mess Notifications count: 52
+ -> Mess Menu Updated | portal: Tenant | buildingId: 6a06c75f676d9b863597ff66 | archived: false
+ -> Attendance Confirmed | portal: Owner | buildingId: 6a06c75f676d9b863597ff66 | archived: false
+ -> Attendance Confirmed | portal: Owner | buildingId: 6a06c75f676d9b863597ff66 | archived: false
+ -> Attendance Confirmed | portal: Owner | buildingId: 6a06e19188ab1e134078be08 | archived: false
+ -> Attendance Skipped | portal: Owner | buildingId: 6a06e19188ab1e134078be08 | archived: false
+ -> Attendance Skipped | portal: Owner | buildingId: 6a06e19188ab1e134078be08 | archived: false
+ -> Attendance Confirmed | portal: Owner | buildingId: 6a06e19188ab1e134078be08 | archived: false
+ -> Attendance Confirmed | portal: Owner | buildingId: 6a06e19188ab1e134078be08 | archived: false
+ -> Attendance Confirmed | portal: Owner | buildingId: 6a06e19188ab1e134078be08 | archived: false
+ -> Attendance Confirmed | portal: Owner | buildingId: 6a06e19188ab1e134078be08 | archived: false

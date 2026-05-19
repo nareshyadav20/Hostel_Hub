@@ -9,16 +9,96 @@ dotenv.config();
 
 // Connect to MongoDB
 connectDB().then(() => {
-  const initAdminProfiles = require('./utils/initAdminProfiles');
-  initAdminProfiles();
+  // Asynchronous lazy self-migration for owner notifications
+  setTimeout(async () => {
+    try {
+      const Notification = require('./models/Notification');
+      const OwnerNotification = require('./models/OwnerNotification');
+      
+      const count = await Notification.countDocuments({
+        $or: [
+          { portalType: 'Owner' },
+          { receiverRole: 'Owner' },
+          { target: 'Owner' }
+        ]
+      });
+      
+      if (count > 0) {
+        console.log(`📡 [AUTO_MIGRATION] Found ${count} legacy owner notifications. Migrating lazily...`);
+        const oldOwnerNotifs = await Notification.find({
+          $or: [
+            { portalType: 'Owner' },
+            { receiverRole: 'Owner' },
+            { target: 'Owner' }
+          ]
+        }).lean();
+        
+        let migrated = 0;
+        for (const notif of oldOwnerNotifs) {
+          const exists = await OwnerNotification.findOne({ _id: notif._id });
+          if (!exists) {
+            await OwnerNotification.create(notif);
+            migrated++;
+          }
+        }
+        
+        // Remove migrated notifications from the old notifications collection to avoid cluttering
+        await Notification.deleteMany({
+          $or: [
+            { portalType: 'Owner' },
+            { receiverRole: 'Owner' },
+            { target: 'Owner' }
+          ]
+        });
+        
+        console.log(`✅ [AUTO_MIGRATION] Successfully migrated and cleaned up ${migrated} owner notifications!`);
+      }
+    } catch (err) {
+      console.error('⚠️ [AUTO_MIGRATION] Lazy migration failed but continuing:', err.message);
+    }
+  }, 2000); // 2 second delay to avoid delaying startup
 });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:3000',
+  'https://hostel-hub-owner.vercel.app',
+  'https://livora-hostel-hub-tenant.vercel.app',
+  // Allow any vercel subdomain for preview deployments
+  /\.vercel\.app$/,
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    
+    // Auto-allow all localhost/127.0.0.1 origins for easier development
+    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:') || origin === 'http://localhost' || origin === 'http://127.0.0.1') {
+      return callback(null, true);
+    }
+
+    const allowed = allowedOrigins.some(o => 
+      typeof o === 'string' ? o === origin : o.test(origin)
+    );
+    if (allowed) return callback(null, true);
+    callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 
 const buildingRoutes = require('./routes/buildingRoutes');
 const floorRoutes = require('./routes/floorRoutes');
@@ -40,6 +120,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const notificationService = require('./utils/notificationService');
+const procurementRoutes = require('./routes/procurementRoutes');
 
 // Pre-load all models to ensure they are registered for population
 require('./models/User');
@@ -50,7 +131,17 @@ require('./models/MessMenu');
 require('./models/MessAttendance');
 require('./models/Payment');
 require('./models/Staff');
+require('./models/Notification');
+require('./models/OwnerNotification');
+require('./models/PurchaseRequest');
+require('./models/PurchaseOrder');
 require('./models/Booking');
+require('./models/ConfidentialReport');
+require('./models/SosAlert');
+require('./models/TenantPhoto');
+require('./models/OwnerPhoto');
+require('./models/BuildingPhoto');
+require('./models/TenantProof');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -70,8 +161,14 @@ app.use('/api/owner', ownerRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/rewards', require('./routes/rewardsRoutes'));
 app.use('/api/bookings', bookingRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/tenant-portal', require('./routes/tenantPortalRoutes'));
+app.use('/api/services', require('./routes/serviceRoutes'));
+app.use('/api/confidential-reports', require('./routes/confidentialReportRoutes'));
+app.use('/api/procurement', procurementRoutes);
+app.use('/api/community', require('./routes/communityRoutes'));
+app.use('/api/tenant-proofs', require('./routes/tenantProofRoutes'));
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
@@ -83,28 +180,83 @@ app.get('/', (req, res) => {
 
 const http = require('http');
 const { Server } = require('socket.io');
+const socketService = require('./utils/socketService');
 
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+    origin: [
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'http://localhost:5174',
+      'http://127.0.0.1:5174',
+      'http://localhost:5175',
+      'http://127.0.0.1:5175',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'https://hostel-hub-owner.vercel.app',
+      'https://livora-hostel-hub-tenant.vercel.app',
+    ],
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
+    credentials: true,
+  },
 });
 
-io.on('connection', (socket) => {
-  socket.on('joinBuilding', (buildingId) => {
-    socket.join(buildingId);
-    console.log(`User joined building room: ${buildingId}`);
-  });
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
-  });
-});
-
-// Link io to notification service
+// Initialize socket services
+socketService.setIo(io);
 notificationService.setIo(io);
 
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+io.on('connection', (socket) => {
+  console.log('⚡ New client connected:', socket.id);
+
+  socket.on('joinBuilding', (buildingId) => {
+    if (buildingId) {
+      const roomId = `building_${buildingId.toString()}`;
+      socket.join(roomId);
+      console.log(`Socket ${socket.id} joined building room: ${roomId}`);
+    }
+  });
+
+  socket.on('joinOwner', (ownerId) => {
+    if (ownerId) {
+      const roomId = `owner_${ownerId.toString()}`;
+      socket.join(roomId);
+      socket.join(ownerId.toString()); // Direct userId room mapping
+      console.log(`Socket ${socket.id} joined owner room: ${roomId} and user room: ${ownerId}`);
+    }
+    socket.join('owners');
+  });
+
+  socket.on('joinTenant', (userId) => {
+    if (userId) {
+      const roomId = `tenant_${userId.toString()}`;
+      socket.join(roomId);
+      socket.join(userId.toString()); // Direct userId room mapping
+      console.log(`Socket ${socket.id} joined tenant room: ${roomId} and user room: ${userId}`);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
 });
+
+const startServer = (p) => {
+  const port = parseInt(p);
+  server.listen(port, () => {
+    console.log(`✅ Server is running on port ${port}`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`⚠️  Port ${port} is in use. Trying port ${port + 1}...`);
+      server.close();
+      startServer(port + 1);
+    } else {
+      console.error('Server error:', err);
+    }
+  });
+};
+
+startServer(Number(PORT) || 5000);
+

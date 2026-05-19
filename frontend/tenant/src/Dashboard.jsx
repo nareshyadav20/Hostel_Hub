@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import API from './api/axios';
 import './Dashboard.css';
+import socket, { connectSocket, disconnectSocket } from './utils/socket';
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -9,23 +10,63 @@ function Dashboard() {
   const [tenantData, setTenantData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [complaints, setComplaints] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [showWelcomeAlert, setShowWelcomeAlert] = useState(false);
+
+  const location = React.useMemo(() => ({ state: window.history.state?.usr }), []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const [profileRes, complaintsRes] = await Promise.all([
+        API.get('/tenants/me'),
+        API.get('/complaints/me').catch(() => ({ data: [] })),
+        API.get('/notifications?limit=3').catch(() => ({ data: [] }))
+      ]);
+      
+      const profile = profileRes.data;
+      setTenantData(profile);
+      setComplaints((complaintsRes.data || []).slice(0, 3));
+      setNotifications((notificationsRes.data || []).slice(0, 3));
+      
+      // Keep local storage in sync for socket and other pages
+      if (profile?.buildingId?._id || profile?.buildingId) {
+        const bId = profile.buildingId?._id || profile.buildingId;
+        localStorage.setItem('buildingId', String(bId));
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      // If unauthorized, redirect
+      if (err.response?.status === 401) navigate('/login');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [profileRes, complaintsRes] = await Promise.all([
-          API.get('/tenants/me').catch(() => ({ data: { name: user.name, room: '203', messPlan: 'Standard' } })),
-          API.get('/complaints/me').catch(() => ({ data: [] }))
-        ]);
-        setTenantData(profileRes.data);
-        setComplaints((complaintsRes.data || []).slice(0, 3));
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDashboardData();
+    
+    // Check if we just came from booking success
+    const isBookingSuccess = window.history.state?.usr?.bookingSuccess;
+    if (isBookingSuccess) {
+      setShowWelcomeAlert(true);
+      setTimeout(() => setShowWelcomeAlert(false), 8000);
+    }
+
+    // Connect socket for real-time updates
+    const buildingId = localStorage.getItem('buildingId');
+    connectSocket(buildingId);
+
+    // Re-fetch when complaint status changes (owner resolved/rejected)
+    socket.on('complaintStatusChanged', () => {
+      API.get('/complaints/me').then(r => setComplaints((r.data || []).slice(0, 3))).catch(() => {});
+    });
+    // Refresh if owner updates hostel/room info
+    socket.on('dashboardStatsUpdated', fetchDashboardData);
+
+    return () => {
+      socket.off('complaintStatusChanged');
+      socket.off('dashboardStatsUpdated');
+    };
   }, []);
 
   const getGreeting = () => {
@@ -61,25 +102,31 @@ function Dashboard() {
         <div className="dash-hero-content">
           <h1 className="dash-hero-title">{getGreeting()}, {user.name?.split(' ')[0] || 'Resident'}! 👋</h1>
           <p className="dash-hero-subtitle">Welcome back to your premium home experience.</p>
+          {showWelcomeAlert && (
+            <div className="booking-success-banner">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Booking Confirmed! Our team is preparing your room.</span>
+            </div>
+          )}
         </div>
         <div className="dash-hero-stats">
           <div className="dash-stat-chip">
             <div className="dash-stat-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </div>
-            <div><strong>Block A</strong><span>Building</span></div>
+            <div><strong>{tenantData?.buildingId?.name || 'Exploring Stays'}</strong><span>Building</span></div>
           </div>
           <div className="dash-stat-chip">
             <div className="dash-stat-icon" style={{ background: '#fef3c7', color: '#d97706' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
             </div>
-            <div><strong>{tenantData?.room || '203'}</strong><span>Room No.</span></div>
+            <div><strong>{tenantData?.roomId?.roomNumber || tenantData?.room || 'TBD'}</strong><span>Room No.</span></div>
           </div>
           <div className="dash-stat-chip">
             <div className="dash-stat-icon" style={{ background: '#f0fdf4', color: '#16a34a' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             </div>
-            <div><strong>2 Sharing</strong><span>Room Type</span></div>
+            <div><strong>{tenantData?.roomId?.roomType || tenantData?.occupation || 'Not Assigned'}</strong><span>Room Type</span></div>
           </div>
         </div>
       </section>
@@ -130,8 +177,8 @@ function Dashboard() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
               </div>
             </div>
-            <div className="dash-sum-value">₹{(tenantData?.rent || 5000).toLocaleString()}</div>
-            <div className="dash-sum-sub">Due in 3 days</div>
+            <div className="dash-sum-value">₹{tenantData?.rentStatus === 'PAID' ? '0' : (tenantData?.rent || 0).toLocaleString()}</div>
+            <div className="dash-sum-sub">{tenantData?.rentStatus === 'PAID' ? 'No pending dues' : 'Payment Pending'}</div>
           </div>
 
           <div className="dash-summary-card" onClick={() => navigate('/complaints')}>
@@ -176,31 +223,79 @@ function Dashboard() {
         <div className="sn-card dash-payments-card">
           <div className="dash-card-header">
             <div className="dash-card-icon" style={{ background: '#f0fdf4', color: '#16a34a' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><line x1="12" y1="18" x2="12" y2="20"></line><line x1="12" y1="4" x2="12" y2="6"></line></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path>
+                <line x1="12" y1="18" x2="12" y2="20"></line>
+                <line x1="12" y1="4" x2="12" y2="6"></line>
+              </svg>
             </div>
             <h4 className="sn-card-title">Payments Overview</h4>
           </div>
+
           <div className="dash-payment-row">
             <div>
               <span className="dash-pay-label">Total Due</span>
-              <strong className="dash-pay-value">₹{(tenantData?.rent || 5000).toLocaleString()}</strong>
+              <strong className="dash-pay-value">₹{tenantData?.rentStatus === 'PAID' ? '0' : (tenantData?.rent || 0).toLocaleString()}</strong>
             </div>
-            <span className="sn-badge-red">Due in 3 days</span>
+            <span className={tenantData?.rentStatus === 'PAID' ? 'sn-badge-green' : 'sn-badge-red'}>
+              {tenantData?.rentStatus === 'PAID' ? 'Paid' : 'Due Now'}
+            </span>
           </div>
+
           <div className="dash-payment-row">
             <div>
               <span className="dash-pay-label">Paid This Month</span>
-              <strong className="dash-pay-value">₹3,000</strong>
+              <strong className="dash-pay-value">₹{tenantData?.rentStatus === 'PAID' ? (tenantData?.rent || 0).toLocaleString() : '0'}</strong>
             </div>
           </div>
+
           <div className="dash-progress-wrap">
-            <div className="dash-progress-bg"><div className="dash-progress-fill" style={{ width: '60%' }}></div></div>
-            <span className="dash-progress-label">60% Paid</span>
+            <div className="dash-progress-bg">
+              <div className="dash-progress-fill" style={{ width: tenantData?.rentStatus === 'PAID' ? '100%' : '0%' }}></div>
+            </div>
+            <span className="dash-progress-label">{tenantData?.rentStatus === 'PAID' ? '100% Paid' : '0% Paid'}</span>
           </div>
+
           <button className="dash-btn-outline" onClick={() => navigate('/payments')}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
             View Payment History
           </button>
+        </div>
+
+        {/* Recent Notifications */}
+        <div className="sn-card dash-notif-card">
+          <div className="dash-card-header">
+            <div className="dash-card-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-primary)' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </div>
+            <h4 className="sn-card-title">Recent Updates</h4>
+            <Link to="/notifications" className="dash-card-link">View All</Link>
+          </div>
+
+          {notifications.length === 0 ? (
+            <div className="dash-empty-state">
+              <p>No recent updates. You're all caught up!</p>
+            </div>
+          ) : (
+            <div className="dash-notif-list">
+              {notifications.map(n => (
+                <div key={n._id} className="dash-notif-item" onClick={() => navigate('/notifications')} style={{ cursor: 'pointer' }}>
+                  <div className="dash-notif-dot" style={{ background: n.isRead ? 'var(--border-color)' : 'var(--accent-primary)' }}></div>
+                  <div className="dash-notif-content">
+                    <strong>{n.title}</strong>
+                    <p>{n.message}</p>
+                    <span className="dash-notif-time">{new Date(n.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Complaints */}
@@ -266,6 +361,49 @@ function Dashboard() {
           <button className="dash-btn-outline" onClick={() => navigate('/services')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
             Request a Service
+          </button>
+        </div>
+
+        {/* Smart Comfort & Safety */}
+        <div className="sn-card dash-smart-card">
+          <div className="dash-card-header">
+            <div className="dash-card-icon" style={{ background: '#f5f3ff', color: '#8b5cf6' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
+            <h4 className="sn-card-title">Smart Comfort & Safety</h4>
+          </div>
+          <div className="dash-smart-metrics">
+             <div className="smart-metric">
+                <span className="smart-label">Hygiene Rating</span>
+                <div className="smart-value-bar">
+                   <div className="smart-fill" style={{ width: `${(tenantData?.roomId?.hygieneRating || 4.5) * 20}%`, background: '#10b981' }}></div>
+                </div>
+                <span className="smart-num">{tenantData?.roomId?.hygieneRating || 4.5} / 5.0</span>
+             </div>
+             <div className="smart-metric">
+                <span className="smart-label">Comfort Score</span>
+                <div className="smart-value-bar">
+                   <div className="smart-fill" style={{ width: `${(tenantData?.bedId?.comfortScore || 8.2) * 10}%`, background: '#8b5cf6' }}></div>
+                </div>
+                <span className="smart-num">{tenantData?.bedId?.comfortScore || 8.2} / 10</span>
+             </div>
+          </div>
+          <div className="dash-smart-status">
+             <div className="status-item">
+                <span className="status-dot active"></span>
+                <span>Smart Lock Active</span>
+             </div>
+             <div className="status-item">
+                <span className="status-dot active"></span>
+                <span>Optimal Ventilation</span>
+             </div>
+          </div>
+          <div className="dash-sanitized-info">
+             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+             <span>Last Sanitized: {tenantData?.bedId?.lastSanitized ? new Date(tenantData.bedId.lastSanitized).toLocaleDateString() : 'Yesterday, 11:00 AM'}</span>
+          </div>
+          <button className="dash-btn-primary-sm" onClick={() => navigate('/safety')}>
+            View Detailed Insights
           </button>
         </div>
       </div>

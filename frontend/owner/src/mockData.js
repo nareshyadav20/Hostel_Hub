@@ -45,6 +45,7 @@ export const api = {
   },
   updateOwnerProfile: async (data) => {
     const res = await axios.patch(`${API_URL}/owner/profile`, data);
+    cacheSet('owner_profile', res.data);
     return res.data;
   },
   getOwnerStats: async () => {
@@ -53,30 +54,40 @@ export const api = {
       axios.get(`${API_URL}/dashboard/summary`).then(res => cacheSet('owner_stats', res.data));
       return cached;
     }
-    const res = await axios.get(`${API_URL}/dashboard/summary`);
+    const res = await axios.get(`${API_URL}/owner/stats`);
     cacheSet('owner_stats', res.data);
     return res.data;
   },
   getOwnerHistory: async () => {
-    const res = await axios.get(`${API_URL}/dashboard/activity`);
+    const res = await axios.get(`${API_URL}/owner/history`);
     return res.data;
   },
   updateOwnerDocuments: async (doc) => {
     const res = await axios.post(`${API_URL}/owner/documents`, doc);
+    cacheSet('owner_profile', res.data);
+    return res.data;
+  },
+  uploadOwnerPhoto: async (photoUrl) => {
+    const res = await axios.post(`${API_URL}/owner/profile/photo`, { photoUrl });
+    const cached = cacheGet('owner_profile') || {};
+    cacheSet('owner_profile', { ...cached, photo: photoUrl });
+    return res.data;
+  },
+  getOwnerPhoto: async () => {
+    const res = await axios.get(`${API_URL}/owner/profile/photo`);
     return res.data;
   },
 
   // Buildings & Infrastructure
   getBuildings: async () => {
-    const cached = cacheGet('buildings');
-    if (cached) {
-      axios.get(`${API_URL}/buildings`).then(res => cacheSet('buildings', res.data));
-      return handleId(cached.filter(b => b.status !== 'Draft'));
-    }
-    const res = await axios.get(`${API_URL}/buildings`);
+    const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Active' } });
     const data = Array.isArray(res.data) ? res.data : [];
-    cacheSet('buildings', data);
-    return handleId(data.filter(b => b.status !== 'Draft'));
+    return handleId(data);
+  },
+  getDraftBuildings: async () => {
+    const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Draft' } });
+    const data = Array.isArray(res.data) ? res.data : [];
+    return handleId(data);
   },
   getHostels: async () => {
     const res = await axios.get(`${API_URL}/hostels`);
@@ -126,6 +137,18 @@ export const api = {
     const data = Array.isArray(res.data) ? res.data : [];
     return handleId(data);
   },
+  recommendBeds: async (buildingId, preferences) => {
+    const res = await axios.post(`${API_URL}/beds/recommend`, { buildingId, preferences });
+    return handleId(res.data);
+  },
+  getMaintenanceBeds: async () => {
+    const res = await axios.get(`${API_URL}/beds/maintenance`);
+    return handleId(res.data);
+  },
+  markBedSanitized: async (id) => {
+    const res = await axios.post(`${API_URL}/beds/${id}/sanitize`);
+    return handleId(res.data);
+  },
   getFloors: async (bId) => {
     const res = await axios.get(`${API_URL}/floors/${bId}`);
     return handleId(res.data);
@@ -174,42 +197,32 @@ export const api = {
   },
 
   // Operational Data
-  getTenants: async () => {
-    const cached = cacheGet('tenants');
-    if (cached) {
-      axios.get(`${API_URL}/tenants`).then(res => cacheSet('tenants', res.data));
-      return handleId(cached);
-    }
-    const res = await axios.get(`${API_URL}/tenants`);
-    cacheSet('tenants', res.data);
+  getTenants: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/tenants`, { params });
     return handleId(res.data);
   },
-  getComplaints: async () => {
-    const cached = cacheGet('complaints');
-    if (cached) {
-      axios.get(`${API_URL}/complaints`).then(res => cacheSet('complaints', res.data));
-      return handleId(cached);
-    }
-    const res = await axios.get(`${API_URL}/complaints`);
-    cacheSet('complaints', res.data);
+  getComplaints: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/complaints`, { params });
     return handleId(res.data);
   },
   updateComplaintStatus: async (id, status, assignedTo = null) => {
     const res = await axios.patch(`${API_URL}/complaints/${id}`, { status, assignedTo });
     return handleId(res.data);
   },
-  getPayments: async () => {
-    const cached = cacheGet('payments');
-    if (cached) {
-      axios.get(`${API_URL}/payments`).then(res => cacheSet('payments', res.data));
-      return handleId(cached);
-    }
-    const res = await axios.get(`${API_URL}/payments`);
-    cacheSet('payments', res.data);
+  getPayments: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/payments`, { params });
     return handleId(res.data);
   },
-  getRoomTransfers: async () => {
-    const res = await axios.get(`${API_URL}/room-transfers`);
+  updatePaymentStatus: async (id, status) => {
+    const res = await axios.patch(`${API_URL}/payments/${id}`, { status });
+    return handleId(res.data);
+  },
+  getRoomTransfers: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/room-transfers`, { params });
     return handleId(res.data);
   },
   updateRoomTransferStatus: async (id, status) => {
@@ -221,7 +234,6 @@ export const api = {
     return handleId(res.data);
   },
   updateMessMenu: async (data) => {
-    // data should include buildingId
     const res = await axios.put(`${API_URL}/mess/menu`, data);
     return handleId(res.data);
   },
@@ -235,6 +247,14 @@ export const api = {
   },
   markAllMessAttendance: async (data) => {
     const res = await axios.post(`${API_URL}/mess/attendance/mark-all`, data);
+    return res.data;
+  },
+  getMessPlans: async () => {
+    const res = await axios.get(`${API_URL}/mess/plans`);
+    return res.data;
+  },
+  updateMessPlan: async (id, data) => {
+    const res = await axios.put(`${API_URL}/mess/plans/${id}`, data);
     return res.data;
   },
   // Staff Management
@@ -273,14 +293,13 @@ export const api = {
     cacheSet(cacheKey, res.data);
     return res.data;
   },
-  updateSettings: async (data) => {
-    const buildingId = data.buildingId || localStorage.getItem('selectedBuildingId');
-    const res = await axios.post(`${API_URL}/settings`, { ...data, buildingId });
-    cacheSet(`settings_${buildingId}`, res.data);
+  updateSettings: async (data, buildingId) => {
+    const payload = buildingId ? { ...data, buildingId } : data;
+    const res = await axios.post(`${API_URL}/settings`, payload);
     return res.data;
   },
 
-  // Notifications API
+  // Notifications API (Centralized)
   getNotifications: async (bId) => {
     const res = await axios.get(`${API_URL}/notifications`, { params: { buildingId: bId } });
     return handleId(res.data);
@@ -308,6 +327,10 @@ export const api = {
     const res = await axios.post(`${API_URL}/notifications/seed`, { buildingId: bId });
     return res.data;
   },
+  sendNotification: async (data) => {
+    const res = await axios.post(`${API_URL}/notifications`, data);
+    return handleId(res.data);
+  },
 
   // CRUD Operations
   addBuilding: async (data) => {
@@ -320,6 +343,14 @@ export const api = {
   },
   deleteBuilding: async (id) => {
     await axios.delete(`${API_URL}/buildings/${id}`);
+  },
+  uploadPhotos: async (formData) => {
+    const res = await axios.post(`${API_URL}/buildings/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return res.data;
   },
   addFloor: async (data) => {
     const res = await axios.post(`${API_URL}/floors`, data);
@@ -399,7 +430,86 @@ export const api = {
   },
   deleteInventoryItem: async (id) => {
     await axios.delete(`${API_URL}/inventory/${id}`);
+  },
+  // Procurement
+  getProcurementData: async (bId) => {
+    const res = await axios.get(`${API_URL}/procurement`, { params: { buildingId: bId } });
+    return res.data;
+  },
+  addPurchaseRequest: async (data) => {
+    const res = await axios.post(`${API_URL}/procurement/requests`, data);
+    return handleId(res.data);
+  },
+  addPurchaseOrder: async (data) => {
+    const res = await axios.post(`${API_URL}/procurement/orders`, data);
+    return handleId(res.data);
+  },
+  getReportsData: async (bId) => {
+    const res = await axios.get(`${API_URL}/reports`, { params: { buildingId: bId } });
+    return res.data;
+  },
+  // Notifications - extra methods
+  seedNotifications: async (bId) => {
+    const res = await axios.post(`${API_URL}/notifications/seed`, { buildingId: bId });
+    return res.data;
+  },
+  archiveNotification: async (id) => {
+    const res = await axios.patch(`${API_URL}/notifications/${id}/archive`);
+    return res.data;
+  },
+  // Tenants - delete
+  deleteTenant: async (id) => {
+    await axios.delete(`${API_URL}/tenants/${id}`);
+  },
+  // Community Hub
+  getLostFound: async () => {
+    const res = await axios.get(`${API_URL}/community/lost-found`);
+    return handleId(res.data);
+  },
+  getSOSAlerts: async () => {
+    const res = await axios.get(`${API_URL}/community/sos`);
+    return handleId(res.data);
+  },
+  resolveSOSAlert: async (id) => {
+    const res = await axios.patch(`${API_URL}/community/sos/${id}/resolve`);
+    return res.data;
+  },
+  dispatchSOSAlert: async (id) => {
+    const res = await axios.patch(`${API_URL}/community/sos/${id}/dispatch`);
+    return res.data;
+  },
+  updateLostFoundStatus: async (id, status) => {
+    const res = await axios.patch(`${API_URL}/community/lost-found/${id}/status`, { status });
+    return res.data;
+  },
+  getConfidentialReports: async (params = {}) => {
+    const res = await axios.get(`${API_URL}/confidential-reports`, { params });
+    return {
+      reports: handleId(res.data.reports || []),
+      pagination: res.data.pagination
+    };
+  },
+  updateConfidentialReportStatus: async (id, status) => {
+    const res = await axios.patch(`${API_URL}/confidential-reports/${id}/status`, { status });
+    return handleId(res.data.report);
+  },
+  flagConfidentialReport: async (id, isFlagged, flagStatus) => {
+    const res = await axios.patch(`${API_URL}/confidential-reports/${id}/flag`, { isFlagged, flagStatus });
+    return handleId(res.data.report);
+  },
+  deleteConfidentialReport: async (id) => {
+    const res = await axios.delete(`${API_URL}/confidential-reports/${id}`);
+    return res.data;
+  },
+  debugConfidentialReports: async () => {
+    const res = await axios.get(`${API_URL}/confidential-reports/debug`);
+    return res.data;
+  },
+  hideConfidentialReport: async (id, isHidden) => {
+    const res = await axios.patch(`${API_URL}/confidential-reports/${id}/hide`, { isHidden });
+    return handleId(res.data.report);
   }
 };
 
 window.api = api;
+// end of file test

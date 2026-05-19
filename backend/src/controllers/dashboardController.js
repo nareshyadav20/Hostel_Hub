@@ -4,6 +4,33 @@ const Tenant = require('../models/Tenant');
 const Payment = require('../models/Payment');
 const Complaint = require('../models/Complaint');
 const User = require('../models/User');
+const SystemSettings = require('../models/SystemSettings');
+const Staff = require('../models/Staff');
+
+// Helper: traverse the nested property hierarchy
+const traverseHierarchy = (buildings) => {
+  let totalBeds = 0, occupiedBeds = 0, maintenanceRooms = 0;
+  const buildingWise = [], floorWise = [];
+
+  buildings.forEach(b => {
+    let bOcc = 0, bTot = 0;
+    (b.floors || []).forEach(f => {
+      let fOcc = 0, fTot = 0;
+      (f.rooms || []).forEach(r => {
+        if (r.status === 'Maintenance') maintenanceRooms++;
+        (r.beds || []).forEach(bed => {
+          totalBeds++; bTot++; fTot++;
+          if (bed.status === 'OCCUPIED') { occupiedBeds++; bOcc++; fOcc++; }
+        });
+      });
+      floorWise.push({ name: `${b.name} F${f.floorNumber}`, occupied: fOcc, vacant: fTot - fOcc, total: fTot });
+    });
+    buildingWise.push({ name: b.name, occupied: bOcc, vacant: bTot - bOcc, total: bTot });
+  });
+
+  return { totalBeds, occupiedBeds, maintenanceRooms, buildingWise, floorWise };
+};
+
 const MessMenu = require('../models/MessMenu');
 const MessAttendance = require('../models/MessAttendance');
 
@@ -69,34 +96,39 @@ const getHierarchyCounts = async (buildingIds) => {
 // ─── GET /api/dashboard/summary ──────────────────────────────────────────────
 exports.getSummaryKPIs = async (req, res) => {
   try {
-    const oid = parseId(req.query.buildingId);
-    const db = mongoose.connection.db;
+    const { buildingId } = req.query;
+    const mongoose = require('mongoose');
 
-    const allBuildingsOwner = await Building.find(oid ? { _id: oid } : {}, '_id');
-    let buildingIds = allBuildingsOwner.map(b => b._id);
-    let buildingCount = buildingIds.length;
+    // 1. Isolate each owner's details of his own buildings
+    const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id name');
+    const ownerBuildingIds = ownerBuildings.map(b => b._id);
 
-    const rawQuery = oid ? { _id: oid } : {};
-    const rawBuildings = await db.collection('buildings').find(rawQuery, { projection: { _id: 1 } }).toArray();
-    const rawBuildingIds = rawBuildings.map(b => b._id);
-    const rawBuildingCount = rawBuildingIds.length;
+    let activeBuildingIds = [];
+    let selectedBuildingName = 'All Properties';
 
-    buildingIds = [...buildingIds, ...rawBuildingIds];
-    buildingCount = buildingCount + rawBuildingCount;
+    if (buildingId) {
+      const isOwned = ownerBuildingIds.some(id => id.toString() === buildingId.toString());
+      if (!isOwned) {
+        return res.status(403).json({ error: 'Access denied: building does not belong to you.' });
+      }
+      activeBuildingIds = [new mongoose.Types.ObjectId(buildingId)];
+      const bObj = ownerBuildings.find(b => b._id.toString() === buildingId.toString());
+      selectedBuildingName = bObj ? bObj.name : 'Selected Property';
+    } else {
+      activeBuildingIds = ownerBuildingIds;
+    }
 
-    const { totalBeds, occupiedBeds, maintenanceRoomsCount } = await getHierarchyCounts(buildingIds);
-    const vacantBeds = totalBeds - occupiedBeds;
-    const occupancyRate = totalBeds > 0 ? parseFloat(((occupiedBeds / totalBeds) * 100).toFixed(1)) : 0;
+    const matchQuery = { _id: { $in: activeBuildingIds } };
 
-    const ownerTenantsCount = await Tenant.countDocuments(oid ? { buildingId: oid } : {});
-    const rawTenantsCount = await db.collection('tenants').countDocuments(oid ? { buildingId: oid } : {});
-    const totalTenants = ownerTenantsCount + rawTenantsCount;
-
-    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(); endOfDay.setHours(23, 59, 59, 999);
-
-    const paymentStatsOwner = await Payment.aggregate([
-      { $match: oid ? { buildingId: oid } : {} },
+    // 2. Check number of beds available (total configured beds)
+    const stats = await Building.aggregate([
+      { $match: matchQuery },
+      { $lookup: { from: 'floors', localField: 'floors', foreignField: '_id', as: 'floorData' } },
+      { $unwind: { path: '$floorData', preserveNullAndEmptyArrays: true } },
+      { $lookup: { from: 'rooms', localField: 'floorData.rooms', foreignField: '_id', as: 'roomData' } },
+      { $unwind: { path: '$roomData', preserveNullAndEmptyArrays: true } },
+      { $lookup: { from: 'beds', localField: 'roomData.beds', foreignField: '_id', as: 'bedData' } },
+      { $unwind: { path: '$bedData', preserveNullAndEmptyArrays: true } },
       {
         $group: {
           _id: null,
@@ -118,8 +150,57 @@ exports.getSummaryKPIs = async (req, res) => {
       }
     ]);
 
-    const paymentStatsRaw = await db.collection('payments').aggregate([
-      { $match: oid ? { buildingId: oid } : {} },
+    const s = stats[0] || { totalBeds: 0, occupiedBeds: 0, maintenanceRooms: [], buildingCount: [] };
+    const maintenanceRoomsCount = s.maintenanceRooms.filter(id => id !== null).length;
+    const buildingCount = s.buildingCount.length;
+
+    // 3. Check number of tenants (active residents in owner's active buildings)
+    const tenantFilter = { buildingId: { $in: activeBuildingIds } };
+    const totalTenants = await Tenant.countDocuments(tenantFilter);
+
+    // 4. Calculate occupancy rate
+    let totalBeds = s.totalBeds;
+    let occupiedBeds = totalTenants; // Since active tenants occupy beds, we dynamically count occupied beds by active tenants count
+
+    // Fallback: If no beds are configured, but there are active tenants, set totalBeds to totalTenants
+    if (totalBeds === 0 && totalTenants > 0) {
+      totalBeds = totalTenants;
+      occupiedBeds = totalTenants;
+    } else {
+      totalBeds = Math.max(totalBeds, totalTenants);
+    }
+
+    const vacantBeds = Math.max(0, totalBeds - occupiedBeds);
+    const occupancyRate = totalBeds > 0 ? parseFloat(((occupiedBeds / totalBeds) * 100).toFixed(1)) : 0;
+
+    // 5. Payments metrics (isolated to active buildings)
+    const payMatch = {
+      $or: [
+        { buildingId: { $in: activeBuildingIds.map(id => id.toString()) } },
+        { buildingId: { $in: activeBuildingIds } }
+      ]
+    };
+
+    const payments = await Payment.find(payMatch);
+    const pendingPayments = payments.filter(p => p.status === 'Pending' || p.status === 'Due');
+    const pendingPaymentsCount = pendingPayments.length;
+    const pendingPaymentsAmount = pendingPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+    // 6. Health Score (Dynamic)
+    const settings = await SystemSettings.findOne({ owner: req.user.id });
+    const defaultRent = settings ? settings.rentSettings.defaultRent.single : 8000;
+
+    const occupancyScore = Math.min(40, (occupancyRate / 100) * 40);
+    const paymentScore = Math.max(0, 30 - (pendingPaymentsCount * 1.5));
+    const maintenanceScore = Math.max(0, 20 - (maintenanceRoomsCount * 2));
+    const healthScore = Math.round(occupancyScore + paymentScore + maintenanceScore + 10);
+
+    // 7. Daily Activity Stats
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(); endOfDay.setHours(23, 59, 59, 999);
+
+    const paymentStats = await Payment.aggregate([
+      { $match: payMatch },
       {
         $group: {
           _id: null,
@@ -128,12 +209,15 @@ exports.getSummaryKPIs = async (req, res) => {
           todayRevenue: {
             $sum: {
               $cond: [
-                { $and: [
-                  { $eq: ['$status', 'Paid'] },
-                  { $gte: ['$date', startOfDay] },
-                  { $lte: ['$date', endOfDay] }
-                ]},
-                '$amount', 0
+                {
+                  $and: [
+                    { $eq: ['$status', 'Paid'] },
+                    { $gte: ['$date', startOfDay] },
+                    { $lt: ['$date', endOfDay] }
+                  ]
+                },
+                '$amount',
+                0
               ]
             }
           }
@@ -177,19 +261,18 @@ exports.getSummaryKPIs = async (req, res) => {
     res.json({
       totalBeds, occupiedBeds, vacantBeds, occupancyRate,
       todayRevenue: ps.todayRevenue,
-      expectedMonthlyRevenue: totalTenants * 8000,
+      expectedMonthlyRevenue: totalTenants * defaultRent,
       pendingPaymentsCount: ps.pendingCount,
       pendingPaymentsAmount: ps.pendingAmount,
       maintenanceRooms: maintenanceRoomsCount,
-      healthScore: 85,
+      healthScore,
       buildingCount,
       totalTenants,
-      ownerCount,
-      complaintsToday,
-      checkinsToday,
-      checkoutsToday: 0, // Placeholder
-      newBookingsToday: checkinsToday, // Simplified
-      buildingName: oid ? 'Selected Property' : 'All Properties'
+      complaintsToday: await Complaint.countDocuments({
+        createdAt: { $gte: startOfDay },
+        buildingId: { $in: activeBuildingIds }
+      }),
+      buildingName: selectedBuildingName
     });
   } catch (error) {
     console.error('Summary Error:', error);
@@ -200,13 +283,31 @@ exports.getSummaryKPIs = async (req, res) => {
 // ─── GET /api/dashboard/revenue ──────────────────────────────────────────────
 exports.getRevenueAnalytics = async (req, res) => {
   try {
-    const oid = parseId(req.query.buildingId);
-    const db = mongoose.connection.db;
+    const { buildingId } = req.query;
+    const mongoose = require('mongoose');
 
-    const ownerPayments = await Payment.find(oid ? { buildingId: oid } : {}).lean();
-    const rawPayments = await db.collection('payments').find(oid ? { buildingId: oid } : {}).toArray();
-    const payments = [...ownerPayments, ...rawPayments];
+    const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+    const ownerBuildingIds = ownerBuildings.map(b => b._id);
 
+    let activeBuildingIds = [];
+    if (buildingId) {
+      const isOwned = ownerBuildingIds.some(id => id.toString() === buildingId.toString());
+      if (!isOwned) return res.status(403).json({ error: 'Access denied.' });
+      activeBuildingIds = [new mongoose.Types.ObjectId(buildingId)];
+    } else {
+      activeBuildingIds = ownerBuildingIds;
+    }
+
+    const payMatch = {
+      $or: [
+        { buildingId: { $in: activeBuildingIds.map(id => id.toString()) } },
+        { buildingId: { $in: activeBuildingIds } }
+      ]
+    };
+
+    const payments = await Payment.find(payMatch);
+
+    // Last 7 days daily revenue
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dailyRevenue = days.map((name, i) => {
       const dayPayments = payments.filter(p => new Date(p.date).getDay() === i && p.status === 'Paid');
@@ -229,7 +330,7 @@ exports.getRevenueAnalytics = async (req, res) => {
       rentMetrics: {
         pendingRent,
         collectedRent,
-        securityDepositsHeld: tenantCount * 10000,
+        securityDepositsHeld: (await Tenant.countDocuments({ buildingId: { $in: activeBuildingIds } })) * 10000,
         totalIncome: collectedRent,
         totalExpenses: collectedRent * 0.25,
         netProfit: collectedRent * 0.75
@@ -244,69 +345,26 @@ exports.getRevenueAnalytics = async (req, res) => {
 // ─── GET /api/dashboard/occupancy ────────────────────────────────────────────
 exports.getOccupancyStats = async (req, res) => {
   try {
-    const oid = parseId(req.query.buildingId);
-    const db = mongoose.connection.db;
+    const { buildingId } = req.query;
+    const mongoose = require('mongoose');
 
-    const ownerBuildings = await Building.find(oid ? { _id: oid } : {}, '_id name').lean();
-    const rawBuildings = await db.collection('buildings').find(oid ? { _id: oid } : {}, { projection: { _id: 1, name: 1 } }).toArray();
-    const buildings = [...ownerBuildings, ...rawBuildings];
-    const buildingIds = buildings.map(b => b._id);
+    const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+    const ownerBuildingIds = ownerBuildings.map(b => b._id);
 
-    // owner_floors & owner_rooms & owner_beds
-    const ownerFloors = await db.collection('owner_floors').find(
-      { buildingId: { $in: buildingIds } }
-    ).toArray();
-    const ownerFloorIds = ownerFloors.map(f => f._id);
-    const ownerRooms = ownerFloorIds.length > 0
-      ? await db.collection('owner_rooms').find({ floor: { $in: ownerFloorIds } }).toArray()
-      : [];
-    const ownerRoomIds = ownerRooms.map(r => r._id);
-    const ownerBeds = ownerRoomIds.length > 0
-      ? await db.collection('owner_beds').find({ roomId: { $in: ownerRoomIds } }).toArray()
-      : [];
+    let activeBuildingIds = [];
+    if (buildingId) {
+      const isOwned = ownerBuildingIds.some(id => id.toString() === buildingId.toString());
+      if (!isOwned) return res.status(403).json({ error: 'Access denied.' });
+      activeBuildingIds = [new mongoose.Types.ObjectId(buildingId)];
+    } else {
+      activeBuildingIds = ownerBuildingIds;
+    }
 
-    // floors & rooms & beds
-    const rawFloors = await db.collection('floors').find(
-      { building: { $in: buildingIds } }
-    ).toArray();
-    const rawFloorIds = rawFloors.map(f => f._id);
-    const rawRooms = rawFloorIds.length > 0
-      ? await db.collection('rooms').find({ floor: { $in: rawFloorIds } }).toArray()
-      : [];
-    const rawRoomIds = rawRooms.map(r => r._id);
-    const rawBeds = rawRoomIds.length > 0
-      ? await db.collection('beds').find({ roomId: { $in: rawRoomIds } }).toArray()
-      : [];
-
-    // Merge
-    const floors = [...ownerFloors, ...rawFloors.map(f => ({ ...f, buildingId: f.building }))];
-    const rooms = [...ownerRooms, ...rawRooms];
-    const beds = [...ownerBeds, ...rawBeds];
-
-    // Per-building stats
-    const buildingWise = buildings.map(b => {
-      const bFloors = floors.filter(f => String(f.buildingId) === String(b._id));
-      const bFloorIds = bFloors.map(f => String(f._id));
-      const bRooms = rooms.filter(r => bFloorIds.includes(String(r.floor)));
-      const bRoomIds = bRooms.map(r => String(r._id));
-      const bBeds = beds.filter(bed => bRoomIds.includes(String(bed.roomId)));
-      const occupied = bBeds.filter(bed => bed.status === 'OCCUPIED').length;
-      return { name: b.name, total: bBeds.length, occupied, vacant: bBeds.length - occupied };
+    const buildings = await Building.find({ _id: { $in: activeBuildingIds } }).populate({
+      path: 'floors',
+      populate: { path: 'rooms', populate: { path: 'beds' } }
     });
-
-    // Per-floor stats
-    const floorWise = floors.map(f => {
-      const fBuilding = buildings.find(b => String(b._id) === String(f.buildingId));
-      const fRooms = rooms.filter(r => String(r.floor) === String(f._id));
-      const fRoomIds = fRooms.map(r => String(r._id));
-      const fBeds = beds.filter(bed => fRoomIds.includes(String(bed.roomId)));
-      const occupied = fBeds.filter(bed => bed.status === 'OCCUPIED').length;
-      return {
-        name: `${fBuilding?.name || 'B'} F${f.floorNumber}`,
-        total: fBeds.length, occupied, vacant: fBeds.length - occupied
-      };
-    });
-
+    const { buildingWise, floorWise } = traverseHierarchy(buildings);
     res.json({ buildingWise, floorWise });
   } catch (error) {
     console.error('Occupancy Error:', error);
@@ -317,39 +375,46 @@ exports.getOccupancyStats = async (req, res) => {
 // ─── GET /api/dashboard/alerts ───────────────────────────────────────────────
 exports.getAlertsAndInsights = async (req, res) => {
   try {
-    const oid = parseId(req.query.buildingId);
-    const db = mongoose.connection.db;
+    const { buildingId } = req.query;
+    const mongoose = require('mongoose');
+
+    const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+    const ownerBuildingIds = ownerBuildings.map(b => b._id);
+
+    let activeBuildingIds = [];
+    if (buildingId) {
+      const isOwned = ownerBuildingIds.some(id => id.toString() === buildingId.toString());
+      if (!isOwned) return res.status(403).json({ error: 'Access denied.' });
+      activeBuildingIds = [new mongoose.Types.ObjectId(buildingId)];
+    } else {
+      activeBuildingIds = ownerBuildingIds;
+    }
+
     const insights = [], alerts = [];
 
-    const highComplaintsOwner = await Complaint.find({
+    const highComplaints = await Complaint.find({
       status: 'Pending',
       priority: 'High',
-      ...(oid && { buildingId: oid })
-    }).lean();
-    const highComplaintsRaw = await db.collection('complaints').find({
-      status: 'Pending',
-      priority: 'High',
-      ...(oid && { buildingId: oid })
-    }).toArray();
-    const highComplaints = [...highComplaintsOwner, ...highComplaintsRaw];
+      buildingId: { $in: activeBuildingIds }
+    });
 
     highComplaints.forEach(c => {
-      alerts.push({ type: 'complaint', message: `Critical: ${c.title}`, severity: 'high', id: c._id });
+      alerts.push({
+        type: 'complaint',
+        message: `Critical: ${c.title}`,
+        severity: 'high',
+        id: c._id
+      });
     });
 
-    const pendingPaymentsOwner = await Payment.countDocuments({
+    const pendingPayments = await Payment.countDocuments({
       status: { $in: ['Pending', 'Due'] },
-      ...(oid && { buildingId: oid })
+      $or: [
+        { buildingId: { $in: activeBuildingIds.map(id => id.toString()) } },
+        { buildingId: { $in: activeBuildingIds } }
+      ]
     });
-    const pendingPaymentsRaw = await db.collection('payments').countDocuments({
-      status: { $in: ['Pending', 'Due'] },
-      ...(oid && { buildingId: oid })
-    });
-    const pendingPayments = pendingPaymentsOwner + pendingPaymentsRaw;
-
-    if (pendingPayments > 0) {
-      insights.push({ type: 'payment', message: `${pendingPayments} tenants have pending dues.` });
-    }
+    if (pendingPayments > 0) insights.push({ type: 'payment', message: `${pendingPayments} tenants have pending dues.` });
 
     res.json({ alerts, insights });
   } catch (error) {
@@ -361,13 +426,24 @@ exports.getAlertsAndInsights = async (req, res) => {
 // ─── GET /api/dashboard/complaints ───────────────────────────────────────────
 exports.getComplaintsStats = async (req, res) => {
   try {
-    const oid = parseId(req.query.buildingId);
-    const query = oid ? { buildingId: oid } : {};
-    const ownerComplaints = await Complaint.find(query).lean();
-    
-    const db = mongoose.connection.db;
-    const rawComplaints = await db.collection('complaints').find(query).toArray();
-    const complaints = [...ownerComplaints, ...rawComplaints];
+    const { buildingId } = req.query;
+    const mongoose = require('mongoose');
+
+    const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+    const ownerBuildingIds = ownerBuildings.map(b => b._id);
+
+    let activeBuildingIds = [];
+    if (buildingId) {
+      const isOwned = ownerBuildingIds.some(id => id.toString() === buildingId.toString());
+      if (!isOwned) return res.status(403).json({ error: 'Access denied.' });
+      activeBuildingIds = [new mongoose.Types.ObjectId(buildingId)];
+    } else {
+      activeBuildingIds = ownerBuildingIds;
+    }
+
+    const complaints = await Complaint.find({ buildingId: { $in: activeBuildingIds } });
+    const open = complaints.filter(c => c.status === 'Pending').length;
+    const resolved = complaints.filter(c => c.status === 'Resolved').length;
 
     res.json({
       total: complaints.length,
@@ -391,24 +467,35 @@ exports.getComplaintsStats = async (req, res) => {
 // ─── GET /api/dashboard/mess ─────────────────────────────────────────────────
 exports.getMessStats = async (req, res) => {
   try {
-    const oid = parseId(req.query.buildingId);
+    const { buildingId } = req.query;
+    const mongoose = require('mongoose');
+
+    const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+    const ownerBuildingIds = ownerBuildings.map(b => b._id);
+
+    let activeBuildingIds = [];
+    if (buildingId) {
+      const isOwned = ownerBuildingIds.some(id => id.toString() === buildingId.toString());
+      if (!isOwned) return res.status(403).json({ error: 'Access denied.' });
+      activeBuildingIds = [new mongoose.Types.ObjectId(buildingId)];
+    } else {
+      activeBuildingIds = ownerBuildingIds;
+    }
+
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const day = days[new Date().getDay()];
     const todayISO = new Date().toISOString().split('T')[0];
 
-    const menu = await MessMenu.findOne({
-      ...(oid && { buildingId: oid }),
-      day,
-      plan: 'standard'
-    });
+    const menu = await MessMenu.findOne({ buildingId: { $in: activeBuildingIds }, day, plan: 'standard' });
 
-    const attendance = await MessAttendance.find({
-      ...(oid && { buildingId: oid }),
-      date: todayISO
+    // Calculate real attendance stats
+    const attendance = await MessAttendance.find({ buildingId: { $in: activeBuildingIds }, date: todayISO });
+    let mealsServedToday = 0;
+    attendance.forEach(att => {
+      if (att.breakfast) mealsServedToday++;
+      if (att.lunch) mealsServedToday++;
+      if (att.dinner) mealsServedToday++;
     });
-    const mealsServedToday = attendance.reduce((sum, a) => {
-      return sum + (a.breakfast ? 1 : 0) + (a.lunch ? 1 : 0) + (a.dinner ? 1 : 0);
-    }, 0);
 
     res.json({
       mealsServedToday,
@@ -431,14 +518,36 @@ exports.getMessStats = async (req, res) => {
 // ─── GET /api/dashboard/staff ────────────────────────────────────────────────
 exports.getStaffStats = async (req, res) => {
   try {
-    const staff = await User.find({ role: { $in: ['STAFF', 'WARDEN'] } }, 'name role').lean();
+    const { buildingId } = req.query;
+    const mongoose = require('mongoose');
+
+    const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+    const ownerBuildingIds = ownerBuildings.map(b => b._id);
+
+    let activeBuildingIds = [];
+    if (buildingId) {
+      const isOwned = ownerBuildingIds.some(id => id.toString() === buildingId.toString());
+      if (!isOwned) return res.status(403).json({ error: 'Access denied.' });
+      activeBuildingIds = [new mongoose.Types.ObjectId(buildingId)];
+    } else {
+      activeBuildingIds = ownerBuildingIds;
+    }
+
+    const staff = await Staff.find({ buildingId: { $in: activeBuildingIds } }).select('name role performance status');
+    const efficiency = staff.length > 0 ? (staff.reduce((s, st) => s + (st.performance || 0), 0) / staff.length) * 20 : 100;
+
     res.json({
       totalStaff: staff.length,
-      tasksAssigned: 0,
-      tasksCompleted: 0,
-      tasksPending: 0,
-      efficiencyScore: 100,
-      staffList: staff.map(s => ({ name: s.name, role: s.role, score: 100 }))
+      tasksAssigned: staff.reduce((s, st) => s + (st.tasks?.length || 0), 0),
+      tasksCompleted: staff.reduce((s, st) => s + (st.tasks?.filter(t => t.status === 'COMPLETED').length || 0), 0),
+      tasksPending: staff.reduce((s, st) => s + (st.tasks?.filter(t => t.status === 'PENDING').length || 0), 0),
+      efficiencyScore: Math.round(efficiency),
+      staffList: staff.map(s => ({
+        name: s.name,
+        role: s.role,
+        score: (s.performance || 0) * 20,
+        status: s.status
+      }))
     });
   } catch (error) {
     console.error('Staff Error:', error);
@@ -449,15 +558,31 @@ exports.getStaffStats = async (req, res) => {
 // ─── GET /api/dashboard/activity ─────────────────────────────────────────────
 exports.getLiveActivity = async (req, res) => {
   try {
-    const oid = parseId(req.query.buildingId);
-    const query = oid ? { buildingId: oid } : {};
-    const db = mongoose.connection.db;
+    const { buildingId } = req.query;
+    const mongoose = require('mongoose');
 
-    const [payments, complaints, rawPayments, rawComplaints] = await Promise.all([
-      Payment.find(query).sort({ createdAt: -1 }).limit(5).populate('tenantId', 'name').lean(),
-      Complaint.find(query).sort({ createdAt: -1 }).limit(5).populate('tenant', 'name').lean(),
-      db.collection('payments').find(query).sort({ createdAt: -1 }).limit(5).toArray(),
-      db.collection('complaints').find(query).sort({ createdAt: -1 }).limit(5).toArray()
+    const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+    const ownerBuildingIds = ownerBuildings.map(b => b._id);
+
+    let activeBuildingIds = [];
+    if (buildingId) {
+      const isOwned = ownerBuildingIds.some(id => id.toString() === buildingId.toString());
+      if (!isOwned) return res.status(403).json({ error: 'Access denied.' });
+      activeBuildingIds = [new mongoose.Types.ObjectId(buildingId)];
+    } else {
+      activeBuildingIds = ownerBuildingIds;
+    }
+
+    const payMatch = {
+      $or: [
+        { buildingId: { $in: activeBuildingIds.map(id => id.toString()) } },
+        { buildingId: { $in: activeBuildingIds } }
+      ]
+    };
+
+    const [payments, complaints] = await Promise.all([
+      Payment.find(payMatch).sort({ createdAt: -1 }).limit(5).populate('tenantId'),
+      Complaint.find({ buildingId: { $in: activeBuildingIds } }).sort({ createdAt: -1 }).limit(5).populate('tenant')
     ]);
 
     for (let p of rawPayments) {

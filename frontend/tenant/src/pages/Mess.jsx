@@ -1,70 +1,166 @@
 import React, { useState, useEffect } from 'react';
 import API from '../api/axios';
 import './Mess.css';
+import socket, { connectSocket, disconnectSocket } from '../utils/socket';
+import { ChevronLeft, ChevronRight, Search, Filter, Calendar, Clock, AlertTriangle, Coffee, Utensils, Moon, CheckCircle, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Mess = () => {
   const [rating, setRating] = useState(0);
-  const [todayMenu, setTodayMenu] = useState({ breakfast: 'Poha & Tea', lunch: 'Veg Thali', dinner: 'Dal Tadka' });
+  const [todayMenu, setTodayMenu] = useState({ breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' });
   const [weeklyMenu, setWeeklyMenu] = useState([]);
   const [tenantPlan, setTenantPlan] = useState('Standard');
   const [loading, setLoading] = useState(true);
   const [attendanceStatus, setAttendanceStatus] = useState('dining'); // 'dining' or 'skipped'
+  const [feedbackMessage, setFeedbackMessage] = useState(null);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 7;
+
+  const fetchMessData = async () => {
+    try {
+      const todayDate = new Date().toLocaleDateString('sv-SE');
+      
+      // 1. Fetch tenant profile first to resolve the verified building ID and active mess plan
+      const profileRes = await API.get('/tenants/me');
+      const tenant = profileRes.data;
+      
+      const bId = tenant.buildingId?._id || tenant.buildingId || localStorage.getItem('buildingId');
+      
+      // Synchronize correct buildingId to localStorage for socket events and other components
+      if (bId) {
+        localStorage.setItem('buildingId', String(bId));
+        connectSocket(String(bId));
+      }
+      
+      // Normalize plan to lowercase to match DB enum ['basic', 'standard', 'premium']
+      const activePlan = (tenant.messPlan || 'basic').toLowerCase();
+      setTenantPlan(tenant.messPlan || 'basic');
+      
+      // 2. Fetch menu and attendance using the verified building ID
+      const [menuRes, attendanceRes] = await Promise.all([
+        bId ? API.get(`/mess/menu?buildingId=${bId}`).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+        bId ? API.get(`/mess/attendance?buildingId=${bId}&date=${todayDate}`).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })
+      ]);
+      
+      // Determine attendance status for today's current active meal based on time
+      const myAttendance = attendanceRes.data.find(a => a.tenantId === tenant._id || a.tenantId === tenant.id);
+      if (myAttendance) {
+        const hour = new Date().getHours();
+        let currentMeal = 'dinner';
+        if (hour < 11) currentMeal = 'breakfast';
+        else if (hour < 16) currentMeal = 'lunch';
+
+        const mealStatus = myAttendance[currentMeal];
+        if (mealStatus !== undefined) {
+          setAttendanceStatus(mealStatus ? 'dining' : 'skipped');
+        } else {
+          setAttendanceStatus('dining'); // Default if unmarked
+        }
+      } else {
+        setAttendanceStatus('dining'); // Default if no attendance record today
+      }
+
+      let finalMenu = menuRes.data && menuRes.data.length > 0 ? menuRes.data : [];
+      const fallbackMenu = [
+        { day: 'Monday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+        { day: 'Tuesday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+        { day: 'Wednesday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+        { day: 'Thursday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+        { day: 'Friday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+        { day: 'Saturday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+        { day: 'Sunday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' }
+      ];
+
+      if (finalMenu.length === 0) {
+        finalMenu = fallbackMenu;
+      } else {
+        // Filter menu items specifically to match the tenant's plan tier
+        finalMenu = finalMenu.filter(m => (m.plan || 'basic').toLowerCase() === activePlan);
+        if (finalMenu.length === 0) finalMenu = fallbackMenu;
+      }
+      
+      // Sort weekly menu chronologically for clean, premium UX
+      const dayOrder = {
+        'Monday': 1,
+        'Tuesday': 2,
+        'Wednesday': 3,
+        'Thursday': 4,
+        'Friday': 5,
+        'Saturday': 6,
+        'Sunday': 7
+      };
+      finalMenu.sort((a, b) => (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99));
+      
+      setWeeklyMenu(finalMenu);
+      const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+      const todayItem = finalMenu.find(m => m.day === today) || finalMenu[0];
+      setTodayMenu(todayItem);
+    } catch (err) {
+      console.error('Error fetching mess data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchMessData = async () => {
-      try {
-        const [profileRes] = await Promise.all([API.get('/tenants/me')]);
-        setTenantPlan(profileRes.data.messPlan || 'Basic');
-        
-        const fallbackMenu = [
-          { day: 'Monday', breakfast: 'Poha & Jalebi', lunch: 'Rajma Chawal', dinner: 'Paneer Butter Masala' },
-          { day: 'Tuesday', breakfast: 'Idli Sambar', lunch: 'Chole Bhature', dinner: 'Dal Tadka' },
-          { day: 'Wednesday', breakfast: 'Aloo Paratha', lunch: 'Veg Biryani', dinner: 'Mix Veg' },
-          { day: 'Thursday', breakfast: 'Upma', lunch: 'Kadhi Pakora', dinner: 'Egg Curry' },
-          { day: 'Friday', breakfast: 'Masala Dosa', lunch: 'Dal Makhani', dinner: 'Chicken Curry' },
-          { day: 'Saturday', breakfast: 'Puri Sabzi', lunch: 'Veg Fried Rice', dinner: 'Aloo Gobi' },
-          { day: 'Sunday', breakfast: 'Bread Omelette', lunch: 'Special Thali', dinner: 'Matar Paneer' }
-        ];
-        setWeeklyMenu(fallbackMenu);
-        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-        setTodayMenu(fallbackMenu.find(m => m.day === today) || fallbackMenu[0]);
-      } catch (err) {
-        console.error('Error fetching mess data, using fallback data:', err);
-        
-        // Fallback Mock Data for Mess
-        const fallbackMenu = [
-          { day: 'Monday', breakfast: 'Poha & Jalebi', lunch: 'Rajma Chawal', dinner: 'Paneer Butter Masala & Roti', plan: 'basic' },
-          { day: 'Tuesday', breakfast: 'Idli Sambar', lunch: 'Chole Bhature', dinner: 'Dal Tadka & Jeera Rice', plan: 'basic' },
-          { day: 'Wednesday', breakfast: 'Aloo Paratha', lunch: 'Veg Biryani', dinner: 'Mix Veg & Roti', plan: 'basic' },
-          { day: 'Thursday', breakfast: 'Upma', lunch: 'Kadhi Pakora', dinner: 'Egg Curry & Rice', plan: 'basic' },
-          { day: 'Friday', breakfast: 'Masala Dosa', lunch: 'Dal Makhani', dinner: 'Chicken Curry & Roti', plan: 'basic' },
-          { day: 'Saturday', breakfast: 'Puri Sabzi', lunch: 'Veg Fried Rice', dinner: 'Aloo Gobi & Roti', plan: 'basic' },
-          { day: 'Sunday', breakfast: 'Bread Omelette', lunch: 'Special Thali', dinner: 'Matar Paneer & Pulao', plan: 'basic' }
-        ];
-        
-        setWeeklyMenu(fallbackMenu);
-        
-        const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-        const todayItem = fallbackMenu.find(m => m.day === today);
-        if (todayItem) {
-          setTodayMenu(todayItem);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchMessData();
+
+    // Register real-time listeners unconditionally on mount
+    socket.on('menuUpdated', () => {
+      console.log('🔄 Mess Menu Updated');
+      fetchMessData();
+    });
+
+    socket.on('attendanceUpdated', (data) => {
+      console.log('✅ Attendance Updated', data);
+      fetchMessData();
+    });
+
+    return () => {
+      socket.off('menuUpdated');
+      socket.off('attendanceUpdated');
+      disconnectSocket();
+    };
   }, []);
 
-  const handleSkipMeal = () => {
-    setAttendanceStatus('skipped');
-    alert('You have opted to skip the next meal. Thank you for helping us reduce food waste!');
+  const updateMyAttendance = async (status) => {
+    try {
+      const bId = localStorage.getItem('buildingId');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const tenantId = user.tenantId || user._id;
+      const todayDate = new Date().toLocaleDateString('sv-SE');
+      
+      // Determine which meal to update based on time
+      const hour = new Date().getHours();
+      let meal = 'dinner';
+      if (hour < 11) meal = 'breakfast';
+      else if (hour < 16) meal = 'lunch';
+
+      await API.put('/mess/attendance', {
+        tenantId,
+        buildingId: bId,
+        date: todayDate,
+        meal,
+        status: status === 'dining'
+      });
+      
+      setAttendanceStatus(status);
+      setFeedbackMessage({
+        type: status === 'dining' ? 'success' : 'info',
+        text: status === 'dining' ? 'Attendance marked! Enjoy your meal.' : 'You have opted to skip. Thank you for helping reduce waste!'
+      });
+      setTimeout(() => setFeedbackMessage(null), 4000);
+    } catch (err) {
+      console.error('Failed to update attendance:', err);
+      setFeedbackMessage({ type: 'error', text: 'Failed to update attendance. Please try again.' });
+      setTimeout(() => setFeedbackMessage(null), 4000);
+    }
   };
 
-  const handleDining = () => {
-    setAttendanceStatus('dining');
-    alert('Attendance marked! Enjoy your meal.');
-  };
+  const handleSkipMeal = () => updateMyAttendance('skipped');
+  const handleDining = () => updateMyAttendance('dining');
 
   if (loading) return (
     <div className="staynest-dashboard loading-state">
@@ -98,36 +194,36 @@ const Mess = () => {
 
           <div className="meal-segments">
             {[
-              { 
-                type: 'Breakfast', 
-                menu: todayMenu.breakfast, 
+              {
+                type: 'Breakfast',
+                menu: todayMenu.breakfast,
                 time: '08:30 - 10:00',
                 color: '#3b82f6',
                 icon: (
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/>
+                    <path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3" />
                   </svg>
                 )
               },
-              { 
-                type: 'Lunch', 
-                menu: todayMenu.lunch, 
+              {
+                type: 'Lunch',
+                menu: todayMenu.lunch,
                 time: '12:30 - 14:30',
                 color: '#ef4444',
                 icon: (
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>
+                    <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7" />
                   </svg>
                 )
               },
-              { 
-                type: 'Dinner', 
-                menu: todayMenu.dinner, 
+              {
+                type: 'Dinner',
+                menu: todayMenu.dinner,
                 time: '20:00 - 21:30',
                 color: '#16a34a',
                 icon: (
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/>
+                    <circle cx="12" cy="12" r="10" /><path d="M12 2v20M2 12h20" />
                   </svg>
                 )
               }
@@ -160,8 +256,8 @@ const Mess = () => {
                 { val: 4, color: '#84cc16', label: 'Great', emoji: '😋' },
                 { val: 5, color: '#22c55e', label: 'Perfect', emoji: '🤩' }
               ].map((item) => (
-                <button 
-                  key={item.val} 
+                <button
+                  key={item.val}
                   className={`rating-btn ${rating === item.val ? 'active' : ''}`}
                   onClick={() => setRating(item.val)}
                   style={{ '--rating-color': item.color }}
@@ -189,14 +285,40 @@ const Mess = () => {
             <div className="attendance-visual">
               <div className="action-icon-bg">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"></polyline>
+                  <circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 15"></polyline>
                 </svg>
               </div>
               <h3>Mark Presence</h3>
               <p>Notify the kitchen if you'll be dining today or skipping.</p>
-              
+
+              <AnimatePresence>
+                {feedbackMessage && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    exit={{ opacity: 0, y: -10 }}
+                    style={{ 
+                      padding: '0.75rem 1rem', 
+                      borderRadius: '12px', 
+                      marginBottom: '1rem',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      background: feedbackMessage.type === 'success' ? '#dcfce7' : feedbackMessage.type === 'error' ? '#fee2e2' : '#e0e7ff',
+                      color: feedbackMessage.type === 'success' ? '#166534' : feedbackMessage.type === 'error' ? '#991b1b' : '#3730a3',
+                      border: `1px solid ${feedbackMessage.type === 'success' ? '#bbf7d0' : feedbackMessage.type === 'error' ? '#fecaca' : '#c7d2fe'}`
+                    }}
+                  >
+                    {feedbackMessage.type === 'success' ? <CheckCircle size={16} /> : feedbackMessage.type === 'error' ? <AlertTriangle size={16} /> : <Info size={16} />}
+                    {feedbackMessage.text}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="attendance-toggle-group">
-                <button 
+                <button
                   className={`att-btn dining ${attendanceStatus === 'dining' ? 'active' : ''}`}
                   onClick={handleDining}
                 >
@@ -205,7 +327,7 @@ const Mess = () => {
                   </svg>
                   I will be dining
                 </button>
-                <button 
+                <button
                   className={`att-btn skip ${attendanceStatus === 'skipped' ? 'active' : ''}`}
                   onClick={handleSkipMeal}
                 >
@@ -217,14 +339,14 @@ const Mess = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="sustainability-box">
-               <div className="tip-icon-pro">
-                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-                 </svg>
-               </div>
-               <p><strong>Sustainability Tip:</strong> Skipping meals 2 hours in advance helps us significantly reduce food waste.</p>
+              <div className="tip-icon-pro">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+              </div>
+              <p><strong>Sustainability Tip:</strong> Skipping meals 2 hours in advance helps us significantly reduce food waste.</p>
             </div>
           </div>
         </div>
@@ -242,7 +364,7 @@ const Mess = () => {
           </div>
           <h3 className="sn-card-title">Weekly Nutrition Schedule</h3>
         </div>
-        
+
         <div className="table-overflow">
           <table className="weekly-table-premium">
             <thead>
@@ -254,8 +376,8 @@ const Mess = () => {
               </tr>
             </thead>
             <tbody>
-              {weeklyMenu.map((m, i) => (
-                <tr key={i}>
+              {weeklyMenu.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((m, i) => (
+                <tr key={i} className="fade-in">
                   <td className="td-day">{m.day}</td>
                   <td className="td-dish">{m.breakfast}</td>
                   <td className="td-dish">{m.lunch}</td>
@@ -264,6 +386,40 @@ const Mess = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="pagination-controls-premium">
+          <div className="pagination-info">
+            Showing <span>{(currentPage - 1) * itemsPerPage + 1}</span> - <span>{Math.min(currentPage * itemsPerPage, weeklyMenu.length)}</span> of <span>{weeklyMenu.length}</span> Days
+          </div>
+          <div className="pagination-btns">
+            <button 
+              className={`p-btn ${currentPage === 1 ? 'disabled' : ''}`}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <div className="p-pages">
+              {Array.from({ length: Math.ceil(weeklyMenu.length / itemsPerPage) }).map((_, i) => (
+                <button 
+                  key={i}
+                  className={`p-page-num ${currentPage === i + 1 ? 'active' : ''}`}
+                  onClick={() => setCurrentPage(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            <button 
+              className={`p-btn ${currentPage === Math.ceil(weeklyMenu.length / itemsPerPage) ? 'disabled' : ''}`}
+              onClick={() => setCurrentPage(p => Math.min(Math.ceil(weeklyMenu.length / itemsPerPage), p + 1))}
+              disabled={currentPage === Math.ceil(weeklyMenu.length / itemsPerPage)}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

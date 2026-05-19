@@ -10,6 +10,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
 import { api } from '../mockData';
+import socket from '../utils/socket';
 
 const METHOD_CONFIG = {
   'UPI': { icon: <Smartphone size={12} />, color: '#7C3AED', bg: '#EDE9FE', label: 'UPI / QR' },
@@ -86,21 +87,64 @@ const Payments = () => {
     fetchData();
   }, [activeBuildingId]);
 
+  // Real-time payment synchronization
+  useEffect(() => {
+    const handleNewPayment = (p) => {
+      console.log("Real-time payment received:", p);
+      // Check if payment belongs to this building
+      if (p.buildingId && p.buildingId.toString() !== activeBuildingId?.toString()) {
+        console.log("Payment belongs to different building:", p.buildingId);
+        return;
+      }
+
+      setPayments(prev => {
+        // Prevent duplicates
+        const paymentId = p.id || p._id;
+        if (prev.some(item => (item.id || item._id) === paymentId)) {
+          console.log("Duplicate payment ignored:", paymentId);
+          return prev;
+        }
+
+        // Enrich payment data using current tenants list
+        const pTenant = p.tenantId;
+        const tenantId = (pTenant && typeof pTenant === 'object') ? (pTenant.id || pTenant._id) : pTenant;
+        const tObj = (pTenant && typeof pTenant === 'object') ? pTenant : (tenants.find(t => (t.id || t._id) === tenantId) || {});
+        
+        const enriched = {
+          ...p,
+          id: paymentId,
+          tenantName: tObj.name || 'Unknown Tenant',
+          room: tObj.room || 'N/A',
+          // Use a consistent display date but keep the original date for sorting
+          displayDate: p.date ? new Date(p.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          date: p.date || new Date().toISOString()
+        };
+
+        console.log("Adding enriched payment to list:", enriched);
+        return [enriched, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date));
+      });
+    };
+
+    socket.on('paymentAdded', handleNewPayment);
+    socket.on('paymentCompleted', handleNewPayment);
+
+    return () => {
+      socket.off('paymentAdded', handleNewPayment);
+      socket.off('paymentCompleted', handleNewPayment);
+    };
+  }, [activeBuildingId, tenants]);
+
   async function fetchData() {
     console.log("Payments module fetching for ID:", activeBuildingId);
     try {
       const [tData, pData] = await Promise.all([
-        api.getTenants(),
-        api.getPayments()
+        api.getTenants(activeBuildingId),
+        api.getPayments(activeBuildingId)
       ]);
 
-      // Filter by buildingId
-      const filteredTenants = activeBuildingId
-        ? (tData || []).filter(t => {
-          const bId = typeof t.buildingId === 'object' ? t.buildingId._id : t.buildingId;
-          return bId === activeBuildingId;
-        })
-        : (tData || []);
+      // Server already filters by building, so no extra client filter needed.
+      // Still normalize for safety:
+      const filteredTenants = tData || [];
 
       setTenants(filteredTenants);
 
@@ -108,23 +152,20 @@ const Payments = () => {
       const enriched = (pData || [])
         .map(p => {
           // p.tenantId might be populated or an ID
-          const tObj = typeof p.tenantId === 'object' ? p.tenantId : ((tData || []).find(t => (t.id || t._id) === p.tenantId) || {});
+          const pTenant = p.tenantId;
+          const tId = (pTenant && typeof pTenant === 'object') ? (pTenant.id || pTenant._id) : pTenant;
+          const tObj = (pTenant && typeof pTenant === 'object') ? pTenant : ((tData || []).find(t => (t.id || t._id) === tId) || {});
           return {
             ...p,
             id: p.id || p._id,
             tenantName: tObj.name || 'Unknown Tenant',
-            room: tObj.room || 'N/A'
+            room: tObj.room || 'N/A',
+            displayDate: p.date ? new Date(p.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'
           };
         });
 
-      // Filter enriched payments by those that belong to the active building's tenants
-      const tIds = new Set(filteredTenants.map(t => t.id || t._id));
-      const buildingPayments = activeBuildingId
-        ? enriched.filter(p => {
-          const tId = typeof p.tenantId === 'object' ? p.tenantId._id : p.tenantId;
-          return tIds.has(tId);
-        })
-        : enriched;
+      // Server already filtered payments by building, so use all enriched payments
+      const buildingPayments = enriched;
 
       setPayments(buildingPayments.sort((a, b) => new Date(b.date) - new Date(a.date)));
     } catch (err) {
@@ -317,7 +358,7 @@ const Payments = () => {
                     {p.amount < 0 ? `-₹${Math.abs(p.amount).toLocaleString()}` : `₹${p.amount.toLocaleString()}`}
                   </td>
                   <td style={{ padding: '1.2rem' }}>{getStatusBadge(p.status)}</td>
-                  <td style={{ padding: '1.2rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{p.date}</td>
+                  <td style={{ padding: '1.2rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{p.displayDate || p.date}</td>
                   <td style={{ padding: '1.2rem', textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                       {p.status === 'Paid' || p.status === 'Success' || p.status === 'Refunded' ? (
@@ -392,7 +433,7 @@ const Payments = () => {
               {/* Details Grid */}
               <div className="card" style={{ padding: '0', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden' }}>
                 {[
-                  ['Date', detailsItem.date],
+                  ['Date', detailsItem.displayDate || detailsItem.date],
                   ['Tenant', detailsItem.tenantName],
                   ['Room', detailsItem.room],
                   ['Type', detailsItem.type],

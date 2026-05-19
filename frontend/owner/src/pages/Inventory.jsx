@@ -1,678 +1,1243 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { 
-  Package, AlertTriangle, Filter, Plus, Info, CheckCircle, Box, Zap, 
-  ShoppingCart, DollarSign, TrendingUp, TrendingDown, ArrowRight, X, 
-  ShieldCheck, ArrowDownToLine, Wrench, Settings, Activity, ClipboardList,
-  UploadCloud, PlayCircle, Layers, ChevronRight, ChevronDown, Search, Grid,
-  Users, FileText, Truck, BarChart3, Clock, Wallet, Trash2, Calendar, Target,
-  Move, Shield, QrCode, ClipboardCheck, History, MoreVertical, MapPin, Receipt,
-  RefreshCcw, Landmark, Eye, Edit, Share2, AlertCircle, Settings2, Coffee, Utensils,
-  Armchair, Bed, Monitor, Brush, Download, FilePlus, ScanLine, LifeBuoy, AlertOctagon,
-  Hammer, Navigation, FileCheck, Mail, Tag, FileText as FileIcon
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Package, Search, Plus, AlertTriangle, Trash2, Edit, History,
+  MapPin, ShoppingCart, Utensils, Brush, Hammer, MoreVertical,
+  ChevronRight, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2,
+  AlertCircle, X, Save, Filter, ChevronLeft, Download, Printer, FileText,
+  Eye, ShieldCheck, Camera, Send, User, TrendingUp, BarChart, StickyNote,
+  Info, ArrowLeft, ArrowRight, ScanBarcode, Maximize2, LayoutGrid
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area
-} from 'recharts';
 import { api } from '../mockData';
+import socket, { connectSocket } from '../utils/socket';
 
-// --- SHARED COMPONENTS ---
-const Modal = ({ isOpen, onClose, title, children, maxWidth = '700px' }) => (
-  <AnimatePresence>
-    {isOpen && (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, backdropFilter: 'blur(10px)', padding: '1rem' }}
-        onClick={onClose}>
-        <motion.div initial={{ y: 50, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.95 }}
-          className="card" onClick={e => e.stopPropagation()}
-          style={{ width: '100%', maxWidth, padding: '0', maxHeight: '96vh', overflowY: 'auto', background: '#FFFFFF', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ padding: '1.5rem 2rem', background: '#FFFFFF', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '900', color: '#0F172A', letterSpacing: '-0.02em', margin: 0 }}>{title}</h2>
-            <button onClick={onClose} style={{ background: '#F1F5F9', border: 'none', color: '#64748B', cursor: 'pointer', padding: '0.6rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <X size={20} />
-            </button>
-          </div>
-          <div style={{ padding: '2rem' }}>{children}</div>
-        </motion.div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-);
-
-const Badge = ({ children, color = 'blue' }) => {
-  const colors = {
-    blue: { bg: '#EFF6FF', text: '#3B82F6' },
-    green: { bg: '#ECFDF5', text: '#10B981' },
-    red: { bg: '#FFF1F2', text: '#E11D48' },
-    amber: { bg: '#FFFBEB', text: '#D97706' },
-    slate: { bg: '#F8FAFC', text: '#64748B' },
-    purple: { bg: '#F5F3FF', text: '#8B5CF6' },
-    cyan: { bg: '#ECFEFF', text: '#0891B2' },
-    indigo: { bg: '#EEF2FF', text: '#4F46E5' }
-  };
-  return (
-    <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '800', background: colors[color]?.bg || colors.slate.bg, color: colors[color]?.text || colors.slate.text, textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}>
-      {children}
-    </span>
-  );
-};
-
-// --- MASTER CONSTANTS ---
+// --- CONFIGURATION ---
 const CATEGORIES = [
-  { id: 'CAT-FOOD', name: 'Food & Supplies', icon: <Utensils size={18}/> },
-  { id: 'CAT-FURN', name: 'Furniture', icon: <Armchair size={18}/> },
-  { id: 'CAT-CLEAN', name: 'Cleaning', icon: <Brush size={18}/> },
-  { id: 'CAT-ELEC', name: 'Electronics', icon: <Monitor size={18}/> }
-];
-
-const SUBCATEGORIES = [
-  { id: 'SUB-GRAIN', categoryId: 'CAT-FOOD', name: 'Rice & Grains' },
-  { id: 'SUB-PULSE', categoryId: 'CAT-FOOD', name: 'Pulses' },
-  { id: 'SUB-VEG', categoryId: 'CAT-FOOD', name: 'Vegetables' },
-  { id: 'SUB-FRUIT', categoryId: 'CAT-FOOD', name: 'Fruits' },
-  { id: 'SUB-OIL', categoryId: 'CAT-FOOD', name: 'Oils & Fats' },
-  { id: 'SUB-DAIRY', categoryId: 'CAT-FOOD', name: 'Dairy' },
-  { id: 'SUB-SPICE', categoryId: 'CAT-FOOD', name: 'Spices' },
-  { id: 'SUB-BREAK', categoryId: 'CAT-FOOD', name: 'Breakfast Items' },
-  { id: 'SUB-BEV', categoryId: 'CAT-FOOD', name: 'Beverages' },
-  { id: 'SUB-PACK', categoryId: 'CAT-FOOD', name: 'Packaged Food' },
-  { id: 'SUB-KIT', categoryId: 'CAT-FOOD', name: 'Kitchen Supplies' },
-  { id: 'SUB-BED', categoryId: 'CAT-FURN', name: 'Beds' },
-  { id: 'SUB-CHAIR', categoryId: 'CAT-FURN', name: 'Chairs' },
-  { id: 'SUB-TABLE', categoryId: 'CAT-FURN', name: 'Tables' },
-  { id: 'SUB-AC', categoryId: 'CAT-ELEC', name: 'ACs' },
-  { id: 'SUB-FAN', categoryId: 'CAT-ELEC', name: 'Fans' },
-  { id: 'SUB-LIQ', categoryId: 'CAT-CLEAN', name: 'Liquids' },
-  { id: 'SUB-TL', categoryId: 'CAT-CLEAN', name: 'Tools' }
-];
-
-// --- EXTENDED DATASETS ---
-const INITIAL_INVENTORY = [
-  { id: 'F-RG-001', name: 'Basmati Rice', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 50, maxStock: 100, minThreshold: 20, unit: 'Kg', location: 'Dry Store A' },
-  { id: 'F-RG-002', name: 'Sona Masoori Rice', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 100, maxStock: 150, minThreshold: 30, unit: 'Kg', location: 'Dry Store A' },
-  { id: 'F-RG-004', name: 'Wheat Flour (Atta)', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-GRAIN', stock: 80, maxStock: 150, minThreshold: 40, unit: 'Kg', location: 'Dry Store B' },
-  { id: 'F-PL-001', name: 'Toor Dal', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-PULSE', stock: 40, maxStock: 60, minThreshold: 15, unit: 'Kg', location: 'Pantry 1' },
-  { id: 'F-VG-001', name: 'Potato', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-VEG', stock: 100, maxStock: 150, minThreshold: 40, unit: 'Kg', location: 'Cold Store' },
-  { id: 'F-DY-001', name: 'Milk', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-DAIRY', stock: 100, maxStock: 150, minThreshold: 40, unit: 'L/Day', location: 'Dairy Cooler' },
-  { id: 'F-KS-001', name: 'Gas Cylinder', categoryId: 'CAT-FOOD', subCategoryId: 'SUB-KIT', stock: 10, maxStock: 15, minThreshold: 3, unit: 'Units', location: 'Gas Bank' },
-  { id: 'INV-G001', name: 'Single Bed (Steel)', categoryId: 'CAT-FURN', subCategoryId: 'SUB-BED', stock: 45, maxStock: 50, minThreshold: 5, unit: 'Units', location: 'Block A' },
-  { id: 'INV-E001', name: 'Split AC (1.5 Ton)', categoryId: 'CAT-ELEC', subCategoryId: 'SUB-AC', stock: 24, maxStock: 30, minThreshold: 2, unit: 'Units', location: 'Room 101' },
-  { id: 'INV-C001', name: 'Floor Cleaner', categoryId: 'CAT-CLEAN', subCategoryId: 'SUB-LIQ', stock: 5, maxStock: 25, minThreshold: 10, unit: 'Liters', location: 'Janitor Room' }
-];
-
-const INITIAL_VENDORS = [
-  { id: 'V-001', name: 'Metro Wholesalers', contact: '+91 98765 43210', email: 'orders@metro.com', categories: ['Food & Supplies', 'Cleaning'], rating: 4.8, onTimeRate: '98%', suppliedCategories: ['Rice', 'Pulses', 'Liquids'] },
-  { id: 'V-002', name: 'Sleepwell Systems', contact: '+91 99887 76655', email: 'sales@sleepwell.in', categories: ['Furniture'], rating: 4.5, onTimeRate: '92%', suppliedCategories: ['Beds', 'Tables'] },
-  { id: 'V-003', name: 'Global Electronics', contact: '+91 91234 56789', email: 'support@globalelec.com', categories: ['Electronics'], rating: 4.2, onTimeRate: '85%', suppliedCategories: ['ACs', 'Fans'] }
-];
-
-const INITIAL_REQUESTS = [
-  { id: 'REQ-1001', requestId: 'PR-24-001', requestedBy: 'Chef Anand', category: 'Food & Supplies', subCategory: 'Rice & Grains', itemName: 'Sona Masoori Rice', quantity: 50, unit: 'Kg', requiredDate: '2024-05-25', priority: 'High', status: 'Approved', approvalStatus: 'Approved', approvedBy: 'Manager Rahul', approvalDate: '2024-05-20', approvalComments: 'Approved for monthly mess supply.' },
-  { id: 'REQ-1002', requestId: 'PR-24-002', requestedBy: 'Staff Kamal', category: 'Cleaning', subCategory: 'Liquids', itemName: 'Floor Cleaner', quantity: 20, unit: 'Liters', requiredDate: '2024-05-28', priority: 'Medium', status: 'Pending', approvalStatus: 'Pending' }
-];
-
-const INITIAL_POS = [
-  { 
-    id: 'PO-5001', poNumber: 'PO-2024-001', linkedRequestId: 'REQ-1001', vendorId: 'V-001', vendorName: 'Metro Wholesalers', 
-    items: [{ id: 'ITEM-1', name: 'Sona Masoori Rice', category: 'Food', quantity: 50, unitPrice: 85, tax: 5, discount: 0 }], 
-    totalAmount: 4250, orderDate: '2024-05-21', deliveryStatus: 'Completed', expectedDelivery: '2024-05-24', 
-    deliveryDate: '2024-05-24', receivedQty: 50, receivedBy: 'Chef Anand', grnNumber: 'GRN-001', qualityCheck: 'Pass', remarks: 'Good quality' 
+  {
+    id: 'Groceries', name: 'Groceries', icon: <Utensils size={18} />, color: '#00A859', bg: '#E8F5E9',
+    subCategories: ['Grains', 'Vegetables', 'Fruits', 'Dairy', 'Spices']
   },
-  { 
-    id: 'PO-5002', poNumber: 'PO-2024-002', vendorId: 'V-002', vendorName: 'Sleepwell Systems', 
-    items: [{ id: 'ITEM-2', name: 'Single Bed (Steel)', category: 'Furniture', quantity: 10, unitPrice: 4500, tax: 18, discount: 5 }], 
-    totalAmount: 45000, orderDate: '2024-05-22', deliveryStatus: 'Pending', expectedDelivery: '2024-05-30', grnStatus: 'Pending' 
+  {
+    id: 'Cleaning', name: 'Cleaning Supplies', icon: <Brush size={18} />, color: '#4DABF7', bg: '#E7F5FF',
+    subCategories: ['Floor Cleaners', 'Detergents', 'Sanitizers', 'Tools']
+  },
+  {
+    id: 'Kitchen', name: 'Kitchen Equipment', icon: <Hammer size={18} />, color: '#F59E0B', bg: '#FFFBEB',
+    subCategories: ['Utensils', 'Electronics', 'Storage', 'Cutlery']
+  },
+  {
+    id: 'Miscellaneous', name: 'Miscellaneous', icon: <Package size={18} />, color: '#64748B', bg: '#F1F5F9',
+    subCategories: ['Stationery', 'Medical', 'Bedding', 'Other']
   }
 ];
 
-const INITIAL_ASSETS = [
-  { 
-    id: 'AST-1001', name: 'Samsung Split AC', code: 'AC-B1-101', tag: 'HOSTEL-AC-001', category: 'Electronics', subCategory: 'ACs',
-    lifecycleStage: 'In Use', lifecycleStatus: 'Healthy', conditionScore: 9, conditionStatus: 'Excellent',
-    assignedTo: 'Room 101', buildingId: 'B1', floorId: 'F1', roomId: '101', bedId: 'N/A',
-    purchaseDate: '2023-04-15', purchaseCost: 45000, currentValue: 38000, depreciationRate: '10%', depreciationMethod: 'Straight Line',
-    maintenanceStatus: 'Good', maintenanceSchedule: 'Quarterly', lastMaintenance: '2024-03-10', nextMaintenance: '2024-06-10', 
-    warrantyExpiry: '2025-04-15', vendor: 'Global Electronics',
-    movementHistory: [{ from: 'Warehouse', to: 'Room 101', date: '2023-04-16', approvedBy: 'Manager' }],
-    maintenanceHistory: [{ date: '2024-03-10', type: 'Cleaning', cost: 1500, vendor: 'Rajesh Services' }]
-  },
-  { 
-    id: 'AST-1002', name: 'Steel Bunk Bed', code: 'BED-B2-205', tag: 'HOSTEL-BED-205', category: 'Furniture', subCategory: 'Beds',
-    lifecycleStage: 'Active', lifecycleStatus: 'Healthy', conditionScore: 7, conditionStatus: 'Good',
-    assignedTo: 'Room 205', buildingId: 'B2', floorId: 'F2', roomId: '205',
-    purchaseDate: '2022-08-10', purchaseCost: 8500, currentValue: 6200, depreciationRate: '15%', depreciationMethod: 'Straight Line',
-    maintenanceStatus: 'Good', maintenanceSchedule: 'Bi-Annual', lastMaintenance: '2023-12-05', nextMaintenance: '2024-06-05',
-    warrantyExpiry: '2024-08-10', vendor: 'Sleepwell Systems',
-    movementHistory: [], maintenanceHistory: []
-  }
+const TABS = [
+  { id: 'master', name: 'INVENTORY MASTER', icon: <Package size={18} /> },
+  { id: 'damage', name: 'DAMAGE ENTRIES', icon: <AlertTriangle size={18} /> },
+  { id: 'deductions', name: '$ DEDUCTIONS', icon: <ArrowDownRight size={18} /> },
+  { id: 'reports', name: 'REPORTS & ANALYTICS', icon: <FileText size={18} /> }
 ];
 
-const INITIAL_BUDGETS = [
-  { categoryId: 'CAT-FOOD', allocated: 150000, used: 85000 },
-  { categoryId: 'CAT-FURN', allocated: 200000, used: 120000 },
-  { categoryId: 'CAT-CLEAN', allocated: 15000, used: 4500 },
-  { categoryId: 'CAT-ELEC', allocated: 50000, used: 32000 }
-];
-
-const InventoryModule = () => {
+const InventoryManagement = ({ initialTab = 'master' }) => {
   const { buildingId: urlBuildingId } = useParams();
+  const navigate = useNavigate();
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
-  
-  const [activeTab, setActiveTab] = useState('inventory');
-  const [procSubTab, setProcSubTab] = useState('dashboard');
-  const [assetSubTab, setAssetSubTab] = useState('overview');
-  const [notifications, setNotifications] = useState([]);
-  
-  // Data States
-  const [inventory, setInventory] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [requests, setRequests] = useState(INITIAL_REQUESTS);
-  const [pos, setPos] = useState(INITIAL_POS);
-  const [assets, setAssets] = useState(INITIAL_ASSETS);
-  const [vendors] = useState(INITIAL_VENDORS);
-  const [budgets] = useState(INITIAL_BUDGETS);
+
+  const fileInputRef = React.useRef(null);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // UI States
-  const [selectedCategory, setSelectedCategory] = useState('CAT-FOOD');
-  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
-  const [expandedCategories, setExpandedCategories] = useState({ 'CAT-FOOD': true });
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedSubCategory, setSelectedSubCategory] = useState('All');
+  const [selectedStatus, setSelectedStatus] = useState('All');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addStep, setAddStep] = useState(1);
+  const [isDamageModalOpen, setIsDamageModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [isAssetModalOpen, setIsAssetModalOpen] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState(null);
+
+  // Data States
+  const [inventory, setInventory] = useState([]);
+  const [damageEntries, setDamageEntries] = useState([
+    { id: 'VK-AP-HUB-DMG-0003', date: '18 Apr 26', product: 'Basmati Rice 5kg', reportedBy: 'Abhiram', qty: 2, type: 'DAMAGED', loss: 796, status: 'PENDING' },
+    { id: 'VK-AP-HUB-DMG-0002', date: '15 Apr 26', product: 'Liquid Detergent', reportedBy: 'Suresh', qty: 1, type: 'EXPIRED', loss: 450, status: 'APPROVED' },
+  ]);
+  const [deductions, setDeductions] = useState([
+    { id: 'DED-001', date: '19 Apr 26', item: 'Broken Window Pan', person: 'Rahul (T-102)', amount: 1500, reason: 'Accidental Damage', status: 'PENDING' },
+    { id: 'DED-002', date: '17 Apr 26', item: 'Electric Kettle', person: 'Staff: Anita', amount: 850, reason: 'Improper Handling', status: 'PAID' },
+  ]);
+  const [reports, setReports] = useState([
+    { id: 'REP-001', name: 'Monthly Stock Audit - April', date: '01 May 26', type: 'PDF', size: '2.4 MB' },
+    { id: 'REP-002', name: 'Damage Loss Analytics Q1', date: '15 Apr 26', type: 'EXCEL', size: '1.1 MB' },
+    { id: 'REP-003', name: 'Vendor Procurement Summary', date: '10 Apr 26', type: 'PDF', size: '850 KB' },
+  ]);
+  const [loading, setLoading] = useState(true);
+
+  // Form States
+  const initialFormData = {
+    name: '',
+    category: 'Groceries',
+    subCategory: 'Grains',
+    stock: 0,
+    minThreshold: 5,
+    unit: 'Kg',
+    location: '',
+    notes: '',
+    status: 'active',
+    image: '',
+    lastPurchased: new Date().toISOString().split('T')[0]
+  };
+  const [formData, setFormData] = useState(initialFormData);
+
+  const [damageFormData, setDamageFormData] = useState({
+    productId: '',
+    qty: 0,
+    type: 'Damaged',
+    description: ''
+  });
 
   useEffect(() => {
     fetchInventory();
+    if (activeBuildingId) connectSocket(activeBuildingId);
   }, [activeBuildingId]);
 
   const fetchInventory = async () => {
     setLoading(true);
     try {
       const data = await api.getInventory(activeBuildingId);
-      // Fallback to initial if mock is empty, but usually api should return data
-      setInventory(data || INITIAL_INVENTORY);
+      setInventory(data || []);
     } catch (err) {
       console.error(err);
-      setInventory(INITIAL_INVENTORY);
     } finally {
       setLoading(false);
     }
   };
 
-  const triggerNotification = (msg, color = 'blue') => {
-    setNotifications(prev => [{ msg, color, id: Date.now() }, ...prev]);
-    setTimeout(() => setNotifications(prev => prev.slice(0, -1)), 5000);
+  const filteredInventory = useMemo(() => {
+    return inventory.filter(item => {
+      const matchesSearch = (item.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
+      // Support both subCategory (frontend) and subCategoryId (backend)
+      const itemSub = item.subCategory || item.subCategoryId || '';
+      const matchesSubCategory = selectedSubCategory === 'All' || itemSub === selectedSubCategory;
+      const matchesStatus = selectedStatus === 'All' ||
+        (selectedStatus === 'Active' && item.stock > 0) ||
+        (selectedStatus === 'Out of Stock' && item.stock <= 0);
+      return matchesSearch && matchesCategory && matchesSubCategory && matchesStatus;
+    });
+  }, [inventory, searchQuery, selectedCategory, selectedSubCategory, selectedStatus]);
+
+  const filteredDamageEntries = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return damageEntries.filter(e =>
+      e.product.toLowerCase().includes(q) ||
+      e.id.toLowerCase().includes(q) ||
+      e.reportedBy.toLowerCase().includes(q) ||
+      e.type.toLowerCase().includes(q)
+    );
+  }, [damageEntries, searchQuery]);
+
+  const filteredDeductions = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return deductions.filter(d =>
+      d.item.toLowerCase().includes(q) ||
+      d.id.toLowerCase().includes(q) ||
+      d.person.toLowerCase().includes(q) ||
+      d.reason.toLowerCase().includes(q)
+    );
+  }, [deductions, searchQuery]);
+
+  const stats = useMemo(() => {
+    if (activeTab === 'damage') {
+      return [
+        { label: 'TOTAL ENTRIES', value: damageEntries.length, color: '#6366F1', bg: '#EEF2FF' },
+        { label: 'PENDING REVIEW', value: damageEntries.filter(e => e.status === 'PENDING').length, color: '#F59E0B', bg: '#FFFBEB' },
+        { label: 'APPROVED', value: damageEntries.filter(e => e.status === 'APPROVED').length, color: '#10B981', bg: '#ECFDF5' },
+        { label: 'TOTAL LOSS', value: `₹${damageEntries.reduce((acc, curr) => acc + curr.loss, 0)}`, color: '#EF4444', bg: '#FEF2F2' }
+      ];
+    }
+    if (activeTab === 'deductions') {
+      return [
+        { label: 'TOTAL DEDUCTIONS', value: deductions.length, color: '#6366F1', bg: '#EEF2FF' },
+        { label: 'PENDING COLLECTION', value: deductions.filter(d => d.status === 'PENDING').length, color: '#F59E0B', bg: '#FFFBEB' },
+        { label: 'RECOVERED', value: deductions.filter(d => d.status === 'PAID').length, color: '#10B981', bg: '#ECFDF5' },
+        { label: 'TOTAL AMOUNT', value: `₹${deductions.reduce((acc, curr) => acc + curr.amount, 0)}`, color: '#00A859', bg: '#E8F5E9' }
+      ];
+    }
+    if (activeTab === 'reports') {
+      return [
+        { label: 'TOTAL REPORTS', value: reports.length, color: '#6366F1', bg: '#EEF2FF' },
+        { label: 'DOWNLOADS (MONTH)', value: '142', color: '#10B981', bg: '#ECFDF5' },
+        { label: 'AUTO-GENERATED', value: '12', color: '#F59E0B', bg: '#FFFBEB' },
+        { label: 'DATA ACCURACY', value: '99.8%', color: '#00A859', bg: '#E8F5E9' }
+      ];
+    }
+    return [
+      { label: 'TOTAL ITEMS', value: inventory.length, color: '#00A859', bg: '#E8F5E9' },
+      { label: 'LOW STOCK', value: inventory.filter(i => i.stock <= i.minThreshold && i.stock > 0).length, color: '#F59E0B', bg: '#FFFBEB' },
+      { label: 'OUT OF STOCK', value: inventory.filter(i => i.stock <= 0).length, color: '#EF4444', bg: '#FEF2F2' },
+      { label: 'CATEGORIES', value: CATEGORIES.length, color: '#6366F1', bg: '#EEF2FF' }
+    ];
+  }, [inventory, damageEntries, deductions, reports, activeTab]);
+
+  const handleSave = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!formData.name.trim()) { alert('Please enter a product name.'); return; }
+    try {
+      const payload = {
+        ...formData,
+        buildingId: activeBuildingId,
+        // Map subCategory → subCategoryId for backend schema compatibility
+        subCategoryId: formData.subCategory || formData.subCategoryId,
+        // Map price fields correctly
+        price: formData.sellingPrice || formData.price || 0,
+      };
+      if (selectedItem) {
+        await api.updateInventoryItem(selectedItem.id || selectedItem._id, payload);
+      } else {
+        await api.addInventoryItem(payload);
+      }
+      setIsAddModalOpen(false);
+      setAddStep(1);
+      setFormData(initialFormData);
+      setSelectedItem(null);
+      fetchInventory();
+    } catch (err) {
+      console.error(err);
+      alert('Error saving item. Please try again.');
+    }
   };
 
-  // --- ANALYTICS ---
-  const procStats = useMemo(() => ({
-    totalSpend: pos.reduce((s, p) => s + p.totalAmount, 0),
-    pendingApprovals: requests.filter(r => r.status === 'Pending').length,
-    activePOs: pos.filter(p => p.deliveryStatus === 'Pending').length,
-    delayed: pos.filter(p => p.deliveryStatus === 'Pending' && new Date(p.expectedDelivery) < new Date()).length
-  }), [pos, requests]);
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this item?')) {
+      try {
+        await api.deleteInventoryItem(id);
+        fetchInventory();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
 
-  const assetStats = useMemo(() => ({
-    total: assets.length,
-    active: assets.filter(a => ['Active', 'In Use'].includes(a.lifecycleStage)).length,
-    maintenance: assets.filter(a => a.lifecycleStage === 'Maintenance').length,
-    damaged: assets.filter(a => a.conditionStatus === 'Damaged').length,
-    valuation: assets.reduce((s, a) => s + a.currentValue, 0)
-  }), [assets]);
+  const handleToggleStatus = async (item) => {
+    const newStock = item.stock > 0 ? 0 : 10; // Simple toggle simulation
+    try {
+      await api.updateInventoryItem(item.id || item._id, { ...item, stock: newStock });
+      fetchInventory();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  // --- RENDERS ---
+  const handleCategoryChange = (catId) => {
+    const cat = CATEGORIES.find(c => c.id === catId);
+    setFormData({
+      ...formData,
+      category: catId,
+      subCategory: cat ? cat.subCategories[0] : ''
+    });
+  };
 
-  const renderSidebar = () => (
-    <div className="inventory-sidebar" style={{ width: '300px', background: '#FFFFFF', borderRight: '1px solid #E2E8F0', padding: '1.5rem', height: '100%', overflowY: 'auto' }}>
-      <h3 style={{ fontSize: '0.8rem', fontWeight: '900', color: '#64748B', textTransform: 'uppercase', marginBottom: '1.5rem' }}>Inventory Explorer</h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-        <button onClick={() => { setSelectedCategory(null); setSelectedSubCategory(null); }} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '1rem', borderRadius: '16px', border: 'none', cursor: 'pointer', background: !selectedCategory ? '#3B82F6' : 'transparent', color: !selectedCategory ? '#FFFFFF' : '#475569', fontWeight: '800', transition: '0.2s', width: '100%', textAlign: 'left' }}>
-          <Grid size={20} /> All Categories
-        </button>
-        {CATEGORIES.map(cat => (
-          <div key={cat.id}>
-            <button onClick={() => { setExpandedCategories(p => ({ ...p, [cat.id]: !p[cat.id] })); setSelectedCategory(cat.id); setSelectedSubCategory(null); }} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '1rem', borderRadius: '16px', border: 'none', cursor: 'pointer', background: selectedCategory === cat.id ? '#F8FAFC' : 'transparent', color: selectedCategory === cat.id ? '#0F172A' : '#475569', fontWeight: '700', width: '100%', textAlign: 'left' }}>
-              {expandedCategories[cat.id] ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>{cat.icon} {cat.name}</span>
-            </button>
-            <AnimatePresence>
-              {expandedCategories[cat.id] && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden', paddingLeft: '2.8rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.4rem' }}>
-                  {SUBCATEGORIES.filter(s => s.categoryId === cat.id).map(sub => (
-                    <button key={sub.id} onClick={(e) => { e.stopPropagation(); setSelectedSubCategory(sub.id); }} style={{ fontSize: '0.9rem', padding: '0.6rem 0', background: 'transparent', border: 'none', cursor: 'pointer', color: selectedSubCategory === sub.id ? '#3B82F6' : '#64748B', fontWeight: selectedSubCategory === sub.id ? '900' : '600', textAlign: 'left' }}>
-                      {sub.name}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  const handleDamageSubmit = (e) => {
+    e.preventDefault();
+    if (!damageFormData.productId.trim()) { alert('Please select a product.'); return; }
+    if (!damageFormData.qty || damageFormData.qty < 1) { alert('Please enter a valid quantity.'); return; }
+    const newEntry = {
+      id: `VK-DMG-${Date.now()}`,
+      date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }),
+      product: damageFormData.productId,
+      reportedBy: 'You',
+      qty: damageFormData.qty,
+      type: damageFormData.type.toUpperCase(),
+      loss: 0,
+      status: 'PENDING'
+    };
+    setDamageEntries(prev => [newEntry, ...prev]);
+    setIsDamageModalOpen(false);
+    setDamageFormData({ productId: '', qty: 0, type: 'Damaged', description: '' });
+  };
 
-  const renderInventoryTab = () => (
-    <div className="inventory-layout" style={{ display: 'flex', height: '100%' }}>
-      {renderSidebar()}
-      <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: '300px' }}><Search size={20} style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} /><input type="text" placeholder="Search Materials..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ padding: '1rem 1rem 1rem 3.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', width: '100%', outline: 'none', background: '#FFFFFF', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }} /></div>
-          <select style={{ padding: '1rem', borderRadius: '16px', border: '1px solid #E2E8F0', fontWeight: '800', outline: 'none', background: '#FFFFFF' }}><option>All Levels</option><option>Critical Only</option><option>Low Stock</option></select>
-          <button 
-            onClick={() => { setSelectedItem(null); setIsModalOpen(true); }}
-            style={{ background: '#3B82F6', color: 'white', border: 'none', padding: '1rem 1.5rem', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}
-          >
-            <Plus size={20}/> Add Item
-          </button>
-        </div>
-        <div className="inventory-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-          {inventory.filter(i => (selectedCategory ? i.categoryId === selectedCategory : true) && (selectedSubCategory ? i.subCategoryId === selectedSubCategory : true) && i.name.toLowerCase().includes(searchQuery.toLowerCase())).map(item => (
-            <motion.div layout key={item.id} className="card" style={{ padding: '1.8rem', borderTop: `6px solid ${item.stock < item.minThreshold ? '#E11D48' : '#10B981'}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem' }}><Badge color="slate">{SUBCATEGORIES.find(s=>s.id===item.subCategoryId)?.name}</Badge><Badge color={item.stock < item.minThreshold ? 'red' : 'green'}>{item.stock < item.minThreshold ? 'Low Stock' : 'Stable'}</Badge></div>
-              <h3 style={{ margin: '0 0 0.4rem 0', fontWeight: '900', fontSize: '1.2rem' }}>{item.name}</h3>
-              <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#64748B', fontWeight: '700' }}><MapPin size={14} style={{ marginRight: '0.3rem' }}/> {item.location}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}><div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>AVAILABLE STOCK</p><span style={{ fontSize: '2rem', fontWeight: '900', color: '#0F172A' }}>{item.stock}</span><span style={{ fontSize: '1rem', color: '#64748B', marginLeft: '0.4rem', fontWeight: '800' }}>{item.unit}</span></div><div style={{ display: 'flex', gap: '0.6rem' }}><button onClick={() => { setSelectedItem(item); setIsModalOpen(true); }} style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#3B82F6' }}><Edit size={18}/></button><button style={{ padding: '0.6rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', color: '#64748B' }}><History size={18}/></button></div></div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+  const handleApproveDamage = (id) => {
+    setDamageEntries(prev => prev.map(e => e.id === id ? { ...e, status: 'APPROVED' } : e));
+  };
 
-  const renderProcurementTab = () => (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div className="proc-subtabs" style={{ padding: '0 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
-        {[
-          { id: 'dashboard', label: 'Dashboard', icon: <BarChart3 size={20}/> },
-          { id: 'requests', label: 'Purchase Requests', icon: <ClipboardList size={20}/> },
-          { id: 'orders', label: 'Active POs', icon: <Truck size={20}/> },
-          { id: 'vendors', label: 'Vendor Directory', icon: <Users size={20}/> }
-        ].map(sub => (
-          <button key={sub.id} onClick={() => setProcSubTab(sub.id)} style={{ padding: '1.2rem 0', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1rem', fontWeight: '900', color: procSubTab === sub.id ? '#3B82F6' : '#64748B', borderBottom: procSubTab === sub.id ? '4px solid #3B82F6' : '4px solid transparent', marginBottom: '-1px' }}>{sub.icon} {sub.label}</button>
-        ))}
-      </div>
-      <div style={{ flex: 1, padding: '2.5rem', overflowY: 'auto' }}>
-        {procSubTab === 'dashboard' && (
-          <div style={{ animation: 'fadeIn 0.3s ease' }}>
-            <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-              {[
-                { l: 'MONTHLY SPEND', v: `₹${procStats.totalSpend.toLocaleString()}`, c: '#3B82F6', i: <DollarSign size={20}/> },
-                { l: 'PENDING APPROVALS', v: procStats.pendingApprovals, c: '#F59E0B', i: <Clock size={20}/> },
-                { l: 'ACTIVE ORDERS', v: procStats.activePOs, c: '#8B5CF6', i: <Package size={20}/> },
-                { l: 'DELAYED DELIVERIES', v: procStats.delayed, c: '#E11D48', i: <AlertTriangle size={20}/> }
-              ].map((s, idx) => (
-                <div key={idx} className="card" style={{ padding: '1.5rem', borderLeft: `5px solid ${s.c}` }}>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', marginBottom: '0.6rem' }}><span style={{ fontSize: '0.75rem', fontWeight: '900' }}>{s.l}</span>{s.i}</div>
-                   <h2 style={{ fontSize: '2rem', fontWeight: '900', margin: 0 }}>{s.v}</h2>
-                </div>
-              ))}
-            </div>
-            <div className="chart-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '1.5rem' }}>
-               <div className="card" style={{ padding: '2rem' }}><h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '2rem' }}>Category-wise Allocation</h3><div style={{ height: '300px' }}><ResponsiveContainer width="100%" height="100%"><AreaChart data={[{n:'Jan',v:45000},{n:'Feb',v:52000},{n:'Mar',v:48000},{n:'Apr',v:61000},{n:'May',v:55000}]}><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="n"/><YAxis/><RechartsTooltip/><Area type="monotone" dataKey="v" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.1}/></AreaChart></ResponsiveContainer></div></div>
-               <div className="card" style={{ padding: '2rem' }}><h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '2rem' }}>Budget Control</h3><div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>{budgets.map(b => (<div key={b.categoryId}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}><span style={{ fontWeight: '800', color: '#0F172A' }}>{CATEGORIES.find(c=>c.id===b.categoryId)?.name}</span><span style={{ fontWeight: '900', fontSize: '0.9rem' }}>₹{b.used.toLocaleString()} / ₹{b.allocated.toLocaleString()}</span></div><div style={{ height: '10px', background: '#F1F5F9', borderRadius: '10px', overflow: 'hidden' }}><div style={{ height: '100%', background: (b.used/b.allocated) > 0.8 ? '#E11D48' : '#3B82F6', width: `${(b.used/b.allocated)*100}%` }} /></div></div>))}</div></div>
-            </div>
-          </div>
-        )}
-        {procSubTab === 'requests' && (
-          <div className="card" style={{ overflowX: 'auto', animation: 'fadeIn 0.2s ease' }}>
-             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
-                <thead style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}><tr style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: '900', textTransform: 'uppercase' }}><th style={{ padding: '1.5rem' }}>Request ID</th><th style={{ padding: '1.5rem' }}>Requested By</th><th style={{ padding: '1.5rem' }}>Item & Sub-Cat</th><th style={{ padding: '1.5rem' }}>Qty/Unit</th><th style={{ padding: '1.5rem' }}>Priority</th><th style={{ padding: '1.5rem' }}>Status</th></tr></thead>
-                <tbody>{requests.map(r => (<tr key={r.id} style={{ borderBottom: '1px solid #F1F5F9' }}><td style={{ padding: '1.5rem', fontWeight: '900' }}>{r.requestId}</td><td style={{ padding: '1.5rem', fontWeight: '700' }}>{r.requestedBy}</td><td style={{ padding: '1.5rem' }}><p style={{ fontWeight: '800', margin: 0 }}>{r.itemName}</p><p style={{ fontSize: '0.75rem', color: '#94A3B8', margin: 0 }}>{r.subCategory}</p></td><td style={{ padding: '1.5rem', fontWeight: '900' }}>{r.quantity} {r.unit}</td><td style={{ padding: '1.5rem' }}><Badge color={r.priority === 'High' ? 'red' : 'blue'}>{r.priority}</Badge></td><td style={{ padding: '1.5rem' }}><Badge color={r.status === 'Approved' ? 'green' : 'amber'}>{r.status}</Badge></td></tr>))}</tbody>
-             </table>
-          </div>
-        )}
-        {procSubTab === 'orders' && (
-          <div className="po-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', gap: '2rem' }}>
-            {pos.map(po => (<div key={po.id} className="card" style={{ padding: '2rem', borderTop: `6px solid ${po.deliveryStatus === 'Completed' ? '#10B981' : '#3B82F6'}` }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><Badge color="slate">{po.poNumber}</Badge><Badge color={po.deliveryStatus === 'Completed' ? 'green' : 'blue'}>{po.deliveryStatus}</Badge></div><h3 style={{ margin: '0 0 1rem 0', fontWeight: '900', fontSize: '1.3rem' }}>{po.vendorName}</h3><div style={{ background: '#F8FAFC', padding: '1.2rem', borderRadius: '16px', marginBottom: '1.5rem' }}>{po.items.map((it, i) => (<div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: '700' }}><span>{it.name} x {it.quantity}</span><span>₹{(it.quantity * it.unitPrice).toLocaleString()}</span></div>))}</div><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>TOTAL PAYABLE</p><h2 style={{ margin: 0, color: '#0F172A' }}>₹{po.totalAmount.toLocaleString()}</h2></div><button style={{ background: '#3B82F6', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><Eye size={18}/> View PO</button></div></div>))}
-          </div>
-        )}
+  const handleDeleteDamage = (id) => {
+    if (window.confirm('Remove this damage entry?')) {
+      setDamageEntries(prev => prev.filter(e => e.id !== id));
+    }
+  };
 
-        {procSubTab === 'vendors' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', animation: 'fadeIn 0.3s ease' }}>
-            {vendors.map(v => (
-              <div key={v.id} className="card" style={{ padding: '1.8rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                  <div style={{ background: '#EFF6FF', color: '#3B82F6', padding: '0.8rem', borderRadius: '14px' }}><Users size={24}/></div>
-                  <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: '0.9rem', fontWeight: '900', margin: 0 }}>★ {v.rating}</p>
-                    <p style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: '800', margin: 0 }}>{v.onTimeRate} On-Time</p>
-                  </div>
-                </div>
-                <h3 style={{ margin: '0 0 0.4rem 0', fontWeight: '900', fontSize: '1.2rem' }}>{v.name}</h3>
-                <p style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '600', marginBottom: '1.5rem' }}>{v.suppliedCategories.join(', ')}</p>
-                <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', color: '#475569', fontWeight: '600' }}><Mail size={14}/> {v.email}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', color: '#475569', fontWeight: '600' }}><Clock size={14}/> Reliable Partner since 2022</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  const handleSettleDeduction = (id) => {
+    setDeductions(prev => prev.map(d => d.id === id ? { ...d, status: 'PAID' } : d));
+  };
 
-  const renderAssetsTab = () => (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div className="asset-subtabs" style={{ padding: '0 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
-        {[
-          { id: 'overview', label: 'Insights', icon: <Grid size={20}/> },
-          { id: 'registry', label: 'Master Registry', icon: <Box size={20}/> },
-          { id: 'maintenance', label: 'Maintenance Hub', icon: <Wrench size={20}/> },
-          { id: 'financials', label: 'Depreciation', icon: <DollarSign size={20}/> }
-        ].map(sub => (
-          <button key={sub.id} onClick={() => setAssetSubTab(sub.id)} style={{ padding: '1.2rem 0', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1rem', fontWeight: '900', color: assetSubTab === sub.id ? '#3B82F6' : '#64748B', borderBottom: assetSubTab === sub.id ? '4px solid #3B82F6' : '4px solid transparent', marginBottom: '-1px' }}>{sub.icon} {sub.label}</button>
-        ))}
-      </div>
-      <div style={{ flex: 1, padding: '2.5rem', overflowY: 'auto' }}>
-        {assetSubTab === 'overview' && (
-          <div style={{ animation: 'fadeIn 0.3s ease' }}>
-            <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-              {[
-                { l: 'TOTAL ASSETS', v: assetStats.total, c: '#3B82F6', i: <Layers size={20}/> },
-                { l: 'IN SERVICE', v: assetStats.active, c: '#10B981', i: <Zap size={20}/> },
-                { l: 'REPAIRING', v: assetStats.maintenance, c: '#F59E0B', i: <Hammer size={20}/> },
-                { l: 'PORTFOLIO VALUE', v: `₹${(assetStats.valuation/1000).toFixed(1)}K`, c: '#8B5CF6', i: <Wallet size={20}/> }
-              ].map((s, idx) => (
-                <div key={idx} className="card" style={{ padding: '1.5rem', borderLeft: `5px solid ${s.c}` }}>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', marginBottom: '0.6rem' }}><span style={{ fontSize: '0.75rem', fontWeight: '900' }}>{s.l}</span>{s.i}</div>
-                   <h2 style={{ fontSize: '2rem', fontWeight: '900', margin: 0 }}>{s.v}</h2>
-                </div>
-              ))}
-            </div>
-            <div className="card" style={{ padding: '2rem' }}><h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '2rem' }}>Condition Health Score</h3><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>{assets.map(a => (<div key={a.id} style={{ background: '#F8FAFC', padding: '1.5rem', borderRadius: '16px' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}><span style={{ fontWeight: '800' }}>{a.name}</span><Badge color={a.conditionScore > 7 ? 'green' : 'amber'}>{a.conditionScore}/10</Badge></div><div style={{ height: '6px', background: '#E2E8F0', borderRadius: '10px' }}><div style={{ height: '100%', background: a.conditionScore > 7 ? '#10B981' : '#F59E0B', width: `${a.conditionScore*10}%`, borderRadius: '10px' }} /></div></div>))}</div></div>
-          </div>
-        )}
-        {assetSubTab === 'registry' && (
-          <div className="asset-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.5rem' }}>
-            {assets.map(asset => (
-              <motion.div layout key={asset.id} className="card" onClick={() => { setSelectedAsset(asset); setIsAssetModalOpen(true); }} style={{ padding: '2rem', cursor: 'pointer' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><div style={{ display: 'flex', gap: '0.5rem' }}><Badge color="slate">{asset.tag}</Badge><Badge color="indigo">{asset.lifecycleStage}</Badge></div><QrCode size={20} color="#94A3B8"/></div>
-                <h3 style={{ margin: '0 0 0.5rem 0', fontWeight: '900', fontSize: '1.3rem' }}>{asset.name}</h3>
-                <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.95rem', color: '#64748B', fontWeight: '700' }}><MapPin size={16} style={{ marginRight: '0.4rem' }}/> {asset.buildingId} • Floor {asset.floorId} • Room {asset.roomId}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '1.2rem' }}><div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>CONDITION</p><p style={{ fontWeight: '900', margin: 0, color: '#10B981' }}>{asset.conditionStatus}</p></div><div style={{ textAlign: 'right' }}><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: 0 }}>WARRANTY</p><p style={{ fontWeight: '900', margin: 0 }}>{asset.warrantyExpiry}</p></div></div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-
-        {assetSubTab === 'maintenance' && (
-          <div className="maintenance-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: '1.5rem', animation: 'fadeIn 0.3s ease' }}>
-            {assets.filter(a => a.maintenanceSchedule).map(asset => (
-              <div key={asset.id} className="card" style={{ padding: '1.8rem', display: 'flex', gap: '1.5rem' }}>
-                <div style={{ width: '70px', height: '70px', background: '#F5F3FF', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B5CF6' }}>
-                  <Wrench size={32}/>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.8rem', alignItems: 'flex-start' }}>
-                    <h4 style={{ margin: 0, fontWeight: '900', fontSize: '1.1rem' }}>{asset.name}</h4>
-                    <Badge color={new Date(asset.nextMaintenance) < new Date() ? 'red' : 'amber'}>Due: {asset.nextMaintenance}</Badge>
-                  </div>
-                  <p style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '700', margin: '0 0 1.2rem 0' }}>Cycle: {asset.maintenanceSchedule} • Last: {asset.lastMaintenance}</p>
-                  <div style={{ display: 'flex', gap: '0.8rem' }}>
-                    <button onClick={() => triggerNotification('Service Call Initiated', 'purple')} style={{ padding: '0.6rem 1.2rem', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '0.8rem' }}>Schedule Now</button>
-                    <button style={{ padding: '0.6rem 1.2rem', background: '#F1F5F9', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '0.8rem', color: '#475569' }}>Full History</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {assetSubTab === 'financials' && (
-          <div className="card" style={{ padding: '2rem', animation: 'fadeIn 0.3s ease' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: '900', marginBottom: '2rem' }}>Asset Depreciation & Financials</h3>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
-                <thead>
-                  <tr style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '900', textTransform: 'uppercase', borderBottom: '1px solid #E2E8F0' }}>
-                    <th style={{ padding: '1rem' }}>Asset Details</th>
-                    <th style={{ padding: '1rem' }}>Purchase Cost</th>
-                    <th style={{ padding: '1rem' }}>Depreciation</th>
-                    <th style={{ padding: '1rem' }}>Current Value</th>
-                    <th style={{ padding: '1rem' }}>Warranty Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {assets.map(a => (
-                    <tr key={a.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                      <td style={{ padding: '1.2rem 1rem' }}>
-                        <p style={{ fontWeight: '900', margin: 0 }}>{a.name}</p>
-                        <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0 }}>{a.tag}</p>
-                      </td>
-                      <td style={{ padding: '1.2rem 1rem', fontWeight: '800' }}>₹{a.purchaseCost.toLocaleString()}</td>
-                      <td style={{ padding: '1.2rem 1rem' }}>
-                        <Badge color="cyan">{a.depreciationRate} / Year</Badge>
-                      </td>
-                      <td style={{ padding: '1.2rem 1rem', fontWeight: '900', color: '#3B82F6' }}>₹{a.currentValue.toLocaleString()}</td>
-                      <td style={{ padding: '1.2rem 1rem' }}>
-                        <Badge color={new Date(a.warrantyExpiry) < new Date() ? 'red' : 'green'}>{a.warrantyExpiry}</Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  const handleDownloadCSV = () => {
+    if (!inventory || inventory.length === 0) {
+      alert('No inventory data available to download.');
+      return;
+    }
+    const headers = ['Product Name', 'Category', 'Sub Category', 'Stock', 'Min Threshold', 'Unit'];
+    const rows = inventory.map(item => [
+      `"${(item.name || '').replace(/"/g, '""')}"`,
+      `"${(item.category || '').replace(/"/g, '""')}"`,
+      `"${(item.subCategory || item.subCategoryId || '').replace(/"/g, '""')}"`,
+      item.stock || 0,
+      item.minThreshold || 0,
+      `"${(item.unit || '').replace(/"/g, '""')}"`
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `inventory_report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#F8FAFC', fontSmooth: 'antialiased' }}>
-      {/* Responsive Styles Injection */}
-      <style>{`
-        @media (max-width: 1024px) {
-          .kpi-grid {
-             grid-template-columns: repeat(2, 1fr) !important;
-          }
-        }
-        @media (max-width: 768px) {
-          .header-main {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            padding: 1.5rem !important;
-            gap: 1.5rem;
-          }
-          .header-main h1 {
-            font-size: 1.5rem !important;
-          }
-          .main-tabs {
-            padding: 0 1rem !important;
-          }
-          .main-tabs button {
-            padding: 1rem 1rem !important;
-            font-size: 0.9rem !important;
-            white-space: nowrap;
-          }
-          .inventory-layout {
-            flex-direction: column !important;
-          }
-          .inventory-sidebar {
-            width: 100% !important;
-            height: auto !important;
-            border-right: none !important;
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem !important;
-          }
-          .inventory-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .kpi-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .proc-subtabs, .asset-subtabs {
-            padding: 0 1rem !important;
-            gap: 1.5rem !important;
-          }
-          .proc-subtabs button, .asset-subtabs button {
-            padding: 1rem 0 !important;
-            font-size: 0.9rem !important;
-          }
-          .chart-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .po-grid, .asset-grid, .maintenance-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .asset-detail-grid {
-            grid-template-columns: 1fr !important;
-            gap: 1.5rem !important;
-          }
-        }
-      `}</style>
-
-      <header className="header-main" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem 2.5rem', background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-        <div><h1 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#0F172A' }}><Layers size={32} color="#3B82F6" /> Material Control</h1><p style={{ color: '#64748B', fontSize: '0.95rem', fontWeight: '600', margin: 0 }}>Smart Inventory & Asset Intelligence.</p></div>
-        <div style={{ display: 'flex', gap: '1rem' }}><button style={{ padding: '0.8rem 1.2rem', background: '#F1F5F9', border: 'none', borderRadius: '12px', color: '#0F172A', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}><RefreshCcw size={18}/> Sync</button></div>
+    <div className="inventory-v3">
+      {/* 1. TOP HEADER */}
+      <header className="page-header">
+        <div className="header-left">
+          <div className="header-title-area">
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {activeTab === 'master' && (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+              )}
+              {activeTab === 'damage' && (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+              )}
+              {activeTab === 'deductions' && (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+              )}
+              {activeTab === 'reports' && (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              )}
+              <span>
+                {activeTab === 'master' ? 'Inventory Master' :
+                  activeTab === 'damage' ? 'Damage Tracking' :
+                    activeTab === 'deductions' ? 'Financial Deductions' :
+                      'Reports & Analytics'}
+              </span>
+            </h1>
+            <p>Track hostel supplies, consumables and financial recovery with precision.</p>
+          </div>
+        </div>
+        <div className="header-actions">
+          <button className="icon-btn" title="View Reports" onClick={() => setActiveTab('reports')}><FileText size={18} /></button>
+          <button className="icon-btn" title="Print Inventory" onClick={() => window.print()}><Printer size={18} /></button>
+          <button className="icon-btn" title="Download CSV Report" onClick={handleDownloadCSV}><Download size={18} /></button>
+          {activeTab === 'master' && (
+            <button className="primary-btn" onClick={() => { setSelectedItem(null); setFormData(initialFormData); setAddStep(1); setIsAddModalOpen(true); }}>
+              <Plus size={20} /> ADD ITEM
+            </button>
+          )}
+          {activeTab === 'damage' && (
+            <button className="primary-btn damage" onClick={() => setIsDamageModalOpen(true)}>
+              <Plus size={20} /> REPORT DAMAGE
+            </button>
+          )}
+        </div>
       </header>
-      <div className="main-tabs" style={{ display: 'flex', gap: '1.5rem', background: '#FFFFFF', padding: '0 2.5rem', borderBottom: '1px solid #E2E8F0', overflowX: 'auto' }}>
-        {[
-          { id: 'inventory', label: 'Inventory', icon: <Package size={22} /> },
-          { id: 'procurement', label: 'Procurement', icon: <ShoppingCart size={22} /> },
-          { id: 'assets', label: 'Assets', icon: <History size={22} /> }
-        ].map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ padding: '1.4rem 1.5rem', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1.05rem', fontWeight: '900', color: activeTab === tab.id ? '#3B82F6' : '#64748B', borderBottom: activeTab === tab.id ? '4px solid #3B82F6' : '4px solid transparent', marginBottom: '-1px', transition: '0.2s' }}>{tab.icon} {tab.label}</button>
+
+      {/* 2. TAB NAVIGATION */}
+      <nav className="tab-nav">
+        {TABS.map(tab => (
+          <button
+            key={tab.id}
+            className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => { setActiveTab(tab.id); setSearchQuery(''); }}
+          >
+            {tab.icon} {tab.name}
+          </button>
+        ))}
+      </nav>
+
+      {/* 3. STATS CARDS */}
+      <div className="stats-grid">
+        {stats.map((stat, i) => (
+          <div key={i} className="stat-card" style={{ '--accent': stat.color, '--bg': stat.bg }}>
+            <div className="stat-info">
+              <span className="stat-label">{stat.label}</span>
+              <h2 className="stat-value">{stat.value}</h2>
+            </div>
+            <div className="stat-trend"><ArrowUpRight size={14} /> 12%</div>
+          </div>
         ))}
       </div>
-      <div style={{ flex: 1, overflowY: 'hidden' }}>
-        {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-            <RefreshCcw className="animate-spin" size={40} color="#3B82F6" />
+
+      {/* 4. MAIN CONTENT AREA */}
+      <div className="content-card">
+        {activeTab !== 'reports' && (
+          <div className="table-filters">
+            <div className="search-box">
+              <Search size={18} />
+              <input
+                type="text"
+                placeholder={`Search ${activeTab === 'damage' ? 'entries' : activeTab === 'deductions' ? 'deductions' : 'products'}...`}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="filter-actions">
+              <select className="filter-select" value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)}>
+                <option value="All">All Status</option>
+                <option value="Active">Active / In Stock</option>
+                <option value="Out of Stock">Out of Stock</option>
+              </select>
+              {activeTab === 'master' && (
+                <>
+                  <select className="filter-select" value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setSelectedSubCategory('All'); }}>
+                    <option value="All">All Categories</option>
+                    {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  <select className="filter-select" onChange={e => setSelectedSubCategory(e.target.value)} value={selectedSubCategory}>
+                    <option value="All">All Sub Categories</option>
+                    {selectedCategory !== 'All' && CATEGORIES.find(c => c.id === selectedCategory)?.subCategories.map(sub => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </select>
+                </>
+              )}
+            </div>
           </div>
-        ) : (
-          <>
-            {activeTab === 'inventory' && renderInventoryTab()}
-            {activeTab === 'procurement' && renderProcurementTab()}
-            {activeTab === 'assets' && renderAssetsTab()}
-          </>
         )}
+
+        <div className="table-container">
+          <table className="custom-table">
+            <thead>
+              {activeTab === 'master' && (
+                <tr>
+                  <th>PRODUCT & CATEGORY</th>
+                  <th>PRICING & TAX</th>
+                  <th>STOCK DISTRIBUTION</th>
+                  <th>STATUS</th>
+                  <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                </tr>
+              )}
+              {activeTab === 'damage' && (
+                <tr>
+                  <th>ID / DATE</th>
+                  <th>PRODUCT</th>
+                  <th>REPORTED BY</th>
+                  <th>QTY</th>
+                  <th>TYPE</th>
+                  <th>LOSS</th>
+                  <th>STATUS</th>
+                  <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                </tr>
+              )}
+              {activeTab === 'deductions' && (
+                <tr>
+                  <th>DEDUCTION ID</th>
+                  <th>ITEM / REASON</th>
+                  <th>RESPONSIBLE PERSON</th>
+                  <th>AMOUNT</th>
+                  <th>DATE</th>
+                  <th>STATUS</th>
+                  <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                </tr>
+              )}
+              {activeTab === 'reports' && (
+                <tr>
+                  <th>REPORT NAME</th>
+                  <th>GENERATED ON</th>
+                  <th>TYPE</th>
+                  <th>FILE SIZE</th>
+                  <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                </tr>
+              )}
+            </thead>
+            <tbody>
+              {/* ── LOADING STATE ── */}
+              {loading && activeTab === 'master' && [1, 2, 3, 4].map(i => (
+                <tr key={i}>
+                  {[1, 2, 3, 4, 5].map(j => (
+                    <td key={j}><div className="skeleton-cell" /></td>
+                  ))}
+                </tr>
+              ))}
+
+              {/* ── MASTER TAB ── */}
+              {!loading && activeTab === 'master' && filteredInventory.map(item => (
+                <tr key={item.id || item._id}>
+                  <td>
+                    <div className="cell-product">
+                      <div className="product-img" style={{
+                        background: item.image ? 'transparent' : (CATEGORIES.find(c => c.id === item.category)?.bg || 'var(--bg-secondary)'),
+                        color: CATEGORIES.find(c => c.id === item.category)?.color || 'var(--text-muted)',
+                        padding: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden'
+                      }}>
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          item.name ? item.name[0].toUpperCase() : '?'
+                        )}
+                      </div>
+                      <div>
+                        <div className="product-name">{item.name}</div>
+                        <div className="cell-sub">{item.category}{(item.subCategory || item.subCategoryId) ? ` • ${item.subCategory || item.subCategoryId}` : ''}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="cell-main">₹{item.price || '0.00'} <span className="cell-sub">0%</span></div>
+                    <div className="cell-sub">Tax Inclusive</div>
+                  </td>
+                  <td>
+                    <div className="stock-dist">
+                      <div className="dist-item">
+                        <span className="dist-val">{item.stock}</span>
+                        <span className="dist-label">STORE</span>
+                      </div>
+                      <div className="dist-item">
+                        <span className="dist-val">0</span>
+                        <span className="dist-label">USED</span>
+                      </div>
+                      <div className="dist-item total">
+                        <span className="dist-val">{item.stock}</span>
+                        <span className="dist-label">TOTAL</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div
+                      className={`toggle-switch ${item.stock > 0 ? 'active' : ''}`}
+                      onClick={() => handleToggleStatus(item)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                  </td>
+                  <td>
+                    <div className="action-btns">
+                      <button className="action-btn" title="Edit" onClick={() => { setSelectedItem(item); setFormData({ ...item, sellingPrice: item.sellingPrice || item.price || 0, purchasePrice: item.purchasePrice || 0 }); setAddStep(1); setIsAddModalOpen(true); }}><Edit size={16} /></button>
+                      <button className="action-btn delete" title="Delete" onClick={() => handleDelete(item.id || item._id)}><Trash2 size={16} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+              {/* ── DAMAGE TAB ── */}
+              {activeTab === 'damage' && filteredDamageEntries.map(entry => (
+                <tr key={entry.id}>
+                  <td>
+                    <div className="cell-id">{entry.id}</div>
+                    <div className="cell-sub">{entry.date}</div>
+                  </td>
+                  <td>
+                    <div className="cell-product">
+                      <div className="product-img" style={{ background: 'rgba(249,115,22,0.1)', color: '#f97316' }}>{entry.product[0]}</div>
+                      <div className="product-name">{entry.product}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="cell-main">{entry.reportedBy}</div>
+                    <div className="cell-sub" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><ShieldCheck size={12} /> VERIFIED</div>
+                  </td>
+                  <td><span className="qty-badge">{entry.qty}</span></td>
+                  <td>
+                    <span className="type-badge" style={{
+                      background: entry.type === 'DAMAGED' ? 'rgba(249,115,22,0.1)' : entry.type === 'EXPIRED' ? 'rgba(139,92,246,0.1)' : 'rgba(239,68,68,0.1)',
+                      color: entry.type === 'DAMAGED' ? '#f97316' : entry.type === 'EXPIRED' ? '#8b5cf6' : '#ef4444'
+                    }}>{entry.type}</span>
+                  </td>
+                  <td><span className="loss-val">₹{entry.loss}</span></td>
+                  <td><span className={`status-pill ${entry.status.toLowerCase()}`}>{entry.status}</span></td>
+                  <td>
+                    <div className="action-btns">
+                      <button className="action-btn verify" title="Approve" onClick={() => handleApproveDamage(entry.id)} style={{ opacity: entry.status === 'APPROVED' ? 0.4 : 1 }} disabled={entry.status === 'APPROVED'}><ShieldCheck size={16} /></button>
+                      <button className="action-btn delete" title="Remove" onClick={() => handleDeleteDamage(entry.id)}><Trash2 size={16} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+              {/* ── DEDUCTIONS TAB ── */}
+              {activeTab === 'deductions' && filteredDeductions.map(ded => (
+                <tr key={ded.id}>
+                  <td><div className="cell-id">{ded.id}</div></td>
+                  <td>
+                    <div className="cell-main">{ded.item}</div>
+                    <div className="cell-sub">{ded.reason}</div>
+                  </td>
+                  <td>
+                    <div className="cell-main">{ded.person}</div>
+                    <div className="cell-sub">Liability Confirmed</div>
+                  </td>
+                  <td><span className="loss-val">₹{ded.amount}</span></td>
+                  <td><div className="cell-sub">{ded.date}</div></td>
+                  <td><span className={`status-pill ${ded.status.toLowerCase()}`}>{ded.status}</span></td>
+                  <td>
+                    <div className="action-btns">
+                      <button className="action-btn verify" title="Mark as Paid" onClick={() => handleSettleDeduction(ded.id)} style={{ opacity: ded.status === 'PAID' ? 0.4 : 1 }} disabled={ded.status === 'PAID'}><CheckCircle2 size={16} /></button>
+                      <button className="action-btn delete" title="Remove" onClick={() => handleDeleteDeduction(ded.id)}><Trash2 size={16} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+              {/* ── REPORTS TAB ── */}
+              {activeTab === 'reports' && reports.map(rep => (
+                <tr key={rep.id}>
+                  <td>
+                    <div className="cell-product">
+                      <div className="product-img" style={{ background: rep.type === 'PDF' ? 'rgba(239,68,68,0.1)' : 'rgba(14,165,233,0.1)', color: rep.type === 'PDF' ? '#EF4444' : '#0EA5E9' }}>
+                        {rep.type === 'PDF' ? '📄' : '📊'}
+                      </div>
+                      <div className="product-name">{rep.name}</div>
+                    </div>
+                  </td>
+                  <td><div className="cell-sub">{rep.date}</div></td>
+                  <td><span className="type-badge" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{rep.type}</span></td>
+                  <td><div className="cell-sub">{rep.size}</div></td>
+                  <td>
+                    <div className="action-btns">
+                      <button className="action-btn" title="Download" onClick={() => { const a = document.createElement('a'); a.href = '#'; a.download = rep.name; a.click(); }}><Download size={16} /></button>
+                      <button className="action-btn" title="Preview" onClick={() => alert(`Preview: ${rep.name}\nSize: ${rep.size}\nGenerated: ${rep.date}`)}><Eye size={16} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* ── EMPTY STATES ── */}
+          {!loading && activeTab === 'master' && filteredInventory.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-state-icon">
+                <Package size={48} strokeWidth={1.2} />
+              </div>
+              <h3 className="empty-state-title">
+                {searchQuery || selectedCategory !== 'All' || selectedStatus !== 'All'
+                  ? 'No items match your filters'
+                  : 'No Inventory Items Yet'}
+              </h3>
+              <p className="empty-state-sub">
+                {searchQuery || selectedCategory !== 'All' || selectedStatus !== 'All'
+                  ? 'Try adjusting your search or filter criteria.'
+                  : 'Add your first product to start tracking hostel inventory, stock levels, and procurement.'}
+              </p>
+              {!searchQuery && selectedCategory === 'All' && selectedStatus === 'All' && (
+                <button className="primary-btn" style={{ margin: '0 auto' }}
+                  onClick={() => { setSelectedItem(null); setFormData(initialFormData); setAddStep(1); setIsAddModalOpen(true); }}>
+                  <Plus size={18} /> Add First Item
+                </button>
+              )}
+              {(searchQuery || selectedCategory !== 'All' || selectedStatus !== 'All') && (
+                <button className="empty-reset-btn"
+                  onClick={() => { setSearchQuery(''); setSelectedCategory('All'); setSelectedSubCategory('All'); setSelectedStatus('All'); }}>
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'damage' && filteredDamageEntries.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-state-icon" style={{ background: 'rgba(249,115,22,0.08)', color: '#f97316' }}>
+                <AlertTriangle size={48} strokeWidth={1.2} />
+              </div>
+              <h3 className="empty-state-title">{searchQuery ? 'No matching damage entries' : 'No Damage Entries'}</h3>
+              <p className="empty-state-sub">{searchQuery ? 'Try a different search term.' : 'All inventory items are in good condition. Report any damage using the button above.'}</p>
+              {searchQuery && <button className="empty-reset-btn" onClick={() => setSearchQuery('')}>Clear Search</button>}
+            </div>
+          )}
+
+          {activeTab === 'deductions' && filteredDeductions.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-state-icon" style={{ background: 'rgba(16,185,129,0.08)', color: '#10b981' }}>
+                <CheckCircle2 size={48} strokeWidth={1.2} />
+              </div>
+              <h3 className="empty-state-title">{searchQuery ? 'No matching deductions' : 'No Deductions Recorded'}</h3>
+              <p className="empty-state-sub">{searchQuery ? 'Try a different search term.' : 'No financial deductions have been logged yet.'}</p>
+              {searchQuery && <button className="empty-reset-btn" onClick={() => setSearchQuery('')}>Clear Search</button>}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Asset Detail Modal */}
-      <Modal isOpen={isAssetModalOpen} onClose={() => setIsAssetModalOpen(false)} title="Asset Life-Cycle Dossier" maxWidth="900px">
-        {selectedAsset && (
-          <div className="asset-detail-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem' }}>
-             <div>
-                <div style={{ width: '100%', height: '240px', background: '#F1F5F9', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem' }}>
-                   <Monitor size={100} color="#94A3B8" />
+      {/* ANALYTICS SECTION */}
+      {activeTab === 'reports' && (
+        <div className="analytics-section" style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+          <div className="content-card">
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <TrendingUp size={20} color="#00A859" /> Stock Consumption Trend
+            </h3>
+            <div style={{ height: '200px', display: 'flex', alignItems: 'flex-end', gap: '1rem', padding: '1rem' }}>
+              {[60, 40, 85, 30, 95, 70, 55].map((h, i) => (
+                <div key={i} style={{ flex: 1, background: 'var(--primary-green)', height: `${h}%`, borderRadius: '4px 4px 0 0', opacity: 0.2 + (h / 100) }} />
+              ))}
+            </div>
+          </div>
+          <div className="content-card">
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <BarChart size={20} color="#6366F1" /> Category Distribution
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              {CATEGORIES.map(cat => (
+                <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748B', width: '80px' }}>{cat.name}</span>
+                  <div style={{ flex: 1, height: '8px', background: '#F1F5F9', borderRadius: '10px', overflow: 'hidden' }}>
+                    <div style={{ width: `${Math.random() * 80 + 20}%`, height: '100%', background: cat.color }} />
+                  </div>
                 </div>
-                <div style={{ background: '#0F172A', color: 'white', padding: '2rem', borderRadius: '24px', textAlign: 'center' }}>
-                   <p style={{ fontSize: '0.8rem', fontWeight: '900', color: '#94A3B8', marginBottom: '1rem' }}>SECURE ASSET TAG</p>
-                   <QrCode size={140} style={{ margin: '0 auto' }} />
-                   <p style={{ fontSize: '1rem', fontWeight: '900', marginTop: '1rem' }}>{selectedAsset.tag}</p>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODALS */}
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 3000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', overflowY: 'auto', padding: '2rem 1rem' }}>
+            <div style={{ width: '100%', maxWidth: '1040px', background: 'var(--bg-primary)', borderRadius: '12px', boxShadow: '0 25px 60px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', fontFamily: "'Inter', sans-serif", marginBottom: '2rem' }}>
+
+              {/* TOP BAR */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2rem', height: '60px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', borderRadius: '12px 12px 0 0', flexShrink: 0 }}>
+                <button onClick={() => setIsAddModalOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', padding: '7px 14px', borderRadius: '7px', transition: '0.18s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-tertiary)'; }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
+                  <ArrowLeft size={15} /> Back to List
+                </button>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Add New Item</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>Inventory Management</div>
                 </div>
-             </div>
-             <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><Badge color="indigo">{selectedAsset.lifecycleStage}</Badge><Badge color="blue">{selectedAsset.category}</Badge></div>
-                <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0F172A', marginBottom: '0.5rem' }}>{selectedAsset.name}</h2>
-                <p style={{ color: '#64748B', fontWeight: '700', marginBottom: '2.5rem' }}>Internal Code: {selectedAsset.code}</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
-                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>PURCHASE COST</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>₹{selectedAsset.purchaseCost.toLocaleString()}</p></div>
-                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>CURRENT VALUE</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0, color: '#3B82F6' }}>₹{selectedAsset.currentValue.toLocaleString()}</p></div>
-                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>LOCATION</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>Room {selectedAsset.roomId}</p></div>
-                   <div><p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '800', margin: '0 0 0.4rem 0' }}>CONDITION</p><p style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0, color: '#10B981' }}>{selectedAsset.conditionScore}/10</p></div>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                   <button style={{ flex: 1, padding: '1.2rem', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}><Move size={20}/> Asset Transfer</button>
-                   <button style={{ flex: 1, padding: '1.2rem', background: '#F1F5F9', color: '#0F172A', border: 'none', borderRadius: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}><Wrench size={20}/> Service Log</button>
-                </div>
-             </div>
+                <button onClick={() => setIsAddModalOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '34px', height: '34px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer', borderRadius: '7px', transition: '0.18s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#ef4444'; }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* TABS */}
+              <div style={{ display: 'flex', gap: '2rem', padding: '0 2rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-primary)' }}>
+                {[{ id: 1, label: 'Basic Information', icon: <Info size={14} /> }, { id: 2, label: 'Pricing & Stock', icon: <Package size={14} /> }].map(t => (
+                  <div key={t.id} onClick={() => setAddStep ? setAddStep(t.id) : null}
+                    style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '1rem 0', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.04em', color: (addStep || 1) === t.id ? 'var(--primary-green)' : 'var(--text-muted)', borderBottom: (addStep || 1) === t.id ? '2.5px solid var(--primary-green)' : '2.5px solid transparent', marginBottom: '-1px', transition: '0.18s' }}>
+                    {t.icon} {t.label}
+                  </div>
+                ))}
+              </div>
+
+              {/* CONTENT */}
+              <div style={{ padding: '2rem' }}>
+                {(!addStep || addStep === 1) ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '3rem' }}>
+                    {/* Left */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
+                      <div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Product Visual</div>
+                        <div 
+                          onClick={() => fileInputRef.current?.click()}
+                          style={{ 
+                            width: '100%', 
+                            aspectRatio: '1/1', 
+                            background: 'var(--bg-secondary)', 
+                            border: '2px dashed var(--border-color)', 
+                            borderRadius: '10px', 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            gap: '10px', 
+                            color: 'var(--text-muted)', 
+                            cursor: 'pointer', 
+                            fontSize: '0.72rem', 
+                            fontWeight: 700, 
+                            letterSpacing: '0.05em', 
+                            textTransform: 'uppercase',
+                            position: 'relative',
+                            overflow: 'hidden'
+                          }}
+                        >
+                          {formData.image ? (
+                            <>
+                              <img src={formData.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <div style={{ 
+                                position: 'absolute', 
+                                inset: 0, 
+                                background: 'rgba(0,0,0,0.55)', 
+                                display: 'flex', 
+                                flexDirection: 'column', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                gap: '8px',
+                                opacity: 0,
+                                transition: 'opacity 0.2s',
+                                color: '#fff'
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.opacity = 1; }}
+                              onMouseLeave={e => { e.currentTarget.style.opacity = 0; }}
+                              >
+                                <Camera size={20} />
+                                <span>Change Image</span>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <Camera size={26} />
+                              <span>Select Image</span>
+                            </>
+                          )}
+                        </div>
+                        <input 
+                          type="file" 
+                          ref={fileInputRef} 
+                          style={{ display: 'none' }} 
+                          accept="image/*" 
+                          onChange={handleImageChange} 
+                        />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Display Name *</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
+                          <Package size={15} color="var(--text-muted)" />
+                          <input placeholder="e.g. Organic Tomato Ketchup" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
+                            style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Barcode / SKU ID</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
+                          <ScanBarcode size={15} color="var(--text-muted)" />
+                          <input placeholder="Scan or type barcode..." style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
+                          <Maximize2 size={13} color="var(--text-muted)" />
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--primary-green)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Initial Stock</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid rgba(0, 168, 89, 0.3)', borderRadius: '8px', background: 'rgba(0, 168, 89, 0.1)' }}>
+                          <Package size={15} color="var(--primary-green)" />
+                          <input type="number" placeholder="0" value={formData.stock} onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
+                            style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 700, outline: 'none', fontSize: '0.95rem', color: 'var(--primary-green)' }} />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Right */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                        <div>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Category *</div>
+                          <div style={{ position: 'relative' }}>
+                            <select value={formData.category} onChange={e => handleCategoryChange(e.target.value)}
+                              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', appearance: 'none', cursor: 'pointer', background: 'var(--bg-primary)' }}>
+                              {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                            <LayoutGrid size={13} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Sub Category *</div>
+                          <div style={{ position: 'relative' }}>
+                            <select value={formData.subCategory} onChange={e => setFormData({ ...formData, subCategory: e.target.value })}
+                              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', appearance: 'none', cursor: 'pointer', background: 'var(--bg-primary)' }}>
+                              {CATEGORIES.find(c => c.id === formData.category)?.subCategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                            </select>
+                            <LayoutGrid size={13} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                        <div>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Unit Type *</div>
+                          <select value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                            style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', cursor: 'pointer', background: 'var(--bg-primary)' }}>
+                            <option>Kg</option><option>Liters</option><option>Pieces</option><option>Boxes</option>
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Unit Value</div>
+                          <input placeholder="e.g. 500 (for 500g)"
+                            style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', boxSizing: 'border-box', background: 'var(--bg-primary)' }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Product Description</div>
+                        <textarea placeholder="Describe the product details..." rows={5} value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                          style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--bg-primary)' }} />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <button onClick={() => setAddStep && setAddStep(2)}
+                          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', background: 'var(--primary-green)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', letterSpacing: '0.03em' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-green-dark)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-green)'}>
+                          NEXT: PRICING &amp; STOCK <ArrowRight size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
+                      {[{ label: 'Selling Price *', field: 'sellingPrice' }, { label: 'Purchase Price', field: 'purchasePrice' }, { label: 'Min Threshold', field: 'minThreshold' }].map(({ label, field }) => (
+                        <div key={field}>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>{label}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
+                            <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>₹</span>
+                            <input type="number" placeholder="0.00" value={formData[field] || ''} onChange={e => setFormData({ ...formData, [field]: e.target.value })}
+                              style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <button onClick={() => setAddStep && setAddStep(1)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>
+                        <ArrowLeft size={14} /> Back
+                      </button>
+                      <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <button onClick={() => { setIsAddModalOpen(false); setFormData(initialFormData); if (setAddStep) setAddStep(1); }}
+                          style={{ padding: '10px 22px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>CANCEL</button>
+                        <button onClick={handleSave}
+                          style={{ padding: '10px 22px', background: 'var(--primary-green)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-green-dark)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-green)'}>
+                          SAVE &amp; ADD TO INVENTORY
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
-      </Modal>
-      
-      {/* Inventory Item Modal */}
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title={selectedItem ? 'Edit Inventory Item' : 'Add New Material'}
-        maxWidth="600px"
-      >
-        <form onSubmit={async (e) => {
-          e.preventDefault();
-          const fd = new FormData(e.target);
-          const data = {
-            name: fd.get('name'),
-            type: fd.get('type'),
-            categoryId: fd.get('categoryId'),
-            stock: Number(fd.get('stock')),
-            minThreshold: Number(fd.get('minThreshold')),
-            unit: fd.get('unit'),
-            location: fd.get('location'),
-            buildingId: activeBuildingId
-          };
-          try {
-            if (selectedItem) {
-              await api.updateInventoryItem(selectedItem.id || selectedItem._id, data);
-            } else {
-              await api.addInventoryItem(data);
-            }
-            fetchInventory();
-            setIsModalOpen(false);
-          } catch (err) { alert('Failed to save: ' + err.message); }
-        }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>ITEM NAME</label>
-              <input name="name" defaultValue={selectedItem?.name} required style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none' }} placeholder="e.g. Basmati Rice" />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>TYPE</label>
-              <select name="type" defaultValue={selectedItem?.type || 'Consumable'} style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none', background: '#FFFFFF' }}>
-                <option value="Consumable">Consumable</option>
-                <option value="Asset">Asset</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>CATEGORY</label>
-              <select name="categoryId" defaultValue={selectedItem?.categoryId || 'CAT-FOOD'} style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none', background: '#FFFFFF' }}>
-                {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>CURRENT STOCK</label>
-              <input name="stock" type="number" defaultValue={selectedItem?.stock || 0} required style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>MIN THRESHOLD</label>
-              <input name="minThreshold" type="number" defaultValue={selectedItem?.minThreshold || 10} required style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>UNIT</label>
-              <input name="unit" defaultValue={selectedItem?.unit || 'Kg'} required style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none' }} placeholder="e.g. Kg, Liters, Units" />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '800', color: '#64748B', marginBottom: '0.6rem' }}>LOCATION</label>
-              <input name="location" defaultValue={selectedItem?.location || 'Store Room'} required style={{ width: '100%', padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', outline: 'none' }} placeholder="e.g. Dry Store A" />
-            </div>
-          </div>
-          <div style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem' }}>
-            <button type="button" onClick={() => setIsModalOpen(false)} style={{ flex: 1, padding: '1rem', borderRadius: '14px', border: '1px solid #E2E8F0', background: '#FFFFFF', fontWeight: '800', cursor: 'pointer' }}>Cancel</button>
-            <button type="submit" style={{ flex: 2, padding: '1rem', borderRadius: '14px', border: 'none', background: '#3B82F6', color: '#FFFFFF', fontWeight: '900', cursor: 'pointer' }}>
-              {selectedItem ? 'Update Item' : 'Save Item'}
-            </button>
-          </div>
-        </form>
-      </Modal>
 
-      <style>{`
-        .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-spin { animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        ::-webkit-scrollbar { height: 6px; width: 6px; }
-        ::-webkit-scrollbar-track { background: #F1F5F9; }
-        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+        {isDamageModalOpen && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(6px)' }}>
+            <div style={{ width: '100%', maxWidth: '600px', background: 'var(--bg-primary)', borderRadius: '16px', boxShadow: '0 30px 70px rgba(0,0,0,0.25)', overflow: 'hidden', fontFamily: "'Inter', sans-serif" }}>
+
+              {/* Red Header Banner */}
+              <div style={{ background: 'linear-gradient(135deg, #dc2626, #b91c1c)', padding: '1.5rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div style={{ width: '44px', height: '44px', background: 'rgba(255,255,255,0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <AlertTriangle size={22} color="#fff" />
+                  </div>
+                  <div>
+                    <div style={{ color: '#fff', fontWeight: 800, fontSize: '1rem', letterSpacing: '0.02em' }}>Report Damage Entry</div>
+                    <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.72rem', fontWeight: 500, marginTop: '2px' }}>Log a damaged, expired, or lost inventory item</div>
+                  </div>
+                </div>
+                <button onClick={() => setIsDamageModalOpen(false)}
+                  style={{ width: '34px', height: '34px', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleDamageSubmit} style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
+
+                {/* Product Search */}
+                <div>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Select Product *</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)' }}>
+                    <Search size={16} color="var(--text-muted)" />
+                    <input type="text" placeholder="Search product by name or SKU..."
+                      value={damageFormData.productId}
+                      onChange={e => setDamageFormData({ ...damageFormData, productId: e.target.value })}
+                      required
+                      style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
+                  </div>
+                </div>
+
+                {/* Damage Type Chips */}
+                <div>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>Damage Type *</div>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    {[
+                      { val: 'Damaged', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)', border: '#fed7aa', emoji: '🔨' },
+                      { val: 'Expired', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)', border: '#ddd6fe', emoji: '⏰' },
+                      { val: 'Lost', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', border: '#fecaca', emoji: '❌' },
+                    ].map(t => (
+                      <div key={t.val} onClick={() => setDamageFormData({ ...damageFormData, type: t.val })}
+                        style={{ flex: 1, padding: '0.9rem 0.5rem', border: `2px solid ${damageFormData.type === t.val ? t.color : 'var(--border-color)'}`, borderRadius: '10px', background: damageFormData.type === t.val ? t.bg : 'var(--bg-primary)', cursor: 'pointer', textAlign: 'center', transition: '0.18s' }}>
+                        <div style={{ fontSize: '1.4rem', marginBottom: '5px' }}>{t.emoji}</div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: damageFormData.type === t.val ? t.color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t.val}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Qty + Loss */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                  <div>
+                    <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Quantity Damaged *</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
+                      <Package size={15} color="var(--text-muted)" />
+                      <input type="number" min="1" placeholder="0"
+                        value={damageFormData.qty}
+                        onChange={e => setDamageFormData({ ...damageFormData, qty: parseInt(e.target.value) || 0 })}
+                        required
+                        style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 600, outline: 'none', fontSize: '0.95rem', color: 'var(--text-primary)' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Estimated Loss (₹)</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)' }}>
+                      <span style={{ color: '#ef4444', fontWeight: 700 }}>₹</span>
+                      <input type="number" placeholder="0.00"
+                        style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 700, outline: 'none', fontSize: '0.95rem', color: '#ef4444' }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Description / Remarks</div>
+                  <textarea placeholder="Describe how the damage occurred, location, or any additional context..."
+                    rows={3} value={damageFormData.description}
+                    onChange={e => setDamageFormData({ ...damageFormData, description: e.target.value })}
+                    style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--bg-primary)' }} />
+                </div>
+
+                {/* Buttons */}
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)' }}>
+                  <button type="button" onClick={() => setIsDamageModalOpen(false)}
+                    style={{ padding: '10px 22px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                  <button type="submit"
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#b91c1c'}
+                    onMouseLeave={e => e.currentTarget.style.background = '#dc2626'}>
+                    <Send size={15} /> Submit Damage Report
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <style jsx="true">{`
+        .inventory-v3 { padding: 1.5rem 2.5rem; background: var(--bg-main); min-height: 100vh; font-family: 'Inter', sans-serif; color: var(--text-primary); }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .header-left { display: flex; align-items: center; gap: 1.5rem; }
+        .back-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); cursor: pointer; }
+        .header-title-area h1 { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 0; }
+        .header-title-area p { font-size: 0.85rem; color: var(--text-muted); margin: 0.2rem 0 0; font-weight: 500; }
+        .header-actions { display: flex; gap: 0.8rem; align-items: center; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .primary-btn { padding: 0.7rem 1.5rem; border-radius: 10px; border: none; background: var(--primary-green); color: white; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+        .primary-btn.damage { background: #EF4444; }
+        .tab-nav { display: flex; gap: 2rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem; }
+        .tab-item { padding: 1rem 0; background: transparent; border: none; color: var(--text-muted); font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 0.6rem; cursor: pointer; position: relative; }
+        .tab-item.active { color: var(--primary-green); }
+        .tab-item.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--primary-green); }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--bg-card); padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: flex-start; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-label { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; }
+        .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--text-primary); margin: 0.5rem 0 0; }
+        .stat-trend { font-size: 0.75rem; font-weight: 700; padding: 0.3rem 0.6rem; border-radius: 8px; background: rgba(0,168,89,0.1); color: var(--primary-green); display: flex; align-items: center; gap: 0.3rem; }
+        .content-card { background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border-light); padding: 1.5rem; box-shadow: var(--shadow-soft); }
+        .table-filters { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .search-box { position: relative; width: 400px; }
+        .search-box svg { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .search-box input { width: 100%; padding: 0.8rem 1rem 0.8rem 3rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-weight: 500; outline: none; }
+        .filter-actions { display: flex; gap: 1rem; }
+        .filter-select { padding: 0.7rem 1rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-primary); font-weight: 600; color: var(--text-secondary); font-size: 0.85rem; outline: none; }
+        .custom-table { width: 100%; border-collapse: collapse; }
+        .custom-table th { text-align: left; padding: 1rem; font-size: 0.7rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; border-bottom: 1px solid var(--border-light); }
+        .custom-table td { padding: 1.2rem 1rem; border-bottom: 1px solid var(--border-light); }
+        .cell-id { font-weight: 700; color: var(--text-primary); font-size: 0.9rem; }
+        .cell-sub { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+        .cell-main { font-weight: 700; color: var(--text-primary); font-size: 0.95rem; }
+        .cell-product { display: flex; align-items: center; gap: 1rem; }
+        .product-img { width: 40px; height: 40px; background: var(--bg-secondary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--text-muted); font-size: 1.2rem; }
+        .product-name { font-weight: 700; color: var(--text-primary); font-size: 0.95rem; }
+        .qty-badge { background: var(--bg-secondary); padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 700; color: var(--text-secondary); }
+        .type-badge { padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.75rem; font-weight: 800; }
+        .type-badge.damaged { background: rgba(249, 115, 22, 0.1); color: #f97316; }
+        .loss-val { font-weight: 800; color: #EF4444; }
+        .status-pill { padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.7rem; font-weight: 800; }
+        .status-pill.pending { background: rgba(245, 158, 11, 0.1); color: #D97706; }
+        .status-pill.paid, .status-pill.approved { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+        .action-btns { display: flex; gap: 0.5rem; justify-content: flex-end; }
+        .action-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .action-btn.verify { color: var(--primary-green); background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); }
+        .action-btn.delete { color: #EF4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); }
+        .stock-dist { display: flex; gap: 1rem; }
+        .dist-item { display: flex; flex-direction: column; align-items: center; min-width: 40px; }
+        .dist-val { font-weight: 800; color: var(--text-primary); font-size: 0.9rem; }
+        .dist-label { font-size: 0.6rem; color: var(--text-muted); font-weight: 800; }
+        .dist-item.total .dist-val { color: var(--primary-green); }
+        .toggle-switch { width: 40px; height: 22px; background: var(--border-color); border-radius: 20px; position: relative; }
+        .toggle-switch.active { background: var(--primary-green); }
+        .toggle-switch::before { content: ''; position: absolute; width: 16px; height: 16px; background: var(--bg-primary); border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
+        .toggle-switch.active::before { transform: translateX(18px); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: var(--bg-primary); border-radius: 32px; box-shadow: var(--shadow-soft); overflow: hidden; width: 90%; }
+        .modal-content.large { max-width: 800px; }
+        .modal-content.medium { max-width: 500px; }
+        .modal-header { padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--border-color); }
+        .header-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(16, 185, 129, 0.1); color: var(--primary-green); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .modal-header h2 { font-size: 1.4rem; font-weight: 900; color: var(--text-primary); margin: 0; }
+        .close-btn { position: absolute; top: 1.5rem; right: 1.5rem; background: transparent; border: none; color: var(--text-muted); cursor: pointer; }
+        .modal-body { padding: 2.5rem; }
+        .modal-info-box { background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.8rem; color: #818cf8; font-size: 0.85rem; font-weight: 600; }
+        .inventory-form { display: flex; flex-direction: column; gap: 1.5rem; }
+        .form-row { display: flex; gap: 1.5rem; }
+        .form-group { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+        .form-group.full { width: 100%; }
+        .form-group label { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; }
+        .form-group input, .form-group select, .form-group textarea { padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); font-weight: 600; font-size: 0.9rem; outline: none; transition: 0.2s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary-green); background: var(--bg-primary); box-shadow: 0 0 0 4px var(--primary-green-light); }
+        .form-group textarea { height: 100px; resize: none; }
+        .form-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
+        .secondary-btn { padding: 0.8rem 1.8rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-weight: 700; cursor: pointer; }
+        .submit-damage-btn { margin-top: 1rem; padding: 1.2rem; border-radius: 16px; border: none; background: #FDA4AF; color: white; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.8rem; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
+        .submit-damage-btn:hover { background: #F43F5E; }
+        .table-container { overflow-x: auto; }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; text-align: center; gap: 1rem; }
+        .empty-state-icon { width: 96px; height: 96px; border-radius: 24px; background: rgba(0, 168, 89, 0.08); color: var(--primary-green); display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem; }
+        .empty-state-title { font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0; }
+        .empty-state-sub { font-size: 0.85rem; color: var(--text-muted); margin: 0; max-width: 360px; line-height: 1.6; font-weight: 500; }
+        .empty-reset-btn { margin-top: 0.5rem; padding: 0.6rem 1.4rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-secondary); font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: 0.18s; }
+        .empty-reset-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+        .skeleton-cell { height: 20px; border-radius: 6px; background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        @media print {
+          /* Hide sidebar, navigation, headers, filters, actions, pagination, buttons */
+          aside,
+          nav,
+          header,
+          .owner-sidebar,
+          .sidebar,
+          .sidebar-container,
+          .sidebar-menu,
+          [class*="sidebar"],
+          .tab-nav,
+          .header-actions,
+          .table-filters,
+          .stats-grid,
+          .back-btn,
+          .action-btns,
+          .action-btn,
+          th:last-child,
+          td:last-child,
+          .pagination-controls,
+          .empty-reset-btn,
+          button,
+          footer {
+            display: none !important;
+          }
+
+          /* Reset layout widths to 100% for full paper usage */
+          body, html, #root, .app-layout, .main-layout, .content-area, .inventory-v3 {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            color: black !important;
+            min-height: auto !important;
+          }
+
+          .content-card {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            background: white !important;
+            width: 100% !important;
+          }
+
+          /* Custom high fidelity Print Title */
+          .page-header {
+            margin-bottom: 2rem !important;
+            border-bottom: 3px solid #0f172a !important;
+            padding-bottom: 1.5rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+          }
+
+          .header-left {
+            display: block !important;
+          }
+
+          .header-title-area h1 {
+            font-size: 2.5rem !important;
+            color: #0f172a !important;
+            margin: 0 !important;
+            font-weight: 800 !important;
+          }
+
+          .header-title-area p {
+            font-size: 1rem !important;
+            color: #475569 !important;
+            margin-top: 0.5rem !important;
+            font-weight: 500 !important;
+          }
+
+          /* Optimize inventory data table rows and typography */
+          .custom-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin-top: 1rem !important;
+          }
+
+          .custom-table th {
+            border-bottom: 2px solid #0f172a !important;
+            color: #0f172a !important;
+            font-weight: 800 !important;
+            font-size: 10.5pt !important;
+            padding: 10px 8px !important;
+            text-transform: uppercase !important;
+          }
+
+          .custom-table td {
+            border-bottom: 1px solid #cbd5e1 !important;
+            font-size: 9.5pt !important;
+            padding: 12px 8px !important;
+            color: #1e293b !important;
+          }
+
+          /* Assure color fidelity for visual categories */
+          .product-img {
+            border: 1px solid #cbd5e1 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
       `}</style>
     </div>
   );
 };
 
-export default InventoryModule;
+export default InventoryManagement;

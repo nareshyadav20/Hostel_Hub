@@ -32,16 +32,30 @@ const Signup = () => {
       localStorage.removeItem('user');
       sessionStorage.clear();
 
+      const searchParams = new URLSearchParams(window.location.search);
+      const referralCode = searchParams.get('ref') || '';
+
       const response = await API.post('/auth/register', {
         name: cleanName,
         email: cleanEmail,
         password: cleanPassword,
         phone: cleanPhone,
-        role: 'TENANT'
+        role: 'TENANT',
+        referralCode
       });
 
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      const { user, token, tenantProfile } = response.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      if (tenantProfile) {
+        localStorage.setItem('tenantProfile', JSON.stringify(tenantProfile));
+        if (tenantProfile.buildingId) {
+          localStorage.setItem('buildingId', String(tenantProfile.buildingId));
+        }
+        if (tenantProfile._id) {
+          localStorage.setItem('tenantId', String(tenantProfile._id));
+        }
+      }
 
       navigate('/dashboard');
     } catch (err) {

@@ -29,10 +29,14 @@ class ErrorBoundary extends React.Component {
 }
 
 
+import { NotificationProvider } from './context/NotificationContext.jsx'
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
-      <App />
+      <NotificationProvider>
+        <App />
+      </NotificationProvider>
     </ErrorBoundary>
   </StrictMode>,
 )

@@ -9,6 +9,8 @@ import { ComplaintsPanel, MessPanel, StaffPanel, InsightsPanel, ActivityFeed, Te
 const iStyle = { padding:'0.85rem', borderRadius:'12px', border:'1px solid var(--border-color)', background:'var(--bg-secondary)', color:'var(--text-primary)', fontSize:'0.9rem', outline:'none', width:'100%', boxSizing:'border-box', transition:'all 0.3s' };
 const lStyle = { fontSize:'0.8rem', fontWeight:'800', color:'var(--text-muted)', marginBottom:'0.5rem', display:'block', textTransform:'uppercase', letterSpacing:'0.04em' };
 
+import socket, { connectSocket, disconnectSocket } from './utils/socket';
+
 function Dashboard() {
   const { buildingId: urlBuildingId } = useParams();
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
@@ -35,7 +37,7 @@ function Dashboard() {
         api.getDashboardMess(activeBuildingId),
         api.getDashboardStaff(activeBuildingId),
         api.getDashboardActivity(activeBuildingId),
-        api.getTenants()
+        api.getTenants(activeBuildingId)
       ]);
 
       const [summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenants] = results.map(r => r.status === 'fulfilled' ? r.value : null);
@@ -59,7 +61,50 @@ function Dashboard() {
     }
   };
 
-  useEffect(() => { fetchData(); }, [activeBuildingId]);
+  useEffect(() => { 
+    fetchData(); 
+
+    if (activeBuildingId) {
+      connectSocket(activeBuildingId);
+
+      socket.on('dashboardStatsUpdated', () => {
+        console.log('🔄 Dashboard Stats Updated in Real-time');
+        fetchData();
+      });
+
+      socket.on('complaintCreated', () => {
+        fetchData();
+      });
+
+      socket.on('bookingCreated', () => {
+        fetchData();
+      });
+
+      socket.on('tenantAdded', () => {
+        console.log('👤 New tenant registered — refreshing dashboard');
+        fetchData();
+      });
+
+      socket.on('transferCreated', () => {
+        console.log('🔄 New transfer request — refreshing dashboard');
+        fetchData();
+      });
+
+      socket.on('paymentCompleted', () => {
+        fetchData();
+      });
+
+      return () => {
+        socket.off('dashboardStatsUpdated');
+        socket.off('complaintCreated');
+        socket.off('bookingCreated');
+        socket.off('tenantAdded');
+        socket.off('transferCreated');
+        socket.off('paymentCompleted');
+        disconnectSocket();
+      };
+    }
+  }, [activeBuildingId]);
 
 
   if (isLoading) return (
@@ -91,9 +136,36 @@ function Dashboard() {
   const { summary, revenue, alerts, complaints, mess, staff, activity, tenantsList } = d;
 
   const primaryKpis = [
-    { label:'Revenue Collected', valueText:`₹${(summary.todayRevenue/1000).toFixed(1)}k`, sub:'Collected today', color:'#10B981', bg:'rgba(16, 185, 129, 0.1)', icon:<Wallet size={20}/>, up:true },
-    { label:'Occupancy Rate', valueText:`${summary.occupancyRate}%`, sub:`${summary.occupiedBeds}/${summary.totalBeds} Beds`, color:'#6366F1', bg:'rgba(99, 102, 241, 0.1)', icon:<TrendingUp size={20}/>, up:true },
-    { label:'Pending Dues', valueText:`₹${(summary.pendingPaymentsAmount/1000).toFixed(0)}k`, sub:`${summary.pendingPaymentsCount} Defaulters`, color:'#EF4444', bg:'rgba(239, 68, 68, 0.1)', icon:<AlertCircle size={20}/>, up:false },
+    { 
+      label:'Revenue Collected', 
+      valueText:`₹${(summary.todayRevenue/1000).toFixed(1)}k`, 
+      sub:'Collected today', 
+      color:'#10B981', 
+      bg:'rgba(16, 185, 129, 0.1)', 
+      icon:<Wallet size={20}/>, 
+      changeText: summary.revenueChange >= 0 ? `+${summary.revenueChange || 0}%` : `${summary.revenueChange}%`,
+      up: (summary.revenueChange || 0) >= 0 
+    },
+    { 
+      label:'Occupancy Rate', 
+      valueText:`${summary.occupancyRate}%`, 
+      sub:`${summary.occupiedBeds}/${summary.totalBeds} Beds`, 
+      color:'#6366F1', 
+      bg:'rgba(99, 102, 241, 0.1)', 
+      icon:<TrendingUp size={20}/>, 
+      changeText: summary.occupancyChange >= 0 ? `+${summary.occupancyChange || 0}%` : `${summary.occupancyChange}%`,
+      up: (summary.occupancyChange || 0) >= 0 
+    },
+    { 
+      label:'Pending Dues', 
+      valueText:`₹${(summary.pendingPaymentsAmount/1000).toFixed(0)}k`, 
+      sub:`${summary.pendingPaymentsCount} Defaulters`, 
+      color:'#EF4444', 
+      bg:'rgba(239, 68, 68, 0.1)', 
+      icon:<AlertCircle size={20}/>, 
+      changeText: summary.pendingChange >= 0 ? `+${summary.pendingChange || 0}%` : `${summary.pendingChange}%`,
+      up: (summary.pendingChange || 0) <= 0 
+    },
   ];
 
   return (
@@ -141,7 +213,7 @@ function Dashboard() {
                  {React.cloneElement(kpi.icon, { size: 18 })}
                </div>
                <span style={{ fontSize:'0.7rem', fontWeight:'800', color:kpi.up?'#10B981':'#EF4444', background: kpi.up?'rgba(16, 185, 129, 0.05)':'rgba(239, 68, 68, 0.05)', padding: '0.2rem 0.5rem', borderRadius: '100px', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                 {kpi.up ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {kpi.up ? '+2.4%' : '-1.2%'}
+                 {kpi.up ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>} {kpi.changeText}
                </span>
              </div>
              <h2 style={{ fontSize:'1.6rem', fontWeight:'900', color:'var(--text-primary)', margin:0 }}>{kpi.valueText}</h2>

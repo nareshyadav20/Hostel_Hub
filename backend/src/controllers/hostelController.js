@@ -1,4 +1,5 @@
 const Hostel = require('../models/Hostel');
+const socketService = require('../utils/socketService');
 
 exports.createHostel = async (req, res) => {
   try {
@@ -21,6 +22,17 @@ exports.getHostels = async (req, res) => {
 exports.updateHostel = async (req, res) => {
   try {
     const hostel = await Hostel.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    
+    // Real-time synchronization
+    // Emit to all buildings associated with this hostel
+    if (hostel.buildings && hostel.buildings.length > 0) {
+      hostel.buildings.forEach(buildingId => {
+        socketService.emitUpdate(buildingId, 'hostelUpdated', hostel);
+      });
+    } else {
+      socketService.emitUpdate(null, 'hostelUpdated', hostel);
+    }
+
     res.status(200).json(hostel);
   } catch (error) {
     res.status(500).json({ error: error.message });

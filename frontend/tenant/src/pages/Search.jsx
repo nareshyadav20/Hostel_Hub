@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import API from '../api/axios';
-import { MOCK_HOSTELS } from '../utils/mockData';
 import './Search.css';
+import socket, { connectSocket, disconnectSocket } from '../utils/socket';
+import ImageModal from '../components/ImageModal';
 
 const ICONS = {
   Search: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
@@ -14,33 +15,31 @@ const ICONS = {
   Occupancy: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
 };
 
-const HOSTELS = MOCK_HOSTELS.map(h => ({
-  id: h.id,
-  name: h.name,
-  location: h.locality || h.location || 'Area unknown',
-  city: (h.city || 'bengaluru').toLowerCase(),
-  price: h.price || 0,
-  gender: h.gender || 'Mixed',
-  category: (h.category || 'Student').toLowerCase(),
-  type: h.type || 'Standard',
-  rating: h.rating || 4.0,
-  popularityLabel: (h.rating || 0) > 4.5 ? 'High Demand' : null,
-  occupancy: h.occupancy || '70%',
-  image: (h.images && h.images[0]) || h.image || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
-  amenities: h.amenities || []
-}));
 
-const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => (
+const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
+  const [imgIdx, setImgIdx] = useState(0);
+
+  useEffect(() => {
+    if (!hostel.images || hostel.images.length <= 1) return;
+    const timer = setInterval(() => {
+      setImgIdx(prev => (prev + 1) % hostel.images.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [hostel.images]);
+
+  const currentImage = hostel.images && hostel.images.length > 0 ? hostel.images[imgIdx] : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800';
+
+  return (
   <div className="search-hostel-card-pro">
-    <div className="card-media-side">
-      <img src={hostel.image} alt={hostel.name} className="hostel-main-img" />
+    <div className="card-media-side" onClick={() => onImageClick(currentImage)} style={{ cursor: 'zoom-in' }}>
+      <img src={currentImage} alt={hostel.name} className="hostel-main-img" style={{ transition: 'opacity 0.5s ease-in-out' }} />
       <div className="card-image-overlays">
         <div className="badge-row-top">
           {hostel.popularityLabel && <span className="label-demand">{hostel.popularityLabel}</span>}
           <span className="label-available">Available</span>
         </div>
-        <button 
-          className={`wish-action-btn ${isWishlisted ? 'active' : ''}`} 
+        <button
+          className={`wish-action-btn ${isWishlisted ? 'active' : ''}`}
           onClick={(e) => { e.preventDefault(); toggleWishlist(hostel); }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5">
@@ -49,7 +48,7 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => (
         </button>
       </div>
     </div>
-    
+
     <div className="card-details-side">
       <div className="details-header-row">
         <div>
@@ -60,7 +59,7 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => (
           <ICONS.Star /> <span>{hostel.rating}</span>
         </div>
       </div>
-      
+
       <div className="details-mid-grid">
         <div className="pricing-stack-pro">
           <span className="price-label-pro">Starts from</span>
@@ -87,7 +86,8 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist }) => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 const Search = () => {
   const navigate = useNavigate();
@@ -97,12 +97,12 @@ const Search = () => {
   const qBudget = queryParams.get('budget') || 'all';
   const qType = queryParams.get('type') || 'all';
 
-  const [filters, setFilters] = useState({ 
-    location: qLocation.toLowerCase(), 
-    budget: qBudget, 
-    gender: 'All', 
-    categories: qType !== 'all' ? [qType.toLowerCase()] : [], 
-    amenities: [] 
+  const [filters, setFilters] = useState({
+    location: qLocation.toLowerCase(),
+    budget: qBudget,
+    gender: 'All',
+    categories: qType !== 'all' ? [qType.toLowerCase()] : [],
+    amenities: []
   });
 
   const [wishlist, setWishlist] = useState([]);
@@ -111,56 +111,69 @@ const Search = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
   const hostelsPerPage = 5;
 
-  useEffect(() => {
-    const fetchHostels = async () => {
-      try {
-        const [response, wishRes] = await Promise.all([
-          API.get('/buildings').catch(() => ({ data: [] })),
-          API.get('/tenant-portal/wishlist').catch(() => ({ data: [] }))
-        ]);
-        
-        setWishlist(Array.isArray(wishRes.data) ? wishRes.data : []);
-        
-        let mapped = [];
-        if (response.data && Array.isArray(response.data)) {
-          mapped = response.data.map(b => ({
-            id: b._id,
-            name: b.name,
-            location: b.address || b.location || 'Location unknown',
-            city: (b.locationCity || 'bengaluru').toLowerCase(),
-            price: b.startingPrice || 5000,
-            gender: b.genderType || 'Mixed',
-            category: (b.category || 'Student').toLowerCase(),
-            type: 'Premium',
-            rating: b.rating || (4.0 + Math.random()).toFixed(1),
-            popularityLabel: b.rating > 4.6 ? 'High Demand' : null,
-            occupancy: '70%',
-            image: b.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
-            amenities: b.amenities || []
-          }));
-        }
+  const fetchHostels = async () => {
+    try {
+      const [response, wishRes] = await Promise.all([
+        API.get('/buildings/public').catch(() => ({ data: [] })),
+        API.get('/tenant-portal/wishlist').catch(() => ({ data: [] }))
+      ]);
 
-        if (mapped.length === 0) mapped = HOSTELS;
-        setAllHostels(mapped);
-        setHostels(mapped);
-      } catch (err) {
-        console.error('Error fetching hostels:', err);
-        setAllHostels(HOSTELS);
-        setHostels(HOSTELS);
-      } finally {
-        setLoading(false);
+      setWishlist(Array.isArray(wishRes.data) ? wishRes.data : []);
+
+      let mapped = [];
+      if (response.data && Array.isArray(response.data)) {
+        mapped = response.data.map(b => ({
+          id: b._id,
+          name: b.name,
+          location: b.address || b.location || 'Location unknown',
+          city: (b.locationCity || 'bengaluru').toLowerCase(),
+          price: b.startingPrice || 5000,
+          gender: b.genderType || 'Mixed',
+          category: (b.category || 'Student').toLowerCase(),
+          type: 'Premium',
+          rating: b.rating || (4.0 + Math.random()).toFixed(1),
+          popularityLabel: b.rating > 4.6 ? 'High Demand' : null,
+          occupancy: '70%',
+          images: b.images && b.images.length > 0 ? b.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `http://localhost:5000${img}`) : ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'],
+          amenities: b.amenities || []
+        }));
       }
-    };
+
+      setAllHostels(mapped);
+      setHostels(mapped);
+    } catch (err) {
+      console.error('Error fetching hostels:', err);
+      setAllHostels([]);
+      setHostels([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchHostels();
+
+    // Real-time synchronization
+    connectSocket(); // Global room
+    socket.on('hostelUpdated', () => {
+      console.log('🔄 Search results updating in real-time');
+      fetchHostels();
+    });
+
+    return () => {
+      socket.off('hostelUpdated');
+      disconnectSocket();
+    };
   }, []);
 
   useEffect(() => {
     let filtered = [...allHostels];
     if (filters.location !== 'all') {
-      filtered = filtered.filter(h => 
-        (h.city || '').toLowerCase().includes(filters.location.toLowerCase()) || 
+      filtered = filtered.filter(h =>
+        (h.city || '').toLowerCase().includes(filters.location.toLowerCase()) ||
         (h.location || '').toLowerCase().includes(filters.location.toLowerCase()) ||
         (h.name || '').toLowerCase().includes(filters.location.toLowerCase())
       );
@@ -249,7 +262,7 @@ const Search = () => {
               <ICONS.Filter />
               <h3>Filters</h3>
             </div>
-            
+
             <div className="filter-section-pro">
               <label className="section-label-pro"><ICONS.Location /> Location</label>
               <div className="select-wrapper-pro">
@@ -269,8 +282,8 @@ const Search = () => {
               <label className="section-label-pro"><ICONS.Gender /> Gender Preference</label>
               <div className="gender-pill-group">
                 {['All', 'Boys', 'Girls', 'Mixed'].map(g => (
-                  <button 
-                    key={g} 
+                  <button
+                    key={g}
                     className={`gender-pill-btn ${filters.gender === g ? 'active' : ''}`}
                     onClick={() => setFilters({ ...filters, gender: g })}
                   >
@@ -291,11 +304,11 @@ const Search = () => {
                   { label: 'Above ₹15,000', value: 'budget-4' }
                 ].map(item => (
                   <label key={item.value} className="budget-radio-row">
-                    <input 
-                      type="radio" 
-                      name="budget" 
-                      checked={filters.budget === item.value} 
-                      onChange={() => setFilters({ ...filters, budget: item.value })} 
+                    <input
+                      type="radio"
+                      name="budget"
+                      checked={filters.budget === item.value}
+                      onChange={() => setFilters({ ...filters, budget: item.value })}
                     />
                     <span className="radio-custom-pro"></span>
                     <span className="radio-label-text">{item.label}</span>
@@ -313,38 +326,46 @@ const Search = () => {
         <main className="search-results-pro">
           {loading ? (
             <div className="loading-placeholder-grid">
-               <div className="premium-spinner"></div>
-               <p>Discovering premium stays for you...</p>
+              <div className="premium-spinner"></div>
+              <p>Discovering premium stays for you...</p>
             </div>
           ) : hostels.length === 0 ? (
             <div className="no-results-card">
-               <div className="empty-visual">
-                  <ICONS.Search />
-               </div>
-               <h3>No Hostels Found</h3>
-               <p>Try adjusting your filters or searching in a different city.</p>
-               <button className="btn-secondary-pro" onClick={() => setFilters({ location: 'all', budget: 'all', gender: 'All', categories: [], amenities: [] })}>Clear All Filters</button>
+              <div className="empty-visual">
+                <ICONS.Search />
+              </div>
+              <h3>No Hostels Found</h3>
+              <p>Try adjusting your filters or searching in a different city.</p>
+              <button className="btn-secondary-pro" onClick={() => setFilters({ location: 'all', budget: 'all', gender: 'All', categories: [], amenities: [] })}>Clear All Filters</button>
             </div>
           ) : (
             <>
               <div className="results-grid-pro">
-                {currentHostels.map(h => <HostelCard key={h.id} hostel={h} isWishlisted={isWishlisted(h.id)} toggleWishlist={toggleWishlist} />)}
+                {currentHostels.map(h => (
+                  <HostelCard
+                    key={h.id}
+                    hostel={h}
+                    isWishlisted={isWishlisted(h.id)}
+                    toggleWishlist={toggleWishlist}
+                    onImageClick={(img) => setModalInfo({ isOpen: true, image: img })}
+                  />
+                ))}
               </div>
-              
+
               {totalPages > 1 && (
                 <div className="pagination-pro">
-                  <button 
-                    disabled={currentPage === 1} 
+                  <button
+                    disabled={currentPage === 1}
                     onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     className="pagi-btn"
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
                   </button>
-                  
+
                   <div className="pagi-numbers">
                     {[...Array(totalPages)].map((_, i) => (
-                      <button 
-                        key={i} 
+                      <button
+                        key={i}
                         onClick={() => { setCurrentPage(i + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                         className={`pagi-num ${currentPage === i + 1 ? 'active' : ''}`}
                       >
@@ -353,8 +374,8 @@ const Search = () => {
                     ))}
                   </div>
 
-                  <button 
-                    disabled={currentPage === totalPages} 
+                  <button
+                    disabled={currentPage === totalPages}
                     onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     className="pagi-btn"
                   >
@@ -366,6 +387,12 @@ const Search = () => {
           )}
         </main>
       </div>
+
+      <ImageModal
+        isOpen={modalInfo.isOpen}
+        image={modalInfo.image}
+        onClose={() => setModalInfo({ isOpen: false, image: '' })}
+      />
     </div>
   );
 };

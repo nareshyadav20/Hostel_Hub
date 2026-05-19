@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown, X } from 'lucide-react';
+import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown, X, Shirt, Sparkles } from 'lucide-react';
 import { api } from '../mockData';
-
+import socket, { connectSocket } from '../utils/socket';
+import { clearAllCache } from '../cache';
 
 const Complaints = () => {
   const { buildingId: urlBuildingId } = useParams();
@@ -18,6 +19,7 @@ const Complaints = () => {
   const [activeTab, setActiveTab] = useState('Maintenance');
   const [filterBuilding, setFilterBuilding] = useState(activeBuildingId || 'all');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastNotification, setLastNotification] = useState(null);
 
   const fetchComplaints = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -25,14 +27,15 @@ const Complaints = () => {
     
     try {
       // Invalidate cache to get fresh data
-      localStorage.removeItem('complaints_all_v4');
-      const data = await api.getComplaints(activeBuildingId);
+      clearAllCache();
+      
+      // If filterBuilding is 'all', pass null to fetch everything for this owner
+      const fetchId = (filterBuilding === 'all') ? null : filterBuilding;
+      const data = await api.getComplaints(fetchId);
       const buildingsData = await api.getBuildings();
       setBuildings(buildingsData);
 
-      const formatted = data
-        .filter(c => filterBuilding === 'all' || c.buildingId === filterBuilding || c.buildingId?._id === filterBuilding)
-        .map(c => {
+      const formatted = data.map(c => {
           const createdAt = c.createdAt || c.date;
           const diffHours = Math.floor((new Date() - new Date(createdAt)) / (1000 * 60 * 60));
           const timeElapsed = diffHours < 24 ? `${diffHours} hours ago` : `${Math.floor(diffHours/24)} days ago`;
@@ -47,7 +50,8 @@ const Complaints = () => {
             reportedBy: c.tenant?.name || 'Unknown User',
             timeElapsed,
             description: c.description,
-            buildingName: c.buildingId?.name || 'Unknown Building'
+            buildingName: c.buildingId?.name || 'Unknown Building',
+            buildingId: c.buildingId?._id || c.buildingId
           };
         });
       setComplaints(formatted);
@@ -63,7 +67,23 @@ const Complaints = () => {
     fetchComplaints();
     // Auto-refresh every 30 seconds
     const interval = setInterval(() => fetchComplaints(false), 30000);
-    return () => clearInterval(interval);
+
+    // Real-time: instantly show new tenant complaints without waiting for poll
+    connectSocket(activeBuildingId);
+    
+    const handleNewComplaint = (data) => {
+      console.log('🔔 New complaint received — refreshing', data);
+      setLastNotification(`New ticket from ${data.tenantName || 'a resident'}: "${data.complaint?.title || 'Maintenance Needed'}"`);
+      fetchComplaints(false);
+      setTimeout(() => setLastNotification(null), 5000);
+    };
+
+    socket.on('complaintCreated', handleNewComplaint);
+
+    return () => {
+      clearInterval(interval);
+      socket.off('complaintCreated', handleNewComplaint);
+    };
   }, [fetchComplaints]);
 
   useEffect(() => {
@@ -78,9 +98,11 @@ const Complaints = () => {
   };
 
   const filteredComplaints = complaints.filter(c => {
-    if (activeTab === 'Maintenance') return !['Leave', 'Visitor'].includes(c.category);
+    if (activeTab === 'Maintenance') return !['Leave', 'Visitor', 'Laundry', 'Cleaning'].includes(c.category);
     if (activeTab === 'Leave') return c.category === 'Leave';
     if (activeTab === 'Visitor') return c.category === 'Visitor';
+    if (activeTab === 'Laundry') return c.category === 'Laundry';
+    if (activeTab === 'Cleaning') return c.category === 'Cleaning';
     return true;
   });
 
@@ -144,6 +166,8 @@ const Complaints = () => {
       case 'WiFi / IT': return <Activity size={16} color="#10B981" />;
       case 'Leave': return <Clock size={16} color="#8B5CF6" />;
       case 'Visitor': return <MessageSquare size={16} color="#EC4899" />;
+      case 'Laundry': return <Shirt size={16} color="#6366F1" />;
+      case 'Cleaning': return <Sparkles size={16} color="#06B6D4" />;
       default: return <Wrench size={16} color="var(--text-secondary)" />;
     }
   };
@@ -152,6 +176,19 @@ const Complaints = () => {
 
   return (
     <div className="complaints-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
+      <AnimatePresence>
+        {lastNotification && (
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            exit={{ opacity: 0, x: 50 }}
+            style={{ position: 'fixed', top: '2rem', right: '2rem', zIndex: 10000, background: 'var(--accent-primary)', color: 'white', padding: '1rem 1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-lg)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.8rem' }}
+          >
+            <Activity size={20} />
+            {lastNotification}
+          </motion.div>
+        )}
+      </AnimatePresence>
       <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '900', marginBottom: '0.4rem', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
@@ -184,8 +221,8 @@ const Complaints = () => {
         </div>
       </header>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', width: 'fit-content' }}>
-        {['Maintenance', 'Leave', 'Visitor'].map(tab => (
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', width: 'fit-content', overflowX: 'auto', maxWidth: '100%' }}>
+        {['Maintenance', 'Leave', 'Visitor', 'Laundry', 'Cleaning'].map(tab => (
           <button
             key={tab}
             onClick={() => { setActiveTab(tab); setExpandedId(null); }}
@@ -194,10 +231,11 @@ const Complaints = () => {
               background: activeTab === tab ? 'var(--bg-primary)' : 'transparent',
               color: activeTab === tab ? 'var(--accent-primary)' : 'var(--text-secondary)',
               fontWeight: '800', fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.3s',
-              boxShadow: activeTab === tab ? 'var(--shadow-sm)' : 'none'
+              boxShadow: activeTab === tab ? 'var(--shadow-sm)' : 'none',
+              whiteSpace: 'nowrap'
             }}
           >
-            {tab} {tab === 'Maintenance' ? 'Tickets' : 'Requests'}
+            {tab} {['Maintenance'].includes(tab) ? 'Tickets' : 'Requests'}
           </button>
         ))}
       </div>
@@ -219,6 +257,15 @@ const Complaints = () => {
           <h2 style={{ fontSize: '2.4rem', fontWeight: '900', color: '#10B981', margin: 0 }}>{resolvedCount}</h2>
         </div>
       </div>
+
+      {totalComplaints === 0 && !loading && (
+        <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '20px', marginBottom: '2.5rem', border: '1px dashed var(--accent-primary)' }}>
+          <p style={{ color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '1rem' }}>No tickets found for this building. Try viewing all buildings?</p>
+          <button onClick={() => { setFilterBuilding('all'); navigate('/owner/complaints'); }} className="btn btn-primary" style={{ padding: '0.6rem 1.5rem', borderRadius: '10px' }}>
+            View All Buildings
+          </button>
+        </div>
+      )}
 
       <div className="card" style={{ padding: '0', overflow: 'hidden', borderRadius: '20px' }}>
         <div style={{ overflowX: 'auto' }}>

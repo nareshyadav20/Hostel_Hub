@@ -6,6 +6,10 @@ const authMiddleware = require('../utils/authMiddleware');
 router.get('/menu', messController.getMenu);
 router.put('/menu', authMiddleware, messController.updateMenu);
 
+// Owner Plans routes
+router.get('/plans', messController.getPlans);
+router.put('/plans/:id', authMiddleware, messController.updatePlan);
+
 // Attendance routes
 router.get('/attendance', authMiddleware, messController.getAttendance);
 router.put('/attendance', authMiddleware, messController.updateAttendance);

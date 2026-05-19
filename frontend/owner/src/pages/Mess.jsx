@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Utensils, Calendar as CalendarIcon, Users, Edit3, ArrowRight, Sun, Coffee, Moon, CheckCircle, X, Grid, List } from 'lucide-react';
+import { Utensils, Calendar as CalendarIcon, Users, Edit3, ArrowRight, Sun, Coffee, Moon, CheckCircle, X, Grid, List, TrendingUp } from 'lucide-react';
 import { api } from '../mockData';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import socket from '../utils/socket';
 
 const Mess = () => {
   const { buildingId: urlBuildingId } = useParams();
@@ -53,6 +55,22 @@ const Mess = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [planToDeactivate, setPlanToDeactivate] = useState(null);
+  const [planToEdit, setPlanToEdit] = useState(null);
+  const [isPlanEditModalOpen, setIsPlanEditModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const data = await api.getMessPlans();
+        if (data && data.length > 0) {
+          setPlans(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch mess plans:', err);
+      }
+    };
+    fetchPlans();
+  }, []);
 
   const [menuData, setMenuData] = useState({});
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -93,18 +111,55 @@ const Mess = () => {
 
   const [tenants, setTenants] = useState([]);
   const [attendance, setAttendance] = useState({});
+  // Format today's date as YYYY-MM-DD for backend
+  const todayDate = new Date().toLocaleDateString('sv-SE');
+
+  const fetchAttendanceData = async () => {
+    try {
+      if (buildingId) {
+        const attData = await api.getMessAttendance(buildingId, todayDate);
+        const attMap = {};
+        (attData || []).forEach(rec => {
+          attMap[rec.tenantId] = {
+            breakfast: rec.breakfast || false,
+            lunch: rec.lunch || false,
+            dinner: rec.dinner || false
+          };
+        });
+        setAttendance(prev => ({ ...prev, [today]: attMap }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const t = await api.getTenants();
-        setTenants(t.filter(x => x.buildingId === activeBuildingId || !activeBuildingId));
+        const t = await api.getTenants(activeBuildingId);
+        const filteredTenants = (t || []).filter(x => x.buildingId === activeBuildingId || !activeBuildingId);
+        setTenants(filteredTenants);
+        await fetchAttendanceData();
       } catch (err) {
         console.error(err);
       }
     };
     fetchData();
-  }, [activeBuildingId]);
+  }, [activeBuildingId, buildingId]);
+
+  useEffect(() => {
+    const handleAttendanceUpdate = (data) => {
+      // Refresh the dashboard if the update is for today
+      if (data.date === todayDate) {
+        fetchAttendanceData();
+      }
+    };
+    
+    socket.on('attendanceUpdated', handleAttendanceUpdate);
+    return () => {
+      socket.off('attendanceUpdated', handleAttendanceUpdate);
+    };
+  }, [buildingId, todayDate]);
 
   const [editForm, setEditForm] = useState({ breakfast: '', lunch: '', dinner: '' });
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -141,23 +196,50 @@ const Mess = () => {
     }
   };
 
-  const toggleAttendance = (tenantId, meal) => {
+  const handleSavePlan = async (e) => {
+    e.preventDefault();
+    if (!planToEdit) return;
+    try {
+      const updated = await api.updateMessPlan(planToEdit.id, planToEdit);
+      setPlans(prev => prev.map(p => p.id === planToEdit.id ? updated : p));
+      setIsPlanEditModalOpen(false);
+      setPlanToEdit(null);
+    } catch (err) {
+      console.error('Failed to save plan:', err);
+      alert('Failed to save plan: ' + err.message);
+    }
+  };
+
+  const toggleAttendance = async (tenantId, meal) => {
     const dayAttendance = attendance[today] || {};
     const tenantAttendance = dayAttendance[tenantId] || { breakfast: false, lunch: false, dinner: false };
-    
+    const newValue = !tenantAttendance[meal];
+
+    // Optimistic UI update
     setAttendance({
       ...attendance,
       [today]: {
         ...dayAttendance,
         [tenantId]: {
           ...tenantAttendance,
-          [meal]: !tenantAttendance[meal]
+          [meal]: newValue
         }
       }
     });
+
+    // Persist to backend
+    if (buildingId) {
+      api.updateMessAttendance({
+        tenantId,
+        buildingId,
+        date: todayDate,
+        meal,
+        status: newValue
+      }).catch(err => console.error('Failed to save attendance:', err));
+    }
   };
 
-  const markAllPresent = (meal) => {
+  const markAllPresent = async (meal) => {
     const dayAttendance = attendance[today] || {};
     const newDayAttendance = { ...dayAttendance };
     
@@ -172,6 +254,16 @@ const Mess = () => {
       ...attendance,
       [today]: newDayAttendance
     });
+
+    // Persist to backend
+    if (buildingId && tenants.length > 0) {
+      api.markAllMessAttendance({
+        buildingId,
+        date: todayDate,
+        meal,
+        tenantIds: tenants.map(t => t.id || t._id)
+      }).catch(err => console.error('Failed to mark all attendance:', err));
+    }
   };
 
   const getAttendanceStats = () => {
@@ -230,62 +322,127 @@ const Mess = () => {
       {activeTab === 'dashboard' && (
         <div style={{ animation: 'fadeIn 0.3s ease' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Total Meals Today</p>
+            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05 }}><Utensils size={100} /></div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Total Meals Today</p>
               <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{stats.breakfast + stats.lunch + stats.dinner}</h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--accent-success)', marginTop: '0.5rem' }}>↑ 12% from yesterday</p>
-            </div>
-            <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #8b5cf6' }}>
+              <p style={{ fontSize: '0.8rem', color: 'var(--accent-success)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><TrendingUp size={12}/> 12% from yesterday</p>
+            </motion.div>
+            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #8b5cf6', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05 }}><Users size={100} /></div>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Premium Usage</p>
               <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{stats.planUsage.Premium}</h2>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Active premium subscribers</p>
-            </div>
-            <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #ef4444' }}>
+            </motion.div>
+            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #ef4444', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05 }}><X size={100} /></div>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Skipped Meals</p>
               <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{tenants.length * 3 - (stats.breakfast + stats.lunch + stats.dinner)}</h2>
               <p style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '0.5rem' }}>Based on total subscribers</p>
-            </div>
-            <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b' }}>
+            </motion.div>
+            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05 }}><CalendarIcon size={100} /></div>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Peak Usage Time</p>
               <h2 style={{ fontSize: '1.8rem', fontWeight: '900', marginTop: '0.5rem' }}>1:30 PM</h2>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>During Lunch hours</p>
-            </div>
+            </motion.div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
             <div className="card" style={{ padding: '2rem' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '2rem' }}>Meal Consumption Analytics</h3>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2rem', height: '200px', paddingBottom: '2rem' }}>
-                {[
-                  { label: 'Breakfast', val: stats.breakfast, color: '#f59e0b' },
-                  { label: 'Lunch', val: stats.lunch, color: '#10b981' },
-                  { label: 'Dinner', val: stats.dinner, color: '#6366f1' }
-                ].map(bar => (
-                  <div key={bar.label} style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                    <div style={{ width: '100%', background: bar.color, borderRadius: '8px 8px 0 0', height: tenants.length ? `${(bar.val / tenants.length) * 100}%` : '0%', minHeight: '10px', transition: 'height 0.5s ease' }} />
-                    <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>{bar.label}</span>
-                  </div>
-                ))}
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Utensils size={18} color="var(--accent-primary)"/> Meal Consumption Analytics</h3>
+              <div style={{ height: '300px', width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={[
+                    { name: 'Breakfast', consumed: stats.breakfast, fill: '#f59e0b' },
+                    { name: 'Lunch', consumed: stats.lunch, fill: '#10b981' },
+                    { name: 'Dinner', consumed: stats.dinner, fill: '#6366f1' }
+                  ]} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" opacity={0.5} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12, fontWeight: 600 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+                    <RechartsTooltip 
+                      cursor={{ fill: 'var(--bg-tertiary)', opacity: 0.4 }}
+                      contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', boxShadow: 'var(--shadow-md)' }}
+                      labelStyle={{ color: 'var(--text-primary)', fontWeight: 'bold', marginBottom: '5px' }}
+                      itemStyle={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}
+                    />
+                    <Bar dataKey="consumed" radius={[8, 8, 0, 0]} maxBarSize={60}>
+                      {
+                        [
+                          { name: 'Breakfast', consumed: stats.breakfast, fill: '#f59e0b' },
+                          { name: 'Lunch', consumed: stats.lunch, fill: '#10b981' },
+                          { name: 'Dinner', consumed: stats.dinner, fill: '#6366f1' }
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))
+                      }
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
-            <div className="card" style={{ padding: '2rem' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '1.5rem' }}>Most Preferred</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {[
-                  { dish: 'Paneer Masala', score: 98, color: '#8b5cf6' },
-                  { dish: 'Veg Biryani', score: 85, color: '#3b82f6' },
-                  { dish: 'Aloo Paratha', score: 72, color: '#94a3b8' }
-                ].map((fav, i) => (
-                  <div key={i}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem', fontSize: '0.9rem' }}>
-                      <span style={{ fontWeight: '700' }}>{fav.dish}</span>
-                      <span style={{ color: 'var(--text-muted)' }}>{fav.score}%</span>
-                    </div>
-                    <div style={{ width: '100%', height: '6px', background: 'var(--bg-tertiary)', borderRadius: '3px' }}>
-                      <div style={{ width: `${fav.score}%`, height: '100%', background: fav.color, borderRadius: '3px' }} />
-                    </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="card" style={{ padding: '2rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Users size={18} color="#8b5cf6"/> Plan Distribution</h3>
+                <div style={{ flex: 1, position: 'relative', minHeight: '180px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Premium', value: stats.planUsage.Premium, color: '#8b5cf6' },
+                          { name: 'Standard', value: stats.planUsage.Standard, color: '#3b82f6' },
+                          { name: 'Basic', value: stats.planUsage.Basic, color: '#94a3b8' }
+                        ].filter(d => d.value > 0).length ? [
+                          { name: 'Premium', value: stats.planUsage.Premium, color: '#8b5cf6' },
+                          { name: 'Standard', value: stats.planUsage.Standard, color: '#3b82f6' },
+                          { name: 'Basic', value: stats.planUsage.Basic, color: '#94a3b8' }
+                        ].filter(d => d.value > 0) : [{ name: 'No Data', value: 1, color: '#334155' }]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {
+                          ([
+                            { name: 'Premium', value: stats.planUsage.Premium, color: '#8b5cf6' },
+                            { name: 'Standard', value: stats.planUsage.Standard, color: '#3b82f6' },
+                            { name: 'Basic', value: stats.planUsage.Basic, color: '#94a3b8' }
+                          ].filter(d => d.value > 0).length ? [
+                            { name: 'Premium', value: stats.planUsage.Premium, color: '#8b5cf6' },
+                            { name: 'Standard', value: stats.planUsage.Standard, color: '#3b82f6' },
+                            { name: 'Basic', value: stats.planUsage.Basic, color: '#94a3b8' }
+                          ].filter(d => d.value > 0) : [{ name: 'No Data', value: 1, color: '#334155' }]).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))
+                        }
+                      </Pie>
+                      <RechartsTooltip 
+                        contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}
+                        itemStyle={{ color: 'var(--text-primary)', fontWeight: 'bold' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                    <span style={{ fontSize: '1.8rem', fontWeight: '900' }}>{tenants.length}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>Total</span>
                   </div>
-                ))}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                  {[
+                    { name: 'Premium', value: stats.planUsage.Premium, color: '#8b5cf6' },
+                    { name: 'Standard', value: stats.planUsage.Standard, color: '#3b82f6' },
+                    { name: 'Basic', value: stats.planUsage.Basic, color: '#94a3b8' }
+                  ].map(p => (
+                    <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: '600' }}>
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: p.color }} /> {p.name} ({p.value})
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -529,15 +686,18 @@ const Mess = () => {
                     </div>
                   ))}
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button onClick={() => setSelectedPlan(plan)} className="btn" style={{ flex: 1, border: '1px solid var(--border-color)', fontWeight: '800', borderRadius: '16px' }}>Specs</button>
+                <div style={{ display: 'flex', gap: '0.6rem' }}>
+                  <button onClick={() => setSelectedPlan(plan)} className="btn" style={{ flex: 1, border: '1px solid var(--border-color)', fontWeight: '800', borderRadius: '16px', fontSize: '0.82rem', padding: '0.6rem 0.8rem' }}>Specs</button>
+                  <button onClick={() => { setPlanToEdit({ ...plan }); setIsPlanEditModalOpen(true); }} className="btn btn-primary" style={{ flex: 1, fontWeight: '800', borderRadius: '16px', background: plan.color, fontSize: '0.82rem', padding: '0.6rem 0.8rem' }}>Edit</button>
                   <button 
-                    className="btn btn-primary" 
-                    style={{ flex: 2, fontWeight: '800', borderRadius: '16px', background: plan.color }}
-                    onClick={() => {
-                      if (plan.active) {
-                        setPlanToDeactivate(plan);
-                        setIsDeactivateModalOpen(true);
+                    className="btn" 
+                    style={{ flex: 1.2, fontWeight: '800', borderRadius: '16px', border: `1px solid ${plan.active ? '#ef4444' : '#10b981'}`, background: 'transparent', color: plan.active ? '#ef4444' : '#10b981', fontSize: '0.82rem', padding: '0.6rem 0.8rem' }}
+                    onClick={async () => {
+                      try {
+                        const updated = await api.updateMessPlan(plan.id, { ...plan, active: !plan.active });
+                        setPlans(prev => prev.map(p => p.id === plan.id ? updated : p));
+                      } catch (err) {
+                        console.error('Failed to toggle plan active state:', err);
                       }
                     }}
                   >
@@ -696,6 +856,41 @@ const Mess = () => {
                 </button>
                 <button className="btn" onClick={() => setIsDeactivateModalOpen(false)} style={{ flex: 1, border: '1px solid var(--border-color)' }}>Cancel</button>
               </div>
+            </motion.div>
+          </>
+        )}
+
+        {isPlanEditModalOpen && planToEdit && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsPlanEditModalOpen(false)} />
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '10%', left: '50%', x: '-50%', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem' }}>Edit Plan: {planToEdit.name}</h2>
+              <form onSubmit={handleSavePlan} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Plan Name</label>
+                  <input value={planToEdit.name} onChange={e => setPlanToEdit({...planToEdit, name: e.target.value})} style={inputStyle} required />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Monthly Price (₹)</label>
+                  <input type="number" value={planToEdit.price} onChange={e => setPlanToEdit({...planToEdit, price: parseInt(e.target.value) || 0})} style={inputStyle} required />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Description</label>
+                  <textarea value={planToEdit.description} onChange={e => setPlanToEdit({...planToEdit, description: e.target.value})} style={{ ...inputStyle, height: '80px', resize: 'none' }} required />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Features (comma separated)</label>
+                  <textarea value={planToEdit.features?.join(', ')} onChange={e => setPlanToEdit({...planToEdit, features: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} style={{ ...inputStyle, height: '80px', resize: 'none' }} required />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Sample Menu Inclusions (comma separated)</label>
+                  <textarea value={planToEdit.menu?.join(', ')} onChange={e => setPlanToEdit({...planToEdit, menu: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} style={{ ...inputStyle, height: '80px', resize: 'none' }} required />
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem' }}>Save Plan Changes</button>
+                  <button className="btn" type="button" onClick={() => setIsPlanEditModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Cancel</button>
+                </div>
+              </form>
             </motion.div>
           </>
         )}

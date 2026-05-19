@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
-const Tenant = require('../models/Tenant');
+const socketService = require('../utils/socketService');
 
 const createBooking = async (req, res) => {
   try {
@@ -14,32 +14,32 @@ const createBooking = async (req, res) => {
       onboardingFee, 
       totalAmount, 
       method,
-      guestName,
-      email,
-      phone
+      proofId,
+      bedNumber,
+      sharingType
     } = req.body;
 
+    // Validate ObjectIds — helper function
     const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-    let activeTenantId = tenantId;
+    // 1. Prevent multiple bookings for same tenant
+    if (isValidObjectId(tenantId)) {
+      const Tenant = require('../models/Tenant');
+      const existingTenant = await Tenant.findById(tenantId);
+      
+      // If already assigned to a building, block new booking
+      if (existingTenant && existingTenant.buildingId) {
+        return res.status(400).json({ 
+          error: 'Access Denied: You already have an active residency or booking. A resident can only book one hostel at a time.' 
+        });
+      }
 
-    // If tenantId is not provided or not valid, try to find or create a tenant by email
-    if (!activeTenantId || !isValidObjectId(activeTenantId)) {
-      if (email) {
-        let t = await Tenant.findOne({ email });
-        if (!t) {
-          t = new Tenant({
-            name: guestName || 'Guest Tenant',
-            email: email,
-            phone: phone || 'N/A',
-            emergencyContact: phone || 'N/A',
-            buildingId: isValidObjectId(buildingId) ? buildingId : undefined,
-            status: 'PENDING'
-          });
-          await t.save();
-          console.log('✅ Created new Tenant for booking:', t._id);
-        }
-        activeTenantId = t._id;
+      // Check if they already have a confirmed booking
+      const existingBooking = await Booking.findOne({ tenantId, status: 'Confirmed' });
+      if (existingBooking) {
+        return res.status(400).json({ 
+          error: 'Booking limit reached: You already have a confirmed reservation. Please manage your existing stay in the dashboard.' 
+        });
       }
     }
 
@@ -51,15 +51,68 @@ const createBooking = async (req, res) => {
       totalAmount: totalAmount || 0,
       paymentMethod: method || 'UPI',
       status: 'Confirmed',
-      userId: guestName || 'guest'
+      userId: tenantId || req.user.id || 'guest',
+      proofId: isValidObjectId(proofId) ? proofId : undefined
     };
 
-    if (isValidObjectId(activeTenantId)) bookingData.tenantId = activeTenantId;
+    const finalTenantId = tenantId || req.user.id;
+    if (isValidObjectId(finalTenantId)) bookingData.tenantId = finalTenantId;
     if (isValidObjectId(buildingId)) bookingData.buildingId = buildingId;
 
     const booking = new Booking(bookingData);
     await booking.save();
     console.log('✅ Booking created:', booking._id);
+
+    // If proofId was provided, backlink the proof to this booking
+    if (isValidObjectId(proofId)) {
+      const TenantProof = require('../models/TenantProof');
+      await TenantProof.findByIdAndUpdate(proofId, { bookingId: booking._id });
+      console.log('✅ TenantProof linked to booking');
+    }
+
+    let tenant = null;
+    // Update Tenant profile automatically so dashboard reflects changes
+    if (isValidObjectId(tenantId)) {
+      const Tenant = require('../models/Tenant');
+      const User = require('../models/User');
+      
+      // Find the tenant profile (try direct ID match or via User email)
+      tenant = await Tenant.findById(tenantId);
+      if (!tenant) {
+        const user = await User.findById(tenantId);
+        if (user) tenant = await Tenant.findOne({ email: user.email });
+      }
+
+      if (tenant) {
+        await Tenant.findByIdAndUpdate(tenant._id, {
+          buildingId: buildingId,
+          status: 'ACTIVE',
+          room: 'TBD (Assigning)',
+          occupation: category,
+          rent: totalAmount / 2,
+          rentStatus: 'PAID',
+          lastPayment: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+        });
+        console.log('✅ Tenant profile updated with booking info');
+      } else {
+        console.warn('⚠️ Could not find Tenant profile to update');
+      }
+    }
+
+    // Record the bed filling if bed data is provided
+    if (isValidObjectId(buildingId) && bedNumber && sharingType) {
+      const BedFilling = require('../models/BedFilling');
+      const bedFill = new BedFilling({
+        buildingId,
+        tenantId: tenant ? tenant._id : finalTenantId,
+        category: category || 'Standard',
+        sharingType: sharingType,
+        bedNumber: bedNumber,
+        status: 'Occupied'
+      });
+      await bedFill.save();
+      console.log('✅ Bed filling recorded for bed:', bedNumber, 'sharing:', sharingType);
+    }
 
     // Create a payment record for the booking
     const invoice = `BKG-${Date.now().toString().slice(-6)}`;
@@ -73,12 +126,27 @@ const createBooking = async (req, res) => {
       month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
     };
 
-    if (isValidObjectId(activeTenantId)) paymentData.tenantId = activeTenantId;
+    // CRITICAL: Link payment to the ACTUAL Tenant Profile ID, not the User ID
+    const actualTenantId = tenant ? tenant._id : finalTenantId;
+    if (isValidObjectId(actualTenantId)) paymentData.tenantId = actualTenantId;
     if (isValidObjectId(buildingId)) paymentData.buildingId = buildingId;
 
     const payment = new Payment(paymentData);
     await payment.save();
     console.log('✅ Payment created:', payment._id);
+
+    // Populate for real-time update
+    const populatedPayment = await Payment.findById(payment._id).populate('tenantId');
+
+    // Real-time synchronization
+    // Emit booking created to owner portal
+    socketService.emitUpdate(null, 'bookingCreated', { booking, payment: populatedPayment });
+    
+    // Emit payment completed
+    socketService.emitUpdate(buildingId, 'paymentCompleted', populatedPayment);
+    
+    // Emit bed status updated (since booking usually occupies a bed)
+    socketService.emitUpdate(buildingId, 'bedStatusUpdated', { status: 'Occupied' });
 
     res.status(201).json({ booking, payment });
   } catch (error) {
@@ -89,13 +157,42 @@ const createBooking = async (req, res) => {
 
 const getMyBookings = async (req, res) => {
   try {
-    const { tenantId } = req.query;
-    if (!tenantId) {
-      return res.status(400).json({ error: 'tenantId is required' });
+    // 1. Identify the user from the JWT token (most reliable source)
+    const email = req.user.email;
+    const userIdFromToken = req.user.id;
+    
+    console.log(`[DEBUG] getMyBookings for user: ${email} (ID: ${userIdFromToken})`);
+
+    const Tenant = require('../models/Tenant');
+    const User = require('../models/User');
+
+    // 2. Find all possible IDs (Tenant profile & User account) for this email
+    const [relatedTenants, relatedUsers] = await Promise.all([
+      Tenant.find({ email }).select('_id'),
+      User.find({ email }).select('_id')
+    ]);
+
+    const allAssociatedIds = [
+      ...relatedTenants.map(t => t._id),
+      ...relatedUsers.map(u => u._id)
+    ];
+
+    // Ensure we also include the ID from the token if it's not already there
+    if (userIdFromToken && !allAssociatedIds.some(id => id.toString() === userIdFromToken)) {
+      allAssociatedIds.push(userIdFromToken);
     }
-    const bookings = await Booking.find({ tenantId }).populate('buildingId').sort({ bookingDate: -1 });
+
+    console.log(`[DEBUG] Searching bookings for IDs:`, allAssociatedIds);
+
+    // 3. Find bookings linked to any of these IDs
+    const bookings = await Booking.find({ 
+      tenantId: { $in: allAssociatedIds } 
+    }).populate('buildingId').sort({ bookingDate: -1 });
+
+    console.log(`[DEBUG] Found ${bookings.length} bookings for ${email}`);
     res.status(200).json(bookings);
   } catch (error) {
+    console.error('[ERROR] getMyBookings failed:', error);
     res.status(500).json({ error: error.message });
   }
 };

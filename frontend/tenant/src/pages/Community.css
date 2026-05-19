@@ -87,12 +87,12 @@
   padding: 1.5rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
-  background: white;
+  background: var(--bg-secondary);
   transition: var(--transition-normal);
 }
 
-.notice-card.warning { border-left: 6px solid #ef4444; background: #fef2f2; }
-.notice-card.info { border-left: 6px solid var(--primary); background: #f0fdf4; }
+.notice-card.warning { border-left: 6px solid #ef4444; background: rgba(239, 68, 68, 0.1); }
+.notice-card.info { border-left: 6px solid var(--primary); background: rgba(22, 163, 74, 0.1); }
 
 .notice-icon-box {
   width: 44px;
@@ -101,7 +101,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
+  background: var(--bg-primary);
   box-shadow: var(--shadow-sm);
 }
 
@@ -216,8 +216,8 @@
   text-transform: uppercase;
 }
 
-.type-pill.lost { background: #fee2e2; color: #ef4444; }
-.type-pill.found { background: #fff7ed; color: #ea580c; }
+.type-pill.lost { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.type-pill.found { background: rgba(234, 88, 12, 0.1); color: #ea580c; }
 
 .btn-table-action {
   padding: 0.5rem 1rem;

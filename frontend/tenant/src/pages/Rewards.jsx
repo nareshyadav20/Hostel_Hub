@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
+import socket from '../utils/socket';
 import './Rewards.css';
 
 const Rewards = () => {
-  const [points, setPoints] = useState({ total: 450, earned: 1200, used: 750 });
+  const navigate = useNavigate();
+  const [points, setPoints] = useState({ total: 0, earned: 0, used: 0, history: [] });
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [tenantId, setTenantId] = useState('');
@@ -11,15 +14,17 @@ const Rewards = () => {
   useEffect(() => {
     const fetchRewards = async () => {
       try {
-        const [profileRes, rewardsRes] = await Promise.all([
+        const [profileRes, walletRes, historyRes] = await Promise.all([
           API.get('/tenants/me'),
-          API.get('/tenant-portal/rewards/me')
+          API.get('/rewards/wallet'),
+          API.get('/rewards/history')
         ]);
         setTenantId(profileRes.data._id);
         setPoints({ 
-          total: rewardsRes.data.points, 
-          earned: rewardsRes.data.lifetimeEarned, 
-          used: rewardsRes.data.used 
+          total: walletRes.data.availablePoints, 
+          earned: walletRes.data.lifetimeEarned, 
+          used: walletRes.data.totalRedeemed,
+          history: historyRes.data || []
         });
       } catch (err) { 
         console.error('Error fetching rewards:', err); 
@@ -28,20 +33,48 @@ const Rewards = () => {
       }
     };
     fetchRewards();
+
+    const handleRewardUpdate = (data) => {
+      setPoints(prev => ({
+        ...prev,
+        total: data.availablePoints,
+        earned: data.lifetimeEarned,
+        used: data.totalRedeemed
+      }));
+      // Fetch latest history to update list
+      API.get('/rewards/history').then(res => {
+        setPoints(prev => ({ ...prev, history: res.data || [] }));
+      }).catch(err => console.error(err));
+    };
+
+    socket.on('rewardUpdated', handleRewardUpdate);
+
+    return () => {
+      socket.off('rewardUpdated', handleRewardUpdate);
+    };
   }, []);
 
-  const handleGetReferralLink = () => {
-    const referralLink = `${window.location.origin}/signup?ref=${tenantId || 'livora'}`;
-    const shareMessage = `Hey! I'm staying at Livora, and it's amazing. Join me using my referral link and we both get bonus points: ${referralLink}`;
-    
-    // Copy to clipboard
-    navigator.clipboard.writeText(referralLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
+  const handleGetReferralLink = async () => {
+    try {
+      const res = await API.get('/rewards/referral-link');
+      const { referralLink, referralMessage } = res.data;
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(referralLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
 
-    // Open WhatsApp
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
-    window.open(whatsappUrl, '_blank');
+      // Open WhatsApp
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(referralMessage)}`;
+      window.open(whatsappUrl, '_blank');
+    } catch (err) {
+      console.error('Error generating referral link:', err);
+      const fallbackLink = `${window.location.origin}/signup?ref=${tenantId || 'livora'}`;
+      navigator.clipboard.writeText(fallbackLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent("Hey! Check out Livora: " + fallbackLink)}`, '_blank');
+    }
   };
 
   if (loading) return (
@@ -113,7 +146,7 @@ const Rewards = () => {
           <div className="cta-info">
             <h2>Redeem Your Points</h2>
             <p>Get instant discounts on rent, food coupons, and exclusive partner offers from our catalog.</p>
-            <button className="btn-primary">Browse Rewards</button>
+            <button className="btn-primary" onClick={() => navigate('/discounts')}>Browse Rewards</button>
           </div>
           <div className="cta-visual">
             <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
@@ -161,6 +194,47 @@ const Rewards = () => {
           </div>
         </div>
       </div>
+
+      {/* Points History Log */}
+      <section className="points-history-section">
+        <h2>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 8v4l3 3"></path>
+            <circle cx="12" cy="12" r="9"></circle>
+          </svg>
+          Points Earning History
+        </h2>
+
+        {points.history.length === 0 ? (
+          <div className="no-history-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+              <path d="M16 2v4"></path>
+              <path d="M8 2v4"></path>
+              <path d="M3 10h18"></path>
+            </svg>
+            <p>No rewards activity recorded yet. Start participating in mess attendance and community programs to earn points!</p>
+          </div>
+        ) : (
+          <div className="history-list">
+            {[...points.history].reverse().map((item, idx) => {
+              const reason = item.description || item.reason || 'Activity Reward';
+              const dateVal = item.createdAt || item.date || new Date();
+              return (
+                <div className="history-item" key={item._id || idx}>
+                  <div className="history-info">
+                    <span className="history-reason">{reason}</span>
+                    <span className="history-date">{new Date(dateVal).toLocaleDateString()} at {new Date(dateVal).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                  <div className={`history-points ${item.points >= 0 ? 'earned' : 'redeemed'}`}>
+                    {item.points >= 0 ? '+' : ''}{item.points} pts
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 };
