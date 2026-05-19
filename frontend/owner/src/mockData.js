@@ -249,6 +249,14 @@ export const api = {
     const res = await axios.post(`${API_URL}/mess/attendance/mark-all`, data);
     return res.data;
   },
+  getMessPlans: async () => {
+    const res = await axios.get(`${API_URL}/mess/plans`);
+    return res.data;
+  },
+  updateMessPlan: async (id, data) => {
+    const res = await axios.put(`${API_URL}/mess/plans/${id}`, data);
+    return res.data;
+  },
   // Staff Management
   getStaff: async (bId) => {
     const res = await axios.get(`${API_URL}/staff`, { params: { buildingId: bId } });

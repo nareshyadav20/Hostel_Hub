@@ -1,5 +1,6 @@
 const MessMenu = require('../models/MessMenu');
 const MessAttendance = require('../models/MessAttendance');
+const OwnerPlan = require('../models/OwnerPlan');
 const socketService = require('../utils/socketService');
 
 const DEFAULT_MENU = {
@@ -328,6 +329,98 @@ exports.markAllAttendance = async (req, res) => {
             isBulk: true
         });
 
+        res.json(updated);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const DEFAULT_PLANS = [
+  { 
+    id: 'basic', 
+    name: 'Basic Plan', 
+    price: 500, 
+    description: 'Simple meals with a fixed weekly menu for standard nourishment.',
+    features: ['Simple Meals', 'Fixed Weekly Menu', 'Limited Variety', 'No Customization', 'Fixed Portion'], 
+    menu: ['Steamed Rice', 'Arhar Dal', 'Seasonal Dry Veg', 'Phulka Roti', 'Pickle'],
+    active: true, 
+    color: '#94a3b8' 
+  },
+  { 
+    id: 'standard', 
+    name: 'Standard Plan', 
+    price: 1000, 
+    description: 'Improved meal quality with rotating weekly menu and limited customization.',
+    features: ['Improved Meal Quality', 'Rotating Weekly Menu', 'Moderate Variety', 'Limited Customization', '1 Refill Allowed'], 
+    menu: ['Jeera Rice / Pulao', 'Paneer / Egg Curry', 'Mixed Veg Fry', 'Roti / Paratha', 'Sweet Bowl'],
+    active: true, 
+    color: '#3b82f6' 
+  },
+  { 
+    id: 'premium', 
+    name: 'Premium Plan', 
+    price: 1500, 
+    description: 'High-quality meals with fully customizable menu and premium add-ons.',
+    features: ['High-Quality Meals', 'Fully Customizable Menu', 'Rich Variety (Veg + Non-Veg)', 'Unlimited/Refill Option', 'Special Weekend Meals', 'Fruits, Juice, Dessert'], 
+    menu: ['Basmati Pulao / Biryani', 'Daily Premium Gravy', 'Cold Drink / Juice', 'Live Paratha / Dosa', 'Premium Desserts'],
+    active: true, 
+    color: '#8b5cf6', 
+    popular: true 
+  }
+];
+
+exports.getPlans = async (req, res) => {
+    try {
+        let plans = await OwnerPlan.find({});
+        if (plans.length === 0) {
+            await OwnerPlan.insertMany(DEFAULT_PLANS);
+            plans = await OwnerPlan.find({});
+        }
+        res.json(plans);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.updatePlan = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, price, description, features, menu, active, popular } = req.body;
+        
+        const updated = await OwnerPlan.findOneAndUpdate(
+            { id },
+            { name, price, description, features, menu, active, popular },
+            { new: true }
+        );
+        
+        if (!updated) {
+            return res.status(404).json({ message: 'Plan not found' });
+        }
+        
+        // Notify all tenants about the plan change
+        try {
+            const Building = require('../models/Building');
+            const notificationService = require('../utils/notificationService');
+            const buildings = await Building.find({});
+            
+            for (const building of buildings) {
+                await notificationService.createNotification({
+                    moduleName: 'Mess',
+                    portalType: 'Tenant',
+                    category: 'Plan Update',
+                    title: `Mess Plan Updated`,
+                    message: `The "${name}" monthly fee is now ₹${price}. Features: ${features.slice(0, 3).join(', ')}...`,
+                    priority: 'Medium',
+                    type: 'info',
+                    buildingId: building._id,
+                    actionLink: '/mess'
+                });
+            }
+            console.log('✅ [NOTIFICATIONS] Successfully notified all tenants about plan changes.');
+        } catch (notifErr) {
+            console.error('⚠️ [NOTIFICATIONS] Failed to dispatch plan update notifications:', notifErr.message);
+        }
+        
         res.json(updated);
     } catch (err) {
         res.status(500).json({ message: err.message });
