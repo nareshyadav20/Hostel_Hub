@@ -226,8 +226,8 @@ const Maintenance = () => {
                           locVal.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = filterStatus === 'All' || 
-                          (filterStatus === 'Open' && t.status === 'Pending') ||
-                          (filterStatus === 'In Progress' && t.status === 'In Progress') ||
+                          (filterStatus === 'Open' && (t.status === 'Pending' || t.status === 'Open')) ||
+                          (filterStatus === 'In Progress' && (t.status === 'In Progress' || t.status === 'In-Progress')) ||
                           (filterStatus === 'Resolved' && t.status === 'Resolved');
     return matchesSearch && matchesStatus;
   });
@@ -359,7 +359,7 @@ const Maintenance = () => {
                             <td className="py-5 px-4">
                                <div>
                                   <p className="text-[13px] font-black text-text-primary tracking-tight">{t.title || t.issue}</p>
-                                  <p className="text-[10px] font-bold text-text-muted italic">{t._id} • Dispatched {new Date(t.createdAt).toLocaleDateString()}</p>
+                                  <p className="text-[10px] font-bold text-text-muted italic">{t._id} • Dispatched {new Date(t.createdAt || t.date || new Date()).toLocaleDateString()}</p>
                                </div>
                             </td>
                             <td className="py-5 px-4">
@@ -416,7 +416,7 @@ const Maintenance = () => {
                                               <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                                                 <Clock size={14} className="text-warning" /> Diagnostics & History
                                               </h4>
-                                              <p className="text-[10px] text-text-muted">Logged Date: {new Date(t.createdAt).toLocaleString()}</p>
+                                              <p className="text-[10px] text-text-muted">Logged Date: {new Date(t.createdAt || t.date || new Date()).toLocaleString()}</p>
                                               <p className="text-[10px] text-text-muted">Assigned Specialist: {t.assignedTo || 'None Assigned'}</p>
                                            </div>
                                            <div className="space-y-6">

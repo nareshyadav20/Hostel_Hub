@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell, PieChart, Pie
@@ -15,6 +15,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
+import API from '../api/axios';
 
 const REVENUE_TREND = [
   { month: 'Jan', revenue: 450000, dues: 20000 },
@@ -54,12 +55,35 @@ const Finance = () => {
   const [progress, setProgress] = useState(0);
   const [reconcileLogs, setReconcileLogs] = useState([]);
   
-  const [transactions, setTransactions] = useState([
-    { id: 'TX-9021', entity: 'Sapphire PG - Electricity', cat: 'Utilities', amount: '-₹42,000', method: 'RTGS', status: 'Verifying', date: '12 May', trend: 'down' },
-    { id: 'TX-9022', entity: 'Arjun Das - Rent Pulse', cat: 'Revenue', amount: '+₹12,000', method: 'UPI Instant', status: 'Settled', date: '12 May', trend: 'up' },
-    { id: 'TX-9023', entity: 'Zomato Mess Logistics', cat: 'Logistics', amount: '-₹18,500', method: 'Settlement', status: 'Pending', date: '11 May', trend: 'down' },
-    { id: 'TX-9024', entity: 'Elite Living - Ad Cluster', cat: 'Marketing', amount: '-₹8,000', method: 'Corporate Card', status: 'Settled', date: '11 May', trend: 'down' },
-  ]);
+  const [loading, setLoading] = useState(true);
+  const [transactions, setTransactions] = useState([]);
+
+  useEffect(() => {
+    const fetchFinanceData = async () => {
+      try {
+        setLoading(true);
+        const res = await API.get('/payments');
+        const mappedTx = res.data.map(p => ({
+          id: p.invoice || p._id.toString().slice(0,8).toUpperCase(),
+          entity: `${p.tenantId?.name || 'System Guest'} - ${p.buildingId?.name || 'Global'}`,
+          cat: p.type || p.category || 'Revenue',
+          amount: `+₹${p.amount}`,
+          method: p.method || 'Online',
+          status: p.status === 'Paid' ? 'Settled' : p.status,
+          date: new Date(p.date || p.createdAt || new Date()).toLocaleDateString(),
+          trend: 'up',
+          _id: p._id
+        }));
+        setTransactions(mappedTx);
+      } catch (err) {
+        console.error('Failed to fetch financial records:', err);
+        showToast('Failed to sync financial data from backend.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFinanceData();
+  }, []);
 
   const filteredTx = transactions.filter(tx => {
     const matchesSearch = tx.entity.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -327,6 +351,12 @@ const Finance = () => {
            )}
          </AnimatePresence>
 
+         {loading ? (
+            <div className="py-24 text-center">
+              <div className="premium-spinner mx-auto mb-4"></div>
+              <p className="text-sm font-black text-text-muted uppercase tracking-widest">Synchronizing financial ledger from MongoDB...</p>
+            </div>
+         ) : (
          <div className="overflow-x-auto scrollbar-hide">
             <table className="w-full text-left border-collapse whitespace-nowrap">
                <thead>
@@ -389,6 +419,7 @@ const Finance = () => {
                </tbody>
             </table>
          </div>
+         )}
       </div>
 
       {/* --- RECONCILIATION ENGINE MODAL --- */}

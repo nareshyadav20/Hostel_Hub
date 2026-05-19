@@ -113,12 +113,11 @@ const Complaints = () => {
                           idVal.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           tenantName.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Status mapping check: DB has 'Pending', 'In Progress', 'Resolved', 'Rejected'
-    const statusMap = c.status === 'Pending' ? 'Open' : c.status;
+    // Status mapping check: DB has 'Pending', 'In Progress', 'In-Progress', 'Resolved', 'Rejected'
     const matchesStatus = activeFilter === 'All' || 
-                          (activeFilter === 'Open' && statusMap === 'Pending') ||
-                          (activeFilter === 'In Progress' && statusMap === 'In Progress') ||
-                          (activeFilter === 'Resolved' && statusMap === 'Resolved');
+                          (activeFilter === 'Open' && (c.status === 'Pending' || c.status === 'Open')) ||
+                          (activeFilter === 'In Progress' && (c.status === 'In Progress' || c.status === 'In-Progress')) ||
+                          (activeFilter === 'Resolved' && c.status === 'Resolved');
 
     const matchesCategory = intelligenceFilters.category === 'All' || c.category === intelligenceFilters.category;
     const matchesPriority = intelligenceFilters.priority === 'All' || c.priority === intelligenceFilters.priority;
@@ -311,7 +310,7 @@ const Complaints = () => {
                             <td className="py-5 px-4">
                                <div>
                                   <p className="text-[13px] font-black text-text-primary uppercase tracking-tight">{c.title || c.issue}</p>
-                                  <p className="text-[10px] font-bold text-text-muted italic">{c._id} • Logged {new Date(c.createdAt).toLocaleDateString()}</p>
+                                  <p className="text-[10px] font-bold text-text-muted italic">{c._id} • Logged {new Date(c.createdAt || c.date || new Date()).toLocaleDateString()}</p>
                                </div>
                             </td>
                             <td className="py-5 px-4">
@@ -386,7 +385,7 @@ const Complaints = () => {
                                                      <div className="absolute -left-[20px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary border-4 border-background" />
                                                      <div className="flex justify-between items-start">
                                                         <span className="text-[11px] font-black text-text-primary uppercase tracking-tight">Opened</span>
-                                                        <span className="text-[9px] font-bold text-text-muted">{new Date(c.createdAt).toLocaleTimeString()}</span>
+                                                        <span className="text-[9px] font-bold text-text-muted">{new Date(c.createdAt || c.date || new Date()).toLocaleTimeString()}</span>
                                                      </div>
                                                      <p className="text-[10px] text-text-muted mt-1 italic">"Logged via tenant portal."</p>
                                                   </div>

@@ -33,19 +33,26 @@ const createPayment = async (req, res) => {
 
 const getAllPayments = async (req, res) => {
   try {
-    const ownerId = req.user.id;
+    let payments;
     
-    // 1. Get all buildings owned by this user
-    const buildings = await Building.find({ owner: ownerId });
-    const buildingIds = buildings.map(b => b._id);
-    
-    // 2. Find payments for these buildings
-    const payments = await Payment.find({ buildingId: { $in: buildingIds } })
-      .populate({
-        path: 'tenantId',
-        select: 'name room'
-      })
-      .sort({ date: -1 });
+    // Check if user is an admin
+    if (req.user.role === 'SUPER_ADMIN' || req.user.role === 'ADMIN') {
+      payments = await Payment.find({})
+        .populate({ path: 'tenantId', select: 'name room' })
+        .populate({ path: 'buildingId', select: 'name' })
+        .sort({ date: -1 });
+    } else {
+      const ownerId = req.user.id;
+      // 1. Get all buildings owned by this user
+      const buildings = await Building.find({ owner: ownerId });
+      const buildingIds = buildings.map(b => b._id);
+      
+      // 2. Find payments for these buildings
+      payments = await Payment.find({ buildingId: { $in: buildingIds } })
+        .populate({ path: 'tenantId', select: 'name room' })
+        .populate({ path: 'buildingId', select: 'name' })
+        .sort({ date: -1 });
+    }
       
     res.status(200).json(payments);
   } catch (error) {
