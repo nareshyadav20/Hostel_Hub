@@ -112,6 +112,23 @@ body {
   transform: translateY(-1px)
 }
 
+.hv2-terms-header-btn {
+  background: rgba(79, 70, 229, 0.1);
+  color: #4F46E5;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 0.5rem;
+}
+
+.hv2-terms-header-btn:hover {
+  background: rgba(79, 70, 229, 0.2);
+}
+
 /* HERO */
 .hv2-hero {
   display: flex;
@@ -721,47 +738,77 @@ body {
   text-align: center;
   box-shadow: 0 4px 24px rgba(79, 70, 229, .08);
   border: 1px solid rgba(79, 70, 229, .08);
-  transition: all .3s;
+  transition: all .4s cubic-bezier(0.4, 0, 0.2, 1);
   flex: 1;
-  min-width: 200px
+  min-width: 200px;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.hv2-step-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(236, 72, 153, 0.05));
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s;
 }
 
 .hv2-step-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 16px 40px rgba(79, 70, 229, .16)
+  box-shadow: 0 20px 40px rgba(79, 70, 229, .15);
+  border-color: rgba(79, 70, 229, .2);
+}
+
+.hv2-step-card:hover::before {
+  opacity: 1;
 }
 
 .hv2-step-num {
-  width: 42px;
-  height: 42px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  background: #4F46E5;
+  background: linear-gradient(135deg, #4F46E5, #EC4899);
   color: white;
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1rem;
-  box-shadow: 0 6px 18px rgba(79, 70, 229, .35)
+  margin: 0 auto 1.2rem;
+  box-shadow: 0 8px 20px rgba(236, 72, 153, 0.25);
+  transition: transform 0.4s;
+}
+
+.hv2-step-card:hover .hv2-step-num {
+  transform: scale(1.1) rotate(5deg);
 }
 
 .hv2-step-icon {
-  font-size: 2.2rem;
-  margin-bottom: .8rem
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+  filter: drop-shadow(0 10px 15px rgba(79, 70, 229, 0.2));
+  transition: transform 0.4s;
+}
+
+.hv2-step-card:hover .hv2-step-icon {
+  transform: translateY(-5px);
 }
 
 .hv2-step-title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 1.2rem;
+  font-weight: 800;
   color: #1a1a2e;
-  margin-bottom: .5rem
+  margin-bottom: .6rem;
 }
 
 .hv2-step-desc {
-  font-size: .84rem;
+  font-size: 0.95rem;
   color: #6b7280;
-  line-height: 1.6
+  line-height: 1.6;
 }
 
 .hv2-step-connector {
@@ -828,6 +875,86 @@ body {
 .hv2-outline-btn:hover {
   background: #4F46E5;
   color: white
+}
+
+/* TERMS MODAL */
+.hv2-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.hv2-terms-modal {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 24px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPop {
+  0% { opacity: 0; transform: scale(0.95) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.hv2-terms-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hv2-terms-header h3 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+
+.hv2-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #94a3b8;
+  transition: color 0.2s;
+}
+
+.hv2-modal-close:hover {
+  color: #ef4444;
+}
+
+.hv2-terms-content {
+  padding: 2rem;
+  overflow-y: auto;
+  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.hv2-terms-content p {
+  margin-bottom: 1.5rem;
+}
+
+.hv2-terms-content strong {
+  color: #1e293b;
+  font-size: 1.05rem;
+}
+
+.hv2-terms-footer {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e2e8f0;
 }
 
 .hv2-rooms-grid {
