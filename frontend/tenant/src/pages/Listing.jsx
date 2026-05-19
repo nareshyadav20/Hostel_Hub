@@ -50,6 +50,28 @@ const Listing = () => {
   const [hostel, setHostel] = useState(null);
   const [menuUpdateInfo, setMenuUpdateInfo] = useState('');
   const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  // Auto-play / Auto-navigation carousel for building photos
+  const galleryImages = React.useMemo(() => {
+    if (hostel?.images && hostel.images.length > 0) {
+      return hostel.images.map(img => img.startsWith('http') ? img : `http://localhost:5000${img}`);
+    }
+    // Fallback images if building has no images
+    return [
+      "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1596276865531-9556a7de74f9?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80"
+    ];
+  }, [hostel?.images]);
+
+  React.useEffect(() => {
+    if (galleryImages.length <= 1) return;
+    const interval = setInterval(() => {
+      setActiveImageIndex(prev => (prev + 1) % galleryImages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [galleryImages]);
 
   React.useEffect(() => {
     const fetchHostel = () => {
@@ -145,20 +167,80 @@ const Listing = () => {
         </div>
       </header>
 
-      <div className="lst-gallery">
+      <div className="lst-gallery" style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px' }}>
         <div 
           className="lst-img-main" 
-          onClick={() => {
-            const imgSrc = hostel?.images && hostel.images[0] ? (hostel.images[0].startsWith('http') ? hostel.images[0] : `http://localhost:5000${hostel.images[0]}`) : images[0];
-            setModalInfo({ isOpen: true, image: imgSrc });
-          }}
-          style={{ cursor: 'zoom-in' }}
+          onClick={() => setModalInfo({ isOpen: true, image: galleryImages[activeImageIndex] })}
+          style={{ cursor: 'zoom-in', width: '100%', height: '480px', position: 'relative' }}
         >
           <img 
-            src={hostel?.images && hostel.images[0] ? (hostel.images[0].startsWith('http') ? hostel.images[0] : `http://localhost:5000${hostel.images[0]}`) : images[0]} 
-            alt="Main" 
+            src={galleryImages[activeImageIndex]} 
+            alt={`Building Photo ${activeImageIndex + 1}`} 
             className="lst-img" 
+            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.5s ease-in-out' }}
           />
+
+          {/* Left Arrow */}
+          {galleryImages.length > 1 && (
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveImageIndex(prev => (prev - 1 + galleryImages.length) % galleryImages.length);
+              }}
+              style={{
+                position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)',
+                background: 'rgba(255, 255, 255, 0.8)', border: 'none', borderRadius: '50%',
+                width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', color: '#1E293B', transition: 'all 0.2s',
+                zIndex: 5
+              }}
+            >
+              ❮
+            </button>
+          )}
+
+          {/* Right Arrow */}
+          {galleryImages.length > 1 && (
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveImageIndex(prev => (prev + 1) % galleryImages.length);
+              }}
+              style={{
+                position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)',
+                background: 'rgba(255, 255, 255, 0.8)', border: 'none', borderRadius: '50%',
+                width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', color: '#1E293B', transition: 'all 0.2s',
+                zIndex: 5
+              }}
+            >
+              ❯
+            </button>
+          )}
+
+          {/* Navigation Dots */}
+          {galleryImages.length > 1 && (
+            <div style={{
+              position: 'absolute', bottom: '16px', left: '50%', transform: 'translateX(-50%)',
+              display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.4)', padding: '6px 12px', borderRadius: '20px',
+              zIndex: 10
+            }}>
+              {galleryImages.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImageIndex(idx);
+                  }}
+                  style={{
+                    width: '8px', height: '8px', borderRadius: '50%', border: 'none',
+                    background: activeImageIndex === idx ? '#FFFFFF' : 'rgba(255,255,255,0.5)',
+                    padding: 0, cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
       {/* 2. Nav Tabs */}
