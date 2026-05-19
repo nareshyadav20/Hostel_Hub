@@ -18,11 +18,11 @@ import ImageModal from '../components/ImageModal';
 const CountUpAnimation = ({ endValue, suffix = '', isFloat = false }) => {
   const [count, setCount] = useState(0);
   const nodeRef = useRef(null);
-  
+
   useEffect(() => {
     const end = parseFloat(endValue);
     if (isNaN(end)) return;
-    
+
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
         let startTimestamp = null;
@@ -37,7 +37,7 @@ const CountUpAnimation = ({ endValue, suffix = '', isFloat = false }) => {
         observer.disconnect();
       }
     }, { threshold: 0.1 });
-    
+
     if (nodeRef.current) observer.observe(nodeRef.current);
     return () => observer.disconnect();
   }, [endValue]);
@@ -257,7 +257,7 @@ const Home = () => {
           </svg>
           <span className="hv2-logo-text">Livora</span>
         </div>
-        
+
         <nav className={`hv2-nav ${isMenuOpen ? 'mobile-open' : ''}`}>
           {isMenuOpen && (
             <div className="hv2-mobile-header">
@@ -639,10 +639,10 @@ const Home = () => {
         </div>
       </footer>
 
-      <ImageModal 
-        isOpen={modalInfo.isOpen} 
-        image={modalInfo.image} 
-        onClose={() => setModalInfo({ isOpen: false, image: '' })} 
+      <ImageModal
+        isOpen={modalInfo.isOpen}
+        image={modalInfo.image}
+        onClose={() => setModalInfo({ isOpen: false, image: '' })}
       />
 
       {/* ── WHATSAPP FLOATING BUTTON ── */}
@@ -659,12 +659,12 @@ const Home = () => {
               <button className="hv2-modal-close" onClick={() => setIsTermsOpen(false)}>✕</button>
             </div>
             <div className="hv2-terms-content">
-              <p><strong>1. CONDITIONS FOR USER REGISTRATION</strong><br/>Registration on the platform is free. By using this website/app, you imply that you agree with the usage terms completely. You must be at least eighteen (18) years of age or above to use Livora Hostel services.</p>
-              <p><strong>2. TERMS & CONDITIONS OF USE</strong><br/>The platform enables guests to connect with properties listed. By making a reservation at the listed properties, the guest enters into commercial/contractual terms as agreed upon at the time of booking.</p>
-              <p><strong>3. USAGE OF WEBSITE & APP</strong><br/>Livora provides an online marketplace. We are not responsible for resolving any dispute or disagreement between guests and management. Users must ensure that their registration data is accurate and not misleading.</p>
-              <p><strong>4. USER ACCOUNT AND REGISTRATION</strong><br/>You are responsible for maintaining the confidentiality of your account information, and are fully responsible for all activities that occur under your account. Ensure that you log out from the account at the end of each session.</p>
-              <p><strong>5. BOOKINGS & PAYMENTS</strong><br/>To prevent any possibility of unauthorized access to your confidential information, do not use this site from unsecure computers. Users must strictly comply with the payment procedure.</p>
-              <p><strong>6. LIMITATION OF LIABILITY</strong><br/>Livora shall not be liable for any damages arising from the use of this website. Guests are requested to take due care of all their personal valuables; the management is not responsible for any loss or theft.</p>
+              <p><strong>1. CONDITIONS FOR USER REGISTRATION</strong><br />Registration on the platform is free. By using this website/app, you imply that you agree with the usage terms completely. You must be at least eighteen (18) years of age or above to use Livora Hostel services.</p>
+              <p><strong>2. TERMS & CONDITIONS OF USE</strong><br />The platform enables guests to connect with properties listed. By making a reservation at the listed properties, the guest enters into commercial/contractual terms as agreed upon at the time of booking.</p>
+              <p><strong>3. USAGE OF WEBSITE & APP</strong><br />Livora provides an online marketplace. We are not responsible for resolving any dispute or disagreement between guests and management. Users must ensure that their registration data is accurate and not misleading.</p>
+              <p><strong>4. USER ACCOUNT AND REGISTRATION</strong><br />You are responsible for maintaining the confidentiality of your account information, and are fully responsible for all activities that occur under your account. Ensure that you log out from the account at the end of each session.</p>
+              <p><strong>5. BOOKINGS & PAYMENTS</strong><br />To prevent any possibility of unauthorized access to your confidential information, do not use this site from unsecure computers. Users must strictly comply with the payment procedure.</p>
+              <p><strong>6. LIMITATION OF LIABILITY</strong><br />Livora shall not be liable for any damages arising from the use of this website. Guests are requested to take due care of all their personal valuables; the management is not responsible for any loss or theft.</p>
             </div>
             <div className="hv2-terms-footer">
               <button className="hv2-btn-primary" style={{ width: '100%' }} onClick={() => setIsTermsOpen(false)}>I Agree</button>

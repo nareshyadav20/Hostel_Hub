@@ -79,7 +79,7 @@ const Listing = () => {
     };
 
     fetchHostel();
-    
+
     // Connect to real-time sync server
     connectSocket(id);
 
@@ -113,29 +113,29 @@ const Listing = () => {
   const maintenanceCost = (hostel?.maintenanceCharges !== undefined && hostel?.maintenanceCharges !== null && hostel?.maintenanceCharges > 0) ? hostel.maintenanceCharges : 799;
 
   const pricingMap = {
-    1: { 
-      rent: (hostel?.rentSingle !== undefined && hostel?.rentSingle !== null && hostel?.rentSingle > 0) ? hostel.rentSingle : (basePrice * 2), 
-      deposit: (hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0) ? hostel.securityDeposit : (basePrice * 2), 
-      food: foodCost, 
-      maintenance: maintenanceCost, 
-      name: 'Single Room', 
-      desc: 'Private room' 
+    1: {
+      rent: (hostel?.rentSingle !== undefined && hostel?.rentSingle !== null && hostel?.rentSingle > 0) ? hostel.rentSingle : (basePrice * 2),
+      deposit: (hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0) ? hostel.securityDeposit : (basePrice * 2),
+      food: foodCost,
+      maintenance: maintenanceCost,
+      name: 'Single Room',
+      desc: 'Private room'
     },
-    2: { 
-      rent: (hostel?.rentDouble !== undefined && hostel?.rentDouble !== null && hostel?.rentDouble > 0) ? hostel.rentDouble : Math.round(basePrice * 1.3333), 
-      deposit: (hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0) ? hostel.securityDeposit : Math.round(basePrice * 1.3333), 
-      food: foodCost, 
-      maintenance: maintenanceCost, 
-      name: '2 Sharing', 
-      desc: '2 beds per room' 
+    2: {
+      rent: (hostel?.rentDouble !== undefined && hostel?.rentDouble !== null && hostel?.rentDouble > 0) ? hostel.rentDouble : Math.round(basePrice * 1.3333),
+      deposit: (hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0) ? hostel.securityDeposit : Math.round(basePrice * 1.3333),
+      food: foodCost,
+      maintenance: maintenanceCost,
+      name: '2 Sharing',
+      desc: '2 beds per room'
     },
-    3: { 
-      rent: (hostel?.rentTriple !== undefined && hostel?.rentTriple !== null && hostel?.rentTriple > 0) ? hostel.rentTriple : basePrice, 
-      deposit: (hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0) ? hostel.securityDeposit : basePrice, 
-      food: foodCost, 
-      maintenance: maintenanceCost, 
-      name: '3 Sharing', 
-      desc: '3 beds per room' 
+    3: {
+      rent: (hostel?.rentTriple !== undefined && hostel?.rentTriple !== null && hostel?.rentTriple > 0) ? hostel.rentTriple : basePrice,
+      deposit: (hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0) ? hostel.securityDeposit : basePrice,
+      food: foodCost,
+      maintenance: maintenanceCost,
+      name: '3 Sharing',
+      desc: '3 beds per room'
     }
   };
 
@@ -155,7 +155,7 @@ const Listing = () => {
           {hostel?.popularityLabel && <span className="lst-badge premium-tag"><Star size={12} fill="currentColor" /> {hostel.popularityLabel}</span>}
           <span className="lst-badge premium-tag"><ShieldCheck size={12} /> Verified Property</span>
         </div>
-        
+
         <div className="lst-quick-highlights">
           <div className="lst-qh-item"><Check size={14} color="var(--lst-success)" /> <span>12 Beds Left</span></div>
           <div className="lst-qh-item"><IndianRupee size={14} color="var(--lst-primary)" /> <span>Starts ₹9,000</span></div>
@@ -168,21 +168,21 @@ const Listing = () => {
       </header>
 
       <div className="lst-gallery" style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px' }}>
-        <div 
-          className="lst-img-main" 
+        <div
+          className="lst-img-main"
           onClick={() => setModalInfo({ isOpen: true, image: galleryImages[activeImageIndex] })}
           style={{ cursor: 'zoom-in', width: '100%', height: '480px', position: 'relative' }}
         >
-          <img 
-            src={galleryImages[activeImageIndex]} 
-            alt={`Building Photo ${activeImageIndex + 1}`} 
-            className="lst-img" 
+          <img
+            src={galleryImages[activeImageIndex]}
+            alt={`Building Photo ${activeImageIndex + 1}`}
+            className="lst-img"
             style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.5s ease-in-out' }}
           />
 
           {/* Left Arrow */}
           {galleryImages.length > 1 && (
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 setActiveImageIndex(prev => (prev - 1 + galleryImages.length) % galleryImages.length);
@@ -201,7 +201,7 @@ const Listing = () => {
 
           {/* Right Arrow */}
           {galleryImages.length > 1 && (
-            <button 
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 setActiveImageIndex(prev => (prev + 1) % galleryImages.length);
@@ -292,28 +292,28 @@ const Listing = () => {
               <div className="lst-svg-card"><span className="lst-svg-icon">👮</span><div className="lst-svg-text"><h4>Security</h4><p>24/7 Guard</p></div></div>
               <div className="lst-svg-card"><span className="lst-svg-icon">🅿️</span><div className="lst-svg-text"><h4>Parking</h4><p>2-Wheeler</p></div></div>
             </div>
-            
+
             <h3 style={{ fontSize: '16px', marginTop: '24px', marginBottom: '12px' }}>Smart Safety & Security</h3>
             <div className="lst-safety-grid">
-               <div className="lst-safety-card verified"><ShieldCheck size={18} /> <span>CCTV Active</span></div>
-               <div className="lst-safety-card verified"><ShieldCheck size={18} /> <span>Live-in Warden</span></div>
-               <div className="lst-safety-card verified"><ShieldCheck size={18} /> <span>Biometric Entry</span></div>
-               <div className="lst-safety-card verified"><ShieldCheck size={18} /> <span>Fire Safety Equipped</span></div>
-               <div className="lst-safety-card verified"><ShieldCheck size={18} /> <span>Female Safety Verified</span></div>
-               <div className="lst-safety-card"><Phone size={18} /> <span>Emergency Contact</span></div>
-               <div className="lst-safety-card"><Eye size={18} /> <span>Visitor Tracking</span></div>
-               <div className="lst-safety-card"><Moon size={18} /> <span>Night Security Guard</span></div>
+              <div className="lst-safety-card verified"><ShieldCheck size={18} /> <span>CCTV Active</span></div>
+              <div className="lst-safety-card verified"><ShieldCheck size={18} /> <span>Live-in Warden</span></div>
+              <div className="lst-safety-card verified"><ShieldCheck size={18} /> <span>Biometric Entry</span></div>
+              <div className="lst-safety-card verified"><ShieldCheck size={18} /> <span>Fire Safety Equipped</span></div>
+              <div className="lst-safety-card verified"><ShieldCheck size={18} /> <span>Female Safety Verified</span></div>
+              <div className="lst-safety-card"><Phone size={18} /> <span>Emergency Contact</span></div>
+              <div className="lst-safety-card"><Eye size={18} /> <span>Visitor Tracking</span></div>
+              <div className="lst-safety-card"><Moon size={18} /> <span>Night Security Guard</span></div>
             </div>
 
             {/* NEW SECTION: NEARBY ACCESS */}
             <h3 style={{ fontSize: '16px', marginTop: '24px', marginBottom: '12px' }}>Nearby Access & Transit</h3>
             <div className="lst-nearby-grid">
-               <div className="lst-nearby-item"><Train size={16}/> <span>Metro Station</span> <strong>800m</strong></div>
-               <div className="lst-nearby-item"><Bus size={16}/> <span>Bus Stop</span> <strong>200m</strong></div>
-               <div className="lst-nearby-item"><ShoppingCart size={16}/> <span>Grocery Store</span> <strong>100m</strong></div>
-               <div className="lst-nearby-item"><Activity size={16}/> <span>Hospital</span> <strong>1km</strong></div>
-               <div className="lst-nearby-item"><Coffee size={16}/> <span>Restaurants</span> <strong>50m</strong></div>
-               <div className="lst-nearby-item"><Dumbbell size={16}/> <span>Gym</span> <strong>300m</strong></div>
+              <div className="lst-nearby-item"><Train size={16} /> <span>Metro Station</span> <strong>800m</strong></div>
+              <div className="lst-nearby-item"><Bus size={16} /> <span>Bus Stop</span> <strong>200m</strong></div>
+              <div className="lst-nearby-item"><ShoppingCart size={16} /> <span>Grocery Store</span> <strong>100m</strong></div>
+              <div className="lst-nearby-item"><Activity size={16} /> <span>Hospital</span> <strong>1km</strong></div>
+              <div className="lst-nearby-item"><Coffee size={16} /> <span>Restaurants</span> <strong>50m</strong></div>
+              <div className="lst-nearby-item"><Dumbbell size={16} /> <span>Gym</span> <strong>300m</strong></div>
             </div>
           </div>
 
@@ -345,12 +345,12 @@ const Listing = () => {
             <div className="lst-room-insights">
               <h3 style={{ fontSize: '16px', marginBottom: '12px' }}>Room Insights</h3>
               <div className="lst-insights-grid">
-                <div className="lst-insight-card"><span>Sunlight</span> <div className="lst-progress"><div style={{width:'80%'}}></div></div></div>
-                <div className="lst-insight-card"><span>Ventilation</span> <div className="lst-progress"><div style={{width:'90%'}}></div></div></div>
-                <div className="lst-insight-card"><span>Quietness</span> <div className="lst-progress"><div style={{width:'70%'}}></div></div></div>
-                <div className="lst-insight-card"><span>Study Env</span> <div className="lst-progress"><div style={{width:'85%'}}></div></div></div>
-                <div className="lst-insight-card"><span>Privacy</span> <div className="lst-progress"><div style={{width:'60%'}}></div></div></div>
-                <div className="lst-insight-card"><span>Freshness</span> <div className="lst-progress"><div style={{width:'95%'}}></div></div></div>
+                <div className="lst-insight-card"><span>Sunlight</span> <div className="lst-progress"><div style={{ width: '80%' }}></div></div></div>
+                <div className="lst-insight-card"><span>Ventilation</span> <div className="lst-progress"><div style={{ width: '90%' }}></div></div></div>
+                <div className="lst-insight-card"><span>Quietness</span> <div className="lst-progress"><div style={{ width: '70%' }}></div></div></div>
+                <div className="lst-insight-card"><span>Study Env</span> <div className="lst-progress"><div style={{ width: '85%' }}></div></div></div>
+                <div className="lst-insight-card"><span>Privacy</span> <div className="lst-progress"><div style={{ width: '60%' }}></div></div></div>
+                <div className="lst-insight-card"><span>Freshness</span> <div className="lst-progress"><div style={{ width: '95%' }}></div></div></div>
               </div>
               <div className="lst-best-for">
                 <strong>Best For:</strong> <span className="lst-bf-chip">Students</span> <span className="lst-bf-chip">Exam Prep</span> <span className="lst-bf-chip">Remote Work</span>
@@ -359,7 +359,7 @@ const Listing = () => {
 
             <h3 style={{ fontSize: '16px', marginBottom: '12px', marginTop: '24px' }}>Bed Availability</h3>
             <div className="lst-bed-wrapper">
-              
+
               {/* NEW SECTION: AI SMART RECOMMENDATION */}
               <div className="lst-ai-recommendation">
                 <div className="lst-ai-header"><Sparkles size={16} color="#8b5cf6" /> <span>AI Smart Match</span></div>
@@ -523,12 +523,12 @@ const Listing = () => {
             {/* NEW SECTION: ROOMMATE COMPATIBILITY */}
             <h3 style={{ fontSize: '16px', marginTop: '24px', marginBottom: '12px' }}>Roommate Compatibility</h3>
             <div className="lst-roommate-grid">
-               <div className="lst-rm-card"><span>Sleep Schedule</span><strong>Early Birds (10 PM - 6 AM)</strong></div>
-               <div className="lst-rm-card"><span>Study Friendly</span><strong>Very High</strong></div>
-               <div className="lst-rm-card"><span>Cleanliness</span><strong>Strictly Clean</strong></div>
-               <div className="lst-rm-card"><span>Noise Preference</span><strong>Pin-drop Quiet</strong></div>
-               <div className="lst-rm-card"><span>Occupants</span><strong>2 Engineering Students</strong></div>
-               <div className="lst-rm-card"><span>Compatible With</span><strong>Students, Interns</strong></div>
+              <div className="lst-rm-card"><span>Sleep Schedule</span><strong>Early Birds (10 PM - 6 AM)</strong></div>
+              <div className="lst-rm-card"><span>Study Friendly</span><strong>Very High</strong></div>
+              <div className="lst-rm-card"><span>Cleanliness</span><strong>Strictly Clean</strong></div>
+              <div className="lst-rm-card"><span>Noise Preference</span><strong>Pin-drop Quiet</strong></div>
+              <div className="lst-rm-card"><span>Occupants</span><strong>2 Engineering Students</strong></div>
+              <div className="lst-rm-card"><span>Compatible With</span><strong>Students, Interns</strong></div>
             </div>
 
             <h3 style={{ fontSize: '16px', marginTop: '24px', marginBottom: '12px' }}>Room Facilities</h3>
@@ -563,14 +563,14 @@ const Listing = () => {
             {/* NEW SECTION: STUDENT-FRIENDLY FEATURES */}
             <h3 style={{ fontSize: '16px', marginTop: '24px', marginBottom: '12px' }}>Student-Friendly Features</h3>
             <div className="lst-student-features">
-               <div className="lst-sf-item"><BookOpen size={18}/> <span>Study Table Available</span></div>
-               <div className="lst-sf-item"><Library size={18}/> <span>Library 500m Away</span></div>
-               <div className="lst-sf-item"><Clock size={18}/> <span>Exam Quiet Hours</span></div>
-               <div className="lst-sf-item"><Wifi size={18}/> <span>High-Speed WiFi</span></div>
-               <div className="lst-sf-item"><Zap size={18}/> <span>4+ Charging Points</span></div>
-               <div className="lst-sf-item"><Monitor size={18}/> <span>Laptop Friendly</span></div>
-               <div className="lst-sf-item"><Users size={18}/> <span>Group Study Area</span></div>
-               <div className="lst-sf-item"><Video size={18}/> <span>Online Class Friendly</span></div>
+              <div className="lst-sf-item"><BookOpen size={18} /> <span>Study Table Available</span></div>
+              <div className="lst-sf-item"><Library size={18} /> <span>Library 500m Away</span></div>
+              <div className="lst-sf-item"><Clock size={18} /> <span>Exam Quiet Hours</span></div>
+              <div className="lst-sf-item"><Wifi size={18} /> <span>High-Speed WiFi</span></div>
+              <div className="lst-sf-item"><Zap size={18} /> <span>4+ Charging Points</span></div>
+              <div className="lst-sf-item"><Monitor size={18} /> <span>Laptop Friendly</span></div>
+              <div className="lst-sf-item"><Users size={18} /> <span>Group Study Area</span></div>
+              <div className="lst-sf-item"><Video size={18} /> <span>Online Class Friendly</span></div>
             </div>
           </div>
 
@@ -593,14 +593,14 @@ const Listing = () => {
             {/* NEW SECTION: HOSTEL COMMUNITY */}
             <h3 style={{ fontSize: '16px', marginTop: '32px', marginBottom: '12px' }}>Hostel Community & Lifestyle</h3>
             <div className="lst-community-grid">
-               <div className="lst-comm-item">🎉 <span>Weekly Events</span></div>
-               <div className="lst-comm-item">🍿 <span>Weekend Movie Nights</span></div>
-               <div className="lst-comm-item">🎮 <span>Gaming Zone (PS5)</span></div>
-               <div className="lst-comm-item">🛋️ <span>Common AC Lounge</span></div>
-               <div className="lst-comm-item">💪 <span>Free Gym Access</span></div>
-               <div className="lst-comm-item">🌅 <span>Rooftop Chill Area</span></div>
-               <div className="lst-comm-item">🤝 <span>Startup Networking</span></div>
-               <div className="lst-comm-item">🪔 <span>Festival Celebrations</span></div>
+              <div className="lst-comm-item">🎉 <span>Weekly Events</span></div>
+              <div className="lst-comm-item">🍿 <span>Weekend Movie Nights</span></div>
+              <div className="lst-comm-item">🎮 <span>Gaming Zone (PS5)</span></div>
+              <div className="lst-comm-item">🛋️ <span>Common AC Lounge</span></div>
+              <div className="lst-comm-item">💪 <span>Free Gym Access</span></div>
+              <div className="lst-comm-item">🌅 <span>Rooftop Chill Area</span></div>
+              <div className="lst-comm-item">🤝 <span>Startup Networking</span></div>
+              <div className="lst-comm-item">🪔 <span>Festival Celebrations</span></div>
             </div>
           </div>
 
@@ -652,14 +652,14 @@ const Listing = () => {
               <div className="lst-bill-row"><span>Security Deposit</span><span>₹{currentPrice.deposit.toLocaleString()}</span></div>
               <div className="lst-bill-row"><span>Food (Monthly)</span><span>₹{currentPrice.food.toLocaleString()}</span></div>
               <div className="lst-bill-row"><span>Maintenance</span><span>₹{currentPrice.maintenance.toLocaleString()}</span></div>
-              
+
               <div className="lst-bill-divider"></div>
-              
+
               <div className="lst-bill-total"><span>Total Due (Move-in)</span><span>₹{totalDue.toLocaleString()}</span></div>
 
               {/* NEW SECTION: MOVE-IN ASSISTANCE */}
               <div className="lst-movein-assist">
-                <h4 style={{marginBottom: '12px', fontSize: '14px', color: 'var(--lst-text-main)', display: 'flex', alignItems: 'center', gap: '6px'}}><Zap size={16} color="var(--lst-warning)" /> Move-In Assistance</h4>
+                <h4 style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--lst-text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}><Zap size={16} color="var(--lst-warning)" /> Move-In Assistance</h4>
                 <div className="lst-ma-list">
                   <div className="lst-ma-item"><Check size={14} color="var(--lst-success)" /> <span>Instant Booking Available</span></div>
                   <div className="lst-ma-item"><Check size={14} color="var(--lst-success)" /> <span>Free Virtual/Physical Tour</span></div>
@@ -673,8 +673,8 @@ const Listing = () => {
                 Selected: {selectedBed ? `Bed ${selectedBed}` : 'Please select a bed above'}
               </div>
 
-              <button 
-                className="lst-btn-reserve" 
+              <button
+                className="lst-btn-reserve"
                 disabled={!selectedBed}
                 onClick={() => navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed, basePrice, securityDeposit: currentPrice.deposit } })}
                 style={{ width: '100%', padding: '20px', fontSize: '18px' }}
@@ -684,12 +684,12 @@ const Listing = () => {
               <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: 'var(--lst-text-muted)', fontWeight: 600 }}>
                 🔒 Secure payment powered by Livora Finance
               </div>
-              <ImageModal 
-        isOpen={modalInfo.isOpen} 
-        image={modalInfo.image} 
-        onClose={() => setModalInfo({ isOpen: false, image: '' })} 
-      />
-    </div>
+              <ImageModal
+                isOpen={modalInfo.isOpen}
+                image={modalInfo.image}
+                onClose={() => setModalInfo({ isOpen: false, image: '' })}
+              />
+            </div>
           </div>
         </div>
 
