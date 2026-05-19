@@ -56,7 +56,7 @@ const createBuilding = async (req, res) => {
 
 const getBuildings = async (req, res) => {
   try {
-    const query = { owner: req.user.id };
+    const query = req.user.role === 'SUPER_ADMIN' ? {} : { owner: req.user.id };
     if (req.query.status) {
       if (req.query.status === 'Active') {
         query.status = { $ne: 'Draft' };
