@@ -10,6 +10,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import API from '../api/axios';
 
 const Tasks = () => {
   const navigate = useNavigate();
@@ -19,69 +20,30 @@ const Tasks = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [selectedTasks, setSelectedTasks] = useState([]);
 
-  const [tasks] = useState([
-    {
-      id: 'TSK-1021',
-      title: 'Review Quarterly Utility Bills',
-      category: 'Finance',
-      assignedTo: 'Rajesh Kumar',
-      dueDate: '14 May 2024',
-      status: 'Pending',
-      priority: 'High',
-      desc: 'Verify the electricity and water bills for Sapphire PG and Elite Living for the Q1 period.',
-      history: [
-        { status: 'Created', time: '10 May', user: 'Admin' },
-        { status: 'Assigned', time: '11 May', user: 'Rajesh K.' }
-      ]
-    },
-    {
-      id: 'TSK-1022',
-      title: 'Fix Leakage in Room 304',
-      category: 'Maintenance',
-      assignedTo: 'Suresh V.',
-      dueDate: 'Today',
-      status: 'In Progress',
-      priority: 'Critical',
-      desc: 'Major pipe burst in the bathroom ceiling. Requires immediate plumbing intervention.',
-      history: [
-        { status: 'Created', time: 'Today 08:00 AM', user: 'System' },
-        { status: 'Started', time: 'Today 09:30 AM', user: 'Suresh V.' }
-      ]
-    },
-    {
-      id: 'TSK-1023',
-      title: 'Renew AMC for Elevator',
-      category: 'Admin',
-      assignedTo: 'Anita Singh',
-      dueDate: '20 May 2024',
-      status: 'Completed',
-      priority: 'Medium',
-      desc: 'Annual Maintenance Contract renewal for the main elevator in Block B.',
-      history: [
-        { status: 'Created', time: '05 May', user: 'Admin' },
-        { status: 'Completed', time: '11 May', user: 'Anita S.' }
-      ]
-    },
-    {
-      id: 'TSK-1024',
-      title: 'Tenant Verification Audit',
-      category: 'Residents',
-      assignedTo: 'Vikram Mehta',
-      dueDate: '16 May 2024',
-      status: 'Pending',
-      priority: 'Low',
-      desc: 'Random check of KYC documents for newly moved-in tenants in Sapphire PG.',
-      history: [
-        { status: 'Created', time: '11 May', user: 'Admin' }
-      ]
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get('/tasks');
+      setTasks(res.data);
+    } catch (err) {
+      console.error('Error fetching tasks:', err);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   const stats = [
-    { label: 'Total Tasks', value: '48', icon: <CheckSquare />, color: 'primary' },
-    { label: 'Completed', value: '32', icon: <CheckCircle2 />, color: 'success' },
-    { label: 'Pending Ops', value: '12', icon: <Clock />, color: 'warning' },
-    { label: 'Overdue', value: '04', icon: <AlertCircle />, color: 'danger' },
+    { label: 'Total Tasks', value: tasks.length.toString(), icon: <CheckSquare />, color: 'primary' },
+    { label: 'Completed', value: tasks.filter(t => t.status === 'Completed').length.toString(), icon: <CheckCircle2 />, color: 'success' },
+    { label: 'Pending Ops', value: tasks.filter(t => t.status === 'Pending').length.toString(), icon: <Clock />, color: 'warning' },
+    { label: 'Overdue', value: '0', icon: <AlertCircle />, color: 'danger' },
   ];
 
   const getCategoryIcon = (cat) => {

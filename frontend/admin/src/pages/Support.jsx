@@ -1,16 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MessageCircle, BookOpen, LifeBuoy, Search, 
   ChevronRight, Send, Phone, Mail, Clock,
   DollarSign, Users, Building2, Wrench, Shield,
-  ChevronDown, Plus, ExternalLink, HelpCircle,
-  MessageSquare, FileText, CheckCircle2, AlertCircle, ArrowLeft, XCircle
+  ChevronDown, ExternalLink, HelpCircle,
+  MessageSquare, ArrowLeft, XCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/Modal';
+import API from '../api/axios';
+
+const iconMap = {
+  'HelpCircle': <HelpCircle size={18} />,
+  'DollarSign': <DollarSign size={18} />,
+  'Users': <Users size={18} />,
+  'Building2': <Building2 size={18} />,
+  'Wrench': <Wrench size={18} />,
+};
 
 const Support = () => {
   const navigate = useNavigate();
@@ -20,18 +29,49 @@ const Support = () => {
   const [activeCategory, setActiveCategory] = useState('General');
   const [expandedFaq, setExpandedFaq] = useState(null);
 
+  // Dynamic States from DB
+  const [categories, setCategories] = useState([]);
+  const [faqs, setFaqs] = useState([]);
+  const [tickets, setTickets] = useState([]);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   // Modal states
   const [showCallModal, setShowCallModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
-  const [chatMessages, setChatMessages] = useState([
-    { from: 'agent', text: 'Hello! Welcome to StayNest Admin Support. How can I assist you today?', time: 'Just now' }
-  ]);
   const [chatInput, setChatInput] = useState('');
   const [emailForm, setEmailForm] = useState({ department: 'Operations', subject: '', body: '', priority: 'Medium' });
   const [callDialing, setCallDialing] = useState(false);
   const [callConnected, setCallConnected] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+
+  // Escalate ticket states
+  const [escalateName, setEscalateName] = useState('');
+  const [escalateEmail, setEscalateEmail] = useState('');
+  const [escalateDesc, setEscalateDesc] = useState('');
+
+  // Fetch Support details on mount
+  useEffect(() => {
+    const fetchSupport = async () => {
+      try {
+        setLoading(true);
+        const res = await API.get('/admin/support');
+        if (res.data) {
+          setCategories(res.data.categories || []);
+          setFaqs(res.data.faqs || []);
+          setTickets(res.data.tickets || []);
+          setChatMessages(res.data.chatLogs || []);
+        }
+      } catch (err) {
+        console.error('Failed to load support data', err);
+        showToast('Error syncing with live support manifest.', 'danger');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSupport();
+  }, []);
 
   const handleCallSupport = () => { setShowCallModal(true); setCallDialing(false); setCallConnected(false); };
   const handleEmailOps = () => setShowEmailModal(true);
@@ -44,14 +84,25 @@ const Support = () => {
 
   const endCall = () => { setCallConnected(false); setShowCallModal(false); showToast('Call session ended.', 'info'); };
 
-  const sendChatMessage = (e) => {
+  const sendChatMessage = async (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
-    setChatMessages(prev => [...prev, { from: 'user', text: chatInput, time: 'Just now' }]);
+    
+    // Optimistically add user message locally
+    const typedText = chatInput;
     setChatInput('');
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { from: 'agent', text: 'Thank you! Our team is reviewing your query. Reference: #SUP-' + Math.floor(Math.random() * 9000 + 1000), time: 'Just now' }]);
-    }, 1200);
+    setChatMessages(prev => [...prev, { from: 'user', text: typedText, time: 'Just now' }]);
+    
+    try {
+      const res = await API.post('/admin/support/chat', { message: typedText });
+      if (res.data) {
+        // Sync full dialog logs from server
+        setChatMessages(res.data.chatLogs || []);
+      }
+    } catch (err) {
+      console.error('Failed to send support chat message', err);
+      showToast('Failed to transmit message to tactical agent.', 'danger');
+    }
   };
 
   const sendEmail = async (e) => {
@@ -63,50 +114,45 @@ const Support = () => {
     setEmailForm({ department: 'Operations', subject: '', body: '', priority: 'Medium' });
     showToast(`Email dispatched to ${emailForm.department} ops team!`, 'success');
   };
-  const handleTransmit = (e) => {
+
+  const handleTransmit = async (e) => {
     e.preventDefault();
-    showToast("Incident report securely transmitted to tactical ops command.", "success");
+    try {
+      const res = await API.post('/admin/support/escalate', {
+        name: escalateName,
+        email: escalateEmail,
+        description: escalateDesc
+      });
+      if (res.data) {
+        setTickets(res.data.support.tickets || []);
+        showToast("Incident report securely transmitted to tactical ops command.", "success");
+        setEscalateName('');
+        setEscalateEmail('');
+        setEscalateDesc('');
+      }
+    } catch (err) {
+      console.error('Failed to escalate support ticket', err);
+      showToast('Failed to escalate incident report.', 'danger');
+    }
   };
 
-  const categories = [
-    { id: 'General', label: 'General Info', icon: <HelpCircle size={18} /> },
-    { id: 'Payments', label: 'Billing & Payments', icon: <DollarSign size={18} /> },
-    { id: 'Tenants', label: 'Tenant Relations', icon: <Users size={18} /> },
-    { id: 'Properties', label: 'Property Assets', icon: <Building2 size={18} /> },
-    { id: 'Technical', label: 'System Help', icon: <Wrench size={18} /> },
-  ];
+  const getCategoryIcon = (id) => {
+    switch(id) {
+      case 'Payments': return <DollarSign size={18} />;
+      case 'Tenants': return <Users size={18} />;
+      case 'Properties': return <Building2 size={18} />;
+      case 'Technical': return <Wrench size={18} />;
+      default: return <HelpCircle size={18} />;
+    }
+  };
 
-  const faqs = [
-    {
-      id: 1,
-      cat: 'Payments',
-      q: 'How do I generate a bulk rent manifest for all properties?',
-      a: 'Navigate to the Finance Hub, select the current period, and click the "Excel" or "PDF" export cluster in the header. The system will automatically generate a consolidated fiscal manifest.',
-    },
-    {
-      id: 2,
-      cat: 'Tenants',
-      q: 'How can I offboard a tenant with pending dues?',
-      a: 'Go to the Residents manifest, select the tenant, and expand their profile. Use the "Decision Matrix" to initiate the Offboarding protocol. The system will prompt you to resolve outstanding dues before finalization.',
-    },
-    {
-      id: 3,
-      cat: 'General',
-      q: 'How do I switch between Light and Dark mode?',
-      a: 'The theme toggle is located in the top bar actions cluster, next to the notifications bell. Switching themes will instantly recalibrate all tactical UI tokens.',
-    },
-    {
-      id: 4,
-      cat: 'Technical',
-      q: 'System is showing Recharts dimension warnings. Is this critical?',
-      a: 'No, these are standard layout warnings during high-velocity UI transitions. I have implemented min-dimension containers to silence these warnings in the latest manifest deployment.',
-    },
-  ];
-
-  const tickets = [
-    { id: 'STK-4011', subject: 'API Integration Timeout', status: 'In Progress', priority: 'High', time: '2h ago' },
-    { id: 'STK-4009', subject: 'Incorrect Tax Calculation', status: 'Resolved', priority: 'Medium', time: '1d ago' },
-  ];
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 pb-20 animate-fade">
@@ -114,11 +160,12 @@ const Support = () => {
       {/* --- BACK NAVIGATION --- */}
       <button 
         onClick={() => navigate('/dashboard')}
-        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group"
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group bg-transparent border-none cursor-pointer"
       >
         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
         Back to Dashboard
       </button>
+
       {/* --- ELITE HEADER --- */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
@@ -127,15 +174,15 @@ const Support = () => {
         </div>
         <div className="flex flex-wrap items-center gap-3">
            <div className="flex items-center gap-2 bg-card border border-divider rounded-xl px-2 py-1 shadow-subtle">
-              <button onClick={handleCallSupport} className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
+              <button onClick={handleCallSupport} className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all bg-transparent border-none cursor-pointer">
                 <Phone size={14} className="text-emerald-500" /> Call Support
               </button>
               <div className="w-px h-4 bg-border" />
-              <button onClick={handleEmailOps} className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all">
+              <button onClick={handleEmailOps} className="flex items-center gap-2 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-text-secondary transition-all bg-transparent border-none cursor-pointer">
                 <Mail size={14} className="text-primary" /> Email Ops
               </button>
            </div>
-           <button onClick={handleLiveChat} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
+           <button onClick={handleLiveChat} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 cursor-pointer border-none">
              <MessageCircle size={16} strokeWidth={3} /> Start Live Chat
            </button>
         </div>
@@ -172,14 +219,16 @@ const Support = () => {
                     <button
                       key={cat.id}
                       onClick={() => setActiveCategory(cat.id)}
-                      className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all border ${
+                      className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all border cursor-pointer text-left ${
                         activeCategory === cat.id 
                           ? 'bg-primary/5 border-primary/20 text-primary shadow-subtle' 
                           : 'bg-transparent border-transparent text-text-secondary hover:bg-slate-50 dark:hover:bg-white/2'
                       }`}
                     >
                        <div className="flex items-center gap-3">
-                          <div className={activeCategory === cat.id ? 'text-primary' : 'text-text-muted'}>{cat.icon}</div>
+                          <div className={activeCategory === cat.id ? 'text-primary' : 'text-text-muted'}>
+                            {getCategoryIcon(cat.id)}
+                          </div>
                           <span className="text-[11px] font-black uppercase tracking-widest">{cat.label}</span>
                        </div>
                        {activeCategory === cat.id && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
@@ -222,14 +271,15 @@ const Support = () => {
                <h3 className="text-sm font-black text-text-primary uppercase tracking-[0.2em] px-2 italic">Knowledge Manifest: {activeCategory}</h3>
                {faqs
                  .filter(f => activeCategory === 'General' || f.cat === activeCategory)
+                 .filter(f => f.q.toLowerCase().includes(searchTerm.toLowerCase()) || f.a.toLowerCase().includes(searchTerm.toLowerCase()))
                  .map((faq) => (
                  <div 
-                   key={faq.id} 
-                   className={`card-classic overflow-hidden transition-all duration-500 ${expandedFaq === faq.id ? 'border-primary/30 ring-4 ring-primary/5' : ''}`}
+                    key={faq.id} 
+                    className={`card-classic overflow-hidden transition-all duration-500 ${expandedFaq === faq.id ? 'border-primary/30 ring-4 ring-primary/5' : ''}`}
                  >
                     <button 
                       onClick={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
-                      className="w-full p-6 flex items-center justify-between text-left"
+                      className="w-full p-6 flex items-center justify-between text-left bg-transparent border-none cursor-pointer"
                     >
                        <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded-xl bg-background border border-divider flex items-center justify-center text-text-muted group-hover:text-primary transition-all">
@@ -250,8 +300,8 @@ const Support = () => {
                              <div className="pt-4 border-t border-divider/50">
                                 <p className="text-[12px] font-medium text-text-secondary leading-relaxed italic">"{faq.a}"</p>
                                 <div className="mt-6 flex items-center gap-4">
-                                   <button onClick={() => showToast("Opening Detailed System Protocol Guide...", "info")} className="px-4 py-2 bg-primary/10 text-primary rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all italic">Protocol Detailed</button>
-                                   <button onClick={() => showToast("Feedback registered. Thank you!", "success")} className="text-[10px] font-black text-text-muted uppercase tracking-widest hover:text-primary transition-all">Was this helpful?</button>
+                                   <button onClick={() => showToast("Opening Detailed System Protocol Guide...", "info")} className="px-4 py-2 bg-primary/10 text-primary rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all italic border-none cursor-pointer">Protocol Detailed</button>
+                                   <button onClick={() => showToast("Feedback registered. Thank you!", "success")} className="text-[10px] font-black text-text-muted uppercase tracking-widest hover:text-primary transition-all bg-transparent border-none cursor-pointer">Was this helpful?</button>
                                 </div>
                              </div>
                           </motion.div>
@@ -267,7 +317,7 @@ const Support = () => {
                   <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                     <Clock size={14} className="text-warning" /> Support Manifest
                   </h4>
-                  <button onClick={() => showToast("Opening Support Ticket Archive...", "info")} className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline italic">View All Tickets</button>
+                  <button onClick={() => showToast("Opening Support Ticket Archive...", "info")} className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline italic bg-transparent border-none cursor-pointer">View All Tickets</button>
                </div>
                <div className="divide-y divide-border/50">
                   {tickets.map((t) => (
@@ -285,7 +335,7 @@ const Support = () => {
                              <span className="text-[9px] font-bold text-text-muted italic">{t.time}</span>
                           </div>
                        </div>
-                       <button onClick={(e) => { e.stopPropagation(); showToast(`Opening Ticket Details for ${t.id}...`, "info"); }} className="p-2.5 rounded-xl bg-background border border-divider text-text-muted group-hover:text-primary group-hover:border-primary transition-all">
+                       <button onClick={(e) => { e.stopPropagation(); showToast(`Opening Ticket Details for ${t.id}...`, "info"); }} className="p-2.5 rounded-xl bg-background border border-divider text-text-muted group-hover:text-primary group-hover:border-primary transition-all cursor-pointer">
                           <ExternalLink size={16} />
                        </button>
                     </div>
@@ -303,11 +353,11 @@ const Support = () => {
                   <p className="text-[11px] text-text-muted font-bold uppercase tracking-widest mb-8 leading-relaxed">Direct transmission to the administrative response force</p>
                   <form onSubmit={handleTransmit} className="space-y-4">
                      <div className="grid grid-cols-2 gap-4">
-                        <input required type="text" placeholder="Personnel Name" className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary" />
-                        <input required type="email" placeholder="Auth Email" className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary" />
+                        <input required type="text" placeholder="Personnel Name" value={escalateName} onChange={e => setEscalateName(e.target.value)} className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary text-text-primary" />
+                        <input required type="email" placeholder="Auth Email" value={escalateEmail} onChange={e => setEscalateEmail(e.target.value)} className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary text-text-primary" />
                      </div>
-                     <textarea required placeholder="Describe the operational anomaly..." rows={3} className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary resize-none" />
-                     <button type="submit" className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
+                     <textarea required placeholder="Describe the operational anomaly..." value={escalateDesc} onChange={e => setEscalateDesc(e.target.value)} rows={3} className="w-full bg-card border border-divider rounded-xl py-3 px-4 text-xs font-bold focus:outline-none focus:border-primary resize-none text-text-primary" />
+                     <button type="submit" className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 cursor-pointer border-none">
                         <Send size={14} strokeWidth={3} /> Transmit Manifest
                      </button>
                   </form>
@@ -315,6 +365,7 @@ const Support = () => {
             </div>
          </div>
       </div>
+
       {/* Call Support Modal */}
       <Modal isOpen={showCallModal} onClose={() => setShowCallModal(false)} title="Tactical VoIP Channel">
         <div className="p-8 text-center space-y-6">
@@ -329,12 +380,12 @@ const Support = () => {
           </div>
           <div className="flex justify-center gap-4 pt-4">
             {!callConnected && !callDialing && (
-               <button onClick={initiateCall} className="px-8 py-3 bg-emerald-500 text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all flex items-center gap-2">
+               <button onClick={initiateCall} className="px-8 py-3 bg-emerald-500 text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all flex items-center gap-2 cursor-pointer border-none">
                  <Phone size={14} /> Connect Now
                </button>
             )}
             {(callDialing || callConnected) && (
-               <button onClick={endCall} className="px-8 py-3 bg-rose-500 text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition-all flex items-center gap-2">
+               <button onClick={endCall} className="px-8 py-3 bg-rose-500 text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition-all flex items-center gap-2 cursor-pointer border-none">
                  <XCircle size={14} /> End Call
                </button>
             )}
@@ -363,8 +414,8 @@ const Support = () => {
             <textarea required rows={5} value={emailForm.body} onChange={(e) => setEmailForm({...emailForm, body: e.target.value})} className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary text-text-primary resize-none" placeholder="Provide detailed operational intelligence..." />
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-divider">
-            <button type="button" onClick={() => setShowEmailModal(false)} className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-text-primary transition-all">Cancel</button>
-            <button type="submit" disabled={sendingEmail} className="px-8 py-3 bg-primary text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all disabled:opacity-50 flex items-center gap-2">
+            <button type="button" onClick={() => setShowEmailModal(false)} className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-text-primary transition-all bg-transparent border-none cursor-pointer">Cancel</button>
+            <button type="submit" disabled={sendingEmail} className="px-8 py-3 bg-primary text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer border-none">
               {sendingEmail ? <span className="animate-pulse">Transmitting...</span> : <><Send size={14} /> Dispatch Mail</>}
             </button>
           </div>
@@ -387,7 +438,7 @@ const Support = () => {
           <form onSubmit={sendChatMessage} className="p-4 border-t border-divider bg-card">
              <div className="relative flex items-center">
                 <input type="text" value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder="Type your message..." className="w-full bg-background border border-divider rounded-full py-4 pl-6 pr-16 text-sm focus:outline-none focus:border-primary text-text-primary shadow-inner" />
-                <button type="submit" disabled={!chatInput.trim()} className="absolute right-2 p-3 bg-primary text-white rounded-full hover:bg-primary-dark transition-all disabled:opacity-50 shadow-md">
+                <button type="submit" disabled={!chatInput.trim()} className="absolute right-2 p-3 bg-primary text-white rounded-full hover:bg-primary-dark transition-all disabled:opacity-50 shadow-md cursor-pointer border-none flex items-center justify-center">
                    <Send size={16} />
                 </button>
              </div>

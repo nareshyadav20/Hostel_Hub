@@ -155,9 +155,9 @@ const Bookings = () => {
 
     return {
       id: b._id,
-      guestName: b.tenantId?.name || b.userId || 'Guest Tenant',
-      email: b.tenantId?.email || 'N/A',
-      phone: b.tenantId?.phone || 'N/A',
+      guestName: b.tenantId?.name || b.guestName || b.userId || 'Guest Tenant',
+      email: b.tenantId?.email || b.email || 'N/A',
+      phone: b.tenantId?.phone || b.phone || 'N/A',
       hostel: b.buildingId?.name || 'Livora Residence',
       roomType: b.category || 'Standard',
       checkIn: checkInFormatted,

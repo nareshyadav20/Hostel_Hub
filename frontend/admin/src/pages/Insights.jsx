@@ -1,28 +1,69 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
+  Radar, RadarChart, PolarGrid, PolarAngleAxis
 } from 'recharts';
-import { Sparkles, Brain, TrendingUp, AlertCircle, Zap, Shield, Target, Lightbulb, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Sparkles, Brain, Target, ArrowRight, ArrowLeft, Lightbulb, AlertCircle, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import API from '../api/axios';
+import { useToast } from '../context/ToastContext';
 
-const RADAR_DATA = [
-  { subject: 'Occupancy', A: 120, fullMark: 150 },
-  { subject: 'Revenue', A: 98, fullMark: 150 },
-  { subject: 'Retention', A: 86, fullMark: 150 },
-  { subject: 'Maintenance', A: 99, fullMark: 150 },
-  { subject: 'Efficiency', A: 85, fullMark: 150 },
-  { subject: 'Growth', A: 65, fullMark: 150 },
-];
+const iconMap = {
+  'primary': <Lightbulb />,
+  'danger': <AlertCircle />,
+  'success': <Zap />
+};
 
 const Insights = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
+  
+  const [radarData, setRadarData] = useState([]);
+  const [forecastData, setForecastData] = useState([]);
+  const [efficiencyTarget, setEfficiencyTarget] = useState('94% / 100%');
+  const [recommendations, setRecommendations] = useState([]);
+  
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchInsights = async () => {
+      try {
+        setLoading(true);
+        const res = await API.get('/admin/insights');
+        if (res.data) {
+          setRadarData(res.data.radarData || []);
+          setForecastData(res.data.forecastData || []);
+          setEfficiencyTarget(res.data.efficiencyTarget || '94% / 100%');
+          setRecommendations(res.data.recommendations || []);
+        }
+      } catch (err) {
+        console.error('Failed to load predictive insights', err);
+        showToast('Error loading neural intelligence forecasts.', 'danger');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInsights();
+  }, []);
+
+  const handleApplySuggestion = (title) => {
+    showToast(`Strategic recommendation "${title}" queued for execution.`, 'success');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 pb-10">
       {/* --- BACK NAVIGATION --- */}
       <button 
         onClick={() => navigate('/dashboard')}
-        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group"
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group bg-transparent border-none cursor-pointer"
       >
         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
         Back to Dashboard
@@ -63,11 +104,7 @@ const Insights = () => {
 
            <div className="h-[350px]">
               <ResponsiveContainer width="100%" height="100%">
-                 <AreaChart data={[
-                   { name: 'W1', val: 70 }, { name: 'W2', val: 75 }, { name: 'W3', val: 82 }, 
-                   { name: 'W4', val: 78 }, { name: 'W5', val: 85 }, { name: 'W6', val: 92 },
-                   { name: 'W7', val: 95 }, { name: 'W8', val: 88 }, { name: 'W9', val: 99 }
-                 ]}>
+                 <AreaChart data={forecastData}>
                     <defs>
                        <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="rgb(var(--primary))" stopOpacity={0.3}/>
@@ -89,7 +126,7 @@ const Insights = () => {
            <h2 className="text-lg font-bold text-text-primary self-start mb-6">Operational Integrity</h2>
            <div className="w-full h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={RADAR_DATA}>
+                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
                     <PolarGrid stroke="rgb(var(--border))" />
                     <PolarAngleAxis dataKey="subject" tick={{fill: '#64748b', fontSize: 10, fontWeight: 'bold'}} />
                     <Radar name="StayNest AI" dataKey="A" stroke="rgb(var(--primary))" fill="rgb(var(--primary))" fillOpacity={0.3} />
@@ -102,7 +139,7 @@ const Insights = () => {
                     <Target size={18} className="text-primary" />
                     <span className="text-xs font-bold text-text-secondary">Efficiency Target</span>
                  </div>
-                 <span className="text-xs font-black text-text-primary">94% / 100%</span>
+                 <span className="text-xs font-black text-text-primary">{efficiencyTarget}</span>
               </div>
            </div>
         </div>
@@ -111,18 +148,14 @@ const Insights = () => {
         <div className="col-span-12 space-y-6">
            <h2 className="text-xl font-bold text-text-primary">Strategic Recommendations</h2>
            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { title: 'Dynamic Pricing Opportunity', desc: 'Predicting 18% surge in Pune demand. Suggesting 5% price adjustment for vacant units.', icon: <Lightbulb />, color: 'primary' },
-                { title: 'Retention Risk Alert', desc: '3 tenants in Bangalore show 85% churn probability due to service lag. Issue urgent maintenance voucher.', icon: <AlertCircle />, color: 'danger' },
-                { title: 'Energy Optimization', desc: 'Auto-adjust HVAC schedules in common areas to save 12% on utility costs this month.', icon: <Zap />, color: 'success' }
-              ].map((rec, i) => (
-                <div key={i} className="layer-2 p-6 group hover:border-primary/30 transition-all cursor-pointer">
+              {recommendations.map((rec, i) => (
+                <div key={i} className="layer-2 p-6 group hover:border-primary/30 transition-all cursor-pointer" onClick={() => handleApplySuggestion(rec.title)}>
                    <div className={`w-12 h-12 rounded-2xl bg-${rec.color}/10 text-${rec.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                      {rec.icon}
+                      {iconMap[rec.color] || <Lightbulb />}
                    </div>
                    <h3 className="text-lg font-bold text-text-primary mb-2">{rec.title}</h3>
                    <p className="text-xs text-text-muted leading-relaxed mb-6">{rec.desc}</p>
-                   <button className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest group-hover:gap-4 transition-all">
+                   <button className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest group-hover:gap-4 transition-all bg-transparent border-none cursor-pointer">
                       Apply Suggestion <ArrowRight size={14} />
                    </button>
                 </div>

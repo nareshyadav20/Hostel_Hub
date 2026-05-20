@@ -105,12 +105,10 @@ exports.getSummaryKPIs = async (req, res) => {
     const User = require('../models/User');
     const SystemSettings = require('../models/SystemSettings');
 
-    const isAdmin = req.user.role === 'SUPER_ADMIN';
-
-    // 1. Isolate buildings
     let ownerBuildings;
-    if (isAdmin) {
-      ownerBuildings = await Building.find().select('_id name');
+    const isPlatformAdmin = req.user && req.user.role && ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role.toUpperCase());
+    if (isPlatformAdmin) {
+      ownerBuildings = await Building.find({}).select('_id name');
     } else {
       ownerBuildings = await Building.find({ owner: req.user.id }).select('_id name');
     }
@@ -130,6 +128,11 @@ exports.getSummaryKPIs = async (req, res) => {
     } else {
       activeBuildingIds = ownerBuildingIds;
     }
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
 
     const matchQuery = { _id: { $in: activeBuildingIds } };
 
@@ -162,8 +165,8 @@ exports.getSummaryKPIs = async (req, res) => {
     const totalTenants = await Tenant.countDocuments(tenantFilter);
 
     // 4. Calculate occupancy rate
-    let totalBeds = s.totalBeds;
-    let occupiedBeds = s.occupiedBeds || totalTenants;
+    let totalBeds = s.totalBeds || 0;
+    let occupiedBeds = totalTenants; // Since active tenants occupy beds, we dynamically count occupied beds by active tenants count
 
     if (totalBeds === 0 && totalTenants > 0) {
       totalBeds = totalTenants;
@@ -196,23 +199,88 @@ exports.getSummaryKPIs = async (req, res) => {
     const maintenanceScore = Math.max(0, 20 - (maintenanceRoomsCount * 2));
     const healthScore = Math.round(occupancyScore + paymentScore + maintenanceScore + 10);
 
-    // 7. Daily Activity Stats
-    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(); endOfDay.setHours(23, 59, 59, 999);
+    // 7. Daily Activity Stats (variables already defined at the top of the function)
 
-    const todayRevenue = payments
-      .filter(p => p.status === 'Paid' && new Date(p.date) >= startOfDay && new Date(p.date) <= endOfDay)
-      .reduce((sum, p) => sum + (p.amount || 0), 0);
+    const paymentStatsOwner = await Payment.aggregate([
+      { $match: payMatch },
+      {
+        $group: {
+          _id: null,
+          pendingCount: { $sum: { $cond: [{ $in: ['$status', ['Pending', 'Due']] }, 1, 0] } },
+          pendingAmount: { $sum: { $cond: [{ $in: ['$status', ['Pending', 'Due']] }, '$amount', 0] } },
+          todayRevenue: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ['$status', 'Paid'] },
+                    { $gte: ['$date', startOfDay] },
+                    { $lt: ['$date', endOfDay] }
+                  ]
+                },
+                '$amount',
+                0
+              ]
+            }
+          }
+        }
+      }
+    ]);
+
+    const db = mongoose.connection.useDb('test');
+    const paymentStatsRaw = await db.collection('payments').aggregate([
+      { $match: payMatch },
+      {
+        $group: {
+          _id: null,
+          pendingCount: { $sum: { $cond: [{ $in: ['$status', ['Pending', 'Due']] }, 1, 0] } },
+          pendingAmount: { $sum: { $cond: [{ $in: ['$status', ['Pending', 'Due']] }, '$amount', 0] } },
+          todayRevenue: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ['$status', 'Paid'] },
+                    { $gte: ['$date', startOfDay] },
+                    { $lt: ['$date', endOfDay] }
+                  ]
+                },
+                '$amount',
+                0
+              ]
+            }
+          }
+        }
+      }
+    ]).toArray();
 
     const complaintsToday = await Complaint.countDocuments({
       createdAt: { $gte: startOfDay },
       buildingId: { $in: activeBuildingIds }
     });
+    const ownerComplaintsCount = complaintsToday;
+    const rawComplaintsCount = await db.collection('complaints').countDocuments({
+      createdAt: { $gte: startOfDay },
+      $or: [
+        { buildingId: { $in: activeBuildingIds.map(id => id.toString()) } },
+        { buildingId: { $in: activeBuildingIds } }
+      ]
+    });
+    const totalComplaintsToday = ownerComplaintsCount + rawComplaintsCount;
 
     const checkinsToday = await Tenant.countDocuments({
       createdAt: { $gte: startOfDay },
       buildingId: { $in: activeBuildingIds }
     });
+    const ownerCheckinsToday = checkinsToday;
+    const rawCheckinsToday = await db.collection('tenants').countDocuments({
+      createdAt: { $gte: startOfDay },
+      $or: [
+        { buildingId: { $in: activeBuildingIds.map(id => id.toString()) } },
+        { buildingId: { $in: activeBuildingIds } }
+      ]
+    });
+    const totalCheckinsToday = ownerCheckinsToday + rawCheckinsToday;
 
     const ownerCount = await User.countDocuments({ role: { $regex: /^owner$/i } });
 
@@ -247,9 +315,13 @@ exports.getRevenueAnalytics = async (req, res) => {
     const Tenant = require('../models/Tenant');
     const isAdmin = req.user.role === 'SUPER_ADMIN';
 
-    const ownerBuildings = isAdmin
-      ? await Building.find().select('_id')
-      : await Building.find({ owner: req.user.id }).select('_id');
+    let ownerBuildings;
+    const isPlatformAdmin = req.user && req.user.role && ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role.toUpperCase());
+    if (isPlatformAdmin) {
+      ownerBuildings = await Building.find({}).select('_id');
+    } else {
+      ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+    }
     const ownerBuildingIds = ownerBuildings.map(b => b._id);
 
     let activeBuildingIds = [];
@@ -279,7 +351,11 @@ exports.getRevenueAnalytics = async (req, res) => {
     const collectedRent = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + (p.amount || 0), 0);
     const pendingRent = payments.filter(p => ['Pending', 'Due'].includes(p.status)).reduce((sum, p) => sum + (p.amount || 0), 0);
 
-    const tenantCount = await Tenant.countDocuments({ buildingId: { $in: activeBuildingIds } });
+    const tenantQuery = { buildingId: { $in: activeBuildingIds } };
+    const ownerTenantsCount = await Tenant.countDocuments(tenantQuery);
+    const db = mongoose.connection.useDb('test');
+    const rawTenantsCount = await db.collection('tenants').countDocuments(tenantQuery);
+    const tenantCount = ownerTenantsCount + rawTenantsCount;
 
     res.json({
       dailyRevenue,
@@ -540,9 +616,13 @@ exports.getLiveActivity = async (req, res) => {
     const Complaint = require('../models/Complaint');
     const isAdmin = req.user.role === 'SUPER_ADMIN';
 
-    const ownerBuildings = isAdmin
-      ? await Building.find().select('_id')
-      : await Building.find({ owner: req.user.id }).select('_id');
+    let ownerBuildings;
+    const isPlatformAdmin = req.user && req.user.role && ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role.toUpperCase());
+    if (isPlatformAdmin) {
+      ownerBuildings = await Building.find({}).select('_id');
+    } else {
+      ownerBuildings = await Building.find({ owner: req.user.id }).select('_id');
+    }
     const ownerBuildingIds = ownerBuildings.map(b => b._id);
 
     let activeBuildingIds = [];
@@ -569,7 +649,7 @@ exports.getLiveActivity = async (req, res) => {
     const activity = [
       ...payments.map(p => ({
         icon: '💰',
-        text: `${p.tenantId?.name || 'A Tenant'} paid ₹${(p.amount || 0).toLocaleString()} rent`,
+        text: `${p.tenantId?.name || 'A Tenant'} paid ₹${p.amount?.toLocaleString()} rent`,
         time: p.createdAt || p.date,
         type: 'payment'
       })),

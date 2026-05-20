@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Bell, BellRing, DollarSign, Wrench, Settings, 
   Search, CheckCircle2, Archive, Trash2, MoreHorizontal,
@@ -9,6 +9,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import API from '../api/axios';
 
 const Notifications = () => {
   const navigate = useNavigate();
@@ -18,53 +19,167 @@ const Notifications = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedId, setExpandedId] = useState(null);
 
-  const [inbox, setInbox] = useState([
-    { 
-      id: 'NT-5021', 
-      type: 'Payment', 
-      title: 'Rent Overdue: Arjun Das', 
-      desc: 'Monthly rent for Sapphire PG (Room 204) is 3 days overdue. Amount: ₹12,000.',
-      time: '2h ago',
-      read: false,
-      priority: 'High',
-      ref: 'TX-9022'
-    },
-    { 
-      id: 'NT-5022', 
-      type: 'Issue', 
-      title: 'New Maintenance Request', 
-      desc: 'Neha Sharma reported a leakage in Room 305 (Elite Living).',
-      time: '5h ago',
-      read: false,
-      priority: 'Medium',
-      ref: 'CMP-102'
-    },
-    { 
-      id: 'NT-5023', 
-      type: 'System', 
-      title: 'Backup Successful', 
-      desc: 'Weekly cloud backup for all property data completed successfully.',
-      time: '1d ago',
-      read: true,
-      priority: 'Low',
-      ref: 'SYS-LOG'
-    },
-    { 
-      id: 'NT-5024', 
-      type: 'Payment', 
-      title: 'Security Deposit Received', 
-      desc: 'Vikram Singh has settled the security deposit for Tech Park PG.',
-      time: '1d ago',
-      read: true,
-      priority: 'Medium',
-      ref: 'TX-9025'
-    }
-  ]);
+  const [inbox, setInbox] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [history] = useState([
-    { id: 1, title: 'Network Maintenance', target: 'Pune Hub', status: 'Delivered', time: '2h ago' },
-    { id: 2, title: 'Festive Offer: 20% Off', target: 'All Users', status: 'Delivered', time: '1 day ago' },
-  ]);
+  // Broadcast state bindings
+  const [targetSegment, setTargetSegment] = useState('Tenants Only (12,100)');
+  const [priority, setPriority] = useState('Standard Distribution');
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [buildings, setBuildings] = useState([]);
+  const [selectedBuildingId, setSelectedBuildingId] = useState('');
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get('/notifications');
+      const rawData = res.data || [];
+      const mapped = rawData.map(n => ({
+        id: n._id,
+        type: n.category || n.moduleName || 'System',
+        title: n.title || 'Notification',
+        desc: n.message || '',
+        time: n.createdAt ? new Date(n.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '',
+        read: n.isRead || false,
+        priority: n.priority || 'Low',
+        ref: n._id
+      }));
+      setInbox(mapped);
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+
+    const fetchBuildings = async () => {
+      try {
+        const res = await API.get('/buildings');
+        setBuildings(res.data || []);
+        if (res.data && res.data.length > 0) {
+          setSelectedBuildingId(res.data[0]._id);
+        }
+      } catch (err) {
+        console.error('Failed to fetch buildings:', err);
+      }
+    };
+    fetchBuildings();
+  }, []);
+
+  const handleMarkAsRead = async (id) => {
+    try {
+      await API.patch(`/notifications/${id}/read`);
+      setInbox(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+      window.dispatchEvent(new Event('notifications-updated'));
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err);
+    }
+  };
+
+  const handleArchive = async (id) => {
+    try {
+      await API.patch(`/notifications/${id}/archive`);
+      setInbox(prev => prev.filter(n => n.id !== id));
+      window.dispatchEvent(new Event('notifications-updated'));
+    } catch (err) {
+      console.error('Failed to archive notification:', err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await API.delete(`/notifications/${id}`);
+      setInbox(prev => prev.filter(n => n.id !== id));
+      window.dispatchEvent(new Event('notifications-updated'));
+    } catch (err) {
+      console.error('Failed to delete notification:', err);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      const categoryFilter = inboxFilter === 'All' ? undefined : inboxFilter;
+      await API.post('/notifications/mark-all-read', {
+        category: categoryFilter
+      });
+      setInbox(prev => prev.map(n => {
+        if (categoryFilter && n.type !== categoryFilter) return n;
+        return { ...n, read: true };
+      }));
+      window.dispatchEvent(new Event('notifications-updated'));
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+    }
+  };
+
+  const handleDeployBroadcast = async (e) => {
+    e.preventDefault();
+    if (!broadcastTitle.trim() || !broadcastMessage.trim()) {
+      alert('Please fill in both the Title and the Content fields.');
+      return;
+    }
+
+    try {
+      let portalType = 'Tenant';
+      let target = 'All Tenants';
+
+      if (targetSegment.includes('Owners')) {
+        portalType = 'Owner';
+        target = 'Owner';
+      } else if (targetSegment.includes('Staff')) {
+        portalType = 'Staff';
+        target = 'Staff';
+      } else if (targetSegment.includes('All Users')) {
+        portalType = 'All';
+        target = 'All';
+      }
+
+      let cleanPriority = 'Medium';
+      if (priority.includes('High')) {
+        cleanPriority = 'High';
+      } else if (priority.includes('Critical')) {
+        cleanPriority = 'High';
+      } else if (priority.includes('Standard')) {
+        cleanPriority = 'Medium';
+      }
+
+      const payload = {
+        moduleName: 'System',
+        portalType,
+        category: 'Alert',
+        title: broadcastTitle,
+        message: broadcastMessage,
+        priority: cleanPriority,
+        type: cleanPriority === 'High' ? 'warning' : 'info',
+        target,
+        buildingId: selectedBuildingId || undefined
+      };
+
+      const res = await API.post('/notifications', payload);
+
+      const newBroadcast = {
+        id: res.data?._id || Date.now().toString(),
+        title: broadcastTitle,
+        time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        target: targetSegment.split(' (')[0],
+        status: 'Sent'
+      };
+
+      setHistory(prev => [newBroadcast, ...prev]);
+      setBroadcastTitle('');
+      setBroadcastMessage('');
+      window.dispatchEvent(new Event('notifications-updated'));
+      alert('Broadcast deployed successfully!');
+    } catch (err) {
+      console.error('Failed to deploy broadcast:', err);
+      alert('Failed to deploy broadcast: ' + (err.response?.data?.error || err.message));
+    }
+  };
 
   const getTypeIcon = (type) => {
     switch(type) {
@@ -160,15 +275,33 @@ const Notifications = () => {
                        </button>
                      ))}
                   </div>
-                  <button className="flex items-center gap-2 px-6 py-3.5 bg-card border border-divider rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0">
+                  <button 
+                     onClick={handleMarkAllRead}
+                     className="flex items-center gap-2 px-6 py-3.5 bg-card border border-divider rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-all shadow-subtle shrink-0"
+                  >
                      <CheckCircle2 size={16} /> Mark All Read
                   </button>
                </div>
             </div>
 
             {/* Notification List */}
-            <div className="space-y-4">
-               {inbox
+             <div className="space-y-4">
+               {loading ? (
+                 <div className="py-16 text-center">
+                   <div className="premium-spinner mx-auto mb-4"></div>
+                   <p className="text-sm font-black text-text-muted uppercase tracking-widest">Loading notifications from database...</p>
+                 </div>
+               ) : inbox.filter(n => {
+                    const matchesSearch = n.title.toLowerCase().includes(searchTerm.toLowerCase()) || n.desc.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesFilter = inboxFilter === 'All' || n.type === inboxFilter;
+                    return matchesSearch && matchesFilter;
+                 }).length === 0 ? (
+                 <div className="py-16 text-center border border-dashed border-divider rounded-3xl">
+                   <Bell size={32} className="mx-auto mb-4 text-text-muted" />
+                   <p className="text-sm font-black text-text-muted uppercase tracking-widest">No notifications found</p>
+                   <p className="text-xs text-text-muted mt-1 italic">System alerts and events will appear here</p>
+                 </div>
+               ) : inbox
                 .filter(n => {
                    const matchesSearch = n.title.toLowerCase().includes(searchTerm.toLowerCase()) || n.desc.toLowerCase().includes(searchTerm.toLowerCase());
                    const matchesFilter = inboxFilter === 'All' || n.type === inboxFilter;
@@ -194,9 +327,29 @@ const Notifications = () => {
                           <p className="text-[12px] font-medium text-text-secondary mt-0.5 line-clamp-1">{n.desc}</p>
                        </div>
                        <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle"><Mail size={16} /></button>
-                          <button className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-indigo-500 transition-all shadow-subtle"><Archive size={16} /></button>
-                          <button className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-rose-500 transition-all shadow-subtle"><Trash2 size={16} /></button>
+                          {!n.read && (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleMarkAsRead(n.id); }}
+                              title="Mark as Read"
+                              className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle"
+                            >
+                              <Mail size={16} />
+                            </button>
+                          )}
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleArchive(n.id); }}
+                            title="Archive Alert"
+                            className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-indigo-500 transition-all shadow-subtle"
+                          >
+                            <Archive size={16} />
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDelete(n.id); }}
+                            title="Delete Alert"
+                            className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-rose-500 transition-all shadow-subtle"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                        </div>
                     </div>
 
@@ -251,55 +404,83 @@ const Notifications = () => {
                    </div>
                 </div>
 
-                <form className="space-y-6">
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                         <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Target Segment</label>
-                         <div className="relative group">
-                            <Target className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-all" size={16} />
-                            <select className="w-full bg-background border border-divider rounded-xl py-3 pl-12 pr-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary">
-                               <option>All Users (14,250)</option>
-                               <option>Tenants Only (12,100)</option>
-                               <option>Owners Only (2,150)</option>
-                               <option>Staff Members (150)</option>
-                            </select>
-                         </div>
-                      </div>
-                      <div className="space-y-2">
-                         <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Priority Protocol</label>
-                         <div className="relative group">
-                            <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-amber-500 transition-all" size={16} />
-                            <select className="w-full bg-background border border-divider rounded-xl py-3 pl-12 pr-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500 transition-all text-text-primary">
-                               <option>Standard Distribution</option>
-                               <option>High Velocity (Push)</option>
-                               <option>Critical (Push + Email)</option>
-                            </select>
-                         </div>
-                      </div>
-                   </div>
+                <form onSubmit={handleDeployBroadcast} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                       <div className="space-y-2">
+                          <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Target Segment</label>
+                          <div className="relative group">
+                             <Target className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-all" size={16} />
+                             <select 
+                                value={targetSegment}
+                                onChange={(e) => setTargetSegment(e.target.value)}
+                                className="w-full bg-background border border-divider rounded-xl py-3 pl-12 pr-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary"
+                             >
+                                <option>All Users (14,250)</option>
+                                <option>Tenants Only (12,100)</option>
+                                <option>Owners Only (2,150)</option>
+                                <option>Staff Members (150)</option>
+                             </select>
+                          </div>
+                       </div>
+                       <div className="space-y-2">
+                          <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Priority Protocol</label>
+                          <div className="relative group">
+                             <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-amber-500 transition-all" size={16} />
+                             <select 
+                                value={priority}
+                                onChange={(e) => setPriority(e.target.value)}
+                                className="w-full bg-background border border-divider rounded-xl py-3 pl-12 pr-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-amber-500/5 focus:border-amber-500 transition-all text-text-primary"
+                             >
+                                <option>Standard Distribution</option>
+                                <option>High Velocity (Push)</option>
+                                <option>Critical (Push + Email)</option>
+                             </select>
+                          </div>
+                       </div>
+                       <div className="space-y-2">
+                          <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Target Property</label>
+                          <div className="relative group">
+                             <Building className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-emerald-500 transition-all" size={16} />
+                             <select 
+                                value={selectedBuildingId}
+                                onChange={(e) => setSelectedBuildingId(e.target.value)}
+                                className="w-full bg-background border border-divider rounded-xl py-3 pl-12 pr-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500 transition-all text-text-primary"
+                             >
+                                <option value="">All Properties (Global)</option>
+                                {buildings.map(b => (
+                                   <option key={b._id} value={b._id}>{b.name}</option>
+                                ))}
+                             </select>
+                          </div>
+                       </div>
+                    </div>
 
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Manifest Title</label>
-                      <input 
-                         type="text" 
-                         placeholder="e.g. System Maintenance Window - Pune Cluster"
-                         className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary"
-                      />
-                   </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Manifest Title</label>
+                       <input 
+                          type="text" 
+                          value={broadcastTitle}
+                          onChange={(e) => setBroadcastTitle(e.target.value)}
+                          placeholder="e.g. System Maintenance Window - Pune Cluster"
+                          className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary"
+                       />
+                    </div>
 
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Alert Content</label>
-                      <textarea 
-                         rows={5}
-                         placeholder="Enter the notification payload details..."
-                         className="w-full bg-background border border-divider rounded-xl py-4 px-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary resize-none"
-                      />
-                   </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Alert Content</label>
+                       <textarea 
+                          rows={5}
+                          value={broadcastMessage}
+                          onChange={(e) => setBroadcastMessage(e.target.value)}
+                          placeholder="Enter the notification payload details..."
+                          className="w-full bg-background border border-divider rounded-xl py-4 px-4 text-[12px] font-bold outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary resize-none"
+                       />
+                    </div>
 
-                   <button className="w-full py-4 bg-primary text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all flex items-center justify-center gap-3">
-                      Deploy Notification Pulse <Zap size={18} strokeWidth={3} />
-                   </button>
-                </form>
+                    <button className="w-full py-4 bg-primary text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all flex items-center justify-center gap-3">
+                       Deploy Notification Pulse <Zap size={18} strokeWidth={3} />
+                    </button>
+                 </form>
              </div>
 
              {/* Recent Broadcasts */}

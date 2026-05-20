@@ -69,17 +69,20 @@ const createPayment = async (req, res) => {
 const getAllPayments = async (req, res) => {
   try {
     const ownerId = req.user.id;
+    const isPlatformAdmin = req.user && req.user.role && ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role.toUpperCase());
 
     // 1. Get all buildings owned by this user
-    const buildings = await Building.find({ owner: ownerId });
+    const buildings = await Building.find(isPlatformAdmin ? {} : { owner: ownerId });
     const buildingIds = buildings.map(b => b._id);
 
     // 2. If specific buildingId is requested, validate ownership
     const { buildingId } = req.query;
     let query;
     if (buildingId) {
-      const isOwned = buildingIds.some(id => id.toString() === buildingId);
-      if (!isOwned) return res.status(403).json({ error: 'Access denied to this building.' });
+      if (!isPlatformAdmin) {
+        const isOwned = buildingIds.some(id => id.toString() === buildingId);
+        if (!isOwned) return res.status(403).json({ error: 'Access denied to this building.' });
+      }
       query = { buildingId };
     } else {
       query = { buildingId: { $in: buildingIds } };
@@ -88,6 +91,7 @@ const getAllPayments = async (req, res) => {
     // 3. Find payments scoped to the query
     const payments = await Payment.find(query)
       .populate({ path: 'tenantId', select: 'name room' })
+      .populate('buildingId')
       .sort({ date: -1 });
 
     res.status(200).json(payments);

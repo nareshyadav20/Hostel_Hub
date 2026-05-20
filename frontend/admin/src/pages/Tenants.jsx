@@ -182,7 +182,7 @@ const Tenants = () => {
       const mapped = res.data.map(t => ({
         id: t._id,
         name: t.name,
-        hostel: buildingMap[t.buildingId] || 'Sunshine Residency',
+        hostel: buildingMap[t.buildingId] || 'Unassigned',
         buildingId: t.buildingId,
         room: t.room || 'N/A',
         email: t.email,
@@ -190,11 +190,11 @@ const Tenants = () => {
         status: t.status === 'ACTIVE' ? 'Active' : t.status === 'LEFT' ? 'Left' : 'Pending',
         rentStatus: t.rentStatus === 'PAID' ? 'Paid' : 'Pending',
         checkIn: t.checkInDate ? new Date(t.checkInDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A',
-        duration: '3 Months',
-        gender: 'Male',
-        balance: t.rentStatus === 'PAID' ? '₹0' : `₹${(t.rent || 8500).toLocaleString('en-IN')}`,
+        duration: t.targetStayDuration || 'N/A',
+        gender: 'Unspecified',
+        balance: t.rentStatus === 'PAID' ? '₹0' : `₹${(t.rent || 0).toLocaleString('en-IN')}`,
         complaints: 0,
-        docs: t.docs?.map(d => d.name) || ['ID Proof']
+        docs: t.docs?.length > 0 ? t.docs.map(d => d.name) : []
       }));
       
       setTenants(mapped);

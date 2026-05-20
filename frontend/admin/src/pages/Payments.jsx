@@ -1,22 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IndianRupee, TrendingUp, CreditCard, Download, ExternalLink, Calendar, Search, Filter, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import API from '../api/axios';
 import '../NexusElite.css';
 
 const Payments = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [payments, setPayments] = useState([
-    { id: 'TXN-9921', owner: 'Rahul Sharma', amount: '4,999', plan: 'Enterprise', date: '20 Apr 2026', status: 'Success', method: 'UPI' },
-    { id: 'TXN-9922', owner: 'Priya Verma', amount: '2,499', plan: 'Standard', date: '18 Apr 2026', status: 'Success', method: 'Card' },
-    { id: 'TXN-9923', owner: 'Amit Singh', amount: '999', plan: 'Basic', date: '15 Apr 2026', status: 'Failed', method: 'UPI' },
-    { id: 'TXN-9924', owner: 'Vikram Mehta', amount: '4,999', plan: 'Enterprise', date: '12 Apr 2026', status: 'Success', method: 'Net Banking' },
-  ]);
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        setLoading(true);
+        const res = await API.get('/payments');
+        const mapped = (res.data || []).map(p => ({
+          id: p.invoice || p.transactionId || p._id.toString().slice(-8).toUpperCase(),
+          owner: p.tenantId?.name || p.buildingId?.name || 'System Guest',
+          amount: p.amount ? p.amount.toLocaleString('en-IN') : '0',
+          plan: p.type || p.category || 'Rent',
+          date: p.date ? new Date(p.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date(p.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          status: (p.status === 'Paid' || p.status === 'Success') ? 'Success' : p.status,
+          method: p.method || 'UPI',
+          rawAmount: p.amount || 0
+        }));
+        setPayments(mapped);
+      } catch (err) {
+        console.error('Failed to fetch payments:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPayments();
+  }, []);
+
+  const successfulPayments = payments.filter(p => p.status === 'Success');
+  const totalRevenueVal = successfulPayments.reduce((acc, p) => acc + p.rawAmount, 0);
+  const avgTicketVal = successfulPayments.length > 0 ? Math.round(totalRevenueVal / successfulPayments.length) : 0;
+  const pendingPayoutsVal = payments.filter(p => p.status === 'Pending' || p.status === 'Due' || p.status === 'Overdue').reduce((acc, p) => acc + p.rawAmount, 0);
 
   const stats = [
-    { label: 'Total Revenue', value: '₹1.24 Cr', icon: <IndianRupee />, color: 'var(--accent-success)' },
-    { label: 'Avg Ticket Size', value: '₹3,450', icon: <TrendingUp />, color: 'var(--accent-primary)' },
-    { label: 'Pending Payouts', value: '₹5.2L', icon: <CreditCard />, color: 'var(--accent-warning)' },
+    { label: 'Total Revenue', value: `₹${totalRevenueVal.toLocaleString('en-IN')}`, icon: <IndianRupee />, color: 'var(--accent-success)' },
+    { label: 'Avg Ticket Size', value: `₹${avgTicketVal.toLocaleString('en-IN')}`, icon: <TrendingUp />, color: 'var(--accent-primary)' },
+    { label: 'Pending / Due Payouts', value: `₹${pendingPayoutsVal.toLocaleString('en-IN')}`, icon: <CreditCard />, color: 'var(--accent-warning)' },
   ];
 
   return (

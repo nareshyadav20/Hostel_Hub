@@ -32,6 +32,7 @@ import Support from './pages/Support';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Complaints from './pages/Complaints';
 
 function App() {
   return (
@@ -72,7 +73,8 @@ function App() {
           <Route path="/tasks"         element={<Layout><Tasks /></Layout>} />
           <Route path="/insights"      element={<Layout><Insights /></Layout>} />
           <Route path="/support"       element={<Layout><Support /></Layout>} />
-          <Route path="/complaints"    element={<Layout><Placeholder title="Complaints" /></Layout>} />
+          <Route path="/complaints"    element={<Layout><Complaints /></Layout>} />
+          <Route path="/maintenance"   element={<Layout><Maintenance /></Layout>} />
           <Route path="/profile"       element={<Layout><Profile /></Layout>} />
           <Route path="*"              element={<Navigate to="/dashboard" replace />} />
         </Routes>

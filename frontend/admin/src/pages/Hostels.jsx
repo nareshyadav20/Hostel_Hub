@@ -81,13 +81,13 @@ const Hostels = () => {
 
       // Fallbacks if no floors/rooms are configured
       if (totalCapacity === 0) {
-         totalCapacity = b.startingPrice ? Math.round(500000 / b.startingPrice) : 80;
+         totalCapacity = 0;
       }
       if (occupiedBeds === 0) {
-         occupiedBeds = Math.round(totalCapacity * 0.75); // Mock 75% for empty DB state so it looks populated
+         occupiedBeds = 0;
       }
 
-      const occupancyRate = Math.min(100, Math.round((occupiedBeds / totalCapacity) * 100)) || 75;
+      const occupancyRate = totalCapacity > 0 ? Math.min(100, Math.round((occupiedBeds / totalCapacity) * 100)) : 0;
 
       // Revenue calculation
       const revAmount = occupiedBeds * (b.startingPrice || 8500);
@@ -303,11 +303,7 @@ const Hostels = () => {
               floorNumber: `Floor ${f.floorNumber}`, 
               description: f.description || `Residential housing zone for Floor ${f.floorNumber}` 
            }))
-         : [
-            { _id: 'f1', floorNumber: 'Ground Floor', description: 'Premium Reception, Main Pantry, & Executive Single Units' },
-            { _id: 'f2', floorNumber: '1st Floor', description: 'Premium Shared Double & Triple Units (Wing A/B)' },
-            { _id: 'f3', floorNumber: '2nd Floor', description: 'Elite Single Suites, Fitness Lounge, & Study Hub' }
-         ];
+         : [];
 
       const getRoomsForFloor = (floorId) => {
          if (hasRealFloors) {
@@ -325,44 +321,16 @@ const Hostels = () => {
                   beds: r.beds || []
                }));
             }
-            return [];
          }
-         
-         if (floorId === 'f1') {
-            return [
-               { _id: 'r101', roomNumber: '101', roomType: 'Single Deluxe', capacity: 1, status: 'AVAILABLE', rentAmount: '18,500', bathroom: 'Attached Private', climate: 'Air Conditioned' },
-               { _id: 'r102', roomNumber: '102', roomType: 'Double Shared', capacity: 2, status: 'AVAILABLE', rentAmount: '12,000', bathroom: 'Attached Private', climate: 'Air Conditioned' },
-               { _id: 'r103', roomNumber: '103', roomType: 'Double Shared', capacity: 2, status: 'FULL', rentAmount: '11,500', bathroom: 'Attached Private', climate: 'Regular Non-AC' }
-            ];
-         } else if (floorId === 'f2') {
-            return [
-               { _id: 'r201', roomNumber: '201', roomType: 'Double Shared', capacity: 2, status: 'AVAILABLE', rentAmount: '12,500', bathroom: 'Attached Private', climate: 'Air Conditioned' },
-               { _id: 'r202', roomNumber: '202', roomType: 'Triple Shared', capacity: 3, status: 'AVAILABLE', rentAmount: '9,500', bathroom: 'Common Premium', climate: 'Regular Non-AC' },
-               { _id: 'r203', roomNumber: '203', roomType: 'Double Shared', capacity: 2, status: 'FULL', rentAmount: '12,500', bathroom: 'Attached Private', climate: 'Air Conditioned' },
-               { _id: 'r204', roomNumber: '204', roomType: 'Triple Shared', capacity: 3, status: 'AVAILABLE', rentAmount: '9,000', bathroom: 'Common Premium', climate: 'Regular Non-AC' }
-            ];
-         } else {
-            return [
-               { _id: 'r301', roomNumber: '301', roomType: 'Single Deluxe', capacity: 1, status: 'OCCUPIED', rentAmount: '19,000', bathroom: 'Attached Private', climate: 'Air Conditioned' },
-               { _id: 'r302', roomNumber: '302', roomType: 'Executive Suite', capacity: 1, status: 'AVAILABLE', rentAmount: '24,000', bathroom: 'Luxury Jacuzzi Attached', climate: 'Dual-Zone AC' }
-            ];
-         }
+         return [];
       };
 
       const getBedOccupant = (roomId, bedIdx) => {
-         const occupants = [
-            "Arjun Mehra", "Sanya Gupta", "Rahul Das", "Priya Sharma", "Amit Singh", "Vikram Mehta", "Kunal Sen", "Rohan Verma", "Sneha Rao", "Devendra Jha"
-         ];
-         const idx = (roomId.charCodeAt(roomId.length - 1) + bedIdx) % occupants.length;
-         return occupants[idx];
+         return 'Unknown Resident';
       };
 
       const getBedPhone = (roomId, bedIdx) => {
-         const phones = [
-            "+91 98765 12345", "+91 98765 23456", "+91 98765 34567", "+91 98765 45678", "+91 98765 56789", "+91 98765 67890"
-         ];
-         const idx = (roomId.charCodeAt(roomId.length - 1) + bedIdx) % phones.length;
-         return phones[idx];
+         return 'N/A';
       };
 
       const activeFloor = simulatedFloors.find(f => f._id === activeFloorId) || simulatedFloors[0];

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell, PieChart, Pie
@@ -15,6 +15,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
+import API from '../api/axios';
 
 const REVENUE_TREND = [
   { month: 'Jan', revenue: 450000, dues: 20000 },
@@ -54,12 +55,35 @@ const Finance = () => {
   const [progress, setProgress] = useState(0);
   const [reconcileLogs, setReconcileLogs] = useState([]);
   
-  const [transactions, setTransactions] = useState([
-    { id: 'TX-9021', entity: 'Sapphire PG - Electricity', cat: 'Utilities', amount: '-₹42,000', method: 'RTGS', status: 'Verifying', date: '12 May', trend: 'down' },
-    { id: 'TX-9022', entity: 'Arjun Das - Rent Pulse', cat: 'Revenue', amount: '+₹12,000', method: 'UPI Instant', status: 'Settled', date: '12 May', trend: 'up' },
-    { id: 'TX-9023', entity: 'Zomato Mess Logistics', cat: 'Logistics', amount: '-₹18,500', method: 'Settlement', status: 'Pending', date: '11 May', trend: 'down' },
-    { id: 'TX-9024', entity: 'Elite Living - Ad Cluster', cat: 'Marketing', amount: '-₹8,000', method: 'Corporate Card', status: 'Settled', date: '11 May', trend: 'down' },
-  ]);
+  const [loading, setLoading] = useState(true);
+  const [transactions, setTransactions] = useState([]);
+
+  useEffect(() => {
+    const fetchFinanceData = async () => {
+      try {
+        setLoading(true);
+        const res = await API.get('/payments');
+        const mappedTx = res.data.map(p => ({
+          id: p.invoice || p._id.toString().slice(0,8).toUpperCase(),
+          entity: `${p.tenantId?.name || 'System Guest'} - ${p.buildingId?.name || 'Global'}`,
+          cat: p.type || p.category || 'Revenue',
+          amount: `+₹${p.amount}`,
+          method: p.method || 'Online',
+          status: p.status === 'Paid' ? 'Settled' : p.status,
+          date: new Date(p.date || p.createdAt || new Date()).toLocaleDateString(),
+          trend: 'up',
+          _id: p._id
+        }));
+        setTransactions(mappedTx);
+      } catch (err) {
+        console.error('Failed to fetch financial records:', err);
+        showToast('Failed to sync financial data from backend.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFinanceData();
+  }, []);
 
   const filteredTx = transactions.filter(tx => {
     const matchesSearch = tx.entity.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -131,11 +155,14 @@ const Finance = () => {
     });
   };
 
+  const totalRevenue = transactions.filter(t => t.status === 'Settled').reduce((sum, tx) => sum + (parseInt(tx.amount.replace(/[^0-9]/g, '')) || 0), 0);
+  const outstanding = transactions.filter(t => t.status !== 'Settled').reduce((sum, tx) => sum + (parseInt(tx.amount.replace(/[^0-9]/g, '')) || 0), 0);
+
   const stats = [
-    { label: 'Total Revenue', value: '₹42.5L', change: '+12.4%', trendUp: true, icon: <Banknote />, color: 'primary' },
-    { label: 'Outstanding', value: '₹1.85L', change: '-4.2%', trendUp: false, icon: <Clock />, color: 'danger' },
-    { label: 'Monthly Yield', value: '94.2%', change: '+2.1%', trendUp: true, icon: <TrendingUp />, color: 'success' },
-    { label: 'Property Dues', value: '03 Units', change: 'Stable', trendUp: true, icon: <Calendar />, color: 'warning' },
+    { label: 'Settled Revenue', value: totalRevenue >= 100000 ? `₹${(totalRevenue/100000).toFixed(2)}L` : `₹${(totalRevenue/1000).toFixed(1)}K`, change: 'Current', trendUp: true, icon: <Banknote />, color: 'primary' },
+    { label: 'Outstanding', value: outstanding >= 100000 ? `₹${(outstanding/100000).toFixed(2)}L` : `₹${(outstanding/1000).toFixed(1)}K`, change: 'Pending', trendUp: false, icon: <Clock />, color: 'danger' },
+    { label: 'Monthly Yield', value: totalRevenue > 0 ? `${((totalRevenue / (totalRevenue + outstanding)) * 100).toFixed(1)}%` : '0%', change: 'Settlement Rate', trendUp: true, icon: <TrendingUp />, color: 'success' },
+    { label: 'Pending Dues', value: `${transactions.filter(t => t.status !== 'Settled').length} Txns`, change: 'Action Req', trendUp: false, icon: <Calendar />, color: 'warning' },
   ];
 
   return (
@@ -308,7 +335,7 @@ const Finance = () => {
                      className="bg-background border border-divider rounded-xl py-2 pl-10 pr-4 text-[11px] font-bold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all w-64 shadow-subtle"
                   />
                </div>
-               <button onClick={() => setShowLedgerFilter(!showLedgerFilter)} className={`p-2.5 border rounded-xl transition-all shadow-subtle \${showLedgerFilter ? 'bg-primary text-white border-primary' : 'bg-background border-divider text-text-muted hover:text-primary'}`}><Filter size={18} /></button>
+               <button onClick={() => setShowLedgerFilter(!showLedgerFilter)} className={`p-2.5 border rounded-xl transition-all shadow-subtle ${showLedgerFilter ? 'bg-primary text-white border-primary' : 'bg-background border-divider text-text-muted hover:text-primary'}`}><Filter size={18} /></button>
             </div>
          </div>
 
@@ -319,7 +346,7 @@ const Finance = () => {
                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Category:</label>
                  <div className="flex gap-2">
                    {['All', 'Revenue', 'Utilities', 'Logistics', 'Marketing'].map(cat => (
-                     <button key={cat} onClick={() => setFilterCat(cat)} className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all \${filterCat === cat ? 'bg-primary text-white' : 'bg-background border border-divider text-text-muted hover:text-primary'}`}>{cat}</button>
+                     <button key={cat} onClick={() => setFilterCat(cat)} className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filterCat === cat ? 'bg-primary text-white' : 'bg-background border border-divider text-text-muted hover:text-primary'}`}>{cat}</button>
                    ))}
                  </div>
                </div>
@@ -327,68 +354,75 @@ const Finance = () => {
            )}
          </AnimatePresence>
 
-         <div className="overflow-x-auto scrollbar-hide">
-            <table className="w-full text-left border-collapse whitespace-nowrap">
-               <thead>
-                  <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-divider">
-                     <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest">Transaction ID</th>
-                     <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Entity Manifest</th>
-                     <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Allocation</th>
-                     <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Financial Pulse</th>
-                     <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Protocol</th>
-                     <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest text-center">Authorization</th>
-                     <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest text-right">Context</th>
-                  </tr>
-               </thead>
-               <tbody className="divide-y divide-border/30">
-                  {filteredTx.map((tx, i) => (
-                    <tr key={i} className="group hover:bg-slate-50/50 dark:hover:bg-white/1 transition-all cursor-pointer">
-                       <td className="py-5 px-8">
-                          <span className="text-[11px] font-black text-text-muted font-mono tracking-tighter uppercase">{tx.id}</span>
-                       </td>
-                       <td className="py-5 px-4">
-                          <p className="text-[13px] font-black text-text-primary uppercase tracking-tight">{tx.entity}</p>
-                          <p className="text-[10px] font-bold text-text-muted italic">{tx.date}</p>
-                       </td>
-                       <td className="py-5 px-4">
-                          <span className="px-2.5 py-1 rounded-lg bg-background border border-divider text-[9px] font-black uppercase tracking-widest text-text-muted italic">{tx.cat}</span>
-                       </td>
-                       <td className={`py-5 px-4 text-[14px] font-black \${tx.trend === 'up' ? 'text-emerald-500' : 'text-rose-500'} italic`}>
-                          {tx.amount}
-                       </td>
-                       <td className="py-5 px-4">
-                          <div className="flex items-center gap-2">
-                             <CreditCard size={14} className="text-text-muted" />
-                             <span className="text-[11px] font-black text-text-secondary italic">{tx.method}</span>
-                          </div>
-                       </td>
-                       <td className="py-5 px-4 text-center">
-                          <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm \${
-                            tx.status === 'Settled' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
-                            tx.status === 'Verifying' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
-                            'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                          }`}>{tx.status}</span>
-                       </td>
-                       <td className="py-5 px-8 text-right">
-                          <button onClick={() => setActiveMenu(activeMenu === tx.id ? null : tx.id)} className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle relative">
-                              <MoreHorizontal size={18} />
-                          </button>
-                          <AnimatePresence>
-                            {activeMenu === tx.id && (
-                              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-                                className="absolute right-0 top-12 z-50 bg-card border border-divider rounded-2xl shadow-premium p-2 min-w-[160px]">
-                                <button onClick={() => handleMenuAction('view', tx.id)} className="w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary hover:bg-primary/5 rounded-xl transition-all">View Detail</button>
-                                <button onClick={() => handleMenuAction('flag', tx.id)} className="w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-amber-500 hover:bg-amber-500/5 rounded-xl transition-all">Flag for Audit</button>
-                                <button onClick={() => handleMenuAction('void', tx.id)} className="w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/5 rounded-xl transition-all">Void Transaction</button>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                       </td>
-                    </tr>
-                  ))}
-               </tbody>
-            </table>
-         </div>
+         {loading ? (
+            <div className="py-24 text-center">
+              <div className="premium-spinner mx-auto mb-4"></div>
+              <p className="text-sm font-black text-text-muted uppercase tracking-widest">Synchronizing financial ledger from MongoDB...</p>
+            </div>
+         ) : (
+          <div className="overflow-x-auto scrollbar-hide">
+             <table className="w-full text-left border-collapse whitespace-nowrap">
+                <thead>
+                   <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-divider">
+                      <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest">Transaction ID</th>
+                      <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Entity Manifest</th>
+                      <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Allocation</th>
+                      <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Financial Pulse</th>
+                      <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Protocol</th>
+                      <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest text-center">Authorization</th>
+                      <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest text-right">Context</th>
+                   </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                   {filteredTx.map((tx, i) => (
+                     <tr key={i} className="group hover:bg-slate-50/50 dark:hover:bg-white/1 transition-all cursor-pointer">
+                        <td className="py-5 px-8">
+                           <span className="text-[11px] font-black text-text-muted font-mono tracking-tighter uppercase">{tx.id}</span>
+                        </td>
+                        <td className="py-5 px-4">
+                           <p className="text-[13px] font-black text-text-primary uppercase tracking-tight">{tx.entity}</p>
+                           <p className="text-[10px] font-bold text-text-muted italic">{tx.date}</p>
+                        </td>
+                        <td className="py-5 px-4">
+                           <span className="px-2.5 py-1 rounded-lg bg-background border border-divider text-[9px] font-black uppercase tracking-widest text-text-muted italic">{tx.cat}</span>
+                        </td>
+                        <td className={`py-5 px-4 text-[14px] font-black ${tx.trend === 'up' ? 'text-emerald-500' : 'text-rose-500'} italic`}>
+                           {tx.amount}
+                        </td>
+                        <td className="py-5 px-4">
+                           <div className="flex items-center gap-2">
+                              <CreditCard size={14} className="text-text-muted" />
+                              <span className="text-[11px] font-black text-text-secondary italic">{tx.method}</span>
+                           </div>
+                        </td>
+                        <td className="py-5 px-4 text-center">
+                           <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm ${
+                             tx.status === 'Settled' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
+                             tx.status === 'Verifying' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 
+                             'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                           }`}>{tx.status}</span>
+                        </td>
+                        <td className="py-5 px-8 text-right">
+                           <button onClick={() => setActiveMenu(activeMenu === tx.id ? null : tx.id)} className="p-2.5 bg-background border border-divider rounded-xl text-text-muted hover:text-primary transition-all shadow-subtle relative">
+                               <MoreHorizontal size={18} />
+                           </button>
+                           <AnimatePresence>
+                             {activeMenu === tx.id && (
+                               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+                                 className="absolute right-0 top-12 z-50 bg-card border border-divider rounded-2xl shadow-premium p-2 min-w-[160px]">
+                                 <button onClick={() => handleMenuAction('view', tx.id)} className="w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-text-secondary hover:text-primary hover:bg-primary/5 rounded-xl transition-all">View Detail</button>
+                                 <button onClick={() => handleMenuAction('flag', tx.id)} className="w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-amber-500 hover:bg-amber-500/5 rounded-xl transition-all">Flag for Audit</button>
+                                 <button onClick={() => handleMenuAction('void', tx.id)} className="w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/5 rounded-xl transition-all">Void Transaction</button>
+                               </motion.div>
+                             )}
+                           </AnimatePresence>
+                        </td>
+                     </tr>
+                   ))}
+                </tbody>
+             </table>
+          </div>
+         )}
       </div>
 
       {/* --- RECONCILIATION ENGINE MODAL --- */}

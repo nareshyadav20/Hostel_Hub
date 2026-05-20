@@ -129,66 +129,17 @@ const Staff = () => {
     );
   };
 
-  const [staff, setStaff] = useState([
-    { 
-      id: 'EMP-2021', 
-      name: 'Sanjay Kumar', 
-      role: 'Admin', 
-      property: 'Sapphire PG', 
-      rating: 4.8, 
-      status: 'Active', 
-      joined: '12 Jan 2023', 
-      tasks: 12,
-      email: 'sanjay.k@staynest.com',
-      phone: '+91 98765 43210',
-      skills: ['Operations', 'Conflict Res', 'Finance']
-    },
-    { 
-      id: 'EMP-2022', 
-      name: 'Anita Rao', 
-      role: 'Finance', 
-      property: 'Elite Living', 
-      rating: 4.9, 
-      status: 'Active', 
-      joined: '05 Mar 2023', 
-      tasks: 8,
-      email: 'anita.r@staynest.com',
-      phone: '+91 98765 43211',
-      skills: ['Accounting', 'Audit', 'Taxation']
-    },
-    { 
-      id: 'EMP-2023', 
-      name: 'Vikram Das', 
-      role: 'Maintenance', 
-      property: 'Tech Park PG', 
-      rating: 4.5, 
-      status: 'On Leave', 
-      joined: '22 Feb 2023', 
-      tasks: 4,
-      email: 'vikram.d@staynest.com',
-      phone: '+91 98765 43212',
-      skills: ['Plumbing', 'Electrical', 'HVAC']
-    },
-    { 
-      id: 'EMP-2024', 
-      name: 'Meera Iyer', 
-      role: 'Admin', 
-      property: 'Sapphire PG', 
-      rating: 4.7, 
-      status: 'Active', 
-      joined: '15 May 2023', 
-      tasks: 22,
-      email: 'meera.i@staynest.com',
-      phone: '+91 98765 43213',
-      skills: ['Hospitality', 'Audit', 'HR']
-    },
-  ]);
+  const [staff, setStaff] = useState([]);
+
+  const activeCount = staff.filter(s => s.status === 'Active').length;
+  const onLeaveCount = staff.filter(s => s.status === 'On Leave').length;
+  const uniqueRoles = [...new Set(staff.map(s => s.role))].length;
 
   const stats = [
-    { label: 'Total Personnel', value: '124', sub: 'Global Staff Count', icon: <Users size={20} />, color: 'primary' },
-    { label: 'Active Manifest', value: '108', sub: '92% On-Duty Rate', icon: <Activity size={20} />, color: 'success' },
-    { label: 'Dept Distribution', value: '06', sub: 'Functional Clusters', icon: <Briefcase size={20} />, color: 'accent' },
-    { label: 'On Leave', value: '16', sub: 'Scheduled Absences', icon: <Calendar size={20} />, color: 'warning' },
+    { label: 'Total Personnel', value: staff.length.toString(), sub: 'Global Staff Count', icon: <Users size={20} />, color: 'primary' },
+    { label: 'Active Manifest', value: activeCount.toString(), sub: staff.length > 0 ? `${Math.round((activeCount/staff.length)*100)}% On-Duty Rate` : 'On-Duty Rate', icon: <Activity size={20} />, color: 'success' },
+    { label: 'Dept Distribution', value: uniqueRoles.toString().padStart(2, '0'), sub: 'Functional Clusters', icon: <Briefcase size={20} />, color: 'accent' },
+    { label: 'On Leave', value: onLeaveCount.toString(), sub: 'Scheduled Absences', icon: <Calendar size={20} />, color: 'warning' },
   ];
 
   const getRoleColor = (role) => {

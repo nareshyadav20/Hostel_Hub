@@ -333,17 +333,24 @@ const Dashboard = () => {
                       <p className="text-xs text-text-muted mt-0.5">Primary Node</p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${i % 3 === 0 ? 'bg-slate-900 text-white border-slate-900' : i % 3 === 1 ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                        {i % 3 === 0 ? 'Enterprise' : i % 3 === 1 ? 'Standard' : 'Basic'}
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${row.category === 'Luxury' ? 'bg-slate-900 text-white border-slate-900' : row.category === 'Professional' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                        {row.category || 'Standard'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-text-main font-medium">{row.genderType || 'Unisex'}</span>
+                      <span className="text-sm text-text-main font-medium">{row.genderType || 'Mixed'}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Active
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-semibold ${
+                        row.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                        row.status === 'Draft' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        'bg-slate-50 text-slate-700 border border-slate-200'
+                      }`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${
+                          row.status === 'Active' ? 'bg-emerald-500' :
+                          row.status === 'Draft' ? 'bg-amber-500' : 'bg-slate-500'
+                        }`} />
+                        {row.status || 'Active'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">

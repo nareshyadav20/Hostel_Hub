@@ -25,4 +25,22 @@ router.put('/settings', adminController.updateAdminSettings);
 // Staff management
 router.get('/staff', adminController.getAllStaff);
 
+// User KYC / Documents management
+router.get('/users/kyc', adminController.getPlatformUsersKyc);
+router.patch('/users/kyc/:id/status', adminController.updateUserKycStatus);
+
+// CMS management
+router.get('/cms', adminController.getAdminCms);
+router.put('/cms', adminController.updateAdminCms);
+
+// Insights management
+router.get('/insights', adminController.getAdminInsights);
+router.put('/insights', adminController.updateAdminInsights);
+
+// Support management
+router.get('/support', adminController.getAdminSupport);
+router.put('/support', adminController.updateAdminSupport);
+router.post('/support/escalate', adminController.escalateSupportTicket);
+router.post('/support/chat', adminController.sendSupportChatMessage);
+
 module.exports = router;

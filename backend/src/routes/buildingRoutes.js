@@ -17,6 +17,7 @@ router.get('/:id', buildingController.getBuildingById);
 router.post('/', buildingController.createBuilding);
 router.post('/bulk', buildingController.bulkCreateBuildings);
 router.patch('/:id', buildingController.updateBuilding);
+router.put('/:id', buildingController.updateBuilding);
 router.delete('/:id', buildingController.deleteBuilding);
 
 const multer = require('multer');

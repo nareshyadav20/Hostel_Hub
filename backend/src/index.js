@@ -121,6 +121,7 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const notificationService = require('./utils/notificationService');
 const procurementRoutes = require('./routes/procurementRoutes');
+const taskRoutes = require('./routes/taskRoutes');
 
 // Pre-load all models to ensure they are registered for population
 require('./models/User');
@@ -142,6 +143,10 @@ require('./models/TenantPhoto');
 require('./models/OwnerPhoto');
 require('./models/BuildingPhoto');
 require('./models/TenantProof');
+require('./models/AdminCms');
+require('./models/AdminInsights');
+require('./models/AdminSupport');
+require('./models/Task');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -169,6 +174,8 @@ app.use('/api/confidential-reports', require('./routes/confidentialReportRoutes'
 app.use('/api/procurement', procurementRoutes);
 app.use('/api/community', require('./routes/communityRoutes'));
 app.use('/api/tenant-proofs', require('./routes/tenantProofRoutes'));
+app.use('/api/admin', adminRoutes);
+app.use('/api/tasks', taskRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

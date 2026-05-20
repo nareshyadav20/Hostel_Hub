@@ -5,10 +5,80 @@ const OwnerNotification = require('../models/OwnerNotification');
 exports.getNotifications = async (req, res) => {
   try {
     const { buildingId, portalType, moduleName, priority, isRead } = req.query;
-    const filters = { archived: false };
     const mongoose = require('mongoose');
     
     const isTenant = req.user.role === 'TENANT';
+    const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role.toUpperCase());
+
+    if (isAdmin) {
+      // Admin sees notifications from BOTH tenant (Notification) and owner (OwnerNotification) portals.
+      const tenantFilters = { archived: false };
+      const ownerFilters = { archived: false };
+
+      if (buildingId) {
+        const bIdStr = buildingId.toString();
+        const bIdObj = mongoose.Types.ObjectId.isValid(bIdStr) ? new mongoose.Types.ObjectId(bIdStr) : null;
+        const bFilters = [
+          { buildingId: bIdStr },
+          { buildingId: bIdObj }
+        ];
+        tenantFilters.$or = bFilters;
+        ownerFilters.$or = bFilters;
+      }
+
+      // Respect the portalType query filter to limit fetch target if specified
+      const fetchTenant = !portalType || portalType === 'Tenant' || portalType === 'All';
+      const fetchOwner = !portalType || portalType === 'Owner' || portalType === 'All' || portalType === 'Staff';
+
+      // Apply standard filters
+      if (moduleName) {
+        tenantFilters.moduleName = moduleName;
+        ownerFilters.moduleName = moduleName;
+      }
+      if (priority) {
+        tenantFilters.priority = priority;
+        ownerFilters.priority = priority;
+      }
+      if (isRead !== undefined) {
+        tenantFilters.isRead = isRead === 'true';
+        ownerFilters.isRead = isRead === 'true';
+      }
+
+      let tenantNotifs = [];
+      let ownerNotifs = [];
+
+      if (fetchTenant) {
+        tenantNotifs = await Notification.find(tenantFilters).lean();
+      }
+      if (fetchOwner) {
+        ownerNotifs = await OwnerNotification.find(ownerFilters).lean();
+      }
+
+      // Combine and enrich records with origin metadata
+      const merged = [
+        ...tenantNotifs.map(n => ({
+          ...n,
+          id: n._id,
+          type: n.category || n.moduleName || 'System',
+          portalOrigin: 'Tenant'
+        })),
+        ...ownerNotifs.map(n => ({
+          ...n,
+          id: n._id,
+          type: n.category || n.moduleName || 'System',
+          portalOrigin: 'Owner'
+        }))
+      ];
+
+      // Sort by absolute creation date in descending order
+      merged.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const limited = merged.slice(0, 100);
+
+      console.log(`✅ [ADMIN_DB_FETCH] Aggregated notifications from both portals. Total merged: ${limited.length}`);
+      return res.json(limited);
+    }
+
+    const filters = { archived: false };
     const Model = isTenant ? Notification : OwnerNotification;
 
     if (isTenant) {
@@ -73,19 +143,6 @@ exports.getNotifications = async (req, res) => {
     const notifications = await Model.find(filters).sort({ createdAt: -1 }).limit(100);
     
     console.log(`✅ [DB_FETCH] Query successful. Found ${notifications.length} persistent records.`);
-    if (notifications.length > 0) {
-      console.log('📊 [DB_FETCH] TOP_RECORD_DIAGNOSTICS:', {
-        title: notifications[0].title,
-        module: notifications[0].moduleName,
-        portal: notifications[0].portalType,
-        building: notifications[0].buildingId,
-        id: notifications[0]._id,
-        timestamp: notifications[0].createdAt
-      });
-    } else {
-      console.warn('⚠️ [DB_FETCH] Warning: No persistent notifications found for this query.');
-    }
-    
     res.json(notifications);
   } catch (error) {
     console.error('❌ FETCH_ERROR:', error);
@@ -96,10 +153,33 @@ exports.getNotifications = async (req, res) => {
 exports.getUnreadCount = async (req, res) => {
   try {
     const { buildingId } = req.query;
-    const query = { isRead: false, archived: false };
     const mongoose = require('mongoose');
     
     const isTenant = req.user.role === 'TENANT';
+    const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role.toUpperCase());
+
+    if (isAdmin) {
+      // Aggregated unread count from both collections for admin
+      const tenantQuery = { isRead: false, archived: false };
+      const ownerQuery = { isRead: false, archived: false };
+
+      if (buildingId) {
+        const bIdStr = buildingId.toString();
+        const bIdObj = mongoose.Types.ObjectId.isValid(bIdStr) ? new mongoose.Types.ObjectId(bIdStr) : null;
+        const bFilters = [
+          { buildingId: bIdStr },
+          { buildingId: bIdObj }
+        ];
+        tenantQuery.$or = bFilters;
+        ownerQuery.$or = bFilters;
+      }
+
+      const tenantCount = await Notification.countDocuments(tenantQuery);
+      const ownerCount = await OwnerNotification.countDocuments(ownerQuery);
+      return res.json({ count: tenantCount + ownerCount });
+    }
+
+    const query = { isRead: false, archived: false };
     const Model = isTenant ? Notification : OwnerNotification;
 
     if (isTenant) {
@@ -170,6 +250,27 @@ exports.createNotification = async (req, res) => {
 
 exports.markAsRead = async (req, res) => {
   try {
+    const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role.toUpperCase());
+    
+    if (isAdmin) {
+      // Try updating in OwnerNotification first
+      let notification = await OwnerNotification.findOneAndUpdate(
+        { _id: req.params.id },
+        { isRead: true },
+        { new: true }
+      );
+      if (!notification) {
+        // If not found, try Notification
+        notification = await Notification.findOneAndUpdate(
+          { _id: req.params.id },
+          { isRead: true },
+          { new: true }
+        );
+      }
+      if (!notification) return res.status(404).json({ message: 'Notification not found' });
+      return res.json(notification);
+    }
+
     const query = { _id: req.params.id };
     const isTenant = req.user.role === 'TENANT';
     const Model = isTenant ? Notification : OwnerNotification;
@@ -198,6 +299,34 @@ exports.markAsRead = async (req, res) => {
 exports.markAllAsRead = async (req, res) => {
   try {
     const { category, buildingId } = req.body;
+    const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role.toUpperCase());
+
+    if (isAdmin) {
+      const tenantQuery = { isRead: false };
+      const ownerQuery = { isRead: false };
+      
+      if (category && category !== 'all') {
+        tenantQuery.category = category;
+        ownerQuery.category = category;
+      }
+      
+      if (buildingId) {
+        const mongoose = require('mongoose');
+        const bIdStr = buildingId.toString();
+        const bIdObj = mongoose.Types.ObjectId.isValid(bIdStr) ? new mongoose.Types.ObjectId(bIdStr) : null;
+        const bFilters = [
+          { buildingId: bIdStr },
+          { buildingId: bIdObj }
+        ];
+        tenantQuery.$or = bFilters;
+        ownerQuery.$or = bFilters;
+      }
+      
+      await OwnerNotification.updateMany(ownerQuery, { isRead: true });
+      await Notification.updateMany(tenantQuery, { isRead: true });
+      return res.json({ message: 'All notifications marked as read' });
+    }
+
     const query = { isRead: false };
     const isTenant = req.user.role === 'TENANT';
     const Model = isTenant ? Notification : OwnerNotification;
@@ -223,6 +352,25 @@ exports.markAllAsRead = async (req, res) => {
 
 exports.archiveNotification = async (req, res) => {
   try {
+    const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role.toUpperCase());
+
+    if (isAdmin) {
+      let notification = await OwnerNotification.findOneAndUpdate(
+        { _id: req.params.id },
+        { archived: true },
+        { new: true }
+      );
+      if (!notification) {
+        notification = await Notification.findOneAndUpdate(
+          { _id: req.params.id },
+          { archived: true },
+          { new: true }
+        );
+      }
+      if (!notification) return res.status(404).json({ message: 'Notification not found' });
+      return res.json(notification);
+    }
+
     const query = { _id: req.params.id };
     const isTenant = req.user.role === 'TENANT';
     const Model = isTenant ? Notification : OwnerNotification;
@@ -249,6 +397,17 @@ exports.archiveNotification = async (req, res) => {
 
 exports.deleteNotification = async (req, res) => {
   try {
+    const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role.toUpperCase());
+
+    if (isAdmin) {
+      let result = await OwnerNotification.deleteOne({ _id: req.params.id });
+      if (result.deletedCount === 0) {
+        result = await Notification.deleteOne({ _id: req.params.id });
+      }
+      if (result.deletedCount === 0) return res.status(404).json({ message: 'Notification not found' });
+      return res.json({ message: 'Notification deleted successfully' });
+    }
+
     const query = { _id: req.params.id };
     const isTenant = req.user.role === 'TENANT';
     const Model = isTenant ? Notification : OwnerNotification;

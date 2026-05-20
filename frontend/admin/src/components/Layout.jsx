@@ -15,6 +15,7 @@ const Layout = ({ children }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchProfile = async () => {
     try {
@@ -27,11 +28,27 @@ const Layout = ({ children }) => {
     }
   };
 
+  const fetchNotificationsCount = async () => {
+    try {
+      const res = await API.get('/notifications');
+      const rawData = res.data || [];
+      const unread = rawData.filter(n => !n.isRead).length;
+      setUnreadCount(unread);
+    } catch (err) {
+      console.error('Layout failed to fetch notifications count:', err);
+    }
+  };
+
   React.useEffect(() => {
     fetchProfile();
+    fetchNotificationsCount();
 
-    // Listen to custom profile update event from Profile.jsx
+    // Listen to custom events
     window.addEventListener('user-profile-updated', fetchProfile);
+    window.addEventListener('notifications-updated', fetchNotificationsCount);
+
+    // Dynamic interval polling every 30 seconds
+    const interval = setInterval(fetchNotificationsCount, 30000);
 
     const down = (e) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
@@ -43,6 +60,8 @@ const Layout = ({ children }) => {
     
     return () => {
       window.removeEventListener('user-profile-updated', fetchProfile);
+      window.removeEventListener('notifications-updated', fetchNotificationsCount);
+      clearInterval(interval);
       document.removeEventListener('keydown', down);
     };
   }, []);
@@ -117,9 +136,16 @@ const Layout = ({ children }) => {
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            <button className="p-2.5 text-text-muted hover:text-primary hover:bg-gray-50 rounded-xl transition-all relative">
+            <button 
+              onClick={() => navigate('/notifications')}
+              className="p-2.5 text-text-muted hover:text-primary hover:bg-gray-50 rounded-xl transition-all relative border-none bg-transparent cursor-pointer active:scale-95"
+            >
               <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-danger rounded-full border-2 border-surface"></span>
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 bg-danger text-white rounded-full border-2 border-surface text-[8px] font-black w-4.5 h-4.5 flex items-center justify-center shadow-sm">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </button>
 
             <div className="h-6 w-px bg-border mx-2" />

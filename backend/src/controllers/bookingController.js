@@ -16,7 +16,10 @@ const createBooking = async (req, res) => {
       method,
       proofId,
       bedNumber,
-      sharingType
+      sharingType,
+      guestName,
+      email,
+      phone
     } = req.body;
 
     // Validate ObjectIds — helper function
@@ -65,8 +68,11 @@ const createBooking = async (req, res) => {
       totalAmount: totalAmount || 0,
       paymentMethod: method || 'UPI',
       status: 'Confirmed',
-      userId: req.user.id || tenantId || 'guest',
-      proofId: isValidObjectId(proofId) ? proofId : undefined
+      userId: tenantId || (req.user ? req.user.id : 'guest'),
+      proofId: isValidObjectId(proofId) ? proofId : undefined,
+      guestName,
+      email,
+      phone
     };
 
     if (finalTenantId) bookingData.tenantId = finalTenantId;

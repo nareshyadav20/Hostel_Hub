@@ -5,6 +5,9 @@ const bookingSchema = new mongoose.Schema({
   buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   proofId: { type: mongoose.Schema.Types.ObjectId, ref: 'TenantProof' },
   userId: { type: String },
+  guestName: { type: String },
+  email: { type: String },
+  phone: { type: String },
   category: { type: String, required: true },
   moveInDate: { type: String, default: 'TBD' },
   securityDeposit: { type: Number, default: 0 },
@@ -18,6 +21,6 @@ const bookingSchema = new mongoose.Schema({
   paymentMethod: { type: String, default: 'UPI' },
   transactionId: { type: String },
   bookingDate: { type: Date, default: Date.now }
-}, { timestamps: true, collection: 'bookings' });
+}, { timestamps: true, collection: 'admin_bookings' });
 
 module.exports = mongoose.model('Booking', bookingSchema);
