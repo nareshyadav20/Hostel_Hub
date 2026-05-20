@@ -52,6 +52,12 @@
 .stat-card-premium.emergency {
   background: linear-gradient(135deg, #fff1f2, #ffe4e6);
   border: 1px solid #fecdd3;
+  padding: 1.5rem 2rem !important;
+}
+
+.stat-card-premium.emergency .stat-value {
+  font-size: 1.8rem;
+  white-space: nowrap;
 }
 
 [data-theme='dark'] .stat-card-premium.emergency {
