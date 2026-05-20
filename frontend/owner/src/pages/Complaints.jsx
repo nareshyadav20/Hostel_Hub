@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown, X, Shirt, Sparkles } from 'lucide-react';
+import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown, X, Shirt, Sparkles, Search } from 'lucide-react';
 import { api } from '../mockData';
 import socket, { connectSocket } from '../utils/socket';
 import { clearAllCache } from '../cache';
@@ -20,6 +20,7 @@ const Complaints = () => {
   const [filterBuilding, setFilterBuilding] = useState(activeBuildingId || 'all');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastNotification, setLastNotification] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchComplaints = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -51,7 +52,11 @@ const Complaints = () => {
             timeElapsed,
             description: c.description,
             buildingName: c.buildingId?.name || 'Unknown Building',
-            buildingId: c.buildingId?._id || c.buildingId
+            buildingId: c.buildingId?._id || c.buildingId,
+            asset: c.asset || '',
+            subIssue: c.subIssue || '',
+            customIssue: c.customIssue || '',
+            createdAt: createdAt
           };
         });
       setComplaints(formatted);
@@ -73,6 +78,10 @@ const Complaints = () => {
     
     const handleNewComplaint = (data) => {
       console.log('🔔 New complaint received — refreshing', data);
+      if (data.complaint?.asset) {
+        // Do not show assets notifications on complaints page
+        return;
+      }
       setLastNotification(`New ticket from ${data.tenantName || 'a resident'}: "${data.complaint?.title || 'Maintenance Needed'}"`);
       fetchComplaints(false);
       setTimeout(() => setLastNotification(null), 5000);
@@ -98,12 +107,31 @@ const Complaints = () => {
   };
 
   const filteredComplaints = complaints.filter(c => {
-    if (activeTab === 'Maintenance') return !['Leave', 'Visitor', 'Laundry', 'Cleaning'].includes(c.category);
-    if (activeTab === 'Leave') return c.category === 'Leave';
-    if (activeTab === 'Visitor') return c.category === 'Visitor';
-    if (activeTab === 'Laundry') return c.category === 'Laundry';
-    if (activeTab === 'Cleaning') return c.category === 'Cleaning';
-    return true;
+    // Isolate asset alerts/updates from the general complaint feed UI
+    if (c.asset) return false;
+
+    // 1. Tab Scoping
+    let matchesTab = true;
+    if (activeTab === 'Maintenance') matchesTab = !['Leave', 'Visitor', 'Laundry', 'Cleaning'].includes(c.category);
+    else if (activeTab === 'Leave') matchesTab = c.category === 'Leave';
+    else if (activeTab === 'Visitor') matchesTab = c.category === 'Visitor';
+    else if (activeTab === 'Laundry') matchesTab = c.category === 'Laundry';
+    else if (activeTab === 'Cleaning') matchesTab = c.category === 'Cleaning';
+
+    // 2. Search filtering
+    const query = searchTerm.toLowerCase();
+    const matchesSearch = !searchTerm ? true : (
+      c.category?.toLowerCase()?.includes(query) ||
+      c.asset?.toLowerCase()?.includes(query) ||
+      c.subIssue?.toLowerCase()?.includes(query) ||
+      c.customIssue?.toLowerCase()?.includes(query) ||
+      c.reportedBy?.toLowerCase()?.includes(query) ||
+      c.room?.toLowerCase()?.includes(query) ||
+      c.buildingName?.toLowerCase()?.includes(query) ||
+      c.issue?.toLowerCase()?.includes(query)
+    );
+
+    return matchesTab && matchesSearch;
   });
 
   const [expandedId, setExpandedId] = useState(null);
@@ -199,6 +227,17 @@ const Complaints = () => {
         </div>
         
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.2rem 0.8rem' }}>
+            <Search size={16} color="var(--text-muted)" style={{ marginRight: '0.5rem' }} />
+            <input 
+              type="text" 
+              placeholder="Search category, tenant, asset..." 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)} 
+              style={{ background: 'transparent', border: 'none', padding: '0.6rem 0.2rem', color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.9rem', outline: 'none', width: '220px' }}
+            />
+          </div>
+
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.2rem 0.8rem' }}>
             <Filter size={16} color="var(--text-muted)" style={{ marginRight: '0.5rem' }} />
             <select 
@@ -316,6 +355,31 @@ const Complaints = () => {
                           {getUrgencyBadge(c.urgency)}
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{c.timeElapsed}</span>
                         </div>
+                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.2rem' }}>
+                          <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', fontWeight: '700' }}>
+                            {c.category}
+                          </span>
+                          {c.asset && (
+                            <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'rgba(14, 165, 233, 0.1)', color: '#0EA5E9', fontWeight: '700' }}>
+                              Asset: {c.asset}
+                            </span>
+                          )}
+                          {c.subIssue && (
+                            <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', fontWeight: '700' }}>
+                              Issue: {c.subIssue}
+                            </span>
+                          )}
+                          {c.customIssue && (
+                            <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B', fontWeight: '700' }}>
+                              Custom: {c.customIssue}
+                            </span>
+                          )}
+                          {c.createdAt && (
+                            <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', fontWeight: '600' }}>
+                              {new Date(c.createdAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td style={{ padding: '1.2rem' }}>
@@ -387,12 +451,28 @@ const Complaints = () => {
                               </div>
                               <div>
                                 <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Building</p>
-                                <p style={{ fontWeight: '700', fontSize: '0.9rem' }}>{c.buildingName}</p>
+                                <p style={{ fontWeight: '700', fontSize: '0.9rem', margin: 0 }}>{c.buildingName}</p>
+                              </div>
+                              <div>
+                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Category & Asset Info</p>
+                                <p style={{ fontWeight: '700', fontSize: '0.9rem', margin: 0 }}>
+                                  Category: {c.category}
+                                </p>
+                                {c.asset && (
+                                  <p style={{ fontWeight: '700', fontSize: '0.9rem', margin: '0.2rem 0 0 0' }}>
+                                    Asset: {c.asset} {c.subIssue ? `(${c.subIssue})` : ''}
+                                  </p>
+                                )}
+                                {c.customIssue && (
+                                  <p style={{ fontWeight: '700', fontSize: '0.9rem', margin: '0.2rem 0 0 0', color: '#D97706' }}>
+                                    Custom Issue: {c.customIssue}
+                                  </p>
+                                )}
                               </div>
                               {c.assignedTo && (
                                 <div>
                                   <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Staff Assigned</p>
-                                  <p style={{ fontWeight: '800', fontSize: '0.9rem', color: 'var(--accent-primary)' }}>{c.assignedTo}</p>
+                                  <p style={{ fontWeight: '800', fontSize: '0.9rem', color: 'var(--accent-primary)', margin: 0 }}>{c.assignedTo}</p>
                                 </div>
                               )}
                             </div>

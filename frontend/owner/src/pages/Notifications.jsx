@@ -56,6 +56,7 @@ const Notifications = () => {
 
   const categories = [
     { id: 'all', name: 'All', icon: <LayoutGrid size={18} /> },
+    { id: 'Assets', name: 'Assets', icon: <Box size={18} /> },
     { id: 'Mess', name: 'Mess', icon: <Utensils size={18} /> },
     { id: 'Safety', name: 'SOS Alerts', icon: <Shield size={18} /> },
     { id: 'Payments', name: 'Payments', icon: <CreditCard size={18} /> },
@@ -183,6 +184,22 @@ const Notifications = () => {
     );
   };
 
+  const getOwnerActionLink = (actionLink) => {
+    if (!actionLink) return null;
+    if (actionLink.startsWith('/owner/')) return actionLink;
+    
+    const genericPaths = [
+      '/complaints', '/mess', '/payments', '/inventory', '/rooms', 
+      '/tenants', '/staff', '/buildings', '/settings', '/reports', '/community', '/assets'
+    ];
+    
+    const matchedPath = genericPaths.find(p => actionLink.startsWith(p));
+    if (matchedPath && activeBuildingId) {
+      return `/owner/building/${activeBuildingId}${actionLink}`;
+    }
+    return actionLink;
+  };
+
   const inputStyle = { padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', width: '100%' };
 
   return (
@@ -295,7 +312,7 @@ const Notifications = () => {
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.5 }}>{n.message}</p>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     {!n.isRead && <button onClick={() => handleMarkAsRead(n.id || n._id)} className="btn-notif-action"><CheckCircle size={14} /> Mark read</button>}
-                    {n.actionLink && <button onClick={() => navigate(n.actionLink)} className="btn-notif-action" style={{ color: 'var(--accent-primary)' }}><ExternalLink size={14} /> Take Action</button>}
+                    {n.actionLink && <button onClick={() => navigate(getOwnerActionLink(n.actionLink))} className="btn-notif-action" style={{ color: 'var(--accent-primary)' }}><ExternalLink size={14} /> Take Action</button>}
                     <button onClick={() => handleArchive(n.id || n._id)} className="btn-notif-action"><Archive size={14} /> Archive</button>
                   </div>
                 </div>

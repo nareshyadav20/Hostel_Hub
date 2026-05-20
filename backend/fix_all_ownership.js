@@ -18,8 +18,22 @@ async function fixAllOwnership() {
       {},
       { $set: { owner: owner._id } }
     );
-    
     console.log(`Successfully reassigned ${result.modifiedCount} buildings.`);
+
+    const Complaint = require('./src/models/Complaint');
+    const complaints = await Complaint.find({});
+    let updatedComplaintsCount = 0;
+    for (const c of complaints) {
+      if (c.buildingId) {
+        const b = await Building.findById(c.buildingId);
+        if (b && b.owner) {
+          c.ownerId = b.owner;
+          await c.save();
+          updatedComplaintsCount++;
+        }
+      }
+    }
+    console.log(`Successfully synced ownerId for ${updatedComplaintsCount} complaints.`);
     process.exit(0);
   } catch (err) {
     console.error(err);

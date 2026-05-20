@@ -176,6 +176,7 @@ app.use('/api/community', require('./routes/communityRoutes'));
 app.use('/api/tenant-proofs', require('./routes/tenantProofRoutes'));
 app.use('/api/admin', adminRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/assets', require('./routes/assetRoutes'));
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });

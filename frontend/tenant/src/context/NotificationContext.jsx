@@ -40,13 +40,15 @@ export const NotificationProvider = ({ children }) => {
     if (!isLoggedIn) return;
 
     const handleNewNotification = (notification) => {
-      // In tenant portal, we usually receive notifications targeted to us via tenant_userId room
-      // or to our building via building_buildingId room.
-      // Socket handles the room filtering, so we just add it.
-      setNotifications(prev => [notification, ...prev].slice(0, 50));
-      if (!notification.isRead) {
-        setUnreadCount(prev => prev + 1);
-      }
+      setNotifications(prev => {
+        const exists = prev.some(n => (n._id || n.id) === (notification._id || notification.id));
+        if (exists) return prev;
+
+        if (!notification.isRead) {
+          setUnreadCount(c => c + 1);
+        }
+        return [notification, ...prev].slice(0, 50);
+      });
 
       // Show browser notification
       if (Notification.permission === 'granted') {
