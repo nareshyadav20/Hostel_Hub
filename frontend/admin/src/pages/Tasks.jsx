@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckSquare, Search, Filter, Plus, MoreHorizontal, 
   Clock, Calendar, User, ChevronRight, CheckCircle2,

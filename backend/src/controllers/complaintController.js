@@ -137,20 +137,8 @@ exports.getMyComplaints = async (req, res) => {
       user: mongoose.Types.ObjectId.isValid(req.user.id) ? new mongoose.Types.ObjectId(req.user.id) : req.user.id 
     }).toArray();
 
-    // Populate raw complaints programmatically
-    const Building = require('../models/Building');
-    for (let c of rawComplaints) {
-      c.id = c._id.toString();
-      if (c.tenant && mongoose.Types.ObjectId.isValid(c.tenant)) {
-        c.tenant = await Tenant.findById(c.tenant, 'name room email').lean();
-      }
-      if (c.buildingId && mongoose.Types.ObjectId.isValid(c.buildingId)) {
-        c.buildingId = await Building.findById(c.buildingId, 'name').lean();
-      }
-      if (c.roomId && mongoose.Types.ObjectId.isValid(c.roomId)) {
-        c.roomId = await Room.findById(c.roomId, 'roomNumber').lean();
-      }
-    }
+    // Populate raw complaints programmatically using concurrent bulk queries (solving N+1 problem)
+    await populateRawComplaints(rawComplaints);
 
     const merged = [...ownerComplaints, ...rawComplaints].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
     res.status(200).json(merged);
@@ -256,24 +244,60 @@ exports.getAllComplaints = async (req, res) => {
 
     const rawComplaints = await db.collection('complaints').find(rawQuery).toArray();
 
-    // Populate raw complaints programmatically
-    const Building = require('../models/Building');
-    for (let c of rawComplaints) {
-      c.id = c._id.toString();
-      if (c.tenant && mongoose.Types.ObjectId.isValid(c.tenant)) {
-        c.tenant = await Tenant.findById(c.tenant, 'name room email').lean();
-      }
-      if (c.buildingId && mongoose.Types.ObjectId.isValid(c.buildingId)) {
-        c.buildingId = await Building.findById(c.buildingId, 'name').lean();
-      }
-      if (c.roomId && mongoose.Types.ObjectId.isValid(c.roomId)) {
-        c.roomId = await Room.findById(c.roomId, 'roomNumber').lean();
-      }
-    }
+    // Populate raw complaints programmatically using concurrent bulk queries (solving N+1 problem)
+    await populateRawComplaints(rawComplaints);
 
     const merged = [...ownerComplaints, ...rawComplaints].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
     res.status(200).json(merged);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch all complaints', error: error.message });
   }
+};
+
+// High-performance helper to populate raw complaints in bulk, avoiding N+1 database queries
+const populateRawComplaints = async (rawComplaints) => {
+  if (!rawComplaints || rawComplaints.length === 0) return rawComplaints;
+
+  const Building = require('../models/Building');
+
+  const tenantIds = new Set();
+  const buildingIds = new Set();
+  const roomIds = new Set();
+
+  for (const c of rawComplaints) {
+    if (c.tenant && mongoose.Types.ObjectId.isValid(c.tenant)) {
+      tenantIds.add(c.tenant.toString());
+    }
+    if (c.buildingId && mongoose.Types.ObjectId.isValid(c.buildingId)) {
+      buildingIds.add(c.buildingId.toString());
+    }
+    if (c.roomId && mongoose.Types.ObjectId.isValid(c.roomId)) {
+      roomIds.add(c.roomId.toString());
+    }
+  }
+
+  const [tenants, buildings, rooms] = await Promise.all([
+    Tenant.find({ _id: { $in: Array.from(tenantIds) } }, 'name room email').lean(),
+    Building.find({ _id: { $in: Array.from(buildingIds) } }, 'name').lean(),
+    Room.find({ _id: { $in: Array.from(roomIds) } }, 'roomNumber').lean()
+  ]);
+
+  const tenantMap = new Map(tenants.map(t => [t._id.toString(), t]));
+  const buildingMap = new Map(buildings.map(b => [b._id.toString(), b]));
+  const roomMap = new Map(rooms.map(r => [r._id.toString(), r]));
+
+  for (const c of rawComplaints) {
+    c.id = c._id.toString();
+    if (c.tenant) {
+      c.tenant = tenantMap.get(c.tenant.toString()) || null;
+    }
+    if (c.buildingId) {
+      c.buildingId = buildingMap.get(c.buildingId.toString()) || null;
+    }
+    if (c.roomId) {
+      c.roomId = roomMap.get(c.roomId.toString()) || null;
+    }
+  }
+
+  return rawComplaints;
 };

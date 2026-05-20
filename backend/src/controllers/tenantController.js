@@ -53,7 +53,7 @@ const getTenants = async (req, res) => {
       query = isPlatformAdmin ? {} : { buildingId: { $in: buildingIds } };
     }
 
-    const tenants = await Tenant.find(query);
+    const tenants = await Tenant.find(query).lean();
     res.status(200).json(tenants);
   } catch (err) {
     res.status(500).json({ error: err.message });
