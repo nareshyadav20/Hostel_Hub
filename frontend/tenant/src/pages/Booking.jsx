@@ -331,7 +331,7 @@ const Booking = () => {
             <div class="info-block" style="text-align: right;">
                 <h4>Invoice Details</h4>
                 <p>#INV-${b._id.slice(-8).toUpperCase()}</p>
-                <p style="font-weight: 400; color: #64748b; font-size: 14px;">Date: ${new Date().toLocaleDateString('en-IN')}</p>
+                <p style="font-weight: 400; color: #64748b; font-size: 14px;">Date: ${new Date(b.bookingDate || b.createdAt || new Date()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
             </div>
         </div>
 
