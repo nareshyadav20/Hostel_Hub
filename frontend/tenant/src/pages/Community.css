@@ -7,7 +7,19 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  font-family: "Times New Roman", serif; /* Updated font */
 }
+
+/* Add vertical spacing between direct children */
+.community-page > *:not(:last-child) {
+  margin-bottom: 1.5rem;
+}
+
+/* Reduced heading sizes for community page */
+.community-page h1 { font-size: 1.4rem; }
+.community-page h2 { font-size: 1.2rem; }
+.community-page h3 { font-size: 1.1rem; }
+.community-page h4 { font-size: 1rem; }
 
 .community-header {
   display: flex;
