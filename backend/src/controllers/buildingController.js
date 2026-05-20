@@ -71,7 +71,7 @@ const getBuildings = async (req, res) => {
     const buildings = await Building.find(query).populate({
       path: 'floors',
       populate: { path: 'rooms', populate: { path: 'beds' } }
-    });
+    }).lean();
     console.log(`[DEBUG] Found ${buildings.length} buildings for owner ${req.user.id}`);
     res.status(200).json(buildings);
   } catch (error) {

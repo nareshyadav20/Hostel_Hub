@@ -191,7 +191,7 @@ exports.getSummaryKPIs = async (req, res) => {
     const pendingPaymentsAmount = pendingPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
     // 6. Health Score (Dynamic)
-    const settings = await SystemSettings.findOne(isAdmin ? {} : { owner: req.user.id });
+    const settings = await SystemSettings.findOne(isPlatformAdmin ? {} : { owner: req.user.id });
     const defaultRent = settings?.rentSettings?.defaultRent?.single || 8000;
 
     const occupancyScore = Math.min(40, (occupancyRate / 100) * 40);
@@ -284,6 +284,8 @@ exports.getSummaryKPIs = async (req, res) => {
 
     const ownerCount = await User.countDocuments({ role: { $regex: /^owner$/i } });
 
+    const todayRevenue = (paymentStatsOwner[0]?.todayRevenue || 0) + (paymentStatsRaw[0]?.todayRevenue || 0);
+
     res.json({
       totalBeds, occupiedBeds, vacantBeds, occupancyRate,
       todayRevenue,
@@ -295,8 +297,8 @@ exports.getSummaryKPIs = async (req, res) => {
       buildingCount,
       totalTenants,
       ownerCount,
-      complaintsToday,
-      checkinsToday,
+      complaintsToday: totalComplaintsToday,
+      checkinsToday: totalCheckinsToday,
       buildingName: selectedBuildingName
     });
   } catch (error) {

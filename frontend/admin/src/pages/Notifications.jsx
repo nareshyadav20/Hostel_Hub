@@ -34,8 +34,12 @@ const Notifications = () => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const res = await API.get('/notifications');
-      const rawData = res.data || [];
+      const [notifRes, buildingsRes] = await Promise.all([
+        API.get('/notifications'),
+        API.get('/buildings')
+      ]);
+      
+      const rawData = notifRes.data || [];
       const mapped = rawData.map(n => ({
         id: n._id,
         type: n.category || n.moduleName || 'System',
@@ -47,8 +51,14 @@ const Notifications = () => {
         ref: n._id
       }));
       setInbox(mapped);
+      
+      const bData = buildingsRes.data || [];
+      setBuildings(bData);
+      if (bData.length > 0) {
+        setSelectedBuildingId(bData[0]._id);
+      }
     } catch (err) {
-      console.error('Failed to fetch notifications:', err);
+      console.error('Failed to fetch notifications or buildings:', err);
     } finally {
       setLoading(false);
     }
@@ -56,19 +66,6 @@ const Notifications = () => {
 
   useEffect(() => {
     fetchNotifications();
-
-    const fetchBuildings = async () => {
-      try {
-        const res = await API.get('/buildings');
-        setBuildings(res.data || []);
-        if (res.data && res.data.length > 0) {
-          setSelectedBuildingId(res.data[0]._id);
-        }
-      } catch (err) {
-        console.error('Failed to fetch buildings:', err);
-      }
-    };
-    fetchBuildings();
   }, []);
 
   const handleMarkAsRead = async (id) => {

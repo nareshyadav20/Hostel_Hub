@@ -66,8 +66,11 @@ const Profile = () => {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64String = reader.result;
-        
-        // Auto-save the avatar directly to backend
+
+        // Immediately show the image in the UI (optimistic update)
+        setProfile(prev => ({ ...prev, avatar: base64String }));
+
+        // Save to backend in background
         try {
           const res = await API.put('/admin/profile', {
             name: profile.name,
@@ -78,7 +81,8 @@ const Profile = () => {
             avatar: base64String
           });
           if (res.data) {
-            setProfile(prev => ({ ...prev, avatar: res.data.avatar }));
+            // Sync with confirmed server value
+            setProfile(prev => ({ ...prev, avatar: res.data.avatar || base64String }));
             showToast('Profile photo uploaded successfully!', 'success');
             // Dispatch local event to notify Sidebar or ProfileDropdown
             window.dispatchEvent(new Event('user-profile-updated'));
@@ -86,6 +90,8 @@ const Profile = () => {
         } catch (err) {
           console.error('Failed to upload photo:', err);
           showToast('Failed to save profile photo to database.', 'error');
+          // Revert on failure
+          setProfile(prev => ({ ...prev, avatar: '' }));
         }
       };
       reader.readAsDataURL(file);
