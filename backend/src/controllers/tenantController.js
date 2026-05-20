@@ -43,13 +43,7 @@ const getTenants = async (req, res) => {
       if (!isOwned) return res.status(403).json({ error: 'Access denied to this building.' });
       query = { buildingId };
     } else {
-      query = { 
-        $or: [
-          { buildingId: { $in: buildingIds } },
-          { buildingId: null },
-          { buildingId: { $exists: false } }
-        ]
-      };
+      query = { buildingId: { $in: buildingIds } };
     }
 
     const tenants = await Tenant.find(query);

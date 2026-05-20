@@ -99,31 +99,18 @@ const getAllPayments = async (req, res) => {
 const getMyPayments = async (req, res) => {
   try {
     const email = req.user.email;
-    const userIdFromToken = req.user.id;
     
-    const User = require('../models/User');
+    const Tenant = require('../models/Tenant');
 
-    // Find all possible IDs
-    const [relatedTenants, relatedUsers] = await Promise.all([
-      Tenant.find({ email }).select('_id'),
-      User.find({ email }).select('_id')
-    ]);
-
-    const allAssociatedIds = [
-      ...relatedTenants.map(t => t._id),
-      ...relatedUsers.map(u => u._id)
-    ];
-
-    if (userIdFromToken && !allAssociatedIds.some(id => id.toString() === userIdFromToken)) {
-      allAssociatedIds.push(userIdFromToken);
-    }
-    
-    const passedTenantId = req.query.tenantId;
-    if (passedTenantId && !allAssociatedIds.some(id => id.toString() === passedTenantId)) {
-        allAssociatedIds.push(passedTenantId);
+    // Find the unique Tenant profile for this email
+    const tenantObj = await Tenant.findOne({ email });
+    if (!tenantObj) {
+      console.log(`[DEBUG] No Tenant profile found for email ${email}`);
+      return res.status(200).json([]);
     }
 
-    const payments = await Payment.find({ tenantId: { $in: allAssociatedIds } }).sort({ date: -1 });
+    // Find payments strictly belonging to this tenant profile
+    const payments = await Payment.find({ tenantId: tenantObj._id }).sort({ date: -1 });
     res.status(200).json(payments);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -127,7 +127,7 @@ const Booking = () => {
 
   const handleBooking = async () => {
     setApiError(null);
-    const tenantId = user?._id || user?.id;
+    const tenantId = localStorage.getItem('tenantId') || user?._id || user?.id;
     const amount = parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + foodCost + maintenanceCost;
 
     console.log("[Booking] Debug Info:", { 

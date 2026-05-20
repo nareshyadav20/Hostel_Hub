@@ -22,26 +22,40 @@ const createBooking = async (req, res) => {
     // Validate ObjectIds — helper function
     const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-    // 1. Prevent multiple bookings for same tenant
+    let tenant = null;
+    const Tenant = require('../models/Tenant');
+    const User = require('../models/User');
+
+    // Resolve tenant profile
     if (isValidObjectId(tenantId)) {
-      const Tenant = require('../models/Tenant');
-      const existingTenant = await Tenant.findById(tenantId);
-      
+      tenant = await Tenant.findById(tenantId);
+      if (!tenant) {
+        const user = await User.findById(tenantId);
+        if (user) tenant = await Tenant.findOne({ email: user.email });
+      }
+    } else if (req.user && req.user.email) {
+      tenant = await Tenant.findOne({ email: req.user.email });
+    }
+
+    // 1. Prevent multiple bookings for same tenant
+    if (tenant) {
       // If already assigned to a building, block new booking
-      if (existingTenant && existingTenant.buildingId) {
+      if (tenant.buildingId) {
         return res.status(400).json({ 
           error: 'Access Denied: You already have an active residency or booking. A resident can only book one hostel at a time.' 
         });
       }
 
       // Check if they already have a confirmed booking
-      const existingBooking = await Booking.findOne({ tenantId, status: 'Confirmed' });
+      const existingBooking = await Booking.findOne({ tenantId: tenant._id, status: 'Confirmed' });
       if (existingBooking) {
         return res.status(400).json({ 
           error: 'Booking limit reached: You already have a confirmed reservation. Please manage your existing stay in the dashboard.' 
         });
       }
     }
+
+    const finalTenantId = tenant ? tenant._id : (isValidObjectId(tenantId) ? tenantId : undefined);
 
     const bookingData = {
       category: category || 'Standard',
@@ -51,12 +65,11 @@ const createBooking = async (req, res) => {
       totalAmount: totalAmount || 0,
       paymentMethod: method || 'UPI',
       status: 'Confirmed',
-      userId: tenantId || req.user.id || 'guest',
+      userId: req.user.id || tenantId || 'guest',
       proofId: isValidObjectId(proofId) ? proofId : undefined
     };
 
-    const finalTenantId = tenantId || req.user.id;
-    if (isValidObjectId(finalTenantId)) bookingData.tenantId = finalTenantId;
+    if (finalTenantId) bookingData.tenantId = finalTenantId;
     if (isValidObjectId(buildingId)) bookingData.buildingId = buildingId;
 
     const booking = new Booking(bookingData);
@@ -70,33 +83,20 @@ const createBooking = async (req, res) => {
       console.log('✅ TenantProof linked to booking');
     }
 
-    let tenant = null;
     // Update Tenant profile automatically so dashboard reflects changes
-    if (isValidObjectId(tenantId)) {
-      const Tenant = require('../models/Tenant');
-      const User = require('../models/User');
-      
-      // Find the tenant profile (try direct ID match or via User email)
-      tenant = await Tenant.findById(tenantId);
-      if (!tenant) {
-        const user = await User.findById(tenantId);
-        if (user) tenant = await Tenant.findOne({ email: user.email });
-      }
-
-      if (tenant) {
-        await Tenant.findByIdAndUpdate(tenant._id, {
-          buildingId: buildingId,
-          status: 'ACTIVE',
-          room: 'TBD (Assigning)',
-          occupation: category,
-          rent: totalAmount / 2,
-          rentStatus: 'PAID',
-          lastPayment: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-        });
-        console.log('✅ Tenant profile updated with booking info');
-      } else {
-        console.warn('⚠️ Could not find Tenant profile to update');
-      }
+    if (tenant) {
+      await Tenant.findByIdAndUpdate(tenant._id, {
+        buildingId: buildingId,
+        status: 'ACTIVE',
+        room: 'TBD (Assigning)',
+        occupation: category,
+        rent: totalAmount / 2,
+        rentStatus: 'PAID',
+        lastPayment: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      });
+      console.log('✅ Tenant profile updated with booking info');
+    } else {
+      console.warn('⚠️ Could not find Tenant profile to update');
     }
 
     // Record the bed filling if bed data is provided
@@ -157,39 +157,28 @@ const createBooking = async (req, res) => {
 
 const getMyBookings = async (req, res) => {
   try {
-    // 1. Identify the user from the JWT token (most reliable source)
     const email = req.user.email;
     const userIdFromToken = req.user.id;
     
     console.log(`[DEBUG] getMyBookings for user: ${email} (ID: ${userIdFromToken})`);
 
     const Tenant = require('../models/Tenant');
-    const User = require('../models/User');
 
-    // 2. Find all possible IDs (Tenant profile & User account) for this email
-    const [relatedTenants, relatedUsers] = await Promise.all([
-      Tenant.find({ email }).select('_id'),
-      User.find({ email }).select('_id')
-    ]);
-
-    const allAssociatedIds = [
-      ...relatedTenants.map(t => t._id),
-      ...relatedUsers.map(u => u._id)
-    ];
-
-    // Ensure we also include the ID from the token if it's not already there
-    if (userIdFromToken && !allAssociatedIds.some(id => id.toString() === userIdFromToken)) {
-      allAssociatedIds.push(userIdFromToken);
+    // Find the unique Tenant profile for this email
+    const tenant = await Tenant.findOne({ email });
+    if (!tenant) {
+      console.log(`[DEBUG] No Tenant profile found for email ${email}`);
+      return res.status(200).json([]);
     }
 
-    console.log(`[DEBUG] Searching bookings for IDs:`, allAssociatedIds);
+    console.log(`[DEBUG] Searching bookings for tenant ID: ${tenant._id}`);
 
-    // 3. Find bookings linked to any of these IDs
+    // Find bookings strictly belonging to this tenant profile
     const bookings = await Booking.find({ 
-      tenantId: { $in: allAssociatedIds } 
+      tenantId: tenant._id 
     }).populate('buildingId').sort({ bookingDate: -1 });
 
-    console.log(`[DEBUG] Found ${bookings.length} bookings for ${email}`);
+    console.log(`[DEBUG] Found ${bookings.length} bookings for tenant ${tenant._id}`);
     res.status(200).json(bookings);
   } catch (error) {
     console.error('[ERROR] getMyBookings failed:', error);
