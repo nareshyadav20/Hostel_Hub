@@ -20,5 +20,6 @@ router.delete('/wishlist/:id', auth, controller.removeFromWishlist);
 
 // Profile
 router.get('/complete-profile', auth, controller.getCompleteProfile);
+router.post('/upload-photo', auth, controller.uploadPhoto);
 
 module.exports = router;

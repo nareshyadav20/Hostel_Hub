@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Map, Plus, TrendingUp, Users, Building2, MapPin, X } from 'lucide-react';
+import { Map, Plus, TrendingUp, Users, Building2, MapPin, X, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const initialCities = [
   { name: 'Bangalore', hubs: 12, properties: 45, tenants: 1840, growth: '+22%' },
@@ -9,6 +10,7 @@ const initialCities = [
 ];
 
 const Cities = () => {
+  const navigate = useNavigate();
   const [cities, setCities] = useState(initialCities);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: '', hubs: '', properties: '', tenants: '' });
@@ -22,6 +24,14 @@ const Cities = () => {
 
   return (
     <div className="animate-fade" style={{ maxWidth: '1300px' }}>
+      {/* --- BACK NAVIGATION --- */}
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center gap-2 text-text-muted hover:text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] group mb-6"
+      >
+        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+        Back to Dashboard
+      </button>
       <div className="page-header">
         <div>
           <h1>City Intelligence & Expansion</h1>

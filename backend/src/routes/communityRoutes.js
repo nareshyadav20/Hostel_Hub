@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const CommunityReport = require('../models/tenant/CommunityReport');
-const SOSAlert = require('../models/SosAlert');
+const SosAlert = require('../models/SosAlert');
 const Building = require('../models/Building');
 
 // Get all community reports (Lost & Found)
@@ -40,7 +40,7 @@ router.get('/sos', async (req, res) => {
       }
     }
 
-    const alerts = await SOSAlert.find(query).sort({ createdAt: -1 });
+    const alerts = await SosAlert.find(query).sort({ createdAt: -1 });
     res.json(alerts);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -50,7 +50,7 @@ router.get('/sos', async (req, res) => {
 // Resolve SOS Alert
 router.patch('/sos/:id/resolve', async (req, res) => {
   try {
-    const alert = await SOSAlert.findByIdAndUpdate(req.params.id, { status: 'Resolved' }, { new: true });
+    const alert = await SosAlert.findByIdAndUpdate(req.params.id, { status: 'Resolved' }, { new: true });
     res.json(alert);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -60,7 +60,7 @@ router.patch('/sos/:id/resolve', async (req, res) => {
 // Dispatch SOS Alert (Mock action)
 router.patch('/sos/:id/dispatch', async (req, res) => {
   try {
-    const alert = await SOSAlert.findById(req.params.id);
+    const alert = await SosAlert.findById(req.params.id);
     // In a real app, this would trigger an SMS/Push to emergency services
     res.json({ message: 'Dispatch signal sent', alert });
   } catch (err) {

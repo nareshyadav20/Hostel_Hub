@@ -2,11 +2,13 @@ const mongoose = require('mongoose');
 
 const ownerProfileSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
-  
+
   // 1. Personal Information
   personalInfo: {
     fullName: { type: String },
     dob: { type: Date },
+    phone: { type: String },
+    email: { type: String },
     address: { type: String },
     city: { type: String },
     state: { type: String },

@@ -10,6 +10,7 @@ const Bed = require('../models/Bed');
 const Tenant = require('../models/Tenant');
 const Payment = require('../models/Payment');
 const Complaint = require('../models/Complaint');
+const User = require('../models/User');
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
@@ -32,8 +33,25 @@ const seed = async () => {
     await Complaint.deleteMany({});
     console.log('Cleared.');
 
+    // Ensure we have a valid owner user in MongoDB
+    console.log('Checking for active Owner...');
+    let ownerUser = await User.findOne({ role: 'OWNER' });
+    if (!ownerUser) {
+      console.log('No active owner found. Registering a default platform owner...');
+      ownerUser = await User.create({
+        name: 'Srinu Owner',
+        email: 'owner@hostelhub.com',
+        password: 'password123',
+        role: 'OWNER',
+        phone: '9998887776'
+      });
+      console.log('Default owner registered.');
+    } else {
+      console.log(`Using existing owner: "${ownerUser.name}"`);
+    }
+
     const buildingsData = [
-      { name: 'Alpha Tower', address: 'North Campus, Tech Park', locationCity: 'Bengaluru', description: 'Premium Boys Hostel', amenities: ['WiFi', 'AC', 'CCTV', 'Laundry', 'Gym'], images: ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'], genderType: 'Boys', category: 'Student', rating: 4.8 },
+      { name: 'Alpha Tower', address: 'North Campus, Tech Park', locationCity: 'Bengaluru', description: 'Premium Boys Hostel', amenities: ['WiFi', 'AC', 'CCTV', 'Laundry', 'Gym'], images: ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'], genderType: 'Boys', category: 'Student', rating: 4.8, owner: ownerUser._id },
     ];
 
     for (const bData of buildingsData) {

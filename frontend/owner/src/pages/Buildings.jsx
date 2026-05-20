@@ -1,5 +1,5 @@
 // Updated: 2026-05-07 - Premium Infrastructure Update
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useParams, useNavigate } from 'react-router-dom';
@@ -8,7 +8,7 @@ import {
   ArrowLeft, CheckSquare, Square, Trash2, Edit2, Zap, X, Image as ImageIcon, BedDouble, Filter, ChevronRight, Search,
   Heart, ShieldCheck, Sparkles, Wind, Sun, BatteryCharging, Wifi, Monitor, Coffee, Lock, UserCheck, Star, 
   MapPin, Thermometer, Fan, Smartphone, Tablet, Luggage, Lightbulb, Ruler, Weight, FileText, Wrench, History,
-  Maximize, ArrowUp, Brush, Palette, LayoutGrid, Activity, Droplets,
+  Maximize, ArrowUp, Brush, Palette, LayoutGrid, Activity, Droplets, ChevronLeft,
   TrendingUp, Coins, BarChart3, HardDrive, Waves, Flame, Fingerprint
 } from 'lucide-react';
 
@@ -2089,6 +2089,18 @@ const RoomHero = ({ room, onImageUpdate, onEdit }) => (
 );
 
 const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuilding, onDeleteBuilding }) => {
+  const [imgIdx, setImgIdx] = useState(0);
+  
+  const images = useMemo(() => {
+    if (building.images && building.images.length > 0) {
+      return building.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `http://localhost:5000${img}`);
+    }
+    return [
+      'https://images.unsplash.com/photo-1545324418-f1d3c5b53571?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1555854817-5b2260d19dca?auto=format&fit=crop&q=80&w=800'
+    ];
+  }, [building.images]);
+
   const occupancyRate = 84; // Mocked for premium UI
   const monthlyRevenue = '12.4L';
   const hygieneScore = 98;
@@ -2166,14 +2178,32 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
         position: 'relative', height: '220px', borderRadius: '32px', overflow: 'hidden', 
         background: '#F1F5F9', border: '1px solid rgba(255,255,255,0.8)', zIndex: 1 
       }}>
-        <img 
-          src={building.images?.[0] || 'https://images.unsplash.com/photo-1545324418-f1d3c5b53571?auto=format&fit=crop&w=800&q=80'} 
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          alt={building.name || "Building"}
-          onError={(e) => {
-            e.target.src = 'https://images.unsplash.com/photo-1545324418-f1d3c5b53571?auto=format&fit=crop&w=800&q=80';
-          }}
-        />
+        <AnimatePresence mode="wait">
+          <motion.img 
+            key={imgIdx}
+            initial={{ opacity: 0.8, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            src={images[imgIdx]} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }}
+            alt={building.name || "Building"}
+            onError={(e) => {
+              e.target.src = 'https://images.unsplash.com/photo-1545324418-f1d3c5b53571?auto=format&fit=crop&w=800&q=80';
+            }}
+          />
+        </AnimatePresence>
+        
+        {images.length > 1 && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0.8rem', zIndex: 10 }}>
+            <button onClick={(e) => { e.stopPropagation(); setImgIdx(prev => (prev - 1 + images.length) % images.length); }} style={{ background: 'rgba(255,255,255,0.6)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)', color: '#0F172A', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <ChevronLeft size={22} />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); setImgIdx(prev => (prev + 1) % images.length); }} style={{ background: 'rgba(255,255,255,0.6)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)', color: '#0F172A', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <ChevronRight size={22} />
+            </button>
+          </div>
+        )}
         <div style={{ 
           position: 'absolute', inset: 0, 
           background: 'linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, transparent 60%)' 

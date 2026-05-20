@@ -1,15 +1,16 @@
 const MessMenu = require('../models/MessMenu');
 const MessAttendance = require('../models/MessAttendance');
+const OwnerPlan = require('../models/OwnerPlan');
 const socketService = require('../utils/socketService');
 
 const DEFAULT_MENU = {
-    Monday: { breakfast: 'Idli, Sambar', lunch: 'Rice, Dal, Veg Fry', dinner: 'Roti, Paneer Masala' },
-    Tuesday: { breakfast: 'Poha, Jalebi', lunch: 'Rajma Chawal, Papad', dinner: 'Aloo Gobi, Roti' },
-    Wednesday: { breakfast: 'Aloo Paratha', lunch: 'Veg Biryani, Raita', dinner: 'Chole Bhature' },
-    Thursday: { breakfast: 'Upma, Chutney', lunch: 'Kadi Pakoda, Rice', dinner: 'Mushroom Peas' },
-    Friday: { breakfast: 'Masala Dosa', lunch: 'Dal Makhani, Rice', dinner: 'Egg Curry' },
-    Saturday: { breakfast: 'Puri Sabzi', lunch: 'Mix Veg, Roti', dinner: 'Veg Pulao' },
-    Sunday: { breakfast: 'Chole Poori', lunch: 'Special Thali', dinner: 'Light Khichdi' }
+    Monday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Tuesday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Wednesday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Thursday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Friday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Saturday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
+    Sunday: { breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' }
 };
 
 const PLANS = ['basic', 'standard', 'premium'];
@@ -62,6 +63,33 @@ exports.updateMenu = async (req, res) => {
             indicator: "Updated Just Now"
         });
 
+        // Create notification for tenants
+        const notificationService = require('../utils/notificationService');
+        const updatedMeals = [];
+        if (breakfast) updatedMeals.push(`Breakfast: ${breakfast}`);
+        if (lunch) updatedMeals.push(`Lunch: ${lunch}`);
+        if (dinner) updatedMeals.push(`Dinner: ${dinner}`);
+        // Ensure we have a valid buildingId for the notification
+        const finalBuildingId = buildingId || (tenant.buildingId?._id || tenant.buildingId);
+
+        if (!finalBuildingId) {
+            console.warn('⚠️ No buildingId found for attendance notification');
+        }
+
+        const mealSummary = updatedMeals.join(' | ');
+
+        await notificationService.createNotification({
+            moduleName: 'Mess',
+            portalType: 'Tenant',
+            category: 'Menu Update',
+            title: `Mess Menu Updated`,
+            message: `The menu for today has been updated. ${mealSummary}`,
+            priority: 'Medium',
+            type: 'info',
+            buildingId,
+            actionLink: '/mess'
+        });
+
         res.json(menu);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -70,9 +98,7 @@ exports.updateMenu = async (req, res) => {
 
 exports.getAttendance = async (req, res) => {
     try {
-        const { buildingId, date } = req.query; // date format: YYYY-MM-DD
-        if (!buildingId || !date) return res.status(400).json({ message: 'buildingId and date are required' });
-
+        const { buildingId, date } = req.query;
         const attendance = await MessAttendance.find({ buildingId, date });
         res.json(attendance);
     } catch (err) {
@@ -83,17 +109,160 @@ exports.getAttendance = async (req, res) => {
 exports.updateAttendance = async (req, res) => {
     try {
         const { tenantId, buildingId, date, meal, status } = req.body;
+        console.log('🍽️ ATTENDANCE_UPDATE_REQUEST:', { tenantId, buildingId, meal, status });
         
-        const update = { [meal]: status };
+        const Tenant = require('../models/Tenant');
+        const mongoose = require('mongoose');
+
+        let finalBuildingId = buildingId;
         
-        const attendance = await MessAttendance.findOneAndUpdate(
-            { tenantId, date, buildingId },
-            { $set: update },
-            { new: true, upsert: true }
-        );
+        // Self-healing fallback: Resolve buildingId from Tenant profile if invalid/missing
+        if (!finalBuildingId || !mongoose.Types.ObjectId.isValid(finalBuildingId)) {
+            const tenantDoc = await Tenant.findById(tenantId);
+            if (tenantDoc) {
+                finalBuildingId = tenantDoc.buildingId?._id || tenantDoc.buildingId;
+            }
+        }
+
+        if (!finalBuildingId || !mongoose.Types.ObjectId.isValid(finalBuildingId)) {
+            return res.status(400).json({ message: 'buildingId is required and could not be resolved.' });
+        }
+
+        // Find existing attendance or create new (querying by unique constraint keys only)
+        let attendance = await MessAttendance.findOne({ tenantId, date });
+        const previousMealStatus = attendance ? (!!attendance[meal]) : false;
+        
+        if (!attendance) {
+            attendance = new MessAttendance({
+                tenantId,
+                buildingId: finalBuildingId,
+                date,
+                [meal]: status
+            });
+        } else {
+            attendance.buildingId = finalBuildingId; // Ensure buildingId is synced
+            attendance[meal] = status;
+        }
+        
+        await attendance.save();
+
+        // Update rewards based on mess attendance change
+        if (status !== previousMealStatus) {
+            try {
+                const Reward = require('../models/tenant/Reward');
+                const pointsToModify = status ? 10 : -10;
+                let reward = await Reward.findOne({ tenant: tenantId });
+                
+                if (!reward) {
+                    const tenantDoc = await Tenant.findById(tenantId);
+                    if (tenantDoc) {
+                        reward = await Reward.create({
+                            tenant: tenantId,
+                            user: tenantDoc.user || tenantId,
+                            points: 100, // Welcome points
+                            lifetimeEarned: 100
+                        });
+                    }
+                }
+                
+                if (reward) {
+                    reward.points = Math.max(0, reward.points + pointsToModify);
+                    if (pointsToModify > 0) {
+                        reward.lifetimeEarned += pointsToModify;
+                        reward.history.push({
+                            reason: `Mess attendance reward for ${meal} on ${date}`,
+                            points: pointsToModify,
+                            type: 'Earned'
+                        });
+                    } else if (pointsToModify < 0) {
+                        reward.history.push({
+                            reason: `Reversed mess attendance reward for ${meal} on ${date}`,
+                            points: pointsToModify,
+                            type: 'Redeemed'
+                        });
+                    }
+                    await reward.save();
+                    console.log(`🎁 [REWARDS] Updated rewards for tenant ${tenantId}: ${pointsToModify} points.`);
+                }
+            } catch (rewardErr) {
+                console.error('⚠️ [REWARDS] Failed to update mess attendance rewards:', rewardErr.message);
+            }
+        }
+
+        // Real-time notification for both Tenant (local update) and Owner (analytics)
+        const updatePayload = {
+            tenantId,
+            buildingId: finalBuildingId,
+            date,
+            meal,
+            status,
+            attendance
+        };
+        socketService.emitToRoom(finalBuildingId, 'attendanceUpdated', updatePayload);
+        socketService.emitToOwner('attendanceUpdated', updatePayload);
+
+        console.log('🔍 [DB_PERSISTENCE] Fetching metadata for notification:', { tenantId, buildingId: finalBuildingId });
+        const MessLog = require('../models/MessLog');
+        const Building = require('../models/Building');
+        const notificationService = require('../utils/notificationService');
+        
+        const tenant = await Tenant.findById(tenantId);
+
+        // Save to permanent MessLog collection
+        try {
+            await MessLog.create({
+                tenantId,
+                buildingId: finalBuildingId,
+                tenantName: tenant?.name || 'A Resident',
+                roomNumber: tenant?.room || 'N/A',
+                meal,
+                status,
+                date
+            });
+            console.log('✅ [DB_PERSISTENCE] MessLog entry saved.');
+        } catch (logErr) {
+            console.error('⚠️ [DB_PERSISTENCE] MessLog save failed but continuing:', logErr.message);
+        }
+        
+        const building = finalBuildingId ? await Building.findById(finalBuildingId) : null;
+        
+        const tenantName = tenant ? tenant.name : 'A resident';
+        const roomNumber = (tenant && tenant.room) ? ` (Room ${tenant.room})` : '';
+        const buildingName = building ? ` at ${building.name}` : '';
+
+        // EXCLUSIVE Owner Notification
+        console.log('📝 [DB_PERSISTENCE] Calling notificationService.createNotification...');
+        await notificationService.createNotification({
+            moduleName: 'Mess',
+            portalType: 'Owner',
+            category: 'Attendance',
+            title: `Attendance ${status ? 'Confirmed' : 'Skipped'}`,
+            message: `${tenantName}${roomNumber} has opted to ${status ? 'attend' : 'skip'} ${meal} on ${new Date(date).toLocaleDateString()}${buildingName}.`,
+            priority: status ? 'Low' : 'Medium',
+            type: 'info',
+            buildingId: finalBuildingId,
+            actionLink: `/owner/building/${finalBuildingId}/notifications?category=Mess`
+        });
+
+        // Tenant Notification
+        console.log('📝 [DB_PERSISTENCE] Calling notificationService.createNotification for Tenant...');
+        await notificationService.createNotification({
+            moduleName: 'Mess',
+            portalType: 'Tenant',
+            category: 'Attendance',
+            title: `Dining Status: ${status ? 'Attending' : 'Skipping'}`,
+            message: `You have successfully marked your presence as "${status ? 'Attending' : 'Skipping'}" for ${meal} today.`,
+            priority: 'Low',
+            type: status ? 'success' : 'info',
+            buildingId: finalBuildingId,
+            receiverId: tenantId,
+            receiverRole: 'Tenant',
+            actionLink: '/tenant/mess'
+        });
         
         res.json(attendance);
     } catch (err) {
+        console.error('🔥 [DB_PERSISTENCE] updateAttendance FAILED:', err);
         res.status(500).json({ message: err.message });
     }
 };
@@ -102,6 +271,11 @@ exports.markAllAttendance = async (req, res) => {
     try {
         const { buildingId, date, meal, tenantIds } = req.body;
         
+        const previousAttendances = await MessAttendance.find({ tenantId: { $in: tenantIds }, date });
+        const alreadyAttendingIds = new Set(
+            previousAttendances.filter(a => a[meal] === true).map(a => a.tenantId.toString())
+        );
+
         const operations = tenantIds.map(tId => ({
             updateOne: {
                 filter: { tenantId: tId, date, buildingId },
@@ -112,6 +286,141 @@ exports.markAllAttendance = async (req, res) => {
 
         await MessAttendance.bulkWrite(operations);
         const updated = await MessAttendance.find({ buildingId, date });
+
+        // Reward newly confirmed tenants
+        try {
+            const Reward = require('../models/tenant/Reward');
+            const Tenant = require('../models/Tenant');
+            for (const tId of tenantIds) {
+                if (!alreadyAttendingIds.has(tId.toString())) {
+                    let reward = await Reward.findOne({ tenant: tId });
+                    if (!reward) {
+                        const tenantDoc = await Tenant.findById(tId);
+                        if (tenantDoc) {
+                            reward = await Reward.create({
+                                tenant: tId,
+                                user: tenantDoc.user || tId,
+                                points: 100,
+                                lifetimeEarned: 100
+                            });
+                        }
+                    }
+                    if (reward) {
+                        reward.points += 10;
+                        reward.lifetimeEarned += 10;
+                        reward.history.push({
+                            reason: `Mess attendance reward for ${meal} on ${date} (Marked by Staff)`,
+                            points: 10,
+                            type: 'Earned'
+                        });
+                        await reward.save();
+                    }
+                }
+            }
+        } catch (rewardErr) {
+            console.error('⚠️ [REWARDS] Failed to reward tenants in markAllAttendance:', rewardErr.message);
+        }
+
+        // Real-time synchronization for the whole building
+        socketService.emitToRoom(buildingId, 'attendanceUpdated', {
+            date,
+            meal,
+            status: true,
+            isBulk: true
+        });
+
+        res.json(updated);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+const DEFAULT_PLANS = [
+  { 
+    id: 'basic', 
+    name: 'Basic Plan', 
+    price: 500, 
+    description: 'Simple meals with a fixed weekly menu for standard nourishment.',
+    features: ['Simple Meals', 'Fixed Weekly Menu', 'Limited Variety', 'No Customization', 'Fixed Portion'], 
+    menu: ['Steamed Rice', 'Arhar Dal', 'Seasonal Dry Veg', 'Phulka Roti', 'Pickle'],
+    active: true, 
+    color: '#94a3b8' 
+  },
+  { 
+    id: 'standard', 
+    name: 'Standard Plan', 
+    price: 1000, 
+    description: 'Improved meal quality with rotating weekly menu and limited customization.',
+    features: ['Improved Meal Quality', 'Rotating Weekly Menu', 'Moderate Variety', 'Limited Customization', '1 Refill Allowed'], 
+    menu: ['Jeera Rice / Pulao', 'Paneer / Egg Curry', 'Mixed Veg Fry', 'Roti / Paratha', 'Sweet Bowl'],
+    active: true, 
+    color: '#3b82f6' 
+  },
+  { 
+    id: 'premium', 
+    name: 'Premium Plan', 
+    price: 1500, 
+    description: 'High-quality meals with fully customizable menu and premium add-ons.',
+    features: ['High-Quality Meals', 'Fully Customizable Menu', 'Rich Variety (Veg + Non-Veg)', 'Unlimited/Refill Option', 'Special Weekend Meals', 'Fruits, Juice, Dessert'], 
+    menu: ['Basmati Pulao / Biryani', 'Daily Premium Gravy', 'Cold Drink / Juice', 'Live Paratha / Dosa', 'Premium Desserts'],
+    active: true, 
+    color: '#8b5cf6', 
+    popular: true 
+  }
+];
+
+exports.getPlans = async (req, res) => {
+    try {
+        let plans = await OwnerPlan.find({});
+        if (plans.length === 0) {
+            await OwnerPlan.insertMany(DEFAULT_PLANS);
+            plans = await OwnerPlan.find({});
+        }
+        res.json(plans);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.updatePlan = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, price, description, features, menu, active, popular } = req.body;
+        
+        const updated = await OwnerPlan.findOneAndUpdate(
+            { id },
+            { name, price, description, features, menu, active, popular },
+            { new: true }
+        );
+        
+        if (!updated) {
+            return res.status(404).json({ message: 'Plan not found' });
+        }
+        
+        // Notify all tenants about the plan change
+        try {
+            const Building = require('../models/Building');
+            const notificationService = require('../utils/notificationService');
+            const buildings = await Building.find({});
+            
+            for (const building of buildings) {
+                await notificationService.createNotification({
+                    moduleName: 'Mess',
+                    portalType: 'Tenant',
+                    category: 'Plan Update',
+                    title: `Mess Plan Updated`,
+                    message: `The "${name}" monthly fee is now ₹${price}. Features: ${features.slice(0, 3).join(', ')}...`,
+                    priority: 'Medium',
+                    type: 'info',
+                    buildingId: building._id,
+                    actionLink: '/mess'
+                });
+            }
+            console.log('✅ [NOTIFICATIONS] Successfully notified all tenants about plan changes.');
+        } catch (notifErr) {
+            console.error('⚠️ [NOTIFICATIONS] Failed to dispatch plan update notifications:', notifErr.message);
+        }
+        
         res.json(updated);
     } catch (err) {
         res.status(500).json({ message: err.message });

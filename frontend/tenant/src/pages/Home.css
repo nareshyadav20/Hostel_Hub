@@ -53,12 +53,12 @@ body {
 
 .hv2-nav {
   display: flex;
-  gap: 1.4rem;
+  gap: 2.2rem;
 }
 
 .hv2-nav-item {
-  font-size: .88rem;
-  font-weight: 500;
+  font-size: 1.05rem;
+  font-weight: 700;
   color: #4b5563;
   cursor: pointer;
   padding-bottom: 3px;
@@ -112,6 +112,23 @@ body {
   transform: translateY(-1px)
 }
 
+.hv2-terms-header-btn {
+  background: rgba(79, 70, 229, 0.1);
+  color: #4F46E5;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 0.5rem;
+}
+
+.hv2-terms-header-btn:hover {
+  background: rgba(79, 70, 229, 0.2);
+}
+
 /* HERO */
 .hv2-hero {
   display: flex;
@@ -121,7 +138,6 @@ body {
   min-height: 75vh;
   background: linear-gradient(135deg, rgba(238, 242, 255, 0.8) 0%, rgba(248, 249, 255, 0.6) 55%, rgba(224, 231, 255, 0.4) 100%);
   position: relative;
-  overflow: hidden
 }
 
 .hv2-hero::before {
@@ -282,7 +298,8 @@ body {
   position: absolute;
   top: calc(100% + 12px);
   left: 0;
-  width: 240px;
+  width: max-content;
+  min-width: 100%;
   background: white;
   border-radius: 16px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
@@ -610,16 +627,17 @@ body {
 .hv2-stats-bar {
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-between;
   background: white;
   border-radius: 30px;
   box-shadow: 0 25px 60px rgba(79, 70, 229, 0.12);
-  padding: 3rem;
-  flex-wrap: wrap;
-  gap: 2rem;
+  padding: 3rem 4rem;
+  flex-wrap: nowrap;
+  gap: 1.5rem;
   border: 1.5px solid rgba(79, 70, 229, 0.08);
   max-width: 1200px;
-  margin: 0 auto
+  margin: 0 auto;
+  overflow-x: auto;
 }
 
 .hv2-stat {
@@ -631,11 +649,11 @@ body {
 }
 
 .hv2-stat-icon-wrap {
-  font-size: 2.2rem;
-  width: 64px;
-  height: 64px;
+  font-size: 3rem;
+  width: 80px;
+  height: 80px;
   background: linear-gradient(135deg, rgba(79, 70, 229, .12), rgba(129, 140, 248, .08));
-  border-radius: 16px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -652,10 +670,11 @@ body {
 }
 
 .hv2-stat-lbl {
-  font-size: 1rem;
+  font-size: 1.05rem;
   color: #6b7280;
   font-weight: 700;
-  margin-top: 4px
+  margin-top: 4px;
+  white-space: nowrap;
 }
 
 .hv2-stat-sep {
@@ -719,47 +738,77 @@ body {
   text-align: center;
   box-shadow: 0 4px 24px rgba(79, 70, 229, .08);
   border: 1px solid rgba(79, 70, 229, .08);
-  transition: all .3s;
+  transition: all .4s cubic-bezier(0.4, 0, 0.2, 1);
   flex: 1;
-  min-width: 200px
+  min-width: 200px;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.hv2-step-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(236, 72, 153, 0.05));
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s;
 }
 
 .hv2-step-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 16px 40px rgba(79, 70, 229, .16)
+  box-shadow: 0 20px 40px rgba(79, 70, 229, .15);
+  border-color: rgba(79, 70, 229, .2);
+}
+
+.hv2-step-card:hover::before {
+  opacity: 1;
 }
 
 .hv2-step-num {
-  width: 42px;
-  height: 42px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  background: #4F46E5;
+  background: linear-gradient(135deg, #4F46E5, #EC4899);
   color: white;
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1rem;
-  box-shadow: 0 6px 18px rgba(79, 70, 229, .35)
+  margin: 0 auto 1.2rem;
+  box-shadow: 0 8px 20px rgba(236, 72, 153, 0.25);
+  transition: transform 0.4s;
+}
+
+.hv2-step-card:hover .hv2-step-num {
+  transform: scale(1.1) rotate(5deg);
 }
 
 .hv2-step-icon {
-  font-size: 2.2rem;
-  margin-bottom: .8rem
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+  filter: drop-shadow(0 10px 15px rgba(79, 70, 229, 0.2));
+  transition: transform 0.4s;
+}
+
+.hv2-step-card:hover .hv2-step-icon {
+  transform: translateY(-5px);
 }
 
 .hv2-step-title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 1.2rem;
+  font-weight: 800;
   color: #1a1a2e;
-  margin-bottom: .5rem
+  margin-bottom: .6rem;
 }
 
 .hv2-step-desc {
-  font-size: .84rem;
+  font-size: 0.95rem;
   color: #6b7280;
-  line-height: 1.6
+  line-height: 1.6;
 }
 
 .hv2-step-connector {
@@ -826,6 +875,86 @@ body {
 .hv2-outline-btn:hover {
   background: #4F46E5;
   color: white
+}
+
+/* TERMS MODAL */
+.hv2-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.hv2-terms-modal {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 24px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPop {
+  0% { opacity: 0; transform: scale(0.95) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.hv2-terms-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hv2-terms-header h3 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+
+.hv2-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #94a3b8;
+  transition: color 0.2s;
+}
+
+.hv2-modal-close:hover {
+  color: #ef4444;
+}
+
+.hv2-terms-content {
+  padding: 2rem;
+  overflow-y: auto;
+  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.hv2-terms-content p {
+  margin-bottom: 1.5rem;
+}
+
+.hv2-terms-content strong {
+  color: #1e293b;
+  font-size: 1.05rem;
+}
+
+.hv2-terms-footer {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e2e8f0;
 }
 
 .hv2-rooms-grid {
@@ -1043,31 +1172,31 @@ body {
 
 .hv2-feat-item {
   display: flex;
-  gap: 1rem;
+  gap: 1.2rem;
   align-items: flex-start
 }
 
 .hv2-feat-icon {
-  font-size: 1.8rem;
+  font-size: 2.4rem;
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+  width: 60px;
+  height: 60px;
   background: rgba(255, 255, 255, .15);
-  border-radius: 12px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center
 }
 
 .hv2-feat-title {
-  font-size: .9rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: white;
   margin-bottom: .25rem
 }
 
 .hv2-feat-desc {
-  font-size: .78rem;
+  font-size: 0.95rem;
   color: rgba(255, 255, 255, .65);
   line-height: 1.5
 }
@@ -1127,14 +1256,34 @@ body {
   background: white
 }
 
-.hv2-testi-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-top: 1rem
+.hv2-testi-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  padding: 1rem 0;
+}
+
+.hv2-testi-track {
+  display: flex;
+  gap: 2rem;
+  width: max-content;
+  animation: scrollTestimonials 20s linear infinite;
+}
+
+.hv2-testi-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scrollTestimonials {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 1rem)); }
 }
 
 .hv2-testi-card {
+  width: 380px;
+  flex-shrink: 0;
   background: #F8F9FF;
   border: 1px solid rgba(79, 70, 229, .1);
   border-radius: 20px;

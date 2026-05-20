@@ -20,6 +20,7 @@ import Services from './pages/Services';
 import Community from './pages/Community';
 import Safety from './pages/Safety';
 import Profile from './pages/Profile';
+import Notifications from './pages/Notifications';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Terms from './pages/Terms';
@@ -89,6 +90,7 @@ function App() {
         <Route path="/community"  element={<ProtectedRoute><Layout><Community /></Layout></ProtectedRoute>} />
         <Route path="/safety"     element={<ProtectedRoute><Layout><Safety /></Layout></ProtectedRoute>} />
         <Route path="/profile"    element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><Layout><Notifications /></Layout></ProtectedRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

@@ -1,6 +1,6 @@
 # Hostel Hub - Full API Documentation v2.0 (Production Ready)
 
-**Base URL:** `https://hostel-hub-1-0835.onrender.com`
+**Base URL:** `https://livora-hostel-hub.onrender.com`
 **Version:** 1.0.0
 **Support:** Naresh Yadav (Backend Lead)
 
@@ -192,6 +192,16 @@ try {
   }
 }
 ```
+
+## 👤 Profile & Account
+- **Get Complete Profile**
+  `GET /api/tenant-portal/complete-profile`
+  Returns all tenant data including payments, history, and current profile photo.
+
+- **Upload Profile Photo**
+  `POST /api/tenant-portal/upload-photo`
+  **Body:** `{ "photoUrl": "base64_string_or_url" }`
+  **Storage:** Collection `tenant_photo`
 
 ---
 

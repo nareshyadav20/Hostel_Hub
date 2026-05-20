@@ -13,7 +13,10 @@ const createBooking = async (req, res) => {
       securityDeposit, 
       onboardingFee, 
       totalAmount, 
-      method 
+      method,
+      proofId,
+      bedNumber,
+      sharingType
     } = req.body;
 
     // Validate ObjectIds — helper function
@@ -48,7 +51,8 @@ const createBooking = async (req, res) => {
       totalAmount: totalAmount || 0,
       paymentMethod: method || 'UPI',
       status: 'Confirmed',
-      userId: tenantId || req.user.id || 'guest'
+      userId: tenantId || req.user.id || 'guest',
+      proofId: isValidObjectId(proofId) ? proofId : undefined
     };
 
     const finalTenantId = tenantId || req.user.id;
@@ -59,13 +63,21 @@ const createBooking = async (req, res) => {
     await booking.save();
     console.log('✅ Booking created:', booking._id);
 
+    // If proofId was provided, backlink the proof to this booking
+    if (isValidObjectId(proofId)) {
+      const TenantProof = require('../models/TenantProof');
+      await TenantProof.findByIdAndUpdate(proofId, { bookingId: booking._id });
+      console.log('✅ TenantProof linked to booking');
+    }
+
+    let tenant = null;
     // Update Tenant profile automatically so dashboard reflects changes
     if (isValidObjectId(tenantId)) {
       const Tenant = require('../models/Tenant');
       const User = require('../models/User');
       
       // Find the tenant profile (try direct ID match or via User email)
-      let tenant = await Tenant.findById(tenantId);
+      tenant = await Tenant.findById(tenantId);
       if (!tenant) {
         const user = await User.findById(tenantId);
         if (user) tenant = await Tenant.findOne({ email: user.email });
@@ -77,12 +89,29 @@ const createBooking = async (req, res) => {
           status: 'ACTIVE',
           room: 'TBD (Assigning)',
           occupation: category,
-          rent: totalAmount / 2 
+          rent: totalAmount / 2,
+          rentStatus: 'PAID',
+          lastPayment: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
         });
         console.log('✅ Tenant profile updated with booking info');
       } else {
         console.warn('⚠️ Could not find Tenant profile to update');
       }
+    }
+
+    // Record the bed filling if bed data is provided
+    if (isValidObjectId(buildingId) && bedNumber && sharingType) {
+      const BedFilling = require('../models/BedFilling');
+      const bedFill = new BedFilling({
+        buildingId,
+        tenantId: tenant ? tenant._id : finalTenantId,
+        category: category || 'Standard',
+        sharingType: sharingType,
+        bedNumber: bedNumber,
+        status: 'Occupied'
+      });
+      await bedFill.save();
+      console.log('✅ Bed filling recorded for bed:', bedNumber, 'sharing:', sharingType);
     }
 
     // Create a payment record for the booking
@@ -97,19 +126,24 @@ const createBooking = async (req, res) => {
       month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
     };
 
-    if (isValidObjectId(tenantId)) paymentData.tenantId = tenantId;
+    // CRITICAL: Link payment to the ACTUAL Tenant Profile ID, not the User ID
+    const actualTenantId = tenant ? tenant._id : finalTenantId;
+    if (isValidObjectId(actualTenantId)) paymentData.tenantId = actualTenantId;
     if (isValidObjectId(buildingId)) paymentData.buildingId = buildingId;
 
     const payment = new Payment(paymentData);
     await payment.save();
     console.log('✅ Payment created:', payment._id);
 
+    // Populate for real-time update
+    const populatedPayment = await Payment.findById(payment._id).populate('tenantId');
+
     // Real-time synchronization
     // Emit booking created to owner portal
-    socketService.emitUpdate(null, 'bookingCreated', { booking, payment });
+    socketService.emitUpdate(null, 'bookingCreated', { booking, payment: populatedPayment });
     
     // Emit payment completed
-    socketService.emitUpdate(buildingId, 'paymentCompleted', payment);
+    socketService.emitUpdate(buildingId, 'paymentCompleted', populatedPayment);
     
     // Emit bed status updated (since booking usually occupies a bed)
     socketService.emitUpdate(buildingId, 'bedStatusUpdated', { status: 'Occupied' });
@@ -172,4 +206,17 @@ const getAllBookings = async (req, res) => {
   }
 };
 
-module.exports = { createBooking, getMyBookings, getAllBookings };
+const updateBookingStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const booking = await Booking.findByIdAndUpdate(req.params.id, { status }, { new: true }).populate('tenantId buildingId');
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    res.status(200).json(booking);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { createBooking, getMyBookings, getAllBookings, updateBookingStatus };

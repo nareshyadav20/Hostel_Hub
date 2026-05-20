@@ -40,14 +40,26 @@ exports.createLaundryOrder = async (req, res) => {
     });
 
     // Real-time update for owner
+    const notificationService = require('../utils/notificationService');
     if (tenant.buildingId) {
       socketService.emitUpdate(tenant.buildingId.toString(), 'complaintCreated', {
         complaint: { title: `Laundry Order #${orderNumber}`, category: 'Laundry' },
         tenantName: tenant.name
       });
-    }
 
-    console.log('✅ Laundry Order Saved:', laundry._id);
+      await notificationService.createNotification({
+        moduleName: 'Laundry',
+        portalType: 'Owner',
+        category: 'Laundry Request',
+        title: 'New Laundry Order',
+        message: `${tenant.name} submitted order #${orderNumber} (${items.length} items)`,
+        priority: 'Medium',
+        type: 'info',
+        buildingId: tenant.buildingId,
+        tenantId: tenant._id,
+        actionLink: '/services/laundry'
+      });
+    }
     res.status(201).json(laundry);
   } catch (error) {
     console.error('❌ Laundry Error:', error);
@@ -91,10 +103,24 @@ exports.scheduleCleaning = async (req, res) => {
     });
 
     // Real-time update for owner
+    const notificationService = require('../utils/notificationService');
     if (tenant.buildingId) {
       socketService.emitUpdate(tenant.buildingId.toString(), 'complaintCreated', {
         complaint: { title: `Room Cleaning Request`, category: 'Cleaning' },
         tenantName: tenant.name
+      });
+
+      await notificationService.createNotification({
+        moduleName: 'Cleaning',
+        portalType: 'Owner',
+        category: 'Cleaning Request',
+        title: 'New Cleaning Request',
+        message: `${tenant.name} requested cleaning for ${new Date(date).toLocaleDateString()} at ${slot}`,
+        priority: 'Low',
+        type: 'info',
+        buildingId: tenant.buildingId,
+        tenantId: tenant._id,
+        actionLink: '/services/cleaning'
       });
     }
 
@@ -143,10 +169,24 @@ exports.createVisitorAccess = async (req, res) => {
     });
 
     // Real-time update for owner
+    const notificationService = require('../utils/notificationService');
     if (tenant.buildingId) {
       socketService.emitUpdate(tenant.buildingId.toString(), 'complaintCreated', {
         complaint: { title: `Visitor Pass: ${name}`, category: 'Visitor' },
         tenantName: tenant.name
+      });
+
+      await notificationService.createNotification({
+        moduleName: 'Visitor',
+        portalType: 'Owner',
+        category: 'Visitor Pass',
+        title: 'New Visitor Request',
+        message: `${tenant.name} created a pass for ${name} (${relation}) on ${new Date(arrivalDate).toLocaleDateString()}`,
+        priority: 'Medium',
+        type: 'info',
+        buildingId: tenant.buildingId,
+        tenantId: tenant._id,
+        actionLink: '/services/visitors'
       });
     }
 
@@ -195,10 +235,24 @@ exports.submitLeaveNotice = async (req, res) => {
     });
 
     // Real-time update for owner
+    const notificationService = require('../utils/notificationService');
     if (tenant.buildingId) {
       socketService.emitUpdate(tenant.buildingId.toString(), 'complaintCreated', {
         complaint: { title: `Leave Notice`, category: 'Leave' },
         tenantName: tenant.name
+      });
+
+      await notificationService.createNotification({
+        moduleName: 'Leave',
+        portalType: 'Owner',
+        category: 'Leave Notice',
+        title: 'New Leave Notice',
+        message: `${tenant.name} submitted leave notice from ${new Date(fromDate).toLocaleDateString()} to ${new Date(toDate).toLocaleDateString()}`,
+        priority: 'Medium',
+        type: 'warning',
+        buildingId: tenant.buildingId,
+        tenantId: tenant._id,
+        actionLink: '/services/leaves'
       });
     }
 

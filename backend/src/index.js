@@ -8,7 +8,56 @@ const authRoutes = require('./routes/authRoutes');
 dotenv.config();
 
 // Connect to MongoDB
-connectDB();
+connectDB().then(() => {
+  // Asynchronous lazy self-migration for owner notifications
+  setTimeout(async () => {
+    try {
+      const Notification = require('./models/Notification');
+      const OwnerNotification = require('./models/OwnerNotification');
+      
+      const count = await Notification.countDocuments({
+        $or: [
+          { portalType: 'Owner' },
+          { receiverRole: 'Owner' },
+          { target: 'Owner' }
+        ]
+      });
+      
+      if (count > 0) {
+        console.log(`📡 [AUTO_MIGRATION] Found ${count} legacy owner notifications. Migrating lazily...`);
+        const oldOwnerNotifs = await Notification.find({
+          $or: [
+            { portalType: 'Owner' },
+            { receiverRole: 'Owner' },
+            { target: 'Owner' }
+          ]
+        }).lean();
+        
+        let migrated = 0;
+        for (const notif of oldOwnerNotifs) {
+          const exists = await OwnerNotification.findOne({ _id: notif._id });
+          if (!exists) {
+            await OwnerNotification.create(notif);
+            migrated++;
+          }
+        }
+        
+        // Remove migrated notifications from the old notifications collection to avoid cluttering
+        await Notification.deleteMany({
+          $or: [
+            { portalType: 'Owner' },
+            { receiverRole: 'Owner' },
+            { target: 'Owner' }
+          ]
+        });
+        
+        console.log(`✅ [AUTO_MIGRATION] Successfully migrated and cleaned up ${migrated} owner notifications!`);
+      }
+    } catch (err) {
+      console.error('⚠️ [AUTO_MIGRATION] Lazy migration failed but continuing:', err.message);
+    }
+  }, 2000); // 2 second delay to avoid delaying startup
+});
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -47,6 +96,10 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+
 const buildingRoutes = require('./routes/buildingRoutes');
 const floorRoutes = require('./routes/floorRoutes');
 const roomRoutes = require('./routes/roomRoutes');
@@ -65,6 +118,7 @@ const inventoryRoutes = require('./routes/inventoryRoutes');
 const staffRoutes = require('./routes/staffRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const notificationService = require('./utils/notificationService');
 const procurementRoutes = require('./routes/procurementRoutes');
 
@@ -78,10 +132,16 @@ require('./models/MessAttendance');
 require('./models/Payment');
 require('./models/Staff');
 require('./models/Notification');
+require('./models/OwnerNotification');
 require('./models/PurchaseRequest');
 require('./models/PurchaseOrder');
 require('./models/Booking');
 require('./models/ConfidentialReport');
+require('./models/SosAlert');
+require('./models/TenantPhoto');
+require('./models/OwnerPhoto');
+require('./models/BuildingPhoto');
+require('./models/TenantProof');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -101,12 +161,14 @@ app.use('/api/owner', ownerRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/rewards', require('./routes/rewardsRoutes'));
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/tenant-portal', require('./routes/tenantPortalRoutes'));
 app.use('/api/services', require('./routes/serviceRoutes'));
 app.use('/api/confidential-reports', require('./routes/confidentialReportRoutes'));
 app.use('/api/procurement', procurementRoutes);
 app.use('/api/community', require('./routes/communityRoutes'));
+app.use('/api/tenant-proofs', require('./routes/tenantProofRoutes'));
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
@@ -149,24 +211,28 @@ io.on('connection', (socket) => {
 
   socket.on('joinBuilding', (buildingId) => {
     if (buildingId) {
-      socket.join(buildingId.toString());
-      console.log(`Socket ${socket.id} joined building room: ${buildingId}`);
+      const roomId = `building_${buildingId.toString()}`;
+      socket.join(roomId);
+      console.log(`Socket ${socket.id} joined building room: ${roomId}`);
     }
   });
 
   socket.on('joinOwner', (ownerId) => {
     if (ownerId) {
-      socket.join(`owner_${ownerId}`);
-      console.log(`Socket ${socket.id} joined owner personal room: owner_${ownerId}`);
+      const roomId = `owner_${ownerId.toString()}`;
+      socket.join(roomId);
+      socket.join(ownerId.toString()); // Direct userId room mapping
+      console.log(`Socket ${socket.id} joined owner room: ${roomId} and user room: ${ownerId}`);
     }
     socket.join('owners');
-    console.log(`Socket ${socket.id} joined global owners room`);
   });
 
-  socket.on('joinTenant', (tenantId) => {
-    if (tenantId) {
-      socket.join(`tenant_${tenantId}`);
-      console.log(`Socket ${socket.id} joined tenant room: tenant_${tenantId}`);
+  socket.on('joinTenant', (userId) => {
+    if (userId) {
+      const roomId = `tenant_${userId.toString()}`;
+      socket.join(roomId);
+      socket.join(userId.toString()); // Direct userId room mapping
+      console.log(`Socket ${socket.id} joined tenant room: ${roomId} and user room: ${userId}`);
     }
   });
 

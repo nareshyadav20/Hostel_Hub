@@ -13,6 +13,7 @@ import Staff from './pages/Staff';
 import Mess from './pages/Mess';
 import Complaints from './pages/Complaints';
 import Inventory from './pages/Inventory';
+import InventoryMaster from './pages/InventoryMaster';
 import Notifications from './pages/Notifications';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
@@ -26,11 +27,11 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        
+
         {/* Protected Routes */}
         <Route path="/owner/portfolio" element={<Portfolio />} />
         <Route path="/owner/profile" element={<Layout><Profile /></Layout>} />
-        
+
         {/* Building specific routes */}
         <Route path="/owner/building/:buildingId/dashboard" element={<Layout><Dashboard /></Layout>} />
         <Route path="/owner/building/:buildingId/profile" element={<Layout><Profile /></Layout>} />
@@ -42,11 +43,13 @@ function App() {
         <Route path="/owner/building/:buildingId/mess" element={<Layout><Mess /></Layout>} />
         <Route path="/owner/building/:buildingId/complaints" element={<Layout><Complaints /></Layout>} />
         <Route path="/owner/building/:buildingId/inventory" element={<Layout><Inventory /></Layout>} />
+        <Route path="/owner/building/:buildingId/inventory/master" element={<Layout><InventoryMaster /></Layout>} />
+        <Route path="/owner/building/:buildingId/inventory/damage" element={<Layout><Inventory initialTab="damage" /></Layout>} />
         <Route path="/owner/building/:buildingId/notifications" element={<Layout><Notifications /></Layout>} />
         <Route path="/owner/building/:buildingId/reports" element={<Layout><Reports /></Layout>} />
         <Route path="/owner/building/:buildingId/settings" element={<Layout><Settings /></Layout>} />
         <Route path="/owner/building/:buildingId/community" element={<Layout><Community /></Layout>} />
-        
+
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/dashboard" element={<Navigate to="/owner/portfolio" />} />
       </Routes>

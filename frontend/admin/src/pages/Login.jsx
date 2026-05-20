@@ -1,10 +1,55 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import axios from 'axios';
 import '@packages/ui-kit/auth.css';
 
 const Login = () => {
   const navigate = useNavigate();
-  const handleSubmit = (e) => { e.preventDefault(); navigate('/dashboard'); };
+  const [email, setEmail] = useState('admin@hostelhub.com');
+  const [password, setPassword] = useState('admin123');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showVault, setShowVault] = useState(false);
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const res = await axios.post(`${API_URL}/auth/login`, { email, password });
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      navigate('/dashboard');
+    } catch (err) {
+      // Auto-register the demo admin if they don't exist in the DB yet
+      if (err.response?.status === 404 && email === 'admin@hostelhub.com') {
+        try {
+          const regRes = await axios.post(`${API_URL}/auth/register`, {
+            email, password, name: 'System Admin', role: 'SUPER_ADMIN'
+          });
+          localStorage.setItem('token', regRes.data.token);
+          localStorage.setItem('user', JSON.stringify(regRes.data.user));
+          navigate('/dashboard');
+          return;
+        } catch (regErr) {
+          setError('Failed to auto-create demo admin. Please register.');
+        }
+      } else {
+        setError(err.response?.data?.message || 'Invalid credentials');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickFill = () => {
+    setEmail('admin@hostelhub.com');
+    setPassword('admin123');
+  };
+
   return (
     <div className="auth-container">
       <div className="auth-card">
@@ -12,20 +57,102 @@ const Login = () => {
           <h1>Admin Portal</h1>
           <p>Sign in to manage the platform</p>
         </div>
+
+        {error && (
+          <div 
+            className="error-message" 
+            style={{ 
+              color: 'var(--accent-error, #EF4444)', 
+              textAlign: 'center', 
+              marginBottom: '1.5rem', 
+              padding: '0.8rem', 
+              background: 'rgba(239, 68, 68, 0.1)', 
+              borderRadius: '12px', 
+              fontSize: '0.9rem' 
+            }}
+          >
+            {error}
+          </div>
+        )}
+
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="input-group">
             <label>Admin Email</label>
-            <input type="email" placeholder="admin@hostelhub.com" required />
+            <input 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@hostelhub.com" 
+              required 
+            />
           </div>
           <div className="input-group">
             <label>Password</label>
-            <input type="password" placeholder="????????" required />
+            <input 
+              type="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••" 
+              required 
+            />
           </div>
-          <button type="submit" className="auth-btn">Access Dashboard</button>
+          <button type="submit" className="auth-btn" disabled={loading}>
+            {loading ? 'Accessing...' : 'Access Dashboard'}
+          </button>
         </form>
+
+        <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <button
+            type="button"
+            onClick={() => setShowVault(!showVault)}
+            style={{
+              background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)',
+              color: '#818cf8', padding: '0.6rem', borderRadius: '8px', width: '100%',
+              fontSize: '0.85rem', cursor: 'pointer', fontWeight: '600'
+            }}
+          >
+            {showVault ? 'Hide Mock Credentials' : 'View Login Access Vault'}
+          </button>
+
+          {showVault && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              style={{
+                marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)',
+                borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)'
+              }}
+            >
+              <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.8rem', textAlign: 'center' }}>Demo Account (Admin Portal)</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                  <span style={{ color: '#64748b' }}>Email:</span>
+                  <code style={{ color: '#e2e8f0' }}>admin@hostelhub.com</code>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                  <span style={{ color: '#64748b' }}>Pass:</span>
+                  <code style={{ color: '#e2e8f0' }}>admin123</code>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleQuickFill}
+                  style={{
+                    marginTop: '0.5rem', background: '#6366f1', color: 'white', border: 'none',
+                    padding: '0.4rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700'
+                  }}
+                >
+                  Auto-Login Now
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        <div className="auth-footer">
+          New admin? <Link to="/signup">Register Admin</Link>
+        </div>
       </div>
     </div>
   );
 };
-export default Login;
 
+export default Login;

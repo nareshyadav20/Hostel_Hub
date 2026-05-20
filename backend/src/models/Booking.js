@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bookingSchema = new mongoose.Schema({
   tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
   buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
+  proofId: { type: mongoose.Schema.Types.ObjectId, ref: 'TenantProof' },
   userId: { type: String },
   category: { type: String, required: true },
   moveInDate: { type: String, default: 'TBD' },

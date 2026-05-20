@@ -1,31 +1,59 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import API from '../api/axios';
 import './Booking.css';
+
+const formatMoveInDate = (dateStr) => {
+  if (!dateStr || dateStr === 'TBD') return 'TBD';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const date = new Date(year, month, day);
+    return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  const parsed = new Date(dateStr);
+  if (isNaN(parsed.getTime())) return dateStr;
+  return parsed.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+};
 
 const Booking = () => {
   const navigate = useNavigate();
   const { buildingId } = useParams();
+  const location = useLocation();
   const idUploadRef = useRef(null);
   const photoUploadRef = useRef(null);
+  
+  // Map passed state to room type
+  const passedSharing = location.state?.selectedSharing || 2;
+  const passedBed = location.state?.selectedBed || 1;
+  const initialRoomType = passedSharing === 1 ? 'Single' : (passedSharing === 3 ? 'Triple' : 'Double');
   
   const [user, setUser] = useState({});
   const [step, setStep] = useState(1);
   const [hostel, setHostel] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [formData, setFormData] = useState({ roomType: 'Double', moveInDate: '', agreementSigned: false, idProof: null, profilePhoto: null });
+  const [formData, setFormData] = useState({ roomType: initialRoomType, moveInDate: '', agreementSigned: false, idProof: null, profilePhoto: null });
   const [bookings, setBookings] = useState([]);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [uploadingProofs, setUploadingProofs] = useState(false);
+  const [proofUploadStatus, setProofUploadStatus] = useState(null); // 'success' | 'error' | null
+  const [proofId, setProofId] = useState(null);
   const [apiError, setApiError] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('UPI');
 
-  const basePrice = hostel?.startingPrice || 9000;
+  const passedBasePrice = location.state?.basePrice;
+  const basePrice = passedBasePrice || hostel?.startingPrice || 9000;
+  const foodCost = (hostel?.foodCharges !== undefined && hostel?.foodCharges !== null && hostel?.foodCharges > 0) ? hostel.foodCharges : 3000;
+  const maintenanceCost = (hostel?.maintenanceCharges !== undefined && hostel?.maintenanceCharges !== null && hostel?.maintenanceCharges > 0) ? hostel.maintenanceCharges : 799;
 
   const roomOptions = [
     { 
       id: 'Single', 
       name: 'Single Elite', 
-      price: (basePrice * 2).toString(), 
+      price: ((hostel?.rentSingle !== undefined && hostel?.rentSingle !== null && hostel?.rentSingle > 0) ? hostel.rentSingle : (basePrice * 2)).toString(), 
+      deposit: hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0 ? hostel.securityDeposit.toString() : (basePrice * 2).toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -36,7 +64,8 @@ const Booking = () => {
     { 
       id: 'Double', 
       name: 'Luxury 2 Sharing', 
-      price: Math.round(basePrice * 1.3333).toString(), 
+      price: ((hostel?.rentDouble !== undefined && hostel?.rentDouble !== null && hostel?.rentDouble > 0) ? hostel.rentDouble : Math.round(basePrice * 1.3333)).toString(), 
+      deposit: hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0 ? hostel.securityDeposit.toString() : Math.round(basePrice * 1.3333).toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -49,7 +78,8 @@ const Booking = () => {
     { 
       id: 'Triple', 
       name: 'Comfort 3 Sharing', 
-      price: basePrice.toString(), 
+      price: ((hostel?.rentTriple !== undefined && hostel?.rentTriple !== null && hostel?.rentTriple > 0) ? hostel.rentTriple : basePrice).toString(), 
+      deposit: hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0 ? hostel.securityDeposit.toString() : basePrice.toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
@@ -98,7 +128,7 @@ const Booking = () => {
   const handleBooking = async () => {
     setApiError(null);
     const tenantId = user?._id || user?.id;
-    const amount = (parseInt(currentRoom.price) * 2);
+    const amount = parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + foodCost + maintenanceCost;
 
     console.log("[Booking] Debug Info:", { 
       tenantId, 
@@ -137,7 +167,10 @@ const Booking = () => {
       buildingId,
       category: currentRoom.name,
       moveInDate: formData.moveInDate,
-      totalAmount: amount
+      totalAmount: amount,
+      proofId,
+      bedNumber: passedBed,
+      sharingType: passedSharing
     };
 
     console.log("[Booking] Outgoing Payload:", payload);
@@ -230,7 +263,7 @@ const Booking = () => {
                   <div className="booking-details-grid">
                     <div className="detail-box">
                       <span className="detail-label">Move-in Date</span>
-                      <span className="detail-value">{new Date(b.moveInDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                      <span className="detail-value">{formatMoveInDate(b.moveInDate)}</span>
                     </div>
                     <div className="detail-box">
                       <span className="detail-label">Total Amount</span>
@@ -240,39 +273,141 @@ const Booking = () => {
 
                   <div className="booking-footer-pro">
                     <div className="booking-id-tag">ID: {b._id.slice(-8).toUpperCase()}</div>
-                    <div className="booking-actions-pro">
-                      <button className="btn-secondary-small" onClick={() => {
-                        const html = `<!DOCTYPE html><html><head><title>Receipt ${b._id}</title>
-                        <style>body{font-family:Arial,sans-serif;max-width:500px;margin:40px auto;padding:2rem;border:2px solid #e5e7eb;border-radius:12px}
-                        h1{color:#2563eb;margin:0}h2{margin:0;font-size:1rem;color:#6b7280}.divider{border:none;border-top:1px solid #e5e7eb;margin:1rem 0}
-                        .row{display:flex;justify-content:space-between;margin:0.5rem 0;font-size:0.95rem}
-                        .total{font-size:1.2rem;font-weight:800;color:#059669}.footer{text-align:center;color:#9ca3af;font-size:0.8rem;margin-top:1.5rem}</style>
-                        </head><body>
-                        <h1>HostelHub</h1><p style="color:#6b7280;margin-top:0.25rem">Transaction Receipt</p>
-                        <hr class="divider"/>
-                        <div class="row"><span><b>${b._id.slice(-8).toUpperCase()}</b></span><span>${new Date(b.moveInDate).toLocaleDateString()}</span></div>
-                        <hr class="divider"/>
-                        <div class="row"><span>Tenant</span><span><b>${user?.name || 'Tenant'}</b></span></div>
-                        <div class="row"><span>Plan / Type</span><span>${b.category}</span></div>
-                        <hr class="divider"/>
-                        <div class="row total"><span>Total Amount</span><span>₹${b.totalAmount?.toLocaleString()}</span></div>
-                        <hr class="divider"/>
-                        <p class="footer">Thank you for your payment · HostelHub Management System</p>
-                        </body></html>`;
-                        const win = window.open('', '_blank');
-                        win.document.write(html);
-                        win.document.close();
-                        win.print();
+                    <button className="btn-download-full" onClick={() => {
+                        const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice_${b._id.slice(-8)}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; line-height: 1.6; background: #fff; }
+        .invoice-container { max-width: 800px; margin: auto; border: 1px solid #e2e8f0; padding: 50px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 60px; }
+        .logo { font-size: 28px; font-weight: 800; color: #4f46e5; letter-spacing: -1px; }
+        .invoice-label { font-size: 36px; font-weight: 800; color: #0f172a; margin: 0; }
+        .status-badge { display: inline-block; padding: 6px 16px; background: #dcfce7; color: #15803d; border-radius: 100px; font-size: 14px; font-weight: 700; margin-top: 10px; text-transform: uppercase; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 50px; }
+        .info-block h4 { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px; margin-top: 0; }
+        .info-block p { margin: 0; font-weight: 600; font-size: 16px; }
+        .table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        .table th { text-align: left; padding: 16px; border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 13px; font-weight: 700; text-transform: uppercase; }
+        .table td { padding: 20px 16px; border-bottom: 1px solid #f1f5f9; font-weight: 600; }
+        .total-section { margin-left: auto; width: 300px; }
+        .total-row { display: flex; justify-content: space-between; padding: 10px 0; }
+        .grand-total { font-size: 24px; font-weight: 800; color: #4f46e5; border-top: 2px solid #e2e8f0; margin-top: 10px; padding-top: 15px; }
+        .footer { text-align: center; margin-top: 80px; color: #94a3b8; font-size: 14px; border-top: 1px solid #f1f5f9; padding-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <div class="header">
+            <div>
+                <div class="logo">Livora Residency</div>
+                <p style="color: #64748b; margin-top: 5px; font-weight: 500;">Premium Managed Accommodations</p>
+            </div>
+            <div style="text-align: right;">
+                <h1 class="invoice-label">INVOICE</h1>
+                <div class="status-badge">${b.status}</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="info-block">
+                <h4>Resident Details</h4>
+                <p>${user?.name || 'Valued Resident'}</p>
+                <p style="font-weight: 400; color: #64748b; font-size: 14px;">${user?.email || ''}</p>
+            </div>
+            <div class="info-block" style="text-align: right;">
+                <h4>Invoice Details</h4>
+                <p>#INV-${b._id.slice(-8).toUpperCase()}</p>
+                <p style="font-weight: 400; color: #64748b; font-size: 14px;">Date: ${new Date().toLocaleDateString('en-IN')}</p>
+            </div>
+        </div>
+
+        <div class="info-block" style="margin-bottom: 40px;">
+            <h4>Property</h4>
+            <p>${b.buildingId?.name || 'HostelHub Network Property'}</p>
+            <p style="font-weight: 400; color: #64748b; font-size: 14px;">${b.buildingId?.location || 'Premium Managed Residence'}</p>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Plan</th>
+                    <th style="text-align: right;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Hostel Accommodation Booking Fee<br/><small style="color: #64748b; font-weight: 400;">Move-in: ${formatMoveInDate(b.moveInDate)}</small></td>
+                    <td>${b.category}</td>
+                    <td style="text-align: right;">₹${(b.totalAmount/2).toLocaleString()}</td>
+                </tr>
+                <tr>
+                    <td>Refundable Security Deposit<br/><small style="color: #64748b; font-weight: 400;">Interest-free refundable amount</small></td>
+                    <td>—</td>
+                    <td style="text-align: right;">₹${(b.totalAmount/2).toLocaleString()}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="total-section">
+            <div class="total-row">
+                <span style="color: #64748b;">Subtotal</span>
+                <span>₹${b.totalAmount?.toLocaleString()}</span>
+            </div>
+            <div class="total-row">
+                <span style="color: #64748b;">GST (0%)</span>
+                <span>₹0</span>
+            </div>
+            <div class="total-row grand-total">
+                <span>Total Paid</span>
+                <span>₹${b.totalAmount?.toLocaleString()}</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>This is a computer-generated document. No signature required.</p>
+            <p style="margin-top: 10px;">Thank you for choosing <strong>Livora Residency</strong> for your premium stay.</p>
+        </div>
+    </div>
+</body>
+</html>`;
+                        const element = document.createElement('div');
+                        element.innerHTML = html;
+                        
+                        // Dynamically load html2pdf if not present
+                        if (!window.html2pdf) {
+                          const script = document.createElement('script');
+                          script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+                          script.onload = () => {
+                            generatePDF(element, b._id.slice(-8));
+                          };
+                          document.head.appendChild(script);
+                        } else {
+                          generatePDF(element, b._id.slice(-8));
+                        }
+                        
+                        function generatePDF(el, id) {
+                           const opt = {
+                             margin:       0,
+                             filename:     `Invoice_${id.toUpperCase()}.pdf`,
+                             image:        { type: 'jpeg', quality: 0.98 },
+                             html2canvas:  { scale: 2, useCORS: true },
+                             jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                           };
+                           // Use html2pdf to automatically save the file
+                           window.html2pdf().set(opt).from(el).save();
+                        }
                       }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        Invoice
-                      </button>
-                      <button className="btn-primary-small" onClick={() => alert('Manage booking features coming soon!')}>
-                        Manage
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Download Invoice (PDF)
                       </button>
                     </div>
                   </div>
-                </div>
               ))}
             </div>
           )}
@@ -389,9 +524,10 @@ const Booking = () => {
                   </div>
                   <div className="upload-info">
                     <h4>ID Proof (Aadhaar/PAN)</h4>
-                    <p>{formData.idProof || 'Click to upload document'}</p>
+                    <p>{formData.idProof ? formData.idProof.name : 'Click to upload document'}</p>
+                    {formData.idProof && <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: '700' }}>✓ File selected</span>}
                   </div>
-                  <input type="file" ref={idUploadRef} style={{ display: 'none' }} onChange={e => setFormData({...formData, idProof: e.target.files[0]?.name})} />
+                  <input type="file" ref={idUploadRef} accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => setFormData({...formData, idProof: e.target.files[0] || null})} />
                </div>
 
                <div className={`upload-card-premium ${formData.profilePhoto ? 'uploaded' : ''}`} onClick={() => photoUploadRef.current.click()}>
@@ -400,9 +536,10 @@ const Booking = () => {
                   </div>
                   <div className="upload-info">
                     <h4>Profile Photograph</h4>
-                    <p>{formData.profilePhoto || 'Click to upload photo'}</p>
+                    <p>{formData.profilePhoto ? formData.profilePhoto.name : 'Click to upload photo'}</p>
+                    {formData.profilePhoto && <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: '700' }}>✓ File selected</span>}
                   </div>
-                  <input type="file" ref={photoUploadRef} style={{ display: 'none' }} onChange={e => setFormData({...formData, profilePhoto: e.target.files[0]?.name})} />
+                  <input type="file" ref={photoUploadRef} accept="image/*" style={{ display: 'none' }} onChange={e => setFormData({...formData, profilePhoto: e.target.files[0] || null})} />
                </div>
             </div>
 
@@ -414,6 +551,17 @@ const Booking = () => {
               </label>
             </div>
 
+            {proofUploadStatus === 'error' && (
+              <div style={{ margin: '1rem 0 0', padding: '0.9rem 1.25rem', borderRadius: '12px', background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontSize: '0.88rem', fontWeight: '600' }}>
+                ⚠️ Document upload failed. You can still proceed — proofs can be re-submitted later.
+              </div>
+            )}
+            {proofUploadStatus === 'success' && (
+              <div style={{ margin: '1rem 0 0', padding: '0.9rem 1.25rem', borderRadius: '12px', background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D', fontSize: '0.88rem', fontWeight: '600' }}>
+                ✅ Documents uploaded and saved securely.
+              </div>
+            )}
+
             <div className="flow-footer dual">
               <button className="btn-secondary-pro" onClick={() => setStep(1)}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -422,12 +570,45 @@ const Booking = () => {
                 </svg>
                 Go Back
               </button>
-              <button className="btn-primary btn-large" disabled={!formData.agreementSigned || !formData.idProof} onClick={() => setStep(3)}>
-                Next: Payment Summary
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                  <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
+              <button
+                className="btn-primary btn-large"
+                disabled={!formData.agreementSigned || !formData.idProof || uploadingProofs}
+                onClick={async () => {
+                  setUploadingProofs(true);
+                  setProofUploadStatus(null);
+                  try {
+                    const fd = new FormData();
+                    fd.append('idProof', formData.idProof);
+                    if (formData.profilePhoto) fd.append('profilePhoto', formData.profilePhoto);
+                    if (buildingId) fd.append('buildingId', buildingId);
+                    const token = localStorage.getItem('token');
+                    await fetch('http://localhost:5000/api/tenant-proofs/upload', {
+                      method: 'POST',
+                      headers: { Authorization: `Bearer ${token}` },
+                      body: fd
+                    }).then(async r => {
+                      if (!r.ok) throw new Error(await r.text());
+                      const data = await r.json();
+                      if (data.proofId) setProofId(data.proofId);
+                      return data;
+                    });
+                    setProofUploadStatus('success');
+                  } catch (err) {
+                    console.error('[TenantProof] Upload failed:', err);
+                    setProofUploadStatus('error');
+                  } finally {
+                    setUploadingProofs(false);
+                    setStep(3);
+                  }
+                }}
+              >
+                {uploadingProofs ? 'Uploading...' : 'Next: Payment Summary'}
+                {!uploadingProofs && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                )}
               </button>
             </div>
           </div>
@@ -443,20 +624,28 @@ const Booking = () => {
                  <span className="item-value">{currentRoom.name}</span>
                </div>
                <div className="summary-item-row">
-                 <span className="item-label">Monthly Rent</span>
+                 <span className="item-label">Room Rent</span>
                  <span className="item-value">₹{parseInt(currentRoom.price).toLocaleString()}</span>
                </div>
                <div className="summary-item-row">
-                 <span className="item-label">Refundable Security Deposit</span>
-                 <span className="item-value">₹{parseInt(currentRoom.price).toLocaleString()}</span>
+                 <span className="item-label">Security Deposit</span>
+                 <span className="item-value">₹{parseInt(currentRoom.deposit || currentRoom.price).toLocaleString()}</span>
+               </div>
+               <div className="summary-item-row">
+                 <span className="item-label">Food (Monthly)</span>
+                 <span className="item-value">₹{foodCost.toLocaleString()}</span>
+               </div>
+               <div className="summary-item-row">
+                 <span className="item-label">Maintenance</span>
+                 <span className="item-value">₹{maintenanceCost.toLocaleString()}</span>
                </div>
                <div className="summary-divider"></div>
                <div className="summary-total-row">
                  <div className="total-label-group">
-                   <span className="total-label">Total Payable Now</span>
-                   <span className="total-subtitle">Inc. security deposit & first month rent</span>
+                   <span className="total-label">Total Due (Move-in)</span>
+                   <span className="total-subtitle">Rent + Deposit + Food + Maintenance</span>
                  </div>
-                 <span className="total-amount-val">₹{(parseInt(currentRoom.price) * 2).toLocaleString()}</span>
+                 <span className="total-amount-val">₹{(parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + foodCost + maintenanceCost).toLocaleString()}</span>
                </div>
             </div>
 

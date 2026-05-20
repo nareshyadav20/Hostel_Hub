@@ -1,4 +1,6 @@
 const Notification = require('../models/Notification');
+const OwnerNotification = require('../models/OwnerNotification');
+const socketService = require('./socketService');
 
 let io;
 
@@ -10,32 +12,85 @@ const setIo = (socketIo) => {
  * Centralized function to create notifications from any module
  */
 const createNotification = async (data) => {
+  console.log('⚡ [DB_PERSISTENCE] Starting notification creation for:', data.title);
   try {
-    const notification = new Notification({
-      ...data,
+    if (!data.moduleName || !data.portalType || !data.title || !data.message) {
+      console.warn('❌ [DB_PERSISTENCE] Missing required fields in payload:', data);
+    }
+
+    // Ensure buildingId is a valid ObjectId if possible
+    let finalData = { ...data };
+    const mongoose = require('mongoose');
+    if (data.buildingId && mongoose.Types.ObjectId.isValid(data.buildingId)) {
+      finalData.buildingId = new mongoose.Types.ObjectId(data.buildingId);
+    }
+
+    // Determine target collection
+    const isOwnerNotif = data.portalType === 'Owner' || data.receiverRole === 'Owner' || data.target === 'Owner';
+    const Model = isOwnerNotif ? OwnerNotification : Notification;
+    console.log(`📝 [DB_PERSISTENCE] Target model selected: ${Model.modelName} (Collection: ${Model.collection.name})`);
+
+    const notification = new Model({
+      ...finalData,
       isRead: false,
     });
     
+    console.log('📝 [DB_PERSISTENCE] Attempting to save to MongoDB Atlas...');
     await notification.save();
+    
+    console.log('✅ [DB_PERSISTENCE] SUCCESS! Notification persisted physically in DB.');
+    console.log('📎 [DB_PERSISTENCE] Document Details:', {
+      id: notification._id,
+      module: notification.moduleName,
+      portal: notification.portalType,
+      category: notification.category,
+      buildingId: notification.buildingId,
+      createdAt: notification.createdAt
+    });
 
-    // Real-time update via Socket.IO
-    if (io) {
-      // Emit to the specific building's room or globally to all owners
-      io.to(data.buildingId).emit('newNotification', notification);
-      io.emit('notificationUpdate', { type: 'NEW', notification });
+    // Real-time update via Socket.IO (Happens AFTER successful DB save)
+    if (data.receiverId && data.receiverRole) {
+      socketService.emitToUser(data.receiverId, data.receiverRole, 'newNotification', notification);
+    } 
+    else if (data.buildingId && data.portalType !== 'Owner') {
+      socketService.emitToRoom(data.buildingId, 'newNotification', notification);
+    }
+    
+    if (data.portalType === 'Owner' || data.owner) {
+      socketService.emitToOwner('newNotification', notification);
     }
 
     return notification;
   } catch (error) {
-    console.error('Error creating notification:', error);
+    console.error('🔥 [DB_PERSISTENCE] CRITICAL SAVE FAILURE:', {
+      error: error.message,
+      stack: error.stack,
+      attemptedData: data
+    });
     return null;
   }
+};
+
+/**
+ * Specifically for system-triggered or critical alerts
+ */
+const createSystemAlert = async (buildingId, title, message, priority = 'High', type = 'warning') => {
+  return await createNotification({
+    moduleName: 'System',
+    portalType: 'Owner',
+    category: 'Alert',
+    title,
+    message,
+    priority,
+    type,
+    buildingId
+  });
 };
 
 const getNotifications = async (buildingId, filters = {}) => {
   try {
     const query = { buildingId, archived: false, ...filters };
-    return await Notification.find(query).sort({ createdAt: -1 });
+    return await Notification.find(query).sort({ createdAt: -1 }).limit(50);
   } catch (error) {
     console.error('Error fetching notifications:', error);
     return [];
@@ -51,6 +106,15 @@ const markAsRead = async (notificationId) => {
   }
 };
 
+const markAllAsRead = async (buildingId) => {
+  try {
+    return await Notification.updateMany({ buildingId, isRead: false }, { isRead: true });
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    return null;
+  }
+};
+
 const getUnreadCount = async (buildingId) => {
   try {
     return await Notification.countDocuments({ buildingId, isRead: false, archived: false });
@@ -62,7 +126,9 @@ const getUnreadCount = async (buildingId) => {
 module.exports = {
   setIo,
   createNotification,
+  createSystemAlert,
   getNotifications,
   markAsRead,
+  markAllAsRead,
   getUnreadCount
 };

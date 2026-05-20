@@ -91,9 +91,24 @@ exports.createComplaint = async (req, res) => {
 
     // Real-time synchronization for Owner
     if (buildingId) {
-      socketService.emitUpdate(buildingId, 'complaintCreated', {
+      socketService.emitUpdate(buildingId.toString(), 'complaintCreated', {
         complaint,
         tenantName: tenant.name
+      });
+      
+      // Create Persistent Notification for Owner
+      await notificationService.createNotification({
+        moduleName: 'Complaints',
+        portalType: 'Owner',
+        category: category || 'Maintenance',
+        title: 'New Complaint Raised',
+        message: `${tenant.name} from Room ${tenant.room || 'N/A'} raised: ${title}`,
+        priority: priority || 'Medium',
+        type: 'warning',
+        buildingId,
+        tenantId: tenant._id,
+        roomId: roomId ? roomId.toString() : null,
+        actionLink: `/complaints`
       });
     }
     socketService.emitToOwner('complaintCreated', {
@@ -109,8 +124,36 @@ exports.createComplaint = async (req, res) => {
 
 exports.getMyComplaints = async (req, res) => {
   try {
-    const complaints = await Complaint.find({ user: req.user.id }).sort({ createdAt: -1 });
-    res.status(200).json(complaints);
+    // 1. Fetch from owner_complaints
+    const ownerComplaints = await Complaint.find({ user: req.user.id })
+      .populate('tenant', 'name room email')
+      .populate('buildingId', 'name')
+      .populate('roomId', 'roomNumber')
+      .lean();
+
+    // 2. Fetch from complaints
+    const db = mongoose.connection.db;
+    const rawComplaints = await db.collection('complaints').find({ 
+      user: mongoose.Types.ObjectId.isValid(req.user.id) ? new mongoose.Types.ObjectId(req.user.id) : req.user.id 
+    }).toArray();
+
+    // Populate raw complaints programmatically
+    const Building = require('../models/Building');
+    for (let c of rawComplaints) {
+      c.id = c._id.toString();
+      if (c.tenant && mongoose.Types.ObjectId.isValid(c.tenant)) {
+        c.tenant = await Tenant.findById(c.tenant, 'name room email').lean();
+      }
+      if (c.buildingId && mongoose.Types.ObjectId.isValid(c.buildingId)) {
+        c.buildingId = await Building.findById(c.buildingId, 'name').lean();
+      }
+      if (c.roomId && mongoose.Types.ObjectId.isValid(c.roomId)) {
+        c.roomId = await Room.findById(c.roomId, 'roomNumber').lean();
+      }
+    }
+
+    const merged = [...ownerComplaints, ...rawComplaints].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+    res.status(200).json(merged);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch complaints', error: error.message });
   }
@@ -137,9 +180,13 @@ exports.updateComplaintStatus = async (req, res) => {
     await notificationService.createNotification({
       title: 'Complaint Status Updated',
       message: `Your complaint "${complaint.title}" is now ${status}.`,
-      type: 'COMPLAINT',
+      moduleName: 'Complaints',
+      portalType: 'Tenant',
+      category: 'Maintenance',
+      type: 'info',
       buildingId: complaint.buildingId,
-      userId: complaint.user._id
+      tenantId: complaint.tenant._id,
+      createdBy: req.user.id
     });
 
     res.status(200).json(complaint);
@@ -157,9 +204,8 @@ exports.getAllComplaints = async (req, res) => {
     if (hostelId) query.hostelId = hostelId;
     if (status) query.status = status;
 
-    // If no specific filter, try to scope to owner's buildings first,
-    // then fall back to all complaints (owner portal view)
-    if (!buildingId && !hostelId && req.user) {
+    // Scoping check: DO NOT restrict if user is SUPER_ADMIN or ADMIN
+    if (!buildingId && !hostelId && req.user && req.user.role !== 'SUPER_ADMIN' && req.user.role !== 'ADMIN') {
       try {
         const Building = require('../models/Building');
         const ownerBuildings = await Building.find({ owner: req.user.id }, '_id').lean();
@@ -173,17 +219,60 @@ exports.getAllComplaints = async (req, res) => {
         }
         // If no buildings found, query is empty — returns all complaints
       } catch (_e) {
-        // Silently fall back to returning all complaints
+        // Fallback
       }
     }
 
-    const complaints = await Complaint.find(query)
+    // 1. Fetch from owner_complaints (via Complaint model)
+    const ownerComplaints = await Complaint.find(query)
       .populate('tenant', 'name room email')
       .populate('buildingId', 'name')
       .populate('roomId', 'roomNumber')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
-    res.status(200).json(complaints);
+    // 2. Fetch from complaints collection directly
+    const db = mongoose.connection.db;
+    const rawQuery = {};
+    
+    if (query.buildingId) {
+      if (query.buildingId.$in) {
+        const ids = query.buildingId.$in;
+        rawQuery.$or = [
+          { buildingId: { $in: ids.map(id => id.toString()) } },
+          { buildingId: { $in: ids.map(id => new mongoose.Types.ObjectId(id)) } }
+        ];
+      } else {
+        const idStr = query.buildingId.toString();
+        rawQuery.$or = [
+          { buildingId: idStr },
+          { buildingId: new mongoose.Types.ObjectId(idStr) }
+        ];
+      }
+    }
+    if (query.status) {
+      rawQuery.status = query.status;
+    }
+
+    const rawComplaints = await db.collection('complaints').find(rawQuery).toArray();
+
+    // Populate raw complaints programmatically
+    const Building = require('../models/Building');
+    for (let c of rawComplaints) {
+      c.id = c._id.toString();
+      if (c.tenant && mongoose.Types.ObjectId.isValid(c.tenant)) {
+        c.tenant = await Tenant.findById(c.tenant, 'name room email').lean();
+      }
+      if (c.buildingId && mongoose.Types.ObjectId.isValid(c.buildingId)) {
+        c.buildingId = await Building.findById(c.buildingId, 'name').lean();
+      }
+      if (c.roomId && mongoose.Types.ObjectId.isValid(c.roomId)) {
+        c.roomId = await Room.findById(c.roomId, 'roomNumber').lean();
+      }
+    }
+
+    const merged = [...ownerComplaints, ...rawComplaints].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+    res.status(200).json(merged);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch all complaints', error: error.message });
   }

@@ -10,6 +10,8 @@ const Transfers = () => {
   const [transfers, setTransfers] = useState([]);
   const [tenantData, setTenantData] = useState(null);
   const [formData, setFormData] = useState({ newRoom: '', reason: '' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,6 +68,11 @@ const Transfers = () => {
       <p>Synchronizing transfer records...</p>
     </div>
   );
+
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentTransfers = transfers.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(transfers.length / itemsPerPage);
 
   return (
     <div className="transfers-page">
@@ -149,10 +156,10 @@ const Transfers = () => {
               </tr>
             </thead>
             <tbody>
-              {transfers.length === 0 ? (
+              {currentTransfers.length === 0 ? (
                 <tr><td colSpan="4" className="td-empty">No previous requests found.</td></tr>
               ) : (
-                transfers.map(t => (
+                currentTransfers.map(t => (
                   <tr key={t._id}>
                     <td className="td-date">{new Date(t.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                     <td className="td-route">
@@ -177,6 +184,21 @@ const Transfers = () => {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderTop: '1px solid #E2E8F0', marginTop: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '600' }}>
+              Showing {indexOfFirst + 1}–{Math.min(indexOfLast, transfers.length)} of {transfers.length} entries
+            </span>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: currentPage === 1 ? '#F8FAFC' : '#fff', color: currentPage === 1 ? '#CBD5E1' : '#475569', fontWeight: '600', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>Previous</button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button key={i+1} onClick={() => setCurrentPage(i+1)} style={{ width: '36px', height: '36px', borderRadius: '8px', border: currentPage === i+1 ? 'none' : '1px solid #E2E8F0', background: currentPage === i+1 ? 'var(--accent-primary)' : '#fff', color: currentPage === i+1 ? '#fff' : '#475569', fontWeight: '700', cursor: 'pointer' }}>{i+1}</button>
+              ))}
+              <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: currentPage === totalPages ? '#F8FAFC' : '#fff', color: currentPage === totalPages ? '#CBD5E1' : '#475569', fontWeight: '600', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}>Next</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {showForm && (

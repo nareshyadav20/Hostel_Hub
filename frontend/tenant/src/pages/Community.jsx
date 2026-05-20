@@ -8,6 +8,8 @@ const Community = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [items, setItems] = useState([]);
   const [formData, setFormData] = useState({ title: '', type: 'Lost', location: '', description: '' });
+  const [lostPage, setLostPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -173,7 +175,7 @@ const Community = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map(item => (
+                    {items.slice((lostPage - 1) * ITEMS_PER_PAGE, lostPage * ITEMS_PER_PAGE).map(item => (
                       <tr key={item._id} className={item.type.toLowerCase()}>
                         <td className="td-date">{new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
                         <td className="td-item">
@@ -191,9 +193,27 @@ const Community = () => {
                         </td>
                       </tr>
                     ))}
+                    {items.length === 0 && (
+                      <tr><td colSpan="5" className="td-empty">No reports yet.</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
+
+              {Math.ceil(items.length / ITEMS_PER_PAGE) > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 1.5rem', borderTop: '1px solid #E2E8F0', flexWrap: 'wrap', gap: '1rem' }}>
+                  <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '600' }}>
+                    Showing {(lostPage - 1) * ITEMS_PER_PAGE + 1}&ndash;{Math.min(lostPage * ITEMS_PER_PAGE, items.length)} of {items.length} entries
+                  </span>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button onClick={() => setLostPage(p => p - 1)} disabled={lostPage === 1} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: lostPage === 1 ? '#F8FAFC' : '#fff', color: lostPage === 1 ? '#CBD5E1' : '#475569', fontWeight: '600', cursor: lostPage === 1 ? 'not-allowed' : 'pointer' }}>Previous</button>
+                    {[...Array(Math.ceil(items.length / ITEMS_PER_PAGE))].map((_, i) => (
+                      <button key={i+1} onClick={() => setLostPage(i+1)} style={{ width: '36px', height: '36px', borderRadius: '8px', border: lostPage === i+1 ? 'none' : '1px solid #E2E8F0', background: lostPage === i+1 ? 'var(--accent-primary)' : '#fff', color: lostPage === i+1 ? '#fff' : '#475569', fontWeight: '700', cursor: 'pointer' }}>{i+1}</button>
+                    ))}
+                    <button onClick={() => setLostPage(p => p + 1)} disabled={lostPage === Math.ceil(items.length / ITEMS_PER_PAGE)} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', background: lostPage === Math.ceil(items.length / ITEMS_PER_PAGE) ? '#F8FAFC' : '#fff', color: lostPage === Math.ceil(items.length / ITEMS_PER_PAGE) ? '#CBD5E1' : '#475569', fontWeight: '600', cursor: lostPage === Math.ceil(items.length / ITEMS_PER_PAGE) ? 'not-allowed' : 'pointer' }}>Next</button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

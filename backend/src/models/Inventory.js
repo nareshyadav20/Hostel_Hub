@@ -14,8 +14,9 @@ const inventorySchema = new mongoose.Schema({
   status: { type: String, default: 'Available' },
   inUse: { type: Number, default: 0 },
   damaged: { type: Number, default: 0 },
+  image: { type: String },
   buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   lastUpdatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-}, { timestamps: true, collection: 'inventory' });
+}, { timestamps: true, collection: 'inventorys' });
 
 module.exports = mongoose.model('Inventory', inventorySchema);

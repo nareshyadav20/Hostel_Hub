@@ -12,11 +12,16 @@ const userSchema = new mongoose.Schema({
     default: 'TENANT' 
   },
   hostelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hostel' },
-  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' }
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
+  referralCode: { type: String, unique: true, sparse: true }
 }, { timestamps: true, collection: 'users' });
 
-// Hash password before saving
+// Hash password before saving & generate unique referralCode
 userSchema.pre('save', async function(next) {
+  if (!this.referralCode) {
+    const crypto = require('crypto');
+    this.referralCode = crypto.randomBytes(12).toString('hex');
+  }
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);

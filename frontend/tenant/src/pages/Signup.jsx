@@ -32,12 +32,16 @@ const Signup = () => {
       localStorage.removeItem('user');
       sessionStorage.clear();
 
+      const searchParams = new URLSearchParams(window.location.search);
+      const referralCode = searchParams.get('ref') || '';
+
       const response = await API.post('/auth/register', {
         name: cleanName,
         email: cleanEmail,
         password: cleanPassword,
         phone: cleanPhone,
-        role: 'TENANT'
+        role: 'TENANT',
+        referralCode
       });
 
       const { user, token, tenantProfile } = response.data;

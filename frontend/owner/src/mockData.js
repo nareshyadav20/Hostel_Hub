@@ -45,6 +45,7 @@ export const api = {
   },
   updateOwnerProfile: async (data) => {
     const res = await axios.patch(`${API_URL}/owner/profile`, data);
+    cacheSet('owner_profile', res.data);
     return res.data;
   },
   getOwnerStats: async () => {
@@ -63,6 +64,17 @@ export const api = {
   },
   updateOwnerDocuments: async (doc) => {
     const res = await axios.post(`${API_URL}/owner/documents`, doc);
+    cacheSet('owner_profile', res.data);
+    return res.data;
+  },
+  uploadOwnerPhoto: async (photoUrl) => {
+    const res = await axios.post(`${API_URL}/owner/profile/photo`, { photoUrl });
+    const cached = cacheGet('owner_profile') || {};
+    cacheSet('owner_profile', { ...cached, photo: photoUrl });
+    return res.data;
+  },
+  getOwnerPhoto: async () => {
+    const res = await axios.get(`${API_URL}/owner/profile/photo`);
     return res.data;
   },
 
@@ -237,6 +249,14 @@ export const api = {
     const res = await axios.post(`${API_URL}/mess/attendance/mark-all`, data);
     return res.data;
   },
+  getMessPlans: async () => {
+    const res = await axios.get(`${API_URL}/mess/plans`);
+    return res.data;
+  },
+  updateMessPlan: async (id, data) => {
+    const res = await axios.put(`${API_URL}/mess/plans/${id}`, data);
+    return res.data;
+  },
   // Staff Management
   getStaff: async (bId) => {
     const res = await axios.get(`${API_URL}/staff`, { params: { buildingId: bId } });
@@ -324,6 +344,14 @@ export const api = {
   deleteBuilding: async (id) => {
     await axios.delete(`${API_URL}/buildings/${id}`);
   },
+  uploadPhotos: async (formData) => {
+    const res = await axios.post(`${API_URL}/buildings/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return res.data;
+  },
   addFloor: async (data) => {
     const res = await axios.post(`${API_URL}/floors`, data);
     return handleId(res.data);
@@ -337,6 +365,7 @@ export const api = {
   },
   addRoom: async (data) => {
     const res = await axios.post(`${API_URL}/rooms`, data);
+    cacheSet('all_rooms', null); // Clear cache to force refresh
     return handleId(res.data);
   },
   updateRoomStatus: async (id, status) => {
@@ -352,6 +381,7 @@ export const api = {
   },
   addBed: async (data) => {
     const res = await axios.post(`${API_URL}/beds`, data);
+    cacheSet('all_beds', null); // Clear cache to force refresh
     return handleId(res.data);
   },
   updateBedStatus: async (id, status) => {

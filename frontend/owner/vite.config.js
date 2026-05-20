@@ -19,6 +19,10 @@ export default defineConfig({
       '@packages': path.resolve(__dirname, '../../packages'),
     }
   },
+  server: {
+    port: 5174,
+    host: true
+  },
   optimizeDeps: {
     include: ['socket.io-client', 'recharts', 'react-is']
   }

@@ -10,6 +10,7 @@ const tenantSchema = new mongoose.Schema({
    bedId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bed' },
    buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   rent: { type: Number },
+  lastPayment: { type: String, default: 'N/A' },
   checkInDate: { type: Date, default: Date.now },
   status: { 
     type: String, 

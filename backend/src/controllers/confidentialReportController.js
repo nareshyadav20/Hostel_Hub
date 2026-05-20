@@ -1,5 +1,6 @@
 const ConfidentialReport = require('../models/ConfidentialReport');
 const socketService = require('../utils/socketService');
+const notificationService = require('../utils/notificationService');
 
 // POST /api/confidential-reports — submit a new report (Tenant)
 const createReport = async (req, res) => {
@@ -46,10 +47,30 @@ const createReport = async (req, res) => {
 
     const saved = await report.save();
     
-    // Real-time notification for owner
-    socketService.emitToOwner('confidentialReportCreated', saved);
+    const populatedReport = await ConfidentialReport.findById(saved._id).populate('tenant', 'name roomNumber');
+    const tenantName = populatedReport.tenant ? populatedReport.tenant.name : 'A tenant';
+    const roomInfo = populatedReport.tenant && populatedReport.tenant.roomNumber ? ` from Room ${populatedReport.tenant.roomNumber}` : '';
     
-    res.status(201).json({ message: 'Report submitted successfully.', report: saved });
+    // Create Persistent Notification for Owner
+    if (buildingId) {
+      await notificationService.createNotification({
+        moduleName: 'Safety',
+        portalType: 'Owner',
+        category: 'Confidential Report',
+        title: 'New Confidential Report',
+        message: `CONFIDENTIAL: ${tenantName}${roomInfo} submitted a report regarding ${classification || 'an issue'}.`,
+        priority: priority || 'High',
+        type: 'warning',
+        buildingId: buildingId,
+        tenantId: tenantId,
+        actionLink: '/community'
+      });
+    }
+
+    // Real-time notification for owner
+    socketService.emitToOwner('confidentialReportCreated', populatedReport);
+    
+    res.status(201).json({ message: 'Report submitted successfully.', report: populatedReport });
   } catch (err) {
     console.error('Error creating confidential report:', err);
     res.status(500).json({ message: 'Server error while saving report.' });
@@ -122,6 +143,22 @@ const updateReportStatus = async (req, res) => {
 
     socketService.emitToOwner('confidentialReportUpdated', report);
     
+    // Create notification for tenant
+    const notificationService = require('../utils/notificationService');
+    await notificationService.createNotification({
+      moduleName: 'Safety',
+      portalType: 'Tenant',
+      category: 'Confidential Report',
+      title: 'Report Status Updated',
+      message: `Your confidential report "${report.title}" is now ${status}.`,
+      priority: 'Medium',
+      type: 'info',
+      buildingId: report.building,
+      tenantId: report.tenant,
+      createdBy: req.user.id,
+      actionLink: '/safety'
+    });
+
     res.status(200).json({ message: 'Status updated.', report });
   } catch (err) {
     console.error('Error updating report status:', err);
