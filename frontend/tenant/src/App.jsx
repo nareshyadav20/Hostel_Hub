@@ -73,7 +73,7 @@ function App() {
         <Route path="/privacy" element={<Privacy />} />
 
         {/* Public browsing routes */}
-        <Route path="/search"          element={<Landing />} />
+        <Route path="/search"          element={<Layout><Search /></Layout>} />
         <Route path="/offers"          element={<Offers />} />
         <Route path="/listing/:id"     element={<Layout><Listing /></Layout>} />
 
