@@ -5,17 +5,10 @@ import './Booking.css';
 
 const formatMoveInDate = (dateStr) => {
   if (!dateStr || dateStr === 'TBD') return 'TBD';
-  const parts = dateStr.split('-');
-  if (parts.length === 3) {
-    const year = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const day = parseInt(parts[2], 10);
-    const date = new Date(year, month, day);
-    return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-  }
-  const parsed = new Date(dateStr);
-  if (isNaN(parsed.getTime())) return dateStr;
-  return parsed.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  // Use UTC timezone to avoid local timezone shifts
+  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
 };
 
 const Booking = () => {
