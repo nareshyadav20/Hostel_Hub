@@ -113,8 +113,10 @@ const Booking = () => {
         // If we have a tenant ID, check if they already have a confirmed booking/residency
         if (tenantId && buildingId) {
           const profileRes = await API.get('/tenants/me').catch(() => null);
-          if (profileRes?.data?.buildingId) {
-             setApiError("Active Residency Found: You are already registered at a hostel. A resident can only have one active stay at a time.");
+          if (profileRes?.data?.buildingId && profileRes?.data?.status === 'ACTIVE') {
+             const bName = profileRes.data.buildingId?.name || "a hostel";
+             const rNum = profileRes.data.room || "Room TBD";
+             setApiError(`Active Residency Found: You are already registered at ${bName} (Room: ${rNum}). A resident can only have one active stay at a time.`);
              return;
           }
         }
@@ -141,7 +143,7 @@ const Booking = () => {
 
   const handleBooking = async () => {
     setApiError(null);
-    const tenantId = user?._id || user?.id;
+    const tenantId = localStorage.getItem('tenantId') || user?._id || user?.id;
     const amount = parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + foodCost + maintenanceCost;
 
     console.log("[Booking] Debug Info:", { 

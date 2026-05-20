@@ -154,8 +154,8 @@ exports.getSummaryKPIs = async (req, res) => {
     ]);
 
     const s = stats[0] || { totalBeds: 0, occupiedBeds: 0, maintenanceRooms: [], buildingCount: [] };
-    const maintenanceRoomsCount = s.maintenanceRooms.filter(id => id !== null).length;
-    const buildingCount = s.buildingCount.length;
+    const maintenanceRoomsCount = (s.maintenanceRooms || []).filter(id => id !== null).length;
+    const buildingCount = (s.buildingCount || []).length;
 
     // 3. Tenants count
     const tenantFilter = { buildingId: { $in: activeBuildingIds } };
