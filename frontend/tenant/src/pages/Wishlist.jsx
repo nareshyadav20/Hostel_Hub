@@ -121,7 +121,7 @@ const Wishlist = () => {
                     <span className="price-label">per month</span>
                   </div>
                   <div className="action-button-group">
-                    <Link to={`/booking/${hostel.hostelId || hostel._id}`} className="btn-primary-small">Book Now</Link>
+                    <Link to={`/booking/${hostel.hostelId || hostel._id}`} state={{ basePrice: hostel.hostelPrice }} className="btn-primary-small">Book Now</Link>
                     <Link to={`/listing/${hostel.hostelId || hostel._id}`} className="btn-secondary-small">Details</Link>
                   </div>
                 </div>

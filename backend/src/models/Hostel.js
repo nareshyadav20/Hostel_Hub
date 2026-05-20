@@ -10,7 +10,9 @@ const hostelSchema = new mongoose.Schema({
     plan: { type: String, enum: ['BASIC', 'PREMIUM', 'ENTERPRISE'], default: 'BASIC' },
     status: { type: String, enum: ['ACTIVE', 'EXPIRED', 'CANCELLED'], default: 'ACTIVE' },
     validUntil: { type: Date }
-  }
+  },
+  totalBeds: { type: Number, default: 0 },
+  filledBeds: { type: Number, default: 0 }
 }, { timestamps: true, collection: 'hostels' });
 
 module.exports = mongoose.model('Hostel', hostelSchema);

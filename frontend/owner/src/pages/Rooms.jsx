@@ -24,6 +24,7 @@ const Rooms = () => {
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloors] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [bedStats, setBedStats] = useState({ totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0, hostelId: null });
   const [beds, setBeds] = useState([]);
   const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,13 +46,14 @@ const Rooms = () => {
       setLoading(true);
       try {
         // Use building-scoped APIs to avoid cross-property data leakage
-        const [b, f, r, bd, t, tr] = await Promise.all([
+        const [b, f, r, bd, t, tr, bs] = await Promise.all([
           api.getBuildings(),
           activeBuildingId ? api.getFloorsByBuilding(activeBuildingId) : api.getAllFloors(),
           activeBuildingId ? api.getRoomsByBuilding(activeBuildingId) : api.getAllRooms(),
           activeBuildingId ? api.getBedsByBuilding(activeBuildingId) : api.getAllBeds(),
           api.getTenants(activeBuildingId),
-          api.getRoomTransfers(activeBuildingId)
+          api.getRoomTransfers(activeBuildingId),
+          api.getHostelBedStats(activeBuildingId).catch(() => ({ totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 }))
         ]);
 
         setBuildings(b || []);
@@ -61,6 +63,7 @@ const Rooms = () => {
         setTenants(t || []);
         // Server now pre-filters by buildingId, so no extra client filter needed
         setTransferRequests(tr || []);
+        setBedStats(bs || { totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 });
 
         const fExp = {}; (f || []).forEach(x => fExp[x.id || x._id] = true);
         setExpandedFloors(fExp);
@@ -91,6 +94,13 @@ const Rooms = () => {
     }
   };
 
+  const refreshBedStats = async () => {
+    try {
+      const bs = await api.getHostelBedStats(activeBuildingId);
+      setBedStats(bs || { totalRooms: 0, totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 });
+    } catch (_) {}
+  };
+
   const toggleBed = async (roomId, bedId) => {
     const room = rooms.find(r => r.id === roomId);
     const bed = beds.find(b => b.id === bedId);
@@ -102,13 +112,25 @@ const Rooms = () => {
     const newStatus = bed.status === 'OCCUPIED' ? 'AVAILABLE' : 'OCCUPIED';
     // Optimistic UI update first
     setBeds(prev => prev.map(b => b.id === bedId ? { ...b, status: newStatus } : b));
+    // Optimistic bedStats update
+    setBedStats(prev => {
+      const newFilled = newStatus === 'OCCUPIED'
+        ? Math.min(prev.filledBeds + 1, prev.totalBeds || Infinity)
+        : Math.max(prev.filledBeds - 1, 0);
+      const newAvail = Math.max((prev.totalBeds || 0) - newFilled, 0);
+      const pct = prev.totalBeds > 0 ? Math.round((newFilled / prev.totalBeds) * 100) : 0;
+      return { ...prev, filledBeds: newFilled, availableBeds: newAvail, occupancyPct: pct };
+    });
 
     // Fire and forget update (no await, no blocking re-fetch)
-    api.updateBedStatus(bedId, newStatus, null).catch(err => {
-      console.error('Failed to update bed status:', err);
-      // Revert quietly on actual failure
-      setBeds(prev => prev.map(b => b.id === bedId ? { ...b, status: bed.status } : b));
-    });
+    api.updateBedStatus(bedId, newStatus, null)
+      .then(() => refreshBedStats())
+      .catch(err => {
+        console.error('Failed to update bed status:', err);
+        // Revert quietly on actual failure
+        setBeds(prev => prev.map(b => b.id === bedId ? { ...b, status: bed.status } : b));
+        refreshBedStats();
+      });
   };
 
   const toggleMaintenance = async (roomId) => {
@@ -154,45 +176,11 @@ const Rooms = () => {
 
   if (loading) return <div style={{ padding: '2rem', color: 'var(--text-secondary)' }}>Loading...</div>;
 
-  const totalRooms = selectedBuildingId
-    ? rooms.filter(r => {
-      const rFloorId = typeof r.floor === 'object' ? r.floor._id : r.floor;
-      return floors.some(f => {
-        const fId = f.id || f._id;
-        const fBldgId = typeof f.building === 'object' ? f.building._id : f.building;
-        return fId === rFloorId && fBldgId === selectedBuildingId;
-      });
-    }).length
-    : rooms.length;
-
-  const totalBedsCount = selectedBuildingId
-    ? beds.filter(b => {
-      const bRoomId = typeof b.room === 'object' ? b.room._id : (b.room || b.roomId);
-      return rooms.some(r => {
-        const rId = r.id || r._id;
-        const rFloorId = typeof r.floor === 'object' ? r.floor._id : r.floor;
-        return rId === bRoomId && floors.some(f => {
-          const fId = f.id || f._id;
-          const fBldgId = typeof f.building === 'object' ? f.building._id : f.building;
-          return fId === rFloorId && fBldgId === selectedBuildingId;
-        });
-      });
-    }).length
-    : beds.length;
-
-  const occupiedBedsCount = selectedBuildingId
-    ? beds.filter(b => b.status === 'OCCUPIED' && rooms.some(r => {
-      const bRoomId = typeof b.room === 'object' ? b.room._id : (b.room || b.roomId);
-      const rId = r.id || r._id;
-      const rFloorId = typeof r.floor === 'object' ? r.floor._id : r.floor;
-      return rId === bRoomId && floors.some(f => {
-        const fId = f.id || f._id;
-        const fBldgId = typeof f.building === 'object' ? f.building._id : f.building;
-        return fId === rFloorId && fBldgId === selectedBuildingId;
-      });
-    })).length
-    : beds.filter(b => b.status === 'OCCUPIED').length;
-  const occupancyRate = totalBedsCount > 0 ? Math.round((occupiedBedsCount / totalBedsCount) * 100) : 0;
+  // Use server-calculated stats for accurate physical + virtual counts
+  const totalRooms = bedStats.totalRooms || 0;
+  const totalBedsCount = bedStats.totalBeds || 0;
+  const occupiedBedsCount = bedStats.filledBeds || 0;
+  const occupancyRate = bedStats.occupancyPct || 0;
 
   const activeBuilding = buildings.find(b => (b.id || b._id) === selectedBuildingId);
   const buildingFloors = floors.filter(f => {
@@ -251,7 +239,7 @@ const Rooms = () => {
       </AnimatePresence>
 
       {/* Stats Summary Bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Property Rooms</p>
           <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{totalRooms}</h2>
@@ -265,6 +253,70 @@ const Rooms = () => {
           <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{occupancyRate}%</h2>
         </div>
       </div>
+
+      {/* ── No. of Beds Panel (Hostel-level availability) ── */}
+      <div className="card" style={{
+        padding: '1.8rem 2rem',
+        marginBottom: '3rem',
+        background: 'linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%)',
+        border: '1px solid var(--border-color)',
+        borderRadius: '20px'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.4rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <BedDouble size={22} color="var(--accent-primary)" />
+            <span style={{ fontWeight: '800', fontSize: '1.05rem', letterSpacing: '-0.01em' }}>No. of Beds — Hostel Availability</span>
+          </div>
+          <span style={{
+            padding: '0.3rem 0.9rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '800',
+            background: bedStats.occupancyPct >= 90 ? '#ef444420' : bedStats.occupancyPct >= 60 ? '#f59e0b20' : '#10b98120',
+            color: bedStats.occupancyPct >= 90 ? '#ef4444' : bedStats.occupancyPct >= 60 ? '#f59e0b' : '#10b981'
+          }}>
+            {bedStats.occupancyPct}% Occupied
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '1.4rem' }}>
+          {[
+            { label: 'Total Beds', value: bedStats.totalBeds, color: 'var(--accent-primary)', icon: '🛏️' },
+            { label: 'Filled Beds', value: `${bedStats.filledBeds} / ${bedStats.totalBeds}`, color: '#ef4444', icon: '👤' },
+            { label: 'Available Beds', value: bedStats.availableBeds, color: '#10b981', icon: '✅' },
+          ].map(s => (
+            <div key={s.label} style={{
+              background: 'var(--bg-primary)', borderRadius: '14px', padding: '1rem 1.2rem',
+              border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.8rem'
+            }}>
+              <span style={{ fontSize: '1.4rem' }}>{s.icon}</span>
+              <div>
+                <div style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: '900', color: s.color, lineHeight: 1.2 }}>{s.value}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Progress bar */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+            <span>Bed Occupancy</span>
+            <span>{bedStats.filledBeds} filled out of {bedStats.totalBeds}</span>
+          </div>
+          <div style={{ height: '10px', borderRadius: '99px', background: 'var(--bg-primary)', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              width: `${bedStats.occupancyPct}%`,
+              borderRadius: '99px',
+              background: bedStats.occupancyPct >= 90
+                ? 'linear-gradient(90deg,#ef4444,#dc2626)'
+                : bedStats.occupancyPct >= 60
+                ? 'linear-gradient(90deg,#f59e0b,#d97706)'
+                : 'linear-gradient(90deg,#10b981,#059669)',
+              transition: 'width 0.6s ease'
+            }} />
+          </div>
+        </div>
+      </div>
+      {/* ────────────────────────────────────────────────── */}
 
       <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2.5rem' }}>
         <button

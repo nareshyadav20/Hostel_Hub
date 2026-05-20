@@ -205,6 +205,8 @@ const Portfolio = () => {
       rentSingle: parseInt(data.rentSingle) || 0,
       rentDouble: parseInt(data.rentDouble) || 0,
       rentTriple: parseInt(data.rentTriple) || 0,
+      totalRooms: parseInt(data.totalRooms) || 0,
+      totalBeds: parseInt(data.totalBeds) || 0,
     };
     try {
       let bId;
@@ -290,6 +292,8 @@ const Portfolio = () => {
         rentSingle: parseInt(formData.rentSingle) || 0,
         rentDouble: parseInt(formData.rentDouble) || 0,
         rentTriple: parseInt(formData.rentTriple) || 0,
+        totalRooms: parseInt(formData.totalRooms) || 0,
+        totalBeds: parseInt(formData.totalBeds) || 0,
         genderType: formData.gender === 'Co-living (Both)' ? 'Mixed' : formData.gender || 'Mixed',
         category: formData.propertyType === 'Co-living' ? 'Luxury' : (formData.propertyType === 'PG' ? 'Student' : 'Professional'),
         rating: 4.5,

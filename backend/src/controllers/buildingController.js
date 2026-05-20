@@ -10,7 +10,7 @@ const createBuilding = async (req, res) => {
     const {
       name, address, locationCity, description, amenities, images,
       startingPrice, securityDeposit, maintenanceCharges, foodCharges,
-      rentSingle, rentDouble, rentTriple,
+      rentSingle, rentDouble, rentTriple, totalRooms, totalBeds,
       genderType, category, rating, popularityLabel,
       policies, staffInfo, status, lastStep, draftData
     } = req.body;
@@ -29,6 +29,8 @@ const createBuilding = async (req, res) => {
       rentSingle,
       rentDouble,
       rentTriple,
+      totalRooms: totalRooms || 0,
+      totalBeds: totalBeds || 0,
       genderType: genderType || 'Mixed',
       category: category || 'Student',
       rating: rating || 4.5,

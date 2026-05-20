@@ -108,7 +108,7 @@ const Listing = () => {
     };
   }, [id]);
 
-  const basePrice = hostel?.startingPrice || 9000;
+  const basePrice = hostel?.startingPrice || 5000;
   const foodCost = (hostel?.foodCharges !== undefined && hostel?.foodCharges !== null && hostel?.foodCharges > 0) ? hostel.foodCharges : 3000;
   const maintenanceCost = (hostel?.maintenanceCharges !== undefined && hostel?.maintenanceCharges !== null && hostel?.maintenanceCharges > 0) ? hostel.maintenanceCharges : 799;
 

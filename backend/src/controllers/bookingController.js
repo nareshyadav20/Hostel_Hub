@@ -99,19 +99,85 @@ const createBooking = async (req, res) => {
       }
     }
 
-    // Record the bed filling if bed data is provided
-    if (isValidObjectId(buildingId) && bedNumber && sharingType) {
+    // Determine actual tenant ID for assignments
+    const actualTenantId = tenant ? tenant._id : finalTenantId;
+
+    // Record the bed filling and ACTUALLY allocate an AVAILABLE Bed document
+    if (isValidObjectId(buildingId)) {
       const BedFilling = require('../models/BedFilling');
       const bedFill = new BedFilling({
         buildingId,
-        tenantId: tenant ? tenant._id : finalTenantId,
+        tenantId: actualTenantId,
         category: category || 'Standard',
         sharingType: sharingType,
         bedNumber: bedNumber,
         status: 'Occupied'
       });
       await bedFill.save();
-      console.log('✅ Bed filling recorded for bed:', bedNumber, 'sharing:', sharingType);
+
+      // Find an AVAILABLE bed in the building and allocate it
+      const Floor = require('../models/Floor');
+      const Room = require('../models/Room');
+      const Bed = require('../models/Bed');
+      const Building = require('../models/Building');
+
+      const floors = await Floor.find({ building: buildingId }).select('_id');
+      const fIds = floors.map(f => f._id);
+      
+      // Try to find a room with matching capacity first
+      const roomsPref = await Room.find({ floor: { $in: fIds }, capacity: sharingType }).select('_id');
+      let rIds = roomsPref.map(r => r._id);
+      let availableBed = await Bed.findOne({ room: { $in: rIds }, status: 'AVAILABLE' });
+
+      // Fallback: any available bed in the building
+      if (!availableBed) {
+        const roomsAll = await Room.find({ floor: { $in: fIds } }).select('_id');
+        rIds = roomsAll.map(r => r._id);
+        availableBed = await Bed.findOne({ room: { $in: rIds }, status: 'AVAILABLE' });
+      }
+
+      if (availableBed) {
+        availableBed.status = 'OCCUPIED';
+        availableBed.tenant = actualTenantId;
+        await availableBed.save();
+        console.log('✅ Bed explicitly allocated:', availableBed._id);
+      } else {
+        console.warn('⚠️ No physical Bed document was AVAILABLE to allocate in building', buildingId);
+      }
+
+      // Auto-sync the hostel occupancy for the owner
+      try {
+        const building = await Building.findById(buildingId).select('owner');
+        if (building && building.owner) {
+          const Hostel = require('../models/Hostel');
+          const hostel = await Hostel.findOne({ owner: building.owner });
+          if (hostel) {
+            const ownerBuildings = await Building.find({ owner: building.owner }).select('_id totalBeds');
+            const bIds = ownerBuildings.map(b => b._id);
+            const configuredTotal = ownerBuildings.reduce((sum, b) => sum + (b.totalBeds || 0), 0);
+            
+            const fs = await Floor.find({ building: { $in: bIds } }).select('_id');
+            const rs = await Room.find({ floor: { $in: fs.map(f => f._id) } }).select('_id');
+            const roomIds = rs.map(r => r._id);
+            const occupiedPhysical = await Bed.countDocuments({ room: { $in: roomIds }, status: 'OCCUPIED' });
+            
+            const BedFillingModel = require('../models/BedFilling');
+            const occupiedVirtual = await BedFillingModel.countDocuments({ buildingId: { $in: bIds }, status: 'Occupied' });
+            
+            const occupiedCount = Math.max(occupiedPhysical, occupiedVirtual);
+            
+            let totalB = await Bed.countDocuments({ room: { $in: roomIds } });
+            if (hostel.totalBeds > 0) totalB = hostel.totalBeds;
+            else if (configuredTotal > 0) totalB = configuredTotal;
+            
+            hostel.filledBeds = Math.min(occupiedCount, totalB);
+            await hostel.save();
+            console.log('✅ Owner Hostel occupancy synced:', hostel.filledBeds, '/', totalB);
+          }
+        }
+      } catch (syncErr) {
+        console.warn('⚠️ Post-booking occupancy sync failed:', syncErr.message);
+      }
     }
 
     // Create a payment record for the booking
@@ -127,7 +193,6 @@ const createBooking = async (req, res) => {
     };
 
     // CRITICAL: Link payment to the ACTUAL Tenant Profile ID, not the User ID
-    const actualTenantId = tenant ? tenant._id : finalTenantId;
     if (isValidObjectId(actualTenantId)) paymentData.tenantId = actualTenantId;
     if (isValidObjectId(buildingId)) paymentData.buildingId = buildingId;
 

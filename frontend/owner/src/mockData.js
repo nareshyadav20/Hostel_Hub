@@ -94,6 +94,22 @@ export const api = {
     const data = Array.isArray(res.data) ? res.data : [];
     return handleId(data);
   },
+  // Bed availability stats for the hostel linked to a building
+  getHostelBedStats: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/hostels/bed-stats`, { params });
+    return res.data;
+  },
+  // Re-calculate filledBeds from live bed data
+  syncHostelBeds: async (hostelId) => {
+    const res = await axios.patch(`${API_URL}/hostels/${hostelId}/sync-beds`);
+    return res.data;
+  },
+  // Update hostel (e.g. totalBeds) by id
+  updateHostel: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/hostels/${id}`, data);
+    return handleId(res.data);
+  },
   getAssignedFloors: async (hId) => {
     const res = await axios.get(`${API_URL}/hostel-floor-mapping`, { params: { hostelId: hId } });
     const data = Array.isArray(res.data) ? res.data : [];

@@ -18,6 +18,8 @@ const buildingSchema = new mongoose.Schema({
   popularityLabel:{ type: String },
   amenities:      [{ type: String }],
   isAC:           { type: Boolean, default: false },
+  totalRooms:     { type: Number, default: 0 },
+  totalBeds:      { type: Number, default: 0 },
   images:         [{ type: String }],
   policies: {
     smoking:  { type: String, default: 'Not Allowed' },

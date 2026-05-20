@@ -82,7 +82,7 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
 
       <div className="card-actions-row-pro">
         <Link to={`/listing/${hostel.id}`} className="btn-secondary-pro">View Details</Link>
-        <Link to={`/booking/${hostel.id}`} className="btn-primary-pro">Book Now</Link>
+        <Link to={`/booking/${hostel.id}`} state={{ basePrice: hostel.price }} className="btn-primary-pro">Book Now</Link>
       </div>
     </div>
   </div>
