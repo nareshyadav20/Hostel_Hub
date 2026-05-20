@@ -57,9 +57,9 @@ const Complaints = () => {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState(null);
-  const [formData, setFormData] = useState({ 
-    title: '', 
-    category: '', 
+  const [formData, setFormData] = useState({
+    title: '',
+    category: '',
     description: '',
     asset: '',
     subIssue: '',
@@ -234,13 +234,13 @@ const Complaints = () => {
                   Asset (Optional)
                 </label>
                 <div className="select-wrapper">
-                  <select 
-                    value={formData.asset} 
+                  <select
+                    value={formData.asset}
                     onChange={e => {
                       setFormData({ ...formData, asset: e.target.value, subIssue: '', customIssue: '' });
                     }}
                   >
-                    <option value="">Select Asset (Optional)</option>
+                    <option value="">Select Asset </option>
                     {Object.keys(ASSET_ISSUES).map(asset => (
                       <option key={asset} value={asset}>{asset}</option>
                     ))}
@@ -255,11 +255,11 @@ const Complaints = () => {
                     Specific Issue (Optional)
                   </label>
                   <div className="select-wrapper">
-                    <select 
-                      value={formData.subIssue} 
+                    <select
+                      value={formData.subIssue}
                       onChange={e => setFormData({ ...formData, subIssue: e.target.value })}
                     >
-                      <option value="">Select Issue (Optional)</option>
+                      <option value="">Select Issue </option>
                       {ASSET_ISSUES[formData.asset].map(issue => (
                         <option key={issue} value={issue}>{issue}</option>
                       ))}
