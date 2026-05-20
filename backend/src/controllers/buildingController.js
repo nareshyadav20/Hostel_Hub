@@ -7,20 +7,30 @@ const BuildingPhoto = require('../models/BuildingPhoto');
 
 const createBuilding = async (req, res) => {
   try {
-    const { 
-      name, address, locationCity, description, amenities, images, 
-      startingPrice, genderType, category, rating, popularityLabel,
+    const {
+      name, address, locationCity, description, amenities, images,
+      startingPrice, securityDeposit, maintenanceCharges, foodCharges,
+      rentSingle, rentDouble, rentTriple, totalRooms, totalBeds,
+      genderType, category, rating, popularityLabel,
       policies, staffInfo, status, lastStep, draftData
     } = req.body;
 
-    const building = await Building.create({ 
-      name: name || 'Untitled Draft', 
-      address, 
+    const building = await Building.create({
+      name: name || 'Untitled Draft',
+      address,
       locationCity: locationCity || 'Bengaluru',
-      description, 
-      amenities: amenities||[], 
-      images: images||[],
+      description,
+      amenities: amenities || [],
+      images: images || [],
       startingPrice: startingPrice || 5000,
+      securityDeposit: securityDeposit || 0,
+      maintenanceCharges: maintenanceCharges || 799,
+      foodCharges: foodCharges || 3000,
+      rentSingle,
+      rentDouble,
+      rentTriple,
+      totalRooms: totalRooms || 0,
+      totalBeds: totalBeds || 0,
       genderType: genderType || 'Mixed',
       category: category || 'Student',
       rating: rating || 4.5,
@@ -48,7 +58,8 @@ const createBuilding = async (req, res) => {
 
 const getBuildings = async (req, res) => {
   try {
-    const query = { owner: req.user.id };
+    const isPlatformAdmin = req.user && req.user.role && ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role.toUpperCase());
+    const query = isPlatformAdmin ? {} : { owner: req.user.id };
     if (req.query.status) {
       if (req.query.status === 'Active') {
         query.status = { $ne: 'Draft' };
@@ -57,15 +68,15 @@ const getBuildings = async (req, res) => {
       }
     }
     console.log(`[DEBUG] getBuildings query:`, JSON.stringify(query));
-    const buildings = await Building.find(query).populate({ 
-      path: 'floors', 
-      populate: { path: 'rooms', populate: { path: 'beds' } } 
+    const buildings = await Building.find(query).populate({
+      path: 'floors',
+      populate: { path: 'rooms', populate: { path: 'beds' } }
     });
     console.log(`[DEBUG] Found ${buildings.length} buildings for owner ${req.user.id}`);
     res.status(200).json(buildings);
-  } catch (error) { 
+  } catch (error) {
     console.error(`[DEBUG] getBuildings error:`, error);
-    res.status(500).json({ error: error.message }); 
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -73,7 +84,7 @@ const updateBuilding = async (req, res) => {
   try {
     const building = await Building.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!building) return res.status(404).json({ error: 'Building not found' });
-    
+
     // Sync new photos to BuildingPhoto collection
     if (req.body.images && Array.isArray(req.body.images)) {
       for (const url of req.body.images) {
@@ -97,35 +108,35 @@ const deleteBuilding = async (req, res) => {
   try {
     const building = await Building.findById(req.params.id);
     if (!building) return res.status(404).json({ error: 'Building not found' });
-    
+
     // Perform Cascade Delete
     // 1. Find all floors in this building
     const floors = await Floor.find({ building: req.params.id });
     const floorIds = floors.map(f => f._id);
-    
+
     // 2. Find all rooms in these floors
     const rooms = await Room.find({ floor: { $in: floorIds } });
     const roomIds = rooms.map(r => r._id);
-    
+
     // 3. Delete all beds in these rooms
     await Bed.deleteMany({ room: { $in: roomIds } });
-    
+
     // 4. Delete all rooms
     await Room.deleteMany({ floor: { $in: floorIds } });
-    
+
     // 5. Delete all floors
     await Floor.deleteMany({ building: req.params.id });
-    
+
     // 6. Delete or update tenants associated with this building
     await Tenant.deleteMany({ buildingId: req.params.id });
-    
+
     // 7. Finally delete the building itself
     await Building.findByIdAndDelete(req.params.id);
-    
+
     res.status(200).json({ message: 'Building and all associated infrastructure deleted successfully' });
-  } catch (error) { 
+  } catch (error) {
     console.error(`[ERROR] deleteBuilding:`, error);
-    res.status(500).json({ error: error.message }); 
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -136,7 +147,7 @@ const bulkCreateBuildings = async (req, res) => {
 
     for (const bData of buildings) {
       const { name, address, description, floorsCount, acRoomsCount, nonAcRoomsCount, images } = bData;
-      
+
       const building = new Building({ name, address, description, images: images || [] });
       await building.save();
 
@@ -184,7 +195,7 @@ const bulkCreateBuildings = async (req, res) => {
 
       building.floors = createdFloors;
       await building.save();
-      
+
       createdBuildings.push(building);
     }
 
@@ -194,21 +205,64 @@ const bulkCreateBuildings = async (req, res) => {
 
 const getBuildingById = async (req, res) => {
   try {
-    const building = await Building.findById(req.params.id).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
-    if (!building) return res.status(404).json({ error: 'Building not found' });
+    let building = await Building.findById(req.params.id).populate({ 
+      path: 'floors', 
+      populate: { 
+        path: 'rooms', 
+        populate: { 
+          path: 'beds',
+          populate: { path: 'tenant' }
+        } 
+      } 
+    });
+
+    if (!building) {
+      const mongoose = require('mongoose');
+      const db = mongoose.connection.db;
+      let objId;
+      try {
+        objId = new mongoose.Types.ObjectId(req.params.id);
+      } catch (e) {
+        return res.status(404).json({ error: 'Building not found' });
+      }
+
+      const b = await db.collection('buildings').findOne({ _id: objId });
+      if (!b) {
+        return res.status(404).json({ error: 'Building not found' });
+      }
+
+      // Populate floors, rooms, beds from 'floors', 'rooms', 'beds'
+      const bFloors = await db.collection('floors').find({ building: b._id }).toArray();
+      for (const f of bFloors) {
+        const fRooms = await db.collection('rooms').find({ floor: f._id }).toArray();
+        for (const r of fRooms) {
+          const rBeds = await db.collection('beds').find({ roomId: r._id }).toArray();
+          for (const bed of rBeds) {
+            if (bed.tenant) {
+              bed.tenant = await db.collection('tenants').findOne({ _id: bed.tenant });
+            }
+          }
+          r.beds = rBeds;
+        }
+        f.rooms = fRooms;
+      }
+      b.floors = bFloors;
+      building = b;
+    }
+
     res.status(200).json(building);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
 const getPublicBuildings = async (req, res) => {
   try {
-    const buildings = await Building.find({ status: { $ne: 'Draft' } }).populate({ 
-      path: 'floors', 
-      populate: { path: 'rooms', populate: { path: 'beds' } } 
+    const buildings = await Building.find({ status: { $ne: 'Draft' } }).populate({
+      path: 'floors',
+      populate: { path: 'rooms', populate: { path: 'beds' } }
     });
     res.status(200).json(buildings);
-  } catch (error) { 
-    res.status(500).json({ error: error.message }); 
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -216,7 +270,7 @@ const getPublicBuildingById = async (req, res) => {
   try {
     const building = await Building.findOne({ _id: req.params.id, status: { $ne: 'Draft' } }).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
     if (!building) return res.status(404).json({ error: 'Building not found' });
-    
+
     // Fetch filled beds for this building
     const BedFilling = require('../models/BedFilling');
     const filledBeds = await BedFilling.find({ buildingId: building._id, status: 'Occupied' });
@@ -231,8 +285,11 @@ const uploadPhotos = async (req, res) => {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
     }
-    const photoUrls = req.files.map(file => `/uploads/${file.filename}`);
-    
+    const photoUrls = req.files.map(file => {
+      const b64 = file.buffer.toString('base64');
+      return `data:${file.mimetype};base64,${b64}`;
+    });
+
     if (buildingId) {
       const photoDocs = photoUrls.map(url => ({
         buildingId,
@@ -241,8 +298,15 @@ const uploadPhotos = async (req, res) => {
       await BuildingPhoto.insertMany(photoDocs, { ordered: false }).catch(err => {
         console.warn('[DEBUG] BuildingPhoto partial insertion warning:', err.message);
       });
+      
+      const building = await Building.findById(buildingId);
+      if (building) {
+        if (!building.images) building.images = [];
+        building.images.push(...photoUrls);
+        await building.save();
+      }
     }
-    
+
     res.status(200).json({ message: 'Photos uploaded successfully', photoUrls });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -254,7 +318,7 @@ const getPlatformStats = async (req, res) => {
     const propertiesCount = await Building.countDocuments({ status: { $ne: 'Draft' } });
     const tenantsCount = await Tenant.countDocuments();
     const cities = await Building.distinct('locationCity', { status: { $ne: 'Draft' } });
-    
+
     const buildings = await Building.find({ status: { $ne: 'Draft' } }, 'rating');
     let totalRating = 0;
     let validRatings = 0;
@@ -274,12 +338,12 @@ const getPlatformStats = async (req, res) => {
   }
 };
 
-module.exports = { 
-  createBuilding, 
-  getBuildings, 
-  getBuildingById, 
-  updateBuilding, 
-  deleteBuilding, 
+module.exports = {
+  createBuilding,
+  getBuildings,
+  getBuildingById,
+  updateBuilding,
+  deleteBuilding,
   bulkCreateBuildings,
   getPublicBuildings,
   getPublicBuildingById,

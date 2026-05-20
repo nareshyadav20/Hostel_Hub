@@ -94,6 +94,22 @@ export const api = {
     const data = Array.isArray(res.data) ? res.data : [];
     return handleId(data);
   },
+  // Bed availability stats for the hostel linked to a building
+  getHostelBedStats: async (buildingId) => {
+    const params = buildingId ? { buildingId } : {};
+    const res = await axios.get(`${API_URL}/hostels/bed-stats`, { params });
+    return res.data;
+  },
+  // Re-calculate filledBeds from live bed data
+  syncHostelBeds: async (hostelId) => {
+    const res = await axios.patch(`${API_URL}/hostels/${hostelId}/sync-beds`);
+    return res.data;
+  },
+  // Update hostel (e.g. totalBeds) by id
+  updateHostel: async (id, data) => {
+    const res = await axios.patch(`${API_URL}/hostels/${id}`, data);
+    return handleId(res.data);
+  },
   getAssignedFloors: async (hId) => {
     const res = await axios.get(`${API_URL}/hostel-floor-mapping`, { params: { hostelId: hId } });
     const data = Array.isArray(res.data) ? res.data : [];
@@ -249,6 +265,14 @@ export const api = {
     const res = await axios.post(`${API_URL}/mess/attendance/mark-all`, data);
     return res.data;
   },
+  getMessPlans: async () => {
+    const res = await axios.get(`${API_URL}/mess/plans`);
+    return res.data;
+  },
+  updateMessPlan: async (id, data) => {
+    const res = await axios.put(`${API_URL}/mess/plans/${id}`, data);
+    return res.data;
+  },
   // Staff Management
   getStaff: async (bId) => {
     const res = await axios.get(`${API_URL}/staff`, { params: { buildingId: bId } });
@@ -357,6 +381,7 @@ export const api = {
   },
   addRoom: async (data) => {
     const res = await axios.post(`${API_URL}/rooms`, data);
+    cacheSet('all_rooms', null); // Clear cache to force refresh
     return handleId(res.data);
   },
   updateRoomStatus: async (id, status) => {
@@ -372,6 +397,7 @@ export const api = {
   },
   addBed: async (data) => {
     const res = await axios.post(`${API_URL}/beds`, data);
+    cacheSet('all_beds', null); // Clear cache to force refresh
     return handleId(res.data);
   },
   updateBedStatus: async (id, status) => {

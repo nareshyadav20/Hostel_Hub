@@ -2093,7 +2093,7 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
   
   const images = useMemo(() => {
     if (building.images && building.images.length > 0) {
-      return building.images.map(img => img.startsWith('http') ? img : `http://localhost:5000${img}`);
+      return building.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `http://localhost:5000${img}`);
     }
     return [
       'https://images.unsplash.com/photo-1545324418-f1d3c5b53571?auto=format&fit=crop&w=800&q=80',

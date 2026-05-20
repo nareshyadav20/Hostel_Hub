@@ -44,24 +44,29 @@ const Booking = () => {
   const [paymentMethod, setPaymentMethod] = useState('UPI');
 
   const passedBasePrice = location.state?.basePrice;
-  const basePrice = passedBasePrice || hostel?.startingPrice || 9000;
+  const basePrice = passedBasePrice || hostel?.startingPrice || 5000;
+  const foodCost = (hostel?.foodCharges !== undefined && hostel?.foodCharges !== null && hostel?.foodCharges > 0) ? hostel.foodCharges : 3000;
+  const maintenanceCost = (hostel?.maintenanceCharges !== undefined && hostel?.maintenanceCharges !== null && hostel?.maintenanceCharges > 0) ? hostel.maintenanceCharges : 799;
 
-  const roomOptions = [
+  const allOptions = [
     { 
       id: 'Single', 
       name: 'Single Elite', 
-      price: (basePrice * 2).toString(), 
+      price: ((hostel?.rentSingle !== undefined && hostel?.rentSingle !== null && hostel?.rentSingle > 0) ? hostel.rentSingle : (basePrice * 2)).toString(), 
+      deposit: hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0 ? hostel.securityDeposit.toString() : (basePrice * 2).toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
-      )
+      ),
+      isConfigured: hostel ? (hostel.rentSingle > 0 || (!hostel.rentSingle && !hostel.rentDouble && !hostel.rentTriple)) : true
     },
     { 
       id: 'Double', 
       name: 'Luxury 2 Sharing', 
-      price: Math.round(basePrice * 1.3333).toString(), 
+      price: ((hostel?.rentDouble !== undefined && hostel?.rentDouble !== null && hostel?.rentDouble > 0) ? hostel.rentDouble : Math.round(basePrice * 1.3333)).toString(), 
+      deposit: hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0 ? hostel.securityDeposit.toString() : Math.round(basePrice * 1.3333).toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -69,21 +74,34 @@ const Booking = () => {
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
           <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
-      )
+      ),
+      isConfigured: hostel ? (hostel.rentDouble > 0 || (!hostel.rentSingle && !hostel.rentDouble && !hostel.rentTriple)) : true
     },
     { 
       id: 'Triple', 
       name: 'Comfort 3 Sharing', 
-      price: basePrice.toString(), 
+      price: ((hostel?.rentTriple !== undefined && hostel?.rentTriple !== null && hostel?.rentTriple > 0) ? hostel.rentTriple : basePrice).toString(), 
+      deposit: hostel?.securityDeposit !== undefined && hostel?.securityDeposit !== null && hostel?.securityDeposit > 0 ? hostel.securityDeposit.toString() : basePrice.toString(),
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
           <polyline points="17 21 17 13 7 13 7 21"></polyline>
           <path d="M2 14h20"></path>
         </svg>
-      )
+      ),
+      isConfigured: hostel ? (hostel.rentTriple > 0 || (!hostel.rentSingle && !hostel.rentDouble && !hostel.rentTriple)) : true
     }
   ];
+
+  // Only show rooms that are configured by the owner (or all if not loaded yet)
+  const roomOptions = allOptions.filter(opt => opt.isConfigured);
+
+  // If the currently selected room type was filtered out, fallback to the first available option
+  useEffect(() => {
+    if (hostel && roomOptions.length > 0 && !roomOptions.find(r => r.id === formData.roomType)) {
+      setFormData(prev => ({ ...prev, roomType: roomOptions[0].id }));
+    }
+  }, [hostel, roomOptions, formData.roomType]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -95,14 +113,17 @@ const Booking = () => {
         // If we have a tenant ID, check if they already have a confirmed booking/residency
         if (tenantId && buildingId) {
           const profileRes = await API.get('/tenants/me').catch(() => null);
-          if (profileRes?.data?.buildingId) {
-             setApiError("Active Residency Found: You are already registered at a hostel. A resident can only have one active stay at a time.");
+          if (profileRes?.data?.buildingId && profileRes?.data?.status === 'ACTIVE') {
+             const bName = profileRes.data.buildingId?.name || "a hostel";
+             const rNum = profileRes.data.room || "Room TBD";
+             setApiError(`Active Residency Found: You are already registered at ${bName} (Room: ${rNum}). A resident can only have one active stay at a time.`);
              return;
           }
         }
 
         if (buildingId) {
           const res = await API.get(`/buildings/public/${buildingId}`);
+          console.log('[DEBUG] Fetched Hostel for Booking:', res.data);
           setHostel(res.data);
         } else {
           // Now using JWT token for identification - no query param needed
@@ -122,8 +143,8 @@ const Booking = () => {
 
   const handleBooking = async () => {
     setApiError(null);
-    const tenantId = user?._id || user?.id;
-    const amount = parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + 3000 + 799;
+    const tenantId = localStorage.getItem('tenantId') || user?._id || user?.id;
+    const amount = parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + foodCost + maintenanceCost;
 
     console.log("[Booking] Debug Info:", { 
       tenantId, 
@@ -628,11 +649,11 @@ const Booking = () => {
                </div>
                <div className="summary-item-row">
                  <span className="item-label">Food (Monthly)</span>
-                 <span className="item-value">₹3,000</span>
+                 <span className="item-value">₹{foodCost.toLocaleString()}</span>
                </div>
                <div className="summary-item-row">
                  <span className="item-label">Maintenance</span>
-                 <span className="item-value">₹799</span>
+                 <span className="item-value">₹{maintenanceCost.toLocaleString()}</span>
                </div>
                <div className="summary-divider"></div>
                <div className="summary-total-row">
@@ -640,7 +661,7 @@ const Booking = () => {
                    <span className="total-label">Total Due (Move-in)</span>
                    <span className="total-subtitle">Rent + Deposit + Food + Maintenance</span>
                  </div>
-                 <span className="total-amount-val">₹{(parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + 3000 + 799).toLocaleString()}</span>
+                 <span className="total-amount-val">₹{(parseInt(currentRoom.price) + parseInt(currentRoom.deposit || currentRoom.price) + foodCost + maintenanceCost).toLocaleString()}</span>
                </div>
             </div>
 

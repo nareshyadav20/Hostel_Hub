@@ -55,6 +55,22 @@ const Mess = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [planToDeactivate, setPlanToDeactivate] = useState(null);
+  const [planToEdit, setPlanToEdit] = useState(null);
+  const [isPlanEditModalOpen, setIsPlanEditModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const data = await api.getMessPlans();
+        if (data && data.length > 0) {
+          setPlans(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch mess plans:', err);
+      }
+    };
+    fetchPlans();
+  }, []);
 
   const [menuData, setMenuData] = useState({});
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -177,6 +193,20 @@ const Mess = () => {
       setIsEditModalOpen(false);
     } catch (err) {
       console.error('Failed to save menu:', err);
+    }
+  };
+
+  const handleSavePlan = async (e) => {
+    e.preventDefault();
+    if (!planToEdit) return;
+    try {
+      const updated = await api.updateMessPlan(planToEdit.id, planToEdit);
+      setPlans(prev => prev.map(p => p.id === planToEdit.id ? updated : p));
+      setIsPlanEditModalOpen(false);
+      setPlanToEdit(null);
+    } catch (err) {
+      console.error('Failed to save plan:', err);
+      alert('Failed to save plan: ' + err.message);
     }
   };
 
@@ -656,15 +686,18 @@ const Mess = () => {
                     </div>
                   ))}
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button onClick={() => setSelectedPlan(plan)} className="btn" style={{ flex: 1, border: '1px solid var(--border-color)', fontWeight: '800', borderRadius: '16px' }}>Specs</button>
+                <div style={{ display: 'flex', gap: '0.6rem' }}>
+                  <button onClick={() => setSelectedPlan(plan)} className="btn" style={{ flex: 1, border: '1px solid var(--border-color)', fontWeight: '800', borderRadius: '16px', fontSize: '0.82rem', padding: '0.6rem 0.8rem' }}>Specs</button>
+                  <button onClick={() => { setPlanToEdit({ ...plan }); setIsPlanEditModalOpen(true); }} className="btn btn-primary" style={{ flex: 1, fontWeight: '800', borderRadius: '16px', background: plan.color, fontSize: '0.82rem', padding: '0.6rem 0.8rem' }}>Edit</button>
                   <button 
-                    className="btn btn-primary" 
-                    style={{ flex: 2, fontWeight: '800', borderRadius: '16px', background: plan.color }}
-                    onClick={() => {
-                      if (plan.active) {
-                        setPlanToDeactivate(plan);
-                        setIsDeactivateModalOpen(true);
+                    className="btn" 
+                    style={{ flex: 1.2, fontWeight: '800', borderRadius: '16px', border: `1px solid ${plan.active ? '#ef4444' : '#10b981'}`, background: 'transparent', color: plan.active ? '#ef4444' : '#10b981', fontSize: '0.82rem', padding: '0.6rem 0.8rem' }}
+                    onClick={async () => {
+                      try {
+                        const updated = await api.updateMessPlan(plan.id, { ...plan, active: !plan.active });
+                        setPlans(prev => prev.map(p => p.id === plan.id ? updated : p));
+                      } catch (err) {
+                        console.error('Failed to toggle plan active state:', err);
                       }
                     }}
                   >
@@ -823,6 +856,41 @@ const Mess = () => {
                 </button>
                 <button className="btn" onClick={() => setIsDeactivateModalOpen(false)} style={{ flex: 1, border: '1px solid var(--border-color)' }}>Cancel</button>
               </div>
+            </motion.div>
+          </>
+        )}
+
+        {isPlanEditModalOpen && planToEdit && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsPlanEditModalOpen(false)} />
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '10%', left: '50%', x: '-50%', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem' }}>Edit Plan: {planToEdit.name}</h2>
+              <form onSubmit={handleSavePlan} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Plan Name</label>
+                  <input value={planToEdit.name} onChange={e => setPlanToEdit({...planToEdit, name: e.target.value})} style={inputStyle} required />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Monthly Price (₹)</label>
+                  <input type="number" value={planToEdit.price} onChange={e => setPlanToEdit({...planToEdit, price: parseInt(e.target.value) || 0})} style={inputStyle} required />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Description</label>
+                  <textarea value={planToEdit.description} onChange={e => setPlanToEdit({...planToEdit, description: e.target.value})} style={{ ...inputStyle, height: '80px', resize: 'none' }} required />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Features (comma separated)</label>
+                  <textarea value={planToEdit.features?.join(', ')} onChange={e => setPlanToEdit({...planToEdit, features: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} style={{ ...inputStyle, height: '80px', resize: 'none' }} required />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Sample Menu Inclusions (comma separated)</label>
+                  <textarea value={planToEdit.menu?.join(', ')} onChange={e => setPlanToEdit({...planToEdit, menu: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} style={{ ...inputStyle, height: '80px', resize: 'none' }} required />
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem' }}>Save Plan Changes</button>
+                  <button className="btn" type="button" onClick={() => setIsPlanEditModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Cancel</button>
+                </div>
+              </form>
             </motion.div>
           </>
         )}

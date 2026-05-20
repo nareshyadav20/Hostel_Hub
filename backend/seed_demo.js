@@ -4,22 +4,31 @@ const path = require('path');
 
 dotenv.config({ path: path.join(__dirname, '.env') });
 
-const OWNER_ID = '69f9974e393c3bc254a00ba1'; // Preserving your primary owner account
-
 async function seedDemo() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to MongoDB for Demo Seeding...');
 
     const db = mongoose.connection.db;
+    
+    // Dynamically find the logged-in owner to link data correctly
+    const realOwner = await db.collection('users').findOne({ role: 'OWNER' });
+    if (!realOwner) {
+      console.error('❌ Error: No user with role "OWNER" found. Please create an account first.');
+      process.exit(1);
+    }
+    const OWNER_ID = realOwner._id.toString();
+    console.log(`Restoring data for: ${realOwner.email} (${OWNER_ID})`);
 
-    // 1. CLEAR COLLECTIONS
+    // 1. CLEAR COLLECTIONS (Both Schemas)
     const collections = [
       'owner_buildings', 'owner_floors', 'owner_rooms', 'owner_beds', 
       'owner_tenants', 'owner_payments', 'owner_complaints', 
-      'owner_inventory', 'owner_messmenus', 'owner_staff', 'owner_systemsettings'
+      'owner_inventory', 'owner_messmenus', 'owner_staff', 'owner_systemsettings',
+      'buildings', 'floors', 'rooms', 'beds', 'tenants', 'payments', 'complaints', 
+      'inventory', 'messmenus', 'staff', 'systemsettings', 'ownerprofiles'
     ];
-    
+
     for (const col of collections) {
       await db.collection(col).deleteMany({});
       console.log(`Cleared: ${col}`);
@@ -34,47 +43,48 @@ async function seedDemo() {
     
     const buildings = [];
     for (const b of buildingsData) {
-      const res = await db.collection('owner_buildings').insertOne({ ...b, status: 'Active', createdAt: new Date(), updatedAt: new Date() });
-      buildings.push({ ...b, _id: res.insertedId });
+      const data = { ...b, status: 'Active', createdAt: new Date(), updatedAt: new Date() };
+      const res = await db.collection('owner_buildings').insertOne(data);
+      await db.collection('buildings').insertOne({ ...data, _id: res.insertedId });
+      buildings.push({ ...data, _id: res.insertedId });
     }
 
-    // 3. CREATE FLOORS, ROOMS, BEDS (Structured for Building 1)
+    // 3. CREATE FLOORS, ROOMS, BEDS
     console.log('Generating Property Hierarchy...');
     const b1 = buildings[0];
     for (let fNum = 1; fNum <= 3; fNum++) {
-      const floorRes = await db.collection('owner_floors').insertOne({
-        floorNumber: fNum,
-        buildingId: b1._id,
-        status: 'Active'
-      });
+      const floorData = { floorNumber: fNum, buildingId: b1._id, status: 'Active' };
+      const floorRes = await db.collection('owner_floors').insertOne(floorData);
+      await db.collection('floors').insertOne({ ...floorData, _id: floorRes.insertedId });
       const floorId = floorRes.insertedId;
-      await db.collection('owner_buildings').updateOne({ _id: b1._id }, { $push: { floors: floorId } });
 
       for (let rNum = 1; rNum <= 4; rNum++) {
         const roomNum = `${fNum}0${rNum}`;
-        const roomRes = await db.collection('owner_rooms').insertOne({
+        const roomData = {
           roomNumber: roomNum,
           roomType: rNum === 1 ? 'Single' : 'Double',
           capacity: rNum === 1 ? 1 : 2,
           rentAmount: rNum === 1 ? 15000 : 9000,
           floor: floorId,
           status: 'AVAILABLE'
-        });
+        };
+        const roomRes = await db.collection('owner_rooms').insertOne(roomData);
+        await db.collection('rooms').insertOne({ ...roomData, _id: roomRes.insertedId });
         const roomId = roomRes.insertedId;
-        await db.collection('owner_floors').updateOne({ _id: floorId }, { $push: { rooms: roomId } });
 
         for (let bNum = 1; bNum <= (rNum === 1 ? 1 : 2); bNum++) {
-          const bedRes = await db.collection('owner_beds').insertOne({
+          const bedData = {
             bedNumber: `${roomNum}${String.fromCharCode(64 + bNum)}`,
             roomId: roomId,
             status: 'VACANT'
-          });
-          await db.collection('owner_rooms').updateOne({ _id: roomId }, { $push: { beds: bedRes.insertedId } });
+          };
+          const bedRes = await db.collection('owner_beds').insertOne(bedData);
+          await db.collection('beds').insertOne({ ...bedData, _id: bedRes.insertedId });
         }
       }
     }
 
-    // 4. CREATE TENANTS (Realistic)
+    // 4. CREATE TENANTS
     console.log('Seeding Tenants...');
     const allBeds = await db.collection('owner_beds').find({}).toArray();
     const tenantNames = ['Arjun Reddy', 'Sneha Kapoor', 'Vikram Singh', 'Priya Sharma', 'Rahul Verma', 'Ananya Iyer', 'Karthik Raja', 'Meera Nair'];
@@ -83,7 +93,6 @@ async function seedDemo() {
     for (let i = 0; i < tenantNames.length; i++) {
       const bed = allBeds[i];
       const room = await db.collection('owner_rooms').findOne({ _id: bed.roomId });
-      const floor = await db.collection('owner_floors').findOne({ _id: room.floor });
       
       const tenant = {
         name: tenantNames[i],
@@ -101,18 +110,19 @@ async function seedDemo() {
       };
       
       const res = await db.collection('owner_tenants').insertOne(tenant);
+      await db.collection('tenants').insertOne({ ...tenant, _id: res.insertedId });
       tenants.push({ ...tenant, _id: res.insertedId });
       
-      // Update bed status
       await db.collection('owner_beds').updateOne({ _id: bed._id }, { $set: { status: 'OCCUPIED' } });
+      await db.collection('beds').updateOne({ _id: bed._id }, { $set: { status: 'OCCUPIED' } });
     }
 
-    // 5. PAYMENTS (3 Months History)
+    // 5. PAYMENTS
     console.log('Generating Payment History...');
     let invNum = 1001;
     for (const t of tenants) {
       for (let m = 0; m < 3; m++) {
-        await db.collection('owner_payments').insertOne({
+        const payData = {
           tenantId: t._id,
           buildingId: t.buildingId,
           amount: t.rent,
@@ -121,7 +131,9 @@ async function seedDemo() {
           paymentMethod: 'UPI',
           transactionId: `TXN${Math.random().toString(36).toUpperCase().slice(2, 10)}`,
           invoice: `INV-2024-${invNum++}`
-        });
+        };
+        const res = await db.collection('owner_payments').insertOne(payData);
+        await db.collection('payments').insertOne({ ...payData, _id: res.insertedId });
       }
     }
 
@@ -134,12 +146,14 @@ async function seedDemo() {
     ];
     
     for (let i = 0; i < issues.length; i++) {
-      await db.collection('owner_complaints').insertOne({
+      const compData = {
         ...issues[i],
         tenant: tenants[i]._id,
         buildingId: b1._id,
         createdAt: new Date()
-      });
+      };
+      const res = await db.collection('owner_complaints').insertOne(compData);
+      await db.collection('complaints').insertOne({ ...compData, _id: res.insertedId });
     }
 
     // 7. INVENTORY
@@ -170,16 +184,30 @@ async function seedDemo() {
       }
     }
 
-    // 9. SETTINGS
+    // 9. STAFF
+    console.log('Seeding Staff...');
+    const staffMembers = [
+      { name: 'Ramesh Babu', role: 'Warden', contact: '9848012345', buildingId: b1._id, salary: 25000, status: 'Active' },
+      { name: 'Savitri Devi', role: 'Cleaner', contact: '9848054321', buildingId: b1._id, salary: 12000, status: 'Active' },
+      { name: 'Kumar Swami', role: 'Security', contact: '9848098765', buildingId: b1._id, salary: 15000, status: 'Active' }
+    ];
+    for (const s of staffMembers) {
+      const res = await db.collection('owner_staff').insertOne(s);
+      await db.collection('staff').insertOne({ ...s, _id: res.insertedId });
+    }
+
+    // 10. SETTINGS
     console.log('Seeding System Settings...');
     for (const b of buildings) {
-      await db.collection('owner_systemsettings').insertOne({
+      const setData = {
         buildingId: b._id.toString(),
         owner: new mongoose.Types.ObjectId(OWNER_ID),
         generalSettings: { hostelName: b.name, ownerName: 'Property Owner' },
         rentSettings: { defaultRent: { single: 12000, double: 8000, shared: 6000 }, allowedPaymentMethods: ['UPI', 'Cash'] },
         roomConfig: { roomTypes: ['Single', 'Double', 'Triple'], bedTypes: ['Normal', 'Bunk'] }
-      });
+      };
+      const res = await db.collection('owner_systemsettings').insertOne(setData);
+      await db.collection('systemsettings').insertOne({ ...setData, _id: res.insertedId });
     }
 
     console.log('\n✅ MASTER DEMO SEED COMPLETE!');

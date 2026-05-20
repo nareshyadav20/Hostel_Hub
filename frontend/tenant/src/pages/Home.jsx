@@ -47,6 +47,44 @@ const CountUpAnimation = ({ endValue, suffix = '', isFloat = false }) => {
   return <span ref={nodeRef}>{displayCount}{suffix}</span>;
 };
 
+const RoomCard = ({ room, wishlist, toggleWishlist, setModalInfo, navigate }) => {
+  const [imgIdx, setImgIdx] = useState(0);
+
+  useEffect(() => {
+    if (!room.images || room.images.length <= 1) return;
+    const timer = setInterval(() => {
+      setImgIdx(prev => (prev + 1) % room.images.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [room.images]);
+
+  const currentImage = room.images && room.images.length > 0 ? room.images[imgIdx] : extReal;
+
+  return (
+    <div className="hv2-room-card">
+      <div className="hv2-room-img-box" onClick={() => setModalInfo({ isOpen: true, image: currentImage })} style={{ cursor: 'zoom-in' }}>
+        <img src={currentImage} alt={room.name} className="hv2-room-img" style={{ transition: 'opacity 0.5s ease-in-out' }} />
+        <span className="hv2-room-badge" style={{ background: room.badgeColor }}>{room.badge}</span>
+        <span className="hv2-trending-badge">🔥 Trending</span>
+        <button className={`hv2-heart ${wishlist.includes(room.id) ? 'liked' : ''}`} onClick={(e) => { e.stopPropagation(); toggleWishlist(room.id); }}>
+          {wishlist.includes(room.id) ? '❤️' : '🤍'}
+        </button>
+      </div>
+      <div className="hv2-room-body">
+        <h4 className="hv2-room-name">{room.name}</h4>
+        <p className="hv2-room-loc">📍 {room.loc}</p>
+        <div className="hv2-amenity-row">
+          {room.amenities.map(a => <span key={a} className="hv2-amenity">{a}</span>)}
+        </div>
+        <div className="hv2-room-footer">
+          <div className="hv2-price-wrap"><span className="hv2-price">{room.price}</span><span className="hv2-per">/mo</span></div>
+          <button className="hv2-details-btn-wide" onClick={(e) => { e.stopPropagation(); navigate(`/listing/${room.id}`); }}>View Details</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Home = () => {
   const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState('Home');
@@ -95,7 +133,7 @@ const Home = () => {
         id: b._id,
         badge: b.popularityLabel || (i === 0 ? 'Premium' : i === 1 ? 'Popular' : 'New'),
         badgeColor: i === 0 ? '#4F46E5' : i === 1 ? '#10B981' : '#F59E0B',
-        img: b.images && b.images[0] ? (b.images[0].startsWith('http') ? b.images[0] : `http://localhost:5000${b.images[0]}`) : extReal,
+        images: b.images && b.images.length > 0 ? b.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `http://localhost:5000${img}`) : [extReal],
         name: b.name,
         loc: b.address + ', ' + b.locationCity,
         price: `₹${b.startingPrice?.toLocaleString() || '9,000'}`,
@@ -587,27 +625,14 @@ const Home = () => {
         </div>
         <div className="hv2-rooms-grid">
           {rooms.map(room => (
-            <div key={room.id} className="hv2-room-card">
-              <div className="hv2-room-img-box" onClick={() => setModalInfo({ isOpen: true, image: room.img })} style={{ cursor: 'zoom-in' }}>
-                <img src={room.img} alt={room.name} className="hv2-room-img" />
-                <span className="hv2-room-badge" style={{ background: room.badgeColor }}>{room.badge}</span>
-                <span className="hv2-trending-badge">🔥 Trending</span>
-                <button className={`hv2-heart ${wishlist.includes(room.id) ? 'liked' : ''}`} onClick={() => toggleWishlist(room.id)}>
-                  {wishlist.includes(room.id) ? '❤️' : '🤍'}
-                </button>
-              </div>
-              <div className="hv2-room-body">
-                <h4 className="hv2-room-name">{room.name}</h4>
-                <p className="hv2-room-loc">📍 {room.loc}</p>
-                <div className="hv2-amenity-row">
-                  {room.amenities.map(a => <span key={a} className="hv2-amenity">{a}</span>)}
-                </div>
-                <div className="hv2-room-footer">
-                  <div className="hv2-price-wrap"><span className="hv2-price">{room.price}</span><span className="hv2-per">/mo</span></div>
-                  <button className="hv2-details-btn-wide" onClick={() => navigate(`/listing/${room.id}`)}>View Details</button>
-                </div>
-              </div>
-            </div>
+            <RoomCard 
+              key={room.id} 
+              room={room} 
+              wishlist={wishlist} 
+              toggleWishlist={toggleWishlist} 
+              setModalInfo={setModalInfo} 
+              navigate={navigate} 
+            />
           ))}
         </div>
       </section>
@@ -777,7 +802,6 @@ const Home = () => {
               </h2>
               <button className="hv2-cm-close" onClick={() => setActiveModal(null)}>✕</button>
             </div>
-
             <div className="hv2-cm-body">
               {activeModal === 'services' && (
                 <div className="hv2-cm-flat-grid">
@@ -804,30 +828,12 @@ const Home = () => {
               {activeModal === 'terms' && (
                 <div className="hv2-cm-document">
                   <h3>Livora Hostel Residency Agreement</h3>
-                  <p>Welcome to Livora! Please review our standard operating terms designed to ensure a premium, safe, and hassle-free living experience for all residents.</p>
-
-                  <ol>
-                    <li>
-                      <strong>Rent & Security Deposit</strong>
-                      Monthly rent is strictly due by the 5th of every month. A 2-month security deposit is required at onboarding, fully refundable subject to a 30-day exit notice.
-                    </li>
-                    <li>
-                      <strong>Visitor Policy</strong>
-                      Guests are welcome in common lounges between 9:00 AM and 8:00 PM. For security reasons, no outside guests are permitted to stay overnight or enter private rooms.
-                    </li>
-                    <li>
-                      <strong>Timings & Curfew</strong>
-                      The main gates close at 11:30 PM. Late entries are permitted only for verified work/study reasons with prior intimation to the property manager via the Livora App.
-                    </li>
-                    <li>
-                      <strong>Maintenance & Damages</strong>
-                      Residents are responsible for the fixtures in their rooms. Any intentional damage or loss of property will be deducted from the security deposit. Normal wear and tear is covered by our Pro Maintenance.
-                    </li>
-                    <li>
-                      <strong>Zero Tolerance Policy</strong>
-                      We maintain a strict zero-tolerance policy towards substance abuse, smoking indoors, and loud disturbances after 10:00 PM to respect the community.
-                    </li>
-                  </ol>
+                  <p><strong>1. CONDITIONS FOR USER REGISTRATION</strong><br />Registration on the platform is free. By using this website/app, you imply that you agree with the usage terms completely. You must be at least eighteen (18) years of age or above to use Livora Hostel services.</p>
+                  <p><strong>2. TERMS & CONDITIONS OF USE</strong><br />The platform enables guests to connect with properties listed. By making a reservation at the listed properties, the guest enters into commercial/contractual terms as agreed upon at the time of booking.</p>
+                  <p><strong>3. USAGE OF WEBSITE & APP</strong><br />Livora provides an online marketplace. We are not responsible for resolving any dispute or disagreement between guests and management. Users must ensure that their registration data is accurate and not misleading.</p>
+                  <p><strong>4. USER ACCOUNT AND REGISTRATION</strong><br />You are responsible for maintaining the confidentiality of your account information, and are fully responsible for all activities that occur under your account. Ensure that you log out from the account at the end of each session.</p>
+                  <p><strong>5. BOOKINGS & PAYMENTS</strong><br />To prevent any possibility of unauthorized access to your confidential information, do not use this site from unsecure computers. Users must strictly comply with the payment procedure.</p>
+                  <p><strong>6. LIMITATION OF LIABILITY</strong><br />Livora shall not be liable for any damages arising from the use of this website. Guests are requested to take due care of all their personal valuables; the management is not responsible for any loss or theft.</p>
                 </div>
               )}
 

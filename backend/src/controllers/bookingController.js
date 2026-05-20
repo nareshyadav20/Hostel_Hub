@@ -16,32 +16,49 @@ const createBooking = async (req, res) => {
       method,
       proofId,
       bedNumber,
-      sharingType
+      sharingType,
+      guestName,
+      email,
+      phone
     } = req.body;
 
     // Validate ObjectIds — helper function
     const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-    // 1. Prevent multiple bookings for same tenant
+    let tenant = null;
+    const Tenant = require('../models/Tenant');
+    const User = require('../models/User');
+
+    // Resolve tenant profile
     if (isValidObjectId(tenantId)) {
-      const Tenant = require('../models/Tenant');
-      const existingTenant = await Tenant.findById(tenantId);
-      
-      // If already assigned to a building, block new booking
-      if (existingTenant && existingTenant.buildingId) {
+      tenant = await Tenant.findById(tenantId);
+      if (!tenant) {
+        const user = await User.findById(tenantId);
+        if (user) tenant = await Tenant.findOne({ email: user.email });
+      }
+    } else if (req.user && req.user.email) {
+      tenant = await Tenant.findOne({ email: req.user.email });
+    }
+
+    // 1. Prevent multiple bookings for same tenant
+    if (tenant) {
+      // If already assigned and active in a building, block new booking
+      if (tenant.buildingId && tenant.status === 'ACTIVE') {
         return res.status(400).json({ 
           error: 'Access Denied: You already have an active residency or booking. A resident can only book one hostel at a time.' 
         });
       }
 
       // Check if they already have a confirmed booking
-      const existingBooking = await Booking.findOne({ tenantId, status: 'Confirmed' });
+      const existingBooking = await Booking.findOne({ tenantId: tenant._id, status: 'Confirmed' });
       if (existingBooking) {
         return res.status(400).json({ 
           error: 'Booking limit reached: You already have a confirmed reservation. Please manage your existing stay in the dashboard.' 
         });
       }
     }
+
+    const finalTenantId = tenant ? tenant._id : (isValidObjectId(tenantId) ? tenantId : undefined);
 
     const bookingData = {
       category: category || 'Standard',
@@ -51,12 +68,14 @@ const createBooking = async (req, res) => {
       totalAmount: totalAmount || 0,
       paymentMethod: method || 'UPI',
       status: 'Confirmed',
-      userId: tenantId || req.user.id || 'guest',
-      proofId: isValidObjectId(proofId) ? proofId : undefined
+      userId: tenantId || (req.user ? req.user.id : 'guest'),
+      proofId: isValidObjectId(proofId) ? proofId : undefined,
+      guestName,
+      email,
+      phone
     };
 
-    const finalTenantId = tenantId || req.user.id;
-    if (isValidObjectId(finalTenantId)) bookingData.tenantId = finalTenantId;
+    if (finalTenantId) bookingData.tenantId = finalTenantId;
     if (isValidObjectId(buildingId)) bookingData.buildingId = buildingId;
 
     const booking = new Booking(bookingData);
@@ -70,48 +89,101 @@ const createBooking = async (req, res) => {
       console.log('✅ TenantProof linked to booking');
     }
 
-    let tenant = null;
     // Update Tenant profile automatically so dashboard reflects changes
-    if (isValidObjectId(tenantId)) {
-      const Tenant = require('../models/Tenant');
-      const User = require('../models/User');
-      
-      // Find the tenant profile (try direct ID match or via User email)
-      tenant = await Tenant.findById(tenantId);
-      if (!tenant) {
-        const user = await User.findById(tenantId);
-        if (user) tenant = await Tenant.findOne({ email: user.email });
-      }
-
-      if (tenant) {
-        await Tenant.findByIdAndUpdate(tenant._id, {
-          buildingId: buildingId,
-          status: 'ACTIVE',
-          room: 'TBD (Assigning)',
-          occupation: category,
-          rent: totalAmount / 2,
-          rentStatus: 'PAID',
-          lastPayment: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-        });
-        console.log('✅ Tenant profile updated with booking info');
-      } else {
-        console.warn('⚠️ Could not find Tenant profile to update');
-      }
+    if (tenant) {
+      await Tenant.findByIdAndUpdate(tenant._id, {
+        buildingId: buildingId,
+        status: 'ACTIVE',
+        room: 'TBD (Assigning)',
+        occupation: category,
+        rent: totalAmount / 2,
+        rentStatus: 'PAID',
+        lastPayment: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      });
+      console.log('✅ Tenant profile updated with booking info');
+    } else {
+      console.warn('⚠️ Could not find Tenant profile to update');
     }
 
-    // Record the bed filling if bed data is provided
-    if (isValidObjectId(buildingId) && bedNumber && sharingType) {
+    // Determine actual tenant ID for assignments
+    const actualTenantId = tenant ? tenant._id : finalTenantId;
+
+    // Record the bed filling and ACTUALLY allocate an AVAILABLE Bed document
+    if (isValidObjectId(buildingId)) {
       const BedFilling = require('../models/BedFilling');
       const bedFill = new BedFilling({
         buildingId,
-        tenantId: tenant ? tenant._id : finalTenantId,
+        tenantId: actualTenantId,
         category: category || 'Standard',
         sharingType: sharingType,
         bedNumber: bedNumber,
         status: 'Occupied'
       });
       await bedFill.save();
-      console.log('✅ Bed filling recorded for bed:', bedNumber, 'sharing:', sharingType);
+
+      // Find an AVAILABLE bed in the building and allocate it
+      const Floor = require('../models/Floor');
+      const Room = require('../models/Room');
+      const Bed = require('../models/Bed');
+      const Building = require('../models/Building');
+
+      const floors = await Floor.find({ building: buildingId }).select('_id');
+      const fIds = floors.map(f => f._id);
+      
+      // Try to find a room with matching capacity first
+      const roomsPref = await Room.find({ floor: { $in: fIds }, capacity: sharingType }).select('_id');
+      let rIds = roomsPref.map(r => r._id);
+      let availableBed = await Bed.findOne({ room: { $in: rIds }, status: 'AVAILABLE' });
+
+      // Fallback: any available bed in the building
+      if (!availableBed) {
+        const roomsAll = await Room.find({ floor: { $in: fIds } }).select('_id');
+        rIds = roomsAll.map(r => r._id);
+        availableBed = await Bed.findOne({ room: { $in: rIds }, status: 'AVAILABLE' });
+      }
+
+      if (availableBed) {
+        availableBed.status = 'OCCUPIED';
+        availableBed.tenant = actualTenantId;
+        await availableBed.save();
+        console.log('✅ Bed explicitly allocated:', availableBed._id);
+      } else {
+        console.warn('⚠️ No physical Bed document was AVAILABLE to allocate in building', buildingId);
+      }
+
+      // Auto-sync the hostel occupancy for the owner
+      try {
+        const building = await Building.findById(buildingId).select('owner');
+        if (building && building.owner) {
+          const Hostel = require('../models/Hostel');
+          const hostel = await Hostel.findOne({ owner: building.owner });
+          if (hostel) {
+            const ownerBuildings = await Building.find({ owner: building.owner }).select('_id totalBeds');
+            const bIds = ownerBuildings.map(b => b._id);
+            const configuredTotal = ownerBuildings.reduce((sum, b) => sum + (b.totalBeds || 0), 0);
+            
+            const fs = await Floor.find({ building: { $in: bIds } }).select('_id');
+            const rs = await Room.find({ floor: { $in: fs.map(f => f._id) } }).select('_id');
+            const roomIds = rs.map(r => r._id);
+            const occupiedPhysical = await Bed.countDocuments({ room: { $in: roomIds }, status: 'OCCUPIED' });
+            
+            const BedFillingModel = require('../models/BedFilling');
+            const occupiedVirtual = await BedFillingModel.countDocuments({ buildingId: { $in: bIds }, status: 'Occupied' });
+            
+            const occupiedCount = Math.max(occupiedPhysical, occupiedVirtual);
+            
+            let totalB = await Bed.countDocuments({ room: { $in: roomIds } });
+            if (hostel.totalBeds > 0) totalB = hostel.totalBeds;
+            else if (configuredTotal > 0) totalB = configuredTotal;
+            
+            hostel.filledBeds = Math.min(occupiedCount, totalB);
+            await hostel.save();
+            console.log('✅ Owner Hostel occupancy synced:', hostel.filledBeds, '/', totalB);
+          }
+        }
+      } catch (syncErr) {
+        console.warn('⚠️ Post-booking occupancy sync failed:', syncErr.message);
+      }
     }
 
     // Create a payment record for the booking
@@ -127,7 +199,6 @@ const createBooking = async (req, res) => {
     };
 
     // CRITICAL: Link payment to the ACTUAL Tenant Profile ID, not the User ID
-    const actualTenantId = tenant ? tenant._id : finalTenantId;
     if (isValidObjectId(actualTenantId)) paymentData.tenantId = actualTenantId;
     if (isValidObjectId(buildingId)) paymentData.buildingId = buildingId;
 
@@ -157,39 +228,28 @@ const createBooking = async (req, res) => {
 
 const getMyBookings = async (req, res) => {
   try {
-    // 1. Identify the user from the JWT token (most reliable source)
     const email = req.user.email;
     const userIdFromToken = req.user.id;
     
     console.log(`[DEBUG] getMyBookings for user: ${email} (ID: ${userIdFromToken})`);
 
     const Tenant = require('../models/Tenant');
-    const User = require('../models/User');
 
-    // 2. Find all possible IDs (Tenant profile & User account) for this email
-    const [relatedTenants, relatedUsers] = await Promise.all([
-      Tenant.find({ email }).select('_id'),
-      User.find({ email }).select('_id')
-    ]);
-
-    const allAssociatedIds = [
-      ...relatedTenants.map(t => t._id),
-      ...relatedUsers.map(u => u._id)
-    ];
-
-    // Ensure we also include the ID from the token if it's not already there
-    if (userIdFromToken && !allAssociatedIds.some(id => id.toString() === userIdFromToken)) {
-      allAssociatedIds.push(userIdFromToken);
+    // Find the unique Tenant profile for this email
+    const tenant = await Tenant.findOne({ email });
+    if (!tenant) {
+      console.log(`[DEBUG] No Tenant profile found for email ${email}`);
+      return res.status(200).json([]);
     }
 
-    console.log(`[DEBUG] Searching bookings for IDs:`, allAssociatedIds);
+    console.log(`[DEBUG] Searching bookings for tenant ID: ${tenant._id}`);
 
-    // 3. Find bookings linked to any of these IDs
+    // Find bookings strictly belonging to this tenant profile
     const bookings = await Booking.find({ 
-      tenantId: { $in: allAssociatedIds } 
+      tenantId: tenant._id 
     }).populate('buildingId').sort({ bookingDate: -1 });
 
-    console.log(`[DEBUG] Found ${bookings.length} bookings for ${email}`);
+    console.log(`[DEBUG] Found ${bookings.length} bookings for tenant ${tenant._id}`);
     res.status(200).json(bookings);
   } catch (error) {
     console.error('[ERROR] getMyBookings failed:', error);
@@ -206,4 +266,17 @@ const getAllBookings = async (req, res) => {
   }
 };
 
-module.exports = { createBooking, getMyBookings, getAllBookings };
+const updateBookingStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const booking = await Booking.findByIdAndUpdate(req.params.id, { status }, { new: true }).populate('tenantId buildingId');
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    res.status(200).json(booking);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { createBooking, getMyBookings, getAllBookings, updateBookingStatus };

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  User, Briefcase, ShieldCheck, CreditCard, BarChart3, Settings, 
-  Camera, CheckCircle2, AlertCircle, Upload, Save, X, Phone, Mail, 
+import {
+  User, Briefcase, ShieldCheck, CreditCard, BarChart3, Settings,
+  Camera, CheckCircle2, AlertCircle, Upload, Save, X, Phone, Mail,
   MapPin, Calendar, Building, Hash, FileText, Lock, Bell, Activity,
   Globe, Plus, Trash2, Eye, EyeOff, LayoutDashboard, History, Sparkles,
   Smartphone, Monitor, ChevronRight, ExternalLink, BedDouble, UsersRound
@@ -172,18 +172,18 @@ const Profile = () => {
               profile?.personalInfo?.fullName?.split(' ').map(n => n[0]).join('') || 'O'
             )}
           </div>
-          <label 
+          <label
             htmlFor="profile-photo-input"
             style={{ position: 'absolute', bottom: '0', right: '0', width: '36px', height: '36px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99,102,241,0.4)' }}
           >
             <Camera size={18} />
           </label>
-          <input 
-            id="profile-photo-input" 
-            type="file" 
-            accept="image/*" 
-            style={{ display: 'none' }} 
-            onChange={handlePhotoUpload} 
+          <input
+            id="profile-photo-input"
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handlePhotoUpload}
             disabled={saving}
           />
         </div>
@@ -203,14 +203,14 @@ const Profile = () => {
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '1rem', margin: 0 }}>{profile?.businessDetails?.businessName || 'Property Owner'}</p>
         </div>
-        
+
         <div style={{ minWidth: '280px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
             <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-muted)' }}>PROFILE STRENGTH</span>
             <span style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--accent-primary)' }}>{profile?.profileCompleteness || 0}%</span>
           </div>
           <div style={{ height: '8px', width: '200px', background: 'var(--bg-tertiary)', borderRadius: '100px', overflow: 'hidden' }}>
-            <motion.div 
+            <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${profile?.profileCompleteness || 0}%` }}
               style={{ height: '100%', background: 'linear-gradient(90deg, var(--accent-primary), #818cf8)' }}
@@ -228,7 +228,7 @@ const Profile = () => {
             style={{
               display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1.2rem', borderRadius: '12px',
               border: 'none', background: activeTab === tab.id ? 'var(--bg-primary)' : 'transparent',
-              color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-secondary)', 
+              color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
               fontWeight: '800', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s',
               boxShadow: activeTab === tab.id ? 'var(--shadow-sm)' : 'none'
             }}
@@ -240,11 +240,11 @@ const Profile = () => {
 
       {/* Main Content Area */}
       <div style={{ display: 'grid', gridTemplateColumns: activeTab === 'overview' ? '1fr 340px' : '1fr', gap: '2rem' }}>
-        <motion.div 
+        <motion.div
           key={activeTab}
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="card" 
+          className="card"
           style={{ padding: '2.5rem', borderRadius: '24px' }}
         >
           {activeTab === 'overview' && <OverviewTab profile={profile} stats={stats} setActiveTab={setActiveTab} />}
@@ -266,10 +266,10 @@ const Profile = () => {
       {/* Message Toast */}
       <AnimatePresence>
         {message && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            style={{ 
-              position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 1000, 
+            style={{
+              position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 1000,
               padding: '1rem 2rem', borderRadius: '12px', background: message.type === 'success' ? '#10B981' : '#EF4444',
               color: 'white', fontWeight: '700', boxShadow: 'var(--shadow-lg)'
             }}
@@ -296,7 +296,7 @@ const OverviewTab = ({ profile, stats, setActiveTab }) => {
           { label: 'Hostels', val: stats?.buildingCount, icon: <Building size={20} />, color: '#6366f1' },
           { label: 'Total Capacity', val: stats?.totalBeds, icon: <BedDouble size={20} />, color: '#8b5cf6' },
           { label: 'Active Tenants', val: stats?.occupiedBeds, icon: <UsersRound size={20} />, color: '#10b981' },
-          { label: 'Monthly Revenue', val: `₹${(stats?.expectedMonthlyRevenue/1000).toFixed(0)}k`, icon: <CreditCard size={20} />, color: '#f59e0b' }
+          { label: 'Monthly Revenue', val: `₹${(stats?.expectedMonthlyRevenue / 1000).toFixed(0)}k`, icon: <CreditCard size={20} />, color: '#f59e0b' }
         ].map((item, i) => (
           <div key={i} className="card" style={{ padding: '1.5rem', background: 'var(--bg-tertiary)', border: 'none', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
             <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${item.color}20`, color: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -318,8 +318,8 @@ const OverviewTab = ({ profile, stats, setActiveTab }) => {
               { label: 'Change Account Password', tab: 'security', icon: <Lock size={18} /> },
               { label: 'View Performance Analytics', tab: 'performance', icon: <BarChart3 size={18} /> }
             ].map((action, i) => (
-              <button 
-                key={i} 
+              <button
+                key={i}
                 onClick={() => setActiveTab(action.tab)}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.2rem', borderRadius: '14px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
                 onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
@@ -609,14 +609,14 @@ const KYCTab = ({ profile, onUpload, onDownload }) => {
               </div>
               <h4 style={{ margin: '0 0 0.5rem', fontWeight: '800' }}>{item.title}</h4>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>{item.desc}</p>
-              
-              <input 
-                id={`file-input-${item.id}`} 
-                type="file" 
-                style={{ display: 'none' }} 
-                onChange={(e) => onUpload(item.title, e)} 
+
+              <input
+                id={`file-input-${item.id}`}
+                type="file"
+                style={{ display: 'none' }}
+                onChange={(e) => onUpload(item.title, e)}
               />
-              
+
               {doc ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
@@ -656,9 +656,9 @@ const BankTab = ({ profile, onSave, isEditing, setIsEditing, saving }) => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
         <h2 style={{ margin: 0, fontWeight: '900' }}>Payout & Financial Details</h2>
-        
+
         {step === 'view' && <button className="btn btn-primary" onClick={() => setStep('otp')}>Update Details</button>}
-        
+
         {step === 'otp' && (
           <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
             <input type="text" placeholder="Enter OTP (1234)" value={otp} onChange={(e) => setOtp(e.target.value)} style={{ width: '140px', padding: '0.6rem', borderRadius: '8px', border: '1px solid var(--accent-primary)' }} />
@@ -766,7 +766,7 @@ const SecurityTab = ({ profile, onUpdate, onSecurityUpdate, onLogoutSession }) =
   return (
     <div>
       <h2 style={{ fontWeight: '900', marginBottom: '2.5rem' }}>Security & Notifications</h2>
-      
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
         <section>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -782,7 +782,7 @@ const SecurityTab = ({ profile, onUpdate, onSecurityUpdate, onLogoutSession }) =
               <h4 style={{ fontWeight: '800', margin: 0, color: 'var(--text-muted)' }}>TWO-FACTOR AUTHENTICATION (2FA)</h4>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Adds an extra layer of protection to your account.</p>
             </div>
-            <div 
+            <div
               onClick={() => onSecurityUpdate({ ...profile.securitySettings, twoFactorEnabled: !profile.securitySettings.twoFactorEnabled })}
               style={{ width: '56px', height: '30px', borderRadius: '100px', background: profile.securitySettings.twoFactorEnabled ? '#10B981' : '#CBD5E1', position: 'relative', cursor: 'pointer', transition: 'all 0.3s ease' }}
             >

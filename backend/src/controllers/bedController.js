@@ -77,6 +77,44 @@ const updateBed = async (req, res) => {
       });
     }
 
+    // --- Sync hostel filledBeds whenever bed status changes ---
+    if (req.body.status !== undefined) {
+      try {
+        const Hostel = require('../models/Hostel');
+        const hostel = await Hostel.findOne({ owner: req.user.id });
+        if (hostel) {
+          // Use owner's buildings — reliable, hostel.buildings array may be empty
+          const ownerBuildings = await Building.find({ owner: req.user.id }).select('_id totalBeds');
+          const bIds = ownerBuildings.map(b => b._id);
+          const configuredTotal = ownerBuildings.reduce((sum, b) => sum + (b.totalBeds || 0), 0);
+          
+          const floors = await Floor.find({ building: { $in: bIds } }).select('_id');
+          const fIds = floors.map(f => f._id);
+          const rooms = await Room.find({ floor: { $in: fIds } }).select('_id');
+          const rIds = rooms.map(r => r._id);
+          const occupiedPhysical = await Bed.countDocuments({ room: { $in: rIds }, status: 'OCCUPIED' });
+          
+          const BedFilling = require('../models/BedFilling');
+          const occupiedVirtual = await BedFilling.countDocuments({ buildingId: { $in: bIds }, status: 'Occupied' });
+          
+          const occupiedCount = Math.max(occupiedPhysical, occupiedVirtual);
+          
+          let totalBeds = await Bed.countDocuments({ room: { $in: rIds } });
+          if (hostel.totalBeds > 0) {
+            totalBeds = hostel.totalBeds;
+          } else if (configuredTotal > 0) {
+            totalBeds = configuredTotal;
+          }
+          
+          hostel.filledBeds = Math.min(occupiedCount, totalBeds);
+          await hostel.save();
+        }
+      } catch (syncErr) {
+        console.warn('filledBeds sync warning:', syncErr.message);
+      }
+    }
+    // ----------------------------------------------------------
+
     res.status(200).json(updated);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
