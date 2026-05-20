@@ -100,7 +100,11 @@ const Layout = ({ children }) => {
     const handleNewNotif = (notif) => {
       // ONLY show if it's meant for Tenants
       if (notif.portalType === 'Tenant' || notif.portalType === 'All') {
-        setActiveToasts(prev => [...prev, { ...notif, toastId: Date.now() }]);
+        setActiveToasts(prev => {
+          const exists = prev.some(t => (t._id || t.id) === (notif._id || notif.id));
+          if (exists) return prev;
+          return [...prev, { ...notif, toastId: Date.now() }];
+        });
       }
     };
     

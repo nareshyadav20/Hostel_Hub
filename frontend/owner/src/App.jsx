@@ -12,6 +12,7 @@ import Payments from './pages/Payments';
 import Staff from './pages/Staff';
 import Mess from './pages/Mess';
 import Complaints from './pages/Complaints';
+import Assets from './pages/Assets';
 import Inventory from './pages/Inventory';
 import InventoryMaster from './pages/InventoryMaster';
 import Notifications from './pages/Notifications';
@@ -42,6 +43,7 @@ function App() {
         <Route path="/owner/building/:buildingId/staff" element={<Layout><Staff /></Layout>} />
         <Route path="/owner/building/:buildingId/mess" element={<Layout><Mess /></Layout>} />
         <Route path="/owner/building/:buildingId/complaints" element={<Layout><Complaints /></Layout>} />
+        <Route path="/owner/building/:buildingId/assets" element={<Layout><Assets /></Layout>} />
         <Route path="/owner/building/:buildingId/inventory" element={<Layout><Inventory /></Layout>} />
         <Route path="/owner/building/:buildingId/inventory/master" element={<Layout><InventoryMaster /></Layout>} />
         <Route path="/owner/building/:buildingId/inventory/damage" element={<Layout><Inventory initialTab="damage" /></Layout>} />

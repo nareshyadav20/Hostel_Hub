@@ -159,20 +159,15 @@ const Tenants = () => {
 
   const handleGenerateLedger = (name) => showToast(`Generating Financial Ledger for ${name}...`, "success");
 
-  const fetchBuildings = async () => {
-    try {
-      const res = await API.get('/buildings');
-      setBuildings(res.data);
-    } catch (err) {
-      console.error('Error fetching buildings:', err);
-    }
-  };
-
   const fetchTenants = async () => {
     try {
       setLoading(true);
-      const res = await API.get('/tenants');
-      const bRes = await API.get('/buildings');
+      const [res, bRes] = await Promise.all([
+        API.get('/tenants'),
+        API.get('/buildings')
+      ]);
+      
+      setBuildings(bRes.data);
       
       const buildingMap = {};
       bRes.data.forEach(b => {
@@ -207,7 +202,6 @@ const Tenants = () => {
 
   useEffect(() => {
     fetchTenants();
-    fetchBuildings();
   }, []);
 
   const handleOnboardClick = () => {

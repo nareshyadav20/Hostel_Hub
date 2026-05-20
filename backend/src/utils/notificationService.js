@@ -52,12 +52,12 @@ const createNotification = async (data) => {
     if (data.receiverId && data.receiverRole) {
       socketService.emitToUser(data.receiverId, data.receiverRole, 'newNotification', notification);
     } 
-    else if (data.buildingId && data.portalType !== 'Owner') {
-      socketService.emitToRoom(data.buildingId, 'newNotification', notification);
-    }
-    
-    if (data.portalType === 'Owner' || data.owner) {
-      socketService.emitToOwner('newNotification', notification);
+    else {
+      if (data.portalType === 'Owner' || data.owner) {
+        socketService.emitToOwner('newNotification', notification);
+      } else if (data.buildingId) {
+        socketService.emitToRoom(data.buildingId, 'newNotification', notification);
+      }
     }
 
     return notification;

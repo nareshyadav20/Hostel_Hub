@@ -12,7 +12,8 @@ import {
   ShieldAlert,
   ChevronRight,
   X,
-  Utensils
+  Utensils,
+  Box
 } from 'lucide-react';
 import { api } from '../mockData';
 import Sidebar from './Sidebar';
@@ -186,8 +187,12 @@ const Layout = ({ children }) => {
   // Toast Listener (Still needed here for UI)
   useEffect(() => {
     const handleNewNotif = (notif) => {
-      // Show toast
-      setActiveToasts(prev => [...prev, { ...notif, toastId: Date.now() }]);
+      // Show toast with duplicate protection
+      setActiveToasts(prev => {
+        const exists = prev.some(t => (t._id || t.id) === (notif._id || notif.id));
+        if (exists) return prev;
+        return [...prev, { ...notif, toastId: Date.now() }];
+      });
     };
     
     socket.on('newNotification', handleNewNotif);
@@ -235,6 +240,22 @@ const Layout = ({ children }) => {
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours}h ago`;
     return new Date(date).toLocaleDateString();
+  };
+
+  const getOwnerActionLink = (actionLink) => {
+    if (!actionLink) return null;
+    if (actionLink.startsWith('/owner/')) return actionLink;
+    
+    const genericPaths = [
+      '/complaints', '/mess', '/payments', '/inventory', '/rooms', 
+      '/tenants', '/staff', '/buildings', '/settings', '/reports', '/community', '/assets'
+    ];
+    
+    const matchedPath = genericPaths.find(p => actionLink.startsWith(p));
+    if (matchedPath && activeBuildingId) {
+      return `/owner/building/${activeBuildingId}${actionLink}`;
+    }
+    return actionLink;
   };
 
   return (
@@ -374,7 +395,7 @@ const Layout = ({ children }) => {
                             style={{ padding: '1rem 1.25rem', display: 'flex', gap: '1rem', position: 'relative' }}
                             onClick={() => {
                               if (!n.isRead) markAsRead(n.id || n._id);
-                              if (n.actionLink) navigate(n.actionLink);
+                              if (n.actionLink) navigate(getOwnerActionLink(n.actionLink));
                             }}
                           >
                             <div style={{ 
@@ -384,7 +405,7 @@ const Layout = ({ children }) => {
                               color: n.type === 'error' ? '#EF4444' : 'var(--accent-primary)',
                               flexShrink: 0
                             }}>
-                              {n.category === 'SOS Alert' ? <ShieldAlert size={20} /> : n.moduleName === 'Mess' ? <Utensils size={20} /> : <Bell size={20} />}
+                               {n.category === 'SOS Alert' || n.moduleName === 'Safety' ? <ShieldAlert size={20} /> : n.moduleName === 'Mess' ? <Utensils size={20} /> : n.moduleName === 'Assets' || n.category === 'Assets' ? <Box size={20} /> : <Bell size={20} />}
                             </div>
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

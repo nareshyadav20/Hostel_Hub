@@ -33,6 +33,7 @@ const Sidebar = () => {
     { name: 'Inventory', path: `/owner/building/${activeBuildingId}/inventory`, icon: <PackageOpen {...iconProps} /> },
     { name: 'Mess Menu', path: `/owner/building/${activeBuildingId}/mess`, icon: <UtensilsCrossed {...iconProps} /> },
     { name: 'Complaints', path: `/owner/building/${activeBuildingId}/complaints`, icon: <MessageSquareWarning {...iconProps} /> },
+    { name: 'Assets', path: `/owner/building/${activeBuildingId}/assets`, icon: <PackageOpen {...iconProps} /> },
     { name: 'Community Hub', path: `/owner/building/${activeBuildingId}/community`, icon: <UsersRound {...iconProps} /> },
     { name: 'Reports', path: `/owner/building/${activeBuildingId}/reports`, icon: <BarChart3 {...iconProps} /> },
     { name: 'Notifications', path: `/owner/building/${activeBuildingId}/notifications`, icon: <BellRing {...iconProps} /> },
