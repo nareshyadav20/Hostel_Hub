@@ -39,8 +39,8 @@ const createBooking = async (req, res) => {
 
     // 1. Prevent multiple bookings for same tenant
     if (tenant) {
-      // If already assigned to a building, block new booking
-      if (tenant.buildingId) {
+      // If already assigned and active in a building, block new booking
+      if (tenant.buildingId && tenant.status === 'ACTIVE') {
         return res.status(400).json({ 
           error: 'Access Denied: You already have an active residency or booking. A resident can only book one hostel at a time.' 
         });
