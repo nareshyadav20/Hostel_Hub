@@ -4,7 +4,35 @@
   margin: 0 auto;
   padding: 1.5rem;
   animation: fadeIn 0.6s ease-out;
+  font-family: 'Inter', sans-serif; /* Consistent font */
 }
+
+.profile-container > *:not(:last-child) {
+  margin-bottom: 0.75rem;
+}
+
+/* Ensure headings and text inherit the same font */
+.profile-container h1,
+.profile-container h2,
+.profile-container h3,
+.profile-container h4,
+.profile-container p,
+.profile-tabs-nav .tab-btn,
+.section-title {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  /* Reduced font sizes for a more compact look */
+  font-size: 0.9rem;
+}
+
+/* Specific heading sizes */
+.profile-container h1 { font-size: 1.4rem; }
+.profile-container h2 { font-size: 1.2rem; }
+.profile-container h3 { font-size: 1.1rem; }
+.profile-container h4 { font-size: 1rem; }
+.profile-tabs-nav .tab-btn { font-size: 0.85rem; }
+.section-title { font-size: 1rem; }
+
 
 .profile-hero {
   display: grid;

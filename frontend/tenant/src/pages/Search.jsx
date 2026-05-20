@@ -216,7 +216,8 @@ const Search = () => {
           hostelName: hostel.name,
           hostelLocation: hostel.location,
           hostelPrice: hostel.price,
-          hostelImage: hostel.image,
+          // Use the first image from the images array if available
+          hostelImage: hostel.images && hostel.images.length > 0 ? hostel.images[0] : '',
           hostelRating: hostel.rating,
           gender: hostel.gender,
           type: hostel.type
