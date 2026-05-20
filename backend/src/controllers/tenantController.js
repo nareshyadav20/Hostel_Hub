@@ -32,18 +32,25 @@ const createTenant = async (req, res) => {
 const getTenants = async (req, res) => {
   try {
     const Building = require('../models/Building');
-    const userBuildings = await Building.find({ owner: req.user.id }).select('_id');
-    const buildingIds = userBuildings.map(b => b._id);
+    const isPlatformAdmin = req.user && req.user.role && ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role.toUpperCase());
+    
+    let buildingIds = [];
+    if (!isPlatformAdmin) {
+      const userBuildings = await Building.find({ owner: req.user.id }).select('_id');
+      buildingIds = userBuildings.map(b => b._id);
+    }
 
     // If a specific buildingId is requested, validate ownership then filter
     const { buildingId } = req.query;
     let query;
     if (buildingId) {
-      const isOwned = buildingIds.some(id => id.toString() === buildingId);
-      if (!isOwned) return res.status(403).json({ error: 'Access denied to this building.' });
+      if (!isPlatformAdmin) {
+        const isOwned = buildingIds.some(id => id.toString() === buildingId);
+        if (!isOwned) return res.status(403).json({ error: 'Access denied to this building.' });
+      }
       query = { buildingId };
     } else {
-      query = { buildingId: { $in: buildingIds } };
+      query = isPlatformAdmin ? {} : { buildingId: { $in: buildingIds } };
     }
 
     const tenants = await Tenant.find(query);
