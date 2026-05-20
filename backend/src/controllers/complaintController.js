@@ -153,7 +153,19 @@ exports.getMyComplaints = async (req, res) => {
     }
 
     const merged = [...ownerComplaints, ...rawComplaints].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
-    res.status(200).json(merged);
+    
+    // Deduplicate to avoid React duplicate key warnings
+    const seenIds = new Set();
+    const uniqueComplaints = [];
+    for (const c of merged) {
+      const idStr = c._id.toString();
+      if (!seenIds.has(idStr)) {
+        seenIds.add(idStr);
+        uniqueComplaints.push(c);
+      }
+    }
+
+    res.status(200).json(uniqueComplaints);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch complaints', error: error.message });
   }
@@ -272,7 +284,19 @@ exports.getAllComplaints = async (req, res) => {
     }
 
     const merged = [...ownerComplaints, ...rawComplaints].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
-    res.status(200).json(merged);
+    
+    // Deduplicate to avoid React duplicate key warnings
+    const seenIds = new Set();
+    const uniqueComplaints = [];
+    for (const c of merged) {
+      const idStr = c._id.toString();
+      if (!seenIds.has(idStr)) {
+        seenIds.add(idStr);
+        uniqueComplaints.push(c);
+      }
+    }
+
+    res.status(200).json(uniqueComplaints);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch all complaints', error: error.message });
   }
