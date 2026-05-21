@@ -57,9 +57,9 @@ const Complaints = () => {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toastMsg, setToastMsg] = useState(null);
-  const [formData, setFormData] = useState({ 
-    title: '', 
-    category: '', 
+  const [formData, setFormData] = useState({
+    title: '',
+    category: '',
     description: '',
     asset: '',
     subIssue: '',
@@ -231,16 +231,16 @@ const Complaints = () => {
               <div className="input-group">
                 <label>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-                  Asset (Optional)
+                  Asset
                 </label>
                 <div className="select-wrapper">
-                  <select 
-                    value={formData.asset} 
+                  <select
+                    value={formData.asset}
                     onChange={e => {
                       setFormData({ ...formData, asset: e.target.value, subIssue: '', customIssue: '' });
                     }}
                   >
-                    <option value="">Select Asset (Optional)</option>
+                    <option value="">Select Asset </option>
                     {Object.keys(ASSET_ISSUES).map(asset => (
                       <option key={asset} value={asset}>{asset}</option>
                     ))}
@@ -252,14 +252,14 @@ const Complaints = () => {
                 <div className="input-group">
                   <label>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    Specific Issue (Optional)
+                    Specific Issue
                   </label>
                   <div className="select-wrapper">
-                    <select 
-                      value={formData.subIssue} 
+                    <select
+                      value={formData.subIssue}
                       onChange={e => setFormData({ ...formData, subIssue: e.target.value })}
                     >
-                      <option value="">Select Issue (Optional)</option>
+                      <option value="">Select Issue </option>
                       {ASSET_ISSUES[formData.asset].map(issue => (
                         <option key={issue} value={issue}>{issue}</option>
                       ))}

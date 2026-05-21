@@ -16,6 +16,7 @@ import Rewards from './pages/Rewards';
 import Complaints from './pages/Complaints';
 import Transfers from './pages/Transfers';
 import Discounts from './pages/Discounts';
+import Offers from './pages/Offers';
 import Services from './pages/Services';
 import Community from './pages/Community';
 import Safety from './pages/Safety';
@@ -73,6 +74,7 @@ function App() {
 
         {/* Public browsing routes */}
         <Route path="/search"          element={<Layout><Search /></Layout>} />
+        <Route path="/offers"          element={<Offers />} />
         <Route path="/listing/:id"     element={<Layout><Listing /></Layout>} />
 
         {/* Protected portal routes */}

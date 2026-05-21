@@ -9,7 +9,14 @@ const ALL_LOCALITIES = [
   'Lanco Hills Manikonda', 'Madhapur', 'Manikonda', 'Miyapur', 'Serilingampally'
 ];
 
-const SearchOverlay = ({ isOpen, onClose, initialCity = 'Hyderabad', onSearch }) => {
+const SearchOverlay = ({ 
+  isOpen, 
+  onClose, 
+  initialCity = 'Hyderabad', 
+  onSearch,
+  availableCities = CITIES,
+  availableLocalities = ALL_LOCALITIES
+}) => {
   const navigate = useNavigate();
   const [selectedCity, setSelectedCity] = useState(initialCity);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
@@ -25,7 +32,7 @@ const SearchOverlay = ({ isOpen, onClose, initialCity = 'Hyderabad', onSearch })
   const [searchProperty, setSearchProperty] = useState('');
   const [userDetails, setUserDetails] = useState({ name: '', contact: '' });
 
-  const visibleLocalities = isLocalityExpanded ? ALL_LOCALITIES : ALL_LOCALITIES.slice(0, 10);
+  const visibleLocalities = isLocalityExpanded ? availableLocalities : availableLocalities.slice(0, 10);
 
   const handleSearch = () => {
     onClose();
@@ -50,7 +57,7 @@ const SearchOverlay = ({ isOpen, onClose, initialCity = 'Hyderabad', onSearch })
             </span>
             {showCityDropdown && (
               <div className="city-dropdown" style={{ position: 'absolute', top: '100%', left: 0, background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', minWidth: '200px' }}>
-                {CITIES.map(city => (
+                {availableCities.map(city => (
                   <div
                     key={city}
                     className="city-option"
