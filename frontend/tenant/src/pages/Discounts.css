@@ -199,3 +199,16 @@
     font-size: 0.9rem;
   }
 }
+/* Dark mode overrides */
+[data-theme='dark'] .offer-card {
+  background: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+}
+[data-theme='dark'] .coupon-code-box {
+  background: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+}
+[data-theme='dark'] .get-coupon-btn {
+  background: var(--accent-primary) !important;
+  color: white !important;
+}

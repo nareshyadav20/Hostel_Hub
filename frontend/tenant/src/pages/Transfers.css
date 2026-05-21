@@ -47,6 +47,12 @@
   background: white !important;
 }
 
+/* Dark mode overrides */
+[data-theme='dark'] .current-residency-card {
+  background: var(--bg-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
 .icon-badge-blue {
   width: 44px;
   height: 44px;
@@ -93,16 +99,11 @@
 }
 
 /* Action Card */
-.transfer-action-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 3rem !important;
-  background: #f0f9ff !important;
-  border: 2px dashed #bae6fd !important;
+[data-theme='dark'] .transfer-action-card {
+  background: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
+
 
 .pulse-icon-container {
   width: 80px;
