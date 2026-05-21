@@ -63,7 +63,10 @@
   gap: var(--space-4);
 }
 
-.wishlist-card-premium {
+[data-theme='dark'] .wishlist-card-premium {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary);
+}
   background: white;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -71,7 +74,7 @@
   transition: var(--transition-normal);
   display: flex;
   flex-direction: column;
-}
+
 
 .wishlist-card-premium:hover {
   transform: translateY(-8px);
@@ -323,4 +326,10 @@
     flex: 1;
     text-align: center;
   }
+}
+
+/* Dark mode overrides */
+[data-theme='dark'] .wishlist-card-premium {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary);
 }

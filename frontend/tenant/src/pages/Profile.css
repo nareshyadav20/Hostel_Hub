@@ -47,8 +47,10 @@
   top: 1rem;
 }
 
-.profile-main-card-premium {
-  padding: 2.5rem !important;
+[data-theme='dark'] .profile-main-card-premium {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+}
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -56,7 +58,7 @@
   background: rgba(255, 255, 255, 0.7) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
-}
+
 
 .profile-avatar-large {
   width: 140px;
@@ -928,4 +930,21 @@
   font-size: 0.9rem;
   font-weight: 800;
   color: var(--text-secondary);
+}
+
+/* Dark mode overrides */
+[data-theme='dark'] .transaction-item {
+  background: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+}
+[data-theme='dark'] .transaction-item .tx-icon {
+  background: var(--bg-secondary) !important;
+}
+[data-theme='dark'] .pagi-btn {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+[data-theme='dark'] .pagi-btn:disabled {
+  background: var(--bg-muted) !important;
+  opacity: 0.5;
 }
