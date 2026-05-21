@@ -67,6 +67,19 @@
   background: #fff7ed !important;
 }
 
+/* Dark mode overrides for stat cards */
+[data-theme='dark'] .stat-card-mini {
+  background: var(--bg-secondary) !important;
+}
+[data-theme='dark'] .stat-card-mini.success {
+  background: var(--bg-secondary) !important;
+  border-left-color: #16a34a !important;
+}
+[data-theme='dark'] .stat-card-mini.warning {
+  background: var(--bg-secondary) !important;
+  border-left-color: #ea580c !important;
+}
+
 .stat-label {
   font-size: 0.75rem;
   font-weight: 800;
@@ -107,6 +120,8 @@
   background: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
 }
+
+.tickets-table th {
   padding: 1rem 1.5rem;
   background: var(--bg-primary);
   color: var(--text-muted);
@@ -114,7 +129,7 @@
   font-weight: 800;
   text-transform: uppercase;
   text-align: left;
-
+}
 
 .tickets-table td {
   padding: 1.25rem 1.5rem;
