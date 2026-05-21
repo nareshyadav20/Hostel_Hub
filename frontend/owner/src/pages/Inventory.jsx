@@ -314,7 +314,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
       <header className="page-header">
         <div className="header-left">
           <div className="header-title-area">
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px'  }}>
               {activeTab === 'master' && (
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
@@ -387,7 +387,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
       {/* 3. STATS CARDS */}
       <div className="stats-grid">
         {stats.map((stat, i) => (
-          <div key={i} className="stat-card" style={{ '--accent': stat.color, '--bg': stat.bg }}>
+          <div key={i} className="stat-card" style={{ '--accent': stat.color, '--bg': stat.bg  }}>
             <div className="stat-info">
               <span className="stat-label">{stat.label}</span>
               <h2 className="stat-value">{stat.value}</h2>
@@ -443,7 +443,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   <th>PRICING & TAX</th>
                   <th>STOCK DISTRIBUTION</th>
                   <th>STATUS</th>
-                  <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                  <th style={{ textAlign: 'right'  }}>ACTIONS</th>
                 </tr>
               )}
               {activeTab === 'damage' && (
@@ -455,7 +455,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   <th>TYPE</th>
                   <th>LOSS</th>
                   <th>STATUS</th>
-                  <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                  <th style={{ textAlign: 'right'  }}>ACTIONS</th>
                 </tr>
               )}
               {activeTab === 'deductions' && (
@@ -466,7 +466,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   <th>AMOUNT</th>
                   <th>DATE</th>
                   <th>STATUS</th>
-                  <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                  <th style={{ textAlign: 'right'  }}>ACTIONS</th>
                 </tr>
               )}
               {activeTab === 'reports' && (
@@ -475,7 +475,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   <th>GENERATED ON</th>
                   <th>TYPE</th>
                   <th>FILE SIZE</th>
-                  <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                  <th style={{ textAlign: 'right'  }}>ACTIONS</th>
                 </tr>
               )}
             </thead>
@@ -494,17 +494,16 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                 <tr key={item.id || item._id}>
                   <td>
                     <div className="cell-product">
-                      <div className="product-img" style={{
-                        background: item.image ? 'transparent' : (CATEGORIES.find(c => c.id === item.category)?.bg || 'var(--bg-secondary)'),
+                      <div className="product-img" style={{ background: item.image ? 'transparent' : (CATEGORIES.find(c => c.id === item.category)?.bg || 'var(--bg-secondary)'),
                         color: CATEGORIES.find(c => c.id === item.category)?.color || 'var(--text-muted)',
                         padding: 0,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         overflow: 'hidden'
-                      }}>
+                       }}>
                         {item.image ? (
-                          <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover'  }} />
                         ) : (
                           item.name ? item.name[0].toUpperCase() : '?'
                         )}
@@ -539,7 +538,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                     <div
                       className={`toggle-switch ${item.stock > 0 ? 'active' : ''}`}
                       onClick={() => handleToggleStatus(item)}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: 'pointer'  }}
                     />
                   </td>
                   <td>
@@ -560,26 +559,25 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   </td>
                   <td>
                     <div className="cell-product">
-                      <div className="product-img" style={{ background: 'rgba(249,115,22,0.1)', color: '#f97316' }}>{entry.product[0]}</div>
+                      <div className="product-img" style={{ background: 'rgba(249,115,22,0.1)', color: '#f97316'  }}>{entry.product[0]}</div>
                       <div className="product-name">{entry.product}</div>
                     </div>
                   </td>
                   <td>
                     <div className="cell-main">{entry.reportedBy}</div>
-                    <div className="cell-sub" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><ShieldCheck size={12} /> VERIFIED</div>
+                    <div className="cell-sub" style={{ display: 'flex', alignItems: 'center', gap: '4px'  }}><ShieldCheck size={12} /> VERIFIED</div>
                   </td>
                   <td><span className="qty-badge">{entry.qty}</span></td>
                   <td>
-                    <span className="type-badge" style={{
-                      background: entry.type === 'DAMAGED' ? 'rgba(249,115,22,0.1)' : entry.type === 'EXPIRED' ? 'rgba(139,92,246,0.1)' : 'rgba(239,68,68,0.1)',
+                    <span className="type-badge" style={{ background: entry.type === 'DAMAGED' ? 'rgba(249,115,22,0.1)' : entry.type === 'EXPIRED' ? 'rgba(139,92,246,0.1)' : 'rgba(239,68,68,0.1)',
                       color: entry.type === 'DAMAGED' ? '#f97316' : entry.type === 'EXPIRED' ? '#8b5cf6' : '#ef4444'
-                    }}>{entry.type}</span>
+                     }}>{entry.type}</span>
                   </td>
                   <td><span className="loss-val">₹{entry.loss}</span></td>
                   <td><span className={`status-pill ${entry.status.toLowerCase()}`}>{entry.status}</span></td>
                   <td>
                     <div className="action-btns">
-                      <button className="action-btn verify" title="Approve" onClick={() => handleApproveDamage(entry.id)} style={{ opacity: entry.status === 'APPROVED' ? 0.4 : 1 }} disabled={entry.status === 'APPROVED'}><ShieldCheck size={16} /></button>
+                      <button className="action-btn verify" title="Approve" onClick={() => handleApproveDamage(entry.id)} style={{ opacity: entry.status === 'APPROVED' ? 0.4 : 1  }} disabled={entry.status === 'APPROVED'}><ShieldCheck size={16} /></button>
                       <button className="action-btn delete" title="Remove" onClick={() => handleDeleteDamage(entry.id)}><Trash2 size={16} /></button>
                     </div>
                   </td>
@@ -603,7 +601,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   <td><span className={`status-pill ${ded.status.toLowerCase()}`}>{ded.status}</span></td>
                   <td>
                     <div className="action-btns">
-                      <button className="action-btn verify" title="Mark as Paid" onClick={() => handleSettleDeduction(ded.id)} style={{ opacity: ded.status === 'PAID' ? 0.4 : 1 }} disabled={ded.status === 'PAID'}><CheckCircle2 size={16} /></button>
+                      <button className="action-btn verify" title="Mark as Paid" onClick={() => handleSettleDeduction(ded.id)} style={{ opacity: ded.status === 'PAID' ? 0.4 : 1  }} disabled={ded.status === 'PAID'}><CheckCircle2 size={16} /></button>
                       <button className="action-btn delete" title="Remove" onClick={() => handleDeleteDeduction(ded.id)}><Trash2 size={16} /></button>
                     </div>
                   </td>
@@ -615,14 +613,14 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                 <tr key={rep.id}>
                   <td>
                     <div className="cell-product">
-                      <div className="product-img" style={{ background: rep.type === 'PDF' ? 'rgba(239,68,68,0.1)' : 'rgba(14,165,233,0.1)', color: rep.type === 'PDF' ? '#EF4444' : '#0EA5E9' }}>
+                      <div className="product-img" style={{ background: rep.type === 'PDF' ? 'rgba(239,68,68,0.1)' : 'rgba(14,165,233,0.1)', color: rep.type === 'PDF' ? '#EF4444' : '#0EA5E9'  }}>
                         {rep.type === 'PDF' ? '📄' : '📊'}
                       </div>
                       <div className="product-name">{rep.name}</div>
                     </div>
                   </td>
                   <td><div className="cell-sub">{rep.date}</div></td>
-                  <td><span className="type-badge" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{rep.type}</span></td>
+                  <td><span className="type-badge" style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)'  }}>{rep.type}</span></td>
                   <td><div className="cell-sub">{rep.size}</div></td>
                   <td>
                     <div className="action-btns">
@@ -652,7 +650,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                   : 'Add your first product to start tracking hostel inventory, stock levels, and procurement.'}
               </p>
               {!searchQuery && selectedCategory === 'All' && selectedStatus === 'All' && (
-                <button className="primary-btn" style={{ margin: '0 auto' }}
+                <button className="primary-btn" style={{ margin: '0 auto'  }}
                   onClick={() => { setSelectedItem(null); setFormData(initialFormData); setAddStep(1); setIsAddModalOpen(true); }}>
                   <Plus size={18} /> Add First Item
                 </button>
@@ -668,7 +666,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
 
           {activeTab === 'damage' && filteredDamageEntries.length === 0 && (
             <div className="empty-state">
-              <div className="empty-state-icon" style={{ background: 'rgba(249,115,22,0.08)', color: '#f97316' }}>
+              <div className="empty-state-icon" style={{ background: 'rgba(249,115,22,0.08)', color: '#f97316'  }}>
                 <AlertTriangle size={48} strokeWidth={1.2} />
               </div>
               <h3 className="empty-state-title">{searchQuery ? 'No matching damage entries' : 'No Damage Entries'}</h3>
@@ -679,7 +677,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
 
           {activeTab === 'deductions' && filteredDeductions.length === 0 && (
             <div className="empty-state">
-              <div className="empty-state-icon" style={{ background: 'rgba(16,185,129,0.08)', color: '#10b981' }}>
+              <div className="empty-state-icon" style={{ background: 'rgba(16,185,129,0.08)', color: '#10b981'  }}>
                 <CheckCircle2 size={48} strokeWidth={1.2} />
               </div>
               <h3 className="empty-state-title">{searchQuery ? 'No matching deductions' : 'No Deductions Recorded'}</h3>
@@ -692,26 +690,26 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
 
       {/* ANALYTICS SECTION */}
       {activeTab === 'reports' && (
-        <div className="analytics-section" style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        <div className="analytics-section" style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem'  }}>
           <div className="content-card">
-            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem'  }}>
               <TrendingUp size={20} color="#00A859" /> Stock Consumption Trend
             </h3>
-            <div style={{ height: '200px', display: 'flex', alignItems: 'flex-end', gap: '1rem', padding: '1rem' }}>
+            <div style={{ height: '200px', display: 'flex', alignItems: 'flex-end', gap: '1rem', padding: '1rem'  }}>
               {[60, 40, 85, 30, 95, 70, 55].map((h, i) => (
                 <div key={i} style={{ flex: 1, background: 'var(--primary-green)', height: `${h}%`, borderRadius: '4px 4px 0 0', opacity: 0.2 + (h / 100) }} />
               ))}
             </div>
           </div>
           <div className="content-card">
-            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem'  }}>
               <BarChart size={20} color="#6366F1" /> Category Distribution
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem'  }}>
               {CATEGORIES.map(cat => (
-                <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748B', width: '80px' }}>{cat.name}</span>
-                  <div style={{ flex: 1, height: '8px', background: '#F1F5F9', borderRadius: '10px', overflow: 'hidden' }}>
+                <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem'  }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748B', width: '80px'  }}>{cat.name}</span>
+                  <div style={{ flex: 1, height: '8px', background: '#F1F5F9', borderRadius: '10px', overflow: 'hidden'  }}>
                     <div style={{ width: `${Math.random() * 80 + 20}%`, height: '100%', background: cat.color }} />
                   </div>
                 </div>
@@ -724,49 +722,48 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
       {/* MODALS */}
       <AnimatePresence>
         {isAddModalOpen && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 3000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', overflowY: 'auto', padding: '2rem 1rem' }}>
-            <div style={{ width: '100%', maxWidth: '1040px', background: 'var(--bg-primary)', borderRadius: '12px', boxShadow: '0 25px 60px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', fontFamily: "'Inter', sans-serif", marginBottom: '2rem' }}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 3000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(6px)', overflowY: 'auto', padding: '2rem 1rem'  }}>
+            <div style={{ width: '100%', maxWidth: '1040px', background: 'var(--bg-primary)', borderRadius: '12px', boxShadow: '0 25px 60px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', fontFamily: "'Inter', sans-serif", marginBottom: '2rem'  }}>
 
               {/* TOP BAR */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2rem', height: '60px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', borderRadius: '12px 12px 0 0', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2rem', height: '60px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', borderRadius: '12px 12px 0 0', flexShrink: 0  }}>
                 <button onClick={() => setIsAddModalOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', padding: '7px 14px', borderRadius: '7px', transition: '0.18s' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', padding: '7px 14px', borderRadius: '7px', transition: '0.18s'  }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-tertiary)'; }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
                   <ArrowLeft size={15} /> Back to List
                 </button>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Add New Item</div>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>Inventory Management</div>
+                <div style={{ textAlign: 'center'  }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.05em', textTransform: 'uppercase'  }}>Add New Item</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500  }}>Inventory Management</div>
                 </div>
                 <button onClick={() => setIsAddModalOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '34px', height: '34px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer', borderRadius: '7px', transition: '0.18s' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '34px', height: '34px', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', cursor: 'pointer', borderRadius: '7px', transition: '0.18s'  }}
                   onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.color = '#ef4444'; }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
                   <X size={18} />
                 </button>
               </div>
 
               {/* TABS */}
-              <div style={{ display: 'flex', gap: '2rem', padding: '0 2rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-primary)' }}>
+              <div style={{ display: 'flex', gap: '2rem', padding: '0 2rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-primary)'  }}>
                 {[{ id: 1, label: 'Basic Information', icon: <Info size={14} /> }, { id: 2, label: 'Pricing & Stock', icon: <Package size={14} /> }].map(t => (
                   <div key={t.id} onClick={() => setAddStep ? setAddStep(t.id) : null}
-                    style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '1rem 0', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.04em', color: (addStep || 1) === t.id ? 'var(--primary-green)' : 'var(--text-muted)', borderBottom: (addStep || 1) === t.id ? '2.5px solid var(--primary-green)' : '2.5px solid transparent', marginBottom: '-1px', transition: '0.18s' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '1rem 0', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.04em', color: (addStep || 1) === t.id ? 'var(--primary-green)' : 'var(--text-muted)', borderBottom: (addStep || 1) === t.id ? '2.5px solid var(--primary-green)' : '2.5px solid transparent', marginBottom: '-1px', transition: '0.18s'  }}>
                     {t.icon} {t.label}
                   </div>
                 ))}
               </div>
 
               {/* CONTENT */}
-              <div style={{ padding: '2rem' }}>
+              <div style={{ padding: '2rem'  }}>
                 {(!addStep || addStep === 1) ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '3rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '3rem'  }}>
                     {/* Left */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem'  }}>
                       <div>
-                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Product Visual</div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>Product Visual</div>
                         <div 
                           onClick={() => fileInputRef.current?.click()}
-                          style={{ 
-                            width: '100%', 
+                          style={{ width: '100%', 
                             aspectRatio: '1/1', 
                             background: 'var(--bg-secondary)', 
                             border: '2px dashed var(--border-color)', 
@@ -784,13 +781,12 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                             textTransform: 'uppercase',
                             position: 'relative',
                             overflow: 'hidden'
-                          }}
+                           }}
                         >
                           {formData.image ? (
                             <>
-                              <img src={formData.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              <div style={{ 
-                                position: 'absolute', 
+                              <img src={formData.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover'  }} />
+                              <div style={{ position: 'absolute', 
                                 inset: 0, 
                                 background: 'rgba(0,0,0,0.55)', 
                                 display: 'flex', 
@@ -800,8 +796,8 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                                 gap: '8px',
                                 opacity: 0,
                                 transition: 'opacity 0.2s',
-                                color: '#fff'
-                              }}
+                                color: "var(--text-on-primary)"
+                               }}
                               onMouseEnter={e => { e.currentTarget.style.opacity = 1; }}
                               onMouseLeave={e => { e.currentTarget.style.opacity = 0; }}
                               >
@@ -819,82 +815,82 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                         <input 
                           type="file" 
                           ref={fileInputRef} 
-                          style={{ display: 'none' }} 
+                          style={{ display: 'none'  }} 
                           accept="image/*" 
                           onChange={handleImageChange} 
                         />
                       </div>
                       <div>
-                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Display Name *</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>Display Name *</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)'  }}>
                           <Package size={15} color="var(--text-muted)" />
                           <input placeholder="e.g. Organic Tomato Ketchup" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
-                            style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
+                            style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)'  }} />
                         </div>
                       </div>
                       <div>
-                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Barcode / SKU ID</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>Barcode / SKU ID</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)'  }}>
                           <ScanBarcode size={15} color="var(--text-muted)" />
-                          <input placeholder="Scan or type barcode..." style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
+                          <input placeholder="Scan or type barcode..." style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)'  }} />
                           <Maximize2 size={13} color="var(--text-muted)" />
                         </div>
                       </div>
                       <div>
-                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--primary-green)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Initial Stock</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid rgba(0, 168, 89, 0.3)', borderRadius: '8px', background: 'rgba(0, 168, 89, 0.1)' }}>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--primary-green)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>Initial Stock</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid rgba(0, 168, 89, 0.3)', borderRadius: '8px', background: 'rgba(0, 168, 89, 0.1)'  }}>
                           <Package size={15} color="var(--primary-green)" />
                           <input type="number" placeholder="0" value={formData.stock} onChange={e => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
-                            style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 700, outline: 'none', fontSize: '0.95rem', color: 'var(--primary-green)' }} />
+                            style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 700, outline: 'none', fontSize: '0.95rem', color: 'var(--primary-green)'  }} />
                         </div>
                       </div>
                     </div>
                     {/* Right */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem'  }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem'  }}>
                         <div>
-                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Category *</div>
-                          <div style={{ position: 'relative' }}>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>Category *</div>
+                          <div style={{ position: 'relative'  }}>
                             <select value={formData.category} onChange={e => handleCategoryChange(e.target.value)}
-                              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', appearance: 'none', cursor: 'pointer', background: 'var(--bg-primary)' }}>
+                              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', appearance: 'none', cursor: 'pointer', background: 'var(--bg-primary)'  }}>
                               {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
-                            <LayoutGrid size={13} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                            <LayoutGrid size={13} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none'  }} />
                           </div>
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Sub Category *</div>
-                          <div style={{ position: 'relative' }}>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>Sub Category *</div>
+                          <div style={{ position: 'relative'  }}>
                             <select value={formData.subCategory} onChange={e => setFormData({ ...formData, subCategory: e.target.value })}
-                              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', appearance: 'none', cursor: 'pointer', background: 'var(--bg-primary)' }}>
+                              style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', appearance: 'none', cursor: 'pointer', background: 'var(--bg-primary)'  }}>
                               {CATEGORIES.find(c => c.id === formData.category)?.subCategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                             </select>
-                            <LayoutGrid size={13} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                            <LayoutGrid size={13} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none'  }} />
                           </div>
                         </div>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem'  }}>
                         <div>
-                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Unit Type *</div>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>Unit Type *</div>
                           <select value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })}
-                            style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', cursor: 'pointer', background: 'var(--bg-primary)' }}>
+                            style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', cursor: 'pointer', background: 'var(--bg-primary)'  }}>
                             <option>Kg</option><option>Liters</option><option>Pieces</option><option>Boxes</option>
                           </select>
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Unit Value</div>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>Unit Value</div>
                           <input placeholder="e.g. 500 (for 500g)"
-                            style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', boxSizing: 'border-box', background: 'var(--bg-primary)' }} />
+                            style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', boxSizing: 'border-box', background: 'var(--bg-primary)'  }} />
                         </div>
                       </div>
                       <div>
-                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Product Description</div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>Product Description</div>
                         <textarea placeholder="Describe the product details..." rows={5} value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                          style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--bg-primary)' }} />
+                          style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--bg-primary)'  }} />
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end'  }}>
                         <button onClick={() => setAddStep && setAddStep(2)}
-                          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', background: 'var(--primary-green)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', letterSpacing: '0.03em' }}
+                          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', background: 'var(--primary-green)', color: "var(--text-on-primary)", border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', letterSpacing: '0.03em'  }}
                           onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-green-dark)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-green)'}>
                           NEXT: PRICING &amp; STOCK <ArrowRight size={14} />
                         </button>
@@ -902,29 +898,29 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem'  }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem'  }}>
                       {[{ label: 'Selling Price *', field: 'sellingPrice' }, { label: 'Purchase Price', field: 'purchasePrice' }, { label: 'Min Threshold', field: 'minThreshold' }].map(({ label, field }) => (
                         <div key={field}>
-                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>{label}</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
-                            <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>₹</span>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>{label}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)'  }}>
+                            <span style={{ color: 'var(--text-muted)', fontWeight: 600  }}>₹</span>
                             <input type="number" placeholder="0.00" value={formData[field] || ''} onChange={e => setFormData({ ...formData, [field]: e.target.value })}
-                              style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
+                              style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)'  }} />
                           </div>
                         </div>
                       ))}
                     </div>
-                    <div style={{ paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center'  }}>
                       <button onClick={() => setAddStep && setAddStep(1)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer'  }}>
                         <ArrowLeft size={14} /> Back
                       </button>
-                      <div style={{ display: 'flex', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', gap: '0.75rem'  }}>
                         <button onClick={() => { setIsAddModalOpen(false); setFormData(initialFormData); if (setAddStep) setAddStep(1); }}
-                          style={{ padding: '10px 22px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>CANCEL</button>
+                          style={{ padding: '10px 22px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer'  }}>CANCEL</button>
                         <button onClick={handleSave}
-                          style={{ padding: '10px 22px', background: 'var(--primary-green)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
+                          style={{ padding: '10px 22px', background: 'var(--primary-green)', color: "var(--text-on-primary)", border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer'  }}
                           onMouseEnter={e => e.currentTarget.style.background = 'var(--primary-green-dark)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--primary-green)'}>
                           SAVE &amp; ADD TO INVENTORY
                         </button>
@@ -938,46 +934,46 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
         )}
 
         {isDamageModalOpen && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(6px)' }}>
-            <div style={{ width: '100%', maxWidth: '600px', background: 'var(--bg-primary)', borderRadius: '16px', boxShadow: '0 30px 70px rgba(0,0,0,0.25)', overflow: 'hidden', fontFamily: "'Inter', sans-serif" }}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(6px)'  }}>
+            <div style={{ width: '100%', maxWidth: '600px', background: 'var(--bg-primary)', borderRadius: '16px', boxShadow: '0 30px 70px rgba(0,0,0,0.25)', overflow: 'hidden', fontFamily: "'Inter', sans-serif"  }}>
 
               {/* Red Header Banner */}
-              <div style={{ background: 'linear-gradient(135deg, #dc2626, #b91c1c)', padding: '1.5rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <div style={{ width: '44px', height: '44px', background: 'rgba(255,255,255,0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ background: 'linear-gradient(135deg, #dc2626, #b91c1c)', padding: '1.5rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between'  }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px'  }}>
+                  <div style={{ width: '44px', height: '44px', background: 'rgba(255,255,255,0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center'  }}>
                     <AlertTriangle size={22} color="#fff" />
                   </div>
                   <div>
-                    <div style={{ color: '#fff', fontWeight: 800, fontSize: '1rem', letterSpacing: '0.02em' }}>Report Damage Entry</div>
-                    <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.72rem', fontWeight: 500, marginTop: '2px' }}>Log a damaged, expired, or lost inventory item</div>
+                    <div style={{ color: "var(--text-on-primary)", fontWeight: 800, fontSize: '1rem', letterSpacing: '0.02em'  }}>Report Damage Entry</div>
+                    <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.72rem', fontWeight: 500, marginTop: '2px'  }}>Log a damaged, expired, or lost inventory item</div>
                   </div>
                 </div>
                 <button onClick={() => setIsDamageModalOpen(false)}
-                  style={{ width: '34px', height: '34px', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  style={{ width: '34px', height: '34px', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '8px', color: "var(--text-on-primary)", cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'  }}>
                   <X size={18} />
                 </button>
               </div>
 
               {/* Form */}
-              <form onSubmit={handleDamageSubmit} style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
+              <form onSubmit={handleDamageSubmit} style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.4rem'  }}>
 
                 {/* Product Search */}
                 <div>
-                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Select Product *</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)' }}>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>Select Product *</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-secondary)'  }}>
                     <Search size={16} color="var(--text-muted)" />
                     <input type="text" placeholder="Search product by name or SKU..."
                       value={damageFormData.productId}
                       onChange={e => setDamageFormData({ ...damageFormData, productId: e.target.value })}
                       required
-                      style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)' }} />
+                      style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 500, outline: 'none', fontSize: '0.88rem', color: 'var(--text-primary)'  }} />
                   </div>
                 </div>
 
                 {/* Damage Type Chips */}
                 <div>
-                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>Damage Type *</div>
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px'  }}>Damage Type *</div>
+                  <div style={{ display: 'flex', gap: '0.75rem'  }}>
                     {[
                       { val: 'Damaged', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)', border: '#fed7aa', emoji: '🔨' },
                       { val: 'Expired', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)', border: '#ddd6fe', emoji: '⏰' },
@@ -985,53 +981,53 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
                     ].map(t => (
                       <div key={t.val} onClick={() => setDamageFormData({ ...damageFormData, type: t.val })}
                         style={{ flex: 1, padding: '0.9rem 0.5rem', border: `2px solid ${damageFormData.type === t.val ? t.color : 'var(--border-color)'}`, borderRadius: '10px', background: damageFormData.type === t.val ? t.bg : 'var(--bg-primary)', cursor: 'pointer', textAlign: 'center', transition: '0.18s' }}>
-                        <div style={{ fontSize: '1.4rem', marginBottom: '5px' }}>{t.emoji}</div>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: damageFormData.type === t.val ? t.color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t.val}</div>
+                        <div style={{ fontSize: '1.4rem', marginBottom: '5px'  }}>{t.emoji}</div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: damageFormData.type === t.val ? t.color : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em'  }}>{t.val}</div>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Qty + Loss */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem'  }}>
                   <div>
-                    <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Quantity Damaged *</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)' }}>
+                    <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>Quantity Damaged *</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)'  }}>
                       <Package size={15} color="var(--text-muted)" />
                       <input type="number" min="1" placeholder="0"
                         value={damageFormData.qty}
                         onChange={e => setDamageFormData({ ...damageFormData, qty: parseInt(e.target.value) || 0 })}
                         required
-                        style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 600, outline: 'none', fontSize: '0.95rem', color: 'var(--text-primary)' }} />
+                        style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 600, outline: 'none', fontSize: '0.95rem', color: 'var(--text-primary)'  }} />
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Estimated Loss (₹)</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)' }}>
-                      <span style={{ color: '#ef4444', fontWeight: 700 }}>₹</span>
+                    <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>Estimated Loss (₹)</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)'  }}>
+                      <span style={{ color: '#ef4444', fontWeight: 700  }}>₹</span>
                       <input type="number" placeholder="0.00"
-                        style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 700, outline: 'none', fontSize: '0.95rem', color: '#ef4444' }} />
+                        style={{ border: 'none', background: 'transparent', width: '100%', fontWeight: 700, outline: 'none', fontSize: '0.95rem', color: '#ef4444'  }} />
                     </div>
                   </div>
                 </div>
 
                 {/* Description */}
                 <div>
-                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Description / Remarks</div>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px'  }}>Description / Remarks</div>
                   <textarea placeholder="Describe how the damage occurred, location, or any additional context..."
                     rows={3} value={damageFormData.description}
                     onChange={e => setDamageFormData({ ...damageFormData, description: e.target.value })}
-                    style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--bg-primary)' }} />
+                    style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 500, fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit', background: 'var(--bg-primary)'  }} />
                 </div>
 
                 {/* Buttons */}
-                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)'  }}>
                   <button type="button" onClick={() => setIsDamageModalOpen(false)}
-                    style={{ padding: '10px 22px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>
+                    style={{ padding: '10px 22px', background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer'  }}>
                     Cancel
                   </button>
                   <button type="submit"
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 22px', background: '#dc2626', color: "var(--text-on-primary)", border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer'  }}
                     onMouseEnter={e => e.currentTarget.style.background = '#b91c1c'}
                     onMouseLeave={e => e.currentTarget.style.background = '#dc2626'}>
                     <Send size={15} /> Submit Damage Report
@@ -1052,7 +1048,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
         .header-title-area p { font-size: 0.85rem; color: var(--text-muted); margin: 0.2rem 0 0; font-weight: 500; }
         .header-actions { display: flex; gap: 0.8rem; align-items: center; }
         .icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .primary-btn { padding: 0.7rem 1.5rem; border-radius: 10px; border: none; background: var(--primary-green); color: white; font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+        .primary-btn { padding: 0.7rem 1.5rem; border-radius: 10px; border: none; background: var(--primary-green); color: var(--text-on-primary); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
         .primary-btn.damage { background: #EF4444; }
         .tab-nav { display: flex; gap: 2rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem; }
         .tab-item { padding: 1rem 0; background: transparent; border: none; color: var(--text-muted); font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 0.6rem; cursor: pointer; position: relative; }
@@ -1083,14 +1079,14 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
         .qty-badge { background: var(--bg-secondary); padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 700; color: var(--text-secondary); }
         .type-badge { padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.75rem; font-weight: 800; }
         .type-badge.damaged { background: rgba(249, 115, 22, 0.1); color: #f97316; }
-        .loss-val { font-weight: 800; color: #EF4444; }
+        .loss-val { font-weight: 800; color: var(--text-red); }
         .status-pill { padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.7rem; font-weight: 800; }
         .status-pill.pending { background: rgba(245, 158, 11, 0.1); color: #D97706; }
-        .status-pill.paid, .status-pill.approved { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+        .status-pill.paid, .status-pill.approved { background: var(--bg-green-soft); color: var(--text-green); }
         .action-btns { display: flex; gap: 0.5rem; justify-content: flex-end; }
         .action-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .action-btn.verify { color: var(--primary-green); background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); }
-        .action-btn.delete { color: #EF4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); }
+        .action-btn.verify { color: var(--primary-green); background: var(--bg-green-soft); border-color: rgba(16, 185, 129, 0.2); }
+        .action-btn.delete { color: var(--text-red); background: var(--bg-red-soft); border-color: rgba(239, 68, 68, 0.2); }
         .stock-dist { display: flex; gap: 1rem; }
         .dist-item { display: flex; flex-direction: column; align-items: center; min-width: 40px; }
         .dist-val { font-weight: 800; color: var(--text-primary); font-size: 0.9rem; }
@@ -1105,7 +1101,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
         .modal-content.large { max-width: 800px; }
         .modal-content.medium { max-width: 500px; }
         .modal-header { padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--border-color); }
-        .header-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(16, 185, 129, 0.1); color: var(--primary-green); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .header-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--bg-green-soft); color: var(--primary-green); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 800; margin-bottom: 0.5rem; }
         .modal-header h2 { font-size: 1.4rem; font-weight: 900; color: var(--text-primary); margin: 0; }
         .close-btn { position: absolute; top: 1.5rem; right: 1.5rem; background: transparent; border: none; color: var(--text-muted); cursor: pointer; }
         .modal-body { padding: 2.5rem; }
@@ -1120,7 +1116,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
         .form-group textarea { height: 100px; resize: none; }
         .form-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
         .secondary-btn { padding: 0.8rem 1.8rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-weight: 700; cursor: pointer; }
-        .submit-damage-btn { margin-top: 1rem; padding: 1.2rem; border-radius: 16px; border: none; background: #FDA4AF; color: white; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.8rem; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
+        .submit-damage-btn { margin-top: 1rem; padding: 1.2rem; border-radius: 16px; border: none; background: #FDA4AF; color: var(--text-on-primary); font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.8rem; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
         .submit-damage-btn:hover { background: #F43F5E; }
         .table-container { overflow-x: auto; }
         .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; text-align: center; gap: 1rem; }
@@ -1164,8 +1160,8 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
             max-width: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
-            background: white !important;
-            color: black !important;
+            background: var(--bg-card) !important;
+            color: var(--text-main) !important;
             min-height: auto !important;
           }
 
@@ -1173,7 +1169,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
             border: none !important;
             box-shadow: none !important;
             padding: 0 !important;
-            background: white !important;
+            background: var(--bg-card) !important;
             width: 100% !important;
           }
 
@@ -1225,7 +1221,7 @@ const InventoryManagement = ({ initialTab = 'master' }) => {
             border-bottom: 1px solid #cbd5e1 !important;
             font-size: 9.5pt !important;
             padding: 12px 8px !important;
-            color: #1e293b !important;
+            color: var(--text-main) !important;
           }
 
           /* Assure color fidelity for visual categories */

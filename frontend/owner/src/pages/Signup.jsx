@@ -42,7 +42,7 @@ const Signup = () => {
         </div>
 
         {error && (
-          <div style={{ background: '#FEE2E2', color: '#EF4444', padding: '0.8rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold' }}>
+          <div style={{ background: '#FEE2E2', color: '#EF4444', padding: '0.8rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold'  }}>
             {error}
           </div>
         )}

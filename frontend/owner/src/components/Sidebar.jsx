@@ -44,7 +44,7 @@ const Sidebar = () => {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <Link to={`/owner/building/${activeBuildingId}/dashboard`} className="brand-logo" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+        <Link to={`/owner/building/${activeBuildingId}/dashboard`} className="brand-logo" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.8rem'  }}>
           <svg className="sidebar-logo-svg" width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2L3 9V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V9L12 2Z" fill="url(#sidebar_logo_gradient)" stroke="var(--primary-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -55,9 +55,9 @@ const Sidebar = () => {
               </linearGradient>
             </defs>
           </svg>
-          <div className="logo-text" style={{ display: 'flex', flexDirection: 'column' }}>
-            <span className="logo-main" style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>Livora</span>
-            <span className="logo-sub" style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--primary-green)', letterSpacing: '0.05em' }}>OWNER PORTAL</span>
+          <div className="logo-text" style={{ display: 'flex', flexDirection: 'column'  }}>
+            <span className="logo-main" style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1  }}>Livora</span>
+            <span className="logo-sub" style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--primary-green)', letterSpacing: '0.05em'  }}>OWNER PORTAL</span>
           </div>
         </Link>
       </div>

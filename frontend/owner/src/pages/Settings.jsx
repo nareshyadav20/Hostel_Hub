@@ -19,7 +19,7 @@ const Toggle = ({ enabled, onClick }) => (
   </div>
 );
 
-const EditableTags = ({ tags, onUpdate, color = '#4F46E5', bgColor = '#EEF2FF' }) => {
+const EditableTags = ({ tags, onUpdate, color = "var(--color-blue-dark)", bgColor = "var(--bg-indigo-soft)" }) => {
   const [inputValue, setInputValue] = useState('');
 
   const handleAdd = () => {
@@ -36,22 +36,22 @@ const EditableTags = ({ tags, onUpdate, color = '#4F46E5', bgColor = '#EEF2FF' }
   return (
     <div className="tag-container">
       {tags.map((tag, i) => (
-        <span key={i} className="tag-item" style={{ background: bgColor, color: color }}>
+        <span key={i} className="tag-item" style={{ background: bgColor, color: color  }}>
           {tag}
           <Trash2 size={14} className="tag-remove" onClick={() => handleRemove(tag)} />
         </span>
       ))}
-      <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '0.8rem' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '0.8rem'  }}>
         <input 
           type="text" 
           value={inputValue} 
           className="settings-input"
-          style={{ padding: '0.6rem 1rem', fontSize: '0.85rem', flex: 1 }}
+          style={{ padding: '0.6rem 1rem', fontSize: '0.85rem', flex: 1  }}
           onChange={e => setInputValue(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleAdd()}
           placeholder="Add new tag..." 
         />
-        <button onClick={handleAdd} className="save-btn" style={{ padding: '0.5rem 1rem', boxShadow: 'none' }}>
+        <button onClick={handleAdd} className="save-btn" style={{ padding: '0.5rem 1rem', boxShadow: 'none'  }}>
           <Plus size={18} />
         </button>
       </div>
@@ -67,7 +67,7 @@ const SectionHeader = ({ title, subtitle }) => (
 );
 
 const InputGroup = ({ label, children, info, fullWidth }) => (
-  <div className="input-wrapper" style={{ gridColumn: fullWidth ? 'span 2' : 'span 1' }}>
+  <div className="input-wrapper" style={{ gridColumn: fullWidth ? 'span 2' : 'span 1'  }}>
     <div className="input-label-row">
       <label>{label}</label>
       {info && <div title={info} className="info-icon"><Info size={14}/></div>}
@@ -131,7 +131,7 @@ const Settings = () => {
   };
 
   if (isLoading) return <div className="loader">Optimizing System Configurations...</div>;
-  if (!settings) return <div style={{ padding: '4rem', textAlign: 'center', color: '#EF4444', fontWeight: '800' }}>Failed to synchronize with the management module.</div>;
+  if (!settings) return <div style={{ padding: '4rem', textAlign: 'center', color: "var(--text-red)", fontWeight: '800'  }}>Failed to synchronize with the management module.</div>;
 
   const tabs = [
     { id: 'general', name: 'General', icon: <Building size={18} /> },
@@ -158,7 +158,7 @@ const Settings = () => {
             <p>Master control for building operations and automation.</p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center'  }}>
            <AnimatePresence>
              {msg.text && (
                <motion.div initial={{ opacity:0, x:20 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0 }}
@@ -199,7 +199,7 @@ const Settings = () => {
                 <InputGroup label="Administrative Head"><input type="text" className="settings-input" value={settings.generalSettings?.ownerName || ''} onChange={e => handleChange('generalSettings', 'ownerName', e.target.value)} /></InputGroup>
                 <InputGroup label="Primary Contact"><input type="text" className="settings-input" value={settings.generalSettings?.contactNumber || ''} onChange={e => handleChange('generalSettings', 'contactNumber', e.target.value)} /></InputGroup>
                 <InputGroup label="Support Email"><input type="email" className="settings-input" value={settings.generalSettings?.email || ''} onChange={e => handleChange('generalSettings', 'email', e.target.value)} /></InputGroup>
-                <InputGroup label="Physical Location" fullWidth><textarea className="settings-textarea" value={settings.generalSettings?.address || ''} onChange={e => handleChange('generalSettings', 'address', e.target.value)} style={{ height: '100px' }} /></InputGroup>
+                <InputGroup label="Physical Location" fullWidth><textarea className="settings-textarea" value={settings.generalSettings?.address || ''} onChange={e => handleChange('generalSettings', 'address', e.target.value)} style={{ height: '100px'  }} /></InputGroup>
                 <InputGroup label="Operational Timezone"><select className="settings-select" value={settings.generalSettings?.timezone || 'IST (UTC+5:30)'} onChange={e => handleChange('generalSettings', 'timezone', e.target.value)}><option>IST (UTC+5:30)</option><option>EST (UTC-5:00)</option><option>GMT (UTC+0:00)</option></select></InputGroup>
                 <InputGroup label="System Currency"><input type="text" className="settings-input" value={settings.generalSettings?.currency || '₹'} onChange={e => handleChange('generalSettings', 'currency', e.target.value)} /></InputGroup>
               </div>
@@ -211,7 +211,7 @@ const Settings = () => {
             <motion.div key="rent" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
               <SectionHeader title="Financial Protocols" subtitle="Configure automated invoicing and payment handling." />
               <div className="settings-grid">
-                <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', background: '#F8FAFC', padding: '2rem', borderRadius: '24px', border: '1px solid #E2E8F0', marginBottom: '1rem' }}>
+                <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', background: "var(--bg-tertiary)", padding: '2rem', borderRadius: '24px', border: "1px solid var(--border-color)", marginBottom: '1rem'  }}>
                   <InputGroup label="Single (₹)"><input type="number" className="settings-input" value={settings.rentSettings?.defaultRent?.single || 0} onChange={e => handleChange('rentSettings', 'defaultRent', Number(e.target.value), 'single')} /></InputGroup>
                   <InputGroup label="Double (₹)"><input type="number" className="settings-input" value={settings.rentSettings?.defaultRent?.double || 0} onChange={e => handleChange('rentSettings', 'defaultRent', Number(e.target.value), 'double')} /></InputGroup>
                   <InputGroup label="Shared (₹)"><input type="number" className="settings-input" value={settings.rentSettings?.defaultRent?.shared || 0} onChange={e => handleChange('rentSettings', 'defaultRent', Number(e.target.value), 'shared')} /></InputGroup>
@@ -224,15 +224,15 @@ const Settings = () => {
                   <EditableTags 
                     tags={settings.rentSettings?.allowedPaymentMethods || []} 
                     onUpdate={newTags => handleChange('rentSettings', 'allowedPaymentMethods', newTags)}
-                    color="#8B5CF6" bgColor="#F5F3FF"
+                    color="var(--text-indigo)" bgColor="var(--bg-indigo-soft)"
                   />
                 </InputGroup>
-                <div style={{ gridColumn: 'span 2', display: 'flex', gap: '1.5rem' }}>
-                   <div className="feature-card" style={{ flex: 1 }}>
+                <div style={{ gridColumn: 'span 2', display: 'flex', gap: '1.5rem'  }}>
+                   <div className="feature-card" style={{ flex: 1  }}>
                      <div className="feature-info"><h4>Smart Invoicing</h4><p>Auto-generate bills on schedule.</p></div>
                      <Toggle enabled={settings.rentSettings?.autoInvoiceGeneration} onClick={() => handleChange('rentSettings', 'autoInvoiceGeneration', !settings.rentSettings?.autoInvoiceGeneration)} />
                    </div>
-                   <div className="feature-card" style={{ flex: 1 }}>
+                   <div className="feature-card" style={{ flex: 1  }}>
                      <div className="feature-info"><h4>Partial Settlements</h4><p>Allow split payment contributions.</p></div>
                      <Toggle enabled={settings.rentSettings?.allowPartialPayment} onClick={() => handleChange('rentSettings', 'allowPartialPayment', !settings.rentSettings?.allowPartialPayment)} />
                    </div>
@@ -245,22 +245,22 @@ const Settings = () => {
           {activeTab === 'rooms' && (
             <motion.div key="infra" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
               <SectionHeader title="Structural Blueprint" subtitle="Manage building hierarchy and inventory types." />
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
-                <div className="card" style={{ padding: '1.5rem', background: '#F8FAFC', textAlign: 'center' }}>
-                  <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '800', color: '#64748B' }}>BUILDINGS</p>
-                  <input type="number" className="settings-input" style={{ textAlign: 'center', marginTop: '0.5rem' }} value={settings.roomConfig?.totalBuildings || 0} onChange={e => handleChange('roomConfig', 'totalBuildings', Number(e.target.value))} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2.5rem'  }}>
+                <div className="card" style={{ padding: '1.5rem', background: "var(--bg-tertiary)", textAlign: 'center'  }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '800', color: "var(--text-secondary)"  }}>BUILDINGS</p>
+                  <input type="number" className="settings-input" style={{ textAlign: 'center', marginTop: '0.5rem'  }} value={settings.roomConfig?.totalBuildings || 0} onChange={e => handleChange('roomConfig', 'totalBuildings', Number(e.target.value))} />
                 </div>
-                <div className="card" style={{ padding: '1.5rem', background: '#F8FAFC', textAlign: 'center' }}>
-                  <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '800', color: '#64748B' }}>FLOORS / B</p>
-                  <input type="number" className="settings-input" style={{ textAlign: 'center', marginTop: '0.5rem' }} value={settings.roomConfig?.floorsPerBuilding || 0} onChange={e => handleChange('roomConfig', 'floorsPerBuilding', Number(e.target.value))} />
+                <div className="card" style={{ padding: '1.5rem', background: "var(--bg-tertiary)", textAlign: 'center'  }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '800', color: "var(--text-secondary)"  }}>FLOORS / B</p>
+                  <input type="number" className="settings-input" style={{ textAlign: 'center', marginTop: '0.5rem'  }} value={settings.roomConfig?.floorsPerBuilding || 0} onChange={e => handleChange('roomConfig', 'floorsPerBuilding', Number(e.target.value))} />
                 </div>
-                <div className="card" style={{ padding: '1.5rem', background: '#F8FAFC', textAlign: 'center' }}>
-                  <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '800', color: '#64748B' }}>ROOMS / F</p>
-                  <input type="number" className="settings-input" style={{ textAlign: 'center', marginTop: '0.5rem' }} value={settings.roomConfig?.roomsPerFloor || 0} onChange={e => handleChange('roomConfig', 'roomsPerFloor', Number(e.target.value))} />
+                <div className="card" style={{ padding: '1.5rem', background: "var(--bg-tertiary)", textAlign: 'center'  }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '800', color: "var(--text-secondary)"  }}>ROOMS / F</p>
+                  <input type="number" className="settings-input" style={{ textAlign: 'center', marginTop: '0.5rem'  }} value={settings.roomConfig?.roomsPerFloor || 0} onChange={e => handleChange('roomConfig', 'roomsPerFloor', Number(e.target.value))} />
                 </div>
-                <div className="card" style={{ padding: '1.5rem', background: '#F8FAFC', textAlign: 'center' }}>
-                  <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '800', color: '#64748B' }}>BEDS / R</p>
-                  <input type="number" className="settings-input" style={{ textAlign: 'center', marginTop: '0.5rem' }} value={settings.roomConfig?.bedsPerRoom || 0} onChange={e => handleChange('roomConfig', 'bedsPerRoom', Number(e.target.value))} />
+                <div className="card" style={{ padding: '1.5rem', background: "var(--bg-tertiary)", textAlign: 'center'  }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '800', color: "var(--text-secondary)"  }}>BEDS / R</p>
+                  <input type="number" className="settings-input" style={{ textAlign: 'center', marginTop: '0.5rem'  }} value={settings.roomConfig?.bedsPerRoom || 0} onChange={e => handleChange('roomConfig', 'bedsPerRoom', Number(e.target.value))} />
                 </div>
               </div>
               <div className="settings-grid">
@@ -268,9 +268,9 @@ const Settings = () => {
                   <EditableTags tags={settings.roomConfig?.roomTypes || []} onUpdate={newTags => handleChange('roomConfig', 'roomTypes', newTags)} />
                 </InputGroup>
                 <InputGroup label="Inventory Sub-types">
-                  <EditableTags tags={settings.roomConfig?.bedTypes || []} onUpdate={newTags => handleChange('roomConfig', 'bedTypes', newTags)} color="#10B981" bgColor="#F0FDF4" />
+                  <EditableTags tags={settings.roomConfig?.bedTypes || []} onUpdate={newTags => handleChange('roomConfig', 'bedTypes', newTags)} color="var(--text-green)" bgColor="var(--bg-green-soft)" />
                 </InputGroup>
-                <div className="feature-card" style={{ gridColumn: 'span 2' }}>
+                <div className="feature-card" style={{ gridColumn: 'span 2'  }}>
                   <div className="feature-info"><h4>Automated Unit Generation</h4><p>Instantly deploy room records upon building synchronization.</p></div>
                   <Toggle enabled={settings.roomConfig?.autoCreateRooms} onClick={() => handleChange('roomConfig', 'autoCreateRooms', !settings.roomConfig?.autoCreateRooms)} />
                 </div>
@@ -308,9 +308,9 @@ const Settings = () => {
                 <InputGroup label="Service Frequency"><select className="settings-select" value={settings.hygieneSettings?.cleaningFrequency || 'DAILY'} onChange={e => handleChange('hygieneSettings', 'cleaningFrequency', e.target.value)}><option value="DAILY">Daily Intensive</option><option value="WEEKLY">Weekly Deep Clean</option></select></InputGroup>
                 <InputGroup label="Compliance Threshold"><input type="number" className="settings-input" value={settings.hygieneSettings?.hygieneThreshold || 70} onChange={e => handleChange('hygieneSettings', 'hygieneThreshold', Number(e.target.value))} /></InputGroup>
                 <InputGroup label="Audit Checkpoints" fullWidth>
-                  <EditableTags tags={settings.hygieneSettings?.hygieneChecklist || []} onUpdate={newTags => handleChange('hygieneSettings', 'hygieneChecklist', newTags)} color="#DB2777" bgColor="#FDF2F8" />
+                  <EditableTags tags={settings.hygieneSettings?.hygieneChecklist || []} onUpdate={newTags => handleChange('hygieneSettings', 'hygieneChecklist', newTags)} color="var(--text-red)" bgColor="var(--bg-red-soft)" />
                 </InputGroup>
-                <div className="feature-card" style={{ gridColumn: 'span 2' }}>
+                <div className="feature-card" style={{ gridColumn: 'span 2'  }}>
                   <div className="feature-info"><h4>Tenant Feedback Node</h4><p>Allow direct hygiene escalation from resident portal.</p></div>
                   <Toggle enabled={settings.hygieneSettings?.issueReportingEnabled} onClick={() => handleChange('hygieneSettings', 'issueReportingEnabled', !settings.hygieneSettings?.issueReportingEnabled)} />
                 </div>
@@ -322,18 +322,18 @@ const Settings = () => {
           {activeTab === 'roles' && (
             <motion.div key="access" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
               <SectionHeader title="Permission Matrix" subtitle="Define role-based security and module accessibility." />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem'  }}>
                 <InputGroup label="Defined Security Roles" fullWidth>
                   <EditableTags tags={settings.roleAccess?.roles || []} onUpdate={newTags => handleChange('roleAccess', 'roles', newTags)} />
                 </InputGroup>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#F8FAFC', padding: '2.5rem', borderRadius: '32px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: "var(--bg-tertiary)", padding: '2.5rem', borderRadius: '32px'  }}>
                    {[
                      { id: 'viewAccess', label: 'Data Visibility', sub: 'Read-only access to records.' },
                      { id: 'editAccess', label: 'Write Permission', sub: 'Ability to update existing entries.' },
                      { id: 'deleteAccess', label: 'Purge Authority', sub: 'Destructive record management.' },
                      { id: 'approvalRights', label: 'Executive Sign-off', sub: 'Authorize pending workflow tasks.' },
                    ].map(item => (
-                     <div key={item.id} className="feature-card" style={{ background: '#FFFFFF' }}>
+                     <div key={item.id} className="feature-card" style={{ background: "var(--bg-card)"  }}>
                        <div className="feature-info"><h4>{item.label}</h4><p>{item.sub}</p></div>
                        <Toggle enabled={settings.roleAccess?.permissions?.[item.id]} onClick={() => handleChange('roleAccess', 'permissions', !settings.roleAccess?.permissions?.[item.id], item.id)} />
                      </div>
@@ -349,8 +349,8 @@ const Settings = () => {
               <SectionHeader title="Business Intelligence" subtitle="Configure automated analytical streams." />
               <div className="settings-grid">
                 <InputGroup label="Pulse Frequency"><select className="settings-select" value={settings.reportSettings?.reportFrequency || 'MONTHLY'} onChange={e => handleChange('reportSettings', 'reportFrequency', e.target.value)}><option value="DAILY">Daily Snapshots</option><option value="WEEKLY">Weekly Analysis</option><option value="MONTHLY">Monthly Overview</option></select></InputGroup>
-                <InputGroup label="Supported Exporters"><EditableTags tags={settings.reportSettings?.exportFormats || []} onUpdate={newTags => handleChange('reportSettings', 'exportFormats', newTags)} color="#64748B" bgColor="#F1F5F9" /></InputGroup>
-                <div className="feature-card" style={{ gridColumn: 'span 2' }}>
+                <InputGroup label="Supported Exporters"><EditableTags tags={settings.reportSettings?.exportFormats || []} onUpdate={newTags => handleChange('reportSettings', 'exportFormats', newTags)} color="var(--text-secondary)" bgColor="var(--bg-main)" /></InputGroup>
+                <div className="feature-card" style={{ gridColumn: 'span 2'  }}>
                   <div className="feature-info"><h4>Automated Dispatch</h4><p>Email executive summaries to stakeholders automatically.</p></div>
                   <Toggle enabled={settings.reportSettings?.emailReportsEnabled} onClick={() => handleChange('reportSettings', 'emailReportsEnabled', !settings.reportSettings?.emailReportsEnabled)} />
                 </div>

@@ -8,7 +8,7 @@
   --warning: #F59E0B;
   --danger: #EF4444;
   --bg-gray: #F8FAFC;
-  --border-color: #E2E8F0;
+  --border-color: var(--border-color);
   --text-main: #1E293B;
   --text-muted: #64748B;
   --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -46,7 +46,7 @@
 
 .add-item-btn {
   background-color: var(--primary);
-  color: white;
+  color: var(--text-on-primary);
   padding: 12px 24px;
   border-radius: 12px;
   border: none;
@@ -74,7 +74,7 @@
 }
 
 .stat-card {
-  background: white;
+  background: var(--bg-card);
   padding: 24px;
   border-radius: 16px;
   border: 1px solid var(--border-color);
@@ -126,7 +126,7 @@
 
 /* Left Section - Table & Filters */
 .inventory-main {
-  background: white;
+  background: var(--bg-card);
   border-radius: 20px;
   border: 1px solid var(--border-color);
   padding: 24px;
@@ -175,7 +175,7 @@
   padding: 10px 16px;
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  background: white;
+  background: var(--bg-card);
   color: var(--text-main);
   font-size: 14px;
   font-weight: 500;
@@ -204,7 +204,7 @@
   padding: 8px 16px;
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  background: white;
+  background: var(--bg-card);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -252,7 +252,7 @@
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: #f1f5f9;
+  background: var(--bg-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -297,7 +297,7 @@
 
 .status-out-of-stock {
   background: #fef2f2;
-  color: #dc2626;
+  color: var(--text-red);
 }
 
 .more-btn {
@@ -321,7 +321,7 @@
 }
 
 .sidebar-card {
-  background: white;
+  background: var(--bg-card);
   border-radius: 20px;
   border: 1px solid var(--border-color);
   padding: 24px;
@@ -435,7 +435,7 @@
 }
 
 .quick-action-item:hover {
-  background: #f1f5f9;
+  background: var(--bg-tertiary);
   transform: translateX(4px);
 }
 
@@ -482,7 +482,7 @@
 
 .page-num.active {
   background: var(--primary);
-  color: white;
+  color: var(--text-on-primary);
   border-color: var(--primary);
 }
 
@@ -503,7 +503,7 @@
 /* Bottom Banner */
 .alert-banner {
   margin-top: 32px;
-  background: white;
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 20px;
   padding: 24px;
@@ -544,7 +544,7 @@
 
 .set-alerts-btn {
   background: var(--primary);
-  color: white;
+  color: var(--text-on-primary);
   padding: 12px 24px;
   border-radius: 12px;
   border: none;

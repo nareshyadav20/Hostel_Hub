@@ -25,18 +25,17 @@ const ProfileDropdown = () => {
   };
 
   return (
-    <div className="profile-dropdown-container" ref={dropdownRef} style={{ position: 'relative' }}>
+    <div className="profile-dropdown-container" ref={dropdownRef} style={{ position: 'relative'  }}>
       <div 
         className="avatar" 
         onClick={() => setIsOpen(!isOpen)}
-        style={{ cursor: 'pointer', userSelect: 'none' }}
+        style={{ cursor: 'pointer', userSelect: 'none'  }}
       >
         {user.name.split(' ').map(n => n[0]).join('')}
       </div>
 
       {isOpen && (
-        <div className="dropdown-menu" style={{
-          position: 'absolute',
+        <div className="dropdown-menu" style={{ position: 'absolute',
           top: '120%',
           right: '0',
           width: '240px',
@@ -47,16 +46,15 @@ const ProfileDropdown = () => {
           padding: '1rem',
           zIndex: '1000',
           animation: 'fadeIn 0.2s ease'
-        }}>
-          <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>
-            <p style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{user.name}</p>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{user.email}</p>
+         }}>
+          <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)'  }}>
+            <p style={{ fontWeight: '700', color: 'var(--text-primary)'  }}>{user.name}</p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)'  }}>{user.email}</p>
           </div>
           
           <button 
             onClick={handleLogout}
-            style={{
-              width: '100%',
+            style={{ width: '100%',
               display: 'flex',
               alignItems: 'center',
               gap: '0.8rem',
@@ -68,7 +66,7 @@ const ProfileDropdown = () => {
               cursor: 'pointer',
               fontWeight: '600',
               transition: 'var(--transition-fast)'
-            }}
+             }}
             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
             onMouseOut={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)'}
           >

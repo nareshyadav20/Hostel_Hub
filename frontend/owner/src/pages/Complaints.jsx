@@ -170,19 +170,19 @@ const Complaints = () => {
 
   const getUrgencyBadge = (urgency) => {
     switch(urgency) {
-       case 'High': return <span style={{ padding: '0.2rem 0.5rem', background: '#EF4444', color: '#fff', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
-       case 'Medium': return <span style={{ padding: '0.2rem 0.5rem', background: '#F59E0B', color: '#fff', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
-       case 'Low': return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
-       default: return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--bg-tertiary)', color: 'var(--text-muted)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase' }}>{urgency}</span>;
+       case 'High': return <span style={{ padding: '0.2rem 0.5rem', background: '#EF4444', color: "var(--text-on-primary)", borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase'  }}>{urgency}</span>;
+       case 'Medium': return <span style={{ padding: '0.2rem 0.5rem', background: '#F59E0B', color: "var(--text-on-primary)", borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase'  }}>{urgency}</span>;
+       case 'Low': return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase'  }}>{urgency}</span>;
+       default: return <span style={{ padding: '0.2rem 0.5rem', background: 'var(--bg-tertiary)', color: 'var(--text-muted)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase'  }}>{urgency}</span>;
     }
   };
 
   const getStatusDisplay = (status) => {
     switch(status) {
-      case 'Resolved': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981' }}><CheckCircle2 size={12}/> {activeTab === 'Maintenance' ? 'RESOLVED' : 'APPROVED'}</span>;
-      case 'In-Progress': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(56, 189, 248, 0.1)', color: '#0EA5E9' }}><Activity size={12}/> IN PROGRESS</span>;
-      case 'Pending': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B' }}><Clock size={12}/> PENDING</span>;
-      case 'Rejected': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' }}><Clock size={12}/> REJECTED</span>;
+      case 'Resolved': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981'  }}><CheckCircle2 size={12}/> {activeTab === 'Maintenance' ? 'RESOLVED' : 'APPROVED'}</span>;
+      case 'In-Progress': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(56, 189, 248, 0.1)', color: '#0EA5E9'  }}><Activity size={12}/> IN PROGRESS</span>;
+      case 'Pending': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B'  }}><Clock size={12}/> PENDING</span>;
+      case 'Rejected': return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444'  }}><Clock size={12}/> REJECTED</span>;
       default: return null;
     }
   };
@@ -203,126 +203,125 @@ const Complaints = () => {
   const inputStyle = { padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', width: '100%' };
 
   return (
-    <div className="complaints-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
+    <div className="complaints-page" style={{ animation: 'fadeIn 0.5s ease-out'  }}>
       <AnimatePresence>
         {lastNotification && (
           <motion.div 
             initial={{ opacity: 0, x: 50 }} 
             animate={{ opacity: 1, x: 0 }} 
             exit={{ opacity: 0, x: 50 }}
-            style={{ position: 'fixed', top: '2rem', right: '2rem', zIndex: 10000, background: 'var(--accent-primary)', color: 'white', padding: '1rem 1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-lg)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.8rem' }}
+            style={{ position: 'fixed', top: '2rem', right: '2rem', zIndex: 10000, background: 'var(--accent-primary)', color: "var(--text-on-primary)", padding: '1rem 1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-lg)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.8rem'  }}
           >
             <Activity size={20} />
             {lastNotification}
           </motion.div>
         )}
       </AnimatePresence>
-      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem'  }}>
         <div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: '900', marginBottom: '0.4rem', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '900', marginBottom: '0.4rem', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '0.7rem'  }}>
             <Wrench size={32} color="var(--accent-primary)" /> Service Hub
             {isRefreshing && <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}><RefreshCw size={16} color="var(--text-muted)"/></motion.div>}
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: '500' }}>Operational control center for maintenance and requests.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: '500'  }}>Operational control center for maintenance and requests.</p>
         </div>
         
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.2rem 0.8rem' }}>
-            <Search size={16} color="var(--text-muted)" style={{ marginRight: '0.5rem' }} />
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center'  }}>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.2rem 0.8rem'  }}>
+            <Search size={16} color="var(--text-muted)" style={{ marginRight: '0.5rem'  }} />
             <input 
               type="text" 
               placeholder="Search category, tenant, asset..." 
               value={searchTerm} 
               onChange={e => setSearchTerm(e.target.value)} 
-              style={{ background: 'transparent', border: 'none', padding: '0.6rem 0.2rem', color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.9rem', outline: 'none', width: '220px' }}
+              style={{ background: 'transparent', border: 'none', padding: '0.6rem 0.2rem', color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.9rem', outline: 'none', width: '220px'  }}
             />
           </div>
 
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.2rem 0.8rem' }}>
-            <Filter size={16} color="var(--text-muted)" style={{ marginRight: '0.5rem' }} />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.2rem 0.8rem'  }}>
+            <Filter size={16} color="var(--text-muted)" style={{ marginRight: '0.5rem'  }} />
             <select 
               value={filterBuilding} 
               onChange={handleBuildingFilterChange}
-              style={{ background: 'transparent', border: 'none', padding: '0.6rem 2rem 0.6rem 0.2rem', color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.9rem', outline: 'none', cursor: 'pointer', appearance: 'none' }}
+              style={{ background: 'transparent', border: 'none', padding: '0.6rem 2rem 0.6rem 0.2rem', color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.9rem', outline: 'none', cursor: 'pointer', appearance: 'none'  }}
             >
               <option value="all">All Buildings</option>
               {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
-            <ChevronDown size={14} color="var(--text-muted)" style={{ position: 'absolute', right: '0.8rem', pointerEvents: 'none' }} />
+            <ChevronDown size={14} color="var(--text-muted)" style={{ position: 'absolute', right: '0.8rem', pointerEvents: 'none'  }} />
           </div>
 
-          <button onClick={() => setIsBroadcastModalOpen(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800', borderRadius: '12px', padding: '0.8rem 1.5rem' }}>
+          <button onClick={() => setIsBroadcastModalOpen(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800', borderRadius: '12px', padding: '0.8rem 1.5rem'  }}>
               <MessageSquare size={16} /> Broadcast
           </button>
-          <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center'  }}>
             <X size={20} />
           </button>
         </div>
       </header>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', width: 'fit-content', overflowX: 'auto', maxWidth: '100%' }}>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: '16px', border: '1px solid var(--border-color)', width: 'fit-content', overflowX: 'auto', maxWidth: '100%'  }}>
         {['Maintenance', 'Leave', 'Visitor', 'Laundry', 'Cleaning'].map(tab => (
           <button
             key={tab}
             onClick={() => { setActiveTab(tab); setExpandedId(null); }}
-            style={{ 
-              padding: '0.8rem 2rem', borderRadius: '12px', border: 'none', 
+            style={{ padding: '0.8rem 2rem', borderRadius: '12px', border: 'none', 
               background: activeTab === tab ? 'var(--bg-primary)' : 'transparent',
               color: activeTab === tab ? 'var(--accent-primary)' : 'var(--text-secondary)',
               fontWeight: '800', fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.3s',
               boxShadow: activeTab === tab ? 'var(--shadow-sm)' : 'none',
               whiteSpace: 'nowrap'
-            }}
+             }}
           >
             {tab} {['Maintenance'].includes(tab) ? 'Tickets' : 'Requests'}
           </button>
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--text-primary)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', right: '-10px', top: '-10px', opacity: 0.05 }}><Wrench size={80}/></div>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Total {activeTab}</p>
-          <h2 style={{ fontSize: '2.4rem', fontWeight: '900', margin: 0 }}>{totalComplaints}</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem'  }}>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--text-primary)', position: 'relative', overflow: 'hidden'  }}>
+          <div style={{ position: 'absolute', right: '-10px', top: '-10px', opacity: 0.05  }}><Wrench size={80}/></div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem'  }}>Total {activeTab}</p>
+          <h2 style={{ fontSize: '2.4rem', fontWeight: '900', margin: 0  }}>{totalComplaints}</h2>
         </div>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #F59E0B', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', right: '-10px', top: '-10px', opacity: 0.05 }}><Clock size={80}/></div>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>Pending</p>
-          <h2 style={{ fontSize: '2.4rem', fontWeight: '900', color: '#F59E0B', margin: 0 }}>{pendingCount}</h2>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #F59E0B', position: 'relative', overflow: 'hidden'  }}>
+          <div style={{ position: 'absolute', right: '-10px', top: '-10px', opacity: 0.05  }}><Clock size={80}/></div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem'  }}>Pending</p>
+          <h2 style={{ fontSize: '2.4rem', fontWeight: '900', color: '#F59E0B', margin: 0  }}>{pendingCount}</h2>
         </div>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #10B981', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', right: '-10px', top: '-10px', opacity: 0.05 }}><CheckCircle2 size={80}/></div>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem' }}>{activeTab === 'Maintenance' ? 'Resolved' : 'Approved'}</p>
-          <h2 style={{ fontSize: '2.4rem', fontWeight: '900', color: '#10B981', margin: 0 }}>{resolvedCount}</h2>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #10B981', position: 'relative', overflow: 'hidden'  }}>
+          <div style={{ position: 'absolute', right: '-10px', top: '-10px', opacity: 0.05  }}><CheckCircle2 size={80}/></div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', fontWeight: '700', marginBottom: '0.5rem'  }}>{activeTab === 'Maintenance' ? 'Resolved' : 'Approved'}</p>
+          <h2 style={{ fontSize: '2.4rem', fontWeight: '900', color: '#10B981', margin: 0  }}>{resolvedCount}</h2>
         </div>
       </div>
 
       {totalComplaints === 0 && !loading && (
-        <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '20px', marginBottom: '2.5rem', border: '1px dashed var(--accent-primary)' }}>
-          <p style={{ color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '1rem' }}>No tickets found for this building. Try viewing all buildings?</p>
-          <button onClick={() => { setFilterBuilding('all'); navigate('/owner/complaints'); }} className="btn btn-primary" style={{ padding: '0.6rem 1.5rem', borderRadius: '10px' }}>
+        <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '20px', marginBottom: '2.5rem', border: '1px dashed var(--accent-primary)'  }}>
+          <p style={{ color: 'var(--text-secondary)', fontWeight: '600', marginBottom: '1rem'  }}>No tickets found for this building. Try viewing all buildings?</p>
+          <button onClick={() => { setFilterBuilding('all'); navigate('/owner/complaints'); }} className="btn btn-primary" style={{ padding: '0.6rem 1.5rem', borderRadius: '10px'  }}>
             View All Buildings
           </button>
         </div>
       )}
 
-      <div className="card" style={{ padding: '0', overflow: 'hidden', borderRadius: '20px' }}>
-        <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+      <div className="card" style={{ padding: '0', overflow: 'hidden', borderRadius: '20px'  }}>
+        <div style={{ overflowX: 'auto'  }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px'  }}>
           <thead>
-            <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <th style={{ padding: '1.2rem 1.5rem' }}>TENANT & LOCATION</th>
-              <th style={{ padding: '1.2rem' }}>ISSUE DETAILS</th>
-              <th style={{ padding: '1.2rem' }}>STATUS</th>
-              <th style={{ padding: '1.2rem 1.5rem', textAlign: 'right' }}>ACTIONS</th>
+            <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem', color: 'var(--text-secondary)'  }}>
+              <th style={{ padding: '1.2rem 1.5rem'  }}>TENANT & LOCATION</th>
+              <th style={{ padding: '1.2rem'  }}>ISSUE DETAILS</th>
+              <th style={{ padding: '1.2rem'  }}>STATUS</th>
+              <th style={{ padding: '1.2rem 1.5rem', textAlign: 'right'  }}>ACTIONS</th>
             </tr>
           </thead>
           <tbody>
             <AnimatePresence>
               {loading ? (
-                <tr><td colSpan="4" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)', fontWeight: '600' }}>Loading complaints...</td></tr>
+                <tr><td colSpan="4" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)', fontWeight: '600'  }}>Loading complaints...</td></tr>
               ) : filteredComplaints.length === 0 ? (
-                <tr><td colSpan="4" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)', fontWeight: '600' }}>No active {activeTab.toLowerCase()} requests found.</td></tr>
+                <tr><td colSpan="4" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)', fontWeight: '600'  }}>No active {activeTab.toLowerCase()} requests found.</td></tr>
               ) : filteredComplaints.map(c => (
                 <React.Fragment key={c.id}>
                   <motion.tr 
@@ -331,67 +330,67 @@ const Complaints = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
-                    style={{ borderBottom: '1px solid var(--border-color)', background: c.status === 'Resolved' ? 'var(--bg-tertiary)' : 'transparent', cursor: 'pointer', transition: 'background 0.2s' }}
+                    style={{ borderBottom: '1px solid var(--border-color)', background: c.status === 'Resolved' ? 'var(--bg-tertiary)' : 'transparent', cursor: 'pointer', transition: 'background 0.2s'  }}
                     className="table-row-hover"
                   >
-                    <td style={{ padding: '1.2rem 1.5rem' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                        <span style={{ fontWeight: '900', fontSize: '1rem', color: 'var(--text-primary)' }}>{c.reportedBy}</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                           <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: '800', background: 'rgba(99, 102, 241, 0.1)', padding: '0.1rem 0.5rem', borderRadius: '6px' }}>Room {c.room}</span>
-                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{c.buildingName}</span>
+                    <td style={{ padding: '1.2rem 1.5rem'  }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem'  }}>
+                        <span style={{ fontWeight: '900', fontSize: '1rem', color: 'var(--text-primary)'  }}>{c.reportedBy}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem'  }}>
+                           <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: '800', background: 'rgba(99, 102, 241, 0.1)', padding: '0.1rem 0.5rem', borderRadius: '6px'  }}>Room {c.room}</span>
+                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600'  }}>{c.buildingName}</span>
                         </div>
                       </div>
                     </td>
-                    <td style={{ padding: '1.2rem' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-start' }}>
-                        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
-                          <span style={{ padding: '0.4rem', background: 'var(--bg-secondary)', borderRadius: '10px', boxShadow: 'var(--shadow-sm)' }}>
+                    <td style={{ padding: '1.2rem'  }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-start'  }}>
+                        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center'  }}>
+                          <span style={{ padding: '0.4rem', background: 'var(--bg-secondary)', borderRadius: '10px', boxShadow: 'var(--shadow-sm)'  }}>
                             {getCategoryIcon(c.category)}
                           </span>
-                          <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{c.issue}</span>
+                          <span style={{ fontWeight: '700', color: 'var(--text-primary)'  }}>{c.issue}</span>
                         </div>
-                        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center'  }}>
                           {getUrgencyBadge(c.urgency)}
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>{c.timeElapsed}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600'  }}>{c.timeElapsed}</span>
                         </div>
-                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.2rem' }}>
-                          <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', fontWeight: '700' }}>
+                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.2rem'  }}>
+                          <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent-primary)', fontWeight: '700'  }}>
                             {c.category}
                           </span>
                           {c.asset && (
-                            <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'rgba(14, 165, 233, 0.1)', color: '#0EA5E9', fontWeight: '700' }}>
+                            <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'rgba(14, 165, 233, 0.1)', color: '#0EA5E9', fontWeight: '700'  }}>
                               Asset: {c.asset}
                             </span>
                           )}
                           {c.subIssue && (
-                            <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', fontWeight: '700' }}>
+                            <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', fontWeight: '700'  }}>
                               Issue: {c.subIssue}
                             </span>
                           )}
                           {c.customIssue && (
-                            <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B', fontWeight: '700' }}>
+                            <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B', fontWeight: '700'  }}>
                               Custom: {c.customIssue}
                             </span>
                           )}
                           {c.createdAt && (
-                            <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', fontWeight: '600' }}>
+                            <span style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', fontWeight: '600'  }}>
                               {new Date(c.createdAt).toLocaleDateString()}
                             </span>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td style={{ padding: '1.2rem' }}>
+                    <td style={{ padding: '1.2rem'  }}>
                       {getStatusDisplay(c.status)}
                     </td>
-                    <td style={{ padding: '1.2rem 1.5rem', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                    <td style={{ padding: '1.2rem 1.5rem', textAlign: 'right'  }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end'  }}>
                           {c.status === 'Pending' && activeTab === 'Maintenance' && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); setSelectedComplaintId(c.id); setIsAssignModalOpen(true); }}
                               className="btn btn-primary" 
-                              style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', fontWeight: '800', borderRadius: '10px' }}
+                              style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', fontWeight: '800', borderRadius: '10px'  }}
                             >
                               Assign Staff
                             </button>
@@ -401,14 +400,14 @@ const Complaints = () => {
                               <button 
                                 onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'Resolved'); }}
                                 className="btn" 
-                                style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', fontWeight: '800', borderRadius: '10px', background: '#10B981', color: 'white', border: 'none' }}
+                                style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', fontWeight: '800', borderRadius: '10px', background: '#10B981', color: "var(--text-on-primary)", border: 'none'  }}
                               >
                                 Approve
                               </button>
                               <button 
                                 onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'Rejected'); }}
                                 className="btn" 
-                                style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', fontWeight: '800', borderRadius: '10px', border: '1px solid #EF4444', color: '#EF4444', background: 'transparent' }}
+                                style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', fontWeight: '800', borderRadius: '10px', border: '1px solid #EF4444', color: '#EF4444', background: 'transparent'  }}
                               >
                                 Reject
                               </button>
@@ -418,16 +417,16 @@ const Complaints = () => {
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleStatusChange(c.id, 'Resolved'); }}
                               className="btn" 
-                              style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', fontWeight: '800', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', border: '1px solid #10B981' }}
+                              style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', fontWeight: '800', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', border: '1px solid #10B981'  }}
                             >
-                              <CheckCircle2 size={14} style={{ marginRight: '0.4rem' }}/> Resolve
+                              <CheckCircle2 size={14} style={{ marginRight: '0.4rem'  }}/> Resolve
                             </button>
                           )}
                           {(c.status === 'Resolved' || c.status === 'Rejected') && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleArchive(c.id); }}
                               className="btn" 
-                              style={{ padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border-color)', color: 'var(--text-muted)', borderRadius: '10px' }}
+                              style={{ padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border-color)', color: 'var(--text-muted)', borderRadius: '10px'  }}
                             >
                               Archive
                             </button>
@@ -436,43 +435,43 @@ const Complaints = () => {
                     </td>
                   </motion.tr>
                   {expandedId === c.id && (
-                    <motion.tr initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ background: 'var(--bg-tertiary)' }}>
-                      <td colSpan="4" style={{ padding: '2rem 3rem' }}>
-                        <div style={{ background: 'var(--bg-primary)', padding: '2rem', borderRadius: '20px', border: '1px solid var(--border-color)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+                    <motion.tr initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ background: 'var(--bg-tertiary)'  }}>
+                      <td colSpan="4" style={{ padding: '2rem 3rem'  }}>
+                        <div style={{ background: 'var(--bg-primary)', padding: '2rem', borderRadius: '20px', border: '1px solid var(--border-color)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'  }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem'  }}>
                             <div>
-                              <p style={{ fontWeight: '800', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.8rem', letterSpacing: '0.05em' }}>Issue Description</p>
-                              <p style={{ fontSize: '1rem', lineHeight: '1.6', color: 'var(--text-primary)', fontWeight: '500', margin: 0 }}>{c.description}</p>
+                              <p style={{ fontWeight: '800', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '0.8rem', letterSpacing: '0.05em'  }}>Issue Description</p>
+                              <p style={{ fontSize: '1rem', lineHeight: '1.6', color: 'var(--text-primary)', fontWeight: '500', margin: 0  }}>{c.description}</p>
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', borderLeft: '1px solid var(--border-color)', paddingLeft: '2rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', borderLeft: '1px solid var(--border-color)', paddingLeft: '2rem'  }}>
                               <div>
-                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Tenant</p>
-                                <p style={{ fontWeight: '700', fontSize: '0.9rem' }}>{c.reportedBy}</p>
+                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.3rem'  }}>Tenant</p>
+                                <p style={{ fontWeight: '700', fontSize: '0.9rem'  }}>{c.reportedBy}</p>
                               </div>
                               <div>
-                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Building</p>
-                                <p style={{ fontWeight: '700', fontSize: '0.9rem', margin: 0 }}>{c.buildingName}</p>
+                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.3rem'  }}>Building</p>
+                                <p style={{ fontWeight: '700', fontSize: '0.9rem', margin: 0  }}>{c.buildingName}</p>
                               </div>
                               <div>
-                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Category & Asset Info</p>
-                                <p style={{ fontWeight: '700', fontSize: '0.9rem', margin: 0 }}>
+                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.3rem'  }}>Category & Asset Info</p>
+                                <p style={{ fontWeight: '700', fontSize: '0.9rem', margin: 0  }}>
                                   Category: {c.category}
                                 </p>
                                 {c.asset && (
-                                  <p style={{ fontWeight: '700', fontSize: '0.9rem', margin: '0.2rem 0 0 0' }}>
+                                  <p style={{ fontWeight: '700', fontSize: '0.9rem', margin: '0.2rem 0 0 0'  }}>
                                     Asset: {c.asset} {c.subIssue ? `(${c.subIssue})` : ''}
                                   </p>
                                 )}
                                 {c.customIssue && (
-                                  <p style={{ fontWeight: '700', fontSize: '0.9rem', margin: '0.2rem 0 0 0', color: '#D97706' }}>
+                                  <p style={{ fontWeight: '700', fontSize: '0.9rem', margin: '0.2rem 0 0 0', color: '#D97706'  }}>
                                     Custom Issue: {c.customIssue}
                                   </p>
                                 )}
                               </div>
                               {c.assignedTo && (
                                 <div>
-                                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Staff Assigned</p>
-                                  <p style={{ fontWeight: '800', fontSize: '0.9rem', color: 'var(--accent-primary)', margin: 0 }}>{c.assignedTo}</p>
+                                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '0.3rem'  }}>Staff Assigned</p>
+                                  <p style={{ fontWeight: '800', fontSize: '0.9rem', color: 'var(--accent-primary)', margin: 0  }}>{c.assignedTo}</p>
                                 </div>
                               )}
                             </div>
@@ -492,18 +491,18 @@ const Complaints = () => {
       <AnimatePresence>
         {isBroadcastModalOpen && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, backdropFilter: 'blur(8px)' }} onClick={() => setIsBroadcastModalOpen(false)} />
-            <motion.div initial={{ y: 50, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.95 }} style={{ position: 'fixed', top: '20%', left: '50%', x: '-50%', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem' }}>
-                <div style={{ padding: '0.8rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '12px', color: 'var(--accent-primary)' }}><MessageSquare size={24}/></div>
-                <h2 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0 }}>Broadcast Update</h2>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, backdropFilter: 'blur(8px)'  }} onClick={() => setIsBroadcastModalOpen(false)} />
+            <motion.div initial={{ y: 50, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.95 }} style={{ position: 'fixed', top: '20%', left: '50%', x: '-50%', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)'  }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem'  }}>
+                <div style={{ padding: '0.8rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '12px', color: 'var(--accent-primary)'  }}><MessageSquare size={24}/></div>
+                <h2 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0  }}>Broadcast Update</h2>
               </div>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.95rem', fontWeight: '500' }}>Notify all tenants about maintenance, events, or important notices.</p>
-              <form onSubmit={async e => { e.preventDefault(); alert('Broadcast sent!'); setIsBroadcastModalOpen(false); }} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <textarea placeholder="Write your update message here..." value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} style={{ ...inputStyle, minHeight: '150px', fontWeight: '500', fontSize: '1rem', resize: 'none' }} required />
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem', fontWeight: '800', borderRadius: '14px' }}>Send Broadcast</button>
-                  <button className="btn" type="button" onClick={() => setIsBroadcastModalOpen(false)} style={{ flex: 1, padding: '1rem', fontWeight: '800', borderRadius: '14px', background: 'var(--bg-tertiary)', border: 'none' }}>Cancel</button>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.95rem', fontWeight: '500'  }}>Notify all tenants about maintenance, events, or important notices.</p>
+              <form onSubmit={async e => { e.preventDefault(); alert('Broadcast sent!'); setIsBroadcastModalOpen(false); }} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem'  }}>
+                <textarea placeholder="Write your update message here..." value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} style={{ ...inputStyle, minHeight: '150px', fontWeight: '500', fontSize: '1rem', resize: 'none'  }} required />
+                <div style={{ display: 'flex', gap: '1rem'  }}>
+                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem', fontWeight: '800', borderRadius: '14px'  }}>Send Broadcast</button>
+                  <button className="btn" type="button" onClick={() => setIsBroadcastModalOpen(false)} style={{ flex: 1, padding: '1rem', fontWeight: '800', borderRadius: '14px', background: 'var(--bg-tertiary)', border: 'none'  }}>Cancel</button>
                 </div>
               </form>
             </motion.div>
@@ -512,33 +511,32 @@ const Complaints = () => {
 
         {isAssignModalOpen && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, backdropFilter: 'blur(8px)' }} onClick={() => setIsAssignModalOpen(false)} />
-            <motion.div initial={{ y: 50, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.95 }} style={{ position: 'fixed', top: '15%', left: '50%', x: '-50%', width: '90%', maxWidth: '450px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)' }}>
-              <h2 style={{ fontSize: '1.6rem', fontWeight: '900', marginBottom: '1.5rem', textAlign: 'center' }}>Assign Staff Member</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', maxHeight: '400px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, backdropFilter: 'blur(8px)'  }} onClick={() => setIsAssignModalOpen(false)} />
+            <motion.div initial={{ y: 50, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.95 }} style={{ position: 'fixed', top: '15%', left: '50%', x: '-50%', width: '90%', maxWidth: '450px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)'  }}>
+              <h2 style={{ fontSize: '1.6rem', fontWeight: '900', marginBottom: '1.5rem', textAlign: 'center'  }}>Assign Staff Member</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', maxHeight: '400px', overflowY: 'auto', paddingRight: '0.5rem'  }}>
                 {staffMembers.filter(s => s.active).map(s => (
                   <button 
                     key={s.id} 
                     onClick={() => handleStatusChange(selectedComplaintId, 'In-Progress', s.name)}
-                    style={{ 
-                      display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.2rem', 
+                    style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.2rem', 
                       borderRadius: '16px', border: '1px solid var(--border-color)', 
                       background: 'var(--bg-tertiary)', cursor: 'pointer', transition: 'all 0.3s',
                       textAlign: 'left'
-                    }}
+                     }}
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent-primary)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.transform = 'none'; }}
                   >
-                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.1rem' }}>{s.avatar}</div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontWeight: '800', fontSize: '1rem', margin: 0 }}>{s.name}</p>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, fontWeight: '600' }}>{s.role}</p>
+                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'var(--accent-primary)', color: "var(--text-on-primary)", display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.1rem'  }}>{s.avatar}</div>
+                    <div style={{ flex: 1  }}>
+                      <p style={{ fontWeight: '800', fontSize: '1rem', margin: 0  }}>{s.name}</p>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, fontWeight: '600'  }}>{s.role}</p>
                     </div>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }}></div>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981'  }}></div>
                   </button>
                 ))}
               </div>
-              <button className="btn" onClick={() => setIsAssignModalOpen(false)} style={{ width: '100%', marginTop: '2rem', border: 'none', background: 'var(--bg-tertiary)', padding: '1rem', fontWeight: '800', borderRadius: '14px' }}>Close</button>
+              <button className="btn" onClick={() => setIsAssignModalOpen(false)} style={{ width: '100%', marginTop: '2rem', border: 'none', background: 'var(--bg-tertiary)', padding: '1rem', fontWeight: '800', borderRadius: '14px'  }}>Close</button>
             </motion.div>
           </>
         )}
