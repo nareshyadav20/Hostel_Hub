@@ -5,15 +5,15 @@ import './Home.css';
 import API from '../api/axios';
 import SearchOverlay from '../components/SearchOverlay';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
-import heroCouple from '../assets/hero_couple.png';
-import extReal from '../assets/ext_real.png';
-import chairsReal from '../assets/chairs_real.png';
-import roomStanza from '../assets/room_stanza.png';
-import bondEasy from '../assets/bond_easy.png';
-import stayEasy from '../assets/stay_easy.png';
-import studentCat from '../assets/student_cat.png';
-import professionalCat from '../assets/professional_cat.png';
-import womensHostelImg from '../assets/womens_hostel.png';
+import heroCouple from '../assets/landing/hero_couple.png';
+import extReal from '../assets/landing/ext_real.png';
+import chairsReal from '../assets/landing/chairs_real.png';
+import roomStanza from '../assets/landing/room_stanza.png';
+import bondEasy from '../assets/landing/bond_easy.png';
+import stayEasy from '../assets/landing/stay_easy.png';
+import studentCat from '../assets/landing/student_cat.png';
+import professionalCat from '../assets/landing/professional_cat.png';
+import womensHostelImg from '../assets/landing/womens_hostel.png';
 import ImageModal from '../components/ImageModal';
 
 const CountUpAnimation = ({ endValue, suffix = '', isFloat = false }) => {

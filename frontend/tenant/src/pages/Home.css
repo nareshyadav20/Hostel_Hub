@@ -1967,10 +1967,13 @@ body {
 }
 
 .hv2-footer-tagline {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.6);
-  line-height: 1.6;
-  font-weight: 500
+  line-height: 1.75;
+  font-weight: 400;
+  text-align: left;
+  max-width: 300px;
+  margin-top: 0.5rem;
 }
 
 .hv2-footer-links-side {
