@@ -41,14 +41,14 @@ const Landing = () => {
   // Parse URL parameters dynamically whenever navigation occurs (resolves HMR & updates not going to change)
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    
+
     // Check both 'city' and 'location' params to support homepage search redirects
     const rawLocationInput = queryParams.get('city') || queryParams.get('location');
     if (rawLocationInput) {
       const lowerLoc = rawLocationInput.toLowerCase();
       // Verify if it matches a known city name or a typo variation
       const isKnownCity = CITIES_LIST.some(c => c.toLowerCase() === lowerLoc || (c.toLowerCase() === 'hyderabad' && lowerLoc === 'hydrabad'));
-      
+
       if (isKnownCity) {
         const formattedCity = lowerLoc === 'hydrabad' || lowerLoc === 'hyderabad' ? 'Hyderabad' : rawLocationInput.charAt(0).toUpperCase() + rawLocationInput.slice(1).toLowerCase();
         setSelectedCity(formattedCity);
@@ -58,7 +58,7 @@ const Landing = () => {
         setSearchLocality(rawLocationInput);
       }
     }
-    
+
     const typeParam = queryParams.get('type') || queryParams.get('stayType') || queryParams.get('hostelType');
     if (typeParam) {
       const lowerType = typeParam.toLowerCase();
@@ -67,14 +67,14 @@ const Landing = () => {
       } else {
         setActiveTab('coliving');
       }
-      
+
       if (lowerType.includes('men') || lowerType.includes('boy')) {
         setSelectedGender('Boys');
       } else if (lowerType.includes('women') || lowerType.includes('girl')) {
         setSelectedGender('Girls');
       }
     }
-    
+
     const genderParam = queryParams.get('gender');
     if (genderParam) {
       const g = genderParam.charAt(0).toUpperCase() + genderParam.slice(1).toLowerCase();
@@ -185,35 +185,35 @@ const Landing = () => {
 
   const filteredHostels = hostels.filter(h => {
     const matchesCity = h.city.toLowerCase() === selectedCity.toLowerCase();
-    
+
     // Locality and Property searches
     const matchesLocality = searchLocality ? h.locality.toLowerCase().includes(searchLocality.toLowerCase()) : true;
     const matchesProperty = searchProperty ? h.name.toLowerCase().includes(searchProperty.toLowerCase()) : true;
-    
+
     // Robust Gender match mapping (Men -> Boys, Women -> Girls, Unisex/Mixed)
     const matchesGender = selectedGender
       ? (
-          h.gender.toLowerCase() === selectedGender.toLowerCase() ||
-          h.gender.toLowerCase() === 'mixed' ||
-          h.gender.toLowerCase() === 'unisex' ||
-          (selectedGender.toLowerCase() === 'boys' && h.gender.toLowerCase() === 'men') ||
-          (selectedGender.toLowerCase() === 'girls' && h.gender.toLowerCase() === 'women') ||
-          (selectedGender.toLowerCase() === 'men' && h.gender.toLowerCase() === 'boys') ||
-          (selectedGender.toLowerCase() === 'women' && h.gender.toLowerCase() === 'girls')
-        )
+        h.gender.toLowerCase() === selectedGender.toLowerCase() ||
+        h.gender.toLowerCase() === 'mixed' ||
+        h.gender.toLowerCase() === 'unisex' ||
+        (selectedGender.toLowerCase() === 'boys' && h.gender.toLowerCase() === 'men') ||
+        (selectedGender.toLowerCase() === 'girls' && h.gender.toLowerCase() === 'women') ||
+        (selectedGender.toLowerCase() === 'men' && h.gender.toLowerCase() === 'boys') ||
+        (selectedGender.toLowerCase() === 'women' && h.gender.toLowerCase() === 'girls')
+      )
       : true;
 
     // Advanced, partial-match, case-insensitive amenities mapping (AC/Gym/WiFi, etc.)
     const matchesAmenities = selectedAmenities.length > 0
       ? selectedAmenities.every(filterAmenity => {
-          return h.amenities.some(item => {
-            const it = item.toLowerCase();
-            const fa = filterAmenity.toLowerCase();
-            if (fa === 'ac' && (it.includes('ac') || it.includes('a/c') || it.includes('conditioning'))) return true;
-            if (fa === 'wifi' && (it.includes('wifi') || it.includes('wi-fi') || it.includes('internet'))) return true;
-            return it.includes(fa) || fa.includes(it);
-          });
-        })
+        return h.amenities.some(item => {
+          const it = item.toLowerCase();
+          const fa = filterAmenity.toLowerCase();
+          if (fa === 'ac' && (it.includes('ac') || it.includes('a/c') || it.includes('conditioning'))) return true;
+          if (fa === 'wifi' && (it.includes('wifi') || it.includes('wi-fi') || it.includes('internet'))) return true;
+          return it.includes(fa) || fa.includes(it);
+        });
+      })
       : true;
 
     // Tab category partition
@@ -234,25 +234,25 @@ const Landing = () => {
 
   return (
     <div className={`landing-page ${isMobileFilterOpen ? 'filter-open' : ''}`}>
-      
+
 
       {/* Hero Banner */}
       <section className="search-hero">
         <span className="search-hero-eyebrow">Explore Stays</span>
         <h2 className="search-hero-title">
           Perfect Stays In{' '}
-          <span 
-            className="city-highlight-dropdown" 
+          <span
+            className="city-highlight-dropdown"
             ref={cityDropdownRef}
             onClick={() => setIsCityDropdownOpen(!isCityDropdownOpen)}
           >
             {selectedCity} <ChevronDown size={28} className="city-chevron" />
-            
+
             {isCityDropdownOpen && (
               <div className="hero-city-dropdown">
                 {availableCities.map(city => (
-                  <div 
-                    key={city} 
+                  <div
+                    key={city}
                     className="hero-city-option"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -290,7 +290,7 @@ const Landing = () => {
       </div>
 
       <div className="landing-container split-layout">
-        
+
         {/* Sidebar Filters */}
         <aside className="filters-sidebar">
           <div className="sidebar-header">
@@ -334,8 +334,8 @@ const Landing = () => {
             ))}
             {selectedGender && (
               <div style={{ marginTop: '8px' }}>
-                <span 
-                  onClick={() => setSelectedGender('')} 
+                <span
+                  onClick={() => setSelectedGender('')}
                   style={{ fontSize: '11px', color: '#5B5BD6', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
                 >
                   Clear gender filter
@@ -427,11 +427,11 @@ const Landing = () => {
                     </div>
                     <span className="gender-tag">{hostel.gender}</span>
                   </div>
-                  
+
                   <div className="card-details-v">
                     <span className="card-locality-v">📍 {hostel.locality}</span>
                     <h3 className="card-title-v" onClick={() => navigate(`/listing/${hostel.id}`)}>{hostel.name}</h3>
-                    
+
                     <div className="card-amenities-row">
                       {hostel.amenities.slice(0, 3).map((a, i) => (
                         <span key={i} className="amenity-chip-v">{a}</span>

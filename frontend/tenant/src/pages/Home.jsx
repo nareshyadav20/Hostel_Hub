@@ -429,7 +429,7 @@ const Home = () => {
           {/* Hero CTAs */}
           <div className="hv2-hero-btns">
             <button className="hv2-btn-primary" onClick={() => navigate('/explore')}>Explore Rooms</button>
-            <button className="hv2-btn-secondary" onClick={() => navigate('/login')}>Book a Visit</button>
+            <button className="hv2-btn-secondary" onClick={() => navigate('/search')}>Search Hostels</button>
           </div>
 
           {/* Trust badges */}
@@ -541,13 +541,13 @@ const Home = () => {
         </div>
         <div className="hv2-rooms-grid">
           {rooms.map(room => (
-            <RoomCard 
-              key={room.id} 
-              room={room} 
-              wishlist={wishlist} 
-              toggleWishlist={toggleWishlist} 
-              setModalInfo={setModalInfo} 
-              navigate={navigate} 
+            <RoomCard
+              key={room.id}
+              room={room}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+              setModalInfo={setModalInfo}
+              navigate={navigate}
             />
           ))}
         </div>
