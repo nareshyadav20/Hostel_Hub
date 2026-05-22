@@ -4,8 +4,11 @@ import socket, { connectSocket } from '../utils/socket';
 import './Profile.css';
 
 const Profile = () => {
-  const [profileData, setProfileData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [profileData, setProfileData] = useState(() => {
+    const cached = sessionStorage.getItem('tenantProfileData');
+    return cached ? JSON.parse(cached) : null;
+  });
+  const [loading, setLoading] = useState(() => !sessionStorage.getItem('tenantProfileData'));
   const [activeTab, setActiveTab] = useState('overview');
   const [error, setError] = useState(null);
   
@@ -18,6 +21,7 @@ const Profile = () => {
     try {
       const response = await API.get('/tenant-portal/complete-profile');
       setProfileData(response.data);
+      sessionStorage.setItem('tenantProfileData', JSON.stringify(response.data));
       setError(null);
     } catch (err) {
       console.error('Error fetching complete profile:', err);
@@ -76,7 +80,6 @@ const Profile = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate size (e.g., 2MB)
     if (file.size > 2 * 1024 * 1024) {
       alert('Photo size should be less than 2MB');
       return;
@@ -84,18 +87,52 @@ const Profile = () => {
 
     setUploading(true);
     const reader = new FileReader();
-    reader.onloadend = async () => {
-      try {
-        const base64String = reader.result;
-        await API.post('/tenant-portal/upload-photo', { photoUrl: base64String });
-        fetchProfile(); // Refresh to show new photo
-        alert('Profile photo updated successfully!');
-      } catch (err) {
-        console.error('Error uploading photo:', err);
-        alert('Failed to upload photo. Please try again.');
-      } finally {
-        setUploading(false);
-      }
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 400;
+        const MAX_HEIGHT = 400;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+        // Optimistic UI update so we don't need to reload
+        setProfileData(prev => {
+          const updated = { ...prev, photo: compressedBase64 };
+          sessionStorage.setItem('tenantProfileData', JSON.stringify(updated));
+          return updated;
+        });
+
+        try {
+          await API.post('/tenant-portal/upload-photo', { photoUrl: compressedBase64 });
+        } catch (err) {
+          console.error('Error uploading photo:', err);
+          alert('Failed to save photo to server. It may revert on next refresh.');
+          fetchProfile(); // Revert on failure
+        } finally {
+          setUploading(false);
+        }
+      };
+      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   };
