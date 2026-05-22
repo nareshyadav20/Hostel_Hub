@@ -22,21 +22,7 @@ const Contact = () => {
   return (
     <div className="contact-page-elite">
 
-      {/* Header */}
-      <header className="contact-header">
-        <div className="contact-container header-flex">
-          <div className="contact-logo" onClick={() => navigate('/')}>
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L3 9V20C3 20.55 3.21 21.04 3.59 21.41 3.96 21.79 4.47 22 5 22H19C19.53 22 20.04 21.79 20.41 21.41 20.79 21.04 21 20.55 21 20V9L12 2Z" fill="#5B5BD6"/>
-              <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <span className="contact-logo-text">Livora</span>
-          </div>
-          <button className="contact-back-btn" onClick={() => navigate('/')}>
-            <ChevronLeft size={16}/> Back to Home
-          </button>
-        </div>
-      </header>
+
 
       <main className="contact-main-wrap">
         <div className="contact-container contact-split-grid">
@@ -117,24 +103,7 @@ const Contact = () => {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="contact-footer">
-        <div className="contact-container footer-inner">
-          <div className="footer-logo-row">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L3 9V20C3 20.55 3.21 21.04 3.59 21.41 3.96 21.79 4.47 22 5 22H19C19.53 22 20.04 21.79 20.41 21.41 20.79 21.04 21 20.55 21 20V9L12 2Z" fill="#5B5BD6"/>
-              <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <span>Livora</span>
-          </div>
-          <p>© 2026 Livora. All rights reserved.</p>
-          <div className="footer-links">
-            <span onClick={() => navigate('/about')}>About</span>
-            <span onClick={() => navigate('/search')}>Properties</span>
-            <span onClick={() => navigate('/privacy')}>Privacy</span>
-          </div>
-        </div>
-      </footer>
+
 
     </div>
   );

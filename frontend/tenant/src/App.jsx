@@ -29,6 +29,8 @@ import Privacy from './pages/Privacy';
 import Layout from './components/Layout';
 import './index.css';
 
+import PublicLayout from './components/PublicLayout';
+
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   if (!token) return <Navigate to="/login" replace />;
@@ -62,15 +64,15 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/explore" element={<Landing />} />
+        <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+        <Route path="/explore" element={<PublicLayout><Landing /></PublicLayout>} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
+        <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
+        <Route path="/terms" element={<PublicLayout><Terms /></PublicLayout>} />
+        <Route path="/privacy" element={<PublicLayout><Privacy /></PublicLayout>} />
 
         {/* Public browsing routes */}
         <Route path="/search"          element={<Layout><Search /></Layout>} />

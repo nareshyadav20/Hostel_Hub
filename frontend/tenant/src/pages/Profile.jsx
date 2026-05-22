@@ -53,7 +53,7 @@ const Profile = () => {
       socket.on('serviceUpdated', handleRealtimeUpdate);
       socket.on('rewardAdded', handleRealtimeUpdate);
       socket.on('transferStatusChanged', handleRealtimeUpdate);
-      socket.on('photoUpdated', handleRealtimeUpdate);
+      // socket.on('photoUpdated', handleRealtimeUpdate); // Disabled to prevent flickering after optimistic update
 
       return () => {
         socket.off('complaintUpdated', handleRealtimeUpdate);
@@ -64,7 +64,7 @@ const Profile = () => {
         socket.off('serviceUpdated', handleRealtimeUpdate);
         socket.off('rewardAdded', handleRealtimeUpdate);
         socket.off('transferStatusChanged', handleRealtimeUpdate);
-        socket.off('photoUpdated', handleRealtimeUpdate);
+        // socket.off('photoUpdated', handleRealtimeUpdate);
       };
     }
   }, [fetchProfile]);
@@ -91,8 +91,8 @@ const Profile = () => {
       const img = new Image();
       img.onload = async () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 400;
-        const MAX_HEIGHT = 400;
+        const MAX_WIDTH = 200;
+        const MAX_HEIGHT = 200;
         let width = img.width;
         let height = img.height;
 

@@ -235,21 +235,6 @@ const Landing = () => {
   return (
     <div className={`landing-page ${isMobileFilterOpen ? 'filter-open' : ''}`}>
       
-      {/* Header */}
-      <header className="landing-header">
-        <div className="landing-container header-flex">
-          <div className="landing-logo" onClick={() => navigate('/')}>
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L3 9V20C3 20.55 3.21 21.04 3.59 21.41 3.96 21.79 4.47 22 5 22H19C19.53 22 20.04 21.79 20.41 21.41 20.79 21.04 21 20.55 21 20V9L12 2Z" fill="#5B5BD6"/>
-              <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <span className="landing-logo-text">Livora</span>
-          </div>
-          <button className="landing-back-btn" onClick={() => navigate('/')}>
-            <ChevronLeft size={16}/> Back to Home
-          </button>
-        </div>
-      </header>
 
       {/* Hero Banner */}
       <section className="search-hero">
@@ -497,9 +482,6 @@ const Landing = () => {
         }}
       />
 
-      <footer className="landing-footer-minimal">
-        <p>© 2026 Livora Private Limited. All rights reserved.</p>
-      </footer>
 
     </div>
   );

@@ -37,21 +37,7 @@ const About = () => {
   return (
     <div className="about-page-elite">
 
-      {/* ─── STICKY HEADER ─── */}
-      <header className="about-header-minimal">
-        <div className="about-container header-flex">
-          <div className="about-logo" onClick={() => navigate('/')}>
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L3 9V20C3 20.55 3.21 21.04 3.59 21.41 3.96 21.79 4.47 22 5 22H19C19.53 22 20.04 21.79 20.41 21.41 20.79 21.04 21 20.55 21 20V9L12 2Z" fill="#5B5BD6"/>
-              <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <span className="about-logo-text">Livora</span>
-          </div>
-          <button className="about-back-btn" onClick={() => navigate('/')}>
-            <ChevronLeft size={16} /> Back to Home
-          </button>
-        </div>
-      </header>
+
 
       <main>
 
@@ -253,45 +239,7 @@ const About = () => {
 
       </main>
 
-      {/* ─── FOOTER ─── */}
-      <footer className="about-footer-compact">
-        <div className="about-container footer-grid-4">
-          <div className="footer-brand-col">
-            <div className="footer-logo">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L3 9V20C3 20.55 3.21 21.04 3.59 21.41 3.96 21.79 4.47 22 5 22H19C19.53 22 20.04 21.79 20.41 21.41 20.79 21.04 21 20.55 21 20V9L12 2Z" fill="#5B5BD6"/>
-                <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-              <span>Livora</span>
-            </div>
-            <p className="footer-desc">
-              Premium co-living spaces designed for comfort, community, and absolute convenience. Your home, elevated.
-            </p>
-          </div>
 
-          <div className="footer-link-col">
-            <h4>Explore</h4>
-            <span onClick={() => navigate('/search')}>Our Properties</span>
-            <span onClick={() => navigate('/contact')}>Contact Us</span>
-          </div>
-
-          <div className="footer-link-col">
-            <h4>Legal</h4>
-            <span onClick={() => navigate('/terms')}>Terms of Service</span>
-            <span onClick={() => navigate('/privacy')}>Privacy Policy</span>
-          </div>
-
-          <div className="footer-link-col">
-            <h4>Contact</h4>
-            <p><MapPin size={14} /> Cyber Towers, Hyderabad</p>
-            <p><Phone size={14} /> +91 7569383323</p>
-            <p><Mail size={14} /> support@livora.com</p>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <p>© 2026 Livora. All rights reserved.</p>
-        </div>
-      </footer>
 
     </div>
   );

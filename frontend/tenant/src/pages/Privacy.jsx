@@ -154,16 +154,7 @@ const Privacy = () => {
         }
       `}</style>
 
-      <header className="hv2-header">
-        <div className="hv2-logo" onClick={() => navigate('/')}>
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L3 9V20C3 20.55 3.21 21.04 3.59 21.41 3.96 21.79 4.47 22 5 22H19C19.53 22 20.04 21.79 20.41 21.41 20.79 21.04 21 20.55 21 20V9L12 2Z" fill="#4F46E5"/>
-            <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <span className="hv2-logo-text">Livora</span>
-        </div>
-        <button className="hv2-login-btn" onClick={() => navigate('/')}>Back to Home</button>
-      </header>
+
 
       <main className="legal-page">
         <section className="legal-hero">
@@ -194,35 +185,7 @@ const Privacy = () => {
         </div>
       </main>
 
-      <footer className="about-footer">
-        <div className="about-footer-main">
-          <div className="about-footer-brand">
-            <h2>Livora</h2>
-            <p className="about-footer-tagline">Making living simple, safe, and hassle-free.</p>
-          </div>
-          <div className="about-footer-links">
-            <div className="about-footer-col">
-              <h4>Explore</h4>
-              <a href="/about">About Us</a>
-              <a href="/contact">Contact Us</a>
-            </div>
-            <div className="about-footer-col">
-              <h4>Legal</h4>
-              <a href="/terms">Terms of Service</a>
-              <a href="/privacy">Privacy Policy</a>
-            </div>
-            <div className="about-footer-col">
-              <h4>Contact Info</h4>
-              <p>📍 Cyber Towers, Hitech City, Hyderabad</p>
-              <p>📞 +91 7569383323</p>
-              <p>✉️ support@livora.com</p>
-            </div>
-          </div>
-        </div>
-        <div className="about-footer-bottom">
-          <p>© 2026 Livora. All rights reserved.</p>
-        </div>
-      </footer>
+
     </div>
   );
 };

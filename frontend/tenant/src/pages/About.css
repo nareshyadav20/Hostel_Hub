@@ -228,7 +228,7 @@
    2. TRUST STRIP
 ════════════════════════════════════ */
 .about-trust-strip {
-  background: var(--ap-dark);
+  background: transparent;
   padding: 28px 0;
 }
 .trust-inner {
@@ -242,7 +242,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: rgba(255,255,255,0.8);
+  color: #475569;
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.3px;
