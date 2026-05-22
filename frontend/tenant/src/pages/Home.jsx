@@ -541,13 +541,13 @@ const Home = () => {
         </div>
         <div className="hv2-rooms-grid">
           {rooms.map(room => (
-            <RoomCard
-              key={room.id}
-              room={room}
-              wishlist={wishlist}
-              toggleWishlist={toggleWishlist}
-              setModalInfo={setModalInfo}
-              navigate={navigate}
+            <RoomCard 
+              key={room.id} 
+              room={room} 
+              wishlist={wishlist} 
+              toggleWishlist={toggleWishlist} 
+              setModalInfo={setModalInfo} 
+              navigate={navigate} 
             />
           ))}
         </div>
