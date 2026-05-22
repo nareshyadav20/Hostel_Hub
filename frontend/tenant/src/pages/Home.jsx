@@ -281,7 +281,7 @@ const Home = () => {
     if (budget) params.append('budget', budget);
     if (hostelType) params.append('hostelType', hostelType);
     if (stayType) params.append('stayType', stayType);
-    navigate(`/search?${params.toString()}`);
+    navigate(`/explore?${params.toString()}`);
   };
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -630,7 +630,7 @@ const Home = () => {
         </div>
         <div className="hv2-cities-grid">
           {displayedCities.map((c, i) => (
-            <div key={i} className="hv2-city-card" onClick={() => navigate(`/search?location=${c.name}`)}>
+            <div key={i} className="hv2-city-card" onClick={() => navigate(`/explore?location=${c.name}`)}>
               <img src={c.img} alt={c.name} className="hv2-city-img" />
               <div className="hv2-city-overlay">
                 <div className="hv2-city-name">{c.name}</div>

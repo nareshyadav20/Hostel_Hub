@@ -38,6 +38,32 @@ const Landing = () => {
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const queryParamsInit = new URLSearchParams(location.search);
+  const initialPage = parseInt(queryParamsInit.get('page') || '1', 10);
+  const [currentPage, setCurrentPage] = useState(initialPage);
+  const itemsPerPage = 4;
+
+  // Sync page state to URL so it persists when navigating back
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (currentPage > 1) {
+      params.set('page', currentPage.toString());
+    } else {
+      params.delete('page');
+    }
+    navigate(`/explore?${params.toString()}`, { replace: true });
+  }, [currentPage]);
+
+  // Reset pagination when filters change
+  const isFirstFilterMount = useRef(true);
+  useEffect(() => {
+    if (isFirstFilterMount.current) {
+      isFirstFilterMount.current = false;
+      return;
+    }
+    setCurrentPage(1);
+  }, [selectedCity, selectedGender, selectedAmenities, searchLocality, searchProperty, activeTab, priceRange, sortBy]);
+
   // Parse URL parameters dynamically whenever navigation occurs (resolves HMR & updates not going to change)
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -232,12 +258,21 @@ const Landing = () => {
     filteredHostels.sort((a, b) => b.price - a.price);
   }
 
+  const totalPages = Math.ceil(filteredHostels.length / itemsPerPage);
+  const paginatedHostels = filteredHostels.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div className={`landing-page ${isMobileFilterOpen ? 'filter-open' : ''}`}>
       
 
       {/* Hero Banner */}
-      <section className="search-hero">
+      <section className="search-hero" style={{ position: 'relative' }}>
+        <button 
+          onClick={() => navigate(-1)} 
+          style={{ position: 'absolute', top: '16px', right: '16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 100, color: '#64748b', fontWeight: 'bold' }}
+        >
+          ✕
+        </button>
         <span className="search-hero-eyebrow">Explore Stays</span>
         <h2 className="search-hero-title">
           Perfect Stays In{' '}
@@ -416,41 +451,68 @@ const Landing = () => {
               <p>Curating best properties for you...</p>
             </div>
           ) : filteredHostels.length > 0 ? (
-            <div className="hostels-grid">
-              {filteredHostels.map((hostel, index) => (
-                <div key={hostel.id} className="hostel-card-v flex-in-up" style={{ animationDelay: `${0.05 * index}s` }}>
-                  <div className="card-img-box-v" onClick={() => navigate(`/listing/${hostel.id}`)}>
-                    <img src={hostel.img} alt={hostel.name} onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'; }} />
-                    <div className="rating-pill">
-                      <Star size={12} fill="#F59E0B" color="#F59E0B" />
-                      <span>{hostel.rating.toFixed(1)}</span>
-                    </div>
-                    <span className="gender-tag">{hostel.gender}</span>
-                  </div>
-                  
-                  <div className="card-details-v">
-                    <span className="card-locality-v">📍 {hostel.locality}</span>
-                    <h3 className="card-title-v" onClick={() => navigate(`/listing/${hostel.id}`)}>{hostel.name}</h3>
-                    
-                    <div className="card-amenities-row">
-                      {hostel.amenities.slice(0, 3).map((a, i) => (
-                        <span key={i} className="amenity-chip-v">{a}</span>
-                      ))}
-                    </div>
-
-                    <div className="card-footer-v">
-                      <div className="price-display-v">
-                        <strong>₹{hostel.price.toLocaleString()}</strong>
-                        <span>/mo</span>
+            <>
+              <div className="hostels-grid">
+                {paginatedHostels.map((hostel, index) => (
+                  <div key={hostel.id} className="hostel-card-v flex-in-up" style={{ animationDelay: `${0.05 * index}s` }}>
+                    <div className="card-img-box-v" onClick={() => navigate(`/listing/${hostel.id}`)}>
+                      <img src={hostel.img} alt={hostel.name} onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'; }} />
+                      <div className="rating-pill">
+                        <Star size={12} fill="#F59E0B" color="#F59E0B" />
+                        <span>{hostel.rating.toFixed(1)}</span>
                       </div>
-                      <button className="details-action-btn" onClick={() => navigate(`/listing/${hostel.id}`)}>
-                        Details
-                      </button>
+                      <span className="gender-tag">{hostel.gender}</span>
+                    </div>
+                    
+                    <div className="card-details-v">
+                      <span className="card-locality-v">📍 {hostel.locality}</span>
+                      <h3 className="card-title-v" onClick={() => navigate(`/listing/${hostel.id}`)}>{hostel.name}</h3>
+                      
+                      <div className="card-amenities-row">
+                        {hostel.amenities.slice(0, 3).map((a, i) => (
+                          <span key={i} className="amenity-chip-v">{a}</span>
+                        ))}
+                      </div>
+
+                      <div className="card-footer-v">
+                        <div className="price-display-v">
+                          <strong>₹{hostel.price.toLocaleString()}</strong>
+                          <span>/mo</span>
+                        </div>
+                        <button className="details-action-btn" onClick={() => navigate(`/listing/${hostel.id}`)}>
+                          Details
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '30px', marginBottom: '10px' }}>
+                <button 
+                  onClick={() => {
+                    setCurrentPage(prev => Math.max(prev - 1, 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === 1}
+                  style={{ padding: '8px 16px', background: currentPage === 1 ? '#f1f5f9' : '#4f46e5', color: currentPage === 1 ? '#94a3b8' : 'white', border: 'none', borderRadius: '8px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: '600', transition: 'all 0.2s' }}
+                >
+                  Previous
+                </button>
+                <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#475569' }}>
+                  Page {currentPage} of {Math.max(totalPages, 1)}
+                </span>
+                <button 
+                  onClick={() => {
+                    setCurrentPage(prev => Math.min(prev + 1, Math.max(totalPages, 1)));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage >= Math.max(totalPages, 1)}
+                  style={{ padding: '8px 16px', background: currentPage >= Math.max(totalPages, 1) ? '#f1f5f9' : '#4f46e5', color: currentPage >= Math.max(totalPages, 1) ? '#94a3b8' : 'white', border: 'none', borderRadius: '8px', cursor: currentPage >= Math.max(totalPages, 1) ? 'not-allowed' : 'pointer', fontWeight: '600', transition: 'all 0.2s' }}
+                >
+                  Next
+                </button>
+              </div>
+            </>
           ) : (
             <div className="explore-empty-wrap">
               <ShieldCheck size={48} color="#94a3b8" />

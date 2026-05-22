@@ -286,7 +286,7 @@ const PublicLayout = ({ children }) => {
                 <div
                   key={i}
                   className="loc-basic-city"
-                  onClick={() => { setIsLocationsOpen(false); navigate(`/search?location=${city.name}`); }}
+                  onClick={() => { setIsLocationsOpen(false); navigate(`/explore?location=${city.name}`); }}
                 >
                   <div className="loc-basic-img-wrap">
                     <img src={city.img} alt={city.name} className="loc-basic-img" />
