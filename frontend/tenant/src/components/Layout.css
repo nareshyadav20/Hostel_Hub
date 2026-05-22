@@ -1,9 +1,9 @@
 .layout-root {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background-color: var(--bg-primary);
   flex-direction: column;
-  /* Stack vertically for mobile */
 }
 
 @media (min-width: 1025px) {
@@ -291,6 +291,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .content-wrapper {
@@ -299,6 +300,7 @@
   margin: 0 auto;
   padding: var(--space-4);
   flex: 1;
+  overflow-y: auto;
 }
 
 @media (max-width: 768px) {
@@ -310,16 +312,18 @@
 }
 
 .layout-footer {
-  padding: var(--space-4) 0;
+  padding: var(--space-3) 0;
   text-align: center;
   border-top: 1px solid var(--border-color);
-  margin-top: var(--space-4);
+  background: var(--bg-primary);
+  flex-shrink: 0;
 }
 
 .layout-footer p {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
+  margin: 0;
 }
 
 /* ─── Global AI Assistance Button ─── */

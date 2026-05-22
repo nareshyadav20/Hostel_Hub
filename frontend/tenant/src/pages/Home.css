@@ -3343,6 +3343,202 @@ body {
   background: rgba(22, 101, 52, 0.15);
   border-color: rgba(34, 197, 94, 0.25);
 }
+.hv2-sidebar-close {
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.hv2-sidebar-close:hover {
+  color: #0f172a;
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  transform: rotate(90deg);
+}
+
+.hv2-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.hv2-sb-section {
+  margin-bottom: 1.1rem;
+}
+
+.hv2-sb-section.last {
+  margin-top: auto;
+  margin-bottom: 0;
+  padding-top: 0.75rem;
+}
+
+.hv2-sb-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  font-weight: 700;
+  margin: 0 0 0.4rem 0;
+  padding-left: 0.4rem;
+}
+
+.hv2-sb-group-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.hv2-sb-item {
+  padding: 0.7rem 0.85rem;
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+}
+
+.hv2-sb-group-card .hv2-sb-item:last-child {
+  border-bottom: none;
+}
+
+.hv2-sb-item svg {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.hv2-sb-item span {
+  transition: transform 0.2s ease;
+}
+
+.hv2-sb-chevron {
+  margin-left: auto;
+  opacity: 0.4;
+  transform: translateX(0);
+  transition: all 0.2s ease;
+  color: #64748b;
+}
+
+.hv2-sb-item:hover {
+  background: #f8fafc;
+  color: #4f46e5;
+}
+
+.hv2-sb-item:hover svg {
+  color: #4f46e5;
+  transform: scale(1.05);
+}
+
+.hv2-sb-item:hover span {
+  transform: translateX(2px);
+}
+
+.hv2-sb-item:hover .hv2-sb-chevron {
+  opacity: 1;
+  color: #4f46e5;
+  transform: translateX(2px);
+}
+
+/* Partner Callout Box - Sleek & Compact Outline Style */
+.hv2-sb-partner-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.hv2-sb-partner-card:hover {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.hv2-sb-partner-card h5 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.3rem 0;
+}
+
+.hv2-sb-partner-card p {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.hv2-sb-partner-btn {
+  width: 100%;
+  background: transparent;
+  color: #4f46e5;
+  border: 1px solid #4f46e5;
+  padding: 0.55rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hv2-sb-partner-btn:hover {
+  background: #4f46e5;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+}
+
+/* Modal Description Banner alert style */
+.hv2-cm-desc-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 0.9rem 1.2rem;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+.hv2-cm-desc-icon {
+  font-size: 1.25rem;
+  line-height: 1.3;
+}
+
+.hv2-cm-desc-text {
+  font-size: 0.9rem;
+  color: #166534;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Dark Mode support for Description Banner */
+[data-theme='dark'] .hv2-cm-desc-banner {
+  background: rgba(22, 101, 52, 0.15);
+  border-color: rgba(34, 197, 94, 0.25);
+}
 
 [data-theme='dark'] .hv2-cm-desc-text {
   color: #86efac;
