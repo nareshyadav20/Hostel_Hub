@@ -37,6 +37,8 @@ const Landing = () => {
   const [priceRange, setPriceRange] = useState([0, 60000]);
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
 
   // Parse URL parameters dynamically whenever navigation occurs (resolves HMR & updates not going to change)
   useEffect(() => {
@@ -154,6 +156,10 @@ const Landing = () => {
     };
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCity, activeTab, selectedGender, selectedAmenities, searchLocality, searchProperty, sortBy, priceRange]);
+
   // Close dropdown on click outside
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -232,12 +238,24 @@ const Landing = () => {
     filteredHostels.sort((a, b) => b.price - a.price);
   }
 
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentHostels = filteredHostels.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredHostels.length / itemsPerPage);
+
   return (
     <div className={`landing-page ${isMobileFilterOpen ? 'filter-open' : ''}`}>
       
 
       {/* Hero Banner */}
-      <section className="search-hero">
+      <section className="search-hero" style={{ position: 'relative' }}>
+        <button 
+          onClick={() => navigate('/')} 
+          style={{ position: 'absolute', top: '16px', right: '16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 100, color: '#64748b', fontWeight: 'bold' }}
+        >
+          ✕
+        </button>
         <span className="search-hero-eyebrow">Explore Stays</span>
         <h2 className="search-hero-title">
           Perfect Stays In{' '}
@@ -410,47 +428,80 @@ const Landing = () => {
 
         {/* Properties Grid */}
         <main className="hostels-main-view">
-          {loading ? (
+        {loading ? (
             <div className="explore-loading-wrap">
               <span className="explore-spinner"></span>
               <p>Curating best properties for you...</p>
             </div>
           ) : filteredHostels.length > 0 ? (
-            <div className="hostels-grid">
-              {filteredHostels.map((hostel, index) => (
-                <div key={hostel.id} className="hostel-card-v flex-in-up" style={{ animationDelay: `${0.05 * index}s` }}>
-                  <div className="card-img-box-v" onClick={() => navigate(`/listing/${hostel.id}`)}>
-                    <img src={hostel.img} alt={hostel.name} onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'; }} />
-                    <div className="rating-pill">
-                      <Star size={12} fill="#F59E0B" color="#F59E0B" />
-                      <span>{hostel.rating.toFixed(1)}</span>
-                    </div>
-                    <span className="gender-tag">{hostel.gender}</span>
-                  </div>
-                  
-                  <div className="card-details-v">
-                    <span className="card-locality-v">📍 {hostel.locality}</span>
-                    <h3 className="card-title-v" onClick={() => navigate(`/listing/${hostel.id}`)}>{hostel.name}</h3>
-                    
-                    <div className="card-amenities-row">
-                      {hostel.amenities.slice(0, 3).map((a, i) => (
-                        <span key={i} className="amenity-chip-v">{a}</span>
-                      ))}
-                    </div>
-
-                    <div className="card-footer-v">
-                      <div className="price-display-v">
-                        <strong>₹{hostel.price.toLocaleString()}</strong>
-                        <span>/mo</span>
+            <>
+              <div className="hostels-grid">
+                {currentHostels.map((hostel, index) => (
+                  <div key={hostel.id} className="hostel-card-v flex-in-up" style={{ animationDelay: `${0.05 * index}s` }}>
+                    <div className="card-img-box-v" onClick={() => navigate(`/listing/${hostel.id}`)}>
+                      <img src={hostel.img} alt={hostel.name} onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'; }} />
+                      <div className="rating-pill">
+                        <Star size={12} fill="#F59E0B" color="#F59E0B" />
+                        <span>{hostel.rating.toFixed(1)}</span>
                       </div>
-                      <button className="details-action-btn" onClick={() => navigate(`/listing/${hostel.id}`)}>
-                        Details
-                      </button>
+                      <span className="gender-tag">{hostel.gender}</span>
+                    </div>
+                    
+                    <div className="card-details-v">
+                      <span className="card-locality-v">📍 {hostel.locality}</span>
+                      <h3 className="card-title-v" onClick={() => navigate(`/listing/${hostel.id}`)}>{hostel.name}</h3>
+                      
+                      <div className="card-amenities-row">
+                        {hostel.amenities.slice(0, 3).map((a, i) => (
+                          <span key={i} className="amenity-chip-v">{a}</span>
+                        ))}
+                      </div>
+
+                      <div className="card-footer-v">
+                        <div className="price-display-v">
+                          <strong>₹{hostel.price.toLocaleString()}</strong>
+                          <span>/mo</span>
+                        </div>
+                        <button className="details-action-btn" onClick={() => navigate(`/listing/${hostel.id}`)}>
+                          Details
+                        </button>
+                      </div>
                     </div>
                   </div>
+                ))}
+              </div>
+
+              {/* Pagination UI */}
+              {totalPages > 1 && (
+                <div className="pagination-wrapper">
+                  <button 
+                    className="pagi-btn" 
+                    disabled={currentPage === 1} 
+                    onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  >
+                    Previous
+                  </button>
+                  <div className="pagi-numbers">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
+                      <button 
+                        key={num} 
+                        className={`pagi-num ${currentPage === num ? 'active' : ''}`}
+                        onClick={() => { setCurrentPage(num); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                  <button 
+                    className="pagi-btn" 
+                    disabled={currentPage === totalPages} 
+                    onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  >
+                    Next
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           ) : (
             <div className="explore-empty-wrap">
               <ShieldCheck size={48} color="#94a3b8" />

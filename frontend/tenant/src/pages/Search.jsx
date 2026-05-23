@@ -112,7 +112,7 @@ const Search = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
-  const hostelsPerPage = 5;
+  const hostelsPerPage = 4;
 
   const fetchHostels = async () => {
     try {
@@ -353,35 +353,117 @@ const Search = () => {
                 ))}
               </div>
 
+              {/* Pagination */}
               {totalPages > 1 && (
-                <div className="pagination-pro">
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    className="pagi-btn"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                  </button>
-
-                  <div className="pagi-numbers">
-                    {[...Array(totalPages)].map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => { setCurrentPage(i + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                        className={`pagi-num ${currentPage === i + 1 ? 'active' : ''}`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
+                <div className="pagination-wrapper-pro">
+                  <div className="pagination-info-pro">
+                    Showing <strong>{indexOfFirstHostel + 1}–{Math.min(indexOfLastHostel, hostels.length)}</strong> of <strong>{hostels.length}</strong> stays
                   </div>
 
-                  <button
-                    disabled={currentPage === totalPages}
-                    onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    className="pagi-btn"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                  </button>
+                  <div className="pagination-pro">
+                    {/* First Page */}
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => { setCurrentPage(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="pagi-btn pagi-edge"
+                      title="First page"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
+                    </button>
+
+                    {/* Previous Page */}
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="pagi-btn"
+                      title="Previous page"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+
+                    <div className="pagi-numbers">
+                      {(() => {
+                        const pages = [];
+                        const maxVisible = 5;
+                        let startPage, endPage;
+
+                        if (totalPages <= maxVisible + 2) {
+                          startPage = 1;
+                          endPage = totalPages;
+                        } else {
+                          if (currentPage <= Math.ceil(maxVisible / 2) + 1) {
+                            startPage = 1;
+                            endPage = maxVisible;
+                          } else if (currentPage >= totalPages - Math.floor(maxVisible / 2)) {
+                            startPage = totalPages - maxVisible + 1;
+                            endPage = totalPages;
+                          } else {
+                            startPage = currentPage - Math.floor(maxVisible / 2);
+                            endPage = currentPage + Math.floor(maxVisible / 2);
+                          }
+                        }
+
+                        // First page always shown
+                        if (startPage > 1) {
+                          pages.push(
+                            <button key={1} onClick={() => { setCurrentPage(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`pagi-num ${currentPage === 1 ? 'active' : ''}`}>1</button>
+                          );
+                          if (startPage > 2) {
+                            pages.push(<span key="ellipsis-start" className="pagi-ellipsis">•••</span>);
+                          }
+                        }
+
+                        // Page numbers
+                        for (let i = startPage; i <= endPage; i++) {
+                          pages.push(
+                            <button
+                              key={i}
+                              onClick={() => { setCurrentPage(i); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                              className={`pagi-num ${currentPage === i ? 'active' : ''}`}
+                            >
+                              {i}
+                            </button>
+                          );
+                        }
+
+                        // Last page always shown
+                        if (endPage < totalPages) {
+                          if (endPage < totalPages - 1) {
+                            pages.push(<span key="ellipsis-end" className="pagi-ellipsis">•••</span>);
+                          }
+                          pages.push(
+                            <button key={totalPages} onClick={() => { setCurrentPage(totalPages); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`pagi-num ${currentPage === totalPages ? 'active' : ''}`}>{totalPages}</button>
+                          );
+                        }
+
+                        return pages;
+                      })()}
+                    </div>
+
+                    {/* Next Page */}
+                    <button
+                      disabled={currentPage === totalPages}
+                      onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="pagi-btn"
+                      title="Next page"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+
+                    {/* Last Page */}
+                    <button
+                      disabled={currentPage === totalPages}
+                      onClick={() => { setCurrentPage(totalPages); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="pagi-btn pagi-edge"
+                      title="Last page"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
+                    </button>
+                  </div>
+
+                  <div className="pagination-page-indicator">
+                    Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+                  </div>
                 </div>
               )}
             </>

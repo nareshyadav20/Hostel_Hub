@@ -177,7 +177,7 @@ const Listing = () => {
         <div
           className="lst-img-main"
           onClick={() => setModalInfo({ isOpen: true, image: galleryImages[activeImageIndex] })}
-          style={{ cursor: 'zoom-in', width: '100%', height: '480px', position: 'relative' }}
+          style={{ cursor: 'zoom-in', width: '100%', height: '100%', position: 'relative' }}
         >
           <img
             src={galleryImages[activeImageIndex]}
@@ -705,6 +705,28 @@ const Listing = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* Mobile Bottom Booking Bar */}
+      <div className="lst-mobile-bar">
+        <div className="lst-mobile-bar-price">
+          <div className="lst-mbp-label">{selectedBed ? `Bed ${selectedBed} Selected` : 'Select a bed'}</div>
+          <div className="lst-mbp-amount">₹{currentPrice.rent.toLocaleString()}<span>/mo</span></div>
+        </div>
+        <button
+          className="lst-btn-reserve"
+          disabled={!selectedBed}
+          onClick={() => {
+            if (!localStorage.getItem('token')) {
+              navigate('/login');
+            } else {
+              navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed, basePrice, securityDeposit: currentPrice.deposit } });
+            }
+          }}
+          style={{ width: 'auto', padding: '12px 24px', fontSize: '15px', margin: 0 }}
+        >
+          Reserve
+        </button>
       </div>
 
     </div>

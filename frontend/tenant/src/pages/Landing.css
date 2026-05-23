@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900%26family=Playfair+Display:wght@700;800;900%26display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900%26family=Playfair+Display:wght@700;800;900%26display=swap');
 
 :root {
   --cp: #5B5BD6;
@@ -19,7 +19,7 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── CONTAINER ── */
+/* â”€â”€ CONTAINER â”€â”€ */
 .landing-container {
   max-width: var(--cp-max);
   margin: 0 auto;
@@ -28,7 +28,7 @@
   width: 100%;
 }
 
-/* ══ HEADER ══ */
+/* â•â• HEADER â•â• */
 .landing-header {
   background: rgba(255,255,255,0.96);
   border-bottom: 1px solid #E8EAED;
@@ -78,7 +78,7 @@
   color: var(--cp-dark);
 }
 
-/* ══ HERO BANNER ══ */
+/* â•â• HERO BANNER â•â• */
 .search-hero {
   text-align: center;
   padding: 64px 24px 52px;
@@ -209,7 +209,7 @@
 .search-pill-icon { color: var(--cp); display: flex; align-items: center; }
 .search-pill-text { font-size: 14px; color: #94A3B8; font-weight: 500; }
 
-/* ══ MOBILE FILTER BAR ══ */
+/* â•â• MOBILE FILTER BAR â•â• */
 .mobile-filter-bar {
   display: none;
   align-items: center;
@@ -245,7 +245,7 @@
   white-space: nowrap;
 }
 
-/* ══ SPLIT LAYOUT ══ */
+/* â•â• SPLIT LAYOUT â•â• */
 .split-layout {
   display: grid;
   grid-template-columns: 268px 1fr;
@@ -255,7 +255,7 @@
   align-items: start;
 }
 
-/* ══ FILTERS SIDEBAR ══ */
+/* â•â• FILTERS SIDEBAR â•â• */
 .filters-sidebar {
   background: #fff;
   border: 1px solid #E8ECF0;
@@ -408,7 +408,7 @@
 .locality-list::-webkit-scrollbar { width: 4px; }
 .locality-list::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
 
-/* ══ MAIN GRID ══ */
+/* â•â• MAIN GRID â•â• */
 .hostels-main-view { min-width: 0; }
 
 /* Loading */
@@ -465,7 +465,7 @@
 }
 .clear-filters-btn:hover { opacity: 0.88; }
 
-/* ══ PROPERTIES GRID ══ */
+/* â•â• PROPERTIES GRID â•â• */
 .hostels-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -607,7 +607,7 @@
   box-shadow: 0 6px 20px rgba(91,91,214,0.35);
 }
 
-/* ══ ANIMATION ══ */
+/* â•â• ANIMATION â•â• */
 @keyframes fadeSlideUp {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -617,7 +617,7 @@
   opacity: 0;
 }
 
-/* ══ FOOTER ══ */
+/* â•â• FOOTER â•â• */
 .landing-footer-minimal {
   text-align: center;
   padding: 16px 20px;
@@ -632,7 +632,7 @@
   z-index: 100;
 }
 
-/* ══ SEARCH OVERLAY BACKDROP ══ */
+/* â•â• SEARCH OVERLAY BACKDROP â•â• */
 .search-overlay-backdrop {
   position: fixed;
   inset: 0;
@@ -704,7 +704,7 @@
   box-shadow: 0 8px 24px rgba(91,91,214,0.35);
 }
 
-/* ══ RESPONSIVE ══ */
+/* â•â• RESPONSIVE â•â• */
 @media (max-width: 900px) {
   :root { --cp-px: 20px; }
   .split-layout {
@@ -774,7 +774,7 @@
   }
 }
 
-/* ══ SEARCH OVERLAY INNER COMPONENTS ══ */
+/* â•â• SEARCH OVERLAY INNER COMPONENTS â•â• */
 
 .details-row {
   display: grid;
@@ -935,3 +935,71 @@
 
 /* Search button */
 .search-action { margin-top: 8px; }
+/* %%% Pagination %%% */
+.pagination-wrapper {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 0;
+}
+
+.pagi-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1.5px solid #E2E8F0;
+  background: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.pagi-btn:hover:not(:disabled) {
+  border-color: var(--cp);
+  color: var(--cp);
+  background: #EEF2FF;
+}
+
+.pagi-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagi-numbers {
+  display: flex;
+  gap: 6px;
+}
+
+.pagi-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  font-weight: 700;
+  font-size: 14px;
+  color: #475569;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.pagi-num:hover:not(.active) {
+  background: #F1F5F9;
+}
+
+.pagi-num.active {
+  background: var(--cp);
+  color: #fff;
+  border-color: var(--cp);
+}
+
+
+
