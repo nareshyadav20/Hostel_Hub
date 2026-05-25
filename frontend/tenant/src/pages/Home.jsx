@@ -316,7 +316,15 @@ const Home = () => {
   const mockServices = [
     {
       category: 'Daily Care & Conveniences', items: [
-        { icon: <Sparkles color={iconColor} size={20} />, name: 'Room cleaning' },
+        {
+          icon: (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12c0 4 3.5 8 8 8s8-4 8-8H4z" />
+              <path d="M4 12c0-2.5 3.5-4 8-4s8 1.5 8 4" />
+            </svg>
+          ),
+          name: 'Room cleaning'
+        },
         { icon: <Utensils color={iconColor} size={20} />, name: 'Food/mess service' },
         { icon: <Shirt color={iconColor} size={20} />, name: 'Laundry pickup service' }
       ]

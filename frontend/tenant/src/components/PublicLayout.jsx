@@ -106,7 +106,12 @@ const PublicLayout = ({ children }) => {
     { category: 'Security & Safety', items: [{ icon: <Video color={iconColor} size={20} />, name: 'CCTV' }] }
   ];
   const mockServices = [
-    { category: 'Daily Care & Conveniences', items: [{ icon: <Sparkles color={iconColor} size={20} />, name: 'Room cleaning' }, { icon: <Utensils color={iconColor} size={20} />, name: 'Food/mess service' }, { icon: <Shirt color={iconColor} size={20} />, name: 'Laundry pickup service' }] },
+    { category: 'Daily Care & Conveniences', items: [{ icon: (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12c0 4 3.5 8 8 8s8-4 8-8H4z" />
+              <path d="M4 12c0-2.5 3.5-4 8-4s8 1.5 8 4" />
+            </svg>
+          ), name: 'Room cleaning' }, { icon: <Utensils color={iconColor} size={20} />, name: 'Food/mess service' }, { icon: <Shirt color={iconColor} size={20} />, name: 'Laundry pickup service' }] },
     { category: 'Support Operations', items: [{ icon: <Wrench color={iconColor} size={20} />, name: 'Maintenance support' }, { icon: <ShieldCheck color={iconColor} size={20} />, name: 'Security assistance' }, { icon: <MessageSquare color={iconColor} size={20} />, name: 'Complaint resolution' }, { icon: <HeartPulse color={iconColor} size={20} />, name: 'Medical assistance' }] }
   ];
 
