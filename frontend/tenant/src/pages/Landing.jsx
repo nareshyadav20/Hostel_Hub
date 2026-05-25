@@ -126,7 +126,7 @@ const Landing = () => {
           fullAddress: address,
           rating: b.rating || 4.5,
           price: b.startingPrice || 8000,
-          img: b.images && b.images[0] ? (b.images[0].startsWith('http') ? b.images[0] : `http://localhost:5000${b.images[0]}`) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
+          img: b.images && b.images[0] ? ((b.images[0].startsWith('http') || b.images[0].startsWith('data:')) ? b.images[0] : `http://localhost:5000${b.images[0]}`) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
           amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['Free WiFi', 'A/C', 'Mess'],
           gender: b.genderType || 'Unisex',
           category: b.category || 'Student'

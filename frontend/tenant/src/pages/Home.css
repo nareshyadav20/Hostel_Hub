@@ -2932,8 +2932,9 @@ body {
 .hv2-cm-document>p {
   font-size: 0.95rem;
   line-height: 1.6;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   color: #475569;
+  text-align: justify;
 }
 
 .hv2-cm-document ol {

@@ -2353,9 +2353,6 @@ const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics, onEditBuil
         <h2 style={{ fontSize: '2.5rem', fontWeight: '1000', margin: 0, color: '#0F172A', letterSpacing: '-0.04em'  }}>Property Portfolio</h2>
         <p style={{ color: '#64748B', fontSize: '1rem', fontWeight: '700'  }}>Manage and monitor your smart building ecosystem.</p>
       </div>
-      <button className="btn btn-primary" onClick={onAdd} style={{ padding: '1rem 2rem', borderRadius: '20px', fontWeight: '950', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.8rem', boxShadow: '0 15px 30px -5px rgba(99, 102, 241, 0.4)'  }}>
-        <PlusCircle size={22} /> Register Property
-      </button>
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(440px, 1fr))', gap: '3rem'  }}>
       {buildings.length > 0 ? buildings.map((b, i) => (
@@ -2594,9 +2591,6 @@ const FloorsList = ({ floors, building, onSelect, onBack, onAdd, onDelete, onVie
           <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700'  }}>{building?.name} • Infrastructure Overview</p>
         </div>
       </div>
-      <button className="btn btn-primary" onClick={onAdd} style={{ padding: '0.8rem 1.8rem', borderRadius: '16px', fontWeight: '950', fontSize: '1rem', boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)'  }}>
-        <PlusCircle size={22} /> Add New Level
-      </button>
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: '2.5rem'  }}>
       {floors.length > 0 ? floors.map((f, i) => (
@@ -2628,7 +2622,6 @@ const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onEdit, on
           <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700'  }}>{building?.name || 'Property'} • Advanced Inventory Management</p>
         </div>
       </div>
-      <button className="btn btn-primary" onClick={onAdd}><PlusCircle size={18} /> Add Room</button>
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '2rem'  }}>
       {rooms.length > 0 ? rooms.map((r, i) => (
