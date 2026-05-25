@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { ChevronRight, Bed, BookOpen, Shirt, Droplet, Car, Video, Wrench, ShieldCheck, MessageSquare, HeartPulse, Wifi, Utensils, Sparkles } from 'lucide-react';
 import '../pages/Home.css';
 
@@ -13,6 +13,10 @@ const PublicLayout = ({ children }) => {
   const [activeModal, setActiveModal] = useState(null); 
   const [isLocationsOpen, setIsLocationsOpen] = useState(false);
   const [showAllCities, setShowAllCities] = useState(false);
+  
+  const [searchParams] = useSearchParams();
+  const selectedLoc = searchParams.get('location');
+  const displayLoc = selectedLoc && selectedLoc !== 'all' ? selectedLoc.charAt(0).toUpperCase() + selectedLoc.slice(1) : 'Locations';
 
   const navItems = [
     { label: 'Home', id: 'hero' },
@@ -85,7 +89,7 @@ const PublicLayout = ({ children }) => {
   }, [location.pathname]);
 
   const cities = [
-    { name: 'Bangalore', img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Bengaluru', img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&q=80&w=800' },
     { name: 'Hyderabad', img: 'https://upload.wikimedia.org/wikipedia/commons/8/88/Downtown_hyderabad_drone.png' },
     { name: 'Mumbai', img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&q=80&w=800' },
     { name: 'Chennai', img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80&w=800' },
@@ -139,7 +143,7 @@ const PublicLayout = ({ children }) => {
         </nav>
 
         <div className="hv2-header-actions">
-          <button className="hv2-locations-btn" onClick={() => setIsLocationsOpen(true)}>📍 Locations</button>
+          <button className="hv2-locations-btn" onClick={() => setIsLocationsOpen(true)}>📍 {displayLoc}</button>
           <div className="hv2-desktop-actions">
             <button className="hv2-classic-link" onClick={() => navigate('/login')}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C9.243 2 7 4.243 7 7s2.243 5 5 5 5-2.243 5-5-2.243-5-5-5zm0 12c-4.418 0-8 3.582-8 8h16c0-4.418-3.582-8-8-8z" /></svg>
