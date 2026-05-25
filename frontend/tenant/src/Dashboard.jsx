@@ -15,18 +15,25 @@ function Dashboard() {
 
   const location = React.useMemo(() => ({ state: window.history.state?.usr }), []);
 
+  const [latestBooking, setLatestBooking] = useState(null);
+
   const fetchDashboardData = async () => {
     try {
-      const [profileRes, complaintsRes] = await Promise.all([
+      const [profileRes, complaintsRes, notificationsRes, bookingsRes] = await Promise.all([
         API.get('/tenants/me'),
         API.get('/complaints/me').catch(() => ({ data: [] })),
-        API.get('/notifications?limit=3').catch(() => ({ data: [] }))
+        API.get('/notifications?limit=3').catch(() => ({ data: [] })),
+        API.get('/bookings/me').catch(() => ({ data: [] }))
       ]);
       
       const profile = profileRes.data;
       setTenantData(profile);
       setComplaints((complaintsRes.data || []).slice(0, 3));
-      setNotifications((notificationsRes.data || []).slice(0, 3));
+      setNotifications((notificationsRes?.data || []).slice(0, 3));
+
+      const userBookings = bookingsRes?.data || [];
+      const activeBooking = userBookings.find(b => b.status !== 'CANCELLED' && b.status !== 'REJECTED') || userBookings[0];
+      setLatestBooking(activeBooking);
       
       // Keep local storage in sync for socket and other pages
       if (profile?.buildingId?._id || profile?.buildingId) {
@@ -84,6 +91,8 @@ function Dashboard() {
   };
 
   const meal = getCurrentMeal();
+
+  const actualAmount = latestBooking?.totalAmount || tenantData?.rent || 0;
 
   if (loading) {
     return (
@@ -177,7 +186,7 @@ function Dashboard() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
               </div>
             </div>
-            <div className="dash-sum-value">₹{tenantData?.rentStatus === 'PAID' ? '0' : (tenantData?.rent || 0).toLocaleString()}</div>
+            <div className="dash-sum-value">₹{tenantData?.rentStatus === 'PAID' ? '0' : actualAmount.toLocaleString()}</div>
             <div className="dash-sum-sub">{tenantData?.rentStatus === 'PAID' ? 'No pending dues' : 'Payment Pending'}</div>
           </div>
 
@@ -236,7 +245,7 @@ function Dashboard() {
           <div className="dash-payment-row">
             <div>
               <span className="dash-pay-label">Total Due</span>
-              <strong className="dash-pay-value">₹{tenantData?.rentStatus === 'PAID' ? '0' : (tenantData?.rent || 0).toLocaleString()}</strong>
+              <strong className="dash-pay-value">₹{tenantData?.rentStatus === 'PAID' ? '0' : actualAmount.toLocaleString()}</strong>
             </div>
             <span className={tenantData?.rentStatus === 'PAID' ? 'sn-badge-green' : 'sn-badge-red'}>
               {tenantData?.rentStatus === 'PAID' ? 'Paid' : 'Due Now'}
@@ -246,7 +255,7 @@ function Dashboard() {
           <div className="dash-payment-row">
             <div>
               <span className="dash-pay-label">Paid This Month</span>
-              <strong className="dash-pay-value">₹{tenantData?.rentStatus === 'PAID' ? (tenantData?.rent || 0).toLocaleString() : '0'}</strong>
+              <strong className="dash-pay-value">₹{tenantData?.rentStatus === 'PAID' ? actualAmount.toLocaleString() : '0'}</strong>
             </div>
           </div>
 
