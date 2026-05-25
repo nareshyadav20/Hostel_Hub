@@ -98,7 +98,7 @@ const Rooms = () => {
     try {
       const bs = await api.getHostelBedStats(activeBuildingId);
       setBedStats(bs || { totalRooms: 0, totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 });
-    } catch (_) {}
+    } catch (_) { }
   };
 
   const toggleBed = async (roomId, bedId) => {
@@ -174,7 +174,7 @@ const Rooms = () => {
 
   const types = [...new Set(rooms.map(r => r.roomType).filter(Boolean))];
 
-  if (loading) return <div style={{ padding: '2rem', color: 'var(--text-secondary)'  }}>Loading...</div>;
+  if (loading) return <div style={{ padding: '2rem', color: 'var(--text-secondary)' }}>Loading...</div>;
 
   // Use server-calculated stats for accurate physical + virtual counts
   const totalRooms = bedStats.totalRooms || 0;
@@ -189,23 +189,23 @@ const Rooms = () => {
   });
 
   return (
-    <div className="rooms-page" style={{ animation: 'fadeIn 0.5s ease-out'  }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '3rem'  }}>
+    <div className="rooms-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '3rem' }}>
         <div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <BedDouble size={32} color="var(--accent-primary)" /> {activeBuilding?.name || 'Rooms & Beds'}
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem'  }}>{activeBuilding?.address || 'Hierarchical occupancy tracking.'}</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>{activeBuilding?.address || 'Hierarchical occupancy tracking.'}</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.8rem'  }}>
+        <div style={{ display: 'flex', gap: '0.8rem' }}>
           <button
             className="btn"
             onClick={() => navigate(`/owner/building/${selectedBuildingId}/buildings`)}
-            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--accent-primary)', fontWeight: '700'  }}
+            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--accent-primary)', fontWeight: '700' }}
           >
             <Building2 size={18} /> Manage Structure
           </button>
-          <button className="btn" onClick={() => setShowFilters(!showFilters)} style={{ background: showFilters ? 'var(--bg-tertiary)' : 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)'  }}>
+          <button className="btn" onClick={() => setShowFilters(!showFilters)} style={{ background: showFilters ? 'var(--bg-tertiary)' : 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
             <Filter size={16} /> Filters
           </button>
         </div>
@@ -217,18 +217,19 @@ const Rooms = () => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            style={{ overflow: 'hidden', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center'  }}
+            style={{ overflow: 'hidden', marginBottom: '2.5rem', background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}
           >
-            <span style={{ fontSize: '0.8rem', fontWeight: '950', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em'  }}>Filter Infrastructure:</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: '950', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filter Infrastructure:</span>
             {['All', 'AC', 'Non-AC', 'Available', 'Occupied'].map(f => (
               <button
                 key={f}
                 onClick={() => setFilterType(f)}
-                style={{ padding: '0.5rem 1.2rem', borderRadius: '10px', border: '1px solid var(--border-color)',
+                style={{
+                  padding: '0.5rem 1.2rem', borderRadius: '10px', border: '1px solid var(--border-color)',
                   background: filterType === f ? 'var(--accent-primary)' : 'var(--bg-primary)',
                   color: filterType === f ? 'white' : 'var(--text-primary)',
                   fontWeight: '800', fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.2s'
-                 }}
+                }}
               >
                 {f}
               </button>
@@ -238,54 +239,57 @@ const Rooms = () => {
       </AnimatePresence>
 
       {/* Stats Summary Bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem'  }}>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)'  }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600'  }}>Property Rooms</p>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem'  }}>{totalRooms}</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Property Rooms</p>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{totalRooms}</h2>
         </div>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #10b981'  }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600'  }}>Capacity (Beds)</p>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem'  }}>{totalBedsCount}</h2>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #10b981' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Capacity (Beds)</p>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{totalBedsCount}</h2>
         </div>
-        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b'  }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600'  }}>Occupancy Rate</p>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem'  }}>{occupancyRate}%</h2>
+        <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Occupancy Rate</p>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{occupancyRate}%</h2>
         </div>
       </div>
 
       {/* ── No. of Beds Panel (Hostel-level availability) ── */}
-      <div className="card" style={{ padding: '1.8rem 2rem',
+      <div className="card" style={{
+        padding: '1.8rem 2rem',
         marginBottom: '3rem',
         background: 'linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%)',
         border: '1px solid var(--border-color)',
         borderRadius: '20px'
-       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.4rem'  }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem'  }}>
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.4rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <BedDouble size={22} color="var(--accent-primary)" />
-            <span style={{ fontWeight: '800', fontSize: '1.05rem', letterSpacing: '-0.01em'  }}>No. of Beds — Hostel Availability</span>
+            <span style={{ fontWeight: '800', fontSize: '1.05rem', letterSpacing: '-0.01em' }}>No. of Beds — Hostel Availability</span>
           </div>
-          <span style={{ padding: '0.3rem 0.9rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '800',
+          <span style={{
+            padding: '0.3rem 0.9rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '800',
             background: bedStats.occupancyPct >= 90 ? '#ef444420' : bedStats.occupancyPct >= 60 ? '#f59e0b20' : '#10b98120',
             color: bedStats.occupancyPct >= 90 ? '#ef4444' : bedStats.occupancyPct >= 60 ? '#f59e0b' : '#10b981'
-           }}>
+          }}>
             {bedStats.occupancyPct}% Occupied
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '1.4rem'  }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '1.4rem' }}>
           {[
             { label: 'Total Beds', value: bedStats.totalBeds, color: 'var(--accent-primary)', icon: '🛏️' },
             { label: 'Filled Beds', value: `${bedStats.filledBeds} / ${bedStats.totalBeds}`, color: '#ef4444', icon: '👤' },
             { label: 'Available Beds', value: bedStats.availableBeds, color: '#10b981', icon: '✅' },
           ].map(s => (
-            <div key={s.label} style={{ background: 'var(--bg-primary)', borderRadius: '14px', padding: '1rem 1.2rem',
+            <div key={s.label} style={{
+              background: 'var(--bg-primary)', borderRadius: '14px', padding: '1rem 1.2rem',
               border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.8rem'
-             }}>
-              <span style={{ fontSize: '1.4rem'  }}>{s.icon}</span>
+            }}>
+              <span style={{ fontSize: '1.4rem' }}>{s.icon}</span>
               <div>
-                <div style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em'  }}>{s.label}</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: '900', color: s.color, lineHeight: 1.2  }}>{s.value}</div>
+                <div style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: '900', color: s.color, lineHeight: 1.2 }}>{s.value}</div>
               </div>
             </div>
           ))}
@@ -293,11 +297,11 @@ const Rooms = () => {
 
         {/* Progress bar */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.4rem'  }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
             <span>Bed Occupancy</span>
             <span>{bedStats.filledBeds} filled out of {bedStats.totalBeds}</span>
           </div>
-          <div style={{ height: '10px', borderRadius: '99px', background: 'var(--bg-primary)', overflow: 'hidden'  }}>
+          <div style={{ height: '10px', borderRadius: '99px', background: 'var(--bg-primary)', overflow: 'hidden' }}>
             <div style={{
               height: '100%',
               width: `${bedStats.occupancyPct}%`,
@@ -305,8 +309,8 @@ const Rooms = () => {
               background: bedStats.occupancyPct >= 90
                 ? 'linear-gradient(90deg,#ef4444,#dc2626)'
                 : bedStats.occupancyPct >= 60
-                ? 'linear-gradient(90deg,#f59e0b,#d97706)'
-                : 'linear-gradient(90deg,#10b981,#059669)',
+                  ? 'linear-gradient(90deg,#f59e0b,#d97706)'
+                  : 'linear-gradient(90deg,#10b981,#059669)',
               transition: 'width 0.6s ease'
             }} />
           </div>
@@ -314,20 +318,20 @@ const Rooms = () => {
       </div>
       {/* ────────────────────────────────────────────────── */}
 
-      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2.5rem'  }}>
+      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2.5rem' }}>
         <button
           onClick={() => setActiveTab('rooms')}
-          style={{ padding: '1rem 2rem', background: 'none', border: 'none', borderBottom: activeTab === 'rooms' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: activeTab === 'rooms' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer'  }}
+          style={{ padding: '1rem 2rem', background: 'none', border: 'none', borderBottom: activeTab === 'rooms' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: activeTab === 'rooms' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer' }}
         >
           Floors & Rooms
         </button>
         <button
           onClick={() => setActiveTab('transfers')}
-          style={{ padding: '1rem 2rem', background: 'none', border: 'none', borderBottom: activeTab === 'transfers' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: activeTab === 'transfers' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}
+          style={{ padding: '1rem 2rem', background: 'none', border: 'none', borderBottom: activeTab === 'transfers' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: activeTab === 'transfers' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
         >
           Transfer Requests
           {transferRequests.filter(r => r.status === 'PENDING').length > 0 && (
-            <span style={{ padding: '0.1rem 0.5rem', background: 'var(--accent-error)', color: "var(--text-on-primary)", borderRadius: '10px', fontSize: '0.7rem'  }}>
+            <span style={{ padding: '0.1rem 0.5rem', background: 'var(--accent-error)', color: "var(--text-on-primary)", borderRadius: '10px', fontSize: '0.7rem' }}>
               {transferRequests.filter(r => r.status === 'PENDING').length}
             </span>
           )}
@@ -336,8 +340,8 @@ const Rooms = () => {
 
       {activeTab === 'transfers' ? (
         /* Transfer Requests List (Omitted for brevity, kept same) */
-        <div style={{ animation: 'fadeIn 0.3s ease-out'  }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem'  }}>
+        <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
             {[
               { label: 'Total Requests', value: transferRequests.length, color: '#6366F1', bg: '#EDE9FE' },
               { label: 'Pending', value: transferRequests.filter(r => r.status === 'PENDING').length, color: '#D97706', bg: '#FEF3C7' },
@@ -345,10 +349,10 @@ const Rooms = () => {
             ].map(s => (
               <div key={s.label} className="card" style={{ padding: '1.2rem', borderLeft: `4px solid ${s.color}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase'  }}>{s.label}</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: '900', color: s.color, lineHeight: 1.2  }}>{s.value}</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{s.label}</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: '900', color: s.color, lineHeight: 1.2 }}>{s.value}</div>
                 </div>``
-                <div style={{ padding: '0.6rem', borderRadius: '100px', background: s.bg, color: s.color, fontSize: '1.2rem'  }}>
+                <div style={{ padding: '0.6rem', borderRadius: '100px', background: s.bg, color: s.color, fontSize: '1.2rem' }}>
                   {s.label === 'Pending' ? '⏳' : s.label === 'Approved' ? '✅' : '📋'}
                 </div>
               </div>
@@ -356,11 +360,11 @@ const Rooms = () => {
           </div>
 
           {transferRequests.length === 0 ? (
-            <div className="card" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)'  }}>
+            <div className="card" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
               No room transfer requests found for this building.
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem'  }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {transferRequests.map(req => {
                 const st = STATUS_STYLES[req.status] || STATUS_STYLES.PENDING;
                 return (
@@ -370,31 +374,31 @@ const Rooms = () => {
                     className="card"
                     style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', borderLeft: `4px solid ${st.color}` }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 1  }}>
-                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-primary), #6366F1)', color: "var(--text-on-primary)", display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '1.2rem', flexShrink: 0  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 1 }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-primary), #6366F1)', color: "var(--text-on-primary)", display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '1.2rem', flexShrink: 0 }}>
                         {req.tenant?.name?.charAt(0) || 'U'}
                       </div>
-                      <div style={{ flex: 1  }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.4rem', flexWrap: 'wrap'  }}>
-                          <h4 style={{ margin: 0, fontWeight: '800', fontSize: '1rem'  }}>{req.tenant?.name || 'Unknown Tenant'}</h4>
-                          <span style={{ padding: '0.2rem 0.7rem', borderRadius: '20px', fontSize: '0.65rem', fontWeight: '800', background: st.bg, color: st.color, textTransform: 'uppercase'  }}>{st.label}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
+                          <h4 style={{ margin: 0, fontWeight: '800', fontSize: '1rem' }}>{req.tenant?.name || 'Unknown Tenant'}</h4>
+                          <span style={{ padding: '0.2rem 0.7rem', borderRadius: '20px', fontSize: '0.65rem', fontWeight: '800', background: st.bg, color: st.color, textTransform: 'uppercase' }}>{st.label}</span>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600', flexWrap: 'wrap'  }}>
-                          <span style={{ background: 'var(--bg-tertiary)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700'  }}>{req.oldRoom}</span>
-                          <span style={{ color: 'var(--accent-primary)', fontWeight: '900'  }}>→</span>
-                          <span style={{ background: 'var(--bg-tertiary)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700'  }}>{req.newRoom}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600', flexWrap: 'wrap' }}>
+                          <span style={{ background: 'var(--bg-tertiary)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700' }}>{req.oldRoom}</span>
+                          <span style={{ color: 'var(--accent-primary)', fontWeight: '900' }}>→</span>
+                          <span style={{ background: 'var(--bg-tertiary)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700' }}>{req.newRoom}</span>
                         </div>
-                        {req.reason && <p style={{ margin: '0.5rem 0 0', fontSize: '0.78rem', fontStyle: 'italic', color: 'var(--text-muted)'  }}>💬 "{req.reason}"</p>}
+                        {req.reason && <p style={{ margin: '0.5rem 0 0', fontSize: '0.78rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>💬 "{req.reason}"</p>}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center'  }}>
+                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                       {req.status === 'PENDING' ? (
                         <>
-                          <button onClick={() => handleTransferStatus(req.id, 'ACCEPTED')} style={{ padding: '0.6rem 1.2rem', fontSize: '0.82rem', borderRadius: '10px', background: '#10B981', color: "var(--text-on-primary)", border: 'none', fontWeight: '800', cursor: 'pointer'  }}>Approve</button>
-                          <button onClick={() => handleTransferStatus(req.id, 'REJECTED')} style={{ padding: '0.6rem 1.2rem', fontSize: '0.82rem', borderRadius: '10px', background: '#FEE2E2', color: '#DC2626', border: '1px solid #FCA5A5', fontWeight: '800', cursor: 'pointer'  }}>Reject</button>
+                          <button onClick={() => handleTransferStatus(req.id, 'ACCEPTED')} style={{ padding: '0.6rem 1.2rem', fontSize: '0.82rem', borderRadius: '10px', background: '#10B981', color: "var(--text-on-primary)", border: 'none', fontWeight: '800', cursor: 'pointer' }}>Approve</button>
+                          <button onClick={() => handleTransferStatus(req.id, 'REJECTED')} style={{ padding: '0.6rem 1.2rem', fontSize: '0.82rem', borderRadius: '10px', background: '#FEE2E2', color: '#DC2626', border: '1px solid #FCA5A5', fontWeight: '800', cursor: 'pointer' }}>Reject</button>
                         </>
                       ) : (
-                        <span style={{ padding: '0.5rem 1.2rem', borderRadius: '10px', fontSize: '0.78rem', fontWeight: '800', background: st.bg, color: st.color  }}>{st.label}</span>
+                        <span style={{ padding: '0.5rem 1.2rem', borderRadius: '10px', fontSize: '0.78rem', fontWeight: '800', background: st.bg, color: st.color }}>{st.label}</span>
                       )}
                     </div>
                   </motion.div>
@@ -406,7 +410,7 @@ const Rooms = () => {
       ) : (
         /* Level 2+: Floor -> Room -> Bed */
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem'  }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {buildingFloors.map(floor => {
               const floorId = floor.id || floor._id;
               const floorRooms = rooms.filter(r => {
@@ -431,22 +435,22 @@ const Rooms = () => {
               if (floorRooms.length === 0) return null;
 
               return (
-                <div key={floor.id} className="card" style={{ padding: '1.5rem', borderRadius: '16px'  }}>
+                <div key={floor.id} className="card" style={{ padding: '1.5rem', borderRadius: '16px' }}>
                   {/* Floor Accordion Header */}
                   <div
                     onClick={() => toggleFloorCollapse(floor.id)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', paddingBottom: expandedFloors[floor.id] ? '1.5rem' : '0', borderBottom: expandedFloors[floor.id] ? '1px solid var(--border-color)' : 'none'  }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', paddingBottom: expandedFloors[floor.id] ? '1.5rem' : '0', borderBottom: expandedFloors[floor.id] ? '1px solid var(--border-color)' : 'none' }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem'  }}>
-                      <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', color: "var(--text-on-primary)", borderRadius: '12px'  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', color: "var(--text-on-primary)", borderRadius: '12px' }}>
                         <Layers size={20} />
                       </div>
                       <div>
-                        <h3 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0  }}>{floor.floorNumber}</h3>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem'  }}>{floorRooms.length} Rooms</p>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0 }}>{floor.floorNumber}</h3>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>{floorRooms.length} Rooms</p>
                       </div>
                     </div>
-                    <div style={{ padding: '0.5rem', background: 'var(--bg-tertiary)', borderRadius: '50%'  }}>
+                    <div style={{ padding: '0.5rem', background: 'var(--bg-tertiary)', borderRadius: '50%' }}>
                       {expandedFloors[floor.id] ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                     </div>
                   </div>
@@ -454,8 +458,8 @@ const Rooms = () => {
                   {/* Room Grid */}
                   <AnimatePresence>
                     {expandedFloors[floor.id] && (
-                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden'  }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', paddingTop: '1.5rem'  }}>
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', paddingTop: '1.5rem' }}>
                           {floorRooms.map(room => {
                             const roomBeds = beds.filter(b => {
                               const bRoomId = typeof b.room === 'object' ? b.room._id : (b.room || b.roomId);
@@ -466,39 +470,39 @@ const Rooms = () => {
                             const occRate = roomBeds.length > 0 ? Math.round(((roomBeds.length - available) / roomBeds.length) * 100) : 0;
 
                             return (
-                              <div key={room.id} style={{ border: room.status === 'Maintenance' ? '2px dashed var(--accent-warning)' : '1px solid var(--border-color)', borderRadius: '16px', background: 'var(--bg-secondary)', overflow: 'hidden'  }}>
+                              <div key={room.id} style={{ border: room.status === 'Maintenance' ? '2px dashed var(--accent-warning)' : '1px solid var(--border-color)', borderRadius: '16px', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
                                 {/* Room Header Info */}
-                                <div style={{ padding: '1.2rem', borderBottom: '1px solid var(--border-color)'  }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem'  }}>
+                                <div style={{ padding: '1.2rem', borderBottom: '1px solid var(--border-color)' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                     <div>
-                                      <h4 style={{ fontSize: '1.2rem', fontWeight: '900', margin: '0 0 0.2rem 0'  }}>Room {room.roomNumber}</h4>
-                                      <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', background: 'var(--bg-tertiary)', borderRadius: '12px', fontWeight: '600'  }}>{room.roomType}</span>
+                                      <h4 style={{ fontSize: '1.2rem', fontWeight: '900', margin: '0 0 0.2rem 0' }}>Room {room.roomNumber}</h4>
+                                      <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', background: 'var(--bg-tertiary)', borderRadius: '12px', fontWeight: '600' }}>{room.roomType}</span>
                                     </div>
-                                    <div style={{ textAlign: 'right'  }}>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end'  }}>
+                                    <div style={{ textAlign: 'right' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end' }}>
                                         <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: `conic-gradient(var(--accent-primary) ${occRate}%, var(--bg-tertiary) 0)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                          <div style={{ width: '24px', height: '24px', background: 'var(--bg-secondary)', borderRadius: '50%'  }} />
+                                          <div style={{ width: '24px', height: '24px', background: 'var(--bg-secondary)', borderRadius: '50%' }} />
                                         </div>
-                                        <span style={{ fontWeight: '800', fontSize: '1rem'  }}>{roomBeds.length - available}/{roomBeds.length}</span>
+                                        <span style={{ fontWeight: '800', fontSize: '1rem' }}>{roomBeds.length - available}/{roomBeds.length}</span>
                                       </div>
-                                      <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem'  }}>Beds Occupied</p>
+                                      <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Beds Occupied</p>
                                     </div>
-                                  </div>
-                                  
-                                  {/* Smart Room Features Chips */}
-                                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem'  }}>
-                                    {room.hygieneRating && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#10b98115', color: '#10b981', borderRadius: '4px', fontWeight: '800'  }}>✨ Hygiene {room.hygieneRating}/5</span>}
-                                    {room.studyFriendly && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#3b82f615', color: '#3b82f6', borderRadius: '4px', fontWeight: '800'  }}>📚 Study Friendly</span>}
-                                    {room.smartLock && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#8b5cf615', color: '#8b5cf6', borderRadius: '4px', fontWeight: '800'  }}>🔒 Smart Lock</span>}
-                                    {room.ventilationScore > 0 && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#0ea5e915', color: '#0ea5e9', borderRadius: '4px', fontWeight: '800'  }}>💨 Vent: {room.ventilationScore}/10</span>}
-                                    {room.femaleSafety && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#ec489915', color: '#ec4899', borderRadius: '4px', fontWeight: '800'  }}>🛡️ Safety Verified</span>}
                                   </div>
 
-                                  <div style={{ display: 'flex', gap: '0.5rem'  }}>
-                                    <button onClick={() => toggleRoomExpand(room.id)} className="btn btn-primary" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', borderRadius: '8px'  }}>
+                                  {/* Smart Room Features Chips */}
+                                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                                    {room.hygieneRating && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#10b98115', color: '#10b981', borderRadius: '4px', fontWeight: '800' }}>✨ Hygiene {room.hygieneRating}/5</span>}
+                                    {room.studyFriendly && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#3b82f615', color: '#3b82f6', borderRadius: '4px', fontWeight: '800' }}>📚 Study Friendly</span>}
+                                    {room.smartLock && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#8b5cf615', color: '#8b5cf6', borderRadius: '4px', fontWeight: '800' }}>🔒 Smart Lock</span>}
+                                    {room.ventilationScore > 0 && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#0ea5e915', color: '#0ea5e9', borderRadius: '4px', fontWeight: '800' }}>💨 Vent: {room.ventilationScore}/10</span>}
+                                    {room.femaleSafety && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#ec489915', color: '#ec4899', borderRadius: '4px', fontWeight: '800' }}>🛡️ Safety Verified</span>}
+                                  </div>
+
+                                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button onClick={() => toggleRoomExpand(room.id)} className="btn btn-primary" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', borderRadius: '8px' }}>
                                       {expandedRooms[room.id] ? 'Hide Beds' : 'View Beds'}
                                     </button>
-                                    <button onClick={() => toggleMaintenance(room.id)} className="btn" style={{ padding: '0.5rem', fontSize: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: room.status === 'Maintenance' ? '#f59e0b20' : 'var(--bg-tertiary)', color: room.status === 'Maintenance' ? '#f59e0b' : 'var(--text-primary)'  }}>
+                                    <button onClick={() => toggleMaintenance(room.id)} className="btn" style={{ padding: '0.5rem', fontSize: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: room.status === 'Maintenance' ? '#f59e0b20' : 'var(--bg-tertiary)', color: room.status === 'Maintenance' ? '#f59e0b' : 'var(--text-primary)' }}>
                                       <AlertTriangle size={14} />
                                     </button>
                                   </div>
@@ -507,8 +511,8 @@ const Rooms = () => {
                                 {/* Bed Grid (Expanded) */}
                                 <AnimatePresence>
                                   {expandedRooms[room.id] && (
-                                    <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} style={{ overflow: 'hidden'  }}>
-                                      <div style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '0.8rem'  }}>
+                                    <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} style={{ overflow: 'hidden' }}>
+                                      <div style={{ padding: '1.2rem', background: 'var(--bg-tertiary)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '0.8rem' }}>
                                         {roomBeds.map(bed => {
                                           let bg = 'var(--bg-secondary)';
                                           let color = 'var(--text-secondary)';
@@ -534,16 +538,16 @@ const Rooms = () => {
                                                 opacity: 0.9,
                                                 borderBottom: `1px solid ${border}`
                                               }} />
-                                              <div style={{ padding: '0.5rem 0.4rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.1rem'  }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem'  }}>
+                                              <div style={{ padding: '0.5rem 0.4rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.1rem' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                                                   {bed.status === 'OCCUPIED' ? <User size={14} /> : <BedDouble size={14} />}
-                                                  <span style={{ fontSize: '0.75rem', fontWeight: '800'  }}>{bed.bedNumber}</span>
+                                                  <span style={{ fontSize: '0.75rem', fontWeight: '800' }}>{bed.bedNumber}</span>
                                                 </div>
-                                                <span style={{ fontSize: '0.55rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8  }}>
+                                                <span style={{ fontSize: '0.55rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>
                                                   {bed.status === 'OCCUPIED' ? (typeof bed.tenant === 'object' ? bed.tenant.name : bed.tenant || 'Occupied') : bed.status}
                                                 </span>
                                                 {bed.comfortScore > 0 && (
-                                                  <span style={{ fontSize: '0.55rem', fontWeight: '800', color: '#f59e0b', marginTop: '0.2rem'  }}>
+                                                  <span style={{ fontSize: '0.55rem', fontWeight: '800', color: '#f59e0b', marginTop: '0.2rem' }}>
                                                     ⭐ {bed.comfortScore}/10
                                                   </span>
                                                 )}
@@ -552,9 +556,9 @@ const Rooms = () => {
                                           );
                                         })}
                                       </div>
-                                      <div style={{ padding: '0.8rem 1.2rem', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between'  }}>
-                                        <button className="btn" style={{ fontSize: '0.7rem', padding: '0.3rem 0.8rem'  }}>Auto Allocate</button>
-                                        <button className="btn" style={{ fontSize: '0.7rem', padding: '0.3rem 0.8rem'  }}>Reserve</button>
+                                      <div style={{ padding: '0.8rem 1.2rem', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between' }}>
+                                        <button className="btn" style={{ fontSize: '0.7rem', padding: '0.3rem 0.8rem' }}>Auto Allocate</button>
+                                        <button className="btn" style={{ fontSize: '0.7rem', padding: '0.3rem 0.8rem' }}>Reserve</button>
                                       </div>
                                     </motion.div>
                                   )}
@@ -576,15 +580,15 @@ const Rooms = () => {
       {/* Bed Details Modal */}
       <AnimatePresence>
         {selectedBedDetails && (
-          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem'  }}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)'  }} onClick={() => setSelectedBedDetails(null)} />
-            <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} style={{ position: 'relative', width: '100%', maxWidth: '440px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', zIndex: 1001, border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)', maxHeight: '90vh', overflowY: 'auto'  }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'  }}>
-                <h3 style={{ fontSize: '1.3rem', fontWeight: '900', margin: 0  }}>Bed Assets & Details</h3>
-                <button onClick={() => setSelectedBedDetails(null)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)'  }}>✕</button>
+          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setSelectedBedDetails(null)} />
+            <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} style={{ position: 'relative', width: '100%', maxWidth: '440px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', zIndex: 1001, border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: '900', margin: 0 }}>Bed Assets & Details</h3>
+                <button onClick={() => setSelectedBedDetails(null)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}>✕</button>
               </div>
 
-              <div style={{ textAlign: 'center'  }}>
+              <div style={{ textAlign: 'center' }}>
                 <div style={{
                   width: '100%',
                   height: '140px',
@@ -596,84 +600,85 @@ const Rooms = () => {
                   border: '1px solid var(--border-color)'
                 }} />
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'  }}>
-                  <div style={{ textAlign: 'left'  }}>
-                    <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900'  }}>{selectedBedDetails.roomInfo.roomNumber} - Bed {selectedBedDetails.bedNumber}</h4>
-                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)'  }}>{selectedBedDetails.roomInfo.roomType} Room</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <div style={{ textAlign: 'left' }}>
+                    <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900' }}>{selectedBedDetails.roomInfo.roomNumber} - Bed {selectedBedDetails.bedNumber}</h4>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>{selectedBedDetails.roomInfo.roomType} Room</p>
                   </div>
-                  <span style={{ padding: '0.4rem 1rem',
+                  <span style={{
+                    padding: '0.4rem 1rem',
                     borderRadius: '20px',
                     fontSize: '0.75rem',
                     fontWeight: '800',
                     background: selectedBedDetails.status === 'OCCUPIED' ? '#ef444415' : '#10b98115',
                     color: selectedBedDetails.status === 'OCCUPIED' ? '#ef4444' : '#10b981',
                     textTransform: 'uppercase'
-                   }}>
+                  }}>
                     {selectedBedDetails.status}
                   </span>
                 </div>
 
-                <div style={{ background: 'var(--bg-tertiary)', borderRadius: '20px', padding: '1.2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem'  }}>
-                  <div style={{ textAlign: 'left'  }}>
-                    <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase'  }}>Hygiene Score</p>
-                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: 'var(--accent-primary)'  }}>✨ {selectedBedDetails.roomInfo.hygieneRating || '4.5'}/5</div>
+                <div style={{ background: 'var(--bg-tertiary)', borderRadius: '20px', padding: '1.2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ textAlign: 'left' }}>
+                    <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Hygiene Score</p>
+                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: 'var(--accent-primary)' }}>✨ {selectedBedDetails.roomInfo.hygieneRating || '4.5'}/5</div>
                   </div>
-                  <div style={{ textAlign: 'left'  }}>
-                    <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase'  }}>Comfort Score</p>
-                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#f59e0b'  }}>⭐ {selectedBedDetails.comfortScore || '8.2'}/10</div>
+                  <div style={{ textAlign: 'left' }}>
+                    <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Comfort Score</p>
+                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#f59e0b' }}>⭐ {selectedBedDetails.comfortScore || '8.2'}/10</div>
                   </div>
-                  <div style={{ textAlign: 'left'  }}>
-                    <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase'  }}>Last Sanitized</p>
-                    <div style={{ fontSize: '0.85rem', fontWeight: '800'  }}>{selectedBedDetails.lastSanitized ? new Date(selectedBedDetails.lastSanitized).toLocaleDateString() : '3 days ago'}</div>
+                  <div style={{ textAlign: 'left' }}>
+                    <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Last Sanitized</p>
+                    <div style={{ fontSize: '0.85rem', fontWeight: '800' }}>{selectedBedDetails.lastSanitized ? new Date(selectedBedDetails.lastSanitized).toLocaleDateString() : '3 days ago'}</div>
                   </div>
-                  <div style={{ textAlign: 'left'  }}>
-                    <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase'  }}>Security</p>
-                    <div style={{ fontSize: '0.85rem', fontWeight: '800'  }}>{selectedBedDetails.roomInfo.smartLock ? '🔒 Smart Lock' : 'Standard'}</div>
+                  <div style={{ textAlign: 'left' }}>
+                    <p style={{ margin: '0 0 0.3rem 0', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Security</p>
+                    <div style={{ fontSize: '0.85rem', fontWeight: '800' }}>{selectedBedDetails.roomInfo.smartLock ? '🔒 Smart Lock' : 'Standard'}</div>
                   </div>
                 </div>
 
                 {selectedBedDetails.tenantInfo && (
-                  <div style={{ textAlign: 'left', marginBottom: '1.5rem', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1rem'  }}>
-                    <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase'  }}>Current Occupant</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem'  }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--accent-primary)', color: "var(--text-on-primary)", display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800'  }}>
+                  <div style={{ textAlign: 'left', marginBottom: '1.5rem', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1rem' }}>
+                    <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Current Occupant</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--accent-primary)', color: "var(--text-on-primary)", display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
                         {selectedBedDetails.tenantInfo.name.charAt(0)}
                       </div>
                       <div>
-                        <h5 style={{ margin: 0, fontWeight: '800'  }}>{selectedBedDetails.tenantInfo.name}</h5>
-                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)'  }}>ID: {selectedBedDetails.tenantInfo.id?.slice(-6) || 'T-9921'}</p>
+                        <h5 style={{ margin: 0, fontWeight: '800' }}>{selectedBedDetails.tenantInfo.name}</h5>
+                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {selectedBedDetails.tenantInfo.id?.slice(-6) || 'T-9921'}</p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '0.8rem'  }}>
+                <div style={{ display: 'flex', gap: '0.8rem' }}>
                   {selectedBedDetails.status === 'OCCUPIED' ? (
-                    <button 
-                      onClick={() => { toggleBed(selectedBedDetails.roomInfo.id, selectedBedDetails.id); setSelectedBedDetails(null); }} 
-                      className="btn" 
-                      style={{ flex: 1, fontWeight: '800', borderRadius: '12px', background: '#ef444415', color: '#ef4444', border: '1px solid #ef444430', padding: '0.8rem'  }}
+                    <button
+                      onClick={() => { toggleBed(selectedBedDetails.roomInfo.id, selectedBedDetails.id); setSelectedBedDetails(null); }}
+                      className="btn"
+                      style={{ flex: 1, fontWeight: '800', borderRadius: '12px', background: '#ef444415', color: '#ef4444', border: '1px solid #ef444430', padding: '0.8rem' }}
                     >
                       Vacate Bed
                     </button>
                   ) : (
-                    <button 
-                      onClick={() => { toggleBed(selectedBedDetails.roomInfo.id, selectedBedDetails.id); setSelectedBedDetails(null); }} 
-                      className="btn btn-primary" 
-                      style={{ flex: 1, fontWeight: '800', borderRadius: '12px', padding: '0.8rem'  }}
+                    <button
+                      onClick={() => { toggleBed(selectedBedDetails.roomInfo.id, selectedBedDetails.id); setSelectedBedDetails(null); }}
+                      className="btn btn-primary"
+                      style={{ flex: 1, fontWeight: '800', borderRadius: '12px', padding: '0.8rem' }}
                     >
                       Allocate Bed
                     </button>
                   )}
-                  <button 
+                  <button
                     onClick={async () => {
                       await api.markBedSanitized(selectedBedDetails.id);
                       setSelectedBedDetails(null);
                       // Refresh parent
                       window.location.reload();
                     }}
-                    className="btn" 
-                    style={{ flex: 1, fontWeight: '800', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', padding: '0.8rem'  }}
+                    className="btn"
+                    style={{ flex: 1, fontWeight: '800', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', padding: '0.8rem' }}
                   >
                     Sanitize Bed
                   </button>
