@@ -80,6 +80,7 @@ const Portfolio = () => {
   const [data, setData] = useState({
     buildings: [], floors: [], rooms: [], beds: [], tenants: [], complaints: []
   });
+  const [hostelStatsMap, setHostelStatsMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -132,6 +133,23 @@ const Portfolio = () => {
         beds: bd || [], tenants: t || [], complaints: c || [],
         staff: s?.staffList || []
       });
+
+      // Fetch authoritative hostel bed stats per building to avoid client-side mapping mismatches
+      try {
+        const statsArr = await Promise.all((b || []).map(async (building) => {
+          const id = building.id || building._id;
+          try {
+            const s = await api.getHostelBedStats(id);
+            return [id, s || { totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 }];
+          } catch (err) {
+            return [id, { totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 }];
+          }
+        }));
+        const map = Object.fromEntries(statsArr);
+        setHostelStatsMap(map);
+      } catch (err) {
+        console.warn('Failed to load hostel stats map', err);
+      }
     } catch (err) {
       console.error("Data fetch error", err);
       setError("Failed to load property data. Please try again.");
@@ -156,7 +174,15 @@ const Portfolio = () => {
     // Real-time synchronization for owner dashboard
     connectSocket(); // Joins 'owners' room by default in connectSocket
 
-    const refreshAll = () => {
+    const refreshAll = async (payload) => {
+      try {
+        if (payload && payload.buildingId) {
+          // Ensure server has recalculated hostel bed stats before we refetch
+          await api.syncHostelBeds(payload.buildingId).catch(() => null);
+        }
+      } catch (e) {
+        console.warn('syncHostelBeds failed in refreshAll', e);
+      }
       console.log('🔄 Dashboard refreshing due to real-time event');
       clearAllCache(); // Clear HH cache to ensure fresh data
       fetchData();
@@ -168,11 +194,18 @@ const Portfolio = () => {
     socket.on('hostelUpdated', refreshAll);
     socket.on('dashboardStatsUpdated', refreshAll);
 
+    // Keep portfolio stats fresh on focus and at intervals as well
+    const onFocus = () => { clearAllCache(); fetchData(); loadDrafts(); };
+    window.addEventListener('focus', onFocus);
+    const interval = setInterval(() => { clearAllCache(); fetchData(); }, 30000);
+
     return () => {
       socket.off('tenantAdded', refreshAll);
       socket.off('complaintCreated', refreshAll);
       socket.off('hostelUpdated', refreshAll);
       socket.off('dashboardStatsUpdated', refreshAll);
+      window.removeEventListener('focus', onFocus);
+      clearInterval(interval);
       // We don't disconnectSocket here as owner might navigate between pages
     };
   }, [fetchData, loadDrafts]);
@@ -344,10 +377,18 @@ const Portfolio = () => {
         const bId = b?.id || b?._id || `temp-${Math.random()}`;
         const bFloors = (data.floors || []).filter(f => f?.building === bId || f?.buildingId === bId);
         const bRooms = (data.rooms || []).filter(r => r && bFloors.some(f => f && (f._id === (r.floor?._id || r.floor) || f.id === (r.floorId || r.floor))));
-        const bBeds = (data.beds || []).filter(bed => bed && bRooms.some(r => r && (r._id === (bed.room?._id || bed.room) || r.id === (bed.roomId || bed.room))));
-
-        const totalBeds = bBeds.length;
-        const occupiedBeds = bBeds.filter(bed => bed?.status === 'OCCUPIED').length;
+        // Prefer authoritative stats fetched from server if present
+        const stats = hostelStatsMap[bId] || null;
+        let totalBeds = 0;
+        let occupiedBeds = 0;
+        if (stats && typeof stats.totalBeds === 'number') {
+          totalBeds = stats.totalBeds || 0;
+          occupiedBeds = stats.filledBeds || 0;
+        } else {
+          const bBeds = (data.beds || []).filter(bed => bed && bRooms.some(r => r && (r._id === (bed.room?._id || bed.room) || r.id === (bed.roomId || bed.room))));
+          totalBeds = bBeds.length;
+          occupiedBeds = bBeds.filter(bed => bed?.status === 'OCCUPIED').length;
+        }
         const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
 
         const monthlyRevenue = occupiedBeds * 8500;
@@ -389,7 +430,7 @@ const Portfolio = () => {
         return { id: `err-${Date.now()}`, name: 'Error Loading', occupancyRate: 0, features: [], status: 'Error' };
       }
     });
-  }, [data]);
+  }, [data, hostelStatsMap]);
 
   const globalStats = useMemo(() => {
     if (!buildingStats || buildingStats.length === 0) return { totalBuildings: 0, totalRooms: 0, totalBeds: 0, occupiedBeds: 0, occupancyRate: 0, totalRevenue: 0, totalDues: 0, totalComplaints: 0, totalStaff: 0 };

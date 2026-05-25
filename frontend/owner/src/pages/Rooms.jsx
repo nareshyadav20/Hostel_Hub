@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -6,6 +6,7 @@ import {
   Settings2, History, Filter, Layers, ChevronDown, ChevronRight, Building2, FileText
 } from 'lucide-react';
 import { api } from '../mockData';
+import socket, { connectSocket } from '../utils/socket';
 
 
 const STATUS_STYLES = {
@@ -40,43 +41,53 @@ const Rooms = () => {
   const [activeTab, setActiveTab] = useState('rooms'); // 'rooms' or 'transfers'
   const [transferRequests, setTransferRequests] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      console.log("Rooms module fetching for ID:", activeBuildingId);
-      setLoading(true);
-      try {
-        // Use building-scoped APIs to avoid cross-property data leakage
-        const [b, f, r, bd, t, tr, bs] = await Promise.all([
-          api.getBuildings(),
-          activeBuildingId ? api.getFloorsByBuilding(activeBuildingId) : api.getAllFloors(),
-          activeBuildingId ? api.getRoomsByBuilding(activeBuildingId) : api.getAllRooms(),
-          activeBuildingId ? api.getBedsByBuilding(activeBuildingId) : api.getAllBeds(),
-          api.getTenants(activeBuildingId),
-          api.getRoomTransfers(activeBuildingId),
-          api.getHostelBedStats(activeBuildingId).catch(() => ({ totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 }))
-        ]);
+  const loadRoomsData = useCallback(async () => {
+    console.log("Rooms module fetching for ID:", activeBuildingId);
+    setLoading(true);
+    try {
+      // Use building-scoped APIs to avoid cross-property data leakage
+      const [b, f, r, bd, t, tr, bs] = await Promise.all([
+        api.getBuildings(),
+        activeBuildingId ? api.getFloorsByBuilding(activeBuildingId) : api.getAllFloors(),
+        activeBuildingId ? api.getRoomsByBuilding(activeBuildingId) : api.getAllRooms(),
+        activeBuildingId ? api.getBedsByBuilding(activeBuildingId) : api.getAllBeds(),
+        api.getTenants(activeBuildingId),
+        api.getRoomTransfers(activeBuildingId),
+        api.getHostelBedStats(activeBuildingId).catch(() => ({ totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 }))
+      ]);
 
-        setBuildings(b || []);
-        setFloors(f || []);
-        setRooms(r || []);
-        setBeds(bd || []);
-        setTenants(t || []);
-        // Server now pre-filters by buildingId, so no extra client filter needed
-        setTransferRequests(tr || []);
-        setBedStats(bs || { totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 });
+      setBuildings(b || []);
+      setFloors(f || []);
+      setRooms(r || []);
+      setBeds(bd || []);
+      setTenants(t || []);
+      // Server now pre-filters by buildingId, so no extra client filter needed
+      setTransferRequests(tr || []);
+      setBedStats(bs || { totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 });
 
-        const fExp = {}; (f || []).forEach(x => fExp[x.id || x._id] = true);
-        setExpandedFloors(fExp);
+      const fExp = {}; (f || []).forEach(x => fExp[x.id || x._id] = true);
+      setExpandedFloors(fExp);
 
-        if (activeBuildingId) setSelectedBuildingId(activeBuildingId);
-      } catch (err) {
-        console.error("Fetch error in Rooms:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+      if (activeBuildingId) setSelectedBuildingId(activeBuildingId);
+    } catch (err) {
+      console.error("Fetch error in Rooms:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [activeBuildingId]);
+
+  useEffect(() => {
+    loadRoomsData();
+  }, [loadRoomsData]);
+
+  useEffect(() => {
+    window.addEventListener('focus', loadRoomsData);
+    const interval = setInterval(loadRoomsData, 30000);
+    return () => {
+      window.removeEventListener('focus', loadRoomsData);
+      clearInterval(interval);
+    };
+  }, [loadRoomsData]);
 
   const handleTransferStatus = async (id, status) => {
     try {
@@ -124,7 +135,19 @@ const Rooms = () => {
 
     // Fire and forget update (no await, no blocking re-fetch)
     api.updateBedStatus(bedId, newStatus, null)
-      .then(() => refreshBedStats())
+      .then(async () => {
+        // Ensure server-side hostel bed counts are synced from live beds
+        try {
+          if (activeBuildingId) await api.syncHostelBeds(activeBuildingId).catch(() => null);
+        } catch (e) { /* ignore */ }
+        refreshBedStats();
+        try {
+          if (!socket || !socket.connected) connectSocket();
+          socket && socket.emit && socket.emit('dashboardStatsUpdated', { buildingId: activeBuildingId });
+        } catch (e) {
+          console.warn('Socket emit failed:', e);
+        }
+      })
       .catch(err => {
         console.error('Failed to update bed status:', err);
         // Revert quietly on actual failure
