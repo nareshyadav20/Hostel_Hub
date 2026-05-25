@@ -3346,6 +3346,7 @@ body {
   background: rgba(22, 101, 52, 0.15);
   border-color: rgba(34, 197, 94, 0.25);
 }
+
 .hv2-sidebar-close {
   border: 1px solid #e2e8f0;
   color: #64748b;
@@ -3546,4 +3547,99 @@ body {
 [data-theme='dark'] .hv2-cm-desc-text {
   color: #86efac;
 }
-@media (max-width: 768px) { .hv2-hero { grid-template-columns: 1fr !important; padding: 1rem !important; gap: 20px !important; } .hv2-hero-h1 { font-size: 36px !important; } .hv2-search-bar { flex-direction: column !important; width: 100% !important; padding: 12px !important; border-radius: 12px !important; } .hv2-search-sep { width: 100% !important; height: 1px !important; margin: 8px 0 !important; } .hv2-hero-right { display: none !important; } .hv2-categories .hv2-cat-grid { grid-template-columns: 1fr !important; gap: 16px !important; } .hv2-cities-grid { grid-template-columns: 1fr !important; } .hv2-steps { flex-direction: column !important; gap: 20px !important; } .hv2-testi-track { flex-direction: column !important; } .hv2-stats-bar { flex-direction: column !important; gap: 20px !important; } .hv2-lifestyle-grid { grid-template-columns: 1fr !important; } .hv2-rooms-grid { grid-template-columns: 1fr !important; } .hv2-footer-main { flex-direction: column !important; gap: 30px !important; } .hv2-footer-links-side { flex-direction: column !important; gap: 20px !important; } .hv2-header { padding: 0 16px !important; } .hv2-desktop-actions, .hv2-nav { display: none !important; } .hv2-nav.mobile-open { display: flex !important; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 2000; padding: 2rem; } .hv2-features-grid { grid-template-columns: 1fr !important; } }
+
+@media (max-width: 768px) {
+  .hv2-hero {
+    grid-template-columns: 1fr !important;
+    padding: 1rem !important;
+    gap: 20px !important;
+  }
+
+  .hv2-hero-h1 {
+    font-size: 36px !important;
+  }
+
+  .hv2-search-bar {
+    flex-direction: column !important;
+    width: 100% !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+  }
+
+  .hv2-search-sep {
+    width: 100% !important;
+    height: 1px !important;
+    margin: 8px 0 !important;
+  }
+
+  .hv2-hero-right {
+    display: none !important;
+  }
+
+  .hv2-categories .hv2-cat-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .hv2-cities-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hv2-steps {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+
+  .hv2-testi-track {
+    flex-direction: column !important;
+  }
+
+  .hv2-stats-bar {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+
+  .hv2-lifestyle-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hv2-rooms-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hv2-footer-main {
+    flex-direction: column !important;
+    gap: 30px !important;
+  }
+
+  .hv2-footer-links-side {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+
+  .hv2-header {
+    padding: 0 16px !important;
+  }
+
+  .hv2-desktop-actions,
+  .hv2-nav {
+    display: none !important;
+  }
+
+  .hv2-nav.mobile-open {
+    display: flex !important;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    z-index: 2000;
+    padding: 2rem;
+  }
+
+  .hv2-features-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

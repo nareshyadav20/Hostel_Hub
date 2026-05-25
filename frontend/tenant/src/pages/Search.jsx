@@ -30,62 +30,62 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
   const currentImage = hostel.images && hostel.images.length > 0 ? hostel.images[imgIdx] : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800';
 
   return (
-  <div className="search-hostel-card-pro">
-    <div className="card-media-side" onClick={() => onImageClick(currentImage)} style={{ cursor: 'zoom-in' }}>
-      <img src={currentImage} alt={hostel.name} className="hostel-main-img" style={{ transition: 'opacity 0.5s ease-in-out' }} />
-      <div className="card-image-overlays">
-        <div className="badge-row-top">
-          {hostel.popularityLabel && <span className="label-demand">{hostel.popularityLabel}</span>}
-          <span className="label-available">Available</span>
+    <div className="search-hostel-card-pro">
+      <div className="card-media-side" onClick={() => onImageClick(currentImage)} style={{ cursor: 'zoom-in' }}>
+        <img src={currentImage} alt={hostel.name} className="hostel-main-img" style={{ transition: 'opacity 0.5s ease-in-out' }} />
+        <div className="card-image-overlays">
+          <div className="badge-row-top">
+            {hostel.popularityLabel && <span className="label-demand">{hostel.popularityLabel}</span>}
+            <span className="label-available">Available</span>
+          </div>
+          <button
+            className={`wish-action-btn ${isWishlisted ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); toggleWishlist(hostel); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
         </div>
-        <button
-          className={`wish-action-btn ${isWishlisted ? 'active' : ''}`}
-          onClick={(e) => { e.preventDefault(); toggleWishlist(hostel); }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-        </button>
+      </div>
+
+      <div className="card-details-side">
+        <div className="details-header-row">
+          <div>
+            <h3 className="hostel-title-pro">{hostel.name}</h3>
+            <p className="hostel-loc-pro"><ICONS.Location /> {hostel.location}</p>
+          </div>
+          <div className="rating-badge-pro">
+            <ICONS.Star /> <span>{hostel.rating}</span>
+          </div>
+        </div>
+
+        <div className="details-mid-grid">
+          <div className="pricing-stack-pro">
+            <span className="price-label-pro">Starts from</span>
+            <span className="price-val-pro">₹{(hostel.price || 0).toLocaleString()}</span>
+          </div>
+          <div className="occupancy-stack-pro">
+            <span className="occ-label-pro"><ICONS.Occupancy /> Occupancy</span>
+            <span className="occ-val-pro">{hostel.occupancy}</span>
+          </div>
+        </div>
+
+        <div className="amenities-footer-row">
+          <div className="amenity-mini-tags">
+            <span className="tag-pro">WiFi</span>
+            <span className="tag-pro">Security</span>
+            <span className="tag-pro">Food</span>
+            <span className="tag-more">+8 More</span>
+          </div>
+        </div>
+
+        <div className="card-actions-row-pro">
+          <Link to={`/listing/${hostel.id}`} className="btn-secondary-pro">View Details</Link>
+          <Link to={`/booking/${hostel.id}`} state={{ basePrice: hostel.price }} className="btn-primary-pro">Book Now</Link>
+        </div>
       </div>
     </div>
-
-    <div className="card-details-side">
-      <div className="details-header-row">
-        <div>
-          <h3 className="hostel-title-pro">{hostel.name}</h3>
-          <p className="hostel-loc-pro"><ICONS.Location /> {hostel.location}</p>
-        </div>
-        <div className="rating-badge-pro">
-          <ICONS.Star /> <span>{hostel.rating}</span>
-        </div>
-      </div>
-
-      <div className="details-mid-grid">
-        <div className="pricing-stack-pro">
-          <span className="price-label-pro">Starts from</span>
-          <span className="price-val-pro">₹{(hostel.price || 0).toLocaleString()}</span>
-        </div>
-        <div className="occupancy-stack-pro">
-          <span className="occ-label-pro"><ICONS.Occupancy /> Occupancy</span>
-          <span className="occ-val-pro">{hostel.occupancy}</span>
-        </div>
-      </div>
-
-      <div className="amenities-footer-row">
-        <div className="amenity-mini-tags">
-          <span className="tag-pro">WiFi</span>
-          <span className="tag-pro">Security</span>
-          <span className="tag-pro">Food</span>
-          <span className="tag-more">+8 More</span>
-        </div>
-      </div>
-
-      <div className="card-actions-row-pro">
-        <Link to={`/listing/${hostel.id}`} className="btn-secondary-pro">View Details</Link>
-        <Link to={`/booking/${hostel.id}`} state={{ basePrice: hostel.price }} className="btn-primary-pro">Book Now</Link>
-      </div>
-    </div>
-  </div>
   );
 };
 

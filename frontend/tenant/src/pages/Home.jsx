@@ -261,7 +261,7 @@ const Home = () => {
   const [showAllCities, setShowAllCities] = useState(false);
 
   const cities = [
-    { name: 'Bangalore', props: 120, img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Bengaluru', props: 120, img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&q=80&w=800' },
     { name: 'Hyderabad', props: 85, img: 'https://upload.wikimedia.org/wikipedia/commons/8/88/Downtown_hyderabad_drone.png' },
     { name: 'Mumbai', props: 64, img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&q=80&w=800' },
     { name: 'Chennai', props: 42, img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80&w=800' },
@@ -400,7 +400,7 @@ const Home = () => {
             <div className="hv2-search-sep" />
 
             <div className="hv2-search-field" onClick={() => { setIsStayTypeOpen(!isStayTypeOpen); setIsBudgetOpen(false); setIsHostelTypeOpen(false); }}>
-              <span className="hv2-field-label">Stay Type</span>
+              <span className="hv2-field-label">Sharing</span>
               <div className="hv2-field-input-wrap">
                 <span className="hv2-field-icon" style={{ color: '#64748b' }}><CalendarCheck size={18} /></span>
                 <div className="hv2-custom-select">
@@ -541,13 +541,13 @@ const Home = () => {
         </div>
         <div className="hv2-rooms-grid">
           {rooms.map(room => (
-            <RoomCard 
-              key={room.id} 
-              room={room} 
-              wishlist={wishlist} 
-              toggleWishlist={toggleWishlist} 
-              setModalInfo={setModalInfo} 
-              navigate={navigate} 
+            <RoomCard
+              key={room.id}
+              room={room}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+              setModalInfo={setModalInfo}
+              navigate={navigate}
             />
           ))}
         </div>
