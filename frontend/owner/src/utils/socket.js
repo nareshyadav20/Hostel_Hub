@@ -12,7 +12,7 @@ const socket = io(socketUrl, {
 export const connectSocket = (id, type = 'building') => {
   if (!socket.connected) {
     socket.connect();
-    
+
     socket.on('connect', () => {
       console.log('✅ Owner Portal: Connected to Real-time Sync Server');
       // Always join global owners room to receive all tenant events
