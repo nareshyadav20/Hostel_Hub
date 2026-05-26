@@ -61,6 +61,9 @@ const createPayment = async (req, res) => {
       tenantId: populated.tenantId?._id,
       actionLink: '/payments'
     });
+
+    // Return the created payment record
+    res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

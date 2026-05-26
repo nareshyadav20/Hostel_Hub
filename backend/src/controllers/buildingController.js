@@ -15,13 +15,43 @@ const createBuilding = async (req, res) => {
       policies, staffInfo, status, lastStep, draftData
     } = req.body;
 
+    const parseField = (field, defaultValue) => {
+      if (!field) return defaultValue;
+      if (typeof field === 'object') return field;
+      try {
+        return JSON.parse(field);
+      } catch (e) {
+        if (typeof field === 'string' && defaultValue && Array.isArray(defaultValue)) {
+          if (field.includes(',')) {
+            return field.split(',').map(s => s.trim());
+          }
+          return [field];
+        }
+        return field || defaultValue;
+      }
+    };
+
+    let finalImages = parseField(images, []);
+    if (req.files && req.files.length > 0) {
+      const uploadedImages = req.files.map(file => {
+        const b64 = file.buffer.toString('base64');
+        return `data:${file.mimetype};base64,${b64}`;
+      });
+      finalImages.push(...uploadedImages);
+    }
+
+    const finalAmenities = parseField(amenities, []);
+    const finalPolicies = parseField(policies, { smoking: 'Not Allowed', alcohol: 'Not Allowed', pets: 'No', visitors: 'Till 8 PM' });
+    const finalStaffInfo = parseField(staffInfo, undefined);
+    const finalDraftData = parseField(draftData, undefined);
+
     const building = await Building.create({
       name: name || 'Untitled Draft',
       address,
       locationCity: locationCity || 'Bengaluru',
       description,
-      amenities: amenities || [],
-      images: images || [],
+      amenities: finalAmenities,
+      images: finalImages,
       startingPrice: startingPrice || 5000,
       securityDeposit: securityDeposit || 0,
       maintenanceCharges: maintenanceCharges || 799,
@@ -35,21 +65,23 @@ const createBuilding = async (req, res) => {
       category: category || 'Student',
       rating: rating || 4.5,
       popularityLabel,
-      policies: policies || { smoking: 'Not Allowed', alcohol: 'Not Allowed', pets: 'No', visitors: 'Till 8 PM' },
-      staffInfo,
+      policies: finalPolicies,
+      staffInfo: finalStaffInfo,
       status: status || 'Active',
       lastStep: lastStep || 1,
-      draftData,
+      draftData: finalDraftData,
       owner: req.user.id
     });
 
     // Sync photos to BuildingPhoto collection
-    if (images && images.length > 0) {
-      const photoDocs = images.map(url => ({
+    if (finalImages && finalImages.length > 0) {
+      const photoDocs = finalImages.map(url => ({
         buildingId: building._id,
         photoUrl: url
       }));
-      await BuildingPhoto.insertMany(photoDocs);
+      await BuildingPhoto.insertMany(photoDocs).catch(err => {
+        console.warn('[DEBUG] BuildingPhoto sync warning:', err.message);
+      });
     }
 
     res.status(201).json(building);
@@ -68,10 +100,16 @@ const getBuildings = async (req, res) => {
       }
     }
     console.log(`[DEBUG] getBuildings query:`, JSON.stringify(query));
-    const buildings = await Building.find(query).populate({
-      path: 'floors',
-      populate: { path: 'rooms', populate: { path: 'beds' } }
-    }).lean();
+    
+    let queryBuilder = Building.find(query);
+    if (req.query.lightweight !== 'true' && req.query.lean !== 'true') {
+      queryBuilder = queryBuilder.populate({
+        path: 'floors',
+        populate: { path: 'rooms', populate: { path: 'beds' } }
+      });
+    }
+    
+    const buildings = await queryBuilder.lean();
     console.log(`[DEBUG] Found ${buildings.length} buildings for owner ${req.user.id}`);
     res.status(200).json(buildings);
   } catch (error) {
@@ -82,15 +120,60 @@ const getBuildings = async (req, res) => {
 
 const updateBuilding = async (req, res) => {
   try {
-    const building = await Building.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updateData = { ...req.body };
+
+    const parseField = (field, defaultValue) => {
+      if (!field) return defaultValue;
+      if (typeof field === 'object') return field;
+      try {
+        return JSON.parse(field);
+      } catch (e) {
+        if (typeof field === 'string' && defaultValue && Array.isArray(defaultValue)) {
+          if (field.includes(',')) {
+            return field.split(',').map(s => s.trim());
+          }
+          return [field];
+        }
+        return field || defaultValue;
+      }
+    };
+
+    if (updateData.amenities) {
+      updateData.amenities = parseField(updateData.amenities, []);
+    }
+    if (updateData.policies) {
+      updateData.policies = parseField(updateData.policies, {});
+    }
+    if (updateData.staffInfo) {
+      updateData.staffInfo = parseField(updateData.staffInfo, {});
+    }
+    if (updateData.draftData) {
+      updateData.draftData = parseField(updateData.draftData, {});
+    }
+
+    let finalImages = parseField(updateData.images, []);
+    if (req.files && req.files.length > 0) {
+      const uploadedImages = req.files.map(file => {
+        const b64 = file.buffer.toString('base64');
+        return `data:${file.mimetype};base64,${b64}`;
+      });
+      finalImages.push(...uploadedImages);
+    }
+    if (updateData.images || (req.files && req.files.length > 0)) {
+      updateData.images = finalImages;
+    }
+
+    const building = await Building.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!building) return res.status(404).json({ error: 'Building not found' });
 
     // Sync new photos to BuildingPhoto collection
-    if (req.body.images && Array.isArray(req.body.images)) {
-      for (const url of req.body.images) {
+    if (building.images && Array.isArray(building.images)) {
+      for (const url of building.images) {
         const exists = await BuildingPhoto.findOne({ buildingId: building._id, photoUrl: url });
         if (!exists) {
-          await BuildingPhoto.create({ buildingId: building._id, photoUrl: url });
+          await BuildingPhoto.create({ buildingId: building._id, photoUrl: url }).catch(err => {
+            console.warn('[DEBUG] BuildingPhoto creation warning:', err.message);
+          });
         }
       }
     }

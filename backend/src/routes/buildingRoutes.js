@@ -9,21 +9,20 @@ router.get('/public/stats', buildingController.getPlatformStats);
 router.get('/public', buildingController.getPublicBuildings);
 router.get('/public/:id', buildingController.getPublicBuildingById);
 
+const multer = require('multer');
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
 router.use(authMiddleware);
 
 // Protected routes for Owner Portal
 router.get('/', buildingController.getBuildings);
 router.get('/:id', buildingController.getBuildingById);
-router.post('/', buildingController.createBuilding);
+router.post('/', upload.array('images', 10), buildingController.createBuilding);
 router.post('/bulk', buildingController.bulkCreateBuildings);
-router.patch('/:id', buildingController.updateBuilding);
-router.put('/:id', buildingController.updateBuilding);
+router.patch('/:id', upload.array('images', 10), buildingController.updateBuilding);
+router.put('/:id', upload.array('images', 10), buildingController.updateBuilding);
 router.delete('/:id', buildingController.deleteBuilding);
-
-const multer = require('multer');
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
 
 router.post('/upload', upload.array('photos', 10), buildingController.uploadPhotos);
 

@@ -120,7 +120,7 @@ const Portfolio = () => {
     setError(null);
     try {
       const [b, f, r, bd, t, c, s] = await Promise.all([
-        api.getBuildings().catch(() => []),
+        api.getBuildings({ lightweight: true }).catch(() => []),
         api.getAllFloors().catch(() => []),
         api.getAllRooms().catch(() => []),
         api.getAllBeds().catch(() => []),
@@ -161,7 +161,7 @@ const Portfolio = () => {
   // Load drafts from backend buildings with status: 'Draft'
   const loadDrafts = useCallback(async () => {
     try {
-      const draftBuildings = await api.getDraftBuildings();
+      const draftBuildings = await api.getDraftBuildings({ lightweight: true });
       setDrafts((draftBuildings || []).map(b => ({ ...b, id: b._id || b.id })));
     } catch (err) { console.error('Draft load error', err); }
   }, []);

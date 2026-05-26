@@ -225,10 +225,14 @@ exports.getCompleteProfile = async (req, res) => {
 exports.uploadPhoto = async (req, res) => {
   try {
     const tenant = await getOrCreateTenant(req.user);
-    const { photoUrl } = req.body;
+    let photoUrl = req.body.photoUrl;
+
+    if (req.file) {
+      photoUrl = `/uploads/profile/${req.file.filename}`;
+    }
 
     if (!photoUrl) {
-      return res.status(400).json({ message: 'Photo URL (base64 or link) is required' });
+      return res.status(400).json({ message: 'Photo URL or uploaded photo file is required' });
     }
 
     const photoRecord = await TenantPhoto.create({

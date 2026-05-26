@@ -76,7 +76,9 @@ const allowedOrigins = [
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, curl, Postman)
-    if (!origin) return callback(null, true);
+    if (!origin || origin === 'null' || origin.startsWith('file://') || origin.startsWith('capacitor://') || origin.startsWith('ionic://') || origin.startsWith('chrome-extension://')) {
+      return callback(null, true);
+    }
     
     // Auto-allow all localhost/127.0.0.1 origins for easier development
     if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:') || origin === 'http://localhost' || origin === 'http://127.0.0.1') {

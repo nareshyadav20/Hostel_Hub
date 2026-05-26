@@ -78,14 +78,13 @@ export const api = {
     return res.data;
   },
 
-  // Buildings & Infrastructure
-  getBuildings: async () => {
-    const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Active' } });
+  getBuildings: async (options = {}) => {
+    const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Active', lightweight: true, ...options } });
     const data = Array.isArray(res.data) ? res.data : [];
     return handleId(data);
   },
-  getDraftBuildings: async () => {
-    const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Draft' } });
+  getDraftBuildings: async (options = {}) => {
+    const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Draft', lightweight: true, ...options } });
     const data = Array.isArray(res.data) ? res.data : [];
     return handleId(data);
   },
