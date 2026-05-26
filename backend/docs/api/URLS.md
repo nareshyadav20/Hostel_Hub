@@ -1,6 +1,6 @@
 # Hostel Hub API Endpoint URLs
 
-**Base Host:** `https://hostel-hub-1-0835.onrender.com/api`
+**Base Host:** `https://livora-hostel-hub.onrender.com/api`
 
 ### 🔑 Authentication
 - POST `/auth/login`

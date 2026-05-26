@@ -1,6 +1,6 @@
 # 📱 Hostel Hub API Reference for Flutter (Dio)
 
-**Base URL**: `https://hostel-hub-1-0835.onrender.com`
+**Base URL**: `https://livora-hostel-hub.onrender.com`
 
 ## 📋 Common Settings
 - **Headers**

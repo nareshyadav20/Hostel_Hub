@@ -55,7 +55,7 @@ const Listing = () => {
   // Auto-play / Auto-navigation carousel for building photos
   const galleryImages = React.useMemo(() => {
     if (hostel?.images && hostel.images.length > 0) {
-      return hostel.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `http://localhost:5000${img}`);
+      return hostel.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `https://livora-hostel-hub.onrender.com${img}`);
     }
     // Fallback images if building has no images
     return [

@@ -256,10 +256,7 @@ const getBuildingById = async (req, res) => {
 
 const getPublicBuildings = async (req, res) => {
   try {
-    const buildings = await Building.find({ status: { $ne: 'Draft' } }).populate({
-      path: 'floors',
-      populate: { path: 'rooms', populate: { path: 'beds' } }
-    });
+    const buildings = await Building.find({ status: { $ne: 'Draft' } }).lean();
     res.status(200).json(buildings);
   } catch (error) {
     res.status(500).json({ error: error.message });

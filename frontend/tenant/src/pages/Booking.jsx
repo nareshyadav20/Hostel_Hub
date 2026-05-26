@@ -591,7 +591,7 @@ const Booking = () => {
                     if (formData.profilePhoto) fd.append('profilePhoto', formData.profilePhoto);
                     if (buildingId) fd.append('buildingId', buildingId);
                     const token = localStorage.getItem('token');
-                    await fetch('http://localhost:5000/api/tenant-proofs/upload', {
+                    await fetch('https://livora-hostel-hub.onrender.com/api/tenant-proofs/upload', {
                       method: 'POST',
                       headers: { Authorization: `Bearer ${token}` },
                       body: fd

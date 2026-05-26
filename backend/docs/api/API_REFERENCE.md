@@ -2,7 +2,7 @@
 
 This document contains the complete API specification for the Hostel Hub mobile application.
 
-**Base URL:** `https://hostel-hub-1-0835.onrender.com`
+**Base URL:** `https://livora-hostel-hub.onrender.com`
 **API Prefix:** `/api`
 
 ---
@@ -109,6 +109,6 @@ All requests (except Login/Register) must include the JWT token.
 final dio = Dio();
 dio.options.headers["Authorization"] = "Bearer $token";
 
-final response = await dio.get('https://hostel-hub-1-0835.onrender.com/api/buildings');
+final response = await dio.get('https://livora-hostel-hub.onrender.com/api/buildings');
 print(response.data);
 ```

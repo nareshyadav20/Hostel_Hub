@@ -8,7 +8,7 @@ import 'package:dio/dio.dart';
 
 class ApiService {
   final Dio _dio = Dio(BaseOptions(
-    baseUrl: 'https://hostel-hub-1-0835.onrender.com/api',
+    baseUrl: 'https://livora-hostel-hub.onrender.com/api',
     connectTimeout: Duration(seconds: 10),
     receiveTimeout: Duration(seconds: 10),
   ));

@@ -12,7 +12,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [showVault, setShowVault] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://livora-hostel-hub.onrender.com/api';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
