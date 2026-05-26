@@ -6,6 +6,23 @@ import './Landing.css';
 import API from '../api/axios';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 
+const EXPLORE_CACHE_KEY = 'hh_explore_buildings';
+const EXPLORE_CACHE_TTL = 3 * 60 * 1000; // 3 minutes
+
+const getCachedBuildings = () => {
+  try {
+    const raw = localStorage.getItem(EXPLORE_CACHE_KEY);
+    if (!raw) return null;
+    const { data, ts } = JSON.parse(raw);
+    if (Date.now() - ts > EXPLORE_CACHE_TTL) { localStorage.removeItem(EXPLORE_CACHE_KEY); return null; }
+    return data;
+  } catch { return null; }
+};
+
+const setCachedBuildings = (data) => {
+  try { localStorage.setItem(EXPLORE_CACHE_KEY, JSON.stringify({ data, ts: Date.now() })); } catch {}
+};
+
 const CITY_LOCALITIES = {
   hyderabad: ['Gachibowli', 'Gowlidoddy', 'HITEC City', 'Kondapur', 'KPHB', 'Madhapur', 'Manikonda', 'Miyapur'],
   bengaluru: ['Koramangala', 'HSR Layout', 'Indiranagar', 'Whitefield', 'Marathahalli', 'BTM Layout', 'Jayanagar', 'Hebbal'],
@@ -35,8 +52,9 @@ const Landing = () => {
 
   const [sortBy, setSortBy] = useState('');
   const [priceRange, setPriceRange] = useState([0, 60000]);
-  const [hostels, setHostels] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Pre-populate from cache so the UI never shows a blank spinner on revisit
+  const [hostels, setHostels] = useState(() => getCachedBuildings() || []);
+  const [loading, setLoading] = useState(() => !getCachedBuildings()); // only show spinner if no cache
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
 
@@ -94,60 +112,63 @@ const Landing = () => {
     }
   }, [location.search]);
 
-  const fetchHostels = async () => {
+  const formatBuildings = (rawData) => {
+    return rawData.map(b => {
+      let city = b.locationCity || 'Hyderabad';
+      if (city.toLowerCase() === 'hydrabad' || city.toLowerCase() === 'hyderabad') {
+        city = 'Hyderabad';
+      } else {
+        city = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
+      }
+      const address = b.address || b.location || 'Hyderabad';
+      let locality = 'Hyderabad';
+      const parenMatch = address.match(/\(([^)]+)\)/);
+      if (parenMatch && parenMatch[1]) {
+        locality = parenMatch[1].trim();
+      } else {
+        const firstPart = address.split(',')[0].trim();
+        locality = firstPart.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      }
+      return {
+        id: b._id,
+        city,
+        name: b.name,
+        locality,
+        fullAddress: address,
+        rating: b.rating || 4.5,
+        price: b.startingPrice || 8000,
+        img: b.images && b.images[0] ? ((b.images[0].startsWith('http') || b.images[0].startsWith('data:')) ? b.images[0] : `http://localhost:5000${b.images[0]}`) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
+        amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['Free WiFi', 'A/C', 'Mess'],
+        gender: b.genderType || 'Unisex',
+        category: b.category || 'Student'
+      };
+    });
+  };
+
+  const fetchHostels = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const res = await API.get('/buildings/public');
-      const formatted = res.data.map(b => {
-        // Normalize spelling inconsistencies: e.g. "hydrabad" -> "Hyderabad"
-        let city = b.locationCity || 'Hyderabad';
-        if (city.toLowerCase() === 'hydrabad' || city.toLowerCase() === 'hyderabad') {
-          city = 'Hyderabad';
-        } else {
-          city = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
-        }
-
-        // Dynamically extract neat neighborhood/locality names from backend address line
-        const address = b.address || b.location || 'Hyderabad';
-        let locality = 'Hyderabad';
-        const parenMatch = address.match(/\(([^)]+)\)/);
-        if (parenMatch && parenMatch[1]) {
-          locality = parenMatch[1].trim();
-        } else {
-          const firstPart = address.split(',')[0].trim();
-          locality = firstPart.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-        }
-
-        return {
-          id: b._id,
-          city: city,
-          name: b.name,
-          locality: locality,
-          fullAddress: address,
-          rating: b.rating || 4.5,
-          price: b.startingPrice || 8000,
-          img: b.images && b.images[0] ? ((b.images[0].startsWith('http') || b.images[0].startsWith('data:')) ? b.images[0] : `http://localhost:5000${b.images[0]}`) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
-          amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['Free WiFi', 'A/C', 'Mess'],
-          gender: b.genderType || 'Unisex',
-          category: b.category || 'Student'
-        };
-      });
+      const formatted = formatBuildings(res.data);
+      setCachedBuildings(formatted);
       setHostels(formatted);
     } catch (error) {
       console.error('Error fetching hostels:', error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchHostels();
+    // If we have cached data, fetch silently in background (no spinner)
+    const hasCached = getCachedBuildings() !== null;
+    fetchHostels(hasCached); // silent=true if cache exists, false if first load
 
-    // Real-time synchronization
+    // Real-time synchronization — silent refresh, no spinner flicker
     connectSocket();
     socket.on('hostelUpdated', () => {
-      console.log('🔄 Explore page updating in real-time');
-      fetchHostels();
+      console.log('🔄 Explore page updating in real-time (silent)');
+      fetchHostels(true); // always silent on socket events
     });
 
     return () => {

@@ -30,6 +30,22 @@ const handleId = (data) => {
   return data;
 };
 
+// SWR (Stale-While-Revalidate) helper to prevent React request storms
+const swrFetch = async (cacheKey, url, config = {}) => {
+  const cached = cacheGet(cacheKey);
+  if (cached) {
+    // Silently revalidate in background
+    axios.get(url, config)
+      .then(res => cacheSet(cacheKey, handleId(Array.isArray(res.data) ? res.data : (res.data || []))))
+      .catch(err => console.warn(`SWR Background fetch failed for ${cacheKey}`, err));
+    return handleId(cached);
+  }
+  const res = await axios.get(url, config);
+  const data = Array.isArray(res.data) ? res.data : (res.data || []);
+  cacheSet(cacheKey, data);
+  return handleId(data);
+};
+
 export const api = {
   // Owner Profile
   getOwnerProfile: async () => {
@@ -80,14 +96,10 @@ export const api = {
 
   // Buildings & Infrastructure
   getBuildings: async () => {
-    const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Active' } });
-    const data = Array.isArray(res.data) ? res.data : [];
-    return handleId(data);
+    return await swrFetch('buildings_active', `${API_URL}/buildings`, { params: { status: 'Active' } });
   },
   getDraftBuildings: async () => {
-    const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Draft' } });
-    const data = Array.isArray(res.data) ? res.data : [];
-    return handleId(data);
+    return await swrFetch('buildings_draft', `${API_URL}/buildings`, { params: { status: 'Draft' } });
   },
   getHostels: async () => {
     const res = await axios.get(`${API_URL}/hostels`);
@@ -116,37 +128,21 @@ export const api = {
     return data.map(m => m.floor?._id || m.floor?.id);
   },
   getAllFloors: async () => {
-    const res = await axios.get(`${API_URL}/floors`);
-    return handleId(res.data);
+    return await swrFetch('all_floors', `${API_URL}/floors`);
   },
   getFloorsByBuilding: async (bId) => {
     const res = await axios.get(`${API_URL}/floors`, { params: { buildingId: bId } });
     return handleId(res.data);
   },
   getAllRooms: async () => {
-    const cached = cacheGet('all_rooms');
-    if (cached) {
-      axios.get(`${API_URL}/rooms`).then(res => cacheSet('all_rooms', res.data));
-      return handleId(cached);
-    }
-    const res = await axios.get(`${API_URL}/rooms`);
-    cacheSet('all_rooms', res.data);
-    return handleId(res.data);
+    return await swrFetch('all_rooms', `${API_URL}/rooms`);
   },
   getRoomsByBuilding: async (bId) => {
     const res = await axios.get(`${API_URL}/rooms`, { params: { buildingId: bId } });
     return handleId(res.data);
   },
   getAllBeds: async () => {
-    const cached = cacheGet('all_beds');
-    if (cached) {
-      axios.get(`${API_URL}/beds`).then(res => cacheSet('all_beds', res.data));
-      return handleId(cached);
-    }
-    const res = await axios.get(`${API_URL}/beds`);
-    const data = Array.isArray(res.data) ? res.data : [];
-    cacheSet('all_beds', data);
-    return handleId(data);
+    return await swrFetch('all_beds', `${API_URL}/beds`);
   },
   getBedsByBuilding: async (bId) => {
     const res = await axios.get(`${API_URL}/beds`, { params: { buildingId: bId } });
@@ -215,13 +211,11 @@ export const api = {
   // Operational Data
   getTenants: async (buildingId) => {
     const params = buildingId ? { buildingId } : {};
-    const res = await axios.get(`${API_URL}/tenants`, { params });
-    return handleId(res.data);
+    return await swrFetch(`tenants_${buildingId || 'all'}`, `${API_URL}/tenants`, { params });
   },
   getComplaints: async (buildingId) => {
     const params = buildingId ? { buildingId } : {};
-    const res = await axios.get(`${API_URL}/complaints`, { params });
-    return handleId(res.data);
+    return await swrFetch(`complaints_${buildingId || 'all'}`, `${API_URL}/complaints`, { params });
   },
   updateComplaintStatus: async (id, status, assignedTo = null) => {
     const res = await axios.patch(`${API_URL}/complaints/${id}`, { status, assignedTo });
@@ -275,11 +269,20 @@ export const api = {
   },
   // Staff Management
   getStaff: async (bId) => {
-    const res = await axios.get(`${API_URL}/staff`, { params: { buildingId: bId } });
-    if (res.data && res.data.staffList) {
-      res.data.staffList = res.data.staffList.map(s => ({ ...s, id: s._id }));
+    const cacheKey = `staff_${bId || 'all'}`;
+    const cached = cacheGet(cacheKey);
+    const processData = (data) => {
+      if (data && data.staffList) data.staffList = data.staffList.map(s => ({ ...s, id: s._id }));
+      return data;
+    };
+    if (cached) {
+      axios.get(`${API_URL}/staff`, { params: { buildingId: bId } }).then(res => cacheSet(cacheKey, processData(res.data))).catch(()=>{});
+      return processData(cached);
     }
-    return res.data;
+    const res = await axios.get(`${API_URL}/staff`, { params: { buildingId: bId } });
+    const data = processData(res.data);
+    cacheSet(cacheKey, data);
+    return data;
   },
   addStaff: async (data) => {
     const res = await axios.post(`${API_URL}/staff`, data);

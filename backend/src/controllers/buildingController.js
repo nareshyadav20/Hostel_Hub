@@ -68,10 +68,9 @@ const getBuildings = async (req, res) => {
       }
     }
     console.log(`[DEBUG] getBuildings query:`, JSON.stringify(query));
-    const buildings = await Building.find(query).populate({
-      path: 'floors',
-      populate: { path: 'rooms', populate: { path: 'beds' } }
-    }).lean();
+    const buildings = await Building.find(query)
+      .select('-floors') // Exclude heavy nested arrays since frontend fetches floors dynamically
+      .lean();
     console.log(`[DEBUG] Found ${buildings.length} buildings for owner ${req.user.id}`);
     res.status(200).json(buildings);
   } catch (error) {
@@ -256,10 +255,9 @@ const getBuildingById = async (req, res) => {
 
 const getPublicBuildings = async (req, res) => {
   try {
-    const buildings = await Building.find({ status: { $ne: 'Draft' } }).populate({
-      path: 'floors',
-      populate: { path: 'rooms', populate: { path: 'beds' } }
-    });
+    const buildings = await Building.find({ status: { $ne: 'Draft' } })
+      .select('name address type category rating images isAC amenities genderType')
+      .lean();
     res.status(200).json(buildings);
   } catch (error) {
     res.status(500).json({ error: error.message });
