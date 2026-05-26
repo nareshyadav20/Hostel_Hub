@@ -101,7 +101,6 @@ function Dashboard() {
         socket.off('tenantAdded');
         socket.off('transferCreated');
         socket.off('paymentCompleted');
-        disconnectSocket();
       };
     }
   }, [activeBuildingId]);

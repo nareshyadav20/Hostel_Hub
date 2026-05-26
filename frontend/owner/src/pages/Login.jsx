@@ -15,7 +15,7 @@ const Login = () => {
   const [error, setError] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'https://livora-hostel-hub.onrender.com/api';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://livora-hostel-hub-1.onrender.com/api';
 
   const handleSubmit = async (e) => {
     e.preventDefault();

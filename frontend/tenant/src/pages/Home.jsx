@@ -133,7 +133,7 @@ const Home = () => {
         id: b._id,
         badge: b.popularityLabel || (i === 0 ? 'Premium' : i === 1 ? 'Popular' : 'New'),
         badgeColor: i === 0 ? '#4F46E5' : i === 1 ? '#10B981' : '#F59E0B',
-        images: b.images && b.images.length > 0 ? b.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `https://livora-hostel-hub.onrender.com${img}`) : [extReal],
+        images: b.images && b.images.length > 0 ? b.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `https://livora-hostel-hub-1.onrender.com${img}`) : [extReal],
         name: b.name,
         loc: b.address + ', ' + b.locationCity,
         price: `₹${b.startingPrice?.toLocaleString() || '9,000'}`,
@@ -159,7 +159,6 @@ const Home = () => {
 
     return () => {
       socket.off('hostelUpdated');
-      disconnectSocket();
     };
   }, []);
 

@@ -26,7 +26,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://livora-hostel-hub.onrender.com';
+  static const String baseUrl = 'https://livora-hostel-hub-1.onrender.com';
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
 
@@ -280,7 +280,7 @@ class SocketService {
 
   SocketService._internal() {
     socket = IO.io(
-      'https://livora-hostel-hub.onrender.com',
+      'https://livora-hostel-hub-1.onrender.com',
       IO.OptionBuilder()
         .setTransports(['websocket'])
         .disableAutoConnect()

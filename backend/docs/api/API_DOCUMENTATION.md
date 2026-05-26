@@ -1,6 +1,6 @@
 # Hostel Hub - Full API Documentation v2.0 (Production Ready)
 
-**Base URL:** `https://livora-hostel-hub.onrender.com`
+**Base URL:** `https://livora-hostel-hub-1.onrender.com`
 **Version:** 2.0.0
 **Support:** Naresh Yadav (Backend Lead)
 
@@ -20,7 +20,7 @@
 
 ### 1. Login User
 - **Method:** `POST`
-- **URL:** `https://livora-hostel-hub.onrender.com/api/auth/login`
+- **URL:** `https://livora-hostel-hub-1.onrender.com/api/auth/login`
 - **Description:** Authenticates user and returns JWT token + profiles.
 - **Request Body:**
   ```json
@@ -42,7 +42,7 @@
 
 ### 2. Register User
 - **Method:** `POST`
-- **URL:** `https://livora-hostel-hub.onrender.com/api/auth/register`
+- **URL:** `https://livora-hostel-hub-1.onrender.com/api/auth/register`
 - **Description:** Creates a new user and auto-creates profile for Tenants.
 - **Request Body:**
   ```json
@@ -71,14 +71,14 @@
 
 ### 3. Get All Buildings
 - **Method:** `GET`
-- **URL:** `https://livora-hostel-hub.onrender.com/api/buildings`
+- **URL:** `https://livora-hostel-hub-1.onrender.com/api/buildings`
 - **Description:** Fetch all properties owned by the user.
 - **Auth Required:** YES
 - **Response (200):** Array of building objects with nested floors/rooms/beds.
 
 ### 4. Create Building (Multipart Upload)
 - **Method:** `POST`
-- **URL:** `https://livora-hostel-hub.onrender.com/api/buildings`
+- **URL:** `https://livora-hostel-hub-1.onrender.com/api/buildings`
 - **Description:** Add a new property with images.
 - **Request Body:**
   ```json
@@ -100,12 +100,12 @@
 
 ### 5. Get Rooms by Floor
 - **Method:** `GET`
-- **URL:** `https://livora-hostel-hub.onrender.com/api/rooms/:floorId`
+- **URL:** `https://livora-hostel-hub-1.onrender.com/api/rooms/:floorId`
 - **Auth Required:** YES
 
 ### 6. Create Bed
 - **Method:** `POST`
-- **URL:** `https://livora-hostel-hub.onrender.com/api/beds`
+- **URL:** `https://livora-hostel-hub-1.onrender.com/api/beds`
 - **Body:** `{ "bedNumber": "A1", "roomId": "..." }`
 - **Auth Required:** YES
 
@@ -117,7 +117,7 @@
 
 ### 7. Create New Booking
 - **Method:** `POST`
-- **URL:** `https://livora-hostel-hub.onrender.com/api/bookings`
+- **URL:** `https://livora-hostel-hub-1.onrender.com/api/bookings`
 - **Description:** Reserves a room and generates an invoice.
 - **Request Body:**
   ```json
@@ -139,7 +139,7 @@
 
 ### 8. Get My Payments
 - **Method:** `GET`
-- **URL:** `https://livora-hostel-hub.onrender.com/api/payments/me`
+- **URL:** `https://livora-hostel-hub-1.onrender.com/api/payments/me`
 - **Query Params:** `tenantId` (Optional)
 - **Auth Required:** YES
 
@@ -151,13 +151,13 @@
 
 ### 9. Raise Complaint
 - **Method:** `POST`
-- **URL:** `https://livora-hostel-hub.onrender.com/api/complaints`
+- **URL:** `https://livora-hostel-hub-1.onrender.com/api/complaints`
 - **Body:** `{ "title", "description", "category", "priority" }`
 - **Auth Required:** YES
 
 ### 10. Community Report (Incident Reporting)
 - **Method:** `POST`
-- **URL:** `https://livora-hostel-hub.onrender.com/api/tenant-portal/community-reports`
+- **URL:** `https://livora-hostel-hub-1.onrender.com/api/tenant-portal/community-reports`
 - **Auth Required:** YES
 
 ---
@@ -168,7 +168,7 @@
 
 ### 11. Request Visitor Access (Visitor Gatepass)
 - **Method:** `POST`
-- **URL:** `https://livora-hostel-hub.onrender.com/api/services/visitors`
+- **URL:** `https://livora-hostel-hub-1.onrender.com/api/services/visitors`
 - **Description:** Requests a visitor gatepass entry/permission.
 - **Request Body:**
   ```json
@@ -193,7 +193,7 @@
 
 ### 12. Submit Leave / Outpass Notice
 - **Method:** `POST`
-- **URL:** `https://livora-hostel-hub.onrender.com/api/services/leaves`
+- **URL:** `https://livora-hostel-hub-1.onrender.com/api/services/leaves`
 - **Description:** Submit a leave/outpass permission request notice.
 - **Request Body:**
   ```json

@@ -1,12 +1,15 @@
 import { io } from 'socket.io-client';
 
-const socketUrl = (import.meta.env.VITE_API_URL || 'https://livora-hostel-hub.onrender.com/api').replace('/api', '');
+const socketUrl = (import.meta.env.VITE_API_URL || 'https://livora-hostel-hub-1.onrender.com/api').replace('/api', '');
 
 const socket = io(socketUrl, {
   autoConnect: false,
   reconnection: true,
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
+  timeout: 10000,
+  transports: ["websocket", "polling"],
+  upgrade: true,
 });
 
 export const connectSocket = (id, type = 'building') => {

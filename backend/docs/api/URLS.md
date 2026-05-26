@@ -1,6 +1,6 @@
 # Hostel Hub API Endpoint URLs
 
-**Base Host:** `https://livora-hostel-hub.onrender.com/api`  
+**Base Host:** `https://livora-hostel-hub-1.onrender.com/api`  
 > 🔓 = Public (no auth). All others require `Authorization: Bearer <token>`.
 
 ---
@@ -125,7 +125,7 @@
 ---
 
 ### 🔴 Real-time (Socket.io)
-Connect to `https://livora-hostel-hub.onrender.com` (not `/api`).
+Connect to `https://livora-hostel-hub-1.onrender.com` (not `/api`).
 
 | Event (emit) | Payload | Notes |
 |--------------|---------|-------|

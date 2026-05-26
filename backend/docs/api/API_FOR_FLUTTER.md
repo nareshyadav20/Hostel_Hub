@@ -1,6 +1,6 @@
 # 📱 Livora Hostel Hub — Flutter (Dio) API Reference
 
-**Base URL**: `https://livora-hostel-hub.onrender.com`
+**Base URL**: `https://livora-hostel-hub-1.onrender.com`
 
 > All protected routes require the `Authorization: Bearer <token>` header.  
 > Unprotected (public) routes are marked 🔓.
@@ -13,7 +13,7 @@
 import 'package:dio/dio.dart';
 
 class ApiClient {
-  static const String baseUrl = 'https://livora-hostel-hub.onrender.com';
+  static const String baseUrl = 'https://livora-hostel-hub-1.onrender.com';
   late final Dio dio;
 
   ApiClient() {
@@ -102,7 +102,7 @@ final buildings = resp.data as List<dynamic>;
 > String resolveImage(String img) =>
 >   img.startsWith('http') || img.startsWith('data:')
 >     ? img
->     : 'https://livora-hostel-hub.onrender.com$img';
+>     : 'https://livora-hostel-hub-1.onrender.com$img';
 > ```
 
 ---
@@ -442,7 +442,7 @@ The backend uses **Socket.io** for real-time events. For native push:
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 IO.Socket socket = IO.io(
-  'https://livora-hostel-hub.onrender.com',
+  'https://livora-hostel-hub-1.onrender.com',
   IO.OptionBuilder()
     .setTransports(['websocket'])
     .disableAutoConnect()

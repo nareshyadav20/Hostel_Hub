@@ -131,7 +131,7 @@ const Users = () => {
               </thead>
               <tbody className="divide-y divide-border/50">
                 {filtered.map((u) => {
-                  const apiBase = (import.meta.env.VITE_API_URL || 'https://livora-hostel-hub.onrender.com/api').replace('/api', '');
+                  const apiBase = (import.meta.env.VITE_API_URL || 'https://livora-hostel-hub-1.onrender.com/api').replace('/api', '');
                   const fullDocUrl = u.documentUrl ? (u.documentUrl.startsWith('http') ? u.documentUrl : `${apiBase}${u.documentUrl}`) : null;
 
                   return (

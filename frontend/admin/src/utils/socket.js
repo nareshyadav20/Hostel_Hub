@@ -1,5 +1,3 @@
-// src/utils/socket.js
-
 import { io } from "socket.io-client";
 
 const SOCKET_URL = (
@@ -20,22 +18,9 @@ const socket = io(SOCKET_URL, {
 let listenersInitialized = false;
 
 export const connectSocket = () => {
-
   if (!listenersInitialized) {
-
     socket.on("connect", () => {
-      console.log("✅ Connected to Real-time Sync Server");
-
-      const buildingId = localStorage.getItem("buildingId");
-      const tenantId = localStorage.getItem("tenantId");
-
-      if (buildingId) {
-        socket.emit("joinBuilding", buildingId);
-      }
-
-      if (tenantId) {
-        socket.emit("joinTenant", tenantId);
-      }
+      console.log("✅ Admin Portal: Connected to Real-time Sync Server");
     });
 
     socket.on("connect_error", (error) => {
@@ -55,15 +40,11 @@ export const connectSocket = () => {
 };
 
 export const disconnectSocket = () => {
-
   socket.removeAllListeners();
-
   if (socket.connected) {
     socket.disconnect();
   }
-
   listenersInitialized = false;
-
   console.log("🔌 Socket disconnected cleanly");
 };
 

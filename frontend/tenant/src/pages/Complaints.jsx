@@ -86,7 +86,6 @@ const Complaints = () => {
 
     return () => {
       socket.off('complaintStatusChanged');
-      disconnectSocket();
     };
   }, []);
 

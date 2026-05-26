@@ -121,7 +121,6 @@ const Mess = () => {
     return () => {
       socket.off('menuUpdated');
       socket.off('attendanceUpdated');
-      disconnectSocket();
     };
   }, []);
 

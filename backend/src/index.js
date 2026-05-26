@@ -184,6 +184,10 @@ app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
 });
 
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'healthy', timestamp: new Date() });
+});
+
 app.get('/', (req, res) => {
   res.send('HostelHub API (Node/Mongoose) is running...');
 });

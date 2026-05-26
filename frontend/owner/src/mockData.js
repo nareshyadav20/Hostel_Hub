@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { cacheGet, cacheSet } from './cache';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://livora-hostel-hub.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://livora-hostel-hub-1.onrender.com/api';
 export const backendOnline = true;
 
 // --- GLOBAL AUTH INTERCEPTOR ---
@@ -79,9 +79,21 @@ export const api = {
   },
 
   getBuildings: async (options = {}) => {
+    const cacheKey = `buildings_${JSON.stringify(options)}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) {
+      axios.get(`${API_URL}/buildings`, { params: { status: 'Active', lightweight: true, ...options } })
+        .then(res => {
+          const data = Array.isArray(res.data) ? res.data : [];
+          cacheSet(cacheKey, handleId(data));
+        }).catch(() => {});
+      return cached;
+    }
     const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Active', lightweight: true, ...options } });
     const data = Array.isArray(res.data) ? res.data : [];
-    return handleId(data);
+    const processed = handleId(data);
+    cacheSet(cacheKey, processed);
+    return processed;
   },
   getDraftBuildings: async (options = {}) => {
     const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Draft', lightweight: true, ...options } });

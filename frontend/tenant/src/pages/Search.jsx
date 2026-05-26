@@ -137,7 +137,7 @@ const Search = () => {
           rating: b.rating || (4.0 + Math.random()).toFixed(1),
           popularityLabel: b.rating > 4.6 ? 'High Demand' : null,
           occupancy: '70%',
-          images: b.images && b.images.length > 0 ? b.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `https://livora-hostel-hub.onrender.com${img}`) : ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'],
+          images: b.images && b.images.length > 0 ? b.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `https://livora-hostel-hub-1.onrender.com${img}`) : ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'],
           amenities: b.amenities || []
         }));
       }
@@ -165,7 +165,6 @@ const Search = () => {
 
     return () => {
       socket.off('hostelUpdated');
-      disconnectSocket();
     };
   }, []);
 
