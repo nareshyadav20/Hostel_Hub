@@ -40,6 +40,18 @@ const ProtectedRoute = ({ children }) => {
 // App version for cache/auth busting
 const APP_VERSION = '1.0.4';
 
+const ListingWrapper = () => {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isLoggedIn = !!token && !!user.name;
+
+  if (isLoggedIn) {
+    return <Layout><Listing /></Layout>;
+  } else {
+    return <PublicLayout><Listing /></PublicLayout>;
+  }
+};
+
 function App() {
   React.useEffect(() => {
     const storedVersion = localStorage.getItem('app_version');
@@ -77,7 +89,7 @@ function App() {
         {/* Public browsing routes */}
         <Route path="/search"          element={<Layout><Search /></Layout>} />
         <Route path="/offers"          element={<Offers />} />
-        <Route path="/listing/:id"     element={<Layout><Listing /></Layout>} />
+        <Route path="/listing/:id"     element={<ListingWrapper />} />
 
         {/* Protected portal routes */}
         <Route path="/dashboard"  element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
