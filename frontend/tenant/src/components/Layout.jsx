@@ -74,6 +74,8 @@ const Toast = ({ notification, onClose }) => {
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isListingPage = location.pathname.startsWith('/listing');
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [aiMessage, setAiMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -276,6 +278,7 @@ const Layout = ({ children }) => {
       {isSidebarOpen && <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>}
 
       <main className={isLoggedIn ? "main-content" : "main-content guest"}>
+        {!(isLoggedIn && isListingPage) && (
         <header className="content-header">
           {isLoggedIn && (
             <button className="hamburger-btn" onClick={toggleSidebar}>
@@ -450,15 +453,18 @@ const Layout = ({ children }) => {
             )}
           </div>
         </header>
+        )}
 
         <div className="content-body">
           <div className="content-wrapper">
             {children}
           </div>
 
+          {!(isLoggedIn && isListingPage) && (
           <footer className="layout-footer">
             <p>© 2026 Livora All rights reserved.</p>
           </footer>
+          )}
         </div>
 
 
