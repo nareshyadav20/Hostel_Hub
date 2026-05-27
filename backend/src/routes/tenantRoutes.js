@@ -6,8 +6,8 @@ const authMiddleware = require('../utils/authMiddleware');
 router.get('/me', authMiddleware, tenantController.getTenantProfile);
 router.post('/', authMiddleware, tenantController.createTenant);
 router.get('/', authMiddleware, tenantController.getTenants);
-router.post('/bulk', tenantController.bulkCreateTenants);
-router.put('/:id', tenantController.updateTenant);
-router.delete('/:id', tenantController.deleteTenant);
+router.post('/bulk', authMiddleware, tenantController.bulkCreateTenants);
+router.put('/:id', authMiddleware, tenantController.updateTenant);
+router.delete('/:id', authMiddleware, tenantController.deleteTenant);
 
 module.exports = router;
