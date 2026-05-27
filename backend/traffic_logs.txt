@@ -3115,3 +3115,186 @@
 2026-05-27T05:07:13.951Z API: GET /api/hostels/bed-stats?buildingId=6a10381498e47e176b9e3647
 2026-05-27T05:07:14.183Z API: GET /api/hostels/bed-stats?buildingId=6a13e1ed04f997bb021cf698
 2026-05-27T05:07:14.239Z API: GET /api/hostels/bed-stats?buildingId=6a156efff90079b97f4072a9
+2026-05-27T10:23:48.884Z API: GET /api/health
+2026-05-27T10:23:49.171Z API: GET /api/buildings/public
+2026-05-27T10:23:49.178Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:23:49.190Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:23:49.196Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:23:49.227Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:23:49.243Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:23:49.277Z API: GET /api/buildings/public
+2026-05-27T10:23:49.376Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:23:49.440Z SOCKET: Socket connected: 0fRMikuQSxrEb4jUAAAB
+2026-05-27T10:24:39.740Z SOCKET: Socket connected: W2xukMoploMv7mSOAAAB
+2026-05-27T10:26:04.258Z API: GET /api/health
+2026-05-27T10:26:04.336Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:26:04.354Z API: GET /api/buildings/public
+2026-05-27T10:26:04.364Z SOCKET: Socket connected: pPj0ay0smdF_OQ9qAAAD
+2026-05-27T10:26:04.366Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:04.374Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:26:04.390Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:26:04.409Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:04.437Z API: GET /api/buildings/public
+2026-05-27T10:26:04.543Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:26:07.411Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:07.450Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:16.996Z API: POST /api/tenant-portal/profile-setup/step3
+2026-05-27T10:26:17.164Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:17.216Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:37.883Z API: POST /api/tenant-portal/profile-setup/step4
+2026-05-27T10:26:39.928Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:40.021Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:40.118Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:40.259Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:42.566Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:43.382Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:44.685Z API: GET /api/health
+2026-05-27T10:26:44.730Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:44.735Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:44.752Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:26:44.765Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:44.783Z SOCKET: Socket connected: 2E9wSKeIjN0CMjz0AAAF
+2026-05-27T10:26:44.805Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:44.942Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:26:52.438Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:55.111Z API: GET /api/health
+2026-05-27T10:26:55.147Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:55.151Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:55.160Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:26:55.172Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:55.221Z SOCKET: Socket connected: 8OUgj8pd4UqFF2SUAAAH
+2026-05-27T10:26:55.294Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:55.383Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:26:55.479Z API: GET /api/health
+2026-05-27T10:26:55.524Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:26:55.552Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:55.597Z SOCKET: Socket connected: ifMG2uZkzcydCb_ZAAAJ
+2026-05-27T10:26:55.663Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:55.671Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:55.760Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:26:55.989Z API: GET /api/health
+2026-05-27T10:26:56.027Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:56.050Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:56.097Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:26:56.130Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:56.147Z SOCKET: Socket connected: _mHt0xJ22raWPdeKAAAL
+2026-05-27T10:26:56.162Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:56.220Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:26:56.493Z API: GET /api/health
+2026-05-27T10:26:56.544Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:56.588Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:56.644Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:26:56.678Z SOCKET: Socket connected: N62fXYLK6X0abdInAAAN
+2026-05-27T10:26:56.684Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:26:56.725Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:26:56.916Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:27:25.749Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:27:54.795Z API: GET /api/buildings/public
+2026-05-27T10:27:54.807Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:27:54.821Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:27:54.862Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:27:54.872Z API: GET /api/buildings/public
+2026-05-27T10:27:54.884Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:27:57.321Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:27:57.326Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:27:57.332Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:27:57.387Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:28:03.289Z SOCKET: Socket connected: pDR8q7akPyD60586AAAB
+2026-05-27T10:28:27.453Z API: GET /api/health
+2026-05-27T10:28:27.539Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:28:27.566Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:28:27.577Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:28:27.595Z SOCKET: Socket connected: 8AKhXZbQ7D69RAjVAAAD
+2026-05-27T10:28:27.669Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:28:27.787Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:28:27.930Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:28:46.813Z API: GET /api/health
+2026-05-27T10:28:46.898Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:28:46.904Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:28:46.915Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:28:46.930Z SOCKET: Socket connected: QcM_yj7srfFBH7VMAAAF
+2026-05-27T10:28:46.971Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:28:47.014Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:28:47.209Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:29:10.570Z API: GET /api/health
+2026-05-27T10:29:10.627Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:29:10.632Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:29:10.642Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:29:10.651Z SOCKET: Socket connected: pThkZzGj5QaQQHG-AAAH
+2026-05-27T10:29:10.685Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:29:10.721Z API: GET /api/tenant-portal/complete-profile
+2026-05-27T10:29:10.803Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:29:40.473Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:29:40.491Z API: GET /api/buildings/public
+2026-05-27T10:29:40.510Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:29:40.531Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:29:40.565Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:29:40.586Z API: GET /api/buildings/public
+2026-05-27T10:30:07.045Z SOCKET: Socket connected: l_T9bZIukIjEket-AAAB
+2026-05-27T10:30:51.130Z API: GET /api/health
+2026-05-27T10:30:51.180Z API: GET /api/buildings/public
+2026-05-27T10:30:51.198Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:30:51.214Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:30:51.232Z SOCKET: Socket connected: kri2LwD7jyzza7ovAAAD
+2026-05-27T10:30:51.238Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:30:51.265Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:30:51.276Z API: GET /api/buildings/public
+2026-05-27T10:30:51.287Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:30:51.423Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:31:19.582Z API: GET /api/health
+2026-05-27T10:31:19.642Z API: GET /api/buildings/public
+2026-05-27T10:31:19.648Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:31:19.654Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:31:19.659Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:31:19.666Z SOCKET: Socket connected: 7rWuKqNuPlxEEW_yAAAF
+2026-05-27T10:31:19.704Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:31:19.730Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:31:19.737Z API: GET /api/buildings/public
+2026-05-27T10:31:19.844Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:33:05.726Z SOCKET: Socket connected: ZoGQ0FXD23sLO4lLAAAB
+2026-05-27T10:33:24.103Z API: GET /api/health
+2026-05-27T10:33:24.181Z API: GET /api/buildings/public
+2026-05-27T10:33:24.196Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:33:24.220Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:33:24.239Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:33:24.253Z SOCKET: Socket connected: x51TgYvLqzwSLk8iAAAD
+2026-05-27T10:33:24.271Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:33:24.281Z API: GET /api/buildings/public
+2026-05-27T10:33:24.293Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:33:24.444Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:33:43.122Z API: GET /api/health
+2026-05-27T10:33:43.187Z API: GET /api/buildings/public
+2026-05-27T10:33:43.195Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:33:43.201Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:33:43.207Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:33:43.214Z SOCKET: Socket connected: ttsaQp-cE-OyitSkAAAF
+2026-05-27T10:33:43.240Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:33:43.251Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:33:43.265Z API: GET /api/buildings/public
+2026-05-27T10:33:43.372Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:34:05.767Z API: GET /api/health
+2026-05-27T10:34:06.026Z API: GET /api/buildings/public
+2026-05-27T10:34:06.031Z API: GET /api/buildings/public/stats
+2026-05-27T10:34:06.039Z API: GET /api/notifications
+2026-05-27T10:34:06.074Z API: GET /api/notifications
+2026-05-27T10:34:06.138Z API: GET /api/buildings/public
+2026-05-27T10:34:06.204Z API: GET /api/buildings/public/stats
+2026-05-27T10:34:07.697Z API: GET /api/health
+2026-05-27T10:34:08.116Z API: GET /api/buildings/public
+2026-05-27T10:34:08.120Z API: GET /api/buildings/public/stats
+2026-05-27T10:34:08.218Z API: GET /api/buildings/public
+2026-05-27T10:34:08.283Z API: GET /api/buildings/public/stats
+2026-05-27T10:34:09.669Z SOCKET: Socket connected: lyE-uir43FmGPO_oAAAI
+2026-05-27T10:34:31.551Z API: GET /api/health
+2026-05-27T10:34:31.628Z API: GET /api/buildings/public
+2026-05-27T10:34:31.648Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:34:31.666Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:34:31.689Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:34:31.777Z SOCKET: Socket connected: bdrfDg3-Q1ZQ1U5BAAAK
+2026-05-27T10:34:31.885Z API: GET /api/buildings/public
+2026-05-27T10:34:31.912Z API: GET /api/tenant-portal/wishlist
+2026-05-27T10:34:31.938Z API: GET /api/tenant-portal/profile-setup/status
+2026-05-27T10:34:32.173Z API: GET /api/notifications?buildingId=6a0fde19961b68b29687d728
+2026-05-27T10:34:53.252Z SOCKET: Socket connected: YRcFwb-sCQAOu-ERAAAB
+2026-05-27T10:35:03.053Z SOCKET: Socket connected: E-gblnMC5tlXuN0mAAAB
+2026-05-27T10:35:10.260Z SOCKET: Socket connected: 92Bgk6jwozEkTgGPAAAB

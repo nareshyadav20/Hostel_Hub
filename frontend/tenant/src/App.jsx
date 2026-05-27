@@ -24,6 +24,8 @@ import Services from './pages/Services';
 import Community from './pages/Community';
 import Safety from './pages/Safety';
 import Profile from './pages/Profile';
+import ProfileStep3 from './pages/ProfileStep3';
+import ProfileStep4 from './pages/ProfileStep4';
 import Notifications from './pages/Notifications';
 import About from './pages/About';
 import Contact from './pages/Contact';
@@ -377,6 +379,24 @@ function App() {
               <Layout>
                 <Profile />
               </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile-setup/step3"
+          element={
+            <ProtectedRoute>
+              <ProfileStep3 />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile-setup/step4"
+          element={
+            <ProtectedRoute>
+              <ProfileStep4 />
             </ProtectedRoute>
           }
         />

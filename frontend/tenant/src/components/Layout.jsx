@@ -410,9 +410,22 @@ const Layout = ({ children }) => {
                             </button>
                           )}
                           {user.profileCompletion === 50 && (
-                            <div className="setup-next-step">
-                              Next: Book a Room to Verify ID
-                            </div>
+                            <button
+                              className="btn-primary-small setup-step-btn"
+                              onClick={() => { setShowDropdown(false); navigate('/profile-setup/step3'); }}
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="9 18 15 12 9 6"/></svg>
+                              Continue Step 3: Lifestyle
+                            </button>
+                          )}
+                          {user.profileCompletion === 75 && (
+                            <button
+                              className="btn-primary-small setup-step-btn"
+                              onClick={() => { setShowDropdown(false); navigate('/profile-setup/step4'); }}
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="9 18 15 12 9 6"/></svg>
+                              Continue Step 4: Verify ID
+                            </button>
                           )}
                         </div>
                       )}
