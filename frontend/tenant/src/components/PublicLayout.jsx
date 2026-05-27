@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { ChevronRight, Bed, BookOpen, Shirt, Droplet, Car, Video, Wrench, ShieldCheck, MessageSquare, HeartPulse, Wifi, Utensils, Sparkles } from 'lucide-react';
+import { ChevronRight, Bed, BookOpen, Shirt, Droplet, Car, Video, Wrench, ShieldCheck, MessageSquare, HeartPulse, Wifi, Utensils, Sparkles, Settings } from 'lucide-react';
 import '../pages/Home.css';
 
 const PublicLayout = ({ children }) => {
@@ -67,6 +67,14 @@ const PublicLayout = ({ children }) => {
   }, [location]);
 
   useEffect(() => {
+    if (location.pathname === '/explore') {
+      setActiveNav('Explore');
+    } else if (location.pathname === '/about') {
+      setActiveNav('About Us');
+    } else if (location.pathname === '/contact') {
+      setActiveNav('Contact');
+    }
+
     if (location.pathname !== '/') {
       window.scrollTo(0, 0);
       return;
@@ -106,13 +114,49 @@ const PublicLayout = ({ children }) => {
     { category: 'Security & Safety', items: [{ icon: <Video color={iconColor} size={20} />, name: 'CCTV' }] }
   ];
   const mockServices = [
-    { category: 'Daily Care & Conveniences', items: [{ icon: (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 12c0 4 3.5 8 8 8s8-4 8-8H4z" />
-              <path d="M4 12c0-2.5 3.5-4 8-4s8 1.5 8 4" />
-            </svg>
-          ), name: 'Room cleaning' }, { icon: <Utensils color={iconColor} size={20} />, name: 'Food/mess service' }, { icon: <Shirt color={iconColor} size={20} />, name: 'Laundry pickup service' }] },
-    { category: 'Support Operations', items: [{ icon: <Wrench color={iconColor} size={20} />, name: 'Maintenance support' }, { icon: <ShieldCheck color={iconColor} size={20} />, name: 'Security assistance' }, { icon: <MessageSquare color={iconColor} size={20} />, name: 'Complaint resolution' }, { icon: <HeartPulse color={iconColor} size={20} />, name: 'Medical assistance' }] }
+    { category: 'Daily Care & Conveniences', items: [
+      { icon: (
+        // Broom / sweeping icon
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="20" y1="4" x2="9" y2="15" />
+          <path d="M7 17 L3 21 L7 23 L13 17 L11 15 Z" />
+        </svg>
+      ), name: 'Room cleaning' }, 
+      { icon: (
+        // Food bowl with steam icon
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 12h18" />
+          <path d="M3 12Q3 20 12 20Q21 20 21 12" />
+          <path d="M8 8Q7.5 6 8 4" />
+          <path d="M12 8Q11.5 6 12 4" />
+          <path d="M16 8Q15.5 6 16 4" />
+        </svg>
+      ), name: 'Food/mess service' }, 
+      { icon: (
+        // Washing machine icon
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="2" />
+          <line x1="2" y1="7" x2="22" y2="7" />
+          <circle cx="12" cy="14" r="4" />
+          <circle cx="5.5" cy="4.5" r="0.6" fill={iconColor} stroke="none" />
+          <circle cx="8.5" cy="4.5" r="0.6" fill={iconColor} stroke="none" />
+          <path d="M10 13Q12 11 14 13" />
+        </svg>
+      ), name: 'Laundry pickup service' }
+    ] },
+    { category: 'Support Operations', items: [
+      { icon: <Settings color={iconColor} size={20} />, name: 'Maintenance support' }, 
+      { icon: (
+        // Security guard shield with person
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2L4 5V11C4 16.5 7.5 20.5 12 22C16.5 20.5 20 16.5 20 11V5L12 2Z" />
+          <circle cx="12" cy="9" r="2" />
+          <path d="M8 16C8 13.8 9.8 13 12 13S16 13.8 16 16" />
+        </svg>
+      ), name: 'Security assistance' }, 
+      { icon: <MessageSquare color={iconColor} size={20} />, name: 'Complaint resolution' }, 
+      { icon: <HeartPulse color={iconColor} size={20} />, name: 'Medical assistance' }
+    ] }
   ];
 
   return (
@@ -252,15 +296,12 @@ const PublicLayout = ({ children }) => {
               {activeModal === 'terms' && (
                 <div className="hv2-cm-document">
                   <h3>Hostel_Hub Terms & Conditions</h3>
-                  <p><strong>1. CONDITIONS FOR USER REGISTRATION</strong><br />Registration on the Website/App is free. 'Hostel_Hub User' means that you are a guest or host. If you do not agree to all the usage terms, do not use this website/app. Your use of the website/app implies that you agree with the usage terms completely. The contract of sale is made in India, is governed exclusively by laws of India and is subject to the exclusive jurisdiction of the courts in India. You hereby represent and warrant that you are at least eighteen (18) years of age or above and are capable of entering, performing and adhering to these usage terms and that you agree to be bound by these usage terms. While individuals under the age of 18 may utilize/browse the website/app, they shall do so only with the involvement, guidance and supervision of their parents and/or legal guardians.</p>
-                  <p><strong>2. TERMS & CONDITIONS OF USE</strong><br />The domain name and its Mobile Application is licensed for use by Hostel_Hub, which enables the user (Guest) of the website or app to connect with independent third party property owners (Host) offering various hostels/PGs/accommodations for rent listed on the website and/or app. Hostel_Hub creates a platform for both the users to connect to each other. Your use of the website and/or app is an acknowledgment that you have reviewed the Terms and Conditions and agree to comply with and be legally bound thereby. By using this website/app you (guest) hereby acknowledge and agree that Hostel_Hub is not the property owner and has no control over the conduct or behavior of the host or the quality, fitness or the suitability of the services provided by host. Hostel_Hub disclaims any and all liabilities in this regard.</p>
-                  <p><strong>3. USAGE OF WEBSITE & APP</strong><br />The website/app are an online marketplace where users (guest or host) may meet and interact with each other for their transactions. Hosts shall list their properties on the website/app and guests reserve the accommodation at the prices specified by the host. Hostel_Hub reiterates that Hostel_Hub and Hosts are separate and independent entities and Hostel_Hub does not work as representative or agent of the host. Hostel_Hub shall not be responsible and shall not be required to mediate or resolve any dispute or disagreement between Guest and Host. In no event, shall Hostel_Hub be made a party to dispute between Guest(s) and Host(s).</p>
-                  <p><strong>4. USER ACCOUNT AND REGISTRATION</strong><br />Hostel_Hub makes the services available to you through the website/app only if you have provided Hostel_Hub the required user information and created an account. You will be responsible for maintaining the confidentiality of the account information, and are fully responsible for all activities that occur under your account. You agree to immediately notify Hostel_Hub of any unauthorized use of your account information or any other breach of security, and ensure that you exit/log out from the account at the end of each session.</p>
-                  <p><strong>5. PROPERTY LISTING & BOOKING</strong><br />The process of listing your property (by Host) and the process of booking accommodation services (by Guest) from this website/app may require you to disclose confidential information. To prevent any possibility of unauthorized access to your confidential information, you shall not use/access this site from unsecure computers, unsecure communication links, unsecure mobile phones or unsecure locations. In a credit card transaction; user must use their own credit card for which user has full right & authority to validly use such credit card for making payment to Hostel_Hub. Hostel_Hub shall not be liable for any credit card fraud.</p>
-                  <p><strong>6. LIMITATION OF LIABILITY</strong><br />Hostel_Hub shall not be liable for any damages of any kind whatsoever including but not limited to direct, indirect, incidental, punitive, exemplary and consequential damages, damages for loss of use, data or profits, or other intangible losses, which may arise or are arising from the use of this website/app. Guests are requested to kindly take due care of all their personal valuables and belongings while they are availing the accommodation services offered by Host. Hostel_Hub management and its employees shall NOT be responsible for any loss, theft or damage to the guests' personal valuables and belongings.</p>
-                  <p><strong>7. INTELLECTUAL PROPERTY</strong><br />The user agrees that any reviews, feedback, comments, ideas, suggestions, information, or any other content which he contributes to Hostel_Hub or this website/app will be deemed to include a royalty-free, perpetual, irrevocable, nonexclusive right and license for Hostel_Hub to adopt, publish, reproduce, disseminate, transmit, distribute, copy, use, create derivative works from, display worldwide, or act on such content. All content on this website/app, including text, graphics, images, and logos, is the property of Hostel_Hub or its content suppliers and is protected by domestic and international copyright laws and regulations.</p>
-                  <p><strong>8. THIRD PARTY LINKS</strong><br />This website/app may at Hostel_Hub's sole discretion, contain links to sites owned and maintained by persons or entities other than Hostel_Hub. None of the foregoing links constitute an endorsement by Hostel_Hub of any such sites and are provided only as a convenience. Hostel_Hub is not responsible for the content or links displayed on such sites.</p>
-                  <p><strong>9. JURISDICTION</strong><br />This agreement, and all transactions entered into on or through website/app shall be interpreted, construed and governed by the laws of India. User agrees that all claims, differences and disputes arising under or in connection with or in relation to the website/app, the usage terms or any transactions entered into on or through the website/app shall be subject to the exclusive jurisdiction of the courts in India.</p>
+                  <p><strong>1. User Registration & Eligibility</strong><br />Registration is free. By using this platform, you agree to these terms. You must be 18 years or older to register. Minors may only use the platform under parental supervision.</p>
+                  <p><strong>2. Booking & Payments</strong><br />Livora connects guests with independent hosts. Ensure your payment information is secure during booking. Rent is typically due by the 5th of every month. Late payments may incur a penalty.</p>
+                  <p><strong>3. Property Rules & Quiet Hours</strong><br />Tenants are expected to maintain peace and respect the community. Quiet hours are generally from 10:00 PM to 6:00 AM. Loud music and disruptive behavior are strictly prohibited.</p>
+                  <p><strong>4. Visitors & Security</strong><br />For the safety of all residents, outside visitors are not allowed in residential areas or private rooms without prior approval from the hostel management. All guests must sign in at the reception.</p>
+                  <p><strong>5. Maintenance & Damages</strong><br />Tenants must take care of the provided furniture and appliances. Any intentional or negligent damages to the property will be deducted from the security deposit.</p>
+                  <p><strong>6. Code of Conduct</strong><br />Strict prohibition of smoking, alcohol, and illegal substances on the premises. Violation of these rules may lead to immediate eviction without refund.</p>
                 </div>
               )}
               {activeModal === 'faq' && (
