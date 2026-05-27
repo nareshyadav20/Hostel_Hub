@@ -45,7 +45,7 @@
   width: 40px;
   height: 40px;
   background: var(--primary-green);
-  color: #FFFFFF;
+  color: var(--text-on-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -79,7 +79,7 @@
 .sidebar-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--modal-overlay);
   backdrop-filter: blur(4px);
   z-index: 1500;
   animation: fadeIn 0.3s ease;

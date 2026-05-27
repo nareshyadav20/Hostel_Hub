@@ -146,6 +146,31 @@ const Terms = () => {
           font-size: 0.9rem;
         }
 
+        .agree-btn-container {
+          margin-top: 4rem;
+          text-align: center;
+        }
+
+        .agree-btn {
+          background: #4f46e5;
+          color: white;
+          border: none;
+          padding: 1rem 3rem;
+          font-size: 1.1rem;
+          font-weight: 600;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-family: 'Inter', sans-serif;
+          box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+        }
+
+        .agree-btn:hover {
+          background: #4338ca;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+        }
+
         @media (max-width: 768px) {
           .legal-title { font-size: 2.5rem; }
           .legal-content-wrap { padding: 2rem; margin: -2rem 1rem 4rem; }
@@ -154,75 +179,34 @@ const Terms = () => {
         }
       `}</style>
 
-      <header className="hv2-header">
-        <div className="hv2-logo" onClick={() => navigate('/')}>
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L3 9V20C3 20.55 3.21 21.04 3.59 21.41 3.96 21.79 4.47 22 5 22H19C19.53 22 20.04 21.79 20.41 21.41 20.79 21.04 21 20.55 21 20V9L12 2Z" fill="#4F46E5"/>
-            <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <span className="hv2-logo-text">Livora</span>
-        </div>
-        <button className="hv2-login-btn" onClick={() => navigate('/')}>Back to Home</button>
-      </header>
+
 
       <main className="legal-page">
         <section className="legal-hero">
-          <h1 className="legal-title">Terms of Service</h1>
+          <h1 className="legal-title">Livora Hostel Residency Agreement</h1>
           <p className="legal-subtitle">Last Updated: May 2026</p>
         </section>
 
         <div className="legal-content-wrap">
           <div className="legal-section">
-            <h3><span>1</span> Acceptance of Terms</h3>
-            <p>By accessing and using Livora's platform, you agree to be bound by these Terms of Service. If you do not agree, please refrain from using our services.</p>
+            <h3><span>1</span> CONDITIONS FOR USER REGISTRATION</h3>
+            <p>Registration on the platform is free. By using this website/app, you imply that you agree with the usage terms completely. You must be at least eighteen (18) years of age or above to use Livora Hostel services.</p>
           </div>
 
           <div className="legal-section">
-            <h3><span>2</span> Booking & Payments</h3>
-            <p>All bookings are subject to availability and verification. Payments must be made through our authorized channels to be considered valid. Refund policies vary by property type and duration of stay.</p>
+            <h3><span>2</span> TERMS & CONDITIONS OF USE</h3>
+            <p>The platform enables guests to connect with properties listed. By making a reservation at the listed properties, the guest enters into commercial/contractual terms as agreed upon at the time of booking.</p>
           </div>
 
-          <div className="legal-section">
-            <h3><span>3</span> Code of Conduct</h3>
-            <p>Residents are expected to maintain harmony and respect the rules of their respective properties. Any violation of property-specific rules may lead to termination of stay without refund.</p>
-          </div>
-
-          <div className="legal-section">
-            <h3><span>4</span> Limitation of Liability</h3>
-            <p>Livora acts as a marketplace connecting residents with property owners. While we verify properties, we are not liable for direct disputes between residents and property management beyond our platform's scope.</p>
+          <div className="agree-btn-container">
+            <button className="agree-btn" onClick={() => navigate(-1)}>
+              I Understand & Agree
+            </button>
           </div>
         </div>
       </main>
 
-      <footer className="about-footer">
-        <div className="about-footer-main">
-          <div className="about-footer-brand">
-            <h2>Livora</h2>
-            <p className="about-footer-tagline">Making living simple, safe, and hassle-free.</p>
-          </div>
-          <div className="about-footer-links">
-            <div className="about-footer-col">
-              <h4>Explore</h4>
-              <a href="/about">About Us</a>
-              <a href="/contact">Contact Us</a>
-            </div>
-            <div className="about-footer-col">
-              <h4>Legal</h4>
-              <a href="/terms">Terms of Service</a>
-              <a href="/privacy">Privacy Policy</a>
-            </div>
-            <div className="about-footer-col">
-              <h4>Contact Info</h4>
-              <p>📍 Cyber Towers, Hitech City, Hyderabad</p>
-              <p>📞 +91 7569383323</p>
-              <p>✉️ support@livora.com</p>
-            </div>
-          </div>
-        </div>
-        <div className="about-footer-bottom">
-          <p>© 2026 Livora. All rights reserved.</p>
-        </div>
-      </footer>
+
     </div>
   );
 };

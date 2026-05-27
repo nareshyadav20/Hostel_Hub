@@ -121,8 +121,8 @@
   text-transform: uppercase;
 }
 
-.badge.lost { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
-.badge.found { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+.badge.lost { background: var(--bg-red-soft); color: var(--text-red); }
+.badge.found { background: var(--bg-green-soft); color: var(--text-green); }
 
 .date {
   font-size: 0.75rem;
@@ -161,7 +161,7 @@
 }
 
 .status.pending { color: #F59E0B; }
-.status.claimed { color: #10B981; }
+.status.claimed { color: var(--text-green); }
 .status.available { color: var(--accent-primary); }
 
 .action-btn {
@@ -176,7 +176,7 @@
 
 .action-btn:hover {
   background: var(--accent-primary);
-  color: white;
+  color: var(--text-on-primary);
 }
 
 /* SOS Section */
@@ -197,8 +197,8 @@
   border-left-width: 6px;
 }
 
-.sos-card.active { border-left-color: #EF4444; background: rgba(239, 68, 68, 0.02); }
-.sos-card.resolved { border-left-color: #10B981; }
+.sos-card.active { border-left-color: var(--text-red); background: rgba(239, 68, 68, 0.02); }
+.sos-card.resolved { border-left-color: var(--text-green); }
 
 .sos-icon {
   width: 50px;
@@ -207,13 +207,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(239, 68, 68, 0.1);
-  color: #EF4444;
+  background: var(--bg-red-soft);
+  color: var(--text-red);
 }
 
 .sos-card.resolved .sos-icon {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10B981;
+  background: var(--bg-green-soft);
+  color: var(--text-green);
 }
 
 .sos-info { flex: 1; }
@@ -244,8 +244,8 @@
   padding: 0.6rem 1.2rem;
   border-radius: 10px;
   border: none;
-  background: #10B981;
-  color: white;
+  background: var(--color-green);
+  color: var(--text-on-primary);
   font-weight: 800;
   font-size: 0.85rem;
   cursor: pointer;
@@ -346,7 +346,7 @@
   gap: 0.5rem;
   padding: 0.7rem 1.2rem;
   background: var(--accent-primary);
-  color: white;
+  color: var(--text-on-primary);
   border: none;
   border-radius: 12px;
   font-weight: 700;
@@ -395,7 +395,7 @@ td {
   border-radius: 6px;
   font-size: 0.7rem;
   font-weight: 800;
-  color: white;
+  color: var(--text-on-primary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -418,7 +418,7 @@ td {
 }
 
 .status-select.pending { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
-.status-select.resolved { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+.status-select.resolved { background: var(--bg-green-soft); color: var(--text-green); }
 .status-select.in-progress { background: rgba(59, 130, 246, 0.1); color: #3B82F6; }
 
 .flag-btn {
@@ -436,9 +436,9 @@ td {
 }
 
 .flag-btn.active {
-  background: rgba(239, 68, 68, 0.1);
-  color: #EF4444;
-  border-color: #EF4444;
+  background: var(--bg-red-soft);
+  color: var(--text-red);
+  border-color: var(--text-red);
 }
 
 .actions { display: flex; gap: 0.5rem; }
@@ -458,7 +458,7 @@ td {
 }
 
 .icon-btn:hover { background: var(--bg-primary); color: var(--accent-primary); }
-.icon-btn.danger:hover { background: #EF4444 !important; color: white !important; }
+.icon-btn.danger:hover { background: #EF4444 !important; color: var(--text-on-primary) !important; }
 
 /* Pagination Styles */
 .pagination {
@@ -498,7 +498,7 @@ td {
 
 .pagi-num.active {
   background: var(--accent-primary);
-  color: white;
+  color: var(--text-on-primary);
   border-color: var(--accent-primary);
 }
 
@@ -520,7 +520,7 @@ td {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--modal-overlay);
   backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
@@ -631,7 +631,7 @@ td {
   border-radius: 12px;
   border: none;
   background: #EF4444;
-  color: white;
+  color: var(--text-on-primary);
   font-weight: 700;
   cursor: pointer;
 }

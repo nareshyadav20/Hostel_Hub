@@ -4,64 +4,89 @@ import API from './api/axios';
 import './Dashboard.css';
 import socket, { connectSocket, disconnectSocket } from './utils/socket';
 
+// SWR cache helpers for tenant dashboard
+const DASH_CACHE_KEY = 'hh_tenant_dashboard';
+const DASH_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+const getDashCache = () => {
+  try {
+    const raw = localStorage.getItem(DASH_CACHE_KEY);
+    if (!raw) return null;
+    const { data, ts } = JSON.parse(raw);
+    if (Date.now() - ts > DASH_CACHE_TTL) { localStorage.removeItem(DASH_CACHE_KEY); return null; }
+    return data;
+  } catch { return null; }
+};
+const setDashCache = (data) => {
+  try { localStorage.setItem(DASH_CACHE_KEY, JSON.stringify({ data, ts: Date.now() })); } catch {}
+};
+
 function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{"name": "Resident"}'));
-  const [tenantData, setTenantData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [complaints, setComplaints] = useState([]);
-  const [notifications, setNotifications] = useState([]);
+
+  // Pre-populate from cache for instant rendering (no spinner on revisit)
+  const cached = getDashCache();
+  const [tenantData, setTenantData] = useState(cached?.tenantData || null);
+  const [loading, setLoading] = useState(!cached); // only show spinner if no cache
+  const [complaints, setComplaints] = useState(cached?.complaints || []);
+  const [notifications, setNotifications] = useState(cached?.notifications || []);
   const [showWelcomeAlert, setShowWelcomeAlert] = useState(false);
+  const [latestBooking, setLatestBooking] = useState(cached?.latestBooking || null);
 
-  const location = React.useMemo(() => ({ state: window.history.state?.usr }), []);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (silent = false) => {
     try {
-      const [profileRes, complaintsRes] = await Promise.all([
+      if (!silent) setLoading(true);
+      const [profileRes, complaintsRes, notificationsRes, bookingsRes] = await Promise.all([
         API.get('/tenants/me'),
         API.get('/complaints/me').catch(() => ({ data: [] })),
-        API.get('/notifications?limit=3').catch(() => ({ data: [] }))
+        API.get('/notifications?limit=3').catch(() => ({ data: [] })),
+        API.get('/bookings/me').catch(() => ({ data: [] }))
       ]);
       
       const profile = profileRes.data;
+      const newComplaints = (complaintsRes.data || []).slice(0, 3);
+      const newNotifications = (notificationsRes?.data || []).slice(0, 3);
+      const userBookings = bookingsRes?.data || [];
+      const activeBooking = userBookings.find(b => b.status !== 'CANCELLED' && b.status !== 'REJECTED') || userBookings[0];
+
       setTenantData(profile);
-      setComplaints((complaintsRes.data || []).slice(0, 3));
-      setNotifications((notificationsRes.data || []).slice(0, 3));
+      setComplaints(newComplaints);
+      setNotifications(newNotifications);
+      setLatestBooking(activeBooking);
+
+      // Persist to cache for instant next load
+      setDashCache({ tenantData: profile, complaints: newComplaints, notifications: newNotifications, latestBooking: activeBooking });
       
-      // Keep local storage in sync for socket and other pages
       if (profile?.buildingId?._id || profile?.buildingId) {
         const bId = profile.buildingId?._id || profile.buildingId;
         localStorage.setItem('buildingId', String(bId));
       }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      // If unauthorized, redirect
       if (err.response?.status === 401) navigate('/login');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    // Fetch silently if we have cached data (no full-screen spinner)
+    const hasCached = getDashCache() !== null;
+    fetchDashboardData(hasCached);
     
-    // Check if we just came from booking success
     const isBookingSuccess = window.history.state?.usr?.bookingSuccess;
     if (isBookingSuccess) {
       setShowWelcomeAlert(true);
       setTimeout(() => setShowWelcomeAlert(false), 8000);
     }
 
-    // Connect socket for real-time updates
     const buildingId = localStorage.getItem('buildingId');
     connectSocket(buildingId);
 
-    // Re-fetch when complaint status changes (owner resolved/rejected)
     socket.on('complaintStatusChanged', () => {
       API.get('/complaints/me').then(r => setComplaints((r.data || []).slice(0, 3))).catch(() => {});
     });
-    // Refresh if owner updates hostel/room info
-    socket.on('dashboardStatsUpdated', fetchDashboardData);
+    socket.on('dashboardStatsUpdated', () => fetchDashboardData(true)); // silent refresh
 
     return () => {
       socket.off('complaintStatusChanged');
@@ -84,6 +109,8 @@ function Dashboard() {
   };
 
   const meal = getCurrentMeal();
+
+  const actualAmount = latestBooking?.totalAmount || tenantData?.rent || 0;
 
   if (loading) {
     return (
@@ -177,7 +204,7 @@ function Dashboard() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
               </div>
             </div>
-            <div className="dash-sum-value">₹{tenantData?.rentStatus === 'PAID' ? '0' : (tenantData?.rent || 0).toLocaleString()}</div>
+            <div className="dash-sum-value">₹{tenantData?.rentStatus === 'PAID' ? '0' : actualAmount.toLocaleString()}</div>
             <div className="dash-sum-sub">{tenantData?.rentStatus === 'PAID' ? 'No pending dues' : 'Payment Pending'}</div>
           </div>
 
@@ -236,7 +263,7 @@ function Dashboard() {
           <div className="dash-payment-row">
             <div>
               <span className="dash-pay-label">Total Due</span>
-              <strong className="dash-pay-value">₹{tenantData?.rentStatus === 'PAID' ? '0' : (tenantData?.rent || 0).toLocaleString()}</strong>
+              <strong className="dash-pay-value">₹{tenantData?.rentStatus === 'PAID' ? '0' : actualAmount.toLocaleString()}</strong>
             </div>
             <span className={tenantData?.rentStatus === 'PAID' ? 'sn-badge-green' : 'sn-badge-red'}>
               {tenantData?.rentStatus === 'PAID' ? 'Paid' : 'Due Now'}
@@ -246,7 +273,7 @@ function Dashboard() {
           <div className="dash-payment-row">
             <div>
               <span className="dash-pay-label">Paid This Month</span>
-              <strong className="dash-pay-value">₹{tenantData?.rentStatus === 'PAID' ? (tenantData?.rent || 0).toLocaleString() : '0'}</strong>
+              <strong className="dash-pay-value">₹{tenantData?.rentStatus === 'PAID' ? actualAmount.toLocaleString() : '0'}</strong>
             </div>
           </div>
 

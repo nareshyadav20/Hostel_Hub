@@ -145,7 +145,13 @@ const Listing = () => {
   return (
     <div className="lst-page">
       {/* 1. Header & Gallery */}
-      <header className="lst-header">
+      <header className="lst-header" style={{ position: 'relative' }}>
+        <button 
+          onClick={() => navigate(-1)} 
+          style={{ position: 'absolute', top: '16px', right: '16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 100, color: '#64748b', fontWeight: 'bold' }}
+        >
+          ✕
+        </button>
         <h1 className="lst-title">{hostel?.name || 'Livora Premium Hostel'}</h1>
         <div className="lst-meta">
           <span className="lst-badge rating">⭐ {hostel?.rating || '4.8'}</span>
@@ -171,7 +177,7 @@ const Listing = () => {
         <div
           className="lst-img-main"
           onClick={() => setModalInfo({ isOpen: true, image: galleryImages[activeImageIndex] })}
-          style={{ cursor: 'zoom-in', width: '100%', height: '480px', position: 'relative' }}
+          style={{ cursor: 'zoom-in', width: '100%', height: '100%', position: 'relative' }}
         >
           <img
             src={galleryImages[activeImageIndex]}
@@ -676,7 +682,13 @@ const Listing = () => {
               <button
                 className="lst-btn-reserve"
                 disabled={!selectedBed}
-                onClick={() => navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed, basePrice, securityDeposit: currentPrice.deposit } })}
+                onClick={() => {
+                  if (!localStorage.getItem('token')) {
+                    navigate('/login');
+                  } else {
+                    navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed, basePrice, securityDeposit: currentPrice.deposit } });
+                  }
+                }}
                 style={{ width: '100%', padding: '20px', fontSize: '18px' }}
               >
                 Reserve Your Bed Now
@@ -693,6 +705,28 @@ const Listing = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* Mobile Bottom Booking Bar */}
+      <div className="lst-mobile-bar">
+        <div className="lst-mobile-bar-price">
+          <div className="lst-mbp-label">{selectedBed ? `Bed ${selectedBed} Selected` : 'Select a bed'}</div>
+          <div className="lst-mbp-amount">₹{currentPrice.rent.toLocaleString()}<span>/mo</span></div>
+        </div>
+        <button
+          className="lst-btn-reserve"
+          disabled={!selectedBed}
+          onClick={() => {
+            if (!localStorage.getItem('token')) {
+              navigate('/login');
+            } else {
+              navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed, basePrice, securityDeposit: currentPrice.deposit } });
+            }
+          }}
+          style={{ width: 'auto', padding: '12px 24px', fontSize: '15px', margin: 0 }}
+        >
+          Reserve
+        </button>
       </div>
 
     </div>

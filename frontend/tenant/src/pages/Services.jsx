@@ -23,7 +23,8 @@ const Services = () => {
       label: 'Room Cleaning', 
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 3v19M5 8h14M15 21l-3-3-3 3"/>
+          <path d="M4 12c0 4 3.5 8 8 8s8-4 8-8H4z" />
+          <path d="M4 12c0-2.5 3.5-4 8-4s8 1.5 8 4" />
         </svg>
       ) 
     },

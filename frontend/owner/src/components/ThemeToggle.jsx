@@ -15,8 +15,7 @@ const ThemeToggle = () => {
     <button 
       onClick={() => setIsDark(!isDark)}
       className="theme-toggle"
-      style={{
-        padding: '0.5rem',
+      style={{ padding: '0.5rem',
         borderRadius: '50%',
         background: 'var(--bg-tertiary)',
         display: 'flex',
@@ -25,7 +24,7 @@ const ThemeToggle = () => {
         border: '1px solid var(--border-color)',
         cursor: 'pointer',
         transition: 'var(--transition-normal)'
-      }}
+       }}
     >
       {isDark ? (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

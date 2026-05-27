@@ -19,14 +19,13 @@ const Login = () => {
     const cleanPassword = password.trim();
 
     try {
-      // Clear old/stale auth data before logging in
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       sessionStorage.clear();
 
-      const response = await API.post('/auth/login', { 
-        email: cleanEmail, 
-        password: cleanPassword 
+      const response = await API.post('/auth/login', {
+        email: cleanEmail,
+        password: cleanPassword
       });
       const { user, token, tenantProfile } = response.data;
 
@@ -52,18 +51,24 @@ const Login = () => {
   return (
     <div className="auth-container">
       <div className="auth-card">
+
         <button className="auth-close-btn" onClick={() => navigate('/')} aria-label="Close">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         </button>
+
         <div className="auth-header">
-          <h1>Livora</h1>
-          <p>Sign in to your digital hostel home</p>
+          <h1>Sign In</h1>
+          <p>Access your digital hostel home</p>
         </div>
 
-        {error && <div className="error-message" style={{ color: 'var(--accent-error)', textAlign: 'center', marginBottom: '1.5rem', padding: '0.8rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px', fontSize: '0.9rem' }}>{error}</div>}
+        {error && (
+          <div style={{ color: 'var(--accent-error)', textAlign: 'center', marginBottom: '1.5rem', padding: '0.8rem', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px', fontSize: '0.9rem' }}>
+            {error}
+          </div>
+        )}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="input-group">
@@ -107,7 +112,9 @@ const Login = () => {
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: 'var(--accent-primary)', fontWeight: '600' }}>Forgot Password?</Link>
+            <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: 'var(--accent-primary)', fontWeight: '600' }}>
+              Forgot Password?
+            </Link>
           </div>
 
           <button type="submit" className="auth-btn" disabled={loading}>
@@ -118,6 +125,7 @@ const Login = () => {
         <div className="auth-footer">
           Don't have an account? <Link to="/signup">Create account</Link>
         </div>
+
       </div>
     </div>
   );

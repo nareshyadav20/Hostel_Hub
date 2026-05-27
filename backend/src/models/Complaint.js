@@ -2,15 +2,13 @@ const mongoose = require('mongoose');
 
 const complaintSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  description: { type: String, required: true },
+  description: { type: String },
   category: { 
-    type: String, 
-    enum: ['Maintenance', 'Housekeeping', 'Cleaning', 'Security', 'WiFi', 'WiFi / IT', 'Leave', 'Visitor', 'Plumbing', 'Electrical', 'Laundry', 'Other'],
-    default: 'Maintenance'
+    type: String
   },
   status: { 
     type: String, 
-    enum: ['Pending', 'Resolved', 'In Progress', 'Rejected'],
+    enum: ['Pending', 'Resolved', 'In Progress', 'In-Progress', 'Rejected'],
     default: 'Pending'
   },
   priority: {
@@ -25,6 +23,10 @@ const complaintSchema = new mongoose.Schema({
   buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building' },
   roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
   bedId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bed' },
+  ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  asset: { type: String },
+  subIssue: { type: String },
+  customIssue: { type: String },
   date: { type: Date, default: Date.now }
 }, { timestamps: true, collection: 'complaints' });
 

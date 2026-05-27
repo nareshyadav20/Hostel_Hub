@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -6,6 +6,7 @@ import {
   Settings2, History, Filter, Layers, ChevronDown, ChevronRight, Building2, FileText
 } from 'lucide-react';
 import { api } from '../mockData';
+import socket, { connectSocket } from '../utils/socket';
 
 
 const STATUS_STYLES = {
@@ -40,43 +41,53 @@ const Rooms = () => {
   const [activeTab, setActiveTab] = useState('rooms'); // 'rooms' or 'transfers'
   const [transferRequests, setTransferRequests] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      console.log("Rooms module fetching for ID:", activeBuildingId);
-      setLoading(true);
-      try {
-        // Use building-scoped APIs to avoid cross-property data leakage
-        const [b, f, r, bd, t, tr, bs] = await Promise.all([
-          api.getBuildings(),
-          activeBuildingId ? api.getFloorsByBuilding(activeBuildingId) : api.getAllFloors(),
-          activeBuildingId ? api.getRoomsByBuilding(activeBuildingId) : api.getAllRooms(),
-          activeBuildingId ? api.getBedsByBuilding(activeBuildingId) : api.getAllBeds(),
-          api.getTenants(activeBuildingId),
-          api.getRoomTransfers(activeBuildingId),
-          api.getHostelBedStats(activeBuildingId).catch(() => ({ totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 }))
-        ]);
+  const loadRoomsData = useCallback(async () => {
+    console.log("Rooms module fetching for ID:", activeBuildingId);
+    setLoading(true);
+    try {
+      // Use building-scoped APIs to avoid cross-property data leakage
+      const [b, f, r, bd, t, tr, bs] = await Promise.all([
+        api.getBuildings(),
+        activeBuildingId ? api.getFloorsByBuilding(activeBuildingId) : api.getAllFloors(),
+        activeBuildingId ? api.getRoomsByBuilding(activeBuildingId) : api.getAllRooms(),
+        activeBuildingId ? api.getBedsByBuilding(activeBuildingId) : api.getAllBeds(),
+        api.getTenants(activeBuildingId),
+        api.getRoomTransfers(activeBuildingId),
+        api.getHostelBedStats(activeBuildingId).catch(() => ({ totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 }))
+      ]);
 
-        setBuildings(b || []);
-        setFloors(f || []);
-        setRooms(r || []);
-        setBeds(bd || []);
-        setTenants(t || []);
-        // Server now pre-filters by buildingId, so no extra client filter needed
-        setTransferRequests(tr || []);
-        setBedStats(bs || { totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 });
+      setBuildings(b || []);
+      setFloors(f || []);
+      setRooms(r || []);
+      setBeds(bd || []);
+      setTenants(t || []);
+      // Server now pre-filters by buildingId, so no extra client filter needed
+      setTransferRequests(tr || []);
+      setBedStats(bs || { totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 });
 
-        const fExp = {}; (f || []).forEach(x => fExp[x.id || x._id] = true);
-        setExpandedFloors(fExp);
+      const fExp = {}; (f || []).forEach(x => fExp[x.id || x._id] = true);
+      setExpandedFloors(fExp);
 
-        if (activeBuildingId) setSelectedBuildingId(activeBuildingId);
-      } catch (err) {
-        console.error("Fetch error in Rooms:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+      if (activeBuildingId) setSelectedBuildingId(activeBuildingId);
+    } catch (err) {
+      console.error("Fetch error in Rooms:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [activeBuildingId]);
+
+  useEffect(() => {
+    loadRoomsData();
+  }, [loadRoomsData]);
+
+  useEffect(() => {
+    window.addEventListener('focus', loadRoomsData);
+    const interval = setInterval(loadRoomsData, 30000);
+    return () => {
+      window.removeEventListener('focus', loadRoomsData);
+      clearInterval(interval);
+    };
+  }, [loadRoomsData]);
 
   const handleTransferStatus = async (id, status) => {
     try {
@@ -98,7 +109,7 @@ const Rooms = () => {
     try {
       const bs = await api.getHostelBedStats(activeBuildingId);
       setBedStats(bs || { totalRooms: 0, totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 });
-    } catch (_) {}
+    } catch (_) { }
   };
 
   const toggleBed = async (roomId, bedId) => {
@@ -124,7 +135,19 @@ const Rooms = () => {
 
     // Fire and forget update (no await, no blocking re-fetch)
     api.updateBedStatus(bedId, newStatus, null)
-      .then(() => refreshBedStats())
+      .then(async () => {
+        // Ensure server-side hostel bed counts are synced from live beds
+        try {
+          if (activeBuildingId) await api.syncHostelBeds(activeBuildingId).catch(() => null);
+        } catch (e) { /* ignore */ }
+        refreshBedStats();
+        try {
+          if (!socket || !socket.connected) connectSocket();
+          socket && socket.emit && socket.emit('dashboardStatsUpdated', { buildingId: activeBuildingId });
+        } catch (e) {
+          console.warn('Socket emit failed:', e);
+        }
+      })
       .catch(err => {
         console.error('Failed to update bed status:', err);
         // Revert quietly on actual failure
@@ -309,8 +332,8 @@ const Rooms = () => {
               background: bedStats.occupancyPct >= 90
                 ? 'linear-gradient(90deg,#ef4444,#dc2626)'
                 : bedStats.occupancyPct >= 60
-                ? 'linear-gradient(90deg,#f59e0b,#d97706)'
-                : 'linear-gradient(90deg,#10b981,#059669)',
+                  ? 'linear-gradient(90deg,#f59e0b,#d97706)'
+                  : 'linear-gradient(90deg,#10b981,#059669)',
               transition: 'width 0.6s ease'
             }} />
           </div>
@@ -331,7 +354,7 @@ const Rooms = () => {
         >
           Transfer Requests
           {transferRequests.filter(r => r.status === 'PENDING').length > 0 && (
-            <span style={{ padding: '0.1rem 0.5rem', background: 'var(--accent-error)', color: 'white', borderRadius: '10px', fontSize: '0.7rem' }}>
+            <span style={{ padding: '0.1rem 0.5rem', background: 'var(--accent-error)', color: "var(--text-on-primary)", borderRadius: '10px', fontSize: '0.7rem' }}>
               {transferRequests.filter(r => r.status === 'PENDING').length}
             </span>
           )}
@@ -375,7 +398,7 @@ const Rooms = () => {
                     style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', borderLeft: `4px solid ${st.color}` }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 1 }}>
-                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-primary), #6366F1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '1.2rem', flexShrink: 0 }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-primary), #6366F1)', color: "var(--text-on-primary)", display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '1.2rem', flexShrink: 0 }}>
                         {req.tenant?.name?.charAt(0) || 'U'}
                       </div>
                       <div style={{ flex: 1 }}>
@@ -394,7 +417,7 @@ const Rooms = () => {
                     <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                       {req.status === 'PENDING' ? (
                         <>
-                          <button onClick={() => handleTransferStatus(req.id, 'ACCEPTED')} style={{ padding: '0.6rem 1.2rem', fontSize: '0.82rem', borderRadius: '10px', background: '#10B981', color: 'white', border: 'none', fontWeight: '800', cursor: 'pointer' }}>Approve</button>
+                          <button onClick={() => handleTransferStatus(req.id, 'ACCEPTED')} style={{ padding: '0.6rem 1.2rem', fontSize: '0.82rem', borderRadius: '10px', background: '#10B981', color: "var(--text-on-primary)", border: 'none', fontWeight: '800', cursor: 'pointer' }}>Approve</button>
                           <button onClick={() => handleTransferStatus(req.id, 'REJECTED')} style={{ padding: '0.6rem 1.2rem', fontSize: '0.82rem', borderRadius: '10px', background: '#FEE2E2', color: '#DC2626', border: '1px solid #FCA5A5', fontWeight: '800', cursor: 'pointer' }}>Reject</button>
                         </>
                       ) : (
@@ -442,7 +465,7 @@ const Rooms = () => {
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', paddingBottom: expandedFloors[floor.id] ? '1.5rem' : '0', borderBottom: expandedFloors[floor.id] ? '1px solid var(--border-color)' : 'none' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '12px' }}>
+                      <div style={{ padding: '0.8rem', background: 'var(--accent-primary)', color: "var(--text-on-primary)", borderRadius: '12px' }}>
                         <Layers size={20} />
                       </div>
                       <div>
@@ -488,7 +511,7 @@ const Rooms = () => {
                                       <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Beds Occupied</p>
                                     </div>
                                   </div>
-                                  
+
                                   {/* Smart Room Features Chips */}
                                   <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
                                     {room.hygieneRating && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#10b98115', color: '#10b981', borderRadius: '4px', fontWeight: '800' }}>✨ Hygiene {room.hygieneRating}/5</span>}
@@ -641,7 +664,7 @@ const Rooms = () => {
                   <div style={{ textAlign: 'left', marginBottom: '1.5rem', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1rem' }}>
                     <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Current Occupant</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--accent-primary)', color: "var(--text-on-primary)", display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
                         {selectedBedDetails.tenantInfo.name.charAt(0)}
                       </div>
                       <div>
@@ -654,30 +677,30 @@ const Rooms = () => {
 
                 <div style={{ display: 'flex', gap: '0.8rem' }}>
                   {selectedBedDetails.status === 'OCCUPIED' ? (
-                    <button 
-                      onClick={() => { toggleBed(selectedBedDetails.roomInfo.id, selectedBedDetails.id); setSelectedBedDetails(null); }} 
-                      className="btn" 
+                    <button
+                      onClick={() => { toggleBed(selectedBedDetails.roomInfo.id, selectedBedDetails.id); setSelectedBedDetails(null); }}
+                      className="btn"
                       style={{ flex: 1, fontWeight: '800', borderRadius: '12px', background: '#ef444415', color: '#ef4444', border: '1px solid #ef444430', padding: '0.8rem' }}
                     >
                       Vacate Bed
                     </button>
                   ) : (
-                    <button 
-                      onClick={() => { toggleBed(selectedBedDetails.roomInfo.id, selectedBedDetails.id); setSelectedBedDetails(null); }} 
-                      className="btn btn-primary" 
+                    <button
+                      onClick={() => { toggleBed(selectedBedDetails.roomInfo.id, selectedBedDetails.id); setSelectedBedDetails(null); }}
+                      className="btn btn-primary"
                       style={{ flex: 1, fontWeight: '800', borderRadius: '12px', padding: '0.8rem' }}
                     >
                       Allocate Bed
                     </button>
                   )}
-                  <button 
+                  <button
                     onClick={async () => {
                       await api.markBedSanitized(selectedBedDetails.id);
                       setSelectedBedDetails(null);
                       // Refresh parent
                       window.location.reload();
                     }}
-                    className="btn" 
+                    className="btn"
                     style={{ flex: 1, fontWeight: '800', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', padding: '0.8rem' }}
                   >
                     Sanitize Bed

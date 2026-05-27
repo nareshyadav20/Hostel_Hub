@@ -108,12 +108,12 @@ const InventoryMaster = () => {
 
     return (
     <div className="add-product-overlay">
-      <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '50px', background: 'red', zIndex: 99999, color: 'white', fontSize: '24px', textAlign: 'center' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '50px', background: 'red', zIndex: 99999, color: "var(--text-on-primary)", fontSize: '24px', textAlign: 'center'  }}>
         DEBUG BANNER: IF YOU SEE THIS, RENDER ADD PRODUCT VIEW IS WORKING
       </div>
       <div className="creator-modal">
         {/* Classic Top Bar */}
-        <div className="creator-top-bar" style={{ display: 'flex', minHeight: '60px', background: '#ffebee' }}>
+        <div className="creator-top-bar" style={{ display: 'flex', minHeight: '60px', background: '#ffebee'  }}>
           <button className="btn-back-classic" onClick={() => setIsAddingProduct(false)}>
             <ArrowLeft size={16} /> Back to List
           </button>
@@ -144,8 +144,7 @@ const InventoryMaster = () => {
                   <div 
                     className="upload-box-square" 
                     onClick={() => fileInputRef.current?.click()}
-                    style={{
-                      cursor: 'pointer',
+                    style={{ cursor: 'pointer',
                       position: 'relative',
                       overflow: 'hidden',
                       display: 'flex',
@@ -158,26 +157,25 @@ const InventoryMaster = () => {
                       height: '140px',
                       width: '100%',
                       background: 'var(--bg-secondary)'
-                    }}
+                     }}
                   >
                     {addFormData.image ? (
                       <>
-                        <img src={addFormData.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        <div style={{
-                          position: 'absolute',
+                        <img src={addFormData.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover'  }} />
+                        <div style={{ position: 'absolute',
                           inset: 0,
                           background: 'rgba(0,0,0,0.5)',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: '#fff',
+                          color: "var(--text-on-primary)",
                           opacity: 0,
                           transition: 'opacity 0.2s',
                           gap: '4px',
                           fontSize: '11px',
                           fontWeight: 'bold'
-                        }}
+                         }}
                         onMouseEnter={e => { e.currentTarget.style.opacity = 1; }}
                         onMouseLeave={e => { e.currentTarget.style.opacity = 0; }}
                         >
@@ -195,7 +193,7 @@ const InventoryMaster = () => {
                   <input 
                     type="file" 
                     ref={fileInputRef} 
-                    style={{ display: 'none' }} 
+                    style={{ display: 'none'  }} 
                     accept="image/*" 
                     onChange={handleImageChange} 
                   />
@@ -478,7 +476,7 @@ const InventoryMaster = () => {
         </div>
         <div className="table-wrapper">
           <table className="damage-table-new">
-            <thead><tr><th>ID / DATE</th><th>ASSET / ITEM</th><th>LOCATION</th><th>QTY</th><th>TYPE</th><th>DEDUCTION</th><th>STATUS</th><th style={{ textAlign: 'right' }}>ACTIONS</th></tr></thead>
+            <thead><tr><th>ID / DATE</th><th>ASSET / ITEM</th><th>LOCATION</th><th>QTY</th><th>TYPE</th><th>DEDUCTION</th><th>STATUS</th><th style={{ textAlign: 'right'  }}>ACTIONS</th></tr></thead>
             <tbody>
               {damageEntries.map(e => (
                 <tr key={e.id}>
@@ -514,7 +512,7 @@ const InventoryMaster = () => {
         <div className="filter-pills">{CATEGORIES_LIST.map(cat => (<button key={cat} onClick={() => setActiveFilter(cat)} className={`filter-pill ${activeFilter === cat ? 'active' : ''}`}>{cat}</button>))}</div>
         <div className="table-wrapper">
           <table className="villagkart-table">
-            <thead><tr><th>PRODUCT & TYPE</th><th>USAGE STATS</th><th>STOCK DIST</th><th>STATUS</th><th style={{ textAlign: 'right' }}>ACTIONS</th></tr></thead>
+            <thead><tr><th>PRODUCT & TYPE</th><th>USAGE STATS</th><th>STOCK DIST</th><th>STATUS</th><th style={{ textAlign: 'right'  }}>ACTIONS</th></tr></thead>
             <tbody>
               {filteredProducts.map(p => (
                 <tr key={p.id}>
@@ -545,7 +543,7 @@ const InventoryMaster = () => {
             { label: 'Asset Value', value: `₹${stats.totalValue}`, color: '#6366F1', icon: <ArrowUpRight />, bg: '#EEF2FF' }
           ].map((s, i) => (
             <motion.div whileHover={{ y: -3 }} key={i} className="stat-card">
-              <div className="stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
+              <div className="stat-icon" style={{ background: s.bg, color: s.color  }}>{s.icon}</div>
               <div className="stat-content"><p className="stat-label">{s.label}</p><h2 className="stat-value">{s.value}</h2></div>
             </motion.div>
           ))}

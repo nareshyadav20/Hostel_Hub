@@ -16,6 +16,7 @@ import Rewards from './pages/Rewards';
 import Complaints from './pages/Complaints';
 import Transfers from './pages/Transfers';
 import Discounts from './pages/Discounts';
+import Offers from './pages/Offers';
 import Services from './pages/Services';
 import Community from './pages/Community';
 import Safety from './pages/Safety';
@@ -28,6 +29,8 @@ import Privacy from './pages/Privacy';
 import Layout from './components/Layout';
 import './index.css';
 
+import PublicLayout from './components/PublicLayout';
+
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   if (!token) return <Navigate to="/login" replace />;
@@ -36,6 +39,18 @@ const ProtectedRoute = ({ children }) => {
 
 // App version for cache/auth busting
 const APP_VERSION = '1.0.4';
+
+const ListingWrapper = () => {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isLoggedIn = !!token && !!user.name;
+
+  if (isLoggedIn) {
+    return <Layout><Listing /></Layout>;
+  } else {
+    return <PublicLayout><Listing /></PublicLayout>;
+  }
+};
 
 function App() {
   React.useEffect(() => {
@@ -61,19 +76,20 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/explore" element={<Landing />} />
+        <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+        <Route path="/explore" element={<PublicLayout><Landing /></PublicLayout>} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
+        <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
+        <Route path="/terms" element={<PublicLayout><Terms /></PublicLayout>} />
+        <Route path="/privacy" element={<PublicLayout><Privacy /></PublicLayout>} />
 
         {/* Public browsing routes */}
         <Route path="/search"          element={<Layout><Search /></Layout>} />
-        <Route path="/listing/:id"     element={<Layout><Listing /></Layout>} />
+        <Route path="/offers"          element={<Offers />} />
+        <Route path="/listing/:id"     element={<ListingWrapper />} />
 
         {/* Protected portal routes */}
         <Route path="/dashboard"  element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />

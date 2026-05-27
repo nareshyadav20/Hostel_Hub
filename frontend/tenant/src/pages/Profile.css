@@ -4,7 +4,35 @@
   margin: 0 auto;
   padding: 1.5rem;
   animation: fadeIn 0.6s ease-out;
+  font-family: 'Inter', sans-serif; /* Consistent font */
 }
+
+.profile-container > *:not(:last-child) {
+  margin-bottom: 0.75rem;
+}
+
+/* Ensure headings and text inherit the same font */
+.profile-container h1,
+.profile-container h2,
+.profile-container h3,
+.profile-container h4,
+.profile-container p,
+.profile-tabs-nav .tab-btn,
+.section-title {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  /* Reduced font sizes for a more compact look */
+  font-size: 0.9rem;
+}
+
+/* Specific heading sizes */
+.profile-container h1 { font-size: 1.4rem; }
+.profile-container h2 { font-size: 1.2rem; }
+.profile-container h3 { font-size: 1.1rem; }
+.profile-container h4 { font-size: 1rem; }
+.profile-tabs-nav .tab-btn { font-size: 0.85rem; }
+.section-title { font-size: 1rem; }
+
 
 .profile-hero {
   display: grid;
@@ -20,7 +48,6 @@
 }
 
 .profile-main-card-premium {
-  padding: 2.5rem !important;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -28,18 +55,26 @@
   background: rgba(255, 255, 255, 0.7) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  padding: 1.5rem;
+  border-radius: 20px;
 }
+
+[data-theme='dark'] .profile-main-card-premium {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
 
 .profile-avatar-large {
   width: 140px;
   height: 140px;
-  border-radius: 40px;
+  border-radius: 35px;
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 4rem;
+  font-size: 3rem;
   font-weight: 900;
   margin-bottom: 1.5rem;
   position: relative;
@@ -900,4 +935,21 @@
   font-size: 0.9rem;
   font-weight: 800;
   color: var(--text-secondary);
+}
+
+/* Dark mode overrides */
+[data-theme='dark'] .transaction-item {
+  background: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+}
+[data-theme='dark'] .transaction-item .tx-icon {
+  background: var(--bg-secondary) !important;
+}
+[data-theme='dark'] .pagi-btn {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+[data-theme='dark'] .pagi-btn:disabled {
+  background: var(--bg-muted) !important;
+  opacity: 0.5;
 }

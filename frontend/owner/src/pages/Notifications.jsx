@@ -56,6 +56,7 @@ const Notifications = () => {
 
   const categories = [
     { id: 'all', name: 'All', icon: <LayoutGrid size={18} /> },
+    { id: 'Assets', name: 'Assets', icon: <Box size={18} /> },
     { id: 'Mess', name: 'Mess', icon: <Utensils size={18} /> },
     { id: 'Safety', name: 'SOS Alerts', icon: <Shield size={18} /> },
     { id: 'Payments', name: 'Payments', icon: <CreditCard size={18} /> },
@@ -172,35 +173,50 @@ const Notifications = () => {
     };
     const style = colors[portal] || colors['Owner'];
     return (
-      <span style={{
-        display: 'flex', alignItems: 'center', gap: '0.3rem',
+      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem',
         padding: '0.2rem 0.6rem', borderRadius: '100px',
         background: style.bg, color: style.color,
         fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase'
-      }}>
+       }}>
         {style.icon} {portal}
       </span>
     );
   };
 
+  const getOwnerActionLink = (actionLink) => {
+    if (!actionLink) return null;
+    if (actionLink.startsWith('/owner/')) return actionLink;
+    
+    const genericPaths = [
+      '/complaints', '/mess', '/payments', '/inventory', '/rooms', 
+      '/tenants', '/staff', '/buildings', '/settings', '/reports', '/community', '/assets'
+    ];
+    
+    const matchedPath = genericPaths.find(p => actionLink.startsWith(p));
+    if (matchedPath && activeBuildingId) {
+      return `/owner/building/${activeBuildingId}${actionLink}`;
+    }
+    return actionLink;
+  };
+
   const inputStyle = { padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', width: '100%' };
 
   return (
-    <div className="notifications-page" style={{ padding: '2rem' }}>
-      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="notifications-page" style={{ padding: '2rem'  }}>
+      <header style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center'  }}>
         <div>
-          <h1 style={{ fontSize: '2.4rem', fontWeight: '900', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+          <h1 style={{ fontSize: '2.4rem', fontWeight: '900', marginBottom: '0.5rem', color: 'var(--text-primary)'  }}>
             Notification Hub
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: '500' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: '500'  }}>
             Centralized alerts from Tenants, Staff, and Operations.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button onClick={() => setIsComposerOpen(true)} className="btn" style={{ background: '#10B981', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '1rem'  }}>
+          <button onClick={() => setIsComposerOpen(true)} className="btn" style={{ background: '#10B981', color: "var(--text-on-primary)", border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}>
             <Send size={18} /> Compose Alert
           </button>
-          <button onClick={() => setIsSettingsOpen(true)} className="btn" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button onClick={() => setIsSettingsOpen(true)} className="btn" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}>
             <Settings size={18} /> Settings
           </button>
           <button onClick={handleMarkAllRead} className="btn btn-secondary">
@@ -209,22 +225,22 @@ const Notifications = () => {
         </div>
       </header>
 
-      <div style={{ background: 'var(--bg-secondary)', padding: '1.5rem', borderRadius: '24px', marginBottom: '2rem', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '1.5rem' }}>
-          <div style={{ position: 'relative' }}>
-            <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
+      <div style={{ background: 'var(--bg-secondary)', padding: '1.5rem', borderRadius: '24px', marginBottom: '2rem', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '1.2rem'  }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '1.5rem'  }}>
+          <div style={{ position: 'relative'  }}>
+            <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)'  }} size={18} />
             <input
               type="text"
               placeholder="Search notifications..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 3rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', outline: 'none' }}
+              style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 3rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', outline: 'none'  }}
             />
           </div>
-          <select value={activePortal} onChange={(e) => setActivePortal(e.target.value)} style={{ padding: '0.8rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontWeight: '700' }}>
+          <select value={activePortal} onChange={(e) => setActivePortal(e.target.value)} style={{ padding: '0.8rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontWeight: '700'  }}>
             {portals.map(p => <option key={p} value={p}>{p} Portal</option>)}
           </select>
-          <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} style={{ padding: '0.8rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontWeight: '700' }}>
+          <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} style={{ padding: '0.8rem', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontWeight: '700'  }}>
             <option value="all">All Priorities</option>
             <option value="High">High Priority</option>
             <option value="Medium">Medium Priority</option>
@@ -232,35 +248,34 @@ const Notifications = () => {
           </select>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.3rem', padding: '0.4rem', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px solid var(--border-color)', overflowX: 'auto', whiteSpace: 'nowrap' }}>
+        <div style={{ display: 'flex', gap: '0.3rem', padding: '0.4rem', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px solid var(--border-color)', overflowX: 'auto', whiteSpace: 'nowrap'  }}>
           {categories.map(cat => (
             <button
               key={cat.id}
               onClick={() => setActiveTab(cat.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', borderRadius: '12px', border: 'none',
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', borderRadius: '12px', border: 'none',
                 background: activeTab === cat.id ? 'var(--accent-primary)' : 'transparent',
                 color: activeTab === cat.id ? 'white' : 'var(--text-secondary)',
                 cursor: 'pointer', transition: 'all 0.2s ease', fontWeight: '800', flexShrink: 0,
                 boxShadow: activeTab === cat.id ? '0 4px 12px rgba(var(--accent-primary-rgb), 0.2)' : 'none'
-              }}
+               }}
             >
-              {cat.icon} <span style={{ fontSize: '0.8rem' }}>{cat.name}</span>
+              {cat.icon} <span style={{ fontSize: '0.8rem'  }}>{cat.name}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem'  }}>
         <button
           onClick={handleSeed}
-          style={{ background: 'transparent', border: '1px dashed var(--border-color)', color: 'var(--text-muted)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '600', cursor: 'pointer' }}
+          style={{ background: 'transparent', border: '1px dashed var(--border-color)', color: 'var(--text-muted)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '600', cursor: 'pointer'  }}
         >
           Seed Sample Notifications
         </button>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem'  }}>
         <AnimatePresence mode="popLayout">
           {paginatedNotifications.length > 0 ? (
             paginatedNotifications.map((n, idx) => (
@@ -275,36 +290,36 @@ const Notifications = () => {
                   boxShadow: n.isRead ? 'none' : 'var(--shadow-md)', border: '1px solid var(--border-color)', display: 'flex', gap: '1.2rem', position: 'relative'
                 }}
               >
-                <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: n.priority === 'High' ? 'rgba(239, 68, 68, 0.1)' : (n.isRead ? 'var(--bg-tertiary)' : 'var(--accent-primary-light)'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: n.priority === 'High' ? '#EF4444' : (n.isRead ? 'var(--text-muted)' : 'var(--accent-primary)'), flexShrink: 0 }}>
+                <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: n.priority === 'High' ? 'rgba(239, 68, 68, 0.1)' : (n.isRead ? 'var(--bg-tertiary)' : 'var(--accent-primary-light)'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: n.priority === 'High' ? '#EF4444' : (n.isRead ? 'var(--text-muted)' : 'var(--accent-primary)'), flexShrink: 0  }}>
                   {getModuleIcon(n.moduleName)}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <div style={{ flex: 1  }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem'  }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center'  }}>
                       {getPortalBadge(n.portalType)}
-                      <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{n.moduleName}</span>
+                      <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', padding: '0.1rem 0.4rem', borderRadius: '4px'  }}>{n.moduleName}</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Clock size={12} /> {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      <button onClick={() => handleDelete(n.id || n._id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Delete Notification"><Trash2 size={16} /></button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem'  }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem'  }}><Clock size={12} /> {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <button onClick={() => handleDelete(n.id || n._id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center'  }} title="Delete Notification"><Trash2 size={16} /></button>
                     </div>
                   </div>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '0.3rem', color: n.isRead ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '0.3rem', color: n.isRead ? 'var(--text-secondary)' : 'var(--text-primary)'  }}>
                     {n.priority === 'High' && '🚨 '}{n.title}
                   </h3>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.5 }}>{n.message}</p>
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.5  }}>{n.message}</p>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center'  }}>
                     {!n.isRead && <button onClick={() => handleMarkAsRead(n.id || n._id)} className="btn-notif-action"><CheckCircle size={14} /> Mark read</button>}
-                    {n.actionLink && <button onClick={() => navigate(n.actionLink)} className="btn-notif-action" style={{ color: 'var(--accent-primary)' }}><ExternalLink size={14} /> Take Action</button>}
+                    {n.actionLink && <button onClick={() => navigate(getOwnerActionLink(n.actionLink))} className="btn-notif-action" style={{ color: 'var(--accent-primary)'  }}><ExternalLink size={14} /> Take Action</button>}
                     <button onClick={() => handleArchive(n.id || n._id)} className="btn-notif-action"><Archive size={14} /> Archive</button>
                   </div>
                 </div>
               </motion.div>
             ))
           ) : (
-            <div style={{ textAlign: 'center', padding: '5rem', gridColumn: '1 / -1' }}>
-              <Bell size={40} color="var(--text-muted)" style={{ margin: '0 auto 1rem' }} />
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>All caught up!</h2>
+            <div style={{ textAlign: 'center', padding: '5rem', gridColumn: '1 / -1'  }}>
+              <Bell size={40} color="var(--text-muted)" style={{ margin: '0 auto 1rem'  }} />
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800'  }}>All caught up!</h2>
             </div>
           )}
         </AnimatePresence>
@@ -312,15 +327,14 @@ const Notifications = () => {
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '2.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '2.5rem'  }}>
           <button
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            style={{
-              padding: '0.5rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)',
+            style={{ padding: '0.5rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)',
               background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontWeight: '700',
               cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1
-            }}
+             }}
           >
             Prev
           </button>
@@ -328,13 +342,12 @@ const Notifications = () => {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              style={{
-                width: '38px', height: '38px', borderRadius: '12px', border: 'none',
+              style={{ width: '38px', height: '38px', borderRadius: '12px', border: 'none',
                 background: currentPage === i + 1 ? 'var(--accent-primary)' : 'var(--bg-secondary)',
                 color: currentPage === i + 1 ? 'white' : 'var(--text-primary)',
                 fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s ease',
                 boxShadow: currentPage === i + 1 ? '0 4px 10px rgba(16,185,129,0.2)' : 'none'
-              }}
+               }}
             >
               {i + 1}
             </button>
@@ -342,11 +355,10 @@ const Notifications = () => {
           <button
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            style={{
-              padding: '0.5rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)',
+            style={{ padding: '0.5rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color)',
               background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontWeight: '700',
               cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1
-            }}
+             }}
           >
             Next
           </button>
@@ -355,30 +367,30 @@ const Notifications = () => {
 
       <AnimatePresence>
         {isComposerOpen && (
-          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' }} onClick={() => setIsComposerOpen(false)} />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ position: 'relative', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: '900' }}>Send Broadcast Alert</h2>
-                <X style={{ cursor: 'pointer' }} onClick={() => setIsComposerOpen(false)} />
+          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000  }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)'  }} onClick={() => setIsComposerOpen(false)} />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ position: 'relative', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto'  }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'  }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '900'  }}>Send Broadcast Alert</h2>
+                <X style={{ cursor: 'pointer'  }} onClick={() => setIsComposerOpen(false)} />
               </div>
-              <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem'  }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Target Audience</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem'  }}>Target Audience</label>
                   <select value={composerData.target} onChange={e => setComposerData({ ...composerData, target: e.target.value })} style={inputStyle}>
                     <option>All Tenants</option>
                     <option>Staff Members</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Title</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem'  }}>Title</label>
                   <input type="text" placeholder="e.g. Mess Update, Maintenance Notice" value={composerData.title} onChange={e => setComposerData({ ...composerData, title: e.target.value })} style={inputStyle} required />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem' }}>Message</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.9rem'  }}>Message</label>
                   <textarea rows="4" placeholder="Type your message here..." value={composerData.message} onChange={e => setComposerData({ ...composerData, message: e.target.value })} style={inputStyle} required />
                 </div>
-                <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem', background: 'var(--accent-primary)', border: 'none', color: 'white', fontWeight: '800', borderRadius: '12px' }}>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem', background: 'var(--accent-primary)', border: 'none', color: "var(--text-on-primary)", fontWeight: '800', borderRadius: '12px'  }}>
                   Send Broadcast
                 </button>
               </form>
@@ -389,19 +401,19 @@ const Notifications = () => {
 
       <AnimatePresence>
         {isSettingsOpen && (
-          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)' }} onClick={() => setIsSettingsOpen(false)} />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ position: 'relative', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '1rem' }}>Hub Settings</h2>
+          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000  }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)'  }} onClick={() => setIsSettingsOpen(false)} />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ position: 'relative', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto'  }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '1rem'  }}>Hub Settings</h2>
               {Object.entries(notifSettings).map(([key, config]) => (
-                <div key={key} style={{ marginBottom: '1rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ textTransform: 'capitalize', fontWeight: '700' }}>{key}</span>
+                <div key={key} style={{ marginBottom: '1rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px'  }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center'  }}>
+                    <span style={{ textTransform: 'capitalize', fontWeight: '700'  }}>{key}</span>
                     <input type="checkbox" checked={config.enabled} onChange={e => setNotifSettings({ ...notifSettings, [key]: { ...config, enabled: e.target.checked } })} />
                   </div>
                 </div>
               ))}
-              <button onClick={() => setIsSettingsOpen(false)} className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>Close</button>
+              <button onClick={() => setIsSettingsOpen(false)} className="btn btn-primary" style={{ width: '100%', marginTop: '1rem'  }}>Close</button>
             </motion.div>
           </div>
         )}

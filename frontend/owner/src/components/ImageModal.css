@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: var(--modal-overlay);
   backdrop-filter: blur(8px);
   z-index: 99999;
   display: flex;
@@ -27,14 +27,14 @@
   max-height: 90vh;
   object-fit: contain;
   border-radius: 12px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-lg);
 }
 
 .img-modal-close {
   position: absolute;
   top: -40px;
   right: -40px;
-  background: white;
+  background: var(--bg-card);
   border: none;
   width: 40px;
   height: 40px;
@@ -45,13 +45,13 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  color: #1e293b;
+  box-shadow: var(--shadow-md);
+  color: var(--text-main);
 }
 
 .img-modal-close:hover {
   transform: scale(1.1) rotate(90deg);
-  background: #f3f4f6;
+  background: var(--bg-tertiary);
 }
 
 @keyframes fadeInModal {

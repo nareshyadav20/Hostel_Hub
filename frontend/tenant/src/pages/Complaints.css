@@ -56,6 +56,7 @@
   border-left: 5px solid var(--primary);
 }
 
+
 .stat-card-mini.success {
   border-left-color: #16a34a;
   background: #f0fdf4 !important;
@@ -64,6 +65,19 @@
 .stat-card-mini.warning {
   border-left-color: #ea580c;
   background: #fff7ed !important;
+}
+
+/* Dark mode overrides for stat cards */
+[data-theme='dark'] .stat-card-mini {
+  background: var(--bg-secondary) !important;
+}
+[data-theme='dark'] .stat-card-mini.success {
+  background: var(--bg-secondary) !important;
+  border-left-color: #16a34a !important;
+}
+[data-theme='dark'] .stat-card-mini.warning {
+  background: var(--bg-secondary) !important;
+  border-left-color: #ea580c !important;
 }
 
 .stat-label {
@@ -84,6 +98,7 @@
   padding: 2rem !important;
 }
 
+[data-theme='dark'] .ticket-history-card { background: var(--bg-secondary) !important; }
 .icon-badge-history {
   width: 44px;
   height: 44px;
@@ -101,6 +116,11 @@
   margin-top: 1.5rem;
 }
 
+[data-theme='dark'] .tickets-table th {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
 .tickets-table th {
   padding: 1rem 1.5rem;
   background: var(--bg-primary);
@@ -114,6 +134,41 @@
 .tickets-table td {
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--border-light);
+}
+
+/* Dark mode overrides */
+[data-theme='dark'] .tickets-table td {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.status-pill {
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+[data-theme='dark'] .status-pill {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.mobile-ticket-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme='dark'] .mobile-ticket-card {
+  background: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
 .td-date {
@@ -350,7 +405,7 @@
     border-radius: 24px;
   }
 
-  .form-row {
+  .form-row, .form-row-dynamic {
     grid-template-columns: 1fr !important;
     gap: 1rem !important;
   }
@@ -373,3 +428,108 @@
     font-size: 1.3rem;
   }
 }
+
+/* Premium Modal Fullscreen Styling */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary, #ffffff);
+  z-index: 99999; /* Covers navigation completely */
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0;
+  overflow-y: auto;
+  animation: modalEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-content-premium {
+  width: 100%;
+  max-width: 800px; /* Keep content readable but use full screen layout */
+  background: transparent;
+  border-radius: 0;
+  padding: 3rem 2rem;
+  box-shadow: none;
+  min-height: 100vh;
+  margin: 0 auto;
+}
+
+@keyframes modalEnter {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header-pro {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.modal-title-group {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.modal-icon-badge {
+  width: 40px;
+  height: 40px;
+  background: var(--primary-light, #e0e7ff);
+  color: var(--primary, #4f46e5);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-icon-badge svg {
+  width: 20px;
+  height: 20px;
+}
+
+.modal-title-group h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 0.2rem;
+}
+
+.modal-title-group p {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 0.25rem;
+}
+
+.close-btn:hover {
+  color: var(--text-primary, #1e293b);
+}
+
+.premium-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-row-dynamic {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1rem;
+}
+

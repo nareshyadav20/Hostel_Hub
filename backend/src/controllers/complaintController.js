@@ -34,7 +34,11 @@ exports.createComplaint = async (req, res) => {
     }
 
     // Robust hierarchy mapping
-    let buildingId = bodyBuildingId || (tenant.buildingId?._id || tenant.buildingId);
+    let buildingId = bodyBuildingId;
+    if (buildingId === 'undefined' || buildingId === 'null') {
+      buildingId = null;
+    }
+    buildingId = buildingId || (tenant.buildingId?._id || tenant.buildingId);
     let roomId = tenant.roomId?._id || tenant.roomId || null;
     let bedId = tenant.bedId?._id || tenant.bedId || null;
     let hostelId = null;
@@ -70,23 +74,48 @@ exports.createComplaint = async (req, res) => {
       }
     }
 
-    // Find Hostel for this building
+    // Find Hostel for this building and Owner
+    let ownerId = null;
     if (buildingId) {
       const hostel = await Hostel.findOne({ buildings: buildingId });
       if (hostel) hostelId = hostel._id;
+      
+      const Building = require('../models/Building');
+      const buildingDoc = await Building.findById(buildingId);
+      if (buildingDoc) ownerId = buildingDoc.owner;
+    }
+
+    let { asset, subIssue, customIssue } = req.body;
+    if (!asset || asset === 'undefined' || asset === 'null' || asset === '') {
+      asset = null;
+    }
+    if (!subIssue || subIssue === 'undefined' || subIssue === 'null' || subIssue === '') {
+      subIssue = null;
+    }
+    if (!customIssue || customIssue === 'undefined' || customIssue === 'null' || customIssue === '') {
+      customIssue = null;
+    }
+
+    let finalCategory = category;
+    if (asset) {
+      finalCategory = subIssue || customIssue || asset;
     }
 
     const complaint = await Complaint.create({
       title,
       description,
-      category,
+      category: finalCategory,
       priority: priority || 'Medium',
       tenant: tenant._id,
       user: req.user.id,
       hostelId,
       buildingId,
       roomId,
-      bedId
+      bedId,
+      ownerId,
+      asset,
+      subIssue,
+      customIssue
     });
 
     // Real-time synchronization for Owner
@@ -97,18 +126,21 @@ exports.createComplaint = async (req, res) => {
       });
       
       // Create Persistent Notification for Owner
+      const isAssetComplaint = !!asset;
       await notificationService.createNotification({
-        moduleName: 'Complaints',
+        moduleName: isAssetComplaint ? 'Assets' : 'Complaints',
         portalType: 'Owner',
-        category: category || 'Maintenance',
-        title: 'New Complaint Raised',
-        message: `${tenant.name} from Room ${tenant.room || 'N/A'} raised: ${title}`,
+        category: isAssetComplaint ? 'Assets' : (category || 'Maintenance'),
+        title: isAssetComplaint ? `New Asset Issue: ${asset}` : 'New Complaint Raised',
+        message: isAssetComplaint 
+          ? `${tenant.name} reported a problem with ${asset} (${subIssue || customIssue || 'General Issue'}): ${title}` 
+          : `${tenant.name} from Room ${tenant.room || 'N/A'} raised: ${title}`,
         priority: priority || 'Medium',
         type: 'warning',
         buildingId,
         tenantId: tenant._id,
         roomId: roomId ? roomId.toString() : null,
-        actionLink: `/complaints`
+        actionLink: isAssetComplaint ? `/assets` : `/complaints`
       });
     }
     socketService.emitToOwner('complaintCreated', {
@@ -141,7 +173,19 @@ exports.getMyComplaints = async (req, res) => {
     await populateRawComplaints(rawComplaints);
 
     const merged = [...ownerComplaints, ...rawComplaints].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
-    res.status(200).json(merged);
+    
+    // Deduplicate to avoid React duplicate key warnings
+    const seenIds = new Set();
+    const uniqueComplaints = [];
+    for (const c of merged) {
+      const idStr = c._id.toString();
+      if (!seenIds.has(idStr)) {
+        seenIds.add(idStr);
+        uniqueComplaints.push(c);
+      }
+    }
+
+    res.status(200).json(uniqueComplaints);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch complaints', error: error.message });
   }
@@ -158,10 +202,17 @@ exports.updateComplaintStatus = async (req, res) => {
       .populate('user', 'name email')
       .populate('tenant', 'name email');
 
-    // Real-time synchronization for Tenant — emit globally since tenant may not have buildingId
+    // Real-time synchronization for Tenant & Owner
     const buildingIdStr = complaint.buildingId ? complaint.buildingId.toString() : null;
-    if (buildingIdStr) socketService.emitUpdate(buildingIdStr, 'complaintStatusChanged', complaint);
-    // Also emit globally so all tenants receive their own update
+    const tenantIdStr = (complaint.tenant?._id || complaint.tenant || complaint.user)?.toString();
+    
+    if (buildingIdStr) {
+      socketService.emitUpdate(buildingIdStr, 'complaintStatusChanged', complaint);
+    }
+    if (tenantIdStr) {
+      socketService.emitToUser(tenantIdStr, 'Tenant', 'complaintStatusChanged', complaint);
+    }
+    // Emit to owner dashboard
     socketService.emitToOwner('complaintStatusChanged', complaint);
 
     // Create notification for tenant
@@ -173,7 +224,9 @@ exports.updateComplaintStatus = async (req, res) => {
       category: 'Maintenance',
       type: 'info',
       buildingId: complaint.buildingId,
-      tenantId: complaint.tenant._id,
+      tenantId: tenantIdStr,
+      receiverId: tenantIdStr,
+      receiverRole: 'Tenant',
       createdBy: req.user.id
     });
 
@@ -248,7 +301,19 @@ exports.getAllComplaints = async (req, res) => {
     await populateRawComplaints(rawComplaints);
 
     const merged = [...ownerComplaints, ...rawComplaints].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
-    res.status(200).json(merged);
+    
+    // Deduplicate to avoid React duplicate key warnings
+    const seenIds = new Set();
+    const uniqueComplaints = [];
+    for (const c of merged) {
+      const idStr = c._id.toString();
+      if (!seenIds.has(idStr)) {
+        seenIds.add(idStr);
+        uniqueComplaints.push(c);
+      }
+    }
+
+    res.status(200).json(uniqueComplaints);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch all complaints', error: error.message });
   }

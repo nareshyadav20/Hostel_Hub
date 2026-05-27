@@ -294,64 +294,64 @@ const Mess = () => {
   const inputStyle = { padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', width: '100%' };
 
   return (
-    <div className="mess-page" style={{ animation: 'fadeIn 0.5s ease-out' }}>
-      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="mess-page" style={{ animation: 'fadeIn 0.5s ease-out'  }}>
+      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem'  }}>
         <div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}>
             <Utensils size={32} color="var(--accent-primary)" /> Premium Mess Control
           </h1>
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-            <button onClick={() => setActiveTab('dashboard')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'dashboard' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'dashboard' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}>Dashboard</button>
-            <button onClick={() => setActiveTab('attendance')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'attendance' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'attendance' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}>Attendance</button>
-            <button onClick={() => setActiveTab('menu')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'menu' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'menu' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}>Menu Plan</button>
-            <button onClick={() => setActiveTab('subscriptions')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'subscriptions' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'subscriptions' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}>Plans ⭐</button>
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap'  }}>
+            <button onClick={() => setActiveTab('dashboard')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'dashboard' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'dashboard' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'  }}>Dashboard</button>
+            <button onClick={() => setActiveTab('attendance')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'attendance' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'attendance' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'  }}>Attendance</button>
+            <button onClick={() => setActiveTab('menu')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'menu' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'menu' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'  }}>Menu Plan</button>
+            <button onClick={() => setActiveTab('subscriptions')} style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', border: 'none', background: activeTab === 'subscriptions' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: activeTab === 'subscriptions' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'  }}>Plans ⭐</button>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center'  }}>
           {activeTab === 'menu' && (
-            <button onClick={handleEditClick} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700', borderRadius: '12px', padding: '0.8rem 1.5rem' }}>
+            <button onClick={handleEditClick} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700', borderRadius: '12px', padding: '0.8rem 1.5rem'  }}>
               <Edit3 size={16} /> Edit Menu
             </button>
           )}
-          <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center'  }}>
             <X size={20} />
           </button>
         </div>
       </header>
 
       {activeTab === 'dashboard' && (
-        <div style={{ animation: 'fadeIn 0.3s ease' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05 }}><Utensils size={100} /></div>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Total Meals Today</p>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{stats.breakfast + stats.lunch + stats.dinner}</h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--accent-success)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><TrendingUp size={12}/> 12% from yesterday</p>
+        <div style={{ animation: 'fadeIn 0.3s ease'  }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem'  }}>
+            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)', position: 'relative', overflow: 'hidden'  }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05  }}><Utensils size={100} /></div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}>Total Meals Today</p>
+              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem'  }}>{stats.breakfast + stats.lunch + stats.dinner}</h2>
+              <p style={{ fontSize: '0.8rem', color: 'var(--accent-success)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem'  }}><TrendingUp size={12}/> 12% from yesterday</p>
             </motion.div>
-            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #8b5cf6', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05 }}><Users size={100} /></div>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Premium Usage</p>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{stats.planUsage.Premium}</h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Active premium subscribers</p>
+            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #8b5cf6', position: 'relative', overflow: 'hidden'  }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05  }}><Users size={100} /></div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600'  }}>Premium Usage</p>
+              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem'  }}>{stats.planUsage.Premium}</h2>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem'  }}>Active premium subscribers</p>
             </motion.div>
-            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #ef4444', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05 }}><X size={100} /></div>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Skipped Meals</p>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem' }}>{tenants.length * 3 - (stats.breakfast + stats.lunch + stats.dinner)}</h2>
-              <p style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '0.5rem' }}>Based on total subscribers</p>
+            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #ef4444', position: 'relative', overflow: 'hidden'  }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05  }}><X size={100} /></div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600'  }}>Skipped Meals</p>
+              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginTop: '0.5rem'  }}>{tenants.length * 3 - (stats.breakfast + stats.lunch + stats.dinner)}</h2>
+              <p style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '0.5rem'  }}>Based on total subscribers</p>
             </motion.div>
-            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05 }}><CalendarIcon size={100} /></div>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>Peak Usage Time</p>
-              <h2 style={{ fontSize: '1.8rem', fontWeight: '900', marginTop: '0.5rem' }}>1:30 PM</h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>During Lunch hours</p>
+            <motion.div whileHover={{ y: -5 }} className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b', position: 'relative', overflow: 'hidden'  }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05  }}><CalendarIcon size={100} /></div>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600'  }}>Peak Usage Time</p>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: '900', marginTop: '0.5rem'  }}>1:30 PM</h2>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem'  }}>During Lunch hours</p>
             </motion.div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-            <div className="card" style={{ padding: '2rem' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Utensils size={18} color="var(--accent-primary)"/> Meal Consumption Analytics</h3>
-              <div style={{ height: '300px', width: '100%' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem'  }}>
+            <div className="card" style={{ padding: '2rem'  }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}><Utensils size={18} color="var(--accent-primary)"/> Meal Consumption Analytics</h3>
+              <div style={{ height: '300px', width: '100%'  }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={[
                     { name: 'Breakfast', consumed: stats.breakfast, fill: '#f59e0b' },
@@ -383,10 +383,10 @@ const Mess = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div className="card" style={{ padding: '2rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Users size={18} color="#8b5cf6"/> Plan Distribution</h3>
-                <div style={{ flex: 1, position: 'relative', minHeight: '180px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem'  }}>
+              <div className="card" style={{ padding: '2rem', flex: 1, display: 'flex', flexDirection: 'column'  }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}><Users size={18} color="#8b5cf6"/> Plan Distribution</h3>
+                <div style={{ flex: 1, position: 'relative', minHeight: '180px'  }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -427,19 +427,19 @@ const Mess = () => {
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                    <span style={{ fontSize: '1.8rem', fontWeight: '900' }}>{tenants.length}</span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>Total</span>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none'  }}>
+                    <span style={{ fontSize: '1.8rem', fontWeight: '900'  }}>{tenants.length}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700'  }}>Total</span>
                   </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap'  }}>
                   {[
                     { name: 'Premium', value: stats.planUsage.Premium, color: '#8b5cf6' },
                     { name: 'Standard', value: stats.planUsage.Standard, color: '#3b82f6' },
                     { name: 'Basic', value: stats.planUsage.Basic, color: '#94a3b8' }
                   ].map(p => (
-                    <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: '600' }}>
-                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: p.color }} /> {p.name} ({p.value})
+                    <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: '600'  }}>
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: p.color  }} /> {p.name} ({p.value})
                     </div>
                   ))}
                 </div>
@@ -450,53 +450,52 @@ const Mess = () => {
       )}
 
       {activeTab === 'attendance' && (
-        <div style={{ animation: 'fadeIn 0.3s ease' }}>
-          <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-tertiary)' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>Resident Meal Attendance - {today}</h3>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => markAllPresent('breakfast')} className="btn" style={{ fontSize: '0.75rem', background: '#f59e0b20', color: '#f59e0b', border: '1px solid #f59e0b40' }}>Mark All Breakfast</button>
-                <button onClick={() => markAllPresent('lunch')} className="btn" style={{ fontSize: '0.75rem', background: '#10b98120', color: '#10b981', border: '1px solid #10b98140' }}>Mark All Lunch</button>
-                <button onClick={() => markAllPresent('dinner')} className="btn" style={{ fontSize: '0.75rem', background: '#6366f120', color: '#6366f1', border: '1px solid #6366f140' }}>Mark All Dinner</button>
+        <div style={{ animation: 'fadeIn 0.3s ease'  }}>
+          <div className="card" style={{ padding: '0', overflow: 'hidden'  }}>
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-tertiary)'  }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800'  }}>Resident Meal Attendance - {today}</h3>
+              <div style={{ display: 'flex', gap: '1rem'  }}>
+                <button onClick={() => markAllPresent('breakfast')} className="btn" style={{ fontSize: '0.75rem', background: '#f59e0b20', color: '#f59e0b', border: '1px solid #f59e0b40'  }}>Mark All Breakfast</button>
+                <button onClick={() => markAllPresent('lunch')} className="btn" style={{ fontSize: '0.75rem', background: '#10b98120', color: '#10b981', border: '1px solid #10b98140'  }}>Mark All Lunch</button>
+                <button onClick={() => markAllPresent('dinner')} className="btn" style={{ fontSize: '0.75rem', background: '#6366f120', color: '#6366f1', border: '1px solid #6366f140'  }}>Mark All Dinner</button>
               </div>
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse'  }}>
               <thead>
-                <tr style={{ textAlign: 'left', background: 'var(--bg-secondary)' }}>
-                  <th style={{ padding: '1.2rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>NAME</th>
-                  <th style={{ padding: '1.2rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>ROOM</th>
-                  <th style={{ padding: '1.2rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>PLAN</th>
-                  <th style={{ padding: '1.2rem', fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center' }}>BREAKFAST</th>
-                  <th style={{ padding: '1.2rem', fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center' }}>LUNCH</th>
-                  <th style={{ padding: '1.2rem', fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center' }}>DINNER</th>
+                <tr style={{ textAlign: 'left', background: 'var(--bg-secondary)'  }}>
+                  <th style={{ padding: '1.2rem', fontSize: '0.85rem', color: 'var(--text-muted)'  }}>NAME</th>
+                  <th style={{ padding: '1.2rem', fontSize: '0.85rem', color: 'var(--text-muted)'  }}>ROOM</th>
+                  <th style={{ padding: '1.2rem', fontSize: '0.85rem', color: 'var(--text-muted)'  }}>PLAN</th>
+                  <th style={{ padding: '1.2rem', fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center'  }}>BREAKFAST</th>
+                  <th style={{ padding: '1.2rem', fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center'  }}>LUNCH</th>
+                  <th style={{ padding: '1.2rem', fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center'  }}>DINNER</th>
                 </tr>
               </thead>
               <tbody>
                 {tenants.map(tenant => {
                   const att = (attendance[today] && attendance[today][tenant.id]) || { breakfast: false, lunch: false, dinner: false };
                   return (
-                    <tr key={tenant.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '1.2rem', fontWeight: '700' }}>{tenant.name}</td>
-                      <td style={{ padding: '1.2rem' }}>{tenant.room}</td>
-                      <td style={{ padding: '1.2rem' }}>
-                        <span style={{ 
-                          padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '800',
+                    <tr key={tenant.id} style={{ borderBottom: '1px solid var(--border-color)'  }}>
+                      <td style={{ padding: '1.2rem', fontWeight: '700'  }}>{tenant.name}</td>
+                      <td style={{ padding: '1.2rem'  }}>{tenant.room}</td>
+                      <td style={{ padding: '1.2rem'  }}>
+                        <span style={{ padding: '0.3rem 0.8rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '800',
                           background: tenant.plan === 'Premium' ? '#8b5cf620' : tenant.plan === 'Standard' ? '#3b82f620' : '#94a3b820',
                           color: tenant.plan === 'Premium' ? '#8b5cf6' : tenant.plan === 'Standard' ? '#3b82f6' : '#94a3b8'
-                        }}>{tenant.plan}</span>
+                         }}>{tenant.plan}</span>
                       </td>
-                      <td style={{ padding: '1.2rem', textAlign: 'center' }}>
-                        <button onClick={() => toggleAttendance(tenant.id, 'breakfast')} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: att.breakfast ? '#f59e0b' : 'var(--border-color)' }}>
+                      <td style={{ padding: '1.2rem', textAlign: 'center'  }}>
+                        <button onClick={() => toggleAttendance(tenant.id, 'breakfast')} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: att.breakfast ? '#f59e0b' : 'var(--border-color)'  }}>
                           <CheckCircle size={24} fill={att.breakfast ? '#f59e0b20' : 'transparent'} />
                         </button>
                       </td>
-                      <td style={{ padding: '1.2rem', textAlign: 'center' }}>
-                        <button onClick={() => toggleAttendance(tenant.id, 'lunch')} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: att.lunch ? '#10b981' : 'var(--border-color)' }}>
+                      <td style={{ padding: '1.2rem', textAlign: 'center'  }}>
+                        <button onClick={() => toggleAttendance(tenant.id, 'lunch')} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: att.lunch ? '#10b981' : 'var(--border-color)'  }}>
                           <CheckCircle size={24} fill={att.lunch ? '#10b98120' : 'transparent'} />
                         </button>
                       </td>
-                      <td style={{ padding: '1.2rem', textAlign: 'center' }}>
-                        <button onClick={() => toggleAttendance(tenant.id, 'dinner')} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: att.dinner ? '#6366f1' : 'var(--border-color)' }}>
+                      <td style={{ padding: '1.2rem', textAlign: 'center'  }}>
+                        <button onClick={() => toggleAttendance(tenant.id, 'dinner')} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: att.dinner ? '#6366f1' : 'var(--border-color)'  }}>
                           <CheckCircle size={24} fill={att.dinner ? '#6366f120' : 'transparent'} />
                         </button>
                       </td>
@@ -510,60 +509,58 @@ const Mess = () => {
       )}
 
       {activeTab === 'menu' && (
-        <div style={{ animation: 'fadeIn 0.3s ease' }}>
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+        <div style={{ animation: 'fadeIn 0.3s ease'  }}>
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem'  }}>
             <button 
               onClick={() => setMenuView('daily')} 
-              style={{ 
-                display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.7rem 1.5rem', borderRadius: '12px', border: 'none', 
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.7rem 1.5rem', borderRadius: '12px', border: 'none', 
                 background: menuView === 'daily' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', 
                 color: menuView === 'daily' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer' 
-              }}
+               }}
             >
               <List size={18} /> Daily Detail
             </button>
             <button 
               onClick={() => setMenuView('weekly')} 
-              style={{ 
-                display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.7rem 1.5rem', borderRadius: '12px', border: 'none', 
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.7rem 1.5rem', borderRadius: '12px', border: 'none', 
                 background: menuView === 'weekly' ? 'var(--accent-primary)' : 'var(--bg-tertiary)', 
                 color: menuView === 'weekly' ? 'white' : 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer' 
-              }}
+               }}
             >
               <Grid size={18} /> Weekly Overview
             </button>
           </div>
 
           {loading ? (
-            <div className="card" style={{ padding: '4rem', textAlign: 'center' }}>Loading menu data...</div>
+            <div className="card" style={{ padding: '4rem', textAlign: 'center'  }}>Loading menu data...</div>
           ) : menuView === 'weekly' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem'  }}>
               {days.map(day => (
-                <div key={day} className="card" style={{ padding: '1.5rem', position: 'relative' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
-                    <h4 style={{ margin: 0, fontWeight: '800', color: 'var(--accent-primary)' }}>{day}</h4>
-                    <button onClick={() => { setSelectedDay(day); handleEditClick(); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><Edit3 size={14} /></button>
+                <div key={day} className="card" style={{ padding: '1.5rem', position: 'relative'  }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem'  }}>
+                    <h4 style={{ margin: 0, fontWeight: '800', color: 'var(--accent-primary)'  }}>{day}</h4>
+                    <button onClick={() => { setSelectedDay(day); handleEditClick(); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer'  }}><Edit3 size={14} /></button>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem'  }}>
+                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center'  }}>
                       <Sun size={14} color="#f59e0b" />
-                      <div style={{ fontSize: '0.85rem' }}>
-                        <span style={{ fontWeight: '800', color: '#f59e0b', fontSize: '0.7rem', display: 'block' }}>BREAKFAST</span>
-                        <span style={{ fontWeight: '600' }}>{menuData?.[selectedMenuPlan]?.[day]?.breakfast || 'Not Set'}</span>
+                      <div style={{ fontSize: '0.85rem'  }}>
+                        <span style={{ fontWeight: '800', color: '#f59e0b', fontSize: '0.7rem', display: 'block'  }}>BREAKFAST</span>
+                        <span style={{ fontWeight: '600'  }}>{menuData?.[selectedMenuPlan]?.[day]?.breakfast || 'Not Set'}</span>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center'  }}>
                       <Coffee size={14} color="#10b981" />
-                      <div style={{ fontSize: '0.85rem' }}>
-                        <span style={{ fontWeight: '800', color: '#10b981', fontSize: '0.7rem', display: 'block' }}>LUNCH</span>
-                        <span style={{ fontWeight: '600' }}>{menuData?.[selectedMenuPlan]?.[day]?.lunch || 'Not Set'}</span>
+                      <div style={{ fontSize: '0.85rem'  }}>
+                        <span style={{ fontWeight: '800', color: '#10b981', fontSize: '0.7rem', display: 'block'  }}>LUNCH</span>
+                        <span style={{ fontWeight: '600'  }}>{menuData?.[selectedMenuPlan]?.[day]?.lunch || 'Not Set'}</span>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center'  }}>
                       <Moon size={14} color="#6366f1" />
-                      <div style={{ fontSize: '0.85rem' }}>
-                        <span style={{ fontWeight: '800', color: '#6366f1', fontSize: '0.7rem', display: 'block' }}>DINNER</span>
-                        <span style={{ fontWeight: '600' }}>{menuData?.[selectedMenuPlan]?.[day]?.dinner || 'Not Set'}</span>
+                      <div style={{ fontSize: '0.85rem'  }}>
+                        <span style={{ fontWeight: '800', color: '#6366f1', fontSize: '0.7rem', display: 'block'  }}>DINNER</span>
+                        <span style={{ fontWeight: '600'  }}>{menuData?.[selectedMenuPlan]?.[day]?.dinner || 'Not Set'}</span>
                       </div>
                     </div>
                   </div>
@@ -571,11 +568,11 @@ const Mess = () => {
               ))}
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div className="card" style={{ padding: '1.5rem' }}>
-                  <h4 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem' }}>Select Plan</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem'  }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem'  }}>
+                <div className="card" style={{ padding: '1.5rem'  }}>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '1.5rem'  }}>Select Plan</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem'  }}>
                     {plans.map(plan => (
                       <button 
                         key={plan.id}
@@ -594,24 +591,23 @@ const Mess = () => {
                   </div>
                 </div>
                 
-                <div className="card" style={{ padding: '1.5rem', background: 'var(--accent-primary)', color: 'white' }}>
-                  <p style={{ fontSize: '0.85rem', fontWeight: '600', opacity: 0.8 }}>Active Menu</p>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginTop: '0.5rem' }}>{selectedDay}'s Menu</h3>
-                  <p style={{ fontSize: '0.8rem', marginTop: '1rem', opacity: 0.9 }}>You are currently viewing the menu for the <b>{selectedMenuPlan}</b> tier.</p>
+                <div className="card" style={{ padding: '1.5rem', background: 'var(--accent-primary)', color: "var(--text-on-primary)"  }}>
+                  <p style={{ fontSize: '0.85rem', fontWeight: '600', opacity: 0.8  }}>Active Menu</p>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginTop: '0.5rem'  }}>{selectedDay}'s Menu</h3>
+                  <p style={{ fontSize: '0.8rem', marginTop: '1rem', opacity: 0.9  }}>You are currently viewing the menu for the <b>{selectedMenuPlan}</b> tier.</p>
                 </div>
               </div>
 
-              <div className="card" style={{ padding: '0', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
+              <div className="card" style={{ padding: '0', display: 'flex', flexDirection: 'column'  }}>
+                <div style={{ display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)'  }}>
                   {days.map(day => (
                     <button 
                       key={day}
                       onClick={() => setSelectedDay(day)}
-                      style={{ 
-                        padding: '1.2rem 2rem', background: 'transparent', border: 'none', borderBottom: selectedDay === day ? `3px solid var(--accent-primary)` : '3px solid transparent',
+                      style={{ padding: '1.2rem 2rem', background: 'transparent', border: 'none', borderBottom: selectedDay === day ? `3px solid var(--accent-primary)` : '3px solid transparent',
                         color: selectedDay === day ? 'var(--accent-primary)' : 'var(--text-secondary)',
                         fontWeight: selectedDay === day ? '800' : '600', fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s'
-                      }}
+                       }}
                     >
                       {day}
                     </button>
@@ -622,29 +618,29 @@ const Mess = () => {
                   key={`${selectedMenuPlan}-${selectedDay}`}
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  style={{ padding: '2.5rem', display: 'grid', gap: '2rem' }}
+                  style={{ padding: '2.5rem', display: 'grid', gap: '2rem'  }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ padding: '1.2rem', background: '#f59e0b15', color: '#f59e0b', borderRadius: '20px' }}><Sun size={32} /></div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Breakfast (8:00 AM - 10:00 AM)</p>
-                      <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData?.[selectedMenuPlan]?.[selectedDay]?.breakfast || 'Not Set'}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)'  }}>
+                    <div style={{ padding: '1.2rem', background: '#f59e0b15', color: '#f59e0b', borderRadius: '20px'  }}><Sun size={32} /></div>
+                    <div style={{ flex: 1  }}>
+                      <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem'  }}>Breakfast (8:00 AM - 10:00 AM)</p>
+                      <p style={{ fontSize: '1.4rem', fontWeight: '700'  }}>{menuData?.[selectedMenuPlan]?.[selectedDay]?.breakfast || 'Not Set'}</p>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ padding: '1.2rem', background: '#10b98115', color: '#10b981', borderRadius: '20px' }}><Coffee size={32} /></div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Lunch (1:00 PM - 3:00 PM)</p>
-                      <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData?.[selectedMenuPlan]?.[selectedDay]?.lunch || 'Not Set'}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)'  }}>
+                    <div style={{ padding: '1.2rem', background: '#10b98115', color: '#10b981', borderRadius: '20px'  }}><Coffee size={32} /></div>
+                    <div style={{ flex: 1  }}>
+                      <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem'  }}>Lunch (1:00 PM - 3:00 PM)</p>
+                      <p style={{ fontSize: '1.4rem', fontWeight: '700'  }}>{menuData?.[selectedMenuPlan]?.[selectedDay]?.lunch || 'Not Set'}</p>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-                    <div style={{ padding: '1.2rem', background: '#6366f115', color: '#6366f1', borderRadius: '20px' }}><Moon size={32} /></div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem' }}>Dinner (8:00 PM - 10:30 PM)</p>
-                      <p style={{ fontSize: '1.4rem', fontWeight: '700' }}>{menuData?.[selectedMenuPlan]?.[selectedDay]?.dinner || 'Not Set'}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '2rem', borderRadius: '24px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)'  }}>
+                    <div style={{ padding: '1.2rem', background: '#6366f115', color: '#6366f1', borderRadius: '20px'  }}><Moon size={32} /></div>
+                    <div style={{ flex: 1  }}>
+                      <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.5rem'  }}>Dinner (8:00 PM - 10:30 PM)</p>
+                      <p style={{ fontSize: '1.4rem', fontWeight: '700'  }}>{menuData?.[selectedMenuPlan]?.[selectedDay]?.dinner || 'Not Set'}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -655,8 +651,8 @@ const Mess = () => {
       )}
 
       {activeTab === 'subscriptions' && (
-        <div style={{ animation: 'fadeIn 0.3s ease' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+        <div style={{ animation: 'fadeIn 0.3s ease'  }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', marginBottom: '3rem'  }}>
             {plans.map(plan => (
               <motion.div key={plan.id} whileHover={{ y: -10 }} className="card" style={{ 
                 padding: '2.5rem', borderRadius: '32px', position: 'relative', overflow: 'hidden',
@@ -664,31 +660,31 @@ const Mess = () => {
                 background: plan.popular ? `linear-gradient(135deg, var(--bg-secondary) 0%, ${plan.color}05 100%)` : 'var(--bg-secondary)'
               }}>
                 {plan.popular && (
-                  <div style={{ position: 'absolute', top: '1.5rem', right: '-3rem', background: plan.color, color: 'white', padding: '0.4rem 4rem', transform: 'rotate(45deg)', fontSize: '0.8rem', fontWeight: '900', letterSpacing: '1px', boxShadow: 'var(--shadow-md)' }}>PREMIUM</div>
+                  <div style={{ position: 'absolute', top: '1.5rem', right: '-3rem', background: plan.color, color: "var(--text-on-primary)", padding: '0.4rem 4rem', transform: 'rotate(45deg)', fontSize: '0.8rem', fontWeight: '900', letterSpacing: '1px', boxShadow: 'var(--shadow-md)'  }}>PREMIUM</div>
                 )}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', marginBottom: '2rem'  }}>
                   <div style={{ padding: '1.2rem', borderRadius: '20px', background: `${plan.color}20`, color: plan.color }}>
                     <Utensils size={28} />
                   </div>
                   <div>
-                    <h3 style={{ fontSize: '1.4rem', fontWeight: '900' }}>{plan.name}</h3>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '600' }}>Exclusive Access</p>
+                    <h3 style={{ fontSize: '1.4rem', fontWeight: '900'  }}>{plan.name}</h3>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '600'  }}>Exclusive Access</p>
                   </div>
                 </div>
-                <div style={{ marginBottom: '2.5rem' }}>
-                  <span style={{ fontSize: '3rem', fontWeight: '900' }}>₹{plan.price}</span>
-                  <span style={{ color: 'var(--text-muted)', fontWeight: '700', fontSize: '1.1rem' }}>/mo</span>
+                <div style={{ marginBottom: '2.5rem'  }}>
+                  <span style={{ fontSize: '3rem', fontWeight: '900'  }}>₹{plan.price}</span>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: '700', fontSize: '1.1rem'  }}>/mo</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginBottom: '3rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginBottom: '3rem'  }}>
                   {plan.features.map((f, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: '500'  }}>
                       <CheckCircle size={18} color={plan.color} /> {f}
                     </div>
                   ))}
                 </div>
-                <div style={{ display: 'flex', gap: '0.6rem' }}>
-                  <button onClick={() => setSelectedPlan(plan)} className="btn" style={{ flex: 1, border: '1px solid var(--border-color)', fontWeight: '800', borderRadius: '16px', fontSize: '0.82rem', padding: '0.6rem 0.8rem' }}>Specs</button>
-                  <button onClick={() => { setPlanToEdit({ ...plan }); setIsPlanEditModalOpen(true); }} className="btn btn-primary" style={{ flex: 1, fontWeight: '800', borderRadius: '16px', background: plan.color, fontSize: '0.82rem', padding: '0.6rem 0.8rem' }}>Edit</button>
+                <div style={{ display: 'flex', gap: '0.6rem'  }}>
+                  <button onClick={() => setSelectedPlan(plan)} className="btn" style={{ flex: 1, border: '1px solid var(--border-color)', fontWeight: '800', borderRadius: '16px', fontSize: '0.82rem', padding: '0.6rem 0.8rem'  }}>Specs</button>
+                  <button onClick={() => { setPlanToEdit({ ...plan }); setIsPlanEditModalOpen(true); }} className="btn btn-primary" style={{ flex: 1, fontWeight: '800', borderRadius: '16px', background: plan.color, fontSize: '0.82rem', padding: '0.6rem 0.8rem'  }}>Edit</button>
                   <button 
                     className="btn" 
                     style={{ flex: 1.2, fontWeight: '800', borderRadius: '16px', border: `1px solid ${plan.active ? '#ef4444' : '#10b981'}`, background: 'transparent', color: plan.active ? '#ef4444' : '#10b981', fontSize: '0.82rem', padding: '0.6rem 0.8rem' }}
@@ -708,18 +704,18 @@ const Mess = () => {
             ))}
           </div>
           
-          <div className="card" style={{ padding: '2.5rem', borderRadius: '24px' }}>
-            <h3 style={{ fontSize: '1.4rem', fontWeight: '900', marginBottom: '2rem' }}>Administrative Controls</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+          <div className="card" style={{ padding: '2.5rem', borderRadius: '24px'  }}>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: '900', marginBottom: '2rem'  }}>Administrative Controls</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem'  }}>
               {[
                 { title: 'Global Customization', desc: 'Allow menu edits per user', val: true },
                 { title: 'Meal Skip Credits', desc: 'Enable wallet refunds', val: false },
                 { title: 'Guest Pass System', desc: 'QR based visitor entry', val: true }
               ].map((ctrl, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', background: 'var(--bg-tertiary)', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
-                  <div><p style={{ fontWeight: '800', fontSize: '1rem' }}>{ctrl.title}</p><p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>{ctrl.desc}</p></div>
-                  <div style={{ width: '48px', height: '24px', background: ctrl.val ? 'var(--accent-primary)' : 'var(--border-color)', borderRadius: '12px', padding: '2px', display: 'flex', justifyContent: ctrl.val ? 'flex-end' : 'flex-start' }}>
-                    <div style={{ width: '20px', height: '20px', background: 'white', borderRadius: '50%', boxShadow: 'var(--shadow-sm)' }} />
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', background: 'var(--bg-tertiary)', borderRadius: '20px', border: '1px solid var(--border-color)'  }}>
+                  <div><p style={{ fontWeight: '800', fontSize: '1rem'  }}>{ctrl.title}</p><p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem'  }}>{ctrl.desc}</p></div>
+                  <div style={{ width: '48px', height: '24px', background: ctrl.val ? 'var(--accent-primary)' : 'var(--border-color)', borderRadius: '12px', padding: '2px', display: 'flex', justifyContent: ctrl.val ? 'flex-end' : 'flex-start'  }}>
+                    <div style={{ width: '20px', height: '20px', background: "var(--bg-card)", borderRadius: '50%', boxShadow: 'var(--shadow-sm)'  }} />
                   </div>
                 </div>
               ))}
@@ -730,20 +726,19 @@ const Mess = () => {
 
       <AnimatePresence>
         {selectedPlan && (
-          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem'  }}>
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
-              style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }} 
+              style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)'  }} 
               onClick={() => setSelectedPlan(null)} 
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }} 
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               exit={{ opacity: 0, scale: 0.95, y: 20 }} 
-              style={{ 
-                position: 'relative', 
+              style={{ position: 'relative', 
                 width: '100%', 
                 maxWidth: '550px', 
                 maxHeight: '90vh',
@@ -756,52 +751,52 @@ const Mess = () => {
                 border: '1px solid var(--border-color)',
                 scrollbarWidth: 'none', /* Firefox */
                 msOverflowStyle: 'none' /* IE/Edge */
-              }}
+               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', marginBottom: '2rem'  }}>
                 <div style={{ padding: '1.2rem', borderRadius: '18px', background: `${selectedPlan.color}20`, color: selectedPlan.color }}>
                   <Utensils size={28} />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <h3 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0, letterSpacing: '-0.02em' }}>{selectedPlan.name}</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: '600' }}>Comprehensive Benefits</p>
+                <div style={{ flex: 1  }}>
+                  <h3 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0, letterSpacing: '-0.02em'  }}>{selectedPlan.name}</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: '600'  }}>Comprehensive Benefits</p>
                 </div>
-                <button onClick={() => setSelectedPlan(null)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                <button onClick={() => setSelectedPlan(null)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)'  }}>
                   <X size={20} />
                 </button>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: '1.7', fontWeight: '500' }}>{selectedPlan.description}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem'  }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: '1.7', fontWeight: '500'  }}>{selectedPlan.description}</p>
                 
-                <div style={{ background: 'rgba(99, 102, 241, 0.03)', padding: '1.5rem', borderRadius: '20px', border: '1px solid rgba(99, 102, 241, 0.1)' }}>
-                  <h4 style={{ fontSize: '0.85rem', fontWeight: '800', marginBottom: '1.2rem', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ background: 'rgba(99, 102, 241, 0.03)', padding: '1.5rem', borderRadius: '20px', border: '1px solid rgba(99, 102, 241, 0.1)'  }}>
+                  <h4 style={{ fontSize: '0.85rem', fontWeight: '800', marginBottom: '1.2rem', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}>
                     <CheckCircle size={16} color="var(--accent-primary)" /> CORE BENEFITS
                   </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem'  }}>
                     {selectedPlan.features.map((f, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-success)' }} /> {f}
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '600'  }}>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-success)'  }} /> {f}
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div style={{ background: 'var(--bg-tertiary)', padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
-                  <h4 style={{ fontSize: '0.85rem', fontWeight: '800', marginBottom: '1.5rem', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                <div style={{ background: 'var(--bg-tertiary)', padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--border-color)'  }}>
+                  <h4 style={{ fontSize: '0.85rem', fontWeight: '800', marginBottom: '1.5rem', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', textTransform: 'uppercase', letterSpacing: '1px'  }}>
                     <Utensils size={18} /> SAMPLE MENU INCLUSIONS
                   </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.8rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.8rem'  }}>
                     {selectedPlan.menu.map((item, i) => (
-                      <div key={i} style={{ padding: '0.7rem 1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', textAlign: 'center', transition: 'transform 0.2s ease' }}>
+                      <div key={i} style={{ padding: '0.7rem 1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', textAlign: 'center', transition: 'transform 0.2s ease'  }}>
                         {item}
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                  <button onClick={() => setSelectedPlan(null)} className="btn btn-primary" style={{ flex: 1, padding: '1.2rem', fontSize: '1rem', borderRadius: '16px' }}>Got it, thanks!</button>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem'  }}>
+                  <button onClick={() => setSelectedPlan(null)} className="btn btn-primary" style={{ flex: 1, padding: '1.2rem', fontSize: '1rem', borderRadius: '16px'  }}>Got it, thanks!</button>
                 </div>
               </div>
             </motion.div>
@@ -810,25 +805,25 @@ const Mess = () => {
 
         {isEditModalOpen && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsEditModalOpen(false)} />
-            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '15%', left: '50%', x: '-50%', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem' }}>Update {selectedDay}'s Menu</h2>
-              <form onSubmit={handleSaveMenu} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)'  }} onClick={() => setIsEditModalOpen(false)} />
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '15%', left: '50%', x: '-50%', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)'  }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem'  }}>Update {selectedDay}'s Menu</h2>
+              <form onSubmit={handleSaveMenu} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem'  }}>
                 <div>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Breakfast</label>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem'  }}>Breakfast</label>
                   <input value={editForm.breakfast} onChange={e => setEditForm({...editForm, breakfast: e.target.value})} style={inputStyle} required />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Lunch</label>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem'  }}>Lunch</label>
                   <input value={editForm.lunch} onChange={e => setEditForm({...editForm, lunch: e.target.value})} style={inputStyle} required />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Dinner</label>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem'  }}>Dinner</label>
                   <input value={editForm.dinner} onChange={e => setEditForm({...editForm, dinner: e.target.value})} style={inputStyle} required />
                 </div>
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem' }}>Save Menu</button>
-                  <button className="btn" type="button" onClick={() => setIsEditModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Cancel</button>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem'  }}>
+                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem'  }}>Save Menu</button>
+                  <button className="btn" type="button" onClick={() => setIsEditModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)'  }}>Cancel</button>
                 </div>
               </form>
             </motion.div>
@@ -836,17 +831,17 @@ const Mess = () => {
         )}
         {isDeactivateModalOpen && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsDeactivateModalOpen(false)} />
-            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '30%', left: '50%', x: '-50%', width: '90%', maxWidth: '400px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', textAlign: 'center' }}>
-              <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)'  }} onClick={() => setIsDeactivateModalOpen(false)} />
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '30%', left: '50%', x: '-50%', width: '90%', maxWidth: '400px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', textAlign: 'center'  }}>
+              <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem'  }}>
                 <X size={30} color="#EF4444" />
               </div>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '1rem' }}>Confirm Deactivation</h2>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Are you sure you want to deactivate the <b>{planToDeactivate?.name}</b>? This will hide it from the tenant portal.</p>
-              <div style={{ display: 'flex', gap: '1rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '1rem'  }}>Confirm Deactivation</h2>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem'  }}>Are you sure you want to deactivate the <b>{planToDeactivate?.name}</b>? This will hide it from the tenant portal.</p>
+              <div style={{ display: 'flex', gap: '1rem'  }}>
                 <button 
                   className="btn" 
-                  style={{ flex: 1, background: '#EF4444', color: 'white' }}
+                  style={{ flex: 1, background: '#EF4444', color: "var(--text-on-primary)"  }}
                   onClick={() => {
                     setPlans(plans.map(p => p.id === planToDeactivate.id ? { ...p, active: false } : p));
                     setIsDeactivateModalOpen(false);
@@ -854,7 +849,7 @@ const Mess = () => {
                 >
                   Yes, Deactivate
                 </button>
-                <button className="btn" onClick={() => setIsDeactivateModalOpen(false)} style={{ flex: 1, border: '1px solid var(--border-color)' }}>Cancel</button>
+                <button className="btn" onClick={() => setIsDeactivateModalOpen(false)} style={{ flex: 1, border: '1px solid var(--border-color)'  }}>Cancel</button>
               </div>
             </motion.div>
           </>
@@ -862,33 +857,33 @@ const Mess = () => {
 
         {isPlanEditModalOpen && planToEdit && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)' }} onClick={() => setIsPlanEditModalOpen(false)} />
-            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '10%', left: '50%', x: '-50%', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem' }}>Edit Plan: {planToEdit.name}</h2>
-              <form onSubmit={handleSavePlan} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, backdropFilter: 'blur(4px)'  }} onClick={() => setIsPlanEditModalOpen(false)} />
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} style={{ position: 'fixed', top: '10%', left: '50%', x: '-50%', width: '90%', maxWidth: '500px', background: 'var(--bg-primary)', zIndex: 1001, padding: '2rem', borderRadius: '24px', border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto'  }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', marginBottom: '1.5rem'  }}>Edit Plan: {planToEdit.name}</h2>
+              <form onSubmit={handleSavePlan} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem'  }}>
                 <div>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Plan Name</label>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem'  }}>Plan Name</label>
                   <input value={planToEdit.name} onChange={e => setPlanToEdit({...planToEdit, name: e.target.value})} style={inputStyle} required />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Monthly Price (₹)</label>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem'  }}>Monthly Price (₹)</label>
                   <input type="number" value={planToEdit.price} onChange={e => setPlanToEdit({...planToEdit, price: parseInt(e.target.value) || 0})} style={inputStyle} required />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Description</label>
-                  <textarea value={planToEdit.description} onChange={e => setPlanToEdit({...planToEdit, description: e.target.value})} style={{ ...inputStyle, height: '80px', resize: 'none' }} required />
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem'  }}>Description</label>
+                  <textarea value={planToEdit.description} onChange={e => setPlanToEdit({...planToEdit, description: e.target.value})} style={{ ...inputStyle, height: '80px', resize: 'none'  }} required />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Features (comma separated)</label>
-                  <textarea value={planToEdit.features?.join(', ')} onChange={e => setPlanToEdit({...planToEdit, features: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} style={{ ...inputStyle, height: '80px', resize: 'none' }} required />
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem'  }}>Features (comma separated)</label>
+                  <textarea value={planToEdit.features?.join(', ')} onChange={e => setPlanToEdit({...planToEdit, features: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} style={{ ...inputStyle, height: '80px', resize: 'none'  }} required />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Sample Menu Inclusions (comma separated)</label>
-                  <textarea value={planToEdit.menu?.join(', ')} onChange={e => setPlanToEdit({...planToEdit, menu: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} style={{ ...inputStyle, height: '80px', resize: 'none' }} required />
+                  <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem'  }}>Sample Menu Inclusions (comma separated)</label>
+                  <textarea value={planToEdit.menu?.join(', ')} onChange={e => setPlanToEdit({...planToEdit, menu: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} style={{ ...inputStyle, height: '80px', resize: 'none'  }} required />
                 </div>
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem' }}>Save Plan Changes</button>
-                  <button className="btn" type="button" onClick={() => setIsPlanEditModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)' }}>Cancel</button>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem'  }}>
+                  <button className="btn btn-primary" type="submit" style={{ flex: 1, padding: '1rem'  }}>Save Plan Changes</button>
+                  <button className="btn" type="button" onClick={() => setIsPlanEditModalOpen(false)} style={{ flex: 1, padding: '1rem', border: '1px solid var(--border-color)'  }}>Cancel</button>
                 </div>
               </form>
             </motion.div>
@@ -898,7 +893,7 @@ const Mess = () => {
       <style>{`
         .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 24px; box-shadow: var(--shadow-sm); }
         .btn { padding: 0.8rem 1.5rem; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-        .btn-primary { background: var(--accent-primary); color: white; }
+        .btn-primary { background: var(--accent-primary); color: var(--text-on-primary); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </div>

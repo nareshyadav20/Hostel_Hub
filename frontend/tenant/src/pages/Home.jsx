@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, IndianRupee, Home as HomeIcon, CalendarCheck, Sparkles } from 'lucide-react';
+import { Search, MapPin, IndianRupee, Home as HomeIcon, CalendarCheck, Sparkles, Users, Building, Star, Sofa, Utensils, Wifi, PartyPopper, LifeBuoy, Wallet, User, Crown, GraduationCap, ChevronDown, X, ChevronRight, Bed, BookOpen, Shirt, Droplet, Car, Video, Wrench, ShieldCheck, MessageSquare, HeartPulse } from 'lucide-react';
 import './Home.css';
 import API from '../api/axios';
 import SearchOverlay from '../components/SearchOverlay';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
-import heroCouple from '../assets/hero_couple.png';
-import extReal from '../assets/ext_real.png';
-import chairsReal from '../assets/chairs_real.png';
-import roomStanza from '../assets/room_stanza.png';
-import bondEasy from '../assets/bond_easy.png';
-import stayEasy from '../assets/stay_easy.png';
-import studentCat from '../assets/student_cat.png';
-import professionalCat from '../assets/professional_cat.png';
+import heroCouple from '../assets/landing/hero_couple.png';
+import extReal from '../assets/landing/ext_real.png';
+import chairsReal from '../assets/landing/chairs_real.png';
+import roomStanza from '../assets/landing/room_stanza.png';
+import bondEasy from '../assets/landing/bond_easy.png';
+import stayEasy from '../assets/landing/stay_easy.png';
+import studentCat from '../assets/landing/student_cat.png';
+import professionalCat from '../assets/landing/professional_cat.png';
+import womensHostelImg from '../assets/landing/womens_hostel.png';
 import ImageModal from '../components/ImageModal';
 
 const CountUpAnimation = ({ endValue, suffix = '', isFloat = false }) => {
@@ -89,11 +90,13 @@ const Home = () => {
   const [activeNav, setActiveNav] = useState('Home');
   const [searchLocation, setSearchLocation] = useState('');
   const [budget, setBudget] = useState('');
-  const [roomType, setRoomType] = useState('');
+  const [stayType, setStayType] = useState('');
+  const [hostelType, setHostelType] = useState('');
   const [wishlist, setWishlist] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
-  const [isTypeOpen, setIsTypeOpen] = useState(false);
+  const [isStayTypeOpen, setIsStayTypeOpen] = useState(false);
+  const [isHostelTypeOpen, setIsHostelTypeOpen] = useState(false);
   const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
   const searchBarRef = useRef(null);
 
@@ -164,7 +167,8 @@ const Home = () => {
     const handleClickOutside = (event) => {
       if (searchBarRef.current && !searchBarRef.current.contains(event.target)) {
         setIsBudgetOpen(false);
-        setIsTypeOpen(false);
+        setIsStayTypeOpen(false);
+        setIsHostelTypeOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -174,8 +178,7 @@ const Home = () => {
   const navItems = [
     { label: 'Home', id: 'hero' },
     { label: 'Explore', id: 'explore' },
-    { label: 'How It Works', id: 'how' },
-    { label: 'Locations', id: 'cities' },
+    { label: 'Services', id: 'services' },
     { label: 'Reviews', id: 'reviews' },
     { label: 'About Us', id: 'about' },
     { label: 'Contact', id: 'contact' }
@@ -225,10 +228,10 @@ const Home = () => {
   };
 
   const stats = [
-    { icon: '👥', value: <CountUpAnimation endValue={platformStats.tenants} suffix="+" />, label: 'Happy Tenants' },
-    { icon: '🏢', value: <CountUpAnimation endValue={platformStats.properties} suffix="+" />, label: 'Verified Properties' },
-    { icon: '📍', value: <CountUpAnimation endValue={platformStats.cities} suffix="+" />, label: 'Cities' },
-    { icon: '⭐', value: <CountUpAnimation endValue={platformStats.rating.split('/')[0]} suffix="/5" isFloat={true} />, label: 'Average Rating' },
+    { icon: <Users size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.tenants} suffix="+" />, label: 'Happy Tenants' },
+    { icon: <Building size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.properties} suffix="+" />, label: 'Verified Properties' },
+    { icon: <MapPin size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.cities} suffix="+" />, label: 'Cities' },
+    { icon: <Star size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.rating.split('/')[0]} suffix="/5" isFloat={true} />, label: 'Average Rating' },
   ];
 
   const steps = [
@@ -241,12 +244,12 @@ const Home = () => {
   // rooms state populated via API
 
   const features = [
-    { icon: '🛋️', title: 'Fully Furnished', desc: 'Move-in with just your suitcase' },
-    { icon: '🍽️', title: 'Daily Meals', desc: 'Nutritious & hygienic meals everyday' },
-    { icon: '📶', title: 'High-Speed WiFi', desc: 'Work, study & stream without limits' },
-    { icon: '🎉', title: 'Community Events', desc: 'Make friends & create memories' },
-    { icon: '🛟', title: '24/7 Support', desc: "We're always here for you" },
-    { icon: '💰', title: 'No Hidden Charges', desc: 'Transparent pricing, no surprises' },
+    { icon: <Sofa size={36} color="#0f172a" />, title: 'Fully Furnished', desc: 'Move-in with just your suitcase' },
+    { icon: <Utensils size={36} color="#0f172a" />, title: 'Daily Meals', desc: 'Nutritious & hygienic meals everyday' },
+    { icon: <Wifi size={36} color="#0f172a" />, title: 'High-Speed WiFi', desc: 'Work, study & stream without limits' },
+    { icon: <PartyPopper size={36} color="#0f172a" />, title: 'Community Events', desc: 'Make friends & create memories' },
+    { icon: <LifeBuoy size={36} color="#0f172a" />, title: '24/7 Support', desc: "We're always here for you" },
+    { icon: <Wallet size={36} color="#0f172a" />, title: 'No Hidden Charges', desc: 'Transparent pricing, no surprises' },
   ];
 
   const testimonials = [
@@ -258,7 +261,7 @@ const Home = () => {
   const [showAllCities, setShowAllCities] = useState(false);
 
   const cities = [
-    { name: 'Bangalore', props: 120, img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Bengaluru', props: 120, img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&q=80&w=800' },
     { name: 'Hyderabad', props: 85, img: 'https://upload.wikimedia.org/wikipedia/commons/8/88/Downtown_hyderabad_drone.png' },
     { name: 'Mumbai', props: 64, img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&q=80&w=800' },
     { name: 'Chennai', props: 42, img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80&w=800' },
@@ -276,70 +279,68 @@ const Home = () => {
     const params = new URLSearchParams();
     if (searchLocation) params.append('location', searchLocation);
     if (budget) params.append('budget', budget);
-    if (roomType) params.append('type', roomType);
+    if (hostelType) params.append('hostelType', hostelType);
+    if (stayType) params.append('stayType', stayType);
     navigate(`/search?${params.toString()}`);
   };
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState(null); // 'services', 'amenities', 'terms'
+  const [isLocationsOpen, setIsLocationsOpen] = useState(false);
+
+  // categorized Mock Data for Modals based on Strict Definitions
+  const iconColor = "#4F46E5"; // Unified color for all icons
+  const mockAmenities = [
+    {
+      category: 'In-Room Features', items: [
+        { icon: <Bed color={iconColor} size={20} />, name: 'Beds' },
+        { icon: <BookOpen color={iconColor} size={20} />, name: 'Study tables' }
+      ]
+    },
+    {
+      category: 'Shared Facilities', items: [
+        { icon: <Wifi color={iconColor} size={20} />, name: 'Wi-Fi' },
+        { icon: <Shirt color={iconColor} size={20} />, name: 'Laundry room' },
+        { icon: <Droplet color={iconColor} size={20} />, name: 'Water cooler' },
+        { icon: <Car color={iconColor} size={20} />, name: 'Parking' }
+      ]
+    },
+    {
+      category: 'Security & Safety', items: [
+        { icon: <Video color={iconColor} size={20} />, name: 'CCTV' }
+      ]
+    }
+  ];
+
+  const mockServices = [
+    {
+      category: 'Daily Care & Conveniences', items: [
+        {
+          icon: (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12c0 4 3.5 8 8 8s8-4 8-8H4z" />
+              <path d="M4 12c0-2.5 3.5-4 8-4s8 1.5 8 4" />
+            </svg>
+          ),
+          name: 'Room cleaning'
+        },
+        { icon: <Utensils color={iconColor} size={20} />, name: 'Food/mess service' },
+        { icon: <Shirt color={iconColor} size={20} />, name: 'Laundry pickup service' }
+      ]
+    },
+    {
+      category: 'Support Operations', items: [
+        { icon: <Wrench color={iconColor} size={20} />, name: 'Maintenance support' },
+        { icon: <ShieldCheck color={iconColor} size={20} />, name: 'Security assistance' },
+        { icon: <MessageSquare color={iconColor} size={20} />, name: 'Complaint resolution' },
+        { icon: <HeartPulse color={iconColor} size={20} />, name: 'Medical assistance' }
+      ]
+    }
+  ];
 
   return (
-    <div className="hv2-root">
-
-      {/* ── HEADER ── */}
-      <header className="hv2-header">
-        <div className="hv2-logo" onClick={() => navigate('/')}>
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L3 9V20C3 20.55 3.21 21.04 3.59 21.41 3.96 21.79 4.47 22 5 22H19C19.53 22 20.04 21.79 20.41 21.41 20.79 21.04 21 20.55 21 20V9L12 2Z" fill="#4F46E5" />
-            <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <span className="hv2-logo-text">Livora</span>
-        </div>
-
-        <nav className={`hv2-nav ${isMenuOpen ? 'mobile-open' : ''}`}>
-          {isMenuOpen && (
-            <div className="hv2-mobile-header">
-              <span className="hv2-logo-text">Livora</span>
-              <button className="hv2-menu-close" onClick={() => setIsMenuOpen(false)}>✕</button>
-            </div>
-          )}
-          {navItems.map(item => (
-            <span key={item.label} className={`hv2-nav-item ${activeNav === item.label ? 'active' : ''}`}
-              onClick={() => {
-                setActiveNav(item.label);
-                setIsMenuOpen(false);
-                if (item.id === 'explore') navigate('/explore');
-                else if (['about', 'contact'].includes(item.id)) navigate(`/${item.id}`);
-                else scrollToSection(item.id);
-              }}>
-              {item.label}
-            </span>
-          ))}
-          {isMenuOpen && (
-            <div className="hv2-mobile-actions">
-              <button className="hv2-login-btn" onClick={() => navigate('/login')}>Log In</button>
-              <button className="hv2-signup-btn" onClick={() => navigate('/signup')}>Sign Up</button>
-            </div>
-          )}
-        </nav>
-
-        <div className="hv2-header-actions">
-          <div className="hv2-desktop-actions">
-            <button className="hv2-login-btn" onClick={() => navigate('/login')}>Log In</button>
-            <button className="hv2-signup-btn" onClick={() => navigate('/signup')}>Sign Up</button>
-          </div>
-          <button className="hv2-terms-header-btn" onClick={() => setIsTermsOpen(true)}>
-            Terms
-          </button>
-          <button className="hv2-menu-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-      </header>
+    <>
 
       {/* ── HERO ── */}
       <section className="hv2-hero" id="hero">
@@ -356,18 +357,19 @@ const Home = () => {
             <div className="hv2-search-field">
               <span className="hv2-field-label">Location</span>
               <div className="hv2-field-input-wrap">
-                <span className="hv2-field-icon" style={{ color: '#EF4444' }}><MapPin size={18} /></span>
-                <input placeholder="Enter City/Locality" value={searchLocation} onChange={e => setSearchLocation(e.target.value)} />
+                <span className="hv2-field-icon" style={{ color: '#64748b' }}><MapPin size={18} /></span>
+                <input className="hv2-field-text-input" placeholder="" value={searchLocation} onChange={e => setSearchLocation(e.target.value)} />
               </div>
             </div>
             <div className="hv2-search-sep" />
-            <div className="hv2-search-field" onClick={() => { setIsBudgetOpen(!isBudgetOpen); setIsTypeOpen(false); }}>
+
+            <div className="hv2-search-field" onClick={() => { setIsBudgetOpen(!isBudgetOpen); setIsHostelTypeOpen(false); setIsStayTypeOpen(false); }}>
               <span className="hv2-field-label">Budget</span>
               <div className="hv2-field-input-wrap">
-                <span className="hv2-field-icon" style={{ color: '#10B981' }}><IndianRupee size={18} /></span>
+                <span className="hv2-field-icon" style={{ color: '#64748b' }}><IndianRupee size={18} /></span>
                 <div className="hv2-custom-select">
-                  <span>{budget || 'Any Budget'}</span>
-                  <div className={`hv2-dropdown-arrow ${isBudgetOpen ? 'open' : ''}`}>▾</div>
+                  <span className="hv2-select-value">{budget || ''}</span>
+                  <ChevronDown size={14} className={`hv2-dropdown-arrow ${isBudgetOpen ? 'open' : ''}`} />
                 </div>
               </div>
               {isBudgetOpen && (
@@ -382,26 +384,50 @@ const Home = () => {
               )}
             </div>
             <div className="hv2-search-sep" />
-            <div className="hv2-search-field" onClick={() => { setIsTypeOpen(!isTypeOpen); setIsBudgetOpen(false); }}>
-              <span className="hv2-field-label">Stay Type</span>
+
+            <div className="hv2-search-field" onClick={() => { setIsHostelTypeOpen(!isHostelTypeOpen); setIsBudgetOpen(false); setIsStayTypeOpen(false); }}>
+              <span className="hv2-field-label">Hostel Type</span>
               <div className="hv2-field-input-wrap">
-                <span className="hv2-field-icon" style={{ color: '#4F46E5' }}><HomeIcon size={18} /></span>
+                <span className="hv2-field-icon" style={{ color: '#64748b' }}><HomeIcon size={18} /></span>
                 <div className="hv2-custom-select">
-                  <span>{roomType || 'Any Type'}</span>
-                  <div className={`hv2-dropdown-arrow ${isTypeOpen ? 'open' : ''}`}>▾</div>
+                  <span className="hv2-select-value">{hostelType || ''}</span>
+                  <ChevronDown size={14} className={`hv2-dropdown-arrow ${isHostelTypeOpen ? 'open' : ''}`} />
                 </div>
               </div>
-              {isTypeOpen && (
+              {isHostelTypeOpen && (
                 <div className="hv2-dropdown-list">
-                  {['Any Type', 'Private', '2 Sharing', '3 Sharing', 'Studio'].map(opt => (
-                    <div key={opt} className={`hv2-dropdown-item ${roomType === opt || (!roomType && opt === 'Any Type') ? 'selected' : ''}`}
-                      onClick={(e) => { e.stopPropagation(); setRoomType(opt === 'Any Type' ? '' : opt); setIsTypeOpen(false); }}>
+                  {['Any Hostel', "Men's", "Women's", 'Co-living'].map(opt => (
+                    <div key={opt} className={`hv2-dropdown-item ${hostelType === opt || (!hostelType && opt === 'Any Hostel') ? 'selected' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); setHostelType(opt === 'Any Hostel' ? '' : opt); setIsHostelTypeOpen(false); }}>
                       {opt}
                     </div>
                   ))}
                 </div>
               )}
             </div>
+            <div className="hv2-search-sep" />
+
+            <div className="hv2-search-field" onClick={() => { setIsStayTypeOpen(!isStayTypeOpen); setIsBudgetOpen(false); setIsHostelTypeOpen(false); }}>
+              <span className="hv2-field-label">Sharing</span>
+              <div className="hv2-field-input-wrap">
+                <span className="hv2-field-icon" style={{ color: '#64748b' }}><CalendarCheck size={18} /></span>
+                <div className="hv2-custom-select">
+                  <span className="hv2-select-value">{stayType || 'Any Stay'}</span>
+                  <ChevronDown size={14} className={`hv2-dropdown-arrow ${isStayTypeOpen ? 'open' : ''}`} />
+                </div>
+              </div>
+              {isStayTypeOpen && (
+                <div className="hv2-dropdown-list">
+                  {['Any Stay', 'Single', '2 Sharing', '3 Sharing', '4 Sharing'].map(opt => (
+                    <div key={opt} className={`hv2-dropdown-item ${stayType === opt || (!stayType && opt === 'Any Stay') ? 'selected' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); setStayType(opt === 'Any Stay' ? '' : opt); setIsStayTypeOpen(false); }}>
+                      {opt}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <button className="hv2-search-btn" onClick={handleSearch}>
               <Search size={18} />
               <span>Search</span>
@@ -411,13 +437,16 @@ const Home = () => {
           {/* Hero CTAs */}
           <div className="hv2-hero-btns">
             <button className="hv2-btn-primary" onClick={() => navigate('/explore')}>Explore Rooms</button>
-            <button className="hv2-btn-secondary" onClick={() => navigate('/login')}>Book a Visit</button>
+            <button className="hv2-btn-secondary" onClick={() => navigate('/search')}>Search Hostels</button>
           </div>
 
           {/* Trust badges */}
           <div className="hv2-trust-row">
             {['Verified', 'Zero Brokerage', 'Flexible Rent', '24/7 Support'].map(b => (
-              <span key={b} className="hv2-trust-badge">{b}</span>
+              <span key={b} className="hv2-trust-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                {b}
+              </span>
             ))}
           </div>
         </div>
@@ -439,16 +468,16 @@ const Home = () => {
       <div className="hv2-stats-wrap">
         <div className="hv2-stats-bar">
           {stats.map((s, i) => (
-            <React.Fragment key={i}>
-              <div className="hv2-stat">
-                <div className="hv2-stat-icon-wrap">{s.icon}</div>
-                <div>
-                  <div className="hv2-stat-val">{s.value}</div>
-                  <div className="hv2-stat-lbl">{s.label}</div>
-                </div>
+            <div key={i} className={`hv2-stat hv2-stat-anim-${i + 1}`}>
+              <div className="hv2-stat-icon-wrap">
+                <div className="hv2-stat-icon-pulse" />
+                {s.icon}
               </div>
-              {i < stats.length - 1 && <div className="hv2-stat-sep" />}
-            </React.Fragment>
+              <div className="hv2-stat-text">
+                <div className="hv2-stat-val">{s.value}</div>
+                <div className="hv2-stat-lbl">{s.label}</div>
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -462,11 +491,11 @@ const Home = () => {
         </div>
         <div className="hv2-cat-grid">
           {[
-            { name: "Men's Hostel", count: '200+ Properties', icon: '♂️', img: extReal },
-            { name: "Women's Hostel", count: '150+ Properties', icon: '♀️', img: stayEasy },
-            { name: "Student Living", count: '100+ Properties', icon: '🎓', img: studentCat },
-            { name: "Professional Stay", count: '120+ Properties', icon: '💼', img: professionalCat },
-            { name: "Co-Living", count: '80+ Properties', icon: '🏡', img: chairsReal },
+            { name: "Men's Hostel", count: '200+ Properties', icon: <User size={24} color="currentColor" />, img: extReal },
+            { name: "Women's Hostel", count: '150+ Properties', icon: <User size={24} color="currentColor" />, img: womensHostelImg },
+            { name: "Co-living Spaces", count: '100+ Properties', icon: <Users size={24} color="currentColor" />, img: heroCouple },
+            { name: "Premium Stays", count: '80+ Properties', icon: <Crown size={24} color="currentColor" />, img: chairsReal },
+            { name: "Student PGs", count: '300+ Properties', icon: <GraduationCap size={24} color="currentColor" />, img: stayEasy }
           ].map((cat, i) => (
             <div key={i} className="hv2-cat-card" onClick={() => navigate('/explore')}>
               <div className="hv2-cat-img-box">
@@ -492,13 +521,17 @@ const Home = () => {
         <div className="hv2-steps">
           {steps.map((s, i) => (
             <React.Fragment key={i}>
-              <div className="hv2-step-card">
+              <div className={`hv2-step-card hv2-step-anim-${i + 1}`}>
                 <div className="hv2-step-num">{s.num}</div>
                 <div className="hv2-step-icon">{s.icon}</div>
                 <h4 className="hv2-step-title">{s.title}</h4>
                 <p className="hv2-step-desc">{s.desc}</p>
               </div>
-              {i < steps.length - 1 && <div className="hv2-step-connector"><div className="hv2-connector-line" /></div>}
+              {i < steps.length - 1 && (
+                <div className="hv2-step-connector">
+                  <div className={`hv2-connector-line hv2-connector-anim-${i + 1}`} />
+                </div>
+              )}
             </React.Fragment>
           ))}
         </div>
@@ -516,13 +549,13 @@ const Home = () => {
         </div>
         <div className="hv2-rooms-grid">
           {rooms.map(room => (
-            <RoomCard 
-              key={room.id} 
-              room={room} 
-              wishlist={wishlist} 
-              toggleWishlist={toggleWishlist} 
-              setModalInfo={setModalInfo} 
-              navigate={navigate} 
+            <RoomCard
+              key={room.id}
+              room={room}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+              setModalInfo={setModalInfo}
+              navigate={navigate}
             />
           ))}
         </div>
@@ -546,9 +579,6 @@ const Home = () => {
                 </div>
               ))}
             </div>
-          </div>
-          <div className="hv2-why-right">
-            <img src={bondEasy} alt="Community" className="hv2-why-img" />
           </div>
         </div>
       </section>
@@ -619,86 +649,9 @@ const Home = () => {
         </div>
       </section>
 
-      <footer className="hv2-footer">
-        <div className="hv2-footer-main">
-          <div className="hv2-footer-brand-side">
-            <div className="hv2-footer-logo" onClick={() => navigate('/')}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 9V20C3 20.55 3.21 21.04 3.59 21.41 3.96 21.79 4.47 22 5 22H19C19.53 22 20.04 21.79 20.41 21.41 20.79 21.04 21 20.55 21 20V9L12 2Z" fill="#818CF8" /><path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round" /></svg>
-              <span>Livora</span>
-            </div>
-            <p className="hv2-footer-tagline">
-              Making living simple, safe, and hassle-free. We provide premium co-living spaces designed for comfort, community, and convenience. Experience a new standard of living with top-notch amenities, 24/7 security, and a vibrant community of professionals and students.
-            </p>
-          </div>
 
-          <div className="hv2-footer-links-side">
-            <div className="hv2-footer-column">
-              <h4>Explore</h4>
-              <span onClick={() => navigate('/about')}>About Us</span>
-              <span onClick={() => navigate('/contact')}>Contact Us</span>
-            </div>
-            <div className="hv2-footer-column">
-              <h4>Legal</h4>
-              <span onClick={() => navigate('/terms')}>Terms of Service</span>
-              <span onClick={() => navigate('/privacy')}>Privacy Policy</span>
-            </div>
-            <div className="hv2-footer-column">
-              <h4>Contact Info</h4>
-              <div className="hv2-contact-item" style={{ display: 'flex', gap: '0.8rem', alignItems: 'flex-start', color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.95rem', marginBottom: '0.8rem' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px', color: '#818CF8' }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                <p style={{ margin: 0, lineHeight: 1.5 }}>Cyber Towers, Hitech City, Hyderabad</p>
-              </div>
-              <div className="hv2-contact-item" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.95rem', marginBottom: '0.8rem' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: '#818CF8' }}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                <p style={{ margin: 0 }}>+91 7569383323</p>
-              </div>
-              <div className="hv2-contact-item" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.95rem', marginBottom: '0.8rem' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: '#818CF8' }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                <p style={{ margin: 0 }}>support@livora.com</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="hv2-footer-bottom-line">
-          <p>© 2026 Livora. All rights reserved.</p>
-        </div>
-      </footer>
 
-      <ImageModal
-        isOpen={modalInfo.isOpen}
-        image={modalInfo.image}
-        onClose={() => setModalInfo({ isOpen: false, image: '' })}
-      />
-
-      {/* ── WHATSAPP FLOATING BUTTON ── */}
-      <a href="https://wa.me/919876543213" target="_blank" rel="noreferrer" className="hv2-whatsapp-fab" title="Chat with us on WhatsApp">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
-      </a>
-
-      {/* ── TERMS MODAL ── */}
-      {isTermsOpen && (
-        <div className="hv2-modal-overlay" onClick={() => setIsTermsOpen(false)}>
-          <div className="hv2-terms-modal" onClick={e => e.stopPropagation()}>
-            <div className="hv2-terms-header">
-              <h3>Livora Hostel - Terms & Conditions</h3>
-              <button className="hv2-modal-close" onClick={() => setIsTermsOpen(false)}>✕</button>
-            </div>
-            <div className="hv2-terms-content">
-              <p><strong>1. CONDITIONS FOR USER REGISTRATION</strong><br />Registration on the platform is free. By using this website/app, you imply that you agree with the usage terms completely. You must be at least eighteen (18) years of age or above to use Livora Hostel services.</p>
-              <p><strong>2. TERMS & CONDITIONS OF USE</strong><br />The platform enables guests to connect with properties listed. By making a reservation at the listed properties, the guest enters into commercial/contractual terms as agreed upon at the time of booking.</p>
-              <p><strong>3. USAGE OF WEBSITE & APP</strong><br />Livora provides an online marketplace. We are not responsible for resolving any dispute or disagreement between guests and management. Users must ensure that their registration data is accurate and not misleading.</p>
-              <p><strong>4. USER ACCOUNT AND REGISTRATION</strong><br />You are responsible for maintaining the confidentiality of your account information, and are fully responsible for all activities that occur under your account. Ensure that you log out from the account at the end of each session.</p>
-              <p><strong>5. BOOKINGS & PAYMENTS</strong><br />To prevent any possibility of unauthorized access to your confidential information, do not use this site from unsecure computers. Users must strictly comply with the payment procedure.</p>
-              <p><strong>6. LIMITATION OF LIABILITY</strong><br />Livora shall not be liable for any damages arising from the use of this website. Guests are requested to take due care of all their personal valuables; the management is not responsible for any loss or theft.</p>
-            </div>
-            <div className="hv2-terms-footer">
-              <button className="hv2-btn-primary" style={{ width: '100%' }} onClick={() => setIsTermsOpen(false)}>I Agree</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-    </div>
+    </>
   );
 };
 

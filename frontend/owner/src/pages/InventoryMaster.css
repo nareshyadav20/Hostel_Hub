@@ -40,7 +40,7 @@
 
 .portal-tab.active {
   background: var(--primary-green);
-  color: #FFFFFF;
+  color: var(--text-on-primary);
 }
 
 /* Stats Cards Section */
@@ -140,7 +140,7 @@
 
 .btn-primary {
   background: var(--primary-green);
-  color: #FFFFFF;
+  color: var(--text-on-primary);
   border: none;
 }
 
@@ -176,7 +176,7 @@
   padding: 8px 16px;
   border-radius: 10px;
   background: var(--bg-tertiary);
-  border: 1px solid transparent;
+  border: 1px solid var(--border-color);
   color: var(--text-secondary);
   font-weight: 700;
   font-size: 0.75rem;
@@ -231,7 +231,7 @@
 .status-toggle .knob {
   width: 14px;
   height: 14px;
-  background: #FFFFFF;
+  background: var(--bg-card);
   border-radius: 50%;
   position: absolute;
   top: 2px;
@@ -385,7 +385,7 @@
 
 .header-icon-box {
   background: var(--bg-tertiary);
-  color: #EF4444;
+  color: var(--text-red);
 }
 
 /* Elite Inventory Creator (Screenshot Match) */
@@ -450,8 +450,8 @@
   transition: 0.2s;
 }
 .btn-close-classic:hover {
-  background: #fee2e2;
-  color: #ef4444;
+  background: var(--bg-red-soft);
+  color: var(--text-red);
 }
 
 .creator-tabs-container {
@@ -662,7 +662,7 @@
 .btn-creator-next {
   padding: 0.8rem 1.75rem;
   background: var(--primary-green);
-  color: #ffffff;
+  color: var(--text-on-primary);
   border: none;
   border-radius: 6px;
   font-weight: 700;
@@ -681,7 +681,7 @@
 .btn-creator-publish {
   padding: 0.8rem 2rem;
   background: var(--primary-green);
-  color: white;
+  color: var(--text-on-primary);
   border: none;
   border-radius: 6px;
   font-weight: 700;
@@ -777,7 +777,7 @@
 }
 
 .creator-input.highlight-green {
-  background: rgba(16, 185, 129, 0.1);
+  background: var(--bg-green-soft);
   border: 1px solid rgba(16, 185, 129, 0.3);
   color: var(--primary-green);
 }
@@ -793,7 +793,7 @@
 }
 
 .creator-input.highlight-green-light {
-  background: rgba(16, 185, 129, 0.1);
+  background: var(--bg-green-soft);
   border: 1px solid rgba(16, 185, 129, 0.3);
   position: relative;
   color: var(--primary-green);

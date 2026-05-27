@@ -298,7 +298,7 @@ const Community = () => {
           </motion.h1>
           <p>Monitor security, reports, and community interactions.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem'  }}>
           <button 
             onClick={async () => {
               try {
@@ -315,7 +315,7 @@ const Community = () => {
               }
             }} 
             className="refresh-btn debug"
-            style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)' }}
+            style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)'  }}
           >
             <ShieldAlert size={18} /> Debug DB
           </button>
@@ -490,7 +490,7 @@ const Community = () => {
                             <div className="report-title-cell">
                               <span className="title-text">{report.title || 'Untitled Report'}</span>
                               {report.isFlagged && (
-                                <span className="flag-badge" style={{ backgroundColor: getFlagStatusColor(report.flagStatus) }}>
+                                <span className="flag-badge" style={{ backgroundColor: getFlagStatusColor(report.flagStatus)  }}>
                                   {report.flagStatus}
                                 </span>
                               )}
@@ -498,7 +498,7 @@ const Community = () => {
                           </td>
                           <td>{report.category}</td>
                           <td>
-                            <span className="priority-dot" style={{ background: getPriorityColor(report.priority) }}></span>
+                            <span className="priority-dot" style={{ background: getPriorityColor(report.priority)  }}></span>
                             {report.priority}
                           </td>
                           <td>
@@ -700,9 +700,9 @@ const Community = () => {
                     className={`flag-option-btn ${showFlagModal.flagStatus === status ? 'selected' : ''}`}
                     onClick={() => handleFlag(showFlagModal._id, status)}
                     disabled={isActionLoading}
-                    style={{ borderLeftColor: getFlagStatusColor(status) }}
+                    style={{ borderLeftColor: getFlagStatusColor(status)  }}
                   >
-                    <div className="dot" style={{ background: getFlagStatusColor(status) }}></div>
+                    <div className="dot" style={{ background: getFlagStatusColor(status)  }}></div>
                     {status}
                   </button>
                 ))}

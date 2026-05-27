@@ -81,12 +81,11 @@ export const NotificationProvider = ({ children, activeBuildingId: propBuildingI
             console.log('⏭️ NOTIFICATION_EXISTS: Skipping duplicate');
             return prev;
           }
+          if (!notification.isRead) {
+            setUnreadCount(prevUnread => prevUnread + 1);
+          }
           return [notification, ...prev].slice(0, 50);
         });
-        
-        if (!notification.isRead) {
-          setUnreadCount(prev => prev + 1);
-        }
       } else {
         console.log('⚠️ NOTIFICATION_MISMATCH:', {
           title: notification.title,

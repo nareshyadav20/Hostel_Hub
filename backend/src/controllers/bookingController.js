@@ -234,6 +234,7 @@ const getMyBookings = async (req, res) => {
     console.log(`[DEBUG] getMyBookings for user: ${email} (ID: ${userIdFromToken})`);
 
     const Tenant = require('../models/Tenant');
+    const Building = require('../models/Building');
 
     // Find the unique Tenant profile for this email
     const tenant = await Tenant.findOne({ email });
@@ -245,11 +246,47 @@ const getMyBookings = async (req, res) => {
     console.log(`[DEBUG] Searching bookings for tenant ID: ${tenant._id}`);
 
     // Find bookings strictly belonging to this tenant profile
-    const bookings = await Booking.find({ 
+    let bookings = await Booking.find({ 
       tenantId: tenant._id 
     }).populate('buildingId').sort({ bookingDate: -1 });
 
-    console.log(`[DEBUG] Found ${bookings.length} bookings for tenant ${tenant._id}`);
+    // If no formal booking found, also search by userId (legacy records)
+    if (bookings.length === 0) {
+      bookings = await Booking.find({ 
+        userId: userIdFromToken 
+      }).populate('buildingId').sort({ bookingDate: -1 });
+      console.log(`[DEBUG] Fallback userId search found ${bookings.length} bookings`);
+    }
+
+    // If STILL no bookings but the tenant has an active residency, synthesize one
+    // This handles cases where the Booking doc was lost/misplaced but the tenant profile is active
+    if (bookings.length === 0 && tenant.buildingId && tenant.status === 'ACTIVE') {
+      console.log(`[DEBUG] No booking docs found, but tenant has active residency at ${tenant.buildingId}. Synthesizing booking.`);
+      
+      const building = await Building.findById(tenant.buildingId);
+      
+      // Create a synthetic booking object that matches the Booking schema shape
+      const syntheticBooking = {
+        _id: `synth_${tenant._id}`,
+        tenantId: tenant._id,
+        buildingId: building || { _id: tenant.buildingId, name: 'Your Hostel' },
+        category: tenant.occupation || 'Standard',
+        moveInDate: tenant.checkInDate || tenant.createdAt || 'TBD',
+        securityDeposit: 0,
+        onboardingFee: 0,
+        totalAmount: tenant.rent || 0,
+        status: 'Confirmed',
+        paymentMethod: 'UPI',
+        bookingDate: tenant.checkInDate || tenant.createdAt,
+        createdAt: tenant.createdAt,
+        updatedAt: tenant.updatedAt
+      };
+      
+      bookings = [syntheticBooking];
+      console.log(`[DEBUG] Synthesized 1 booking from active tenant profile`);
+    }
+
+    console.log(`[DEBUG] Returning ${bookings.length} bookings for tenant ${tenant._id}`);
     res.status(200).json(bookings);
   } catch (error) {
     console.error('[ERROR] getMyBookings failed:', error);

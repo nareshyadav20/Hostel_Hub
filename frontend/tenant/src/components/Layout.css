@@ -1,9 +1,10 @@
 .layout-root {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background-color: var(--bg-primary);
   flex-direction: column;
-  /* Stack vertically for mobile */
 }
 
 @media (min-width: 1025px) {
@@ -18,6 +19,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
   width: 100%;
   position: relative;
   transition: padding-left var(--transition-normal);
@@ -291,6 +293,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .content-wrapper {
@@ -299,6 +303,8 @@
   margin: 0 auto;
   padding: var(--space-4);
   flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 @media (max-width: 768px) {
@@ -310,16 +316,18 @@
 }
 
 .layout-footer {
-  padding: var(--space-4) 0;
+  padding: var(--space-3) 0;
   text-align: center;
   border-top: 1px solid var(--border-color);
-  margin-top: var(--space-4);
+  background: var(--bg-primary);
+  flex-shrink: 0;
 }
 
 .layout-footer p {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
+  margin: 0;
 }
 
 /* ─── Global AI Assistance Button ─── */
@@ -913,4 +921,32 @@
     border-radius: 24px 24px 0 0;
   }
 }
-
+
+.guest-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-btn {
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.nav-btn:hover {
+  background: var(--bg-tertiary);
+}
+
+.nav-btn.primary {
+  background: var(--primary);
+  color: white;
+}
+
+.nav-btn.primary:hover {
+  background: var(--primary-dark);
+}

@@ -47,4 +47,9 @@ const buildingSchema = new mongoose.Schema({
   floors:     [{ type: mongoose.Schema.Types.ObjectId, ref: 'Floor' }]
 }, { timestamps: true, collection: 'buildings' });
 
+// Performance indexes for common queries
+buildingSchema.index({ owner: 1, status: 1 }); // getBuildings (owner portal)
+buildingSchema.index({ status: 1 }); // getPublicBuildings
+buildingSchema.index({ locationCity: 1 }); // city-based search
+
 module.exports = mongoose.model('Building', buildingSchema);
