@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Sparkles, Shirt, UserCheck, CalendarX } from 'lucide-react';
 import API from '../api/axios';
 import './Services.css';
 
@@ -21,39 +22,22 @@ const Services = () => {
     { 
       id: 'cleaning', 
       label: 'Room Cleaning', 
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4 12c0 4 3.5 8 8 8s8-4 8-8H4z" />
-          <path d="M4 12c0-2.5 3.5-4 8-4s8 1.5 8 4" />
-        </svg>
-      ) 
+      icon: <Sparkles size={20} />
     },
     { 
       id: 'laundry', 
       label: 'Laundry', 
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.62 1.96V10a2 2 0 002 2h16a2 2 0 002-2V5.42a2 2 0 00-1.62-1.96zM12 22a7 7 0 100-14 7 7 0 000 14z"/>
-        </svg>
-      ) 
+      icon: <Shirt size={20} />
     },
     { 
       id: 'visitor', 
       label: 'Visitor Pass', 
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-        </svg>
-      ) 
+      icon: <UserCheck size={20} />
     },
     { 
       id: 'leave', 
       label: 'Leave Notice', 
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-        </svg>
-      ) 
+      icon: <CalendarX size={20} />
     }
   ];
 

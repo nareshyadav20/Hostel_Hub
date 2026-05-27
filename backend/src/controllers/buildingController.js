@@ -204,15 +204,15 @@ const bulkCreateBuildings = async (req, res) => {
 
 const getBuildingById = async (req, res) => {
   try {
-    let building = await Building.findById(req.params.id).populate({ 
-      path: 'floors', 
-      populate: { 
-        path: 'rooms', 
-        populate: { 
+    let building = await Building.findById(req.params.id).populate({
+      path: 'floors',
+      populate: {
+        path: 'rooms',
+        populate: {
           path: 'beds',
           populate: { path: 'tenant' }
-        } 
-      } 
+        }
+      }
     });
 
     if (!building) {
@@ -300,7 +300,7 @@ const uploadPhotos = async (req, res) => {
       await BuildingPhoto.insertMany(photoDocs, { ordered: false }).catch(err => {
         console.warn('[DEBUG] BuildingPhoto partial insertion warning:', err.message);
       });
-      
+
       const building = await Building.findById(buildingId);
       if (building) {
         if (!building.images) building.images = [];

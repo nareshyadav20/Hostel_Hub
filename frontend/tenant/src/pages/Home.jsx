@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, IndianRupee, Home as HomeIcon, CalendarCheck, Sparkles, Users, Building, Star, Sofa, Utensils, Wifi, PartyPopper, LifeBuoy, Wallet, User, Crown, GraduationCap, ChevronDown, X, ChevronRight, Bed, BookOpen, Shirt, Droplet, Car, Video, Wrench, ShieldCheck, MessageSquare, HeartPulse } from 'lucide-react';
+import { Search, MapPin, IndianRupee, Home as HomeIcon, CalendarCheck, Sparkles, Users, Building, Star, Utensils, Wifi, User, Crown, GraduationCap, ChevronDown, X, ChevronRight, Bed, BookOpen, Shirt, Droplet, Car, Video, Wrench, ShieldCheck, MessageSquare, HeartPulse, Clock, UtensilsCrossed, Lock, Settings } from 'lucide-react';
 import './Home.css';
 import API from '../api/axios';
 import SearchOverlay from '../components/SearchOverlay';
@@ -244,12 +244,12 @@ const Home = () => {
   // rooms state populated via API
 
   const features = [
-    { icon: <Sofa size={36} color="#0f172a" />, title: 'Fully Furnished', desc: 'Move-in with just your suitcase' },
-    { icon: <Utensils size={36} color="#0f172a" />, title: 'Daily Meals', desc: 'Nutritious & hygienic meals everyday' },
+    { icon: <Bed size={36} color="#0f172a" />, title: 'Fully Furnished', desc: 'Move-in with just your suitcase' },
+    { icon: <UtensilsCrossed size={36} color="#0f172a" />, title: 'Daily Meals', desc: 'Nutritious & hygienic meals everyday' },
     { icon: <Wifi size={36} color="#0f172a" />, title: 'High-Speed WiFi', desc: 'Work, study & stream without limits' },
-    { icon: <PartyPopper size={36} color="#0f172a" />, title: 'Community Events', desc: 'Make friends & create memories' },
-    { icon: <LifeBuoy size={36} color="#0f172a" />, title: '24/7 Support', desc: "We're always here for you" },
-    { icon: <Wallet size={36} color="#0f172a" />, title: 'No Hidden Charges', desc: 'Transparent pricing, no surprises' },
+    { icon: <Users size={36} color="#0f172a" />, title: 'Community Living', desc: 'Make friends & create lasting memories' },
+    { icon: <Clock size={36} color="#0f172a" />, title: '24/7 Support', desc: "We're always here for you, round the clock" },
+    { icon: <ShieldCheck size={36} color="#0f172a" />, title: 'No Hidden Charges', desc: 'Transparent pricing, zero surprises' },
   ];
 
   const testimonials = [
@@ -262,13 +262,13 @@ const Home = () => {
 
   const cities = [
     { name: 'Bengaluru', props: 120, img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Hyderabad', props: 85, img: 'https://upload.wikimedia.org/wikipedia/commons/8/88/Downtown_hyderabad_drone.png' },
+    { name: 'Hyderabad', props: 85, img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Downtown_hyderabad_drone.png/960px-Downtown_hyderabad_drone.png' },
     { name: 'Mumbai', props: 64, img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&q=80&w=800' },
     { name: 'Chennai', props: 42, img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80&w=800' },
     { name: 'Delhi', props: 95, img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Pune', props: 58, img: 'https://images.unsplash.com/photo-1564507004663-b6dfb3c824d5?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Noida', props: 37, img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR7_3JvufedjEFqBXXm7mUfumsQTlz-dhPh2Q&s' },
-    { name: 'Gurgaon', props: 72, img: 'https://riseinfraventures.com/assets/gurgaon-new.webp' },
+    { name: 'Pune', props: 58, img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Pune_West_skyline_-_March_2017.jpg/960px-Pune_West_skyline_-_March_2017.jpg' },
+    { name: 'Noida', props: 37, img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Sector_78_Noida_with_Moonlight.jpg/960px-Sector_78_Noida_with_Moonlight.jpg' },
+    { name: 'Gurgaon', props: 72, img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Cyber_City_View.jpg/960px-Cyber_City_View.jpg' },
   ];
 
   const displayedCities = showAllCities ? cities : cities.slice(0, 4);
@@ -281,7 +281,7 @@ const Home = () => {
     if (budget) params.append('budget', budget);
     if (hostelType) params.append('hostelType', hostelType);
     if (stayType) params.append('stayType', stayType);
-    navigate(`/search?${params.toString()}`);
+    navigate(`/explore?${params.toString()}`);
   };
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -318,21 +318,57 @@ const Home = () => {
       category: 'Daily Care & Conveniences', items: [
         {
           icon: (
+            // Broom / sweeping icon
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 12c0 4 3.5 8 8 8s8-4 8-8H4z" />
-              <path d="M4 12c0-2.5 3.5-4 8-4s8 1.5 8 4" />
+              <line x1="20" y1="4" x2="9" y2="15" />
+              <path d="M7 17 L3 21 L7 23 L13 17 L11 15 Z" />
             </svg>
           ),
           name: 'Room cleaning'
         },
-        { icon: <Utensils color={iconColor} size={20} />, name: 'Food/mess service' },
-        { icon: <Shirt color={iconColor} size={20} />, name: 'Laundry pickup service' }
+        {
+          icon: (
+            // Food bowl with steam icon
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12h18" />
+              <path d="M3 12Q3 20 12 20Q21 20 21 12" />
+              <path d="M8 8Q7.5 6 8 4" />
+              <path d="M12 8Q11.5 6 12 4" />
+              <path d="M16 8Q15.5 6 16 4" />
+            </svg>
+          ),
+          name: 'Food/mess service'
+        },
+        {
+          icon: (
+            // Washing machine icon
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="2" />
+              <line x1="2" y1="7" x2="22" y2="7" />
+              <circle cx="12" cy="14" r="4" />
+              <circle cx="5.5" cy="4.5" r="0.6" fill={iconColor} stroke="none" />
+              <circle cx="8.5" cy="4.5" r="0.6" fill={iconColor} stroke="none" />
+              <path d="M10 13Q12 11 14 13" />
+            </svg>
+          ),
+          name: 'Laundry pickup service'
+        }
       ]
     },
     {
       category: 'Support Operations', items: [
-        { icon: <Wrench color={iconColor} size={20} />, name: 'Maintenance support' },
-        { icon: <ShieldCheck color={iconColor} size={20} />, name: 'Security assistance' },
+        { icon: <Settings color={iconColor} size={20} />, name: 'Maintenance support' },
+        {
+          icon: (
+            // Security guard shield with person
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2L4 5V11C4 16.5 7.5 20.5 12 22C16.5 20.5 20 16.5 20 11V5L12 2Z" />
+              <circle cx="12" cy="9" r="2" />
+              <path d="M8 16C8 13.8 9.8 13 12 13S16 13.8 16 16" />
+            </svg>
+          ),
+          name: 'Security assistance'
+        },
         { icon: <MessageSquare color={iconColor} size={20} />, name: 'Complaint resolution' },
         { icon: <HeartPulse color={iconColor} size={20} />, name: 'Medical assistance' }
       ]
@@ -410,17 +446,17 @@ const Home = () => {
             <div className="hv2-search-field" onClick={() => { setIsStayTypeOpen(!isStayTypeOpen); setIsBudgetOpen(false); setIsHostelTypeOpen(false); }}>
               <span className="hv2-field-label">Sharing</span>
               <div className="hv2-field-input-wrap">
-                <span className="hv2-field-icon" style={{ color: '#64748b' }}><CalendarCheck size={18} /></span>
+                <span className="hv2-field-icon" style={{ color: '#64748b' }}><Users size={18} /></span>
                 <div className="hv2-custom-select">
-                  <span className="hv2-select-value">{stayType || 'Any Stay'}</span>
+                  <span className="hv2-select-value">{stayType || 'Select'}</span>
                   <ChevronDown size={14} className={`hv2-dropdown-arrow ${isStayTypeOpen ? 'open' : ''}`} />
                 </div>
               </div>
               {isStayTypeOpen && (
-                <div className="hv2-dropdown-list">
-                  {['Any Stay', 'Single', '2 Sharing', '3 Sharing', '4 Sharing'].map(opt => (
-                    <div key={opt} className={`hv2-dropdown-item ${stayType === opt || (!stayType && opt === 'Any Stay') ? 'selected' : ''}`}
-                      onClick={(e) => { e.stopPropagation(); setStayType(opt === 'Any Stay' ? '' : opt); setIsStayTypeOpen(false); }}>
+                <div className="hv2-dropdown-list hv2-dropdown-grid-3x3">
+                  {['No Pref', 'Single', '2 Sharing', '3 Sharing', '4 Sharing', '5 Sharing', '6 Sharing', 'Dormitory', 'Other'].map(opt => (
+                    <div key={opt} className={`hv2-dropdown-item ${stayType === opt || (!stayType && opt === 'No Pref') ? 'selected' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); setStayType(opt === 'No Pref' ? '' : opt); setIsStayTypeOpen(false); }}>
                       {opt}
                     </div>
                   ))}
@@ -565,7 +601,7 @@ const Home = () => {
       <section className="hv2-why">
         <div className="hv2-why-inner">
           <div className="hv2-why-left">
-            <span className="hv2-tag hv2-tag-light">Our Benefits</span>
+            <span className="hv2-tag">Our Benefits</span>
             <h2 className="hv2-why-title">Why Choose Livora?</h2>
             <p className="hv2-why-sub">More than just a room — it's a complete lifestyle experience.</p>
             <div className="hv2-features-grid">
