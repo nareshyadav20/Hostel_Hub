@@ -112,7 +112,7 @@ app.use((req, res, next) => {
 const rateLimit = require('express-rate-limit');
 const apiLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 1000, // Increased from 100 to prevent 429 errors during development/testing
   message: { error: 'Too many requests from this IP, please try again later.' }
 });
 app.use('/api', apiLimiter);
