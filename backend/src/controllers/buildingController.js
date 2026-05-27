@@ -100,16 +100,9 @@ const getBuildings = async (req, res) => {
       }
     }
     console.log(`[DEBUG] getBuildings query:`, JSON.stringify(query));
-    
-    let queryBuilder = Building.find(query);
-    if (req.query.lightweight !== 'true' && req.query.lean !== 'true') {
-      queryBuilder = queryBuilder.populate({
-        path: 'floors',
-        populate: { path: 'rooms', populate: { path: 'beds' } }
-      });
-    }
-    
-    const buildings = await queryBuilder.lean();
+    const buildings = await Building.find(query)
+      .select('-floors -images -draftData -gallery -description') // Exclude heavy fields (base64 images can be 300KB+)
+      .lean();
     console.log(`[DEBUG] Found ${buildings.length} buildings for owner ${req.user.id}`);
     res.status(200).json(buildings);
   } catch (error) {
@@ -339,7 +332,13 @@ const getBuildingById = async (req, res) => {
 
 const getPublicBuildings = async (req, res) => {
   try {
-    const buildings = await Building.find({ status: { $ne: 'Draft' } }).lean();
+    const buildings = await Building.find(
+      { status: { $ne: 'Draft' } },
+      {
+        name: 1, address: 1, locationCity: 1, category: 1, rating: 1,
+        startingPrice: 1, genderType: 1, amenities: 1, isAC: 1
+      }
+    ).lean();
     res.status(200).json(buildings);
   } catch (error) {
     res.status(500).json({ error: error.message });

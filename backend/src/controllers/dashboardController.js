@@ -6,6 +6,8 @@ const Complaint = require('../models/Complaint');
 const User = require('../models/User');
 const SystemSettings = require('../models/SystemSettings');
 const Staff = require('../models/Staff');
+const NodeCache = require('node-cache');
+const cache = new NodeCache({ stdTTL: 60 }); // Cache data for 60 seconds
 
 // Helper: traverse the nested property hierarchy
 const traverseHierarchy = (buildings) => {
@@ -97,6 +99,10 @@ const getHierarchyCounts = async (buildingIds) => {
 exports.getSummaryKPIs = async (req, res) => {
   try {
     const { buildingId } = req.query;
+    const cacheKey = `summary_${req.user.id}_${buildingId || 'all'}`;
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) return res.json(cachedData);
+
     const mongoose = require('mongoose');
     const Building = require('../models/Building');
     const Tenant = require('../models/Tenant');
@@ -286,7 +292,7 @@ exports.getSummaryKPIs = async (req, res) => {
 
     const todayRevenue = (paymentStatsOwner[0]?.todayRevenue || 0) + (paymentStatsRaw[0]?.todayRevenue || 0);
 
-    res.json({
+    const result = {
       totalBeds, occupiedBeds, vacantBeds, occupancyRate,
       todayRevenue,
       expectedMonthlyRevenue: totalTenants * defaultRent,
@@ -300,7 +306,9 @@ exports.getSummaryKPIs = async (req, res) => {
       complaintsToday: totalComplaintsToday,
       checkinsToday: totalCheckinsToday,
       buildingName: selectedBuildingName
-    });
+    };
+    cache.set(cacheKey, result);
+    res.json(result);
   } catch (error) {
     console.error('Summary Error:', error);
     res.status(500).json({ error: error.message });
@@ -311,6 +319,10 @@ exports.getSummaryKPIs = async (req, res) => {
 exports.getRevenueAnalytics = async (req, res) => {
   try {
     const { buildingId } = req.query;
+    const cacheKey = `revenue_${req.user.id}_${buildingId || 'all'}`;
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) return res.json(cachedData);
+
     const mongoose = require('mongoose');
     const Building = require('../models/Building');
     const Payment = require('../models/Payment');
@@ -359,7 +371,7 @@ exports.getRevenueAnalytics = async (req, res) => {
     const rawTenantsCount = await db.collection('tenants').countDocuments(tenantQuery);
     const tenantCount = ownerTenantsCount + rawTenantsCount;
 
-    res.json({
+    const result = {
       dailyRevenue,
       monthlyRevenue: [
         { name: 'Prev Month', revenue: collectedRent * 0.8, expenses: collectedRent * 0.2 },
@@ -373,7 +385,9 @@ exports.getRevenueAnalytics = async (req, res) => {
         totalExpenses: collectedRent * 0.25,
         netProfit: collectedRent * 0.75
       }
-    });
+    };
+    cache.set(cacheKey, result);
+    res.json(result);
   } catch (error) {
     console.error('Revenue Error:', error);
     res.status(500).json({ error: error.message });
@@ -384,6 +398,10 @@ exports.getRevenueAnalytics = async (req, res) => {
 exports.getOccupancyStats = async (req, res) => {
   try {
     const { buildingId } = req.query;
+    const cacheKey = `occupancy_${req.user.id}_${buildingId || 'all'}`;
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) return res.json(cachedData);
+
     const mongoose = require('mongoose');
 
     const isAdmin = req.user.role === 'SUPER_ADMIN';
@@ -406,7 +424,9 @@ exports.getOccupancyStats = async (req, res) => {
       populate: { path: 'rooms', populate: { path: 'beds' } }
     });
     const { buildingWise, floorWise } = traverseHierarchy(buildings);
-    res.json({ buildingWise, floorWise });
+    const result = { buildingWise, floorWise };
+    cache.set(cacheKey, result);
+    res.json(result);
   } catch (error) {
     console.error('Occupancy Error:', error);
     res.status(500).json({ error: error.message });

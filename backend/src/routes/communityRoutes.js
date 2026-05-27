@@ -3,6 +3,10 @@ const router = express.Router();
 const CommunityReport = require('../models/tenant/CommunityReport');
 const SosAlert = require('../models/SosAlert');
 const Building = require('../models/Building');
+const authMiddleware = require('../utils/authMiddleware');
+
+// All community routes require authentication
+router.use(authMiddleware);
 
 // Get all community reports (Lost & Found)
 router.get('/lost-found', async (req, res) => {

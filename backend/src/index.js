@@ -98,6 +98,25 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+const compression = require('compression');
+app.use(compression()); // Gzip compression for all responses
+
+app.use((req, res, next) => {
+  const msg = `${new Date().toISOString()} API: ${req.method} ${req.originalUrl}\n`;
+  require('fs').appendFileSync(require('path').join(__dirname, '../traffic_logs.txt'), msg);
+  console.log(req.method, req.originalUrl);
+  next();
+});
+
+// API Rate Limiter to prevent Flutter request storms
+const rateLimit = require('express-rate-limit');
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: { error: 'Too many requests from this IP, please try again later.' }
+});
+app.use('/api', apiLimiter);
+
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -220,8 +239,31 @@ const io = new Server(server, {
 socketService.setIo(io);
 notificationService.setIo(io);
 
+const activeSockets = new Map();
+
 io.on('connection', (socket) => {
+  const msg = `${new Date().toISOString()} SOCKET: Socket connected: ${socket.id}\n`;
+  require('fs').appendFileSync(require('path').join(__dirname, '../traffic_logs.txt'), msg);
   console.log('⚡ New client connected:', socket.id);
+  console.log("Socket connected:", socket.id);
+
+  // WebSocket Deduplication: Prevent Flutter reconnect storms
+  const clientIp = socket.handshake.address;
+  if (activeSockets.has(clientIp)) {
+    const oldSocketId = activeSockets.get(clientIp);
+    const oldSocket = io.sockets.sockets.get(oldSocketId);
+    if (oldSocket) {
+      console.log(`🔌 Terminating old zombie socket ${oldSocketId} for IP ${clientIp}`);
+      oldSocket.disconnect(true);
+    }
+  }
+  activeSockets.set(clientIp, socket.id);
+
+  socket.on('disconnect', () => {
+    if (activeSockets.get(clientIp) === socket.id) {
+      activeSockets.delete(clientIp);
+    }
+  });
 
   socket.on('joinBuilding', (buildingId) => {
     if (buildingId) {
