@@ -7,7 +7,7 @@ import {
   ScanBarcode, Shield, History, Banknote, Camera, Maximize2, User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../mockData';
+import { api } from '../api';
 import './InventoryMaster.css';
 
 const PORTALS = [

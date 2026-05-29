@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { api } from '../mockData';
+import { api } from '../api';
 import socket from '../utils/socket';
 
 const useNotifications = (buildingId) => {

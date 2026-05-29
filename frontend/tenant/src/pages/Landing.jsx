@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, Search, SlidersHorizontal, Star, ShieldCheck, ChevronDown, RefreshCw } from 'lucide-react';
+import { Search, SlidersHorizontal, Star, ShieldCheck, ChevronDown, RefreshCw } from 'lucide-react';
 import SearchOverlay from '../components/SearchOverlay';
 import './Landing.css';
 import API from '../api/axios';
@@ -20,11 +20,15 @@ const getCachedBuildings = () => {
 };
 
 const setCachedBuildings = (data) => {
-  try { localStorage.setItem(EXPLORE_CACHE_KEY, JSON.stringify({ data, ts: Date.now() })); } catch {}
+  try { localStorage.setItem(EXPLORE_CACHE_KEY, JSON.stringify({ data, ts: Date.now() })); } catch { }
 };
 
 const CITY_LOCALITIES = {
-  hyderabad: ['Gachibowli', 'Gowlidoddy', 'HITEC City', 'Kondapur', 'KPHB', 'Madhapur', 'Manikonda', 'Miyapur'],
+  hyderabad: [
+    'Gachibowli', 'Gopanpally Gachibowli', 'Gowlidoddy', 'HITEC City',
+    'Journalist colony', 'KOKAPET', 'Kondapur', 'KPHB', 'Kukatpally',
+    'Lanco Hills Manikonda', 'Madhapur', 'Manikonda', 'Miyapur', 'Serilingampally'
+  ],
   bengaluru: ['Koramangala', 'HSR Layout', 'Indiranagar', 'Whitefield', 'Marathahalli', 'BTM Layout', 'Jayanagar', 'Hebbal'],
   mumbai: ['Andheri', 'Bandra', 'Powai', 'Worli', 'Thane', 'Dadar', 'Juhu', 'Borivali'],
   delhi: ['Connaught Place', 'Saket', 'Karol Bagh', 'Dwarka', 'Rajouri Garden', 'Vasant Kunj', 'Hauz Khas', 'Greater Kailash'],
@@ -32,7 +36,7 @@ const CITY_LOCALITIES = {
   chennai: ['Adyar', 'Velachery', 'Anna Nagar', 'OMR', 'T-Nagar', 'Guindy', 'Mylapore', 'Nungambakkam']
 };
 
-const CITIES_LIST = ['Hyderabad', 'Bengaluru', 'Mumbai', 'Delhi', 'Pune', 'Chennai', 'Kolkata'];
+const CITIES_LIST = ['Bengaluru', 'Hyderabad', 'Mumbai', 'Chennai', 'Delhi', 'Pune', 'Noida', 'Gurgaon'];
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -45,30 +49,31 @@ const Landing = () => {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('coliving');
 
-  const [selectedGender, setSelectedGender] = useState('');
   const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [searchLocality, setSearchLocality] = useState('');
   const [searchProperty, setSearchProperty] = useState('');
+  const [hostelType, setHostelType] = useState('');
+  const [sharing, setSharing] = useState('');
 
   const [sortBy, setSortBy] = useState('');
-  const [priceRange, setPriceRange] = useState([0, 60000]);
-  // Pre-populate from cache so the UI never shows a blank spinner on revisit
-  const [hostels, setHostels] = useState(() => getCachedBuildings() || []);
-  const [loading, setLoading] = useState(() => !getCachedBuildings()); // only show spinner if no cache
+  const [budgetMin, setBudgetMin] = useState(0);
+  const [budgetMax, setBudgetMax] = useState(60000);
+  const [hostels, setHostels] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
 
   // Parse URL parameters dynamically whenever navigation occurs (resolves HMR & updates not going to change)
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    
+
     // Check both 'city' and 'location' params to support homepage search redirects
     const rawLocationInput = queryParams.get('city') || queryParams.get('location');
     if (rawLocationInput) {
       const lowerLoc = rawLocationInput.toLowerCase();
       // Verify if it matches a known city name or a typo variation
       const isKnownCity = CITIES_LIST.some(c => c.toLowerCase() === lowerLoc || (c.toLowerCase() === 'hyderabad' && lowerLoc === 'hydrabad'));
-      
+
       if (isKnownCity) {
         const formattedCity = lowerLoc === 'hydrabad' || lowerLoc === 'hyderabad' ? 'Hyderabad' : rawLocationInput.charAt(0).toUpperCase() + rawLocationInput.slice(1).toLowerCase();
         setSelectedCity(formattedCity);
@@ -78,27 +83,15 @@ const Landing = () => {
         setSearchLocality(rawLocationInput);
       }
     }
-    
-    const typeParam = queryParams.get('type') || queryParams.get('stayType') || queryParams.get('hostelType');
-    if (typeParam) {
-      const lowerType = typeParam.toLowerCase();
-      if (lowerType.includes('student')) {
-        setActiveTab('student');
-      } else {
-        setActiveTab('coliving');
-      }
-      
-      if (lowerType.includes('men') || lowerType.includes('boy')) {
-        setSelectedGender('Boys');
-      } else if (lowerType.includes('women') || lowerType.includes('girl')) {
-        setSelectedGender('Girls');
-      }
+
+    const hostelTypeParam = queryParams.get('hostelType');
+    if (hostelTypeParam) {
+      setHostelType(hostelTypeParam);
     }
-    
-    const genderParam = queryParams.get('gender');
-    if (genderParam) {
-      const g = genderParam.charAt(0).toUpperCase() + genderParam.slice(1).toLowerCase();
-      setSelectedGender(g === 'Men' || g === 'Boys' ? 'Boys' : g === 'Women' || g === 'Girls' ? 'Girls' : g);
+
+    const stayTypeParam = queryParams.get('stayType');
+    if (stayTypeParam) {
+      setSharing(stayTypeParam);
     }
 
     const localityParam = queryParams.get('locality');
@@ -109,6 +102,14 @@ const Landing = () => {
     const propertyParam = queryParams.get('property');
     if (propertyParam) {
       setSearchProperty(propertyParam);
+    }
+
+    const budgetParam = queryParams.get('budget');
+    if (budgetParam) {
+      if (budgetParam.includes('Under')) { setBudgetMin(0); setBudgetMax(8000); }
+      else if (budgetParam.includes('8k') && budgetParam.includes('12k')) { setBudgetMin(8000); setBudgetMax(12000); }
+      else if (budgetParam.includes('12k') && budgetParam.includes('18k')) { setBudgetMin(12000); setBudgetMax(18000); }
+      else if (budgetParam.includes('Above')) { setBudgetMin(18000); setBudgetMax(60000); }
     }
   }, [location.search]);
 
@@ -178,7 +179,7 @@ const Landing = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCity, activeTab, selectedGender, selectedAmenities, searchLocality, searchProperty, sortBy, priceRange]);
+  }, [selectedCity, activeTab, selectedAmenities, searchLocality, searchProperty, hostelType, sharing, sortBy, budgetMin, budgetMax]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -192,64 +193,69 @@ const Landing = () => {
   }, []);
 
   const resetAllFilters = () => {
-    setSelectedGender('');
     setSelectedAmenities([]);
     setSearchLocality('');
     setSearchProperty('');
+    setHostelType('');
+    setSharing('');
     setSortBy('');
-    setPriceRange([0, 60000]);
+    setBudgetMin(0);
+    setBudgetMax(60000);
     navigate('/explore');
   };
 
-  // Compile available cities list
-  const availableCities = CITIES_LIST;
+  // Compile available cities list dynamically from the fetched properties
+  const dynamicCities = Array.from(new Set(hostels.map(h => {
+    let c = h.city || 'Hyderabad';
+    return (c.toLowerCase() === 'hydrabad' || c.toLowerCase() === 'hyderabad')
+      ? 'Hyderabad'
+      : c.charAt(0).toUpperCase() + c.slice(1).toLowerCase();
+  })));
+  // ALWAYS show the default cities, plus any new ones found in the database
+  const availableCities = Array.from(new Set([...CITIES_LIST, ...dynamicCities]));
 
-  // Extract localities: Use actual db active localities for Hyderabad, fall back to default localities for other cities
-  const uniqueLocalitiesOfSelectedCity = selectedCity.toLowerCase() === 'hyderabad'
-    ? Array.from(new Set(hostels.filter(h => h.city.toLowerCase() === 'hyderabad').map(h => h.locality)))
-    : CITY_LOCALITIES[selectedCity.toLowerCase()] || [];
+  // Extract localities: Use actual db active localities for the selected city
+  const dynamicLocalities = Array.from(new Set(
+    hostels.filter(h => h.city.toLowerCase() === selectedCity.toLowerCase() ||
+      (selectedCity.toLowerCase() === 'hyderabad' && h.city.toLowerCase() === 'hydrabad'))
+      .map(h => h.locality)
+  ));
+
+  // ONLY show localities for the selected city that actually have properties in the database
+  const uniqueLocalitiesOfSelectedCity = dynamicLocalities;
 
   const filteredHostels = hostels.filter(h => {
     const matchesCity = h.city.toLowerCase() === selectedCity.toLowerCase();
-    
-    // Locality and Property searches
     const matchesLocality = searchLocality ? h.locality.toLowerCase().includes(searchLocality.toLowerCase()) : true;
     const matchesProperty = searchProperty ? h.name.toLowerCase().includes(searchProperty.toLowerCase()) : true;
-    
-    // Robust Gender match mapping (Men -> Boys, Women -> Girls, Unisex/Mixed)
-    const matchesGender = selectedGender
-      ? (
-          h.gender.toLowerCase() === selectedGender.toLowerCase() ||
-          h.gender.toLowerCase() === 'mixed' ||
-          h.gender.toLowerCase() === 'unisex' ||
-          (selectedGender.toLowerCase() === 'boys' && h.gender.toLowerCase() === 'men') ||
-          (selectedGender.toLowerCase() === 'girls' && h.gender.toLowerCase() === 'women') ||
-          (selectedGender.toLowerCase() === 'men' && h.gender.toLowerCase() === 'boys') ||
-          (selectedGender.toLowerCase() === 'women' && h.gender.toLowerCase() === 'girls')
-        )
-      : true;
 
-    // Advanced, partial-match, case-insensitive amenities mapping (AC/Gym/WiFi, etc.)
     const matchesAmenities = selectedAmenities.length > 0
       ? selectedAmenities.every(filterAmenity => {
-          return h.amenities.some(item => {
-            const it = item.toLowerCase();
-            const fa = filterAmenity.toLowerCase();
-            if (fa === 'ac' && (it.includes('ac') || it.includes('a/c') || it.includes('conditioning'))) return true;
-            if (fa === 'wifi' && (it.includes('wifi') || it.includes('wi-fi') || it.includes('internet'))) return true;
-            return it.includes(fa) || fa.includes(it);
-          });
-        })
+        return h.amenities.some(item => {
+          const it = item.toLowerCase();
+          const fa = filterAmenity.toLowerCase();
+          if (fa === 'ac' && (it.includes('ac') || it.includes('a/c') || it.includes('conditioning'))) return true;
+          if (fa === 'wifi' && (it.includes('wifi') || it.includes('wi-fi') || it.includes('internet'))) return true;
+          return it.includes(fa) || fa.includes(it);
+        });
+      })
       : true;
 
-    // Tab category partition
+    const matchesHostelType = hostelType
+      ? (h.gender || '').toLowerCase().includes(hostelType.toLowerCase().replace("'s", ''))
+      : true;
+
+    const matchesSharing = sharing
+      ? (h.sharing || h.roomType || '').toLowerCase().includes(sharing.toLowerCase())
+      : true;
+
     const matchesTab = activeTab === 'student'
       ? h.category.toLowerCase().includes('student')
       : !h.category.toLowerCase().includes('student');
 
-    const matchesPrice = h.price >= priceRange[0] && h.price <= priceRange[1];
+    const matchesPrice = h.price >= budgetMin && h.price <= budgetMax;
 
-    return matchesCity && matchesLocality && matchesProperty && matchesGender && matchesAmenities && matchesTab && matchesPrice;
+    return matchesCity && matchesLocality && matchesProperty && matchesAmenities && matchesHostelType && matchesSharing && matchesTab && matchesPrice;
   });
 
   if (sortBy === 'price_low_high') {
@@ -266,12 +272,12 @@ const Landing = () => {
 
   return (
     <div className={`landing-page ${isMobileFilterOpen ? 'filter-open' : ''}`}>
-      
+
 
       {/* Hero Banner */}
       <section className="search-hero" style={{ position: 'relative' }}>
-        <button 
-          onClick={() => navigate('/')} 
+        <button
+          onClick={() => navigate('/')}
           style={{ position: 'absolute', top: '16px', right: '16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 100, color: '#64748b', fontWeight: 'bold' }}
         >
           ✕
@@ -279,18 +285,18 @@ const Landing = () => {
         <span className="search-hero-eyebrow">Explore Stays</span>
         <h2 className="search-hero-title">
           Perfect Stays In{' '}
-          <span 
-            className="city-highlight-dropdown" 
+          <span
+            className="city-highlight-dropdown"
             ref={cityDropdownRef}
             onClick={() => setIsCityDropdownOpen(!isCityDropdownOpen)}
           >
             {selectedCity} <ChevronDown size={28} className="city-chevron" />
-            
+
             {isCityDropdownOpen && (
               <div className="hero-city-dropdown">
                 {availableCities.map(city => (
-                  <div 
-                    key={city} 
+                  <div
+                    key={city}
                     className="hero-city-option"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -321,14 +327,15 @@ const Landing = () => {
           <SlidersHorizontal size={16} /> Filters
         </button>
         <div className="filter-summary">
-          {selectedGender && <span className="summary-chip">{selectedGender}</span>}
+          {hostelType && <span className="summary-chip">{hostelType}</span>}
+          {sharing && <span className="summary-chip">{sharing}</span>}
           {activeTab === 'student' && <span className="summary-chip">Student</span>}
           {selectedAmenities.length > 0 && <span className="summary-chip">{selectedAmenities.length} Amenities</span>}
         </div>
       </div>
 
       <div className="landing-container split-layout">
-        
+
         {/* Sidebar Filters */}
         <aside className="filters-sidebar">
           <div className="sidebar-header">
@@ -338,79 +345,63 @@ const Landing = () => {
             </button>
           </div>
 
+          {/* Budget */}
           <div className="filter-section">
-            <h4>Stay Type</h4>
-            <label className="radio-label">
-              <input type="radio" name="stayType" checked={activeTab === 'coliving'} onChange={() => setActiveTab('coliving')} />
-              <span className="radio-custom"></span> Co-living
-            </label>
-            <label className="radio-label">
-              <input type="radio" name="stayType" checked={activeTab === 'student'} onChange={() => setActiveTab('student')} />
-              <span className="radio-custom"></span> Student Stays
-            </label>
-          </div>
-
-          <div className="filter-section">
-            <h4>Sort By</h4>
-            <label className="radio-label">
-              <input type="radio" name="sortBy" checked={sortBy === 'price_low_high'} onChange={() => setSortBy('price_low_high')} />
-              <span className="radio-custom"></span> Price: Low to High
-            </label>
-            <label className="radio-label">
-              <input type="radio" name="sortBy" checked={sortBy === 'price_high_low'} onChange={() => setSortBy('price_high_low')} />
-              <span className="radio-custom"></span> Price: High to Low
-            </label>
-          </div>
-
-          <div className="filter-section">
-            <h4>Gender Preferred</h4>
-            {['Boys', 'Girls', 'Mixed'].map(g => (
-              <label className="radio-label" key={g}>
-                <input type="radio" name="genderFilter" checked={selectedGender === g} onChange={() => setSelectedGender(g)} />
-                <span className="radio-custom"></span> {g}
-              </label>
-            ))}
-            {selectedGender && (
-              <div style={{ marginTop: '8px' }}>
-                <span 
-                  onClick={() => setSelectedGender('')} 
-                  style={{ fontSize: '11px', color: '#5B5BD6', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
-                >
-                  Clear gender filter
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="filter-section">
-            <h4>Price Limit</h4>
-            <input
-              type="range"
-              min="0" max="60000"
-              step="500"
-              value={priceRange[1]}
-              onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-              className="price-slider"
-            />
-            <div className="price-inputs">
-              <select className="price-select" value={priceRange[0]} onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}>
-                <option value={0}>₹0</option>
-                <option value={5000}>₹5,000</option>
-                <option value={10000}>₹10,000</option>
-                <option value={15000}>₹15,000</option>
-              </select>
-              <span>–</span>
-              <select className="price-select" value={priceRange[1]} onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}>
-                <option value={10000}>₹10,000</option>
-                <option value={20000}>₹20,000</option>
-                <option value={30000}>₹30,000</option>
-                <option value={40000}>₹40,000</option>
-                <option value={50000}>₹50,000</option>
-                <option value={60000}>₹60,000</option>
-              </select>
+            <h4>Monthly Budget</h4>
+            <div className="budget-filter-list">
+              {[
+                { label: 'Any Budget', min: 0, max: 60000 },
+                { label: 'Under ₹8k', min: 0, max: 8000 },
+                { label: '₹8k – ₹12k', min: 8000, max: 12000 },
+                { label: '₹12k – ₹18k', min: 12000, max: 18000 },
+                { label: 'Above ₹18k', min: 18000, max: 60000 },
+              ].map(opt => (
+                <label className="radio-label" key={opt.label}>
+                  <input
+                    type="radio"
+                    name="budget"
+                    checked={budgetMin === opt.min && budgetMax === opt.max}
+                    onChange={() => { setBudgetMin(opt.min); setBudgetMax(opt.max); }}
+                  />
+                  <span className="radio-custom"></span> {opt.label}
+                </label>
+              ))}
             </div>
           </div>
 
+          {/* Hostel Type */}
+          <div className="filter-section">
+            <h4>Hostel Type</h4>
+            <div className="explore-pill-group">
+              {["Any Hostel", "Men's", "Women's", 'Co-living'].map(t => (
+                <button
+                  key={t}
+                  className={`explore-pill-btn ${(hostelType === t) || (!hostelType && t === 'Any Hostel') ? 'active' : ''}`}
+                  onClick={() => setHostelType(t === 'Any Hostel' ? '' : t)}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Sharing */}
+          <div className="filter-section">
+            <h4>Sharing Type</h4>
+            <div className="explore-sharing-grid">
+              {['No Pref', 'Single', '2 Sharing', '3 Sharing', '4 Sharing', '5 Sharing', '6 Sharing', 'Dormitory', 'Other'].map(opt => (
+                <button
+                  key={opt}
+                  className={`explore-sharing-btn ${(sharing === opt) || (!sharing && opt === 'No Pref') ? 'active' : ''}`}
+                  onClick={() => setSharing(opt === 'No Pref' ? '' : opt)}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Amenities */}
           <div className="filter-section">
             <h4>Amenities</h4>
             {['AC', 'Gym', 'Food', 'Fridge', 'Parking', 'Power Backup'].map(a => (
@@ -428,17 +419,16 @@ const Landing = () => {
             ))}
           </div>
 
+          {/* Localities */}
           <div className="filter-section border-0">
-            <h4>Popular Localities in {selectedCity}</h4>
+            <h4>Localities in {selectedCity}</h4>
             <div className="locality-list">
-              {uniqueLocalitiesOfSelectedCity.map(loc => (
+              {dynamicLocalities.map(loc => (
                 <label className="radio-label" key={loc}>
-                  <input type="radio" name="localityFilter" checked={searchLocality === loc} onChange={() => setSearchLocality(searchLocality === loc ? '' : loc)} onClick={(e) => {
-                    if (searchLocality === loc) {
-                      e.preventDefault();
-                      setSearchLocality('');
-                    }
-                  }} />
+                  <input type="radio" name="localityFilter" checked={searchLocality === loc}
+                    onChange={() => setSearchLocality(searchLocality === loc ? '' : loc)}
+                    onClick={(e) => { if (searchLocality === loc) { e.preventDefault(); setSearchLocality(''); } }}
+                  />
                   <span className="radio-custom"></span> {loc}
                 </label>
               ))}
@@ -448,7 +438,7 @@ const Landing = () => {
 
         {/* Properties Grid */}
         <main className="hostels-main-view">
-        {loading ? (
+          {loading ? (
             <div className="explore-loading-wrap">
               <span className="explore-spinner"></span>
               <p>Curating best properties for you...</p>
@@ -466,11 +456,11 @@ const Landing = () => {
                       </div>
                       <span className="gender-tag">{hostel.gender}</span>
                     </div>
-                    
+
                     <div className="card-details-v">
                       <span className="card-locality-v">📍 {hostel.locality}</span>
                       <h3 className="card-title-v" onClick={() => navigate(`/listing/${hostel.id}`)}>{hostel.name}</h3>
-                      
+
                       <div className="card-amenities-row">
                         {hostel.amenities.slice(0, 3).map((a, i) => (
                           <span key={i} className="amenity-chip-v">{a}</span>
@@ -494,17 +484,17 @@ const Landing = () => {
               {/* Pagination UI */}
               {totalPages > 1 && (
                 <div className="pagination-wrapper">
-                  <button 
-                    className="pagi-btn" 
-                    disabled={currentPage === 1} 
+                  <button
+                    className="pagi-btn"
+                    disabled={currentPage === 1}
                     onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                   >
                     Previous
                   </button>
                   <div className="pagi-numbers">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
-                      <button 
-                        key={num} 
+                      <button
+                        key={num}
                         className={`pagi-num ${currentPage === num ? 'active' : ''}`}
                         onClick={() => { setCurrentPage(num); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                       >
@@ -512,9 +502,9 @@ const Landing = () => {
                       </button>
                     ))}
                   </div>
-                  <button 
-                    className="pagi-btn" 
-                    disabled={currentPage === totalPages} 
+                  <button
+                    className="pagi-btn"
+                    disabled={currentPage === totalPages}
                     onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                   >
                     Next

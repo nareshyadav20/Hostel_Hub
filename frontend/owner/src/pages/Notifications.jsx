@@ -8,7 +8,7 @@ import {
   Info, CreditCard, Box, MessageSquare,
   Users, Shield, FileText, LayoutGrid, User, Briefcase, Send, CheckCircle, Clock, ExternalLink, Utensils
 } from 'lucide-react';
-import { api } from '../mockData';
+import { api } from '../api';
 import socket, { connectSocket } from '../utils/socket';
 import { useNotifications } from '../context/NotificationContext';
 

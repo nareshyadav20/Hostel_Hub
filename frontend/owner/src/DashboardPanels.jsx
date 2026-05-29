@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { AlertCircle, Lightbulb, Bell, Users, Utensils, ShieldCheck, TrendingUp, FileText, ClipboardList, ChevronRight, Download, X, Building } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
-import { api } from './mockData';
+import { api } from './api';
 
 const PIE_COLORS = ['#EF4444','#F59E0B','#8B5CF6','#6B7280'];
 

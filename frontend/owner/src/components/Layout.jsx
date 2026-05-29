@@ -15,7 +15,7 @@ import {
   Utensils,
   Box
 } from 'lucide-react';
-import { api } from '../mockData';
+import { api } from '../api';
 import Sidebar from './Sidebar';
 import ThemeToggle from './ThemeToggle';
 import ProfileDropdown from './ProfileDropdown';

@@ -170,7 +170,7 @@ const Tenants = () => {
       setTenants(filtered);
     } catch (err) {
       console.error('Failed to fetch tenants:', err);
-      // Keep existing mock state on error
+      // Show error state or empty state if needed
     } finally {
       setIsLoading(false);
     }

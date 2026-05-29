@@ -22,7 +22,11 @@ const Hostels = () => {
    const [currentStep, setCurrentStep] = useState(1);
    const [filterCity, setFilterCity] = useState('All Cities');
    const [selectedHostel, setSelectedHostel] = useState(null);
-   const [userRole] = useState('admin'); // Mock role for access control
+   
+   // Fetch actual user role
+   const user = JSON.parse(localStorage.getItem('user') || '{}');
+   const userRole = user.role?.toLowerCase() || 'admin';
+
 
    const [confirmDialog, setConfirmDialog] = useState({
       isOpen: false,
