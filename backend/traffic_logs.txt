@@ -4147,3 +4147,20 @@
 2026-05-29T11:03:19.524Z API: GET /api/notifications?buildingId=6a13e1ed04f997bb021cf698
 2026-05-29T11:03:19.818Z SOCKET: Socket connected: ir4NirNUYSBV1GRkAACJ
 2026-05-29T11:03:23.626Z API: GET /api/buildings/public/6a12690e6f227214775cd0cb
+2026-05-29T15:25:00.711Z API: GET /api/health
+2026-05-29T15:25:01.203Z API: GET /api/buildings/public
+2026-05-29T15:25:01.231Z API: GET /api/buildings/public/stats
+2026-05-29T15:25:01.243Z API: GET /api/notifications?buildingId=6a13e1ed04f997bb021cf698
+2026-05-29T15:25:01.311Z SOCKET: Socket connected: -rBQ1s1XeXFSWXk8AAAB
+2026-05-29T15:25:01.369Z API: GET /api/buildings/public
+2026-05-29T15:25:01.572Z API: GET /api/buildings/public/stats
+2026-05-29T15:25:01.723Z API: GET /api/notifications?buildingId=6a13e1ed04f997bb021cf698
+2026-05-29T15:25:05.250Z API: POST /api/auth/login
+2026-05-29T15:25:06.085Z API: GET /api/tenants/me
+2026-05-29T15:25:06.403Z API: GET /api/complaints/me
+2026-05-29T15:25:06.476Z API: GET /api/notifications?limit=3
+2026-05-29T15:25:06.792Z API: GET /api/bookings/me
+2026-05-29T15:25:07.850Z API: GET /api/tenants/me
+2026-05-29T15:25:08.097Z API: GET /api/complaints/me
+2026-05-29T15:25:08.268Z API: GET /api/notifications?limit=3
+2026-05-29T15:25:08.420Z API: GET /api/bookings/me

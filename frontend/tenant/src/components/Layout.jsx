@@ -165,68 +165,154 @@ const Layout = ({ children }) => {
     setAiMessage('');
     setIsTyping(true);
 
-    // Expanded Deep Knowledge Base for "Full Training"
-    setTimeout(() => {
-      let response = "I'm sorry, I'm still learning about that. You can contact the warden for specific details, or try asking about rooms, mess, WiFi, or laundry!";
-      const lowerText = text.toLowerCase();
+    // Smart keyword matcher helper
+    const lowerText = text.toLowerCase().trim();
+    const match = (keywords) => keywords.some(kw => lowerText.includes(kw));
 
-      // Basic Info & Booking
-      if (lowerText.includes('room') || lowerText.includes('booking') || lowerText.includes('sharing') || lowerText.includes('bed')) {
-        response = "We offer Premium Single, 2-Sharing, and 3-Sharing rooms. All rooms are fully furnished with study tables, wardrobes, and attached washrooms. You can book directly through the Listing page!";
+    setTimeout(() => {
+      let response = "";
+
+      // ── Greetings & Conversation ──
+      if (match(['hello', 'hi ', 'hey', 'hii', 'hola', 'namaste', 'good morning', 'good afternoon', 'good evening', 'good night', 'sup', 'howdy', 'yo']) || lowerText === 'hi') {
+        const greetings = [
+          `Hey ${user.name ? user.name.split(' ')[0] : 'there'}! 👋 Welcome to Livora AI. How can I help you today? You can ask about rooms, mess, payments, WiFi, or anything about hostel life!`,
+          `Hi there! 😊 I'm your Livora assistant. Feel free to ask me about room availability, mess menus, laundry, WiFi, or any hostel facilities!`,
+          `Hello! 🏠 Great to see you. I can help with bookings, pricing, amenities, complaints, and more. What would you like to know?`
+        ];
+        response = greetings[Math.floor(Math.random() * greetings.length)];
       }
-      // Food & Mess
-      else if (lowerText.includes('mess') || lowerText.includes('food') || lowerText.includes('meal') || lowerText.includes('dinner') || lowerText.includes('breakfast') || lowerText.includes('lunch') || lowerText.includes('eat')) {
-        response = "Our mess serves 3 nutritious meals a day. We prioritize hygiene and variety in our weekly menu. Check the 'Mess' section for the full schedule and today's specials!";
+      // ── Thank you / Bye ──
+      else if (match(['thank', 'thanks', 'thx', 'appreciate', 'helpful', 'awesome', 'great', 'nice', 'cool', 'perfect'])) {
+        const thanks = [
+          "You're welcome! 😊 Feel free to ask anytime. I'm here 24/7 to help!",
+          "Happy to help! If you need anything else, just ask. 🙌",
+          "Glad I could assist! Don't hesitate to reach out again. 💪"
+        ];
+        response = thanks[Math.floor(Math.random() * thanks.length)];
       }
-      // Pricing & Payments
-      else if (lowerText.includes('price') || lowerText.includes('rent') || lowerText.includes('cost') || lowerText.includes('fee') || lowerText.includes('payment') || lowerText.includes('bill')) {
-        response = "Rent starts from ₹9,000/month for 3-sharing and ₹12,000/month for 2-sharing. This includes food, WiFi, cleaning, and utilities. You can pay your rent via the 'Payments' tab.";
+      else if (match(['bye', 'goodbye', 'see you', 'later', 'gotta go', 'ttyl'])) {
+        response = `Bye ${user.name ? user.name.split(' ')[0] : ''}! 👋 Have a great day. I'm always here whenever you need help!`;
       }
-      // Utilities & Tech
-      else if (lowerText.includes('wifi') || lowerText.includes('internet') || lowerText.includes('speed') || lowerText.includes('network')) {
-        response = "We provide high-speed 100 Mbps dedicated WiFi for all residents. There are no data caps, perfect for students and professionals!";
-      } else if (lowerText.includes('power') || lowerText.includes('electricity') || lowerText.includes('backup') || lowerText.includes('ups') || lowerText.includes('generator')) {
-        response = "We have 24/7 power backup through heavy-duty generators. Your fans, lights, and WiFi will work seamlessly during power cuts!";
-      } else if (lowerText.includes('water') || lowerText.includes('drinking') || lowerText.includes('ro') || lowerText.includes('purifier') || lowerText.includes('hot water')) {
-        response = "We have 24/7 hot/cold water supply and UV+RO purifiers on every floor. Safety and hydration are guaranteed!";
-      } else if (lowerText.includes('ac') || lowerText.includes('air conditioning') || lowerText.includes('cooler')) {
-        response = "Premium rooms come with high-efficiency ACs. Standard rooms have heavy-duty ceiling fans and great ventilation.";
+      // ── Help / What can you do ──
+      else if (match(['help', 'assist', 'what can you', 'what do you', 'support', 'guide', 'how to', 'how do i', 'can you'])) {
+        response = "I can help you with:\n\n🏠 **Rooms & Booking** — availability, types, pricing\n🍽️ **Mess & Food** — menus, timings, diet options\n💰 **Payments & Rent** — bills, dues, payment methods\n📶 **WiFi & Internet** — speed, connectivity\n👕 **Laundry** — schedules, services\n🔒 **Safety & Security** — CCTV, SOS, guards\n🏋️ **Amenities** — gym, parking, common areas\n📝 **Complaints** — raise and track issues\n📞 **Contact Warden** — phone, office location\n\nJust type your question and I'll do my best!";
       }
-      // Amenities & Facilities
-      else if (lowerText.includes('gym') || lowerText.includes('fitness') || lowerText.includes('workout') || lowerText.includes('exercise')) {
-        response = "Yes! We have a dedicated fitness zone with modern equipment available for all residents from 6 AM to 10 PM.";
-      } else if (lowerText.includes('laundry') || lowerText.includes('wash') || lowerText.includes('cloth') || lowerText.includes('iron')) {
-        response = "Professional laundry services are available 3 times a week. Drop your clothes at the desk, and they'll be returned clean and folded!";
-      } else if (lowerText.includes('parking') || lowerText.includes('bike') || lowerText.includes('cycle') || lowerText.includes('car')) {
-        response = "We provide secure basement parking for 2-wheelers. 4-wheeler parking is available in the vicinity with prior notice.";
-      } else if (lowerText.includes('tv') || lowerText.includes('movie') || lowerText.includes('common') || lowerText.includes('game') || lowerText.includes('recreation')) {
-        response = "Our common lounge has a 65-inch Smart TV, board games, and comfy seating for community chill-out sessions.";
+      // ── Room & Booking ──
+      else if (match(['room', 'booking', 'sharing', 'bed', 'occupancy', 'vacancy', 'available', 'accommodation', 'stay', 'allot', 'assign', 'single', 'double', 'triple', 'dormitory', 'dorm', 'furnished'])) {
+        response = "🏠 We offer Premium Single, 2-Sharing, and 3-Sharing rooms. All rooms are fully furnished with study tables, wardrobes, and attached washrooms. You can book directly through the Listing page! Use the 'Room Availability' quick action to see what's open.";
       }
-      // Safety & Rules
-      else if (lowerText.includes('safety') || lowerText.includes('secure') || lowerText.includes('security') || lowerText.includes('emergency') || lowerText.includes('guard')) {
-        response = "Your safety is our priority. 24/7 CCTV, biometric entry, and on-site security. Use the SOS button in the 'Safety' section for emergencies.";
-      } else if (lowerText.includes('visitor') || lowerText.includes('friend') || lowerText.includes('parent') || lowerText.includes('guest')) {
-        response = "Visitors are allowed in the lobby from 9 AM to 8 PM. Parents can stay overnight in designated guest rooms with warden's permission.";
-      } else if (lowerText.includes('curfew') || lowerText.includes('time') || lowerText.includes('late') || lowerText.includes('entry')) {
-        response = "Our standard in-time is 10:30 PM for safety. Late entries are allowed for work or study with a simple digital gate pass.";
+      // ── Food & Mess ──
+      else if (match(['mess', 'food', 'meal', 'dinner', 'breakfast', 'lunch', 'eat', 'menu', 'snack', 'tiffin', 'canteen', 'kitchen', 'diet', 'veg', 'non-veg', 'nonveg', 'jain', 'nutrition', 'hungry', 'thali'])) {
+        response = "🍽️ Our mess serves 3 nutritious meals a day with both veg and non-veg options. We prioritize hygiene and variety in our weekly rotating menu. Check the 'Mess' section in the app for the full schedule, today's specials, and upcoming menus!";
       }
-      // Management & Admin
-      else if (lowerText.includes('complaint') || lowerText.includes('problem') || lowerText.includes('issue') || lowerText.includes('broken') || lowerText.includes('fix')) {
-        response = "If you face any issue, raise a ticket in the 'Complaints' section. Our maintenance team usually fixes it within 24 hours!";
-      } else if (lowerText.includes('notice') || lowerText.includes('leave') || lowerText.includes('vacate') || lowerText.includes('refund')) {
-        response = "We require a 30-day notice period before vacating. Security deposits are processed within 15 days of checkout.";
-      } else if (lowerText.includes('document') || lowerText.includes('id') || lowerText.includes('aadhaar') || lowerText.includes('proof')) {
-        response = "For move-in, we need your ID proof (Aadhaar/DL), college/work ID, and 2 passport-size photos for the hostel registry.";
-      } else if (lowerText.includes('event') || lowerText.includes('party') || lowerText.includes('celebration') || lowerText.includes('birthday')) {
-        response = "We love community! We celebrate birthdays, festivals, and organize monthly social events for all residents.";
-      } else if (lowerText.includes('warden') || lowerText.includes('manager') || lowerText.includes('contact desk')) {
-        response = "You can contact the Warden (Mr. Rajesh) at +91 98765 43210. His office is located on the Ground Floor near the main entrance.";
-      } else if (lowerText.includes('livora') || lowerText.includes('who') || lowerText.includes('about')) {
-        response = "Livora is a premium student living brand providing a high-end 'Home away from Home' with focus on comfort, safety, and community.";
+      // ── Pricing & Payments ──
+      else if (match(['price', 'rent', 'cost', 'fee', 'payment', 'bill', 'money', 'charge', 'deposit', 'amount', 'dues', 'pay', 'upi', 'transaction', 'invoice', 'receipt', 'affordable', 'budget', 'expensive', 'cheap'])) {
+        response = "💰 Rent starts from ₹9,000/month for 3-sharing and ₹12,000/month for 2-sharing. This includes food, WiFi, cleaning, and utilities. You can view and pay your rent via the 'Payments' tab in the app. We accept UPI, net banking, and card payments!";
       }
+      // ── WiFi & Internet ──
+      else if (match(['wifi', 'wi-fi', 'internet', 'speed', 'network', 'broadband', 'data', 'bandwidth', 'connection', 'online', 'stream', 'download'])) {
+        response = "📶 We provide high-speed 100 Mbps dedicated WiFi for all residents — no data caps! Perfect for streaming, studying, and video calls. If you face connectivity issues, report it via the Complaints section.";
+      }
+      // ── Power & Electricity ──
+      else if (match(['power', 'electricity', 'backup', 'ups', 'generator', 'inverter', 'voltage', 'outage', 'blackout', 'current'])) {
+        response = "⚡ We have 24/7 power backup through heavy-duty generators. Your fans, lights, and WiFi will work seamlessly during power cuts — zero downtime guaranteed!";
+      }
+      // ── Water ──
+      else if (match(['water', 'drinking', 'purifier', 'hot water', 'geyser', 'shower', 'bath'])) {
+        response = "💧 We have 24/7 hot & cold water supply and UV+RO purifiers on every floor. Hot water geysers are available in all washrooms for comfortable bathing!";
+      }
+      // ── AC & Cooling ──
+      else if (match(['ac', 'air conditioning', 'cooler', 'fan', 'cooling', 'heater', 'temperature'])) {
+        response = "❄️ Premium rooms come with high-efficiency split ACs. Standard rooms have heavy-duty ceiling fans and great ventilation. You can request AC room upgrades through the app!";
+      }
+      // ── Gym & Fitness ──
+      else if (match(['gym', 'fitness', 'workout', 'exercise', 'yoga', 'sports', 'play'])) {
+        response = "🏋️ Yes! We have a dedicated fitness zone with modern equipment available from 6 AM to 10 PM. Some properties also have outdoor sports areas and yoga spaces!";
+      }
+      // ── Laundry ──
+      else if (match(['laundry', 'wash', 'cloth', 'iron', 'pressing', 'dry clean', 'dryer'])) {
+        response = "👕 Professional laundry services are available 3 times a week (Mon/Wed/Fri). Drop your clothes at the collection desk by 9 AM, and they'll be returned clean and folded the same evening!";
+      }
+      // ── Parking & Transport ──
+      else if (match(['parking', 'bike', 'cycle', 'car', 'vehicle', 'scooter', 'two wheeler', 'garage'])) {
+        response = "🅿️ We provide secure basement parking for 2-wheelers with CCTV monitoring. 4-wheeler parking is available nearby with prior notice. Bicycle stands are available at the entrance!";
+      }
+      // ── Common Areas & Recreation ──
+      else if (match(['tv', 'movie', 'common', 'game', 'recreation', 'lounge', 'hangout', 'chill', 'entertainment'])) {
+        response = "🎮 Our common lounge has a 65-inch Smart TV, board games, TT table, and comfy seating for community hangouts. Movie nights are organized every weekend!";
+      }
+      // ── Safety & Security ──
+      else if (match(['safety', 'secure', 'security', 'emergency', 'guard', 'cctv', 'camera', 'sos', 'fire', 'theft', 'biometric', 'lock'])) {
+        response = "🔒 Your safety is our top priority! We have 24/7 CCTV surveillance, biometric entry, fire extinguishers, and trained security guards. Use the SOS feature in the app for emergencies!";
+      }
+      // ── Visitors & Guests ──
+      else if (match(['visitor', 'friend', 'parent', 'guest', 'relative', 'visit'])) {
+        response = "👥 Visitors are allowed in the lobby area from 9 AM to 8 PM. Parents can stay overnight in designated guest rooms with warden's permission. All visitors must register at the reception.";
+      }
+      // ── Curfew & Timings ──
+      else if (match(['curfew', 'timing', 'late', 'in-time', 'gate', 'entry time', 'closing', 'open', 'hours', 'schedule'])) {
+        response = "🕐 Standard in-time is 10:30 PM for safety. Late entries are allowed for work or study with a simple digital gate pass — apply through the app before 9 PM!";
+      }
+      // ── Complaints & Issues ──
+      else if (match(['complaint', 'problem', 'issue', 'broken', 'fix', 'repair', 'maintenance', 'not working', 'damage', 'bug', 'report', 'ticket'])) {
+        response = "📝 If you face any issue, raise a ticket in the 'Complaints' section of the app. Our maintenance team usually resolves issues within 24 hours. You can track your complaint status in real-time!";
+      }
+      // ── Notice & Vacating ──
+      else if (match(['notice', 'vacate', 'refund', 'checkout', 'check-out', 'moving out', 'cancel', 'cancellation', 'terminate'])) {
+        response = "📋 We require a 30-day notice period before vacating. Security deposits are processed within 15 business days of checkout. Submit your notice through the app or contact the warden directly.";
+      }
+      // ── Check-in & Move-in ──
+      else if (match(['check-in', 'checkin', 'check in', 'move-in', 'move in', 'moving in', 'join', 'admission', 'register', 'enroll', 'onboard'])) {
+        response = "🏡 Welcome aboard! For check-in, bring your ID proof (Aadhaar/DL), college/work ID, and 2 passport-size photos. Complete your profile setup in the app to speed up the process!";
+      }
+      // ── Documents & ID ──
+      else if (match(['document', 'aadhaar', 'proof', 'verification', 'verify', 'kyc', 'passport', 'id proof', 'identity', 'pan card'])) {
+        response = "📄 For move-in, we need your ID proof (Aadhaar/DL), college/work ID, and 2 passport-size photos. You can upload these digitally through the profile setup section in the app!";
+      }
+      // ── Events & Community ──
+      else if (match(['event', 'party', 'celebration', 'birthday', 'festival', 'diwali', 'holi', 'christmas', 'new year', 'social'])) {
+        response = "🎉 We love community! We celebrate birthdays, festivals (Diwali, Holi, and more), and organize monthly social events, movie nights, and game tournaments for all residents!";
+      }
+      // ── Warden & Contact ──
+      else if (match(['warden', 'manager', 'contact', 'phone', 'call', 'reach', 'office', 'reception', 'front desk', 'admin', 'staff'])) {
+        response = "📞 You can contact the Warden (Mr. Rajesh) at +91 98765 43210. His office is on the Ground Floor near the main entrance, open 9 AM – 6 PM. For urgent matters, use the SOS feature!";
+      }
+      // ── About Livora ──
+      else if (match(['livora', 'who', 'about', 'what is', 'tell me'])) {
+        response = "🏠 Livora is a premium student living brand providing a high-end 'Home away from Home' experience. We focus on comfort, safety, community, and smart technology to make hostel life amazing!";
+      }
+      // ── Cleaning & Housekeeping ──
+      else if (match(['clean', 'housekeep', 'sweep', 'mop', 'dust', 'hygiene', 'sanitize', 'pest', 'cockroach', 'mosquito'])) {
+        response = "🧹 Daily housekeeping is included! Common areas are cleaned twice a day, and room cleaning happens 3 times a week. Pest control is done monthly. Report any hygiene concerns via the Complaints section.";
+      }
+      // ── Study & Work ──
+      else if (match(['study', 'library', 'reading', 'exam', 'work from home', 'wfh', 'workspace', 'desk', 'quiet'])) {
+        response = "📚 We have a dedicated study room/library that's open 24/7 with high-speed WiFi, charging points, and quiet zones. Perfect for exam prep and work-from-home sessions!";
+      }
+      // ── Medical & Health ──
+      else if (match(['medical', 'doctor', 'health', 'sick', 'hospital', 'clinic', 'fever', 'medicine', 'first aid', 'ambulance', 'ill', 'unwell'])) {
+        response = "🏥 We have a first-aid kit at the reception and tie-ups with nearby hospitals. For medical emergencies, use the SOS feature or contact the warden immediately. A doctor-on-call service is available!";
+      }
+      // ── Roommate ──
+      else if (match(['roommate', 'room mate', 'partner', 'sharing with', 'co-living', 'coliving', 'neighbor', 'neighbour'])) {
+        response = "🤝 Roommates are assigned based on your preferences (occupation, lifestyle). You can request specific roommates or a roommate change through the warden. We aim for the best compatibility!";
+      }
+      // ── Location & Address ──
+      else if (match(['location', 'address', 'where', 'direction', 'map', 'nearby', 'area', 'landmark', 'distance'])) {
+        response = "📍 Check the hostel location and nearby landmarks on the Listing page. Each property page shows the full address, Google Maps link, and distance from key locations like metro stations and colleges!";
+      }
+      // ── Rules & Policies ──
+      else if (match(['rule', 'policy', 'regulation', 'guideline', 'allowed', 'prohibited', 'banned', 'smoking', 'alcohol', 'drugs', 'noise', 'pet'])) {
+        response = "📜 Key rules: No smoking/alcohol on premises, quiet hours from 10 PM – 7 AM, and guests must be registered. Pets are not allowed. Full hostel guidelines are available in the app under 'Rules & Policies'.";
+      }
+      // ── Default Fallback (Improved) ──
+      else {
+        response = `🤔 I'm not sure about that specific query, but I'd love to help! Here are some topics I know well:\n\n• 🏠 Rooms & Booking\n• 🍽️ Mess & Food\n• 💰 Pricing & Payments\n• 📶 WiFi & Internet\n• 👕 Laundry\n• 🔒 Safety & Security\n• 🏋️ Gym & Amenities\n• 📝 Complaints\n• 🧹 Cleaning\n• 📞 Warden Contact\n• 📋 Check-in/Check-out\n\nTry asking about any of these, or contact the warden at +91 98765 43210 for specific queries!`;
+      }
+
       setAiChat([...newChat, { role: 'assistant', content: response }]);
       setIsTyping(false);
-    }, 1000);
+    }, 800);
   };
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
