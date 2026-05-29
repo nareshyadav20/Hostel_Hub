@@ -54,7 +54,7 @@ export function ComplaintsPanel({ data }) {
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column'  }}>
         <div style={{ height:'140px', marginTop: '0.5rem'  }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={1}>
             <PieChart>
               <Pie 
                 data={data.categories || []} 
