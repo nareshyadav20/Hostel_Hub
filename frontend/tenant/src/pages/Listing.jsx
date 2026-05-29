@@ -418,7 +418,7 @@ const Listing = () => {
           {/* MONTHLY RENT SECTION (Now in Sidebar) */}
           {(activeTab === 'overview' || activeTab === 'rent') && (
           <div ref={sectionRefs.rent} className="lst-section lst-sidebar-card">
-            <h2 className="lst-section-title"><span className="lst-section-icon">💰</span> Monthly Rent Breakdown</h2>
+            <h2 className="lst-section-title"><span className="lst-section-icon">💰</span> Monthly Rent</h2>
             <div className="lst-booking-card">
               <div className="lst-bill-row"><div style={{ textAlign: 'left', flex: 1 }}>Room Rent</div><div style={{ textAlign: 'right', color: 'var(--lst-text-main)', fontWeight: 700 }}>₹{currentPrice.rent.toLocaleString()}</div></div>
               <div className="lst-bill-row"><div style={{ textAlign: 'left', flex: 1 }}>Security Deposit</div><div style={{ textAlign: 'right', color: 'var(--lst-text-main)', fontWeight: 700 }}>₹{currentPrice.deposit.toLocaleString()}</div></div>
@@ -427,7 +427,7 @@ const Listing = () => {
 
               <div className="lst-bill-divider"></div>
 
-              <div className="lst-bill-total"><div style={{ textAlign: 'left', flex: 1 }}>Total Due (Move-in)</div><div style={{ textAlign: 'right' }}>₹{totalDue.toLocaleString()}</div></div>
+              <div className="lst-bill-total"><div style={{ textAlign: 'left', flex: 1 }}>Total Payment</div><div style={{ textAlign: 'right' }}>₹{totalDue.toLocaleString()}</div></div>
 
               {/* NEW SECTION: MOVE-IN ASSISTANCE */}
               <div className="lst-movein-assist">
@@ -457,7 +457,7 @@ const Listing = () => {
                 }}
                 style={{ width: '100%', padding: '20px', fontSize: '18px' }}
               >
-                Reserve Your Bed Now
+                Book Now
               </button>
               <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: 'var(--lst-text-muted)', fontWeight: 600 }}>
                 🔒 Secure payment powered by Livora Finance
