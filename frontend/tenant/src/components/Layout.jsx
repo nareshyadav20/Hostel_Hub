@@ -156,7 +156,7 @@ const Layout = ({ children }) => {
     window.location.href = '/';
   };
 
-  const handleSendAiMessage = (msg = null) => {
+  const handleSendAiMessage = async (msg = null) => {
     const text = msg || aiMessage;
     if (!text.trim()) return;
 
@@ -165,69 +165,55 @@ const Layout = ({ children }) => {
     setAiMessage('');
     setIsTyping(true);
 
-    // Expanded Deep Knowledge Base for "Full Training"
-    setTimeout(() => {
-      let response = "I'm sorry, I'm still learning about that. You can contact the warden for specific details, or try asking about rooms, mess, WiFi, or laundry!";
-      const lowerText = text.toLowerCase();
-      
-      // Basic Info & Booking
-      if (lowerText.includes('room') || lowerText.includes('booking') || lowerText.includes('sharing') || lowerText.includes('bed')) {
-        response = "We offer Premium Single, 2-Sharing, and 3-Sharing rooms. All rooms are fully furnished with study tables, wardrobes, and attached washrooms. You can book directly through the Listing page!";
-      } 
-      // Food & Mess
-      else if (lowerText.includes('mess') || lowerText.includes('food') || lowerText.includes('meal') || lowerText.includes('dinner') || lowerText.includes('breakfast') || lowerText.includes('lunch') || lowerText.includes('eat')) {
-        response = "Our mess serves 3 nutritious meals a day. We prioritize hygiene and variety in our weekly menu. Check the 'Mess' section for the full schedule and today's specials!";
-      } 
-      // Pricing & Payments
-      else if (lowerText.includes('price') || lowerText.includes('rent') || lowerText.includes('cost') || lowerText.includes('fee') || lowerText.includes('payment') || lowerText.includes('bill')) {
-        response = "Rent starts from ₹9,000/month for 3-sharing and ₹12,000/month for 2-sharing. This includes food, WiFi, cleaning, and utilities. You can pay your rent via the 'Payments' tab.";
-      } 
-      // Utilities & Tech
-      else if (lowerText.includes('wifi') || lowerText.includes('internet') || lowerText.includes('speed') || lowerText.includes('network')) {
-        response = "We provide high-speed 100 Mbps dedicated WiFi for all residents. There are no data caps, perfect for students and professionals!";
-      } else if (lowerText.includes('power') || lowerText.includes('electricity') || lowerText.includes('backup') || lowerText.includes('ups') || lowerText.includes('generator')) {
-        response = "We have 24/7 power backup through heavy-duty generators. Your fans, lights, and WiFi will work seamlessly during power cuts!";
-      } else if (lowerText.includes('water') || lowerText.includes('drinking') || lowerText.includes('ro') || lowerText.includes('purifier') || lowerText.includes('hot water')) {
-        response = "We have 24/7 hot/cold water supply and UV+RO purifiers on every floor. Safety and hydration are guaranteed!";
-      } else if (lowerText.includes('ac') || lowerText.includes('air conditioning') || lowerText.includes('cooler')) {
-        response = "Premium rooms come with high-efficiency ACs. Standard rooms have heavy-duty ceiling fans and great ventilation.";
-      }
-      // Amenities & Facilities
-      else if (lowerText.includes('gym') || lowerText.includes('fitness') || lowerText.includes('workout') || lowerText.includes('exercise')) {
-        response = "Yes! We have a dedicated fitness zone with modern equipment available for all residents from 6 AM to 10 PM.";
-      } else if (lowerText.includes('laundry') || lowerText.includes('wash') || lowerText.includes('cloth') || lowerText.includes('iron')) {
-        response = "Professional laundry services are available 3 times a week. Drop your clothes at the desk, and they'll be returned clean and folded!";
-      } else if (lowerText.includes('parking') || lowerText.includes('bike') || lowerText.includes('cycle') || lowerText.includes('car')) {
-        response = "We provide secure basement parking for 2-wheelers. 4-wheeler parking is available in the vicinity with prior notice.";
-      } else if (lowerText.includes('tv') || lowerText.includes('movie') || lowerText.includes('common') || lowerText.includes('game') || lowerText.includes('recreation')) {
-        response = "Our common lounge has a 65-inch Smart TV, board games, and comfy seating for community chill-out sessions.";
-      }
-      // Safety & Rules
-      else if (lowerText.includes('safety') || lowerText.includes('secure') || lowerText.includes('security') || lowerText.includes('emergency') || lowerText.includes('guard')) {
-        response = "Your safety is our priority. 24/7 CCTV, biometric entry, and on-site security. Use the SOS button in the 'Safety' section for emergencies.";
-      } else if (lowerText.includes('visitor') || lowerText.includes('friend') || lowerText.includes('parent') || lowerText.includes('guest')) {
-        response = "Visitors are allowed in the lobby from 9 AM to 8 PM. Parents can stay overnight in designated guest rooms with warden's permission.";
-      } else if (lowerText.includes('curfew') || lowerText.includes('time') || lowerText.includes('late') || lowerText.includes('entry')) {
-        response = "Our standard in-time is 10:30 PM for safety. Late entries are allowed for work or study with a simple digital gate pass.";
-      }
-      // Management & Admin
-      else if (lowerText.includes('complaint') || lowerText.includes('problem') || lowerText.includes('issue') || lowerText.includes('broken') || lowerText.includes('fix')) {
-        response = "If you face any issue, raise a ticket in the 'Complaints' section. Our maintenance team usually fixes it within 24 hours!";
-      } else if (lowerText.includes('notice') || lowerText.includes('leave') || lowerText.includes('vacate') || lowerText.includes('refund')) {
-        response = "We require a 30-day notice period before vacating. Security deposits are processed within 15 days of checkout.";
-      } else if (lowerText.includes('document') || lowerText.includes('id') || lowerText.includes('aadhaar') || lowerText.includes('proof')) {
-        response = "For move-in, we need your ID proof (Aadhaar/DL), college/work ID, and 2 passport-size photos for the hostel registry.";
-      } else if (lowerText.includes('event') || lowerText.includes('party') || lowerText.includes('celebration') || lowerText.includes('birthday')) {
-        response = "We love community! We celebrate birthdays, festivals, and organize monthly social events for all residents.";
-      } else if (lowerText.includes('warden') || lowerText.includes('manager') || lowerText.includes('contact desk')) {
-        response = "You can contact the Warden (Mr. Rajesh) at +91 98765 43210. His office is located on the Ground Floor near the main entrance.";
-      } else if (lowerText.includes('livora') || lowerText.includes('who') || lowerText.includes('about')) {
-        response = "Livora is a premium student living brand providing a high-end 'Home away from Home' with focus on comfort, safety, and community.";
+    try {
+      const systemMessage = {
+        role: 'system',
+        content: `You are Livora Hostel AI, a helpful digital assistant for Livora Hostel Hub.
+Answer user questions concisely and accurately based on the following details of Livora Hostel:
+- Rooms: Premium Single, 2-Sharing (₹12,000/month), and 3-Sharing (₹9,000/month). Furnished with study tables, wardrobes, attached washrooms. AC in premium rooms.
+- Mess: 3 nutritious meals daily, weekly menu in 'Mess' tab.
+- Utilities: 100 Mbps WiFi, 24/7 power backup, hot/cold water, RO purifiers on every floor.
+- Amenities: Gym (6 AM - 10 PM), Laundry (3x a week, clean & folded), Basement parking (2-wheelers), Common Lounge (65-inch TV, games).
+- Rules: Curfew in-time is 10:30 PM (late entry via gate pass). Visitors in lobby 9 AM - 8 PM (overnight guests need warden approval).
+- Admin: Raised tickets resolved in 24h. 30-day notice period for vacating (deposit refunded in 15 days). Need Aadhaar/DL and photos for move-in.
+- Warden: Mr. Rajesh, +91 98765 43210, office on Ground Floor.
+- Livora: Premium student living brand focusing on comfort, safety, and community.
+Keep your response friendly, helpful, and extremely brief (max 2-3 sentences).`
+      };
+
+      const messages = [
+        systemMessage,
+        ...newChat.map(c => ({ role: c.role === 'user' ? 'user' : 'assistant', content: c.content }))
+      ];
+
+      const response = await fetch('https://api.sarvam.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-subscription-key': 'sk_kfqssvah_BB55zMCgUxBrPGHL2iYkJOFK'
+        },
+        body: JSON.stringify({
+          model: 'sarvam-30b',
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 1200
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Sarvam API error: ${response.status}`);
       }
 
-      setAiChat([...newChat, { role: 'assistant', content: response }]);
+      const data = await response.json();
+      const aiReply = data.choices?.[0]?.message?.content || "I couldn't fetch a reply. How else can I assist you?";
+      
+      setAiChat([...newChat, { role: 'assistant', content: aiReply }]);
+    } catch (err) {
+      console.error('Error calling Sarvam AI API:', err);
+      setAiChat([...newChat, { role: 'assistant', content: "I'm having trouble connecting to my brain right now, but I can tell you that rent starts from ₹9,000/month and Mr. Rajesh (Warden) can be reached at +91 98765 43210!" }]);
+    } finally {
       setIsTyping(false);
-    }, 1200);
+    }
   };
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -488,7 +474,7 @@ const Layout = ({ children }) => {
                 <Bot size={22} />
               </div>
               <div className="ai-fab-text">
-                <strong>Hostel AI</strong>
+                <strong>AI</strong>
                 <span>Instant Help</span>
               </div>
             </div>

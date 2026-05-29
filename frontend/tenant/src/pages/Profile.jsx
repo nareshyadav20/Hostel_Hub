@@ -180,7 +180,7 @@ const Profile = () => {
     }
   };
 
-  const { tenant, payments, complaints, history, rewards, photo } = profileData;
+  const { tenant = {}, payments = [], complaints = [], history = {}, rewards = {}, photo } = profileData || {};
 
   const renderOverview = () => (
     <div className="profile-tab-content fade-in">
@@ -325,8 +325,8 @@ const Profile = () => {
   );
 
   const renderPayments = () => {
-    const totalPaid = payments.filter(p => p.status === 'Paid' || p.status === 'Success').reduce((sum, p) => sum + p.amount, 0);
-    const pendingAmount = tenant.rentStatus === 'PENDING' ? tenant.rent : 0;
+    const totalPaid = (payments || []).filter(p => p && (p.status === 'Paid' || p.status === 'Success')).reduce((sum, p) => sum + (p.amount || 0), 0);
+    const pendingAmount = tenant?.rentStatus === 'PENDING' ? (tenant?.rent || 0) : 0;
 
     return (
       <div className="profile-tab-content fade-in">
@@ -334,15 +334,15 @@ const Profile = () => {
           <div className="payment-summary-main">
             <div className="summary-item">
               <label>Current Status</label>
-              <p className={`amount ${tenant.rentStatus === 'PENDING' ? 'due' : 'cleared'}`}>{tenant.rentStatus || 'PAID'}</p>
+              <p className={`amount ${tenant?.rentStatus === 'PENDING' ? 'due' : 'cleared'}`}>{tenant?.rentStatus || 'PAID'}</p>
             </div>
             <div className="summary-item">
               <label>Lifetime Paid</label>
-              <p className="due-date">₹{totalPaid.toLocaleString()}</p>
+              <p className="due-date">₹{(totalPaid || 0).toLocaleString()}</p>
             </div>
             <div className="summary-item">
               <label>Pending Dues</label>
-              <p className="due-date">₹{pendingAmount.toLocaleString()}</p>
+              <p className="due-date">₹{(pendingAmount || 0).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -371,7 +371,7 @@ const Profile = () => {
                       <span>{payment.invoice || `Ref: ${payment._id?.slice(-8).toUpperCase()}`}</span>
                     </div>
                   </div>
-                  <div className="tx-amount">₹{payment.amount.toLocaleString()}</div>
+                  <div className="tx-amount">₹{(payment.amount || 0).toLocaleString()}</div>
                 </div>
               ))
             ) : (
@@ -401,12 +401,12 @@ const Profile = () => {
   const renderActivity = () => {
     // Combine all history into a unified timeline
     const timeline = [
-      ...history.laundry.map(item => ({ ...item, type: 'Laundry', icon: '👕', label: `Laundry #${item.orderNumber}` })),
-      ...history.cleaning.map(item => ({ ...item, type: 'Cleaning', icon: '🧹', label: 'Room Cleaning' })),
-      ...history.visitors.map(item => ({ ...item, type: 'Visitor', icon: '🎫', label: `Visitor: ${item.name}` })),
-      ...history.leaves.map(item => ({ ...item, type: 'Leave', icon: '📝', label: 'Leave Notice' })),
-      ...history.transfers.map(item => ({ ...item, type: 'Transfer', icon: '🔄', label: 'Room Transfer' })),
-      ...complaints.map(item => ({ ...item, type: 'Complaint', icon: '⚠️', label: item.title }))
+      ...(history?.laundry || []).map(item => ({ ...item, type: 'Laundry', icon: '👕', label: `Laundry #${item.orderNumber}` })),
+      ...(history?.cleaning || []).map(item => ({ ...item, type: 'Cleaning', icon: '🧹', label: 'Room Cleaning' })),
+      ...(history?.visitors || []).map(item => ({ ...item, type: 'Visitor', icon: '🎫', label: `Visitor: ${item.name}` })),
+      ...(history?.leaves || []).map(item => ({ ...item, type: 'Leave', icon: '📝', label: 'Leave Notice' })),
+      ...(history?.transfers || []).map(item => ({ ...item, type: 'Transfer', icon: '🔄', label: 'Room Transfer' })),
+      ...(complaints || []).map(item => ({ ...item, type: 'Complaint', icon: '⚠️', label: item.title }))
     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const totalPages = Math.ceil(timeline.length / itemsPerPage);
@@ -472,7 +472,7 @@ const Profile = () => {
   };
 
   const renderSafety = () => {
-    const safetyLog = [...history.sosAlerts, ...history.confidentialReports]
+    const safetyLog = [...(history?.sosAlerts || []), ...(history?.confidentialReports || [])]
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const totalPages = Math.ceil(safetyLog.length / itemsPerPage);
