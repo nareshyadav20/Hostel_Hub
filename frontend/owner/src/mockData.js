@@ -224,7 +224,8 @@ export const api = {
   getPayments: async (buildingId) => {
     const params = buildingId ? { buildingId } : {};
     const res = await axios.get(`${API_URL}/payments`, { params });
-    return handleId(res.data);
+    const data = res.data?.payments || res.data;
+    return handleId(Array.isArray(data) ? data : []);
   },
   updatePaymentStatus: async (id, status) => {
     const res = await axios.patch(`${API_URL}/payments/${id}`, { status });

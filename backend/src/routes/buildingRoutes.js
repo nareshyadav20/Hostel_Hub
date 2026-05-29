@@ -13,6 +13,7 @@ router.use(authMiddleware);
 
 // Protected routes for Owner Portal
 router.get('/', buildingController.getBuildings);
+router.get('/:id/portfolio', buildingController.getBuildingPortfolio);
 router.get('/:id', buildingController.getBuildingById);
 router.post('/', buildingController.createBuilding);
 router.post('/bulk', buildingController.bulkCreateBuildings);

@@ -4,6 +4,10 @@ const Room = require('../models/Room');
 const Bed = require('../models/Bed');
 const Tenant = require('../models/Tenant');
 const BuildingPhoto = require('../models/BuildingPhoto');
+const User = require('../models/User');
+const Staff = require('../models/Staff');
+const OwnerProfile = require('../models/OwnerProfile');
+const Payment = require('../models/Payment');
 
 const createBuilding = async (req, res) => {
   try {
@@ -69,10 +73,37 @@ const getBuildings = async (req, res) => {
     }
     console.log(`[DEBUG] getBuildings query:`, JSON.stringify(query));
     const buildings = await Building.find(query)
-      .select('-floors -images -draftData -gallery -description') // Exclude heavy fields (base64 images can be 300KB+)
+      .select('-floors -images -draftData -gallery -description') // Exclude heavy fields
+      .populate('owner', 'name')
       .lean();
-    console.log(`[DEBUG] Found ${buildings.length} buildings for owner ${req.user.id}`);
-    res.status(200).json(buildings);
+    console.log(`[DEBUG] Found ${buildings.length} buildings. Enriching with stats...`);
+
+    // Enrich buildings with Tenant, Staff counts and room stats
+    const enrichedBuildings = await Promise.all(buildings.map(async (b) => {
+      // Fetch stats
+      const tenantCount = await Tenant.countDocuments({ buildingId: b._id });
+      const staffCount = await Staff.countDocuments({ buildingId: b._id });
+      
+      const floors = await Floor.find({ building: b._id }, '_id');
+      const floorIds = floors.map(f => f._id);
+      
+      const totalRoomsCount = await Room.countDocuments({ floor: { $in: floorIds } });
+      const occupiedRoomsCount = await Room.countDocuments({ floor: { $in: floorIds }, status: 'FULL' });
+      const maintenanceRoomsCount = await Room.countDocuments({ floor: { $in: floorIds }, status: 'MAINTENANCE' });
+      const vacantRoomsCount = totalRoomsCount - occupiedRoomsCount - maintenanceRoomsCount;
+
+      return {
+        ...b,
+        tenantCount,
+        staffCount,
+        totalRoomsCount,
+        occupiedRoomsCount,
+        vacantRoomsCount,
+        maintenanceRoomsCount
+      };
+    }));
+
+    res.status(200).json(enrichedBuildings);
   } catch (error) {
     console.error(`[DEBUG] getBuildings error:`, error);
     res.status(500).json({ error: error.message });
@@ -230,21 +261,44 @@ const getBuildingById = async (req, res) => {
         return res.status(404).json({ error: 'Building not found' });
       }
 
-      // Populate floors, rooms, beds from 'floors', 'rooms', 'beds'
+      // Batch fetch floors, rooms, beds, and tenants
       const bFloors = await db.collection('floors').find({ building: b._id }).toArray();
-      for (const f of bFloors) {
-        const fRooms = await db.collection('rooms').find({ floor: f._id }).toArray();
-        for (const r of fRooms) {
-          const rBeds = await db.collection('beds').find({ roomId: r._id }).toArray();
-          for (const bed of rBeds) {
-            if (bed.tenant) {
-              bed.tenant = await db.collection('tenants').findOne({ _id: bed.tenant });
-            }
-          }
-          r.beds = rBeds;
+      const floorIds = bFloors.map(f => f._id);
+      
+      const fRooms = await db.collection('rooms').find({ floor: { $in: floorIds } }).toArray();
+      const roomIds = fRooms.map(r => r._id);
+      
+      const rBeds = await db.collection('beds').find({ roomId: { $in: roomIds } }).toArray();
+      
+      const tenantIds = rBeds.map(bed => bed.tenant).filter(Boolean);
+      const tenantsList = await db.collection('tenants').find({ _id: { $in: tenantIds } }).toArray();
+      const tenantMap = {};
+      tenantsList.forEach(t => {
+        tenantMap[t._id.toString()] = t;
+      });
+
+      const bedsByRoomId = {};
+      rBeds.forEach(bed => {
+        if (bed.tenant) {
+          bed.tenant = tenantMap[bed.tenant.toString()] || null;
         }
-        f.rooms = fRooms;
-      }
+        const roomIdStr = bed.roomId.toString();
+        if (!bedsByRoomId[roomIdStr]) bedsByRoomId[roomIdStr] = [];
+        bedsByRoomId[roomIdStr].push(bed);
+      });
+
+      const roomsByFloorId = {};
+      fRooms.forEach(room => {
+        room.beds = bedsByRoomId[room._id.toString()] || [];
+        const floorIdStr = room.floor.toString();
+        if (!roomsByFloorId[floorIdStr]) roomsByFloorId[floorIdStr] = [];
+        roomsByFloorId[floorIdStr].push(room);
+      });
+
+      bFloors.forEach(f => {
+        f.rooms = roomsByFloorId[f._id.toString()] || [];
+      });
+
       b.floors = bFloors;
       building = b;
     }
@@ -340,10 +394,256 @@ const getPlatformStats = async (req, res) => {
   }
 };
 
+const getBuildingPortfolio = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const mongoose = require('mongoose');
+
+    // 1. Fetch building (hostel) details with robust model and collection fallback
+    let building = await Building.findById(id)
+      .populate({
+        path: 'floors',
+        populate: {
+          path: 'rooms',
+          populate: {
+            path: 'beds',
+            populate: { path: 'tenant', select: 'name phone email' }
+          }
+        }
+      });
+
+    if (!building) {
+      const db = mongoose.connection.db;
+      let objId;
+      try {
+        objId = new mongoose.Types.ObjectId(id);
+      } catch (e) {
+        return res.status(404).json({ error: 'Building ID is invalid' });
+      }
+
+      const b = await db.collection('buildings').findOne({ _id: objId });
+      if (!b) {
+        return res.status(404).json({ error: 'Hostel not found' });
+      }
+
+      // Batch fetch floors, rooms, beds, and tenants
+      const bFloors = await db.collection('floors').find({ building: b._id }).toArray();
+      const floorIds = bFloors.map(f => f._id);
+      
+      const fRooms = await db.collection('rooms').find({ floor: { $in: floorIds } }).toArray();
+      const roomIds = fRooms.map(r => r._id);
+      
+      const rBeds = await db.collection('beds').find({ roomId: { $in: roomIds } }).toArray();
+      
+      const tenantIds = rBeds.map(bed => bed.tenant).filter(Boolean);
+      const tenantsList = await db.collection('tenants').find({ _id: { $in: tenantIds } }, { projection: { name: 1, phone: 1, email: 1 } }).toArray();
+      const tenantMap = {};
+      tenantsList.forEach(t => {
+        tenantMap[t._id.toString()] = t;
+      });
+
+      const bedsByRoomId = {};
+      rBeds.forEach(bed => {
+        if (bed.tenant) {
+          bed.tenant = tenantMap[bed.tenant.toString()] || null;
+        }
+        const roomIdStr = bed.roomId.toString();
+        if (!bedsByRoomId[roomIdStr]) bedsByRoomId[roomIdStr] = [];
+        bedsByRoomId[roomIdStr].push(bed);
+      });
+
+      const roomsByFloorId = {};
+      fRooms.forEach(room => {
+        room.beds = bedsByRoomId[room._id.toString()] || [];
+        const floorIdStr = room.floor.toString();
+        if (!roomsByFloorId[floorIdStr]) roomsByFloorId[floorIdStr] = [];
+        roomsByFloorId[floorIdStr].push(room);
+      });
+
+      bFloors.forEach(f => {
+        f.rooms = roomsByFloorId[f._id.toString()] || [];
+      });
+
+      b.floors = bFloors;
+      building = b;
+    }
+
+    // 2. Fetch Owner details
+    const ownerUser = await User.findById(building.owner).select('-password').lean();
+    const ownerProfile = await OwnerProfile.findOne({ userId: building.owner }).lean();
+    const ownerBuildings = await Building.find({ owner: building.owner }, 'name address').lean();
+
+    const ownerDetails = {
+      name: ownerUser?.name || 'Unknown Owner',
+      phone: ownerUser?.phone || ownerProfile?.personalInfo?.phone || 'N/A',
+      email: ownerUser?.email || ownerProfile?.personalInfo?.email || 'N/A',
+      address: ownerProfile?.personalInfo?.address || 'N/A',
+      profilePhoto: ownerProfile?.personalInfo?.profilePhotoUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',
+      assignedHostels: ownerBuildings.map(ob => ({ id: ob._id, name: ob.name, address: ob.address }))
+    };
+
+    // 3. Fetch Tenant details with payment history
+    const tenants = await Tenant.find({ buildingId: id }).lean();
+    const payments = await Payment.find({ buildingId: id }).sort({ date: -1 }).lean();
+
+    const tenantsEnriched = tenants.map(tenant => {
+      const tenantPayments = payments
+        .filter(p => p.tenantId && p.tenantId.toString() === tenant._id.toString())
+        .map(p => ({
+          id: p._id,
+          amount: p.amount,
+          status: p.status,
+          date: p.date,
+          type: p.type,
+          method: p.method,
+          invoice: p.invoice,
+          transactionId: p.transactionId
+        }));
+
+      const isVerified = tenant.docs && tenant.docs.some(doc => doc.verified);
+
+      return {
+        id: tenant._id,
+        name: tenant.name,
+        email: tenant.email,
+        phone: tenant.phone,
+        room: tenant.room || 'N/A',
+        bedNumber: tenant.bedId ? 'Allocated' : 'N/A',
+        checkInDate: tenant.checkInDate || tenant.createdAt,
+        rentStatus: tenant.rentStatus || 'PENDING',
+        paymentHistory: tenantPayments,
+        isVerified: isVerified ? 'Verified' : 'Pending',
+        profilePhoto: tenant.profilePhoto || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200'
+      };
+    });
+
+    // 4. Fetch Staff details
+    const staffList = await Staff.find({ buildingId: id }).lean();
+    const staffEnriched = staffList.map(s => {
+      const latestSalaryStatus = s.salaryHistory && s.salaryHistory.length > 0
+        ? s.salaryHistory[s.salaryHistory.length - 1].status
+        : 'Paid';
+
+      return {
+        id: s._id,
+        name: s.name,
+        role: s.role,
+        phone: s.phone,
+        email: s.email || 'N/A',
+        shift: s.shift || 'Full Time',
+        salaryStatus: latestSalaryStatus,
+        attendanceStatus: s.attendance?.percentage !== undefined ? `${s.attendance.percentage}%` : '100%',
+        profilePhoto: s.profilePhoto || 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=200',
+        assignedFloors: 'All Floors'
+      };
+    });
+
+    // 5. Aggregate Room & Occupancy Analytics
+    let totalRooms = 0;
+    let occupiedRooms = 0;
+    let vacantRooms = 0;
+    let maintenanceRooms = 0;
+    let totalBeds = 0;
+    let occupiedBeds = 0;
+
+    const floorWiseOccupancy = [];
+
+    if (building.floors && building.floors.length > 0) {
+      building.floors.forEach(floor => {
+        let floorBeds = 0;
+        let floorOccupiedBeds = 0;
+        let floorRoomsCount = 0;
+
+        if (floor.rooms && floor.rooms.length > 0) {
+          floorRoomsCount = floor.rooms.length;
+          totalRooms += floorRoomsCount;
+
+          floor.rooms.forEach(room => {
+            if (room.status === 'MAINTENANCE') {
+              maintenanceRooms++;
+            } else if (room.status === 'AVAILABLE') {
+              vacantRooms++;
+            } else {
+              occupiedRooms++;
+            }
+
+            const capacity = room.capacity || 0;
+            totalBeds += capacity;
+            floorBeds += capacity;
+
+            if (room.beds && room.beds.length > 0) {
+              room.beds.forEach(bed => {
+                if (bed.status === 'OCCUPIED') {
+                  occupiedBeds++;
+                  floorOccupiedBeds++;
+                }
+              });
+            }
+          });
+        }
+
+        floorWiseOccupancy.push({
+          floorId: floor._id,
+          floorNumber: `Floor ${floor.floorNumber}`,
+          totalRooms: floorRoomsCount,
+          totalBeds: floorBeds,
+          occupiedBeds: floorOccupiedBeds,
+          occupancyPercentage: floorBeds > 0 ? Math.round((floorOccupiedBeds / floorBeds) * 100) : 0
+        });
+      });
+    }
+
+    const occupancyRate = totalBeds > 0 ? Math.min(100, Math.round((occupiedBeds / totalBeds) * 100)) : 0;
+    const monthlyRevenue = occupiedBeds * (building.startingPrice || 8500);
+
+    const analytics = {
+      totalRooms,
+      occupiedRooms,
+      vacantRooms,
+      maintenanceRooms,
+      totalBeds,
+      occupiedBeds,
+      vacantBeds: totalBeds - occupiedBeds,
+      occupancyRate,
+      monthlyRevenue,
+      floorWiseOccupancy
+    };
+
+    res.status(200).json({
+      hostelDetails: {
+        id: building._id,
+        name: building.name,
+        address: building.address,
+        locationCity: building.locationCity,
+        category: building.category || 'Mixed',
+        description: building.description || 'Premium PG and residential lodging space.',
+        startingPrice: building.startingPrice || 8500,
+        securityDeposit: building.securityDeposit || 0,
+        maintenanceCharges: building.maintenanceCharges || 799,
+        foodCharges: building.foodCharges || 3000,
+        genderType: building.genderType || 'Mixed',
+        amenities: building.amenities && building.amenities.length > 0 ? building.amenities : ['Wifi', 'AC', 'Gym', 'Laundry'],
+        images: building.images && building.images.length > 0 ? building.images : ['https://images.unsplash.com/photo-1555854817-5b2260d50c63?auto=format&fit=crop&q=80&w=800'],
+        createdAt: building.createdAt || new Date(),
+        policies: building.policies || { smoking: 'Not Allowed', alcohol: 'Not Allowed', pets: 'No', visitors: 'Till 8 PM' }
+      },
+      ownerDetails,
+      tenants: tenantsEnriched,
+      staff: staffEnriched,
+      analytics
+    });
+
+  } catch (error) {
+    console.error('Error fetching building portfolio:', error);
+    res.status(500).json({ error: 'Failed to fetch building portfolio details', details: error.message });
+  }
+};
+
 module.exports = {
   createBuilding,
   getBuildings,
   getBuildingById,
+  getBuildingPortfolio,
   updateBuilding,
   deleteBuilding,
   bulkCreateBuildings,

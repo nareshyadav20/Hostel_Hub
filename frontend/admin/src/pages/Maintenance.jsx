@@ -27,6 +27,8 @@ const Maintenance = () => {
   const [filterStatus, setFilterStatus] = useState('All');
   const [expandedId, setExpandedId] = useState(null);
   const [selectedTasks, setSelectedTasks] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 6;
 
   // Confirm Dialog State
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
@@ -232,6 +234,8 @@ const Maintenance = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const displayedTasks = filteredTasks.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
+
   return (
     <div className="space-y-10 pb-20">
       
@@ -287,7 +291,7 @@ const Maintenance = () => {
                className="w-full bg-card border border-divider rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-subtle"
                placeholder="Search tasks by ID, Technician, or Location..."
                value={searchTerm}
-               onChange={(e) => setSearchTerm(e.target.value)}
+               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(0); }}
             />
          </div>
          
@@ -296,7 +300,7 @@ const Maintenance = () => {
                {['All', 'Open', 'In Progress', 'Resolved'].map((status) => (
                  <button
                    key={status}
-                   onClick={() => setFilterStatus(status)}
+                   onClick={() => { setFilterStatus(status); setCurrentPage(0); }}
                    className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                      filterStatus === status ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-text-muted hover:text-text-primary'
                    }`}
@@ -339,7 +343,7 @@ const Maintenance = () => {
                     </tr>
                  </thead>
                  <tbody className="divide-y divide-border/30">
-                    {filteredTasks.map((t) => (
+                    {displayedTasks.map((t) => (
                       <React.Fragment key={t._id}>
                          <tr 
                            onClick={() => setExpandedId(expandedId === t._id ? null : t._id)}
@@ -448,12 +452,28 @@ const Maintenance = () => {
       {/* --- PAGINATION --- */}
       <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-6 p-6 card-classic bg-slate-50/50 dark:bg-white/2">
          <div className="flex items-center gap-4">
-            <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Showing {filteredTasks.length} of {totalTasks} logs</span>
+            <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">
+               Showing {filteredTasks.length === 0 ? 0 : currentPage * itemsPerPage + 1} to {Math.min((currentPage + 1) * itemsPerPage, filteredTasks.length)} of {filteredTasks.length} logs
+            </span>
             <div className="h-4 w-px bg-border" />
             <div className="flex items-center gap-2 bg-background border border-divider rounded-xl px-3 py-1.5 shadow-subtle cursor-pointer" onClick={fetchMaintenanceData}>
                <FileText size={14} className="text-primary" />
                <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">Refresh Manifest</span>
             </div>
+         </div>
+
+         {/* Pagination Controls */}
+         <div className="flex justify-center gap-2">
+           {currentPage > 0 && (
+             <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))} className="px-4 py-2 bg-primary text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-primary-dark transition-colors">
+               Prev
+             </button>
+           )}
+           {(currentPage + 1) * itemsPerPage < filteredTasks.length && (
+             <button onClick={() => setCurrentPage(prev => prev + 1)} className="px-4 py-2 bg-primary text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-primary-dark transition-colors">
+               Next
+             </button>
+           )}
          </div>
       </div>
 
