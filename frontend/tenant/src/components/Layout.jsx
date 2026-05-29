@@ -224,10 +224,9 @@ const Layout = ({ children }) => {
       } else if (lowerText.includes('livora') || lowerText.includes('who') || lowerText.includes('about')) {
         response = "Livora is a premium student living brand providing a high-end 'Home away from Home' with focus on comfort, safety, and community.";
       }
-      setTimeout(() => {
-        setAiChat([...newChat, { role: 'assistant', content: response }]);
-        setIsTyping(false);
-      }, 1000);
+      setAiChat([...newChat, { role: 'assistant', content: response }]);
+      setIsTyping(false);
+    }, 1000);
   };
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
