@@ -59,16 +59,16 @@ function App() {
           <Route path="/bookings"      element={<Layout><Bookings /></Layout>} />
           <Route path="/issues"        element={<Layout><Issues /></Layout>} />
           <Route path="/payments"      element={<Layout><Finance /></Layout>} />
-          <Route path="/plans"         element={<Layout><Placeholder title="SaaS Plans" /></Layout>} />
+          <Route path="/plans"         element={<Placeholder title="SaaS Plans" />} />
           <Route path="/promotions"    element={<Layout><Cms /></Layout>} />
-          <Route path="/integrations"  element={<Layout><Placeholder title="Partner Integrations" /></Layout>} />
+          <Route path="/integrations"  element={<Placeholder title="Partner Integrations" />} />
           <Route path="/security"      element={<Layout><Settings /></Layout>} />
           <Route path="/rooms"         element={<Layout><Rooms /></Layout>} />
-          <Route path="/beds"          element={<Layout><Placeholder title="Beds" /></Layout>} />
-          <Route path="/mess"          element={<Layout><Placeholder title="Mess" /></Layout>} />
-          <Route path="/inventory"     element={<Layout><Placeholder title="Inventory" /></Layout>} />
+          <Route path="/beds"          element={<Placeholder title="Beds" />} />
+          <Route path="/mess"          element={<Placeholder title="Mess" />} />
+          <Route path="/inventory"     element={<Placeholder title="Inventory" />} />
           <Route path="/finance"       element={<Layout><Finance /></Layout>} />
-          <Route path="/wallet"        element={<Layout><Placeholder title="Wallet" /></Layout>} />
+          <Route path="/wallet"        element={<Placeholder title="Wallet" />} />
           <Route path="/automation"    element={<Layout><Automation /></Layout>} />
           <Route path="/tasks"         element={<Layout><Tasks /></Layout>} />
           <Route path="/insights"      element={<Layout><Insights /></Layout>} />

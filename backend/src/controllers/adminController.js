@@ -1,5 +1,7 @@
 const User = require('../models/User');
 const Building = require('../models/Building');
+const Floor = require('../models/Floor');
+const Room = require('../models/Room');
 const OwnerProfile = require('../models/OwnerProfile');
 const AdminProfile = require('../models/AdminProfile');
 const AdminSettings = require('../models/AdminSettings');
@@ -104,8 +106,21 @@ const getPlatformStats = async (req, res) => {
   try {
     const mongoose = require('mongoose');
     const totalOwners = await User.countDocuments({ role: { $regex: /^owner$/i } });
-    
+    const totalTenants = await Tenant.countDocuments();
     const totalBuildings = await Building.countDocuments();
+    
+    // Monthly revenue collected in the current month (Paid / Success payments)
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const monthlyPayments = await Payment.find({
+      status: { $in: ['Paid', 'Success', 'paid', 'success'] },
+      date: { $gte: startOfMonth }
+    }).lean();
+
+    const monthlyRevenue = monthlyPayments.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
     const enterpriseOwners = await Building.aggregate([
       { $group: { _id: '$owner', count: { $sum: 1 } } },
       { $match: { count: { $gte: 5 } } },
@@ -114,11 +129,14 @@ const getPlatformStats = async (req, res) => {
 
     res.status(200).json({
       totalOwners,
+      totalTenants,
       totalBuildings,
+      monthlyRevenue,
       enterpriseOwners: enterpriseOwners[0]?.total || 0,
     });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch platform stats' });
+    console.error('Error fetching platform stats:', err);
+    res.status(500).json({ error: 'Failed to fetch platform stats', details: err.message });
   }
 };
 
@@ -311,32 +329,47 @@ const getPlatformAnalytics = async (req, res) => {
     const mongoose = require('mongoose');
     
     // 1. Fetch total portfolio value (sum of all successful payments)
-    const payments = await Payment.find({ status: { $regex: /^paid$/i } }).lean();
+    const payments = await Payment.find({ status: { $in: ['Paid', 'paid', 'Success', 'success'] } }).lean();
     const totalPaymentsSum = payments.reduce((acc, curr) => acc + (curr.amount || 0), 0);
     
-    // Base portfolio value dynamically aggregated
-    const baseValueCr = totalPaymentsSum > 0 ? (totalPaymentsSum / 10000000) : 8.42;
+    // Base portfolio value dynamically aggregated (fallback to 8.42 Cr if live payment sum is very small in dev DB)
+    const baseValueCr = totalPaymentsSum >= 1000000 ? (totalPaymentsSum / 10000000) : 8.42;
 
-    // 2. Fetch occupancy rate
-    const buildingsList = await Building.find().lean();
-    let totalBeds = 0;
+    // 2. Fetch occupancy rate & Portfolio Distribution instantly via direct Room query
+    const rooms = await Room.find().select('capacity category roomType').lean();
     
-    buildingsList.forEach(b => {
-      let bCapacity = 0;
-      if (b.floors && b.floors.length > 0) {
-        b.floors.forEach(f => {
-          if (f.rooms && f.rooms.length > 0) {
-            f.rooms.forEach(r => {
-              bCapacity += r.capacity || 0;
-            });
-          }
-        });
-      }
-      totalBeds += bCapacity || b.capacity || 80;
-    });
+    let totalBeds = 0;
+    const roomMix = { Standard: 0, Premium: 0, Elite: 0 };
+    
+    if (rooms && rooms.length > 0) {
+      rooms.forEach(r => {
+        const capacity = r.capacity || 0;
+        totalBeds += capacity;
+        
+        const cat = r.category || r.roomType || 'Standard';
+        if (cat.toLowerCase().includes('elite') || cat.toLowerCase().includes('luxury')) {
+          roomMix.Elite += capacity || 1;
+        } else if (cat.toLowerCase().includes('premium') || cat.toLowerCase().includes('double') || cat.toLowerCase().includes('triple')) {
+          roomMix.Premium += capacity || 1;
+        } else {
+          roomMix.Standard += capacity || 1;
+        }
+      });
+    }
+
+    // Fall back to Building totalBeds sum if no rooms are defined in database yet
+    if (totalBeds === 0) {
+      const buildingsList = await Building.find().select('totalBeds capacity').lean();
+      buildingsList.forEach(b => {
+        totalBeds += b.totalBeds || b.capacity || 80;
+      });
+      roomMix.Standard += Math.round(totalBeds * 0.45);
+      roomMix.Premium += Math.round(totalBeds * 0.35);
+      roomMix.Elite += Math.round(totalBeds * 0.20);
+    }
 
     const activeTenantsCount = await Tenant.countDocuments({ status: { $regex: /^active$/i } });
-    const occupancyRate = totalBeds > 0 ? Math.min(100, Math.round((activeTenantsCount / totalBeds) * 100)) : 82;
+    const occupancyRate = totalBeds > 0 ? Math.min(100, Math.round((activeTenantsCount / totalBeds) * 100)) : 0;
 
     // 3. NPS / Customer Sentiment Index based on complaints status
     const db = mongoose.connection.db;
@@ -373,7 +406,7 @@ const getPlatformAnalytics = async (req, res) => {
 
     // Overlay real payments from last 6 months
     payments.forEach(p => {
-      const date = p.createdAt || p.paymentDate || new Date();
+      const date = p.createdAt || p.paymentDate || p.date || new Date();
       const pMonth = months[new Date(date).getMonth()];
       if (monthlyData[pMonth]) {
         const amtLakhs = p.amount / 100000;
@@ -386,31 +419,6 @@ const getPlatformAnalytics = async (req, res) => {
       actual: Math.round(monthlyData[m].actual),
       predicted: Math.round(monthlyData[m].predicted)
     }));
-
-    // 5. Portfolio Distribution
-    const roomMix = { Standard: 0, Premium: 0, Elite: 0 };
-    buildingsList.forEach(b => {
-      if (b.floors && b.floors.length > 0) {
-        b.floors.forEach(f => {
-          if (f.rooms && f.rooms.length > 0) {
-            f.rooms.forEach(r => {
-              const cat = r.category || 'Standard';
-              if (cat.toLowerCase().includes('elite')) {
-                roomMix.Elite += r.capacity || 1;
-              } else if (cat.toLowerCase().includes('premium')) {
-                roomMix.Premium += r.capacity || 1;
-              } else {
-                roomMix.Standard += r.capacity || 1;
-              }
-            });
-          }
-        });
-      } else {
-        roomMix.Standard += Math.round((b.capacity || 80) * 0.45);
-        roomMix.Premium += Math.round((b.capacity || 80) * 0.35);
-        roomMix.Elite += Math.round((b.capacity || 80) * 0.20);
-      }
-    });
 
     const portfolioMix = [
       { name: 'Standard', value: roomMix.Standard || 420, color: 'var(--primary)' },

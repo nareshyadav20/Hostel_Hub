@@ -73,18 +73,13 @@ const Sidebar = ({ collapsed }) => {
             className={({ isActive }) =>
               `flex items-center gap-3.5 py-3 px-6 transition-all relative group ${isActive
                 ? 'font-semibold text-text-main'
-                : 'text-text-muted hover:text-text-main hover:bg-gray-50'
+                : 'text-text-muted hover:text-text-main hover:bg-primary-light'
               } ${collapsed ? 'justify-center px-0' : ''}`
             }
           >
             {({ isActive }) => (
               <>
-                {isActive && (
-                  <motion.div
-                    layoutId="activeIndicator"
-                    className="absolute left-0 w-1 h-3/5 bg-primary rounded-r-full top-1/2 -translate-y-1/2"
-                  />
-                )}
+                
                 <div className={`shrink-0 transition-all duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110 group-hover:text-primary'}`}>
                   {item.icon}
                 </div>
