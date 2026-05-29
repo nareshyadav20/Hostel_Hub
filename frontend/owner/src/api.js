@@ -138,24 +138,20 @@ export const api = {
     return await swrFetch('all_rooms', `${API_URL}/rooms`);
   },
   getRoomsByBuilding: async (bId) => {
-    const res = await axios.get(`${API_URL}/rooms`, { params: { buildingId: bId } });
-    return handleId(res.data);
+    return await swrFetch(`rooms_b_${bId || 'all'}`, `${API_URL}/rooms`, { params: { buildingId: bId } });
   },
   getAllBeds: async () => {
     return await swrFetch('all_beds', `${API_URL}/beds`);
   },
   getBedsByBuilding: async (bId) => {
-    const res = await axios.get(`${API_URL}/beds`, { params: { buildingId: bId } });
-    const data = Array.isArray(res.data) ? res.data : [];
-    return handleId(data);
+    return await swrFetch(`beds_b_${bId || 'all'}`, `${API_URL}/beds`, { params: { buildingId: bId } });
   },
   recommendBeds: async (buildingId, preferences) => {
     const res = await axios.post(`${API_URL}/beds/recommend`, { buildingId, preferences });
     return handleId(res.data);
   },
   getMaintenanceBeds: async () => {
-    const res = await axios.get(`${API_URL}/beds/maintenance`);
-    return handleId(res.data);
+    return await swrFetch('beds_maintenance', `${API_URL}/beds/maintenance`);
   },
   markBedSanitized: async (id) => {
     const res = await axios.post(`${API_URL}/beds/${id}/sanitize`);
@@ -223,8 +219,7 @@ export const api = {
   },
   getPayments: async (buildingId) => {
     const params = buildingId ? { buildingId } : {};
-    const res = await axios.get(`${API_URL}/payments`, { params });
-    return handleId(res.data);
+    return await swrFetch(`payments_${buildingId || 'all'}`, `${API_URL}/payments`, { params });
   },
   updatePaymentStatus: async (id, status) => {
     const res = await axios.patch(`${API_URL}/payments/${id}`, { status });

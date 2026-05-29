@@ -11,7 +11,7 @@ import { ResponsiveContainer, AreaChart, Area, BarChart, Bar,
   Cell, Legend, LineChart, Line 
 } from 'recharts';
 import { useParams } from 'react-router-dom';
-import api from '../api/axios.js';
+import { api } from '../api';
 
 const Reports = () => {
   const { buildingId: urlBuildingId } = useParams();

@@ -12,7 +12,7 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip, BarChart, Bar, Cell
 } from 'recharts';
-import api from '../api/axios.js';
+import { api } from '../api';
 
 const ROLE_COLORS = {
   'Warden': { bg: "var(--bg-blue-soft)", color: "var(--text-blue)", border: "var(--color-blue)" },
