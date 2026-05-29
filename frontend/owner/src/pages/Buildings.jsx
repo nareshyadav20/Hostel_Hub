@@ -12,7 +12,7 @@ import {
   TrendingUp, Coins, BarChart3, HardDrive, Waves, Flame, Fingerprint
 } from 'lucide-react';
 
-import { api } from '../mockData';
+import { api } from '../api';
 
 // Full-Screen Professional Modal Component
 const Modal = ({ isOpen, onClose, title, children }) => (
@@ -81,75 +81,36 @@ const PropertyDetailDrawer = ({ isOpen, onClose, target, type, activeTab, onTabC
     switch (activeTab) {
       case 'Overview':
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-              {[
-                { label: 'Status', value: 'Active', icon: <Activity size={18} />, color: '#10B981' },
-                { label: 'Occupancy', value: '88%', icon: <UsersRound size={18} />, color: '#6366F1' },
-                { label: 'Health Score', value: '96/100', icon: <Heart size={18} />, color: '#EF4444' },
-                { label: 'AI Confidence', value: 'High', icon: <Sparkles size={18} />, color: '#F59E0B' }
-              ].map((kpi, i) => (
-                <div key={i} style={{ padding: '1.2rem', background: '#F8FAFC', borderRadius: '24px', border: '1px solid #F1F5F9' }}>
-                  <div style={{ color: kpi.color, marginBottom: '0.6rem' }}>{kpi.icon}</div>
-                  <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: '900', color: '#64748B', letterSpacing: '0.05em' }}>{kpi.label.toUpperCase()}</p>
-                  <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: '1000', color: '#0F172A' }}>{kpi.value}</p>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ position: 'relative', height: '240px', borderRadius: '32px', overflow: 'hidden', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ position: 'relative', height: '120px', borderRadius: '20px', overflow: 'hidden' }}>
               <img
                 src={target.images?.[0] || 'https://images.unsplash.com/photo-1545324418-f1d3c5b53571?auto=format&fit=crop&w=800&q=80'}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 alt="Property"
               />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent, rgba(15, 23, 42, 0.8))' }} />
-              <div style={{ position: 'absolute', bottom: '1.5rem', left: '2rem' }}>
-                <h3 style={{ color: "var(--text-on-primary)", fontSize: '1.5rem', fontWeight: '900', margin: 0 }}>{target.name || `Room ${target.roomNumber}`}</h3>
-                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', fontWeight: '700', margin: '0.2rem 0 0 0' }}>{type.toUpperCase()} VISUALIZATION</p>
-              </div>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+              {[
+                { label: 'Status', value: target.status || 'Active', icon: <Activity size={16} />, color: '#10B981' },
+                { label: 'Capacity', value: `${target.totalBeds || target.capacity || 0} Beds`, icon: <UsersRound size={16} />, color: '#6366F1' },
+                { label: 'Category', value: target.category || 'Standard', icon: <Building size={16} />, color: '#F59E0B' },
+                { label: 'Residency', value: target.genderType || 'Mixed', icon: <Users size={16} />, color: '#8B5CF6' }
+              ].map((kpi, i) => (
+                <div key={i} style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
+                  <div style={{ color: kpi.color, marginBottom: '0.4rem' }}>{kpi.icon}</div>
+                  <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: '#64748B', letterSpacing: '0.05em' }}>{kpi.label.toUpperCase()}</p>
+                  <p style={{ margin: 0, fontSize: '1rem', fontWeight: '950', color: '#0F172A' }}>{kpi.value}</p>
+                </div>
+              ))}
             </div>
 
-            <div style={{ padding: '2rem', background: '#0F172A', borderRadius: '32px', color: "var(--text-on-primary)", position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%)' }} />
-              <h4 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                <Zap size={20} color="#FCD34D" /> Operational Live Stream
-              </h4>
-              <p style={{ fontSize: '0.9rem', opacity: 0.8, lineHeight: '1.6', maxWidth: '80%' }}>
-                System heart-beat is stable. All biometric access points are online. HVAC systems operating at peak efficiency (22.5°C).
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-              <div style={{ padding: '1.5rem', borderRadius: '28px', border: '1px solid #E2E8F0' }}>
-                <h5 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', fontWeight: '900' }}>Infrastructure Health</h5>
-                {[
-                  { label: 'Connectivity', val: type === 'bed' ? 'OPTIMAL' : 'EXCELLENT' },
-                  { label: 'Power Backup', val: '100% ONLINE' },
-                  { label: 'Water Systems', val: 'STABLE' },
-                  { label: 'Security Grid', val: 'ACTIVE' }
-                ].map(item => (
-                  <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.8rem 0', borderBottom: '1px solid #F1F5F9' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>{item.label}</span>
-                    <span style={{ fontSize: '0.85rem', fontWeight: '950', color: '#10B981' }}>{item.val}</span>
-                  </div>
-                ))}
+            {target.address && (
+              <div style={{ padding: '1.2rem', borderRadius: '16px', background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.8rem', fontWeight: '900', color: '#475569' }}>Location</h5>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#0F172A', fontWeight: '700' }}>{target.address}</p>
               </div>
-              <div style={{ padding: '1.5rem', borderRadius: '28px', background: '#F8FAFC' }}>
-                <h5 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', fontWeight: '900' }}>{type.toUpperCase()} SPECIFIC LOG</h5>
-                {[
-                  type === 'bed' ? 'Linen changed 2h ago' : 'Floor corridor sanitized',
-                  type === 'room' ? 'RFID lock battery at 92%' : 'Biometric entry verified',
-                  'Operational health audit passed',
-                  'Intelligence threshold met'
-                ].map((act, i) => (
-                  <div key={i} style={{ display: 'flex', gap: '0.8rem', marginBottom: '1rem' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366F1', marginTop: '5px' }} />
-                    <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: '700', color: '#475569' }}>{act}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         );
       case 'Analytics':
@@ -249,7 +210,7 @@ const PropertyDetailDrawer = ({ isOpen, onClose, target, type, activeTab, onTabC
       case 'AI Insights':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ position: 'relative', height: '180px', borderRadius: '32px', overflow: 'hidden', marginBottom: '0.5rem' }}>
+            <div style={{ position: 'relative', height: '120px', borderRadius: '24px', overflow: 'hidden', marginBottom: '0.5rem' }}>
               <img
                 src={target.images?.[0] || 'https://images.unsplash.com/photo-1545324418-f1d3c5b53571?auto=format&fit=crop&w=800&q=80'}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }}
@@ -257,12 +218,14 @@ const PropertyDetailDrawer = ({ isOpen, onClose, target, type, activeTab, onTabC
               />
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent, rgba(15, 23, 42, 0.9))' }} />
               <div style={{ position: 'absolute', bottom: '1.5rem', left: '2rem' }}>
-                <h3 style={{ color: "var(--text-on-primary)", fontSize: '1.2rem', fontWeight: '900', margin: 0 }}>Intelligence Context: {target.name || `Room ${target.roomNumber}`}</h3>
+                <h3 style={{ color: "var(--text-on-primary)", fontSize: '1.2rem', fontWeight: '900', margin: 0 }}>
+                  Intelligence Context: {target.name || (target.roomNumber ? `Room ${target.roomNumber}` : target.floorNumber ? `Floor ${target.floorNumber}` : target.bedNumber ? `Bed ${target.bedNumber}` : 'Unit')}
+                </h3>
                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontWeight: '700', margin: '0.2rem 0 0 0' }}>AI-DRIVEN VISUAL ANALYSIS ACTIVE</p>
               </div>
             </div>
 
-            <div style={{ padding: '2.5rem', background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', borderRadius: '40px', color: "var(--text-on-primary)", position: 'relative', overflow: 'hidden' }}>
+            <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', borderRadius: '24px', color: "var(--text-on-primary)", position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: '-100px', left: '-100px', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%)' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: '14px', background: 'rgba(99, 102, 241, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818CF8' }}><Sparkles size={24} /></div>
@@ -292,20 +255,20 @@ const PropertyDetailDrawer = ({ isOpen, onClose, target, type, activeTab, onTabC
         );
       case 'Smart Features':
         return (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
             {[
-              { label: 'Smart Access', desc: 'RFID + Mobile QR active', icon: <Lock size={20} />, color: '#6366F1' },
-              { label: 'Climate Control', desc: 'Automated HVAC enabled', icon: <Wind size={20} />, color: '#10B981' },
-              { label: 'Energy Monitor', desc: 'Real-time wattage tracking', icon: <Zap size={20} />, color: '#F59E0B' },
-              { label: 'Air Quality', desc: 'High natural airflow score', icon: <Flame size={20} />, color: '#EF4444' }
+              { label: 'Smart Access', desc: 'RFID + Mobile QR active', icon: <Lock size={18} />, color: '#6366F1' },
+              { label: 'Climate Control', desc: 'Automated HVAC enabled', icon: <Wind size={18} />, color: '#10B981' },
+              { label: 'Energy Monitor', desc: 'Real-time wattage tracking', icon: <Zap size={18} />, color: '#F59E0B' },
+              { label: 'Air Quality', desc: 'High natural airflow score', icon: <Flame size={18} />, color: '#EF4444' }
             ].map((f, i) => (
-              <div key={i} style={{ padding: '2rem', background: "var(--bg-card)", borderRadius: '32px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: `${f.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: f.color }}>
+              <div key={i} style={{ padding: '1.2rem', background: "var(--bg-card)", borderRadius: '20px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: `${f.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: f.color }}>
                   {f.icon}
                 </div>
                 <div>
-                  <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '950', color: '#0F172A' }}>{f.label}</h4>
-                  <p style={{ margin: '0.3rem 0 0 0', fontSize: '0.85rem', color: '#64748B', fontWeight: '700', lineHeight: '1.4' }}>{f.desc}</p>
+                  <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '950', color: '#0F172A' }}>{f.label}</h4>
+                  <p style={{ margin: '0.3rem 0 0 0', fontSize: '0.75rem', color: '#64748B', fontWeight: '700', lineHeight: '1.4' }}>{f.desc}</p>
                 </div>
               </div>
             ))}
@@ -333,34 +296,34 @@ const PropertyDetailDrawer = ({ isOpen, onClose, target, type, activeTab, onTabC
             exit={{ opacity: 0, scale: 0.95, y: 30 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             style={{
-              position: 'relative', width: '100%', maxWidth: '1100px', height: '95vh',
-              background: "var(--bg-card)", borderRadius: '32px', overflow: 'hidden',
+              position: 'relative', width: '100%', maxWidth: '800px', height: '90vh',
+              background: "var(--bg-card)", borderRadius: '24px', overflow: 'hidden',
               display: 'flex', flexDirection: 'column', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.3)'
             }}
           >
             {/* Drawer Header */}
-            <div style={{ padding: '2.5rem', borderBottom: '1px solid #F1F5F9', background: "var(--bg-card)", zIndex: 10 }}>
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid #F1F5F9', background: "var(--bg-card)", zIndex: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.8rem', flexWrap: 'wrap' }}>
-                    <span style={{ padding: '0.4rem 0.8rem', borderRadius: '10px', background: '#0F172A', color: "var(--text-on-primary)", fontSize: '0.7rem', fontWeight: '950', letterSpacing: '0.05em' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.6rem', flexWrap: 'wrap' }}>
+                    <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: '#0F172A', color: "var(--text-on-primary)", fontSize: '0.65rem', fontWeight: '950', letterSpacing: '0.05em' }}>
                       {type.toUpperCase()} ID: {target.id?.slice(-6).toUpperCase() || 'SYS-INFRA'}
                     </span>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#6366F1', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <Activity size={14} /> LIVE MONITORING
+                    <span style={{ fontSize: '0.65rem', fontWeight: '800', color: '#6366F1', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <Activity size={12} /> LIVE MONITORING
                     </span>
                   </div>
-                  <h2 style={{ fontSize: '2.4rem', fontWeight: '1000', color: '#0F172A', margin: 0, letterSpacing: '-0.04em' }}>
+                  <h2 style={{ fontSize: '1.8rem', fontWeight: '1000', color: '#0F172A', margin: 0, letterSpacing: '-0.04em' }}>
                     {target.name || (target.roomNumber ? `Room ${target.roomNumber}` : target.floorNumber ? `Floor ${target.floorNumber}` : target.bedNumber ? `Bed ${target.bedNumber}` : 'Intelligence')}
                   </h2>
                 </div>
-                <button onClick={onClose} style={{ width: '48px', height: '48px', borderRadius: '16px', background: '#F8FAFC', border: '1px solid #F1F5F9', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                  <X size={24} />
+                <button onClick={onClose} style={{ width: '36px', height: '36px', borderRadius: '12px', background: '#F8FAFC', border: '1px solid #F1F5F9', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <X size={20} />
                 </button>
               </div>
 
               {/* Tab Navigation */}
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '2.5rem', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.4rem', marginTop: '1.5rem', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: '0.4rem' }}>
                 {tabs.map(tab => (
                   <button
                     key={tab}
@@ -408,7 +371,10 @@ const INITIAL_FORM_STATE = {
   isAC: false, washroomType: 'Attached', balcony: false, facing: 'Road',
   position: 'Standard', bedType: 'Single', floorType: 'Tiles', windowCount: 1,
   furniture: [], amenities: [],
-  rentAmount: 8000, securityDeposit: 16000, noticePeriod: 30, description: ''
+  rentAmount: 8000, securityDeposit: 16000, noticePeriod: 30, description: '',
+  smartMonitoringEnabled: true, realTimeEnabled: true, totalRooms: 0, totalBeds: 0,
+  images: [], hygieneRating: 96, washroomsCount: 4, cctvStatus: 'Active',
+  wifiStatus: 'Full', loungesCount: 2, facilities: []
 };
 
 const Buildings = () => {
@@ -615,7 +581,11 @@ const Buildings = () => {
         facing: formData.facing,
         floorType: formData.floorType,
         windowCount: formData.windowCount,
-        furniture: formData.furniture
+        furniture: formData.furniture,
+        ventilationScore: formData.ventilationScore || 85,
+        naturalLightScore: formData.naturalLightScore || 85,
+        hygieneRating: formData.hygieneRating || 9.0,
+        images: formData.images?.length > 0 ? formData.images : (formData.imageUrl ? [formData.imageUrl] : [])
       });
       setSelectedRoom(updated);
       setRooms(prev => prev.map(r => (r.id === updated.id || r._id === updated._id) ? updated : r));
@@ -643,7 +613,11 @@ const Buildings = () => {
         bedNumber: formData.number,
         status: formData.status,
         position: formData.position,
-        bedType: formData.bedType
+        bedType: formData.bedType,
+        images: formData.images?.length > 0 ? formData.images : (formData.imageUrl ? [formData.imageUrl] : []),
+        comfortScore: formData.comfortScore || 85,
+        privacyCurtain: formData.privacyCurtain || false,
+        readingLight: formData.readingLight || false
       });
       // Update beds list
       setBeds(prev => prev.map(b => (b.id === updated.id || b._id === updated._id) ? updated : b));
@@ -687,13 +661,20 @@ const Buildings = () => {
 
   // --- HELPER: Image Upload ---
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData(prev => ({ ...prev, imageUrl: reader.result }));
-    };
-    reader.readAsDataURL(file);
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ 
+          ...prev, 
+          imageUrl: prev.imageUrl || reader.result, // keep legacy imageUrl working
+          images: [...(prev.images || []), reader.result] 
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const updateRoomImageDirectly = async (roomId, file) => {
@@ -800,7 +781,15 @@ const Buildings = () => {
         floorNumber: formData.number,
         description: formData.description,
         specializationCategory: formData.specialization || 'General',
-        images: formData.imageUrl ? [formData.imageUrl] : []
+        totalRooms: formData.totalRooms,
+        totalBeds: formData.totalBeds,
+        hygieneRating: formData.hygieneRating,
+        washroomsCount: formData.washroomsCount,
+        cctvStatus: formData.cctvStatus,
+        wifiStatus: formData.wifiStatus,
+        loungesCount: formData.loungesCount,
+        facilities: formData.facilities,
+        images: formData.images?.length > 0 ? formData.images : (formData.imageUrl ? [formData.imageUrl] : [])
       });
       setFloors([...floors, newF]);
       setIsAddFloorOpen(false);
@@ -830,7 +819,10 @@ const Buildings = () => {
         floorType: formData.floorType,
         windowCount: formData.windowCount,
         furniture: formData.furniture,
-        images: formData.imageUrl ? [formData.imageUrl] : []
+        ventilationScore: formData.ventilationScore || 85,
+        naturalLightScore: formData.naturalLightScore || 85,
+        hygieneRating: formData.hygieneRating || 9.0,
+        images: formData.images?.length > 0 ? formData.images : (formData.imageUrl ? [formData.imageUrl] : [])
       });
       setRooms([...rooms, newR]);
       setIsAddRoomOpen(false);
@@ -849,7 +841,10 @@ const Buildings = () => {
         status: formData.status,
         position: formData.position,
         bedType: formData.bedType,
-        images: formData.imageUrl ? [formData.imageUrl] : []
+        images: formData.images?.length > 0 ? formData.images : (formData.imageUrl ? [formData.imageUrl] : []),
+        comfortScore: formData.comfortScore || 85,
+        privacyCurtain: formData.privacyCurtain || false,
+        readingLight: formData.readingLight || false
       });
       setBeds([...beds, newB]);
       setIsAddBedOpen(false);
@@ -928,18 +923,17 @@ const Buildings = () => {
             <button className="btn" onClick={() => setShowFilters(!showFilters)} style={{ background: showFilters ? 'var(--accent-primary)' : 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: showFilters ? 'white' : 'var(--text-primary)' }}>
               <Filter size={16} /> Filters
             </button>
-            {['buildings', 'floors', 'rooms', 'beds'].includes(view) && (
+            {['floors', 'rooms', 'beds'].includes(view) && (
               <button
                 className="btn btn-primary"
                 onClick={() => {
-                  if (view === 'buildings') setIsAddBuildingOpen(true);
-                  else if (view === 'floors') setIsAddFloorOpen(true);
+                  if (view === 'floors') setIsAddFloorOpen(true);
                   else if (view === 'rooms') setIsAddRoomOpen(true);
                   else if (view === 'beds') setIsAddBedOpen(true);
                 }}
                 style={{ padding: '0.7rem 1.5rem', borderRadius: '12px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.6rem' }}
               >
-                <PlusCircle size={20} /> Add {view === 'buildings' ? 'Building' : view === 'floors' ? 'Floor' : view === 'rooms' ? 'Room' : 'Bed'}
+                <PlusCircle size={20} /> Add {view === 'floors' ? 'Floor' : view === 'rooms' ? 'Room' : 'Bed'}
               </button>
             )}
             <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1105,13 +1099,13 @@ const Buildings = () => {
             <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING NAME</label><input placeholder="Royal residency" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={inputStyle} required /></div>
             <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>ADDRESS</label><input placeholder="123 tech street" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} style={inputStyle} required /></div>
             <div className="input-group">
-              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING IMAGE</label>
+              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING PHOTOS (MULTIPLE)</label>
               <div style={{ position: 'relative', marginTop: '0.6rem' }}>
-                <input type="file" accept="image/*" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }} />
+                <input type="file" multiple accept="image/*" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }} />
                 <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(99, 102, 241, 0.05)', borderColor: 'rgba(99, 102, 241, 0.3)', minHeight: '60px' }}>
                   <ImageIcon size={22} color="var(--accent-primary)" />
-                  <span style={{ fontSize: '0.95rem', color: formData.imageUrl ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '800' }}>
-                    {formData.imageUrl ? 'Photo Selected' : 'Choose Building Photo'}
+                  <span style={{ fontSize: '0.95rem', color: formData.images?.length > 0 ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '800' }}>
+                    {formData.images?.length > 0 ? `${formData.images.length} Photos Selected` : 'Choose Multiple Photos'}
                   </span>
                 </div>
               </div>
@@ -1154,6 +1148,17 @@ const Buildings = () => {
               </div>
               <span style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)' }}>Full Centralized AC</span>
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem', marginTop: '0.5rem' }}>
+              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>TOTAL CAPACITY (BEDS)</label><input type="number" value={formData.totalBeds} onChange={e => setFormData({ ...formData, totalBeds: parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
+              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>SMART ACCESS SYSTEM</label>
+                <select value={formData.smartAccessSystem} onChange={e => setFormData({ ...formData, smartAccessSystem: e.target.value })} style={inputStyle}>
+                  <option value="None">None</option>
+                  <option value="Biometric + RFID Active">Biometric + RFID Active</option>
+                  <option value="RFID Only">RFID Only</option>
+                  <option value="Biometric Only">Biometric Only</option>
+                </select>
+              </div>
+            </div>
             <button className="btn btn-primary" type="submit" style={{ padding: '1.2rem', borderRadius: '18px', fontWeight: '950', marginTop: '1rem', fontSize: '1.1rem', boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)' }}>Create Property</button>
           </form>
         </Modal>
@@ -1174,15 +1179,58 @@ const Buildings = () => {
               </select>
             </div>
             <div className="input-group">
-              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FLOOR LAYOUT PHOTO</label>
+              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FLOOR LAYOUT PHOTOS (MULTIPLE)</label>
               <div style={{ position: 'relative', marginTop: '0.6rem' }}>
-                <input type="file" accept="image/*" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }} />
+                <input type="file" multiple accept="image/*" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }} />
                 <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(99, 102, 241, 0.05)', borderColor: 'rgba(99, 102, 241, 0.3)', minHeight: '60px' }}>
                   <ImageIcon size={22} color="var(--accent-primary)" />
-                  <span style={{ fontSize: '0.95rem', color: formData.imageUrl ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '800' }}>
-                    {formData.imageUrl ? 'Photo Loaded' : 'Upload Floor View'}
+                  <span style={{ fontSize: '0.95rem', color: formData.images?.length > 0 ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '800' }}>
+                    {formData.images?.length > 0 ? `${formData.images.length} Photos Loaded` : 'Upload Multiple Photos'}
                   </span>
                 </div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>TOTAL ROOMS</label><input type="number" value={formData.totalRooms} onChange={e => setFormData({ ...formData, totalRooms: parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
+              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>TOTAL BEDS</label><input type="number" value={formData.totalBeds} onChange={e => setFormData({ ...formData, totalBeds: parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>HYGIENE SCORE</label><input type="number" value={formData.hygieneRating} onChange={e => setFormData({ ...formData, hygieneRating: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
+              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WASHROOMS COUNT</label><input type="number" value={formData.washroomsCount} onChange={e => setFormData({ ...formData, washroomsCount: parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>CCTV STATUS</label>
+                <select value={formData.cctvStatus} onChange={e => setFormData({ ...formData, cctvStatus: e.target.value })} style={inputStyle}>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                  <option value="Maintenance">Maintenance</option>
+                </select>
+              </div>
+              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WIFI STATUS</label>
+                <select value={formData.wifiStatus} onChange={e => setFormData({ ...formData, wifiStatus: e.target.value })} style={inputStyle}>
+                  <option value="Full">Full</option>
+                  <option value="Excellent">Excellent</option>
+                  <option value="Good">Good</option>
+                  <option value="Offline">Offline</option>
+                </select>
+              </div>
+            </div>
+            <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>LOUNGES</label><input type="number" value={formData.loungesCount} onChange={e => setFormData({ ...formData, loungesCount: parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
+            
+            <div className="input-group">
+              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>LIVE FACILITIES</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginTop: '0.5rem' }}>
+                {['Laundry', 'Smart Access', 'Pantry', 'Gaming Zone', 'Study Hall'].map(f => (
+                  <div
+                    key={f} onClick={() => {
+                      const newFac = formData.facilities?.includes(f) ? formData.facilities.filter(i => i !== f) : [...(formData.facilities || []), f];
+                      setFormData({ ...formData, facilities: newFac });
+                    }}
+                    style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '800', cursor: 'pointer', background: formData.facilities?.includes(f) ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: formData.facilities?.includes(f) ? 'white' : 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
+                  >
+                    {f}
+                  </div>
+                ))}
               </div>
             </div>
             <button className="btn btn-primary" type="submit" style={{ padding: '1.1rem', borderRadius: '16px', fontWeight: '900', fontSize: '1rem' }}>Save Floor Structure</button>
@@ -1212,11 +1260,11 @@ const Buildings = () => {
             <div className="input-group">
               <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ROOM PREVIEW</label>
               <div style={{ position: 'relative', marginTop: '0.6rem' }}>
-                <input type="file" accept="image/*" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }} />
+                <input type="file" multiple accept="image/*" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }} />
                 <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(99, 102, 241, 0.05)', borderColor: 'rgba(99, 102, 241, 0.3)', minHeight: '60px' }}>
                   <ImageIcon size={20} color="var(--accent-primary)" />
-                  <span style={{ fontSize: '0.9rem', color: formData.imageUrl ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '800' }}>
-                    {formData.imageUrl ? 'Room Photo Ready' : 'Take/Select Room Photo'}
+                  <span style={{ fontSize: '0.9rem', color: (formData.images?.length || formData.imageUrl) ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '800' }}>
+                    {formData.images?.length > 0 ? `${formData.images.length} Photos Loaded` : (formData.imageUrl ? 'Photo Ready' : 'Upload Multiple Photos')}
                   </span>
                 </div>
               </div>
@@ -1283,6 +1331,11 @@ const Buildings = () => {
                 ))}
               </div>
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem' }}>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>VENTILATION (0-100)</label><input type="number" value={formData.ventilationScore || ''} onChange={e => setFormData({ ...formData, ventilationScore: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>NATURAL LIGHT</label><input type="number" value={formData.naturalLightScore || ''} onChange={e => setFormData({ ...formData, naturalLightScore: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>HYGIENE RATING</label><input type="number" step="0.1" value={formData.hygieneRating || ''} onChange={e => setFormData({ ...formData, hygieneRating: parseFloat(e.target.value) })} style={inputStyle} min="0" max="10" /></div>
+            </div>
             <button className="btn btn-primary" type="submit" style={{ padding: '1.2rem', borderRadius: '18px', fontWeight: '950', marginTop: '0.5rem', fontSize: '1rem' }}>Deploy Room</button>
           </form>
         </Modal>
@@ -1332,6 +1385,11 @@ const Buildings = () => {
                 <input placeholder="Garden" value={formData.facing} onChange={e => setFormData({ ...formData, facing: e.target.value })} style={inputStyle} />
               </div>
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem' }}>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>VENTILATION (0-100)</label><input type="number" value={formData.ventilationScore || ''} onChange={e => setFormData({ ...formData, ventilationScore: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>NATURAL LIGHT</label><input type="number" value={formData.naturalLightScore || ''} onChange={e => setFormData({ ...formData, naturalLightScore: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>HYGIENE RATING</label><input type="number" step="0.1" value={formData.hygieneRating || ''} onChange={e => setFormData({ ...formData, hygieneRating: parseFloat(e.target.value) })} style={inputStyle} min="0" max="10" /></div>
+            </div>
             <button className="btn btn-primary" type="submit" style={{ padding: '1.2rem', borderRadius: '18px', fontWeight: '950', marginTop: '0.5rem', fontSize: '1rem' }}>Save Changes</button>
           </form>
         </Modal>
@@ -1362,6 +1420,23 @@ const Buildings = () => {
                 </select>
               </div>
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem' }}>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>COMFORT SCORE</label><input type="number" value={formData.comfortScore || ''} onChange={e => setFormData({ ...formData, comfortScore: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, privacyCurtain: !formData.privacyCurtain })}>
+                <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.privacyCurtain ? 'var(--accent-primary)' : 'transparent' }}>
+                  {formData.privacyCurtain && <div style={{ width: '8px', height: '8px', background: "var(--bg-card)", borderRadius: '1px' }} />}
+                </div>
+                <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>Privacy Curtain</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, readingLight: !formData.readingLight })}>
+                <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.readingLight ? 'var(--accent-primary)' : 'transparent' }}>
+                  {formData.readingLight && <div style={{ width: '8px', height: '8px', background: "var(--bg-card)", borderRadius: '1px' }} />}
+                </div>
+                <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>Reading Light</span>
+              </div>
+            </div>
             <button className="btn btn-primary" type="submit" style={{ padding: '1.1rem', borderRadius: '16px', fontWeight: '900' }}>Save Bed Details</button>
           </form>
         </Modal>
@@ -1379,17 +1454,14 @@ const Buildings = () => {
             <div className="input-group">
               <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED PHOTO</label>
               <div style={{ position: 'relative', marginTop: '0.6rem' }}>
-                <input type="file" accept="image/*" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }} />
+                <input type="file" multiple accept="image/*" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }} />
                 <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', gap: '1.2rem', background: 'rgba(99, 102, 241, 0.05)', borderColor: 'rgba(99, 102, 241, 0.3)', minHeight: '65px' }}>
                   <ImageIcon size={22} color="var(--accent-primary)" />
-                  <span style={{ fontSize: '0.95rem', color: formData.imageUrl ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '800' }}>
-                    {formData.imageUrl ? 'Photo Captured ✅' : 'Click to Upload Bed Image'}
+                  <span style={{ fontSize: '0.95rem', color: (formData.images?.length || formData.imageUrl) ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '800' }}>
+                    {formData.images?.length > 0 ? `${formData.images.length} Photos Loaded` : (formData.imageUrl ? 'Photo Ready' : 'Upload Multiple Photos')}
                   </span>
                 </div>
               </div>
-              {formData.imageUrl && (
-                <div style={{ marginTop: '1rem', width: '100%', height: '120px', borderRadius: '16px', backgroundImage: `url(${formData.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--border-color)' }}></div>
-              )}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
               <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED TYPE</label>
@@ -1405,9 +1477,31 @@ const Buildings = () => {
                   <option value="Standard">Standard</option>
                   <option value="Window side">Window Side</option>
                   <option value="Entrance side">Entrance Side</option>
-                  <option value="Corner">Corner</option>
                 </select>
               </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem' }}>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>COMFORT SCORE</label><input type="number" value={formData.comfortScore || ''} onChange={e => setFormData({ ...formData, comfortScore: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, privacyCurtain: !formData.privacyCurtain })}>
+                <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.privacyCurtain ? 'var(--accent-primary)' : 'transparent' }}>
+                  {formData.privacyCurtain && <div style={{ width: '8px', height: '8px', background: "var(--bg-card)", borderRadius: '1px' }} />}
+                </div>
+                <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>Privacy Curtain</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, readingLight: !formData.readingLight })}>
+                <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.readingLight ? 'var(--accent-primary)' : 'transparent' }}>
+                  {formData.readingLight && <div style={{ width: '8px', height: '8px', background: "var(--bg-card)", borderRadius: '1px' }} />}
+                </div>
+                <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>Reading Light</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '18px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, operationalMonitoringEnabled: formData.operationalMonitoringEnabled === undefined ? true : !formData.operationalMonitoringEnabled })}>
+              <div style={{ width: '24px', height: '24px', border: '2px solid var(--accent-primary)', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: (formData.operationalMonitoringEnabled !== false) ? 'var(--accent-primary)' : 'transparent', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                {(formData.operationalMonitoringEnabled !== false) && <div style={{ width: '10px', height: '10px', background: "var(--bg-card)", borderRadius: '2px' }} />}
+              </div>
+              <span style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)' }}>Enable IoT Bed Monitoring</span>
             </div>
             <button className="btn btn-primary" type="submit" style={{ padding: '1.2rem', borderRadius: '18px', fontWeight: '950', marginTop: '0.5rem', fontSize: '1.05rem' }}>Save Bed Assignment</button>
           </form>
@@ -1846,7 +1940,7 @@ const Buildings = () => {
               ))}
             </div>
 
-            {/* Performance Visualization (Mock Chart) */}
+            {/* Performance Visualization */}
             <div style={{ padding: '2rem', background: '#0F172A', borderRadius: '32px', color: "var(--text-on-primary)" }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
                 <div>
@@ -2101,9 +2195,12 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
     ];
   }, [building.images]);
 
-  const occupancyRate = 84; // Mocked for premium UI
-  const monthlyRevenue = '12.4L';
-  const hygieneScore = 98;
+  const occupancyRate = building.occupancyPercentage || 84;
+  const computedRevenue = building.revenueStats?.monthlyRevenue 
+    ? (building.revenueStats.monthlyRevenue / 100000).toFixed(1) + 'L' 
+    : (building.totalBeds && building.rentSingle ? ((building.totalBeds * building.rentSingle)/100000).toFixed(1) + 'L' : '12.4L');
+  const hygieneScore = building.healthScores?.hygieneScore || (building.smartConfig?.hasAIHygiene ? 98 : 85);
+  const energyEfficiency = building.healthScores?.energyEfficiency || (building.smartConfig?.hasClimateControl ? 92 : 82);
 
   const stats = {
     floors: building.floors?.length || 4,
@@ -2121,17 +2218,17 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
       style={{
         background: 'rgba(255, 255, 255, 0.7)',
         backdropFilter: 'blur(30px)',
-        borderRadius: '40px',
-        padding: '1.5rem',
+        borderRadius: '32px',
+        padding: '1rem',
         border: '1px solid rgba(255, 255, 255, 0.4)',
         boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.12)',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.2rem',
+        gap: '0.8rem',
         cursor: 'pointer',
         overflow: 'hidden',
-        minHeight: '820px',
+        minHeight: 'auto',
         maxWidth: '100%'
       }}
     >
@@ -2175,7 +2272,7 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
 
       {/* Hero Visualization */}
       <div style={{
-        position: 'relative', height: '220px', borderRadius: '32px', overflow: 'hidden',
+        position: 'relative', height: '140px', borderRadius: '24px', overflow: 'hidden',
         background: '#F1F5F9', border: '1px solid rgba(255,255,255,0.8)', zIndex: 1
       }}>
         <AnimatePresence mode="wait">
@@ -2212,7 +2309,7 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
           <div style={{ display: 'flex', gap: '1.5rem' }}>
             <div>
               <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.05em' }}>TOTAL CAPACITY</p>
-              <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: '950', color: "var(--text-on-primary)" }}>{stats.beds} Beds</p>
+              <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: '950', color: "var(--text-on-primary)" }}>{building.totalBeds || stats.beds} Beds</p>
             </div>
             <div>
               <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.05em' }}>RESIDENCY</p>
@@ -2227,10 +2324,10 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
       </div>
 
       {/* Bento Grid: Analytics & Performance */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '1rem', zIndex: 1 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '0.8rem', zIndex: 1 }}>
         {/* Financial Bento */}
         <div style={{
-          padding: '1.5rem', borderRadius: '32px',
+          padding: '1rem', borderRadius: '24px',
           background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
           color: "var(--text-on-primary)", display: 'flex', flexDirection: 'column', gap: '0.6rem'
         }}>
@@ -2239,7 +2336,7 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
             <span style={{ fontSize: '0.65rem', fontWeight: '950', letterSpacing: '0.1em' }}>REVENUE ENGINE</span>
           </div>
           <div>
-            <h4 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '1000' }}>₹{monthlyRevenue}</h4>
+            <h4 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '1000' }}>₹{computedRevenue}</h4>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.4rem' }}>
               {[40, 60, 45, 70, 55, 80, 75].map((h, i) => (
                 <div key={i} style={{ width: '4px', height: `${h * 0.2}px`, background: i === 6 ? '#10B981' : 'rgba(255,255,255,0.2)', borderRadius: '2px' }} />
@@ -2255,15 +2352,15 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
         </div>
 
         {/* Intelligence Bento */}
-        <div style={{ padding: '1.5rem', borderRadius: '32px', background: "var(--bg-card)", border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ padding: '1rem', borderRadius: '24px', background: "var(--bg-card)", border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: '950', color: '#0F172A' }}>Building Health</span>
             <BarChart3 size={18} color="#6366F1" />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
             {[
-              { label: 'Hygiene Score', value: hygieneScore, color: '#10B981' },
-              { label: 'Energy Efficiency', value: 82, color: '#6366F1' }
+              { label: 'Hygiene Score', value: building.healthScores?.hygieneScore || hygieneScore, color: '#10B981' },
+              { label: 'Energy Efficiency', value: energyEfficiency, color: '#6366F1' }
             ].map((score, i) => (
               <div key={i}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', fontWeight: '900', marginBottom: '0.3rem' }}>
@@ -2282,10 +2379,10 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
       {/* Infrastructure KPI Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.8rem', zIndex: 1 }}>
         {[
-          { label: 'Power', value: 'Backup', icon: <Zap size={14} /> },
-          { label: 'Water', value: '24/7', icon: <Waves size={14} /> },
-          { label: 'Fire', value: 'Secure', icon: <Flame size={14} /> },
-          { label: 'Lift', value: 'Smart', icon: <ArrowUp size={14} /> }
+          { label: 'Power', value: building.infrastructure?.powerBackup || 'Backup', icon: <Zap size={14} /> },
+          { label: 'Water', value: building.infrastructure?.waterSupply || '24/7', icon: <Waves size={14} /> },
+          { label: 'Fire', value: building.infrastructure?.fireSafety || 'Secure', icon: <Flame size={14} /> },
+          { label: 'Lift', value: building.infrastructure?.liftStatus || 'Smart', icon: <ArrowUp size={14} /> }
         ].map((kpi, i) => (
           <div key={i} style={{ padding: '0.8rem', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #F1F5F9', textAlign: 'center' }}>
             <div style={{ color: '#6366F1', marginBottom: '0.4rem', display: 'flex', justifyContent: 'center' }}>{kpi.icon}</div>
@@ -2295,23 +2392,11 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
         ))}
       </div>
 
-      {/* Security & Access Section */}
-      <div style={{ padding: '1.2rem', borderRadius: '24px', background: 'rgba(99, 102, 241, 0.05)', border: '1px dashed #6366F1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: "var(--bg-card)", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366F1', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
-            <Fingerprint size={20} />
-          </div>
-          <div>
-            <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '950', color: '#0F172A' }}>Smart Access System</p>
-            <p style={{ margin: 0, fontSize: '0.65rem', color: '#64748B', fontWeight: '700' }}>Biometric + RFID Active</p>
-          </div>
-        </div>
-        <ShieldCheck size={20} color="#10B981" />
-      </div>
+
 
       {/* AI Insights & Badges */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', zIndex: 1 }}>
-        {['Highest ROI', 'Top Rated Hygiene', 'Student Choice', 'Low Maintenance'].map(badge => (
+        {(building.smartBadges?.length ? building.smartBadges : ['Highest ROI', 'Top Rated Hygiene', 'Student Choice', 'Low Maintenance']).map(badge => (
           <span key={badge} style={{ padding: '0.4rem 0.8rem', borderRadius: '10px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
             <Sparkles size={10} color="#F59E0B" /> {badge}
           </span>
@@ -2401,16 +2486,9 @@ const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics, onEditBuil
 );
 
 const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete }) => {
-  const occupancyRate = 78; // Mocked for premium UI
-  const totalRooms = 12;
-  const totalBeds = 48;
-
-  const scores = {
-    hygiene: 96,
-    comfort: 92,
-    security: 98,
-    efficiency: 89
-  };
+  const occupancyRate = floor.occupancyPercentage || 0;
+  const totalRooms = floor.totalRooms || 0;
+  const totalBeds = floor.totalBeds || 0;
 
   return (
     <motion.div
@@ -2421,17 +2499,17 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
       style={{
         background: 'rgba(255, 255, 255, 0.7)',
         backdropFilter: 'blur(30px)',
-        borderRadius: '40px',
-        padding: '1.5rem',
+        borderRadius: '32px',
+        padding: '0.8rem',
         border: '1px solid rgba(255, 255, 255, 0.4)',
         boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.12)',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.2rem',
+        gap: '0.6rem',
         cursor: 'pointer',
         overflow: 'hidden',
-        minHeight: '720px',
+        minHeight: 'auto',
         maxWidth: '100%'
       }}
     >
@@ -2469,7 +2547,7 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
 
       {/* Hero Visualization Area */}
       <div style={{
-        position: 'relative', height: '240px', borderRadius: '32px', overflow: 'hidden',
+        position: 'relative', height: '100px', borderRadius: '20px', overflow: 'hidden',
         background: '#F1F5F9', border: '1px solid rgba(255,255,255,0.8)', zIndex: 1
       }}>
         <img
@@ -2486,74 +2564,77 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
             <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '900', color: 'rgba(255,255,255,0.7)', letterSpacing: '0.05em' }}>FLOOR TYPE</p>
             <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '950', color: "var(--text-on-primary)" }}>Mixed Residency</p>
           </div>
-          <div style={{ padding: '0.6rem 1rem', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.3)', color: "var(--text-on-primary)", fontSize: '0.75rem', fontWeight: '900' }}>
-            {occupancyRate}% OCCUPIED
+          <div style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.3)', color: "var(--text-on-primary)", fontSize: '0.7rem', fontWeight: '900' }}>
+            {floor.occupancyPercentage || occupancyRate}% OCCUPIED
           </div>
         </div>
       </div>
 
       {/* Bento Grid: Intelligence & Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1rem', zIndex: 1 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.6rem', zIndex: 1 }}>
         {/* Occupancy Heatmap Bento */}
-        <div style={{ padding: '1.5rem', borderRadius: '32px', background: "var(--bg-card)", border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ padding: '0.8rem', borderRadius: '20px', background: "var(--bg-card)", border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: '950', color: '#0F172A' }}>Occupancy Heatmap</span>
-            <UsersRound size={18} color="#6366F1" />
+            <span style={{ fontSize: '0.7rem', fontWeight: '950', color: '#0F172A' }}>Occupancy Heatmap</span>
+            <UsersRound size={16} color="#6366F1" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.4rem' }}>
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} style={{ height: '24px', borderRadius: '6px', background: i < 8 ? '#6366F1' : '#F1F5F9' }} />
-            ))}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.3rem' }}>
+            {Array.from({ length: 12 }).map((_, i) => {
+              // Create dynamic heatmap logic based on occupancyPercentage
+              const occ = floor.occupancyPercentage || occupancyRate;
+              const filledBlocks = Math.round((occ / 100) * 12);
+              return <div key={i} style={{ height: '12px', borderRadius: '3px', background: i < filledBlocks ? '#6366F1' : '#F1F5F9' }} />;
+            })}
           </div>
           <div style={{ marginTop: 'auto', display: 'flex', gap: '1.5rem' }}>
             <div>
-              <p style={{ margin: 0, fontSize: '1rem', fontWeight: '1000', color: '#0F172A' }}>{totalRooms}</p>
-              <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '800', color: '#94A3B8' }}>ROOMS</p>
+              <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '1000', color: '#0F172A' }}>{floor.totalRooms || totalRooms}</p>
+              <p style={{ margin: 0, fontSize: '0.55rem', fontWeight: '800', color: '#94A3B8' }}>ROOMS</p>
             </div>
             <div>
-              <p style={{ margin: 0, fontSize: '1rem', fontWeight: '1000', color: '#0F172A' }}>{totalBeds}</p>
-              <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '800', color: '#94A3B8' }}>TOTAL BEDS</p>
+              <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '1000', color: '#0F172A' }}>{floor.totalBeds || totalBeds}</p>
+              <p style={{ margin: 0, fontSize: '0.55rem', fontWeight: '800', color: '#94A3B8' }}>TOTAL BEDS</p>
             </div>
           </div>
         </div>
 
         {/* AI Health Bento */}
         <div style={{
-          padding: '1.5rem', borderRadius: '32px',
+          padding: '0.8rem', borderRadius: '20px',
           background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
-          color: "var(--text-on-primary)", display: 'flex', flexDirection: 'column', gap: '0.8rem'
+          color: "var(--text-on-primary)", display: 'flex', flexDirection: 'column', gap: '0.4rem'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Sparkles size={16} color="#6366F1" />
-            <span style={{ fontSize: '0.65rem', fontWeight: '950', letterSpacing: '0.1em' }}>AI INSIGHTS</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Sparkles size={14} color="#6366F1" />
+            <span style={{ fontSize: '0.6rem', fontWeight: '950', letterSpacing: '0.1em' }}>AI INSIGHTS</span>
           </div>
-          <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '700', lineHeight: '1.4', opacity: 0.9 }}>
-            "High natural light detected on East wing. Recommended for study zones."
+          <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '700', lineHeight: '1.3', opacity: 0.9 }}>
+            {floor.aiInsights?.[0] || '"High natural light detected on East wing. Recommended for study zones."'}
           </p>
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', fontWeight: '900' }}>
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.55rem', fontWeight: '900' }}>
               <span>HYGIENE SCORE</span>
-              <span style={{ color: '#10B981' }}>{scores.hygiene}%</span>
+              <span style={{ color: '#10B981' }}>{floor.hygieneRating || 0}%</span>
             </div>
             <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${scores.hygiene}%`, background: '#10B981' }} />
+              <div style={{ height: '100%', width: `${floor.hygieneRating || 0}%`, background: '#10B981' }} />
             </div>
           </div>
         </div>
       </div>
 
       {/* Infrastructure KPI Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.8rem', zIndex: 1 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.6rem', zIndex: 1 }}>
         {[
-          { label: 'Washrooms', value: '4 Units', icon: <Droplets size={14} /> },
-          { label: 'CCTV', value: 'Active', icon: <ShieldCheck size={14} /> },
-          { label: 'WiFi 6', value: 'Full', icon: <Wifi size={14} /> },
-          { label: 'Lounges', value: '2 Areas', icon: <Coffee size={14} /> }
+          { label: 'Washrooms', value: `${floor.washroomsCount || 4} Units`, icon: <Droplets size={12} /> },
+          { label: 'CCTV', value: floor.cctvStatus || 'Active', icon: <ShieldCheck size={12} /> },
+          { label: 'WiFi', value: floor.wifiStatus || 'Full', icon: <Wifi size={12} /> },
+          { label: 'Lounges', value: `${floor.loungesCount || 2} Areas`, icon: <Coffee size={12} /> }
         ].map((kpi, i) => (
-          <div key={i} style={{ padding: '0.8rem', background: '#F8FAFC', borderRadius: '18px', border: '1px solid #F1F5F9', textAlign: 'center' }}>
-            <div style={{ color: '#6366F1', marginBottom: '0.3rem', display: 'flex', justifyContent: 'center' }}>{kpi.icon}</div>
-            <p style={{ margin: 0, fontSize: '0.55rem', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase' }}>{kpi.label}</p>
-            <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '950', color: '#1E293B' }}>{kpi.value}</p>
+          <div key={i} style={{ padding: '0.6rem', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #F1F5F9', textAlign: 'center' }}>
+            <div style={{ color: '#6366F1', marginBottom: '0.2rem', display: 'flex', justifyContent: 'center' }}>{kpi.icon}</div>
+            <p style={{ margin: 0, fontSize: '0.5rem', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase' }}>{kpi.label}</p>
+            <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: '950', color: '#1E293B' }}>{kpi.value}</p>
           </div>
         ))}
       </div>
@@ -2562,7 +2643,7 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
       <div style={{ zIndex: 1 }}>
         <p style={{ fontSize: '0.75rem', fontWeight: '950', color: '#0F172A', marginBottom: '0.8rem' }}>LIVE FACILITIES</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-          {['Laundry', 'Smart Access', 'Pantry', 'Gaming Zone', 'Study Hall'].map(f => (
+          {(floor.facilities?.length ? floor.facilities : ['Laundry', 'Smart Access', 'Pantry', 'Gaming Zone', 'Study Hall']).map(f => (
             <span key={f} style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>
               {f}
             </span>
@@ -2683,14 +2764,6 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
   const occupancyRate = Math.round(((room.occupied || 0) / room.capacity) * 100);
   const isHighDemand = occupancyRate > 80;
 
-  // Intelligence Metrics (Mocked for premium UI experience)
-  const scores = {
-    comfort: 92,
-    hygiene: 98,
-    safety: 96,
-    environment: 88
-  };
-
   const statusColors = {
     Available: '#10B981',
     Occupied: '#3B82F6',
@@ -2720,7 +2793,7 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
         gap: '1.2rem',
         cursor: 'pointer',
         overflow: 'hidden',
-        minHeight: '680px',
+        minHeight: 'auto',
         maxWidth: '100%'
       }}
     >
@@ -2829,7 +2902,7 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
             {occupancyRate > 90 ? 'High ROI: Optimization recommended.' : 'Best for students: High natural light score.'}
           </p>
           <div style={{ marginTop: 'auto', padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.65rem', fontWeight: '900', textAlign: 'center' }}>
-            {scores.comfort}% COMFORT
+            {room.ventilationScore || 85}% VENTILATION
           </div>
         </div>
       </div>
@@ -2837,9 +2910,9 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
       {/* Specifications Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.8rem', zIndex: 1 }}>
         {[
-          { label: 'Area', value: '240 sqft', icon: <Ruler size={14} /> },
-          { label: 'Views', value: 'Garden', icon: <Sun size={14} /> },
-          { label: 'Privacy', value: 'High', icon: <ShieldCheck size={14} /> }
+          { label: 'Floor Type', value: room.floorType || 'Standard', icon: <Ruler size={14} /> },
+          { label: 'Facing', value: room.facing || 'Standard', icon: <Sun size={14} /> },
+          { label: 'Balcony', value: room.balcony ? 'Yes' : 'No', icon: <ShieldCheck size={14} /> }
         ].map((spec, i) => (
           <div key={i} style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #F1F5F9' }}>
             <div style={{ color: '#6366F1', marginBottom: '0.4rem' }}>{spec.icon}</div>
@@ -2853,39 +2926,38 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
       <div style={{ zIndex: 1 }}>
         <p style={{ fontSize: '0.75rem', fontWeight: '950', color: '#0F172A', marginBottom: '0.8rem' }}>AMENITIES</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-          {['Smart TV', 'Wi-Fi 6', 'Balcony', 'Geyser', 'Study Desk'].slice(0, 4).map(a => (
+          {(room.furniture?.length > 0 ? room.furniture : ['Standard']).slice(0, 4).map(a => (
             <span key={a} style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>
               {a}
             </span>
           ))}
-          <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: '#F1F5F9', color: '#64748B', fontSize: '0.7rem', fontWeight: '800' }}>+4 more</span>
+          {room.furniture?.length > 4 && <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: '#F1F5F9', color: '#64748B', fontSize: '0.7rem', fontWeight: '800' }}>+{room.furniture.length - 4} more</span>}
         </div>
       </div>
 
-      {/* AI Intelligence Metrics */}
+      {/* Analytics Metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.8rem', zIndex: 1 }}>
         <div style={{ padding: '1rem', background: '#F0FDFA', borderRadius: '24px', border: '1px solid #CCFBF1' }}>
           <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: '#0F766E' }}>HYGIENE INDEX</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
             <Sparkles size={14} color="#10B981" />
-            <span style={{ fontSize: '1.1rem', fontWeight: '1000', color: '#115E59' }}>{scores.hygiene}%</span>
+            <span style={{ fontSize: '1.1rem', fontWeight: '1000', color: '#115E59' }}>{room.hygieneRating || 9.0}/10</span>
           </div>
         </div>
         <div style={{ padding: '1rem', background: '#F5F3FF', borderRadius: '24px', border: '1px solid #DDD6FE' }}>
-          <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: '#6D28D9' }}>COMFORT SCORE</p>
+          <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: '#6D28D9' }}>NATURAL LIGHT</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
-            <Heart size={14} color="#7C3AED" />
-            <span style={{ fontSize: '1.1rem', fontWeight: '1000', color: '#5B21B6' }}>{scores.comfort}%</span>
+            <Sun size={14} color="#7C3AED" />
+            <span style={{ fontSize: '1.1rem', fontWeight: '1000', color: '#5B21B6' }}>{room.naturalLightScore || 85}%</span>
           </div>
         </div>
       </div>
 
-      {/* Smart Infrastructure Badges */}
+      {/* Washroom Badges */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', zIndex: 1 }}>
         {[
-          { label: 'Smart Lock', icon: <Lock size={12} />, color: '#6366F1' },
-          { label: 'RFID Access', icon: <Fingerprint size={12} />, color: '#10B981' },
-          { label: 'Air Flow', icon: <Wind size={12} />, color: '#3B82F6' }
+          { label: `${room.washroomType} Washroom`, icon: <ShieldCheck size={12} />, color: '#6366F1' },
+          { label: `${room.windowCount || 0} Windows`, icon: <Wind size={12} />, color: '#3B82F6' }
         ].map(tag => (
           <span key={tag.label} style={{ padding: '0.4rem 0.8rem', borderRadius: '10px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span style={{ color: tag.color }}>{tag.icon}</span> {tag.label}
@@ -2943,25 +3015,7 @@ const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssi
   const isOccupied = bed.status === 'OCCUPIED';
   const isMaintenance = bed.status === 'MAINTENANCE';
 
-  // Placeholder data for enhanced UI (since existing data might be sparse)
-  const features = {
-    comfort: [
-      { id: 'light', icon: <Lightbulb size={12} />, label: 'Reading Light', active: true },
-      { id: 'charge', icon: <BatteryCharging size={12} />, label: 'USB Port', active: true },
-      { id: 'wifi', icon: <Wifi size={12} />, label: 'Fast Wi-Fi', active: true },
-      { id: 'locker', icon: <Lock size={12} />, label: 'Personal Locker', active: true }
-    ],
-    position: [
-      { id: 'window', icon: <Sun size={12} />, label: 'Window Side', active: bed.position?.toLowerCase().includes('window') },
-      { id: 'ac', icon: <Wind size={12} />, label: 'AC Vent', active: true },
-      { id: 'quiet', icon: <ShieldCheck size={12} />, label: 'Quiet Zone', active: true }
-    ],
-    specs: [
-      { label: 'Mattress', value: '7" Memory Foam', icon: <Sparkles size={14} /> },
-      { label: 'Capacity', value: '180kg', icon: <Weight size={14} /> },
-      { label: 'Material', value: 'Teak Wood', icon: <Ruler size={14} /> }
-    ]
-  };
+
 
   const getStatusColor = () => {
     if (isAvailable) return '#10B981';
@@ -2994,7 +3048,7 @@ const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssi
         flexDirection: 'column',
         gap: '1rem',
         overflow: 'hidden',
-        minWidth: '320px',
+        minWidth: '280px',
         transition: 'all 0.3s ease-out',
         backfaceVisibility: 'hidden',
         WebkitFontSmoothing: 'antialiased'
@@ -3144,7 +3198,10 @@ const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssi
           transition: 'all 0.3s ease'
         }}>
           <h4 style={{ fontSize: '0.65rem', fontWeight: '900', color: '#94A3B8', margin: 0, letterSpacing: '0.05em' }}>SPECS</h4>
-          {features.specs.map((s, i) => (
+          {[
+            { label: 'Status', value: bed.status, icon: <Sparkles size={14} /> },
+            { label: 'Position', value: bed.position || 'Standard', icon: <Wind size={14} /> }
+          ].map((s, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div style={{ color: '#6366F1' }}>{s.icon}</div>
               <div style={{ lineHeight: 1 }}>
@@ -3189,7 +3246,7 @@ const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssi
               fontSize: '1rem',
               fontWeight: '1000',
               color: '#1E293B'
-            }}>8.5</div>
+            }}>{bed.comfortScore || 85}%</div>
           </div>
           <p style={{ fontSize: '0.65rem', fontWeight: '900', color: '#64748B', margin: 0 }}>COMFORT SCORE</p>
         </div>
@@ -3204,75 +3261,22 @@ const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssi
         }}>
           <h4 style={{ fontSize: '0.65rem', fontWeight: '900', color: '#94A3B8', margin: '0 0 0.8rem 0', letterSpacing: '0.05em' }}>SMART FEATURES</h4>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
-            {features.comfort.map(f => (
-              <div key={f.id} style={{
-                padding: '0.4rem 0.6rem',
-                borderRadius: '10px',
-                background: "var(--bg-card)",
-                border: '1px solid #E2E8F0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                fontSize: '0.7rem',
-                fontWeight: '800',
-                color: '#475569'
-              }}>
-                <span style={{ color: '#6366F1' }}>{f.icon}</span>
-                {f.label}
+            {bed.readingLight && (
+              <div style={{ padding: '0.4rem 0.6rem', borderRadius: '10px', background: "var(--bg-card)", border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>
+                <span style={{ color: '#6366F1' }}><Lightbulb size={12} /></span> Reading Light
               </div>
-            ))}
+            )}
+            {bed.privacyCurtain && (
+              <div style={{ padding: '0.4rem 0.6rem', borderRadius: '10px', background: "var(--bg-card)", border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>
+                <span style={{ color: '#6366F1' }}><ShieldCheck size={12} /></span> Privacy Curtain
+              </div>
+            )}
+            {!bed.readingLight && !bed.privacyCurtain && (
+              <div style={{ padding: '0.4rem 0.6rem', borderRadius: '10px', background: "var(--bg-card)", border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>
+                <span style={{ color: '#64748B' }}>Standard Config</span>
+              </div>
+            )}
           </div>
-        </div>
-
-        {/* Climate & Flow */}
-        <div className="bento-item" style={{
-          gridColumn: 'span 2',
-          background: 'rgba(99, 102, 241, 0.05)',
-          padding: '0.8rem 1rem',
-          borderRadius: '20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          transition: 'all 0.3s ease'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-            <div style={{ color: '#6366F1' }}><Wind size={20} /></div>
-            <div>
-              <p style={{ fontSize: '0.85rem', fontWeight: '900', color: '#1E293B', margin: 0 }}>Optimal Airflow</p>
-              <p style={{ fontSize: '0.65rem', color: '#64748B', margin: 0, fontWeight: '700' }}>Direct vent access available</p>
-            </div>
-          </div>
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
-            style={{ color: '#6366F1', opacity: 0.5 }}
-          >
-            <Fan size={24} />
-          </motion.div>
-        </div>
-
-        {/* Hygiene & Comfort Badge */}
-        <div className="bento-item" style={{
-          gridColumn: 'span 2',
-          padding: '1rem',
-          borderRadius: '20px',
-          background: '#ECFDF5',
-          border: '1px solid #10B98120',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          transition: 'all 0.3s ease'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: "var(--bg-card)", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981', boxShadow: '0 4px 10px rgba(0,0,0,0.03)' }}>
-              <Sparkles size={18} />
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '950', color: '#065F46' }}>Hygiene Seal</p>
-              <p style={{ margin: 0, fontSize: '0.65rem', color: '#047857', fontWeight: '700' }}>Last Sanitized: 2h ago</p>
-            </div>
-          </div>
-          <ShieldCheck size={20} color="#10B981" />
         </div>
       </div>
 

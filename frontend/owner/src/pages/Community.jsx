@@ -22,7 +22,7 @@ import {
   X,
   Loader2
 } from 'lucide-react';
-import { api } from '../mockData';
+import { api } from '../api';
 import socket, { connectSocket } from '../utils/socket';
 import './Community.css';
 

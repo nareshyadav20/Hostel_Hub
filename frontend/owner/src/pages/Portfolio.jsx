@@ -15,7 +15,7 @@ import {
   Heart, Home, ArrowLeft, Settings, Trash2, ChevronUp
 } from 'lucide-react';
 import ImageModal from '../components/ImageModal';
-import { api } from '../mockData';
+import { api } from '../api';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 import { clearAllCache } from '../cache';
 
@@ -194,18 +194,11 @@ const Portfolio = () => {
     socket.on('hostelUpdated', refreshAll);
     socket.on('dashboardStatsUpdated', refreshAll);
 
-    // Keep portfolio stats fresh on focus and at intervals as well
-    const onFocus = () => { clearAllCache(); fetchData(); loadDrafts(); };
-    window.addEventListener('focus', onFocus);
-    const interval = setInterval(() => { clearAllCache(); fetchData(); }, 30000);
-
     return () => {
       socket.off('tenantAdded', refreshAll);
       socket.off('complaintCreated', refreshAll);
       socket.off('hostelUpdated', refreshAll);
       socket.off('dashboardStatsUpdated', refreshAll);
-      window.removeEventListener('focus', onFocus);
-      clearInterval(interval);
       // We don't disconnectSocket here as owner might navigate between pages
     };
   }, [fetchData, loadDrafts]);

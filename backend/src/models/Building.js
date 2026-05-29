@@ -40,6 +40,31 @@ const buildingSchema = new mongoose.Schema({
     hasCCTVAi: { type: Boolean, default: false },
     targetComfortScore: { type: Number, default: 90 }
   },
+
+  // Revenue & Operations (Step 5)
+  revenueStats: {
+    monthlyRevenue: { type: Number, default: 0 },
+    revenueGrowth: { type: Number, default: 0 },
+    roiOptimizedByAI: { type: Boolean, default: true }
+  },
+  
+  // Health & Infrastructure
+  healthScores: {
+    hygieneScore: { type: Number, default: 100 },
+    energyEfficiency: { type: Number, default: 100 }
+  },
+  infrastructure: {
+    powerBackup: { type: String, default: 'Available' },
+    waterSupply: { type: String, default: '24/7' },
+    fireSafety: { type: String, default: 'Secure' },
+    liftStatus: { type: String, default: 'Smart' }
+  },
+  smartAccessSystem: { type: String, default: 'Biometric + RFID Active' },
+  
+  // Badges & AI
+  smartBadges: [{ type: String }],
+  thumbIntelligence: { type: String, default: '' },
+  
   status: { type: String, enum: ['Active', 'Draft', 'Inactive'], default: 'Active' },
   lastStep: { type: Number, default: 1 },
   draftData: { type: mongoose.Schema.Types.Mixed },

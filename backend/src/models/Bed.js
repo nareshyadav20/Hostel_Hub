@@ -33,8 +33,14 @@ const bedSchema = new mongoose.Schema({
   pestControlStatus: { type: String, default: 'Up to Date' },
   laundrySupport: { type: Boolean, default: false },
   odorFree: { type: Boolean, default: true },
-  hygieneRating: { type: Number, default: 5.0 }
+  hygieneRating: { type: Number, default: 5.0 },
 
+  // Smart Operations & Monitoring
+  maintenanceStatus: { type: String, enum: ['OK', 'Pending Repair', 'Under Maintenance'], default: 'OK' },
+  smartAccessEnabled: { type: Boolean, default: false },
+  operationalMonitoringEnabled: { type: Boolean, default: true },
+  healthStatus: { type: String, default: 'Optimal' },
+  realTimeEnabled: { type: Boolean, default: true }
 }, { timestamps: true, collection: 'beds' });
 
 module.exports = mongoose.model('Bed', bedSchema);

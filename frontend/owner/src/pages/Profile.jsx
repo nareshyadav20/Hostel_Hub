@@ -7,7 +7,7 @@ import {
   Globe, Plus, Trash2, Eye, EyeOff, LayoutDashboard, History, Sparkles,
   Smartphone, Monitor, ChevronRight, ExternalLink, BedDouble, UsersRound
 } from 'lucide-react';
-import { api } from '../mockData';
+import { api } from '../api';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('overview');

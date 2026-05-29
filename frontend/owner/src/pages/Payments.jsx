@@ -9,7 +9,7 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
-import { api } from '../mockData';
+import { api } from '../api';
 import socket from '../utils/socket';
 
 const METHOD_CONFIG = {

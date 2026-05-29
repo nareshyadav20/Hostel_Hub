@@ -8,7 +8,7 @@ import {
   TrendingDown, Star, ChevronRight, Download, Edit3, MessageSquare,
   Clock, MapPin, CheckCircle, CreditCard, Filter, ArrowRight
 } from 'lucide-react';
-import { api } from '../mockData';
+import { api } from '../api';
 import { clearAllCache } from '../cache';
 
 // Generic Modal Component
@@ -170,7 +170,7 @@ const Tenants = () => {
       setTenants(filtered);
     } catch (err) {
       console.error('Failed to fetch tenants:', err);
-      // Keep existing mock state on error
+      // Show error state or empty state if needed
     } finally {
       setIsLoading(false);
     }

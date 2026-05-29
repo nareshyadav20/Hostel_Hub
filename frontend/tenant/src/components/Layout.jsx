@@ -80,7 +80,7 @@ const Layout = ({ children }) => {
   const [aiMessage, setAiMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeToasts, setActiveToasts] = useState([]);
-  
+
   const [aiChat, setAiChat] = useState([
     { role: 'assistant', content: 'Hi! I am your Livora Hostel AI. I can help you with room bookings, mess menus, or any other facility details. How can I assist you today?' }
   ]);
@@ -89,12 +89,12 @@ const Layout = ({ children }) => {
   const isLoggedIn = !!token && !!user.name;
 
   // Use global notification context
-  const { 
-    notifications, 
-    unreadCount, 
-    markAsRead, 
-    markAllAsRead, 
-    refresh: fetchNotifications 
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    refresh: fetchNotifications
   } = useNotifications();
 
   // Toast Listener
@@ -109,7 +109,7 @@ const Layout = ({ children }) => {
         });
       }
     };
-    
+
     socket.on('newNotification', handleNewNotif);
     return () => socket.off('newNotification', handleNewNotif);
   }, []);
@@ -169,19 +169,19 @@ const Layout = ({ children }) => {
     setTimeout(() => {
       let response = "I'm sorry, I'm still learning about that. You can contact the warden for specific details, or try asking about rooms, mess, WiFi, or laundry!";
       const lowerText = text.toLowerCase();
-      
+
       // Basic Info & Booking
       if (lowerText.includes('room') || lowerText.includes('booking') || lowerText.includes('sharing') || lowerText.includes('bed')) {
         response = "We offer Premium Single, 2-Sharing, and 3-Sharing rooms. All rooms are fully furnished with study tables, wardrobes, and attached washrooms. You can book directly through the Listing page!";
-      } 
+      }
       // Food & Mess
       else if (lowerText.includes('mess') || lowerText.includes('food') || lowerText.includes('meal') || lowerText.includes('dinner') || lowerText.includes('breakfast') || lowerText.includes('lunch') || lowerText.includes('eat')) {
         response = "Our mess serves 3 nutritious meals a day. We prioritize hygiene and variety in our weekly menu. Check the 'Mess' section for the full schedule and today's specials!";
-      } 
+      }
       // Pricing & Payments
       else if (lowerText.includes('price') || lowerText.includes('rent') || lowerText.includes('cost') || lowerText.includes('fee') || lowerText.includes('payment') || lowerText.includes('bill')) {
         response = "Rent starts from ₹9,000/month for 3-sharing and ₹12,000/month for 2-sharing. This includes food, WiFi, cleaning, and utilities. You can pay your rent via the 'Payments' tab.";
-      } 
+      }
       // Utilities & Tech
       else if (lowerText.includes('wifi') || lowerText.includes('internet') || lowerText.includes('speed') || lowerText.includes('network')) {
         response = "We provide high-speed 100 Mbps dedicated WiFi for all residents. There are no data caps, perfect for students and professionals!";
@@ -244,17 +244,23 @@ const Layout = ({ children }) => {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  const handleProfileSubmit = (e) => {
+  const handleProfileSubmit = async (e) => {
     e.preventDefault();
     const updatedUser = { ...user, ...modalData, profileCompletion: 50 };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-
-    const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
-    const userIndex = users.findIndex(u => u.email === user.email);
-    if (userIndex > -1) {
-      users[userIndex] = updatedUser;
-      localStorage.setItem('mock_users', JSON.stringify(users));
+    
+    try {
+      // Send profile update to backend
+      const token = localStorage.getItem('token');
+      if (token) {
+        await API.put('/tenant/profile', updatedUser, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch (err) {
+      console.error('Failed to update profile on backend', err);
     }
+    
+    localStorage.setItem('user', JSON.stringify(updatedUser));
     setShowProfileModal(false);
     window.location.reload();
   };
@@ -265,10 +271,10 @@ const Layout = ({ children }) => {
       <div style={{ position: 'fixed', top: '24px', right: '24px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '12px', pointerEvents: 'none' }}>
         <AnimatePresence>
           {activeToasts.map(toast => (
-            <Toast 
-              key={toast.toastId} 
-              notification={toast} 
-              onClose={() => setActiveToasts(prev => prev.filter(t => t.toastId !== toast.toastId))} 
+            <Toast
+              key={toast.toastId}
+              notification={toast}
+              onClose={() => setActiveToasts(prev => prev.filter(t => t.toastId !== toast.toastId))}
             />
           ))}
         </AnimatePresence>
@@ -279,180 +285,180 @@ const Layout = ({ children }) => {
 
       <main className={isLoggedIn ? "main-content" : "main-content guest"}>
         {!(isLoggedIn && isListingPage) && (
-        <header className="content-header">
-          {isLoggedIn && (
-            <button className="hamburger-btn" onClick={toggleSidebar}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
-            </button>
-          )}
-
-          <div className="user-profile">
-            <ThemeToggle />
-            {isLoggedIn ? (
-              <>
-                <div className="notifications-container" ref={notifRef} style={{ position: 'relative' }}>
-                  <div className="notifications" onClick={() => setShowNotifDropdown(!showNotifDropdown)}>
-                    <Bell size={20} />
-                    {unreadCount > 0 && (
-                      <span className="notification-badge badge-pulse" style={{ 
-                        position: 'absolute', top: '-5px', right: '-5px', 
-                        background: '#EF4444', color: 'white', borderRadius: '50%', 
-                        width: '18px', height: '18px', display: 'flex', 
-                        alignItems: 'center', justifyContent: 'center',
-                        fontSize: '10px', fontWeight: '900' 
-                      }}>
-                        {unreadCount}
-                      </span>
-                    )}
-                  </div>
-
-                  <AnimatePresence>
-                    {showNotifDropdown && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="profile-dropdown glass-card" 
-                        style={{ right: '-10px', width: '320px', padding: '0', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}
-                      >
-                        <div className="dropdown-header" style={{ background: 'var(--bg-tertiary)', padding: '1.2rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800' }}>Notifications</h4>
-                          {unreadCount > 0 && (
-                            <button onClick={markAllAsRead} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '800' }}>Mark all read</button>
-                          )}
-                        </div>
-                        <div style={{ maxHeight: '350px', overflowY: 'auto', scrollbarWidth: 'none' }}>
-                          {notifications.length === 0 ? (
-                            <div style={{ padding: '3rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                              <Bell size={40} style={{ opacity: 0.1, marginBottom: '1rem' }} />
-                              <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>All caught up!</p>
-                            </div>
-                          ) : (
-                            notifications.map((n, i) => (
-                              <div key={i} style={{ padding: '1.25rem', borderBottom: '1px solid var(--border-color)', background: n.isRead ? 'transparent' : 'rgba(99,102,241,0.03)', display: 'flex', gap: '1rem', cursor: 'pointer', transition: '0.2s' }}
-                                onClick={async () => {
-                                  if (!n.isRead) markAsRead(n._id || n.id);
-                                  setShowNotifDropdown(false);
-                                  if (n.moduleName === 'Complaints') navigate('/complaints');
-                                  if (n.moduleName === 'Payments') navigate('/payments');
-                                  if (n.moduleName === 'Mess') navigate('/mess');
-                                }}>
-                                <div style={{ flex: 1 }}>
-                                  <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', fontWeight: '750', color: 'var(--text-primary)' }}>{n.title}</h5>
-                                  <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{n.message}</p>
-                                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem', display: 'block' }}>
-                                    <Clock size={10} style={{ display: 'inline', marginRight: '4px' }} /> 
-                                    {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                  </span>
-                                </div>
-                                {!n.isRead && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)', alignSelf: 'center', flexShrink: 0 }}></div>}
-                              </div>
-                            ))
-                          )}
-                        </div>
-                        <div className="dropdown-footer" style={{ padding: '1rem', textAlign: 'center', borderTop: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
-                          <button 
-                            onClick={() => { setShowNotifDropdown(false); navigate('/notifications'); }}
-                            style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.85rem', cursor: 'pointer', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto' }}
-                          >
-                            View All Notifications
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                <div className="avatar-container" ref={dropdownRef}>
-                  <div className="profile-mini-box" onClick={() => setShowDropdown(!showDropdown)}>
-                    <div className="profile-text">
-                      <span className="p-name">{user.name || 'Guest User'}</span>
-                      <span className="p-role">Premium Resident</span>
-                    </div>
-                    <div className="profile-avatar">
-                      <img
-                        src={user.profileImage || `https://ui-avatars.com/api/?name=${user.name || 'User'}&background=10b981&color=fff`}
-                        alt="Profile"
-                      />
-                    </div>
-                  </div>
-
-                  {showDropdown && (
-                    <div className="profile-dropdown glass-card">
-                      <div className="dropdown-header">
-                        <div className="dropdown-avatar-large">
-                          {user.name ? user.name[0].toUpperCase() : 'U'}
-                        </div>
-                        <div className="dropdown-user-info">
-                          <h4>{user.name || 'uma'}</h4>
-                          <p>{user.email || 'uma@gmail.com'}</p>
-                        </div>
-                      </div>
-                      <div className="dropdown-divider"></div>
-
-                      {user.profileCompletion && user.profileCompletion < 100 && (
-                        <div className="setup-progress-card">
-                          <div className="setup-progress-header">
-                            <span>Setup Progress</span>
-                            <span className="setup-percent">{user.profileCompletion}%</span>
-                          </div>
-                          <div className="setup-progress-bar">
-                            <div className="setup-progress-fill" style={{ width: `${user.profileCompletion}%` }}></div>
-                          </div>
-
-                          {user.profileCompletion < 50 && (
-                            <button className="btn-primary-small" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
-                              Complete Profile
-                            </button>
-                          )}
-                          {user.profileCompletion === 50 && (
-                            <div className="setup-next-step">
-                              Next: Book a Room to Verify ID
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="dropdown-divider"></div>
-                      <button className="dropdown-item" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                          <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                        Profile
-                      </button>
-                      <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/payments'); }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                          <line x1="1" y1="10" x2="23" y2="10"></line>
-                        </svg>
-                        Payments
-                      </button>
-                      <div className="dropdown-divider"></div>
-                      <button className="dropdown-item logout" onClick={handleLogout}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                          <polyline points="16 17 21 12 16 7"></polyline>
-                          <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="guest-nav">
-                <Link to="/login" className="nav-btn">Sign In</Link>
-                <Link to="/signup" className="nav-btn primary">Sign Up</Link>
-              </div>
+          <header className="content-header">
+            {isLoggedIn && (
+              <button className="hamburger-btn" onClick={toggleSidebar}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
             )}
-          </div>
-        </header>
+
+            <div className="user-profile">
+              <ThemeToggle />
+              {isLoggedIn ? (
+                <>
+                  <div className="notifications-container" ref={notifRef} style={{ position: 'relative' }}>
+                    <div className="notifications" onClick={() => setShowNotifDropdown(!showNotifDropdown)}>
+                      <Bell size={20} />
+                      {unreadCount > 0 && (
+                        <span className="notification-badge badge-pulse" style={{
+                          position: 'absolute', top: '-5px', right: '-5px',
+                          background: '#EF4444', color: 'white', borderRadius: '50%',
+                          width: '18px', height: '18px', display: 'flex',
+                          alignItems: 'center', justifyContent: 'center',
+                          fontSize: '10px', fontWeight: '900'
+                        }}>
+                          {unreadCount}
+                        </span>
+                      )}
+                    </div>
+
+                    <AnimatePresence>
+                      {showNotifDropdown && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="profile-dropdown glass-card"
+                          style={{ right: '-10px', width: '320px', padding: '0', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}
+                        >
+                          <div className="dropdown-header" style={{ background: 'var(--bg-tertiary)', padding: '1.2rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800' }}>Notifications</h4>
+                            {unreadCount > 0 && (
+                              <button onClick={markAllAsRead} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '800' }}>Mark all read</button>
+                            )}
+                          </div>
+                          <div style={{ maxHeight: '350px', overflowY: 'auto', scrollbarWidth: 'none' }}>
+                            {notifications.length === 0 ? (
+                              <div style={{ padding: '3rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                <Bell size={40} style={{ opacity: 0.1, marginBottom: '1rem' }} />
+                                <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>All caught up!</p>
+                              </div>
+                            ) : (
+                              notifications.map((n, i) => (
+                                <div key={i} style={{ padding: '1.25rem', borderBottom: '1px solid var(--border-color)', background: n.isRead ? 'transparent' : 'rgba(99,102,241,0.03)', display: 'flex', gap: '1rem', cursor: 'pointer', transition: '0.2s' }}
+                                  onClick={async () => {
+                                    if (!n.isRead) markAsRead(n._id || n.id);
+                                    setShowNotifDropdown(false);
+                                    if (n.moduleName === 'Complaints') navigate('/complaints');
+                                    if (n.moduleName === 'Payments') navigate('/payments');
+                                    if (n.moduleName === 'Mess') navigate('/mess');
+                                  }}>
+                                  <div style={{ flex: 1 }}>
+                                    <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', fontWeight: '750', color: 'var(--text-primary)' }}>{n.title}</h5>
+                                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{n.message}</p>
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem', display: 'block' }}>
+                                      <Clock size={10} style={{ display: 'inline', marginRight: '4px' }} />
+                                      {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                  {!n.isRead && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)', alignSelf: 'center', flexShrink: 0 }}></div>}
+                                </div>
+                              ))
+                            )}
+                          </div>
+                          <div className="dropdown-footer" style={{ padding: '1rem', textAlign: 'center', borderTop: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
+                            <button
+                              onClick={() => { setShowNotifDropdown(false); navigate('/notifications'); }}
+                              style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.85rem', cursor: 'pointer', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto' }}
+                            >
+                              View All Notifications
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  <div className="avatar-container" ref={dropdownRef}>
+                    <div className="profile-mini-box" onClick={() => setShowDropdown(!showDropdown)}>
+                      <div className="profile-text">
+                        <span className="p-name">{user.name || 'Guest User'}</span>
+                        <span className="p-role">Premium Resident</span>
+                      </div>
+                      <div className="profile-avatar">
+                        <img
+                          src={user.profileImage || `https://ui-avatars.com/api/?name=${user.name || 'User'}&background=10b981&color=fff`}
+                          alt="Profile"
+                        />
+                      </div>
+                    </div>
+
+                    {showDropdown && (
+                      <div className="profile-dropdown glass-card">
+                        <div className="dropdown-header">
+                          <div className="dropdown-avatar-large">
+                            {user.name ? user.name[0].toUpperCase() : 'U'}
+                          </div>
+                          <div className="dropdown-user-info">
+                            <h4>{user.name || 'uma'}</h4>
+                            <p>{user.email || 'uma@gmail.com'}</p>
+                          </div>
+                        </div>
+                        <div className="dropdown-divider"></div>
+
+                        {user.profileCompletion && user.profileCompletion < 100 && (
+                          <div className="setup-progress-card">
+                            <div className="setup-progress-header">
+                              <span>Setup Progress</span>
+                              <span className="setup-percent">{user.profileCompletion}%</span>
+                            </div>
+                            <div className="setup-progress-bar">
+                              <div className="setup-progress-fill" style={{ width: `${user.profileCompletion}%` }}></div>
+                            </div>
+
+                            {user.profileCompletion < 50 && (
+                              <button className="btn-primary-small" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
+                                Complete Profile
+                              </button>
+                            )}
+                            {user.profileCompletion === 50 && (
+                              <div className="setup-next-step">
+                                Next: Book a Room to Verify ID
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="dropdown-divider"></div>
+                        <button className="dropdown-item" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                          </svg>
+                          Profile
+                        </button>
+                        <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/payments'); }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                          </svg>
+                          Payments
+                        </button>
+                        <div className="dropdown-divider"></div>
+                        <button className="dropdown-item logout" onClick={handleLogout}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                          </svg>
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="guest-nav">
+                  <Link to="/login" className="nav-btn">Sign In</Link>
+                  <Link to="/signup" className="nav-btn primary">Sign Up</Link>
+                </div>
+              )}
+            </div>
+          </header>
         )}
 
         <div className="content-body">
@@ -461,9 +467,9 @@ const Layout = ({ children }) => {
           </div>
 
           {!(isLoggedIn && isListingPage) && (
-          <footer className="layout-footer">
-            <p>© 2026 Livora All rights reserved.</p>
-          </footer>
+            <footer className="layout-footer">
+              <p>© 2026 Livora All rights reserved.</p>
+            </footer>
           )}
         </div>
 
@@ -475,7 +481,7 @@ const Layout = ({ children }) => {
                 <Bot size={22} />
               </div>
               <div className="ai-fab-text">
-                <strong>Hostel AI</strong>
+                <strong>AI</strong>
                 <span>Instant Help</span>
               </div>
             </div>
@@ -554,9 +560,9 @@ const Layout = ({ children }) => {
 
               <div className="ai-chat-input-area">
                 <div className="ai-input-container">
-                  <input 
-                    type="text" 
-                    placeholder="Ask Livora AI..." 
+                  <input
+                    type="text"
+                    placeholder="Ask Livora AI..."
                     value={aiMessage}
                     onChange={(e) => setAiMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendAiMessage()}

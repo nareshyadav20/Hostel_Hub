@@ -75,12 +75,26 @@
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 2rem;
-  align-items: start;
+  /* Make the layout fill the viewport *after* the header is scrolled away */
+  height: calc(100vh - 20px); 
 }
 
 .search-sidebar-pro {
-  position: sticky;
-  top: 100px;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 8px; /* space for scrollbar */
+}
+
+/* Minimal scrollbar for sidebar */
+.search-sidebar-pro::-webkit-scrollbar {
+  width: 5px;
+}
+.search-sidebar-pro::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.search-sidebar-pro::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* ─── Filter Card ─── */
@@ -330,6 +344,21 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 12px;
+}
+
+/* Custom minimal scrollbar for results */
+.search-results-pro::-webkit-scrollbar {
+  width: 6px;
+}
+.search-results-pro::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.search-results-pro::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .results-meta-bar {

@@ -108,12 +108,12 @@ const PublicLayout = ({ children }) => {
   ];
 
   const iconColor = "#4F46E5";
-  const mockAmenities = [
+  const amenitiesData = [
     { category: 'In-Room Features', items: [{ icon: <Bed color={iconColor} size={20} />, name: 'Beds' }, { icon: <BookOpen color={iconColor} size={20} />, name: 'Study tables' }] },
     { category: 'Shared Facilities', items: [{ icon: <Wifi color={iconColor} size={20} />, name: 'Wi-Fi' }, { icon: <Shirt color={iconColor} size={20} />, name: 'Laundry room' }, { icon: <Droplet color={iconColor} size={20} />, name: 'Water cooler' }, { icon: <Car color={iconColor} size={20} />, name: 'Parking' }] },
     { category: 'Security & Safety', items: [{ icon: <Video color={iconColor} size={20} />, name: 'CCTV' }] }
   ];
-  const mockServices = [
+  const servicesData = [
     { category: 'Daily Care & Conveniences', items: [
       { icon: (
         // Broom / sweeping icon
@@ -275,7 +275,7 @@ const PublicLayout = ({ children }) => {
             <div className="hv2-cm-body">
               {activeModal === 'services' && (
                 <div className="hv2-cm-flat-grid">
-                  {mockServices.flatMap(s => s.items).map((srv, j) => (
+                  {servicesData.flatMap(s => s.items).map((srv, j) => (
                     <div key={j} className="hv2-cm-grid-card">
                       <div className="hv2-cm-grid-icon">{srv.icon}</div>
                       <span className="hv2-cm-grid-name">{srv.name}</span>
@@ -285,7 +285,7 @@ const PublicLayout = ({ children }) => {
               )}
               {activeModal === 'amenities' && (
                 <div className="hv2-cm-flat-grid">
-                  {mockAmenities.flatMap(s => s.items).map((amn, j) => (
+                  {amenitiesData.flatMap(s => s.items).map((amn, j) => (
                     <div key={j} className="hv2-cm-grid-card">
                       <div className="hv2-cm-grid-icon">{amn.icon}</div>
                       <span className="hv2-cm-grid-name">{amn.name}</span>

@@ -23,11 +23,7 @@ const Payments = () => {
         setTenantData(profileRes.data);
         const tId = profileRes.data._id;
         
-        // Mock data fallback if API fails
-        const paymentsRes = await API.get(`/payments/me?tenantId=${tId}`).catch(() => ({ data: [
-          { _id: '1', invoice: 'BKG-850860', amount: 14000, status: 'Paid', createdAt: '2026-05-05T00:00:00Z' },
-          { _id: '2', invoice: 'RENT-1029', amount: 8500, status: 'Pending', createdAt: new Date().toISOString() }
-        ]}));
+        const paymentsRes = await API.get(`/payments/me?tenantId=${tId}`).catch(() => ({ data: [] }));
         
         setInvoices(paymentsRes.data.map(p => ({
           id: p.invoice || `#INV-${p._id.slice(-6)}`,
