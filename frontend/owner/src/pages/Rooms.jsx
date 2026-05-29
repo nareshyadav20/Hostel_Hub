@@ -5,7 +5,7 @@ import {
   BedDouble, User, AlertTriangle, SlidersHorizontal,
   Settings2, History, Filter, Layers, ChevronDown, ChevronRight, Building2, FileText
 } from 'lucide-react';
-import api from '../api/axios.js';
+import { api } from '../api.js';
 import socket, { connectSocket } from '../utils/socket';
 
 
