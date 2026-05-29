@@ -49,15 +49,7 @@ const swrFetch = async (cacheKey, url, config = {}) => {
 export const api = {
   // Owner Profile
   getOwnerProfile: async () => {
-    const cached = cacheGet('owner_profile');
-    if (cached) {
-      // Background revalidate
-      axios.get(`${API_URL}/owner/profile`).then(res => cacheSet('owner_profile', res.data));
-      return cached;
-    }
-    const res = await axios.get(`${API_URL}/owner/profile`);
-    cacheSet('owner_profile', res.data);
-    return res.data;
+    return await swrFetch('owner_profile', `${API_URL}/owner/profile`);
   },
   updateOwnerProfile: async (data) => {
     const res = await axios.patch(`${API_URL}/owner/profile`, data);
@@ -65,14 +57,7 @@ export const api = {
     return res.data;
   },
   getOwnerStats: async () => {
-    const cached = cacheGet('owner_stats');
-    if (cached) {
-      axios.get(`${API_URL}/dashboard/summary`).then(res => cacheSet('owner_stats', res.data));
-      return cached;
-    }
-    const res = await axios.get(`${API_URL}/owner/stats`);
-    cacheSet('owner_stats', res.data);
-    return res.data;
+    return await swrFetch('owner_stats', `${API_URL}/owner/stats`);
   },
   getOwnerHistory: async () => {
     const res = await axios.get(`${API_URL}/owner/history`);
