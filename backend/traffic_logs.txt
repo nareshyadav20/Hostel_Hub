@@ -3675,3 +3675,8 @@
 2026-05-29T08:25:47.249Z API: GET /api/rewards/history
 2026-05-29T08:25:47.261Z API: GET /api/rewards/wallet
 2026-05-29T08:25:47.281Z API: GET /api/tenants/me
+2026-05-29T08:26:36.602Z API: GET /api/buildings/public
+2026-05-29T08:26:36.732Z API: GET /api/tenant-portal/wishlist
+2026-05-29T08:26:36.941Z SOCKET: Socket connected: 8jfpdya3JjRjhdJbAAAZ
+2026-05-29T08:26:37.058Z API: GET /api/buildings/public
+2026-05-29T08:26:37.174Z API: GET /api/tenant-portal/wishlist
