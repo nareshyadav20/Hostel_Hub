@@ -168,6 +168,7 @@ require('./models/AdminCms');
 require('./models/AdminInsights');
 require('./models/AdminSupport');
 require('./models/Task');
+require('./models/Rating');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);

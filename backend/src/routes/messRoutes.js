@@ -15,4 +15,7 @@ router.get('/attendance', authMiddleware, messController.getAttendance);
 router.put('/attendance', authMiddleware, messController.updateAttendance);
 router.post('/attendance/mark-all', authMiddleware, messController.markAllAttendance);
 
+// Rating route
+router.post('/rating', authMiddleware, messController.submitRating);
+
 module.exports = router;
