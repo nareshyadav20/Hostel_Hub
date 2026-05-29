@@ -59,7 +59,6 @@ const Transfers = () => {
 
   return (
     <div style={{ padding: '2rem'  }}>
-    <div>
       {/* Responsive Styles Injection */}
       <style>{`
         @media (max-width: 1024px) {

@@ -294,7 +294,7 @@ const Staff = () => {
 
               <div className="card" style={{ padding: '2rem', height: '400px', background: 'var(--bg-tertiary)', borderRadius: '20px', border: '1px solid var(--border-color)', minWidth: 0  }}>
                 <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem', textTransform: 'uppercase'  }}>Weekly Engagement Trend</h4>
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={1}>
                   <BarChart data={Array.isArray(selectedStaff.attendance?.monthly) ? selectedStaff.attendance.monthly : []}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                     <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
@@ -355,7 +355,7 @@ const Staff = () => {
 
               <div className="card" style={{ padding: '2rem', height: '400px', background: 'var(--bg-tertiary)', borderRadius: '20px', border: '1px solid var(--border-color)', minWidth: 0  }}>
                 <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem', textTransform: 'uppercase'  }}>Performance History</h4>
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={1}>
                   <AreaChart data={Array.isArray(selectedStaff.metrics?.history) ? selectedStaff.metrics.history : []}>
                     <defs>
                       <linearGradient id="colorRate" x1="0" y1="0" x2="0" y2="1">
