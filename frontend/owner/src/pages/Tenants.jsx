@@ -8,7 +8,7 @@ import {
   TrendingDown, Star, ChevronRight, Download, Edit3, MessageSquare,
   Clock, MapPin, CheckCircle, CreditCard, Filter, ArrowRight
 } from 'lucide-react';
-import { api } from '../mockData';
+import api from '../api/axios.js';
 import { clearAllCache } from '../cache';
 
 // Generic Modal Component

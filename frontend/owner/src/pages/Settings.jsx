@@ -7,7 +7,7 @@ import {
   Utensils, BarChart, LayoutGrid, DollarSign, Clock, ArrowLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../mockData';
+import api from '../api/axios.js';
 import './Settings.css';
 
 const Toggle = ({ enabled, onClick }) => (

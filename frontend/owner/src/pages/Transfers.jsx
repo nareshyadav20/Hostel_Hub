@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import { RefreshCw, CheckCircle, XCircle, Clock, ArrowRightLeft, User, Home, MessageSquare } from 'lucide-react';
-import { api } from '../mockData';
+import api from '../api/axios.js';
 import socket, { connectSocket } from '../utils/socket';
 
 const Transfers = () => {
