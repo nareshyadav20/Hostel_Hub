@@ -1,6 +1,9 @@
 const Floor = require('../models/Floor');
 const Building = require('../models/Building');
 
+// Normalize legacy/frontend wifi labels to valid enum values
+const WIFI_NORMALIZE = { 'Full': 'Excellent', 'Partial': 'Good' };
+
 const createFloor = async (req, res) => {
   try {
     const { floorNumber, buildingId, description, images } = req.body;
@@ -18,7 +21,7 @@ const createFloor = async (req, res) => {
       hygieneRating: req.body.hygieneRating || 5.0,
       washroomsCount: req.body.washroomsCount || 0,
       cctvStatus: req.body.cctvStatus || 'Active',
-      wifiStatus: req.body.wifiStatus || 'Excellent',
+      wifiStatus: WIFI_NORMALIZE[req.body.wifiStatus] || req.body.wifiStatus || 'Excellent',
       loungesCount: req.body.loungesCount || 0,
       facilities: req.body.facilities || []
     });
@@ -66,7 +69,8 @@ const updateFloor = async (req, res) => {
     if (!floor || floor.building.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Floor not found or unauthorized' });
     }
-    const updated = await Floor.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (req.body.wifiStatus) req.body.wifiStatus = WIFI_NORMALIZE[req.body.wifiStatus] || req.body.wifiStatus;
+    const updated = await Floor.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     res.status(200).json(updated);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };

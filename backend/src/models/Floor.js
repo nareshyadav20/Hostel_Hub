@@ -33,7 +33,7 @@ const floorSchema = new mongoose.Schema({
 
   // Infrastructure
   cctvStatus: { type: String, enum: ['Active', 'Inactive', 'Maintenance'], default: 'Active' },
-  wifiStatus: { type: String, enum: ['Excellent', 'Good', 'Poor', 'Offline'], default: 'Excellent' },
+  wifiStatus: { type: String, enum: ['Excellent', 'Good', 'Poor', 'Offline', 'Full'], default: 'Excellent' },
   powerBackupStatus: { type: String, enum: ['Online', 'Offline', 'Maintenance'], default: 'Online' },
   waterSystemStatus: { type: String, enum: ['Stable', 'Low', 'Critical'], default: 'Stable' },
   securityGridStatus: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
