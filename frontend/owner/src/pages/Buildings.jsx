@@ -2323,58 +2323,7 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
         </div>
       </div>
 
-      {/* Bento Grid: Analytics & Performance */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '0.8rem', zIndex: 1 }}>
-        {/* Financial Bento */}
-        <div style={{
-          padding: '1rem', borderRadius: '24px',
-          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
-          color: "var(--text-on-primary)", display: 'flex', flexDirection: 'column', gap: '0.6rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Coins size={16} color="#F59E0B" />
-            <span style={{ fontSize: '0.65rem', fontWeight: '950', letterSpacing: '0.1em' }}>REVENUE ENGINE</span>
-          </div>
-          <div>
-            <h4 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '1000' }}>₹{computedRevenue}</h4>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.4rem' }}>
-              {[40, 60, 45, 70, 55, 80, 75].map((h, i) => (
-                <div key={i} style={{ width: '4px', height: `${h * 0.2}px`, background: i === 6 ? '#10B981' : 'rgba(255,255,255,0.2)', borderRadius: '2px' }} />
-              ))}
-              <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: '800', color: '#10B981', display: 'flex', alignItems: 'center', gap: '0.3rem', marginLeft: '0.4rem' }}>
-                <TrendingUp size={12} /> +12.4%
-              </p>
-            </div>
-          </div>
-          <div style={{ marginTop: 'auto', padding: '0.6rem', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', fontSize: '0.6rem', fontWeight: '800', textAlign: 'center' }}>
-            ROI OPTIMIZED BY AI
-          </div>
-        </div>
 
-        {/* Intelligence Bento */}
-        <div style={{ padding: '1rem', borderRadius: '24px', background: "var(--bg-card)", border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: '950', color: '#0F172A' }}>Building Health</span>
-            <BarChart3 size={18} color="#6366F1" />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-            {[
-              { label: 'Hygiene Score', value: building.healthScores?.hygieneScore || hygieneScore, color: '#10B981' },
-              { label: 'Energy Efficiency', value: energyEfficiency, color: '#6366F1' }
-            ].map((score, i) => (
-              <div key={i}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', fontWeight: '900', marginBottom: '0.3rem' }}>
-                  <span style={{ color: '#64748B' }}>{score.label.toUpperCase()}</span>
-                  <span style={{ color: score.color }}>{score.value}%</span>
-                </div>
-                <div style={{ height: '6px', background: '#F1F5F9', borderRadius: '3px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${score.value}%`, background: score.color }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* Infrastructure KPI Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.8rem', zIndex: 1 }}>
@@ -2394,34 +2343,13 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
 
 
 
-      {/* AI Insights & Badges */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', zIndex: 1 }}>
-        {(building.smartBadges?.length ? building.smartBadges : ['Highest ROI', 'Top Rated Hygiene', 'Student Choice', 'Low Maintenance']).map(badge => (
-          <span key={badge} style={{ padding: '0.4rem 0.8rem', borderRadius: '10px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-            <Sparkles size={10} color="#F59E0B" /> {badge}
-          </span>
-        ))}
-      </div>
+
 
       {/* Action Footer */}
       <div style={{
-        marginTop: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem',
-        paddingTop: '1.2rem', borderTop: '1px solid #F1F5F9', zIndex: 1
+        marginTop: 'auto', display: 'flex', justifyContent: 'space-between', gap: '0.8rem',
+        paddingTop: '1.2rem', borderTop: '1px solid #F1F5F9', zIndex: 1, alignItems: 'center'
       }}>
-        <button
-          className="btn"
-          onClick={(e) => { e.stopPropagation(); onViewAnalytics(building, 'building'); }}
-          style={{
-            padding: '1.1rem', borderRadius: '22px', background: '#F8FAFC', color: '#0F172A',
-            fontWeight: '950', fontSize: '0.85rem', border: '1px solid #E2E8F0',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem'
-          }}
-        >
-          <div style={{ width: '32px', height: '32px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
-            <img src={building.images?.[0] || 'https://images.unsplash.com/photo-1545324418-f1d3c5b53571?auto=format&fit=crop&w=100&q=80'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Thumb" />
-          </div>
-          Intelligence
-        </button>
         <div style={{ display: 'flex', gap: '0.4rem' }}>
           <button
             className="btn"
@@ -2429,14 +2357,14 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
               e.stopPropagation();
               onEditBuilding(building);
             }}
-            style={{ padding: '0.6rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#6366F1' }}
+            style={{ padding: '0.9rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <Edit2 size={16} />
           </button>
           <button
             className="btn"
             onClick={(e) => { e.stopPropagation(); onDeleteBuilding(building.id || building._id); }}
-            style={{ padding: '0.6rem', borderRadius: '12px', background: '#FEF2F2', border: 'none', color: '#EF4444' }}
+            style={{ padding: '0.9rem', borderRadius: '12px', background: '#FEF2F2', border: 'none', color: '#EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <Trash2 size={16} />
           </button>
@@ -2445,7 +2373,7 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
           className="btn btn-primary"
           onClick={(e) => { e.stopPropagation(); onSelect(building); }}
           style={{
-            padding: '1.1rem', borderRadius: '22px', fontWeight: '950', fontSize: '0.85rem', flex: 1,
+            padding: '1.1rem 2rem', borderRadius: '22px', fontWeight: '950', fontSize: '0.85rem', flex: 1,
             boxShadow: '0 10px 20px rgba(99, 102, 241, 0.3)'
           }}
         >
@@ -2562,7 +2490,7 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
         <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', right: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div>
             <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '900', color: 'rgba(255,255,255,0.7)', letterSpacing: '0.05em' }}>FLOOR TYPE</p>
-            <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '950', color: "var(--text-on-primary)" }}>Mixed Residency</p>
+            <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '950', color: "var(--text-on-primary)" }}>{floor.floorCategory || 'General Use'}</p>
           </div>
           <div style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.3)', color: "var(--text-on-primary)", fontSize: '0.7rem', fontWeight: '900' }}>
             {floor.occupancyPercentage || occupancyRate}% OCCUPIED
@@ -2570,15 +2498,15 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
         </div>
       </div>
 
-      {/* Bento Grid: Intelligence & Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.6rem', zIndex: 1 }}>
+      {/* Bento Grid: Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.6rem', zIndex: 1 }}>
         {/* Occupancy Heatmap Bento */}
         <div style={{ padding: '0.8rem', borderRadius: '20px', background: "var(--bg-card)", border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.7rem', fontWeight: '950', color: '#0F172A' }}>Occupancy Heatmap</span>
             <UsersRound size={16} color="#6366F1" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.3rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '0.3rem' }}>
             {Array.from({ length: 12 }).map((_, i) => {
               // Create dynamic heatmap logic based on occupancyPercentage
               const occ = floor.occupancyPercentage || occupancyRate;
@@ -2597,39 +2525,15 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
             </div>
           </div>
         </div>
-
-        {/* AI Health Bento */}
-        <div style={{
-          padding: '0.8rem', borderRadius: '20px',
-          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
-          color: "var(--text-on-primary)", display: 'flex', flexDirection: 'column', gap: '0.4rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Sparkles size={14} color="#6366F1" />
-            <span style={{ fontSize: '0.6rem', fontWeight: '950', letterSpacing: '0.1em' }}>AI INSIGHTS</span>
-          </div>
-          <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '700', lineHeight: '1.3', opacity: 0.9 }}>
-            {floor.aiInsights?.[0] || '"High natural light detected on East wing. Recommended for study zones."'}
-          </p>
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.55rem', fontWeight: '900' }}>
-              <span>HYGIENE SCORE</span>
-              <span style={{ color: '#10B981' }}>{floor.hygieneRating || 0}%</span>
-            </div>
-            <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${floor.hygieneRating || 0}%`, background: '#10B981' }} />
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Infrastructure KPI Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.6rem', zIndex: 1 }}>
         {[
-          { label: 'Washrooms', value: `${floor.washroomsCount || 4} Units`, icon: <Droplets size={12} /> },
+          { label: 'Washrooms', value: `${floor.washroomsCount !== undefined ? floor.washroomsCount : 4} Units`, icon: <Droplets size={12} /> },
           { label: 'CCTV', value: floor.cctvStatus || 'Active', icon: <ShieldCheck size={12} /> },
           { label: 'WiFi', value: floor.wifiStatus || 'Full', icon: <Wifi size={12} /> },
-          { label: 'Lounges', value: `${floor.loungesCount || 2} Areas`, icon: <Coffee size={12} /> }
+          { label: 'Lounges', value: `${floor.loungesCount !== undefined ? floor.loungesCount : 2} Areas`, icon: <Coffee size={12} /> }
         ].map((kpi, i) => (
           <div key={i} style={{ padding: '0.6rem', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #F1F5F9', textAlign: 'center' }}>
             <div style={{ color: '#6366F1', marginBottom: '0.2rem', display: 'flex', justifyContent: 'center' }}>{kpi.icon}</div>
@@ -2643,34 +2547,23 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
       <div style={{ zIndex: 1 }}>
         <p style={{ fontSize: '0.75rem', fontWeight: '950', color: '#0F172A', marginBottom: '0.8rem' }}>LIVE FACILITIES</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-          {(floor.facilities?.length ? floor.facilities : ['Laundry', 'Smart Access', 'Pantry', 'Gaming Zone', 'Study Hall']).map(f => (
-            <span key={f} style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>
-              {f}
-            </span>
-          ))}
+          {floor.facilities && floor.facilities.length > 0 ? (
+            floor.facilities.map(f => (
+              <span key={f} style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>
+                {f}
+              </span>
+            ))
+          ) : (
+            <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: '700' }}>No facilities listed</span>
+          )}
         </div>
       </div>
 
       {/* Action Footer */}
       <div style={{
-        marginTop: 'auto', display: 'grid', gridTemplateColumns: '1.2fr 0.6fr 1.2fr', gap: '0.8rem',
+        marginTop: 'auto', display: 'grid', gridTemplateColumns: '60px 1fr', gap: '0.8rem',
         paddingTop: '1.2rem', borderTop: '1px solid #F1F5F9', zIndex: 1
       }}>
-        <button
-          className="btn"
-          onClick={(e) => { e.stopPropagation(); onViewAnalytics(floor, 'floor'); }}
-          style={{
-            padding: '0.6rem 1rem', borderRadius: '20px', background: '#F8FAFC', color: '#0F172A',
-            fontWeight: '950', fontSize: '0.85rem', border: '1px solid #E2E8F0',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          <div style={{ width: '32px', height: '32px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
-            <img src={floor.images?.[0] || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=100&q=80'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Thumb" />
-          </div>
-          Intelligence
-        </button>
         <button
           className="btn"
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
@@ -2861,8 +2754,8 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
         </div>
       </div>
 
-      {/* Bento Section: Occupancy & Intelligence */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1rem', zIndex: 1 }}>
+      {/* Bento Section: Occupancy */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', zIndex: 1 }}>
         {/* Occupancy Bento */}
         <div style={{ padding: '1.5rem', borderRadius: '28px', background: "var(--bg-card)", border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
@@ -2885,24 +2778,6 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
             {Array.from({ length: room.capacity }).map((_, i) => (
               <div key={i} style={{ width: '12px', height: '12px', borderRadius: '4px', background: i < room.occupied ? themeColor : '#F1F5F9' }} />
             ))}
-          </div>
-        </div>
-
-        {/* AI Insight Bento */}
-        <div style={{
-          padding: '1.5rem', borderRadius: '28px',
-          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
-          color: "var(--text-on-primary)", display: 'flex', flexDirection: 'column', gap: '0.8rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Sparkles size={16} color="#6366F1" />
-            <span style={{ fontSize: '0.65rem', fontWeight: '950', letterSpacing: '0.1em' }}>AI INSIGHT</span>
-          </div>
-          <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: '700', lineHeight: '1.4', opacity: 0.9 }}>
-            {occupancyRate > 90 ? 'High ROI: Optimization recommended.' : 'Best for students: High natural light score.'}
-          </p>
-          <div style={{ marginTop: 'auto', padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.65rem', fontWeight: '900', textAlign: 'center' }}>
-            {room.ventilationScore || 85}% VENTILATION
           </div>
         </div>
       </div>
@@ -2967,39 +2842,33 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
 
       {/* Action Footer */}
       <div style={{
-        marginTop: 'auto', display: 'grid', gridTemplateColumns: '1.2fr 0.6fr 1.2fr', gap: '0.8rem',
-        paddingTop: '1.2rem', borderTop: '1px solid #F1F5F9', zIndex: 1
+        marginTop: 'auto', display: 'flex', justifyContent: 'space-between', gap: '0.8rem',
+        paddingTop: '1.2rem', borderTop: '1px solid #F1F5F9', zIndex: 1, alignItems: 'center'
       }}>
-        <button
-          className="btn"
-          onClick={(e) => { e.stopPropagation(); onViewDetails(room, 'room'); }}
-          style={{
-            padding: '0.6rem 1rem', borderRadius: '18px', background: '#F8FAFC', color: '#0F172A',
-            fontWeight: '950', fontSize: '0.85rem', border: '1px solid #E2E8F0',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem'
-          }}
-        >
-          <div style={{ width: '32px', height: '32px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
-            <img src={room.images?.[0] || 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=100&q=80'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Thumb" />
-          </div>
-          Intelligence
-        </button>
-        <button
-          className="btn"
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          style={{
-            padding: '1rem', borderRadius: '18px', background: '#FEF2F2', color: '#EF4444',
-            fontWeight: '950', fontSize: '0.85rem', border: '1px solid #FEE2E2',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}
-        >
-          <Trash2 size={18} />
-        </button>
+        <div style={{ display: 'flex', gap: '0.4rem' }}>
+          <button
+            className="btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            style={{ padding: '0.9rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Edit2 size={16} />
+          </button>
+          <button
+            className="btn"
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            style={{ padding: '0.9rem', borderRadius: '12px', background: '#FEF2F2', border: 'none', color: '#EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
         <button
           className="btn btn-primary"
           onClick={(e) => { e.stopPropagation(); onSelect(room); }}
           style={{
-            padding: '1.1rem', borderRadius: '22px', fontWeight: '950', fontSize: '0.85rem',
+            padding: '1.1rem 2rem', borderRadius: '22px', fontWeight: '950', fontSize: '0.85rem', flex: 1,
             boxShadow: `0 10px 20px ${themeColor}30`
           }}
         >

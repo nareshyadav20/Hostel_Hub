@@ -39,6 +39,7 @@ const Rooms = () => {
   const [filterType, setFilterType] = useState('All');
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState('rooms'); // 'rooms' or 'transfers'
+  const [showBedLayoutModal, setShowBedLayoutModal] = useState(false);
   const [transferRequests, setTransferRequests] = useState([]);
 
   const loadRoomsData = useCallback(async () => {
@@ -342,12 +343,14 @@ const Rooms = () => {
       {/* ────────────────────────────────────────────────── */}
 
       <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2.5rem' }}>
-        <button
-          onClick={() => setActiveTab('rooms')}
-          style={{ padding: '1rem 2rem', background: 'none', border: 'none', borderBottom: activeTab === 'rooms' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: activeTab === 'rooms' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer' }}
-        >
-          Floors & Rooms
-        </button>
+                    <button
+              className="btn"
+              onClick={() => setShowBedLayoutModal(true)}
+              style={{ padding: '1rem 2rem', background: 'none', border: 'none', borderBottom: activeTab === 'rooms' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: activeTab === 'rooms' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer' }}
+            >
+              View Beds
+            </button>
+          
         <button
           onClick={() => setActiveTab('transfers')}
           style={{ padding: '1rem 2rem', background: 'none', border: 'none', borderBottom: activeTab === 'transfers' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: activeTab === 'transfers' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
@@ -599,6 +602,131 @@ const Rooms = () => {
           </div>
         </motion.div>
       )}
+
+        {/* Bed Layout Modal */}
+        {showBedLayoutModal && (
+          <AnimatePresence>
+            <div style={{ position: 'fixed', inset: 0, zIndex: 4000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(12px)' }}
+                onClick={() => setShowBedLayoutModal(false)}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  maxWidth: '900px',
+                  maxHeight: '90vh',
+                  background: "var(--bg-card)",
+                  borderRadius: '24px',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  boxShadow: '0 50px 100px -20px rgba(0,0,0,0.3)'
+                }}
+              >
+                {/* Header */}
+                <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', background: "var(--bg-card)", display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Bed Layout</h2>
+                  <button onClick={() => setShowBedLayoutModal(false)} style={{ background: '#F8FAFC', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '8px', padding: '0.5rem 1rem' }}>Close</button>
+                </div>
+                 {/* Summary Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', padding: '1.5rem 1.5rem 0.5rem 1.5rem' }}>
+                  <div style={{ background: 'var(--bg-primary)', borderRadius: '16px', padding: '1rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.8rem', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)' }}>
+                    <span style={{ fontSize: '1.5rem' }}>🛏️</span>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Beds</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-primary)' }}>{bedStats.totalBeds}</div>
+                    </div>
+                  </div>
+                  <div style={{ background: 'var(--bg-primary)', borderRadius: '16px', padding: '1rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.8rem', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)' }}>
+                    <span style={{ fontSize: '1.5rem' }}>👤</span>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Filled Beds</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#ef4444' }}>{bedStats.filledBeds} / {bedStats.totalBeds}</div>
+                    </div>
+                  </div>
+                  <div style={{ background: 'var(--bg-primary)', borderRadius: '16px', padding: '1rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.8rem', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)' }}>
+                    <span style={{ fontSize: '1.5rem' }}>✅</span>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Available Beds</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#10b981' }}>{bedStats.availableBeds}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Occupancy Bar */}
+                <div style={{ padding: '0.5rem 1.5rem 1rem 1.5rem' }}>
+                  <div style={{ background: '#e5e7eb', borderRadius: '99px', overflow: 'hidden', height: '12px' }}>
+                    <div style={{ width: `${((bedStats.filledBeds || 0) / (bedStats.totalBeds || 1)) * 100}%`, background: '#10b981', height: '100%', borderRadius: '99px', transition: 'width 0.6s ease' }} />
+                  </div>
+                  <div style={{ fontSize: '0.85rem', marginTop: '0.5rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                    Bed Occupancy: {bedStats.filledBeds} / {bedStats.totalBeds} ({Math.round(((bedStats.filledBeds || 0) / (bedStats.totalBeds || 1)) * 100)}% Occupied)
+                  </div>
+                </div>
+
+                {/* Legend Above Grid */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', margin: '0.5rem 0 1.5rem 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '18px', height: '18px', background: '#10b981', borderRadius: '4px' }}></div>
+                    <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#10b981' }}>Available Bed</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '18px', height: '18px', background: '#ef4444', borderRadius: '4px' }}></div>
+                    <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#ef4444' }}>Filled Bed</span>
+                  </div>
+                </div>
+
+                {/* Grid */}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '0 1.5rem 1.5rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '10px', width: 'fit-content' }}>
+                    {Array.from({ length: bedStats.totalBeds || 100 }, (_, i) => {
+                      const bedLabel = `${i + 1}`;
+                      const occupied = i < (bedStats.filledBeds || 0);
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            width: '64px',
+                            height: '40px',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: '700',
+                            fontSize: '0.9rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            border: occupied ? '2px solid #ef4444' : '2px solid #10b981',
+                            background: occupied ? '#ef4444' : '#ffffff',
+                            color: occupied ? '#ffffff' : '#10b981',
+                            boxShadow: occupied ? '0 1px 4px rgba(239,68,68,0.3)' : 'none',
+                          }}
+                        >
+                          {bedLabel}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Legend Below Grid */}
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem', fontSize: '0.85rem', color: '#10b981', fontWeight: '700' }}>
+                    <span>💡 Red = Filled Bed</span>
+                    <span style={{ color: 'var(--text-muted)' }}>|</span>
+                    <span>Green = Available Bed</span>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </AnimatePresence>
+        )}
 
       {/* Bed Details Modal */}
       <AnimatePresence>

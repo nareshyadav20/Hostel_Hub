@@ -7,7 +7,21 @@ const createFloor = async (req, res) => {
     const building = await Building.findOne({ _id: buildingId, owner: req.user.id });
     if (!building) return res.status(404).json({ error: 'Building not found or unauthorized' });
     
-    const floor = await Floor.create({ floorNumber, description, images: images||[], building: buildingId });
+    const floor = await Floor.create({
+      floorNumber,
+      description,
+      images: images || [],
+      building: buildingId,
+      floorCategory: req.body.floorCategory || req.body.specializationCategory || 'General',
+      totalRooms: req.body.totalRooms || 0,
+      totalBeds: req.body.totalBeds || 0,
+      hygieneRating: req.body.hygieneRating || 5.0,
+      washroomsCount: req.body.washroomsCount || 0,
+      cctvStatus: req.body.cctvStatus || 'Active',
+      wifiStatus: req.body.wifiStatus || 'Excellent',
+      loungesCount: req.body.loungesCount || 0,
+      facilities: req.body.facilities || []
+    });
     building.floors.push(floor._id);
     await building.save();
     res.status(201).json(floor);
