@@ -1,11 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Check, Info, Wind, Zap, BookOpen, ShieldCheck,
-  Clock, CreditCard, ChevronDown, ChevronUp, Star,
-  Volume2, Lock, MousePointer2, Smartphone,
-  Coffee, Wifi, Snowflake, MapPin, IndianRupee, Home as HomeIcon, Search,
-  Bed, Library, Monitor, Users, Video, Phone, Eye, Moon, Train, Bus, ShoppingCart, Activity, Dumbbell, Shirt, Sparkles
+  Check, MapPin, Bed, Users, ShieldCheck, Star, DoorOpen, LayoutGrid, Lock, 
+  ChevronDown, ChevronUp, CheckCircle2, ChevronRight, Wind, Bath, Info, Zap, User
 } from 'lucide-react';
 import API from '../api/axios';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
@@ -15,521 +12,403 @@ import ImageModal from '../components/ImageModal';
 const Listing = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [activeTab, setActiveTab] = useState('overview');
-  const [selectedSharing, setSelectedSharing] = useState('2 Sharing');
-  const [selectedBed, setSelectedBed] = useState(2);
-  const [selectedFilters, setSelectedFilters] = useState(['Available']);
-  const [expandedBed, setExpandedBed] = useState(null);
-
-  const toggleFilter = (filter) => {
-    setSelectedFilters(prev =>
-      prev.includes(filter) ? prev.filter(f => f !== filter) : [...prev, filter]
-    );
-  };
-
-  const sectionRefs = {
-    overview: useRef(null),
-    rooms: useRef(null),
-    dining: useRef(null),
-    pricing: useRef(null),
-    rules: useRef(null),
-    rent: useRef(null)
-  };
-
-  const handleScrollTo = (sectionId) => {
-    setActiveTab(sectionId);
-    window.scrollTo({ top: 400, behavior: 'smooth' });
-  };
-
-  const images = [
-    'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80',
-    'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=400'
-  ];
-
+  
   const [hostel, setHostel] = useState(null);
-  const [menuUpdateInfo, setMenuUpdateInfo] = useState('');
+  const [loading, setLoading] = useState(true);
   const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // Auto-play / Auto-navigation carousel for building photos
-  const galleryImages = React.useMemo(() => {
-    if (hostel?.images && hostel.images.length > 0) {
-      return hostel.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `https://livora-hostel-hub-1.onrender.com${img}`);
-    }
-    // Fallback images if building has no images
-    return [
-      "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1596276865531-9556a7de74f9?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80"
-    ];
-  }, [hostel?.images]);
+  // Expanded States for Accordions
+  const [expandedFloor, setExpandedFloor] = useState(null);
+  const [expandedRoom, setExpandedRoom] = useState(null);
+  
+  // Selection State for Booking
+  const [selectedFloor, setSelectedFloor] = useState(null);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [selectedBed, setSelectedBed] = useState(null);
 
-  React.useEffect(() => {
-    if (galleryImages.length <= 1) return;
-    const interval = setInterval(() => {
-      setActiveImageIndex(prev => (prev + 1) % galleryImages.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [galleryImages]);
-
-  React.useEffect(() => {
-    const fetchHostel = () => {
-      API.get(`/buildings/public/${id}`).then(res => setHostel(res.data)).catch(console.error);
+  useEffect(() => {
+    const fetchHostel = async () => {
+      try {
+        const res = await API.get(`/buildings/public/${id}`);
+        setHostel(res.data);
+      } catch (error) {
+        console.error("Failed to fetch building data", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchHostel();
-
-    // Connect to real-time sync server
     connectSocket(id);
-
-    // Listen for live updates
     socket.on('hostelUpdated', (updatedHostel) => {
       if (updatedHostel._id === id || (updatedHostel.buildings && updatedHostel.buildings.includes(id))) {
-        setHostel(updatedHostel);
-        console.log('⚡ Real-time Update: Hostel data refreshed');
+        fetchHostel(); 
       }
     });
-
-    socket.on('menuUpdated', (data) => {
-      setMenuUpdateInfo(data.indicator || 'Updated Just Now');
-      setTimeout(() => setMenuUpdateInfo(''), 8000);
-    });
-
-    socket.on('bedStatusUpdated', () => {
-      fetchHostel();
-    });
+    socket.on('bedStatusUpdated', () => fetchHostel());
 
     return () => {
       socket.off('hostelUpdated');
-      socket.off('menuUpdated');
       socket.off('bedStatusUpdated');
+      disconnectSocket();
     };
   }, [id]);
 
-  const basePrice = hostel?.startingPrice || 5000;
-  const foodCost = (hostel?.foodCharges !== undefined && hostel?.foodCharges !== null && hostel?.foodCharges > 0) ? hostel.foodCharges : 3000;
-  const maintenanceCost = (hostel?.maintenanceCharges !== undefined && hostel?.maintenanceCharges !== null && hostel?.maintenanceCharges > 0) ? hostel.maintenanceCharges : 799;
-
-  const pricingMap = {
-    'No Pref': { rent: basePrice, deposit: basePrice, food: foodCost, maintenance: maintenanceCost, name: 'No Preference', desc: 'Any available bed', beds: 1 },
-    'Single': {
-      rent: (hostel?.rentSingle || basePrice * 2),
-      deposit: (hostel?.securityDeposit || basePrice * 2),
-      food: foodCost, maintenance: maintenanceCost, name: 'Single Room', desc: 'Private room', beds: 1
-    },
-    '2 Sharing': {
-      rent: (hostel?.rentDouble || Math.round(basePrice * 1.3333)),
-      deposit: (hostel?.securityDeposit || Math.round(basePrice * 1.3333)),
-      food: foodCost, maintenance: maintenanceCost, name: '2 Sharing', desc: '2 beds per room', beds: 2
-    },
-    '3 Sharing': {
-      rent: (hostel?.rentTriple || basePrice),
-      deposit: (hostel?.securityDeposit || basePrice),
-      food: foodCost, maintenance: maintenanceCost, name: '3 Sharing', desc: '3 beds per room', beds: 3
-    },
-    '4 Sharing': { rent: Math.round(basePrice * 0.9), deposit: Math.round(basePrice * 0.9), food: foodCost, maintenance: maintenanceCost, name: '4 Sharing', desc: '4 beds per room', beds: 4 },
-    '5 Sharing': { rent: Math.round(basePrice * 0.8), deposit: Math.round(basePrice * 0.8), food: foodCost, maintenance: maintenanceCost, name: '5 Sharing', desc: '5 beds per room', beds: 5 },
-    '6 Sharing': { rent: Math.round(basePrice * 0.7), deposit: Math.round(basePrice * 0.7), food: foodCost, maintenance: maintenanceCost, name: '6 Sharing', desc: '6 beds per room', beds: 6 },
-    'Dormitory': { rent: Math.round(basePrice * 0.5), deposit: Math.round(basePrice * 0.5), food: foodCost, maintenance: maintenanceCost, name: 'Dormitory', desc: 'Dormitory bed', beds: 8 },
-    'Other': { rent: basePrice, deposit: basePrice, food: foodCost, maintenance: maintenanceCost, name: 'Other', desc: 'Custom arrangement', beds: 1 }
+  const toggleFloor = (floor) => {
+    if (expandedFloor?._id === floor._id) {
+      setExpandedFloor(null);
+      setExpandedRoom(null);
+    } else {
+      setExpandedFloor(floor);
+      setExpandedRoom(null);
+    }
   };
 
-  const currentPrice = pricingMap[selectedSharing] || pricingMap['2 Sharing'];
-  const totalDue = currentPrice.rent + currentPrice.deposit + currentPrice.food + currentPrice.maintenance;
+  const toggleRoom = (room) => {
+    if (expandedRoom?._id === room._id) {
+      setExpandedRoom(null);
+    } else {
+      setExpandedRoom(room);
+    }
+  };
+
+  const handleBedSelect = (floor, room, bed) => {
+    const isOccupied = bed.status === 'OCCUPIED' || (hostel?.filledBeds && hostel.filledBeds.some(b => String(b.bedId) === String(bed._id)));
+    if (!isOccupied) {
+      setSelectedFloor(floor);
+      setSelectedRoom(room);
+      setSelectedBed(bed);
+    }
+  };
+
+  const handleBooking = () => {
+    if (!selectedBed || !selectedRoom || !selectedFloor) return;
+    
+    if (!localStorage.getItem('token')) {
+      navigate('/login');
+      return;
+    }
+
+    const bookingData = {
+      buildingId: hostel._id,
+      floorId: selectedFloor._id,
+      roomId: selectedRoom._id,
+      bedId: selectedBed._id,
+      rentAmount: selectedRoom.rentAmount || hostel.startingPrice,
+      securityDeposit: selectedRoom.securityDeposit || hostel.securityDeposit || 0,
+      foodCharges: hostel.foodCharges || 0,
+      maintenanceCharges: hostel.maintenanceCharges || 0,
+      roomNumber: selectedRoom.roomNumber,
+      bedNumber: selectedBed.bedNumber,
+      floorNumber: selectedFloor.floorNumber
+    };
+
+    navigate(`/booking/${id}`, { state: bookingData });
+  };
+
+  if (loading) {
+    return (
+      <div className="lst-page loading">
+        <div className="explore-spinner"></div>
+      </div>
+    );
+  }
+
+  if (!hostel) {
+    return (
+      <div className="lst-page not-found">
+        <h2>Property Not Found</h2>
+        <button onClick={() => navigate(-1)} className="lst-btn-reserve">Go Back</button>
+      </div>
+    );
+  }
+
+  // Helper for No Data
+  const renderField = (value) => {
+    if (value === null || value === undefined || value === '') return 'No Data Available';
+    return value;
+  };
+
+  const currentRent = selectedRoom?.rentAmount ? selectedRoom.rentAmount : (hostel.startingPrice || 0);
+  const currentDeposit = selectedRoom?.securityDeposit ? selectedRoom.securityDeposit : (hostel.securityDeposit || 0);
+  const foodCost = hostel.foodCharges || 0;
+  const maintenanceCost = hostel.maintenanceCharges || 0;
+  const totalDue = currentRent + currentDeposit + foodCost + maintenanceCost;
 
   return (
     <div className="lst-page">
-      {/* 1. Header & Gallery */}
-      <header className="lst-header" style={{ position: 'relative' }}>
-        <button 
-          onClick={() => navigate(-1)} 
-          style={{ position: 'absolute', top: '16px', right: '16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 100, color: '#64748b', fontWeight: 'bold' }}
-        >
-          ✕
-        </button>
-        <h1 className="lst-title">{hostel?.name || 'Livora Premium Hostel'}</h1>
-        <div className="lst-meta">
-          <span className="lst-badge rating">⭐ {hostel?.rating || '4.8'}</span>
-          <span className="lst-badge category">🎓 {hostel?.category || 'Students'}</span>
-          <span className="lst-badge gender">👨 {hostel?.genderType || 'Boys'}</span>
-          <span>📍 {hostel?.address || 'Koramangala, Bangalore'}</span>
-          {hostel?.popularityLabel && <span className="lst-badge premium-tag"><Star size={12} fill="currentColor" /> {hostel.popularityLabel}</span>}
-          <span className="lst-badge premium-tag"><ShieldCheck size={12} /> Verified Property</span>
-        </div>
-
-        <div className="lst-quick-highlights">
-          <div className="lst-qh-item"><Check size={14} color="var(--lst-success)" /> <span>12 Beds Left</span></div>
-          <div className="lst-qh-item"><IndianRupee size={14} color="var(--lst-primary)" /> <span>Starts ₹9,000</span></div>
-          <div className="lst-qh-item"><MapPin size={14} color="var(--lst-info)" /> <span>2km from College</span></div>
-          <div className="lst-qh-item"><Coffee size={14} color="var(--lst-warning)" /> <span>Food Included</span></div>
-          <div className="lst-qh-item"><Wifi size={14} color="var(--lst-primary)" /> <span>100 Mbps WiFi</span></div>
-          <div className="lst-qh-item"><Zap size={14} color="var(--lst-warning)" /> <span>24/7 Power</span></div>
-          <div className="lst-qh-item"><Clock size={14} color="var(--lst-success)" /> <span>Move-In Ready</span></div>
+      <header className="lst-header">
+        <button className="lst-back-btn" onClick={() => navigate(-1)}>✕</button>
+        <div className="lst-title-area">
+          <h1 className="lst-title">{renderField(hostel.name)}</h1>
+          <div className="lst-meta-tags">
+            {hostel.rating ? <span className="lst-tag rating"><Star size={12} fill="currentColor" /> {hostel.rating} Rating</span> : null}
+            <span className="lst-tag category">🎓 Category: {renderField(hostel.category)}</span>
+            <span className="lst-tag gender">👥 Gender: {renderField(hostel.genderType)}</span>
+          </div>
+          <p className="lst-address">
+            <MapPin size={16}/> {renderField(hostel.address)}, {renderField(hostel.locationCity)}
+          </p>
         </div>
       </header>
 
-      <div className="lst-gallery" style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px' }}>
-        <div
-          className="lst-img-main"
-          onClick={() => setModalInfo({ isOpen: true, image: galleryImages[activeImageIndex] })}
-          style={{ cursor: 'zoom-in', width: '100%', height: '100%', position: 'relative' }}
-        >
-          <img
-            src={galleryImages[activeImageIndex]}
-            alt={`Building Photo ${activeImageIndex + 1}`}
-            className="lst-img"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.5s ease-in-out' }}
-          />
-
-          {/* Left Arrow */}
-          {galleryImages.length > 1 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setActiveImageIndex(prev => (prev - 1 + galleryImages.length) % galleryImages.length);
-              }}
-              style={{
-                position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)',
-                background: 'rgba(255, 255, 255, 0.8)', border: 'none', borderRadius: '50%',
-                width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', color: '#1E293B', transition: 'all 0.2s',
-                zIndex: 5
-              }}
-            >
-              ❮
-            </button>
+      <div className="lst-hero-gallery">
+        <div className="lst-hg-main" onClick={() => {
+          if(hostel.images && hostel.images.length > 0) {
+             setModalInfo({ isOpen: true, image: hostel.images[activeImageIndex] });
+          }
+        }}>
+          {hostel.images && hostel.images.length > 0 ? (
+            <img src={hostel.images[activeImageIndex]} alt="Property Main" className="lst-hg-img" />
+          ) : (
+            <div className="lst-no-img">No Data Available</div>
           )}
-
-          {/* Right Arrow */}
-          {galleryImages.length > 1 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setActiveImageIndex(prev => (prev + 1) % galleryImages.length);
-              }}
-              style={{
-                position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)',
-                background: 'rgba(255, 255, 255, 0.8)', border: 'none', borderRadius: '50%',
-                width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', color: '#1E293B', transition: 'all 0.2s',
-                zIndex: 5
-              }}
-            >
-              ❯
-            </button>
-          )}
-
-          {/* Navigation Dots */}
-          {galleryImages.length > 1 && (
-            <div style={{
-              position: 'absolute', bottom: '16px', left: '50%', transform: 'translateX(-50%)',
-              display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.4)', padding: '6px 12px', borderRadius: '20px',
-              zIndex: 10
-            }}>
-              {galleryImages.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveImageIndex(idx);
-                  }}
-                  style={{
-                    width: '8px', height: '8px', borderRadius: '50%', border: 'none',
-                    background: activeImageIndex === idx ? '#FFFFFF' : 'rgba(255,255,255,0.5)',
-                    padding: 0, cursor: 'pointer', transition: 'all 0.2s'
-                  }}
-                />
-              ))}
+          {hostel.images && hostel.images.length > 1 && (
+            <div className="lst-hg-nav">
+              <button onClick={(e) => { e.stopPropagation(); setActiveImageIndex(prev => (prev - 1 + hostel.images.length) % hostel.images.length); }}>❮</button>
+              <button onClick={(e) => { e.stopPropagation(); setActiveImageIndex(prev => (prev + 1) % hostel.images.length); }}>❯</button>
             </div>
           )}
         </div>
       </div>
-      {/* 2. Nav Tabs */}
-      <div className="lst-nav-wrap">
-        <div className="lst-nav-tabs">
-          {['overview', 'rooms', 'dining', 'rules', 'rent'].map(tab => (
-            <button key={tab} className={`lst-nav-btn ${activeTab === tab ? 'active' : ''}`} onClick={() => handleScrollTo(tab)}>
-              {tab === 'rent' ? 'MONTHLY RENT' : tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
-        </div>
-      </div>
 
-      <div className="lst-content" style={activeTab !== 'overview' ? { display: 'flex', justifyContent: 'center', width: '100%' } : {}}>
-        <div className="lst-main" style={
-          ['rent', 'rules', 'dining'].includes(activeTab) ? { display: 'none' } : 
-          (activeTab !== 'overview' ? { width: '100%', maxWidth: '900px' } : {})
-        }>
-
-          {/* OVERVIEW SECTION */}
-          {(activeTab === 'overview') && (
-          <div ref={sectionRefs.overview} className="lst-section">
-            <h2 className="lst-section-title">
-              <span className="lst-section-icon">📊</span> Overview & Details
-            </h2>
-
-            <h3 style={{ fontSize: '16px', marginBottom: '12px' }}>Occupancy & Category</h3>
-            <div className="lst-grid-2">
-              <div className="lst-info-card" style={{ background: 'var(--lst-bg-blue)' }}>
-                <span className="lst-ic-label">Sharing</span>
-                <span className="lst-ic-val">{selectedSharing}</span>
-              </div>
-              <div className="lst-info-card" style={{ background: 'var(--lst-bg-purple)' }}>
-                <span className="lst-ic-label">Category</span>
-                <span className="lst-ic-val">Students</span>
-              </div>
-              <div className="lst-info-card" style={{ background: 'var(--lst-bg-orange)' }}>
-                <span className="lst-ic-label">Gender</span>
-                <span className="lst-ic-val">Boys</span>
-              </div>
-              <div className="lst-info-card" style={{ background: 'var(--lst-bg-green)' }}>
-                <span className="lst-ic-label">Occupancy</span>
-                <span className="lst-ic-val">70% Full</span>
-              </div>
-            </div>
-          </div>
-          )}
-
-          {/* ROOMS SECTION */}
-          {(activeTab === 'overview' || activeTab === 'rooms') && (
-          <div ref={sectionRefs.rooms} className="lst-section">
-            <h2 className="lst-section-title"><span className="lst-section-icon">🛏️</span> Select Room Type</h2>
-            <div className="lst-room-types" style={{ display: 'block' }}>
-              <select 
-                value={selectedSharing} 
-                onChange={(e) => { 
-                  const val = e.target.value; 
-                  setSelectedSharing(val); 
-                  setSelectedBed(val === '2 Sharing' ? 2 : null); 
-                }}
-                style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--lst-border)', background: 'var(--lst-bg-card)', color: 'var(--lst-text-main)', fontSize: '16px', fontWeight: '600', cursor: 'pointer', outline: 'none' }}
-              >
-                {['No Pref', 'Single', '2 Sharing', '3 Sharing', '4 Sharing', '5 Sharing', '6 Sharing', 'Dormitory', 'Other'].map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
+      <div className="lst-layout">
+        <div className="lst-explorer">
+          
+          <section className="lst-block">
+            <h2 className="lst-block-title">Building Overview</h2>
+            <div className="lst-overview-grid">
+               <div className="lst-og-item"><strong>Description:</strong> {renderField(hostel.description)}</div>
+               <div className="lst-og-item"><strong>Total Rooms:</strong> {renderField(hostel.totalRooms)}</div>
+               <div className="lst-og-item"><strong>Total Beds:</strong> {renderField(hostel.totalBeds)}</div>
+               <div className="lst-og-item"><strong>Starting Price:</strong> {hostel.startingPrice ? `₹${hostel.startingPrice}` : 'No Data Available'}</div>
+               <div className="lst-og-item"><strong>Security Deposit:</strong> {hostel.securityDeposit ? `₹${hostel.securityDeposit}` : 'No Data Available'}</div>
+               <div className="lst-og-item"><strong>Food Charges:</strong> {hostel.foodCharges ? `₹${hostel.foodCharges}` : 'No Data Available'}</div>
+               <div className="lst-og-item"><strong>Maintenance Charges:</strong> {hostel.maintenanceCharges ? `₹${hostel.maintenanceCharges}` : 'No Data Available'}</div>
+               <div className="lst-og-item"><strong>Property Features:</strong> {renderField(hostel.popularityLabel)}</div>
             </div>
 
-            <h3 style={{ fontSize: '16px', marginBottom: '12px' }}>Room Dimensions</h3>
-            <div className="lst-grid-3">
-              <div className="lst-info-card" style={{ border: '1px solid var(--lst-border)' }}>
-                <span className="lst-ic-label">Length</span><span className="lst-ic-val">12 ft</span>
-              </div>
-              <div className="lst-info-card" style={{ border: '1px solid var(--lst-border)' }}>
-                <span className="lst-ic-label">Width</span><span className="lst-ic-val">14 ft</span>
-              </div>
-              <div className="lst-info-card" style={{ border: '1px solid var(--lst-primary)', background: 'var(--lst-bg-blue)' }}>
-                <span className="lst-ic-label" style={{ color: 'var(--lst-primary)' }}>Total Area</span><span className="lst-ic-val">168 sq ft</span>
-              </div>
-            </div>
-
-            <h3 style={{ fontSize: '16px', marginBottom: '12px', marginTop: '24px' }}>Bed Availability</h3>
-            <div className="lst-bed-wrapper">
-
-              <div style={{ display: 'flex', gap: '20px', marginBottom: '16px', fontSize: '14px', fontWeight: 700 }}>
-                <span>Total Beds: {currentPrice.beds}</span>
-                <span style={{ color: 'var(--lst-success)' }}>Available: {Math.max(0, currentPrice.beds - (hostel?.filledBeds?.filter(b => b.sharingType === currentPrice.beds || String(b.sharingType) === selectedSharing).length || 0))}</span>
-                <span style={{ color: 'var(--lst-danger)' }}>Occupied: {hostel?.filledBeds?.filter(b => b.sharingType === currentPrice.beds || String(b.sharingType) === selectedSharing).length || 0}</span>
-              </div>
-
-              <div className="lst-bed-list">
-                {Array.from({ length: currentPrice.beds }).map((_, i) => {
-                  const bedNum = i + 1;
-                  const isFilled = hostel?.filledBeds?.some(b => (b.sharingType === currentPrice.beds || String(b.sharingType) === selectedSharing) && b.bedNumber === bedNum);
-                  return (
-                    <div key={bedNum}
-                      className={`lst-bed-row ${isFilled ? 'occupied' : (selectedBed === bedNum ? 'selected' : '')}`}
-                      onClick={() => !isFilled && setSelectedBed(bedNum)}
-                    >
-                      <div className="lst-bed-left">
-                        <h4>Bed {bedNum}</h4>
-                        <p>{isFilled ? 'Single Cot • Near Door • Head → North' : 'Single Cot • Window Side • Head → South'}</p>
-                      </div>
-                      <div className={`lst-bed-status ${isFilled ? 'filled' : (selectedBed === bedNum ? 'sel' : 'avail')}`}>
-                        {isFilled ? 'FILLED' : (selectedBed === bedNum ? 'SELECTED' : 'AVAILABLE')}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* NEW SECTION: BED DETAILS & PREFERENCES */}
-            <h3 style={{ fontSize: '16px', marginTop: '24px', marginBottom: '12px' }}>Bed Details & Preferences</h3>
-
-            {/* Horizontal Filters */}
-            <div className="lst-bed-filters">
-              {['Available', 'AC', 'Non-AC', 'Window Side', 'Quiet Zone', 'Study Friendly', 'With Locker', 'Lower Bunk', 'Upper Bunk', 'Near Window', 'Best WiFi', 'Most Preferred', 'Newly Added', 'Budget Friendly', 'Premium Beds', 'Attached Bathroom', 'Balcony Room', 'Fast Booking'].map(filter => (
-                <button
-                  key={filter}
-                  className={`lst-filter-chip ${selectedFilters.includes(filter) ? 'active' : ''}`}
-                  onClick={() => toggleFilter(filter)}
-                >
-                  {filter}
-                </button>
-              ))}
-            </div>
-
-            <div className="lst-bed-cards-v2">
-              {Array.from({ length: currentPrice.beds }).map((_, i) => {
-                const bedNum = i + 1;
-                const isOccupied = hostel?.filledBeds?.some(b => (b.sharingType === currentPrice.beds || String(b.sharingType) === selectedSharing) && b.bedNumber === bedNum);
-                const isSelected = selectedBed === bedNum;
-                const isExpanded = expandedBed === bedNum;
-
-                return (
-                  <div
-                    key={bedNum}
-                    className={`lst-bed-card-v2 ${isSelected ? 'selected' : ''} ${isOccupied ? 'occupied' : ''}`}
-                    onClick={() => !isOccupied && setSelectedBed(bedNum)}
-                  >
-                    <div className="lst-bed-card-top">
-                      <div className="lst-bc-header">
-                        <div className="lst-bc-title">
-                          <div className="lst-bc-num-wrap">
-                            <span className="lst-bc-num">#{bedNum}</span>
-                            <h4>Luxury Bed</h4>
-                          </div>
-                          <span className="lst-bc-type">
-                            <HomeIcon size={14} /> {bedNum % 2 === 0 ? 'Lower Bunk' : 'Single Cot'} •
-                            <MapPin size={14} /> {bedNum === 1 ? 'Near Door' : 'Window Side'}
-                          </span>
-                        </div>
-                        <div className={`lst-bc-status-pill ${isOccupied ? 'occupied' : (isSelected ? 'selected' : 'available')}`}>
-                          {isOccupied ? <Lock size={12} /> : (isSelected ? <Check size={12} /> : <MousePointer2 size={12} />)}
-                          {isOccupied ? 'Occupied' : (isSelected ? 'Selected' : 'Available')}
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          )}
-
-        </div>
-
-        {/* SIDEBAR */}
-        {(['overview', 'rent', 'rules', 'dining'].includes(activeTab)) && (
-        <div className="lst-sidebar" style={activeTab !== 'overview' ? { width: '100%', maxWidth: '900px' } : {}}>
-          {/* MONTHLY RENT SECTION (Now in Sidebar) */}
-          {(activeTab === 'overview' || activeTab === 'rent') && (
-          <div ref={sectionRefs.rent} className="lst-section lst-sidebar-card">
-            <h2 className="lst-section-title"><span className="lst-section-icon">💰</span> Monthly Rent</h2>
-            <div className="lst-booking-card">
-              <div className="lst-bill-row"><div style={{ textAlign: 'left', flex: 1 }}>Room Rent</div><div style={{ textAlign: 'right', color: 'var(--lst-text-main)', fontWeight: 700 }}>₹{currentPrice.rent.toLocaleString()}</div></div>
-              <div className="lst-bill-row"><div style={{ textAlign: 'left', flex: 1 }}>Security Deposit</div><div style={{ textAlign: 'right', color: 'var(--lst-text-main)', fontWeight: 700 }}>₹{currentPrice.deposit.toLocaleString()}</div></div>
-              <div className="lst-bill-row"><div style={{ textAlign: 'left', flex: 1 }}>Food (Monthly)</div><div style={{ textAlign: 'right', color: 'var(--lst-text-main)', fontWeight: 700 }}>₹{currentPrice.food.toLocaleString()}</div></div>
-              <div className="lst-bill-row"><div style={{ textAlign: 'left', flex: 1 }}>Maintenance</div><div style={{ textAlign: 'right', color: 'var(--lst-text-main)', fontWeight: 700 }}>₹{currentPrice.maintenance.toLocaleString()}</div></div>
-
-              <div className="lst-bill-divider"></div>
-
-              <div className="lst-bill-total"><div style={{ textAlign: 'left', flex: 1 }}>Total Payment</div><div style={{ textAlign: 'right' }}>₹{totalDue.toLocaleString()}</div></div>
-
-              {/* NEW SECTION: MOVE-IN ASSISTANCE */}
-              <div className="lst-movein-assist">
-                <h4 style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--lst-text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}><Zap size={16} color="var(--lst-warning)" /> Move-In Assistance</h4>
-                <div className="lst-ma-list">
-                  <div className="lst-ma-item"><Check size={14} color="var(--lst-success)" /> <span>Instant Booking Available</span></div>
-                  <div className="lst-ma-item"><Check size={14} color="var(--lst-success)" /> <span>Free Virtual/Physical Tour</span></div>
-                  <div className="lst-ma-item"><Check size={14} color="var(--lst-success)" /> <span>Luggage Support on Arrival</span></div>
-                  <div className="lst-ma-item"><Check size={14} color="var(--lst-success)" /> <span>Setup Assistance Included</span></div>
-                  <div className="lst-ma-item"><Check size={14} color="var(--lst-success)" /> <span>Early Move-In Options</span></div>
+            <h3 className="lst-sub-title">Amenities</h3>
+            <div className="lst-features-list">
+              {hostel.amenities?.length > 0 ? hostel.amenities.map((amenity, idx) => (
+                <div key={idx} className="lst-feature-pill">
+                  <Check size={14} color="var(--lst-primary)" /> {amenity}
                 </div>
-              </div>
-
-              <div style={{ background: 'var(--lst-bg-blue)', padding: '16px', borderRadius: '12px', marginBottom: '24px', fontSize: '15px', fontWeight: 800, color: 'var(--lst-primary)', textAlign: 'center', border: '1px solid rgba(99,102,241,0.1)' }}>
-                Selected: {selectedBed ? `Bed ${selectedBed}` : 'Please select a bed above'}
-              </div>
-
-              <button
-                className="lst-btn-reserve"
-                disabled={!selectedBed}
-                onClick={() => {
-                  if (!localStorage.getItem('token')) {
-                    navigate('/login');
-                  } else {
-                    navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed, basePrice, securityDeposit: currentPrice.deposit } });
-                  }
-                }}
-                style={{ width: '100%', padding: '20px', fontSize: '18px' }}
-              >
-                Book Now
-              </button>
-              <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: 'var(--lst-text-muted)', fontWeight: 600 }}>
-                🔒 Secure payment powered by Livora Finance
-              </div>
-              <ImageModal
-                isOpen={modalInfo.isOpen}
-                image={modalInfo.image}
-                onClose={() => setModalInfo({ isOpen: false, image: '' })}
-              />
+              )) : <span className="lst-none">No Data Available</span>}
             </div>
-          </div>
-          )}
 
-          {/* DINING SECTION (Moved to Sidebar) */}
-          {(activeTab === 'overview' || activeTab === 'dining') && (
-          <div ref={sectionRefs.dining} className="lst-section">
-            <h2 className="lst-section-title"><span className="lst-section-icon">🍽️</span> Dining & Food</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div className="lst-info-card" style={{ background: 'var(--lst-bg-orange)' }}>
-                <span className="lst-ic-label" style={{ color: '#c2410c' }}>Meal Type</span><span className="lst-ic-val">Veg + Non-Veg</span>
-              </div>
-              <div className="lst-info-card" style={{ background: 'var(--lst-bg-green)', position: 'relative' }}>
-                <span className="lst-ic-label" style={{ color: '#15803d' }}>Weekly Menu</span><span className="lst-ic-val">7-day rotation</span>
-                {menuUpdateInfo && <span className="lst-live-indicator">{menuUpdateInfo}</span>}
-              </div>
-              <div className="lst-info-card" style={{ background: 'var(--lst-bg-blue)' }}>
-                <span className="lst-ic-label" style={{ color: '#1d4ed8' }}>Custom Menu</span><span className="lst-ic-val">On request</span>
-              </div>
+            <h3 className="lst-sub-title">House Rules</h3>
+            <div className="lst-overview-grid">
+               <div className="lst-og-item"><strong>Smoking:</strong> {renderField(hostel.policies?.smoking)}</div>
+               <div className="lst-og-item"><strong>Alcohol:</strong> {renderField(hostel.policies?.alcohol)}</div>
+               <div className="lst-og-item"><strong>Pets:</strong> {renderField(hostel.policies?.pets)}</div>
+               <div className="lst-og-item"><strong>Visitors:</strong> {renderField(hostel.policies?.visitors)}</div>
             </div>
-          </div>
-          )}
+          </section>
 
-          {/* RULES SECTION (Moved to Sidebar) */}
-          {(activeTab === 'overview' || activeTab === 'rules') && (
-          <div ref={sectionRefs.rules} className="lst-section">
-            <h2 className="lst-section-title"><span className="lst-section-icon">📜</span> House Rules</h2>
-            <div className="lst-rule-list">
-              <div className="lst-rule-item">🚫 <span>No smoking inside rooms or common areas</span></div>
-              <div className="lst-rule-item">⏰ <span>Visitors allowed between 9 AM – 8 PM only</span></div>
-              <div className="lst-rule-item">🤫 <span>Quiet hours from 10 PM – 7 AM</span></div>
-              <div className="lst-rule-item">🧹 <span>Keep rooms clean; weekly inspection applies</span></div>
-              <div className="lst-rule-item">🐕 <span>No pets allowed on premises</span></div>
-              <div className="lst-rule-item">🪪 <span>ID verification mandatory for all residents</span></div>
+          <section className="lst-block">
+            <h2 className="lst-block-title"><LayoutGrid size={20}/> Floor Explorer</h2>
+            
+            <div className="lst-accordion-container">
+              {hostel.floors && hostel.floors.length > 0 ? (
+                hostel.floors.map(floor => (
+                  <div key={floor._id} className={`lst-floor-accordion ${expandedFloor?._id === floor._id ? 'expanded' : ''}`}>
+                    <div className="lst-floor-header" onClick={() => toggleFloor(floor)}>
+                      <div className="lst-fh-left">
+                        <h3>Floor {renderField(floor.floorNumber)}</h3>
+                        <span className="lst-fh-category">Type: {renderField(floor.floorCategory)}</span>
+                      </div>
+                      <div className="lst-fh-right">
+                        <span className="lst-fh-stats"><DoorOpen size={16}/> {floor.rooms ? floor.rooms.length : 0} Rooms</span>
+                        <div className="lst-fh-icon">
+                          {expandedFloor?._id === floor._id ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {expandedFloor?._id === floor._id && (
+                      <div className="lst-floor-body">
+                        <div className="lst-floor-details-grid">
+                          <div><strong>Description:</strong> {renderField(floor.description)}</div>
+                          <div><strong>Occupancy:</strong> {renderField(floor.occupancyPercentage)}%</div>
+                          <div><strong>Total Rooms:</strong> {renderField(floor.totalRooms)}</div>
+                          <div><strong>Total Beds:</strong> {renderField(floor.totalBeds)}</div>
+                        </div>
+
+                        {floor.facilities && floor.facilities.length > 0 ? (
+                          <div className="lst-floor-facilities">
+                            <strong>Facilities: </strong>
+                            {floor.facilities.map((fac, idx) => <span key={idx} className="lst-fac-pill">{fac}</span>)}
+                          </div>
+                        ) : <div style={{margin: '10px 0'}}><strong>Facilities:</strong> No Data Available</div>}
+                        
+                        <h4 className="lst-explorer-title">Room Explorer</h4>
+                        <div className="lst-rooms-accordion">
+                          {floor.rooms && floor.rooms.length > 0 ? (
+                            floor.rooms.map(room => {
+                               const occupiedCount = room.beds ? room.beds.filter(b => b.status === 'OCCUPIED' || (hostel.filledBeds && hostel.filledBeds.some(fb => String(fb.bedId) === String(b._id)))).length : 0;
+                               const availableCount = (room.beds ? room.beds.length : 0) - occupiedCount;
+
+                               return (
+                              <div key={room._id} className={`lst-room-accordion ${expandedRoom?._id === room._id ? 'expanded' : ''}`}>
+                                <div className="lst-room-header" onClick={() => toggleRoom(room)}>
+                                  <div className="lst-rh-left">
+                                    <h4>Room {renderField(room.roomNumber)}</h4>
+                                    <div className="lst-rh-tags">
+                                      <span className="lst-tag">Type: {renderField(room.roomType)}</span>
+                                      <span className="lst-tag">Status: {renderField(room.status)}</span>
+                                    </div>
+                                  </div>
+                                  <div className="lst-rh-right">
+                                    <div className="lst-rh-price">
+                                      <span className="amount">₹{room.rentAmount ? room.rentAmount.toLocaleString() : 'N/A'}</span>
+                                      <span className="period">/mo</span>
+                                    </div>
+                                    <div className="lst-rh-icon">
+                                      {expandedRoom?._id === room._id ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {expandedRoom?._id === room._id && (
+                                  <div className="lst-room-body">
+                                    <div className="lst-room-details-grid">
+                                      <div><strong>Capacity:</strong> {renderField(room.capacity)}</div>
+                                      <div><strong>Occupied Beds:</strong> {occupiedCount}</div>
+                                      <div><strong>Available Beds:</strong> {availableCount}</div>
+                                      <div><strong>AC:</strong> {room.isAC ? 'Yes' : 'No'}</div>
+                                      <div><strong>Washroom:</strong> {renderField(room.washroomType)}</div>
+                                      <div><strong>Security Deposit:</strong> {room.securityDeposit ? `₹${room.securityDeposit}` : 'No Data Available'}</div>
+                                    </div>
+
+                                    {room.amenities && room.amenities.length > 0 ? (
+                                      <div className="lst-room-amenities">
+                                        <strong>Facilities: </strong>
+                                        {room.amenities.map((am, idx) => <span key={idx}><Check size={12}/> {am}</span>)}
+                                      </div>
+                                    ) : <div style={{margin: '10px 0'}}><strong>Facilities:</strong> No Data Available</div>}
+                                    
+                                    <h5 className="lst-beds-title">Bed Explorer</h5>
+                                    <div className="lst-beds-grid">
+                                      {room.beds && room.beds.length > 0 ? (
+                                        room.beds.map(bed => {
+                                          const isOccupied = bed.status === 'OCCUPIED' || (hostel.filledBeds && hostel.filledBeds.some(b => String(b.bedId) === String(bed._id)));
+                                          const isSelected = selectedBed?._id === bed._id;
+                                          
+                                          return (
+                                            <div 
+                                              key={bed._id} 
+                                              className={`lst-bed-card ${isOccupied ? 'occupied' : ''} ${isSelected ? 'selected' : ''}`}
+                                              onClick={() => handleBedSelect(floor, room, bed)}
+                                            >
+                                              <div className="lst-bc-top">
+                                                <span className="lst-bc-num">#{renderField(bed.bedNumber)}</span>
+                                                <div className="lst-bc-status">
+                                                  {isOccupied ? <><Lock size={12}/> Occupied</> : <><CheckCircle2 size={12}/> Available</>}
+                                                </div>
+                                              </div>
+                                              <div className="lst-bc-mid">
+                                                <span><strong>Type:</strong> {renderField(bed.bedType)}</span>
+                                                <span><strong>Pos:</strong> {renderField(bed.position)}</span>
+                                              </div>
+                                              <div className="lst-bc-badges">
+                                                {bed.smartBadges && bed.smartBadges.length > 0 ? bed.smartBadges.slice(0, 2).map((badge, idx) => <span key={idx} className="lst-bc-badge"><Zap size={10}/> {badge}</span>) : <span>No specific features</span>}
+                                              </div>
+                                            </div>
+                                          );
+                                        })
+                                      ) : (
+                                        <div className="lst-none">No Data Available</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                           })
+                          ) : (
+                            <div className="lst-none">No Data Available</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="lst-none-card">No Data Available</div>
+              )}
             </div>
-          </div>
-          )}
+          </section>
         </div>
-        )}
+
+        {/* Sidebar: Booking Summary */}
+        <div className="lst-sidebar">
+          <div className="lst-checkout-panel">
+            <h3 className="lst-cp-title">Booking Summary</h3>
+            
+            <div className="lst-cp-selection">
+              <div className="lst-cp-row">
+                <span className="lst-cp-label">Building Name</span>
+                <span className="lst-cp-val">{renderField(hostel.name)}</span>
+              </div>
+              <div className="lst-cp-row">
+                <span className="lst-cp-label">Floor Number</span>
+                <span className="lst-cp-val">{selectedFloor ? renderField(selectedFloor.floorNumber) : 'No Data Available'}</span>
+              </div>
+              <div className="lst-cp-row">
+                <span className="lst-cp-label">Room Number</span>
+                <span className="lst-cp-val">{selectedRoom ? renderField(selectedRoom.roomNumber) : 'No Data Available'}</span>
+              </div>
+              <div className="lst-cp-row highlight">
+                <span className="lst-cp-label">Bed Number</span>
+                <span className="lst-cp-val">{selectedBed ? renderField(selectedBed.bedNumber) : 'No Data Available'}</span>
+              </div>
+            </div>
+
+            <div className="lst-cp-divider"></div>
+
+            <div className="lst-cp-pricing">
+              <div className="lst-cp-row">
+                <span>Rent Amount</span>
+                <span>{currentRent ? `₹${currentRent.toLocaleString()}` : 'No Data Available'}</span>
+              </div>
+              <div className="lst-cp-row">
+                <span>Deposit Amount</span>
+                <span>{currentDeposit ? `₹${currentDeposit.toLocaleString()}` : 'No Data Available'}</span>
+              </div>
+              <div className="lst-cp-row">
+                <span>Food Charges</span>
+                <span>{foodCost ? `₹${foodCost.toLocaleString()}` : 'No Data Available'}</span>
+              </div>
+              <div className="lst-cp-row">
+                <span>Maintenance</span>
+                <span>{maintenanceCost ? `₹${maintenanceCost.toLocaleString()}` : 'No Data Available'}</span>
+              </div>
+              <div className="lst-cp-divider"></div>
+              <div className="lst-cp-row total">
+                <span>Total Amount</span>
+                <span className="amount">₹{totalDue.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <button 
+              className="lst-checkout-btn" 
+              disabled={!selectedBed}
+              onClick={handleBooking}
+            >
+              Proceed to Booking <ChevronRight size={18} />
+            </button>
+            <p className="lst-cp-secure"><ShieldCheck size={14}/> Secure Livora Booking</p>
+          </div>
+        </div>
       </div>
 
-      {/* Mobile Bottom Booking Bar */}
-      <div className="lst-mobile-bar">
-        <div className="lst-mobile-bar-price">
-          <div className="lst-mbp-label">{selectedBed ? `Bed ${selectedBed} Selected` : 'Select a bed'}</div>
-          <div className="lst-mbp-amount">₹{currentPrice.rent.toLocaleString()}<span>/mo</span></div>
-        </div>
-        <button
-          className="lst-btn-reserve"
-          disabled={!selectedBed}
-          onClick={() => {
-            if (!localStorage.getItem('token')) {
-              navigate('/login');
-            } else {
-              navigate(`/booking/${id}`, { state: { selectedSharing, selectedBed, basePrice, securityDeposit: currentPrice.deposit } });
-            }
-          }}
-          style={{ width: 'auto', padding: '12px 24px', fontSize: '15px', margin: 0 }}
-        >
-          Reserve
-        </button>
-      </div>
-
+      <ImageModal
+        isOpen={modalInfo.isOpen}
+        image={modalInfo.image}
+        onClose={() => setModalInfo({ isOpen: false, image: '' })}
+      />
     </div>
   );
 };
