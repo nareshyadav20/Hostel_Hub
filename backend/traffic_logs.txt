@@ -4322,3 +4322,34 @@
 2026-05-30T09:03:23.258Z API: GET /api/buildings/public
 2026-05-30T09:03:29.987Z API: GET /api/buildings/public/6a1aa73a65d63f0abe1f32bb
 2026-05-30T09:03:30.475Z API: GET /api/buildings/public/6a1aa73a65d63f0abe1f32bb
+2026-05-30T09:47:11.537Z SOCKET: Socket connected: bNuzwLBvzF3OQqVUAAAB
+2026-05-30T09:50:56.336Z SOCKET: Socket connected: desaW7OGuapm1grvAAAB
+2026-05-30T09:51:09.811Z SOCKET: Socket connected: 7DFTyGqEq9hEg3XuAAAB
+2026-05-30T10:14:50.671Z API: POST /api/auth/login
+2026-05-30T10:14:53.339Z API: GET /api/bookings/me
+2026-05-30T10:14:53.634Z API: GET /api/tenants/me
+2026-05-30T10:14:54.246Z API: GET /api/complaints/me
+2026-05-30T10:14:54.630Z API: GET /api/notifications?limit=3
+2026-05-30T10:14:55.983Z API: GET /api/tenants/me
+2026-05-30T10:14:56.028Z SOCKET: Socket connected: NQgLbN9AYUXScQP-AAAD
+2026-05-30T10:14:56.169Z API: GET /api/buildings/public
+2026-05-30T10:14:56.180Z API: GET /api/tenant-portal/wishlist
+2026-05-30T10:14:56.262Z API: GET /api/bookings/me
+2026-05-30T10:14:56.356Z API: GET /api/buildings/public
+2026-05-30T10:14:56.373Z API: GET /api/tenant-portal/wishlist
+2026-05-30T10:14:56.427Z API: GET /api/complaints/me
+2026-05-30T10:14:56.584Z API: GET /api/notifications?limit=3
+2026-05-30T10:15:03.394Z API: GET /api/tenants/me
+2026-05-30T10:15:03.985Z API: GET /api/tenants/me
+2026-05-30T10:15:04.270Z API: GET /api/buildings/public/6a1aa73a65d63f0abe1f32bb
+2026-05-30T10:15:05.856Z API: GET /api/buildings/public/6a1aa73a65d63f0abe1f32bb
+2026-05-30T10:15:34.021Z API: POST /api/bookings
+2026-05-30T10:15:44.600Z API: GET /api/bookings/me
+2026-05-30T10:15:44.726Z API: GET /api/tenants/me
+2026-05-30T10:15:44.813Z API: GET /api/notifications?limit=3
+2026-05-30T10:15:44.867Z API: GET /api/complaints/me
+2026-05-30T10:15:44.965Z SOCKET: Socket connected: YDbxmEWxju4oa17VAAAF
+2026-05-30T10:15:45.844Z API: GET /api/tenants/me
+2026-05-30T10:15:46.551Z API: GET /api/notifications?limit=3
+2026-05-30T10:15:46.654Z API: GET /api/complaints/me
+2026-05-30T10:15:46.676Z API: GET /api/bookings/me

@@ -84,9 +84,21 @@ const Rooms = () => {
   useEffect(() => {
     window.addEventListener('focus', loadRoomsData);
     const interval = setInterval(loadRoomsData, 30000);
+
+    // Reload stats when Buildings page adds a new bed
+    const onStorage = (e) => {
+      if (e.type === 'bedStatsUpdated' || (e.type === 'storage' && e.key === 'bedStatsUpdated')) {
+        loadRoomsData();
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('bedStatsUpdated', onStorage);
+
     return () => {
       window.removeEventListener('focus', loadRoomsData);
       clearInterval(interval);
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('bedStatsUpdated', onStorage);
     };
   }, [loadRoomsData]);
 
@@ -515,14 +527,6 @@ const Rooms = () => {
                                     </div>
                                   </div>
 
-                                  {/* Smart Room Features Chips */}
-                                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-                                    {room.hygieneRating && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#10b98115', color: '#10b981', borderRadius: '4px', fontWeight: '800' }}>✨ Hygiene {room.hygieneRating}/5</span>}
-                                    {room.studyFriendly && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#3b82f615', color: '#3b82f6', borderRadius: '4px', fontWeight: '800' }}>📚 Study Friendly</span>}
-                                    {room.smartLock && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#8b5cf615', color: '#8b5cf6', borderRadius: '4px', fontWeight: '800' }}>🔒 Smart Lock</span>}
-                                    {room.ventilationScore > 0 && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#0ea5e915', color: '#0ea5e9', borderRadius: '4px', fontWeight: '800' }}>💨 Vent: {room.ventilationScore}/10</span>}
-                                    {room.femaleSafety && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#ec489915', color: '#ec4899', borderRadius: '4px', fontWeight: '800' }}>🛡️ Safety Verified</span>}
-                                  </div>
 
                                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                                     <button onClick={() => toggleRoomExpand(room.id)} className="btn btn-primary" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', borderRadius: '8px' }}>
@@ -731,9 +735,9 @@ const Rooms = () => {
       {/* Bed Details Modal */}
       <AnimatePresence>
         {selectedBedDetails && (
-          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 5000, padding: '1rem' }}>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setSelectedBedDetails(null)} />
-            <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} style={{ position: 'relative', width: '100%', maxWidth: '440px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', zIndex: 1001, border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} style={{ position: 'relative', width: '100%', maxWidth: '440px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', zIndex: 5001, border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)', maxHeight: '90vh', overflowY: 'auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h3 style={{ fontSize: '1.3rem', fontWeight: '900', margin: 0 }}>Bed Assets & Details</h3>
                 <button onClick={() => setSelectedBedDetails(null)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}>✕</button>
