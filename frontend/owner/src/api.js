@@ -80,7 +80,13 @@ export const api = {
   },
 
   // Buildings & Infrastructure
-  getBuildings: async () => {
+  getBuildings: async (bypassCache = false) => {
+    if (bypassCache) {
+      const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Active' } });
+      const data = Array.isArray(res.data) ? res.data : (res.data || []);
+      cacheSet('buildings_active', data);
+      return handleId(data);
+    }
     return await swrFetch('buildings_active', `${API_URL}/buildings`, { params: { status: 'Active' } });
   },
   getDraftBuildings: async () => {

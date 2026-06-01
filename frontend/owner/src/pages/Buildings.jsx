@@ -441,7 +441,7 @@ const Buildings = () => {
     setLoading(true);
     console.log("Buildings module fetching for ID:", activeBuildingId);
     try {
-      const bData = await api.getBuildings();
+      const bData = await api.getBuildings(true);
       const safeData = Array.isArray(bData) ? bData : [];
 
       if (activeBuildingId) {
@@ -505,7 +505,7 @@ const Buildings = () => {
 
   const silentRefresh = async () => {
     try {
-      const bData = await api.getBuildings();
+      const bData = await api.getBuildings(true);
       const safeData = Array.isArray(bData) ? bData : [];
       if (activeBuildingId) {
         const matchingBuilding = safeData.find(b => (b.id === activeBuildingId || b._id === activeBuildingId));
@@ -979,17 +979,18 @@ const Buildings = () => {
             <button className="btn" onClick={() => setShowFilters(!showFilters)} style={{ background: showFilters ? 'var(--accent-primary)' : 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: showFilters ? 'white' : 'var(--text-primary)' }}>
               <Filter size={16} /> Filters
             </button>
-            {['floors', 'rooms', 'beds'].includes(view) && (
+            {['buildings', 'floors', 'rooms', 'beds'].includes(view) && (
               <button
                 className="btn btn-primary"
                 onClick={() => {
-                  if (view === 'floors') setIsAddFloorOpen(true);
+                  if (view === 'buildings') setIsAddBuildingOpen(true);
+                  else if (view === 'floors') setIsAddFloorOpen(true);
                   else if (view === 'rooms') setIsAddRoomOpen(true);
                   else if (view === 'beds') setIsAddBedOpen(true);
                 }}
                 style={{ padding: '0.7rem 1.5rem', borderRadius: '12px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.6rem' }}
               >
-                <PlusCircle size={20} /> Add {view === 'floors' ? 'Floor' : view === 'rooms' ? 'Room' : 'Bed'}
+                <PlusCircle size={20} /> Add {view === 'buildings' ? 'Building' : view === 'floors' ? 'Floor' : view === 'rooms' ? 'Room' : 'Bed'}
               </button>
             )}
             <button onClick={() => window.history.back()} className="btn" style={{ padding: '0.7rem', borderRadius: '50%', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2251,18 +2252,18 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
     ];
   }, [building.images]);
 
-  const occupancyRate = building.occupancyPercentage || 84;
+  const occupancyRate = building.occupancyPercentage !== undefined ? building.occupancyPercentage : 0;
   const computedRevenue = building.revenueStats?.monthlyRevenue 
     ? (building.revenueStats.monthlyRevenue / 100000).toFixed(1) + 'L' 
-    : (building.totalBeds && building.rentSingle ? ((building.totalBeds * building.rentSingle)/100000).toFixed(1) + 'L' : '12.4L');
+    : (building.totalBeds && building.rentSingle ? ((building.totalBeds * building.rentSingle)/100000).toFixed(1) + 'L' : '0.0L');
   const hygieneScore = building.healthScores?.hygieneScore || (building.smartConfig?.hasAIHygiene ? 98 : 85);
   const energyEfficiency = building.healthScores?.energyEfficiency || (building.smartConfig?.hasClimateControl ? 92 : 82);
 
   const stats = {
     floors: building.floors?.length || 4,
-    rooms: 32,
-    beds: 128,
-    occupied: 108
+    rooms: building.totalRooms || 0,
+    beds: building.totalBeds || 0,
+    occupied: Math.round(((building.occupancyPercentage || 0) / 100) * (building.totalBeds || 0))
   };
 
   return (

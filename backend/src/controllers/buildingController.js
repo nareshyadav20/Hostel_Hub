@@ -326,7 +326,28 @@ const getBuildingById = async (req, res) => {
       building = b;
     }
 
-    res.status(200).json(building);
+    // Dynamically calculate live rooms, beds and occupancy
+    const bObj = building.toObject ? building.toObject() : building;
+    const floors = bObj.floors || [];
+    let totalRooms = 0;
+    let totalBeds = 0;
+    let occupiedBeds = 0;
+    
+    floors.forEach(floor => {
+      const rooms = floor.rooms || [];
+      totalRooms += rooms.length;
+      rooms.forEach(room => {
+        const beds = room.beds || [];
+        totalBeds += beds.length;
+        occupiedBeds += beds.filter(b => b.status === 'OCCUPIED' || b.status === 'Occupied').length;
+      });
+    });
+    
+    bObj.totalRooms = totalRooms;
+    bObj.totalBeds = totalBeds;
+    bObj.occupancyPercentage = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+
+    res.status(200).json(bObj);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 

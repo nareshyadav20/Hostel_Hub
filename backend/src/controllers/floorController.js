@@ -36,8 +36,33 @@ const getFloors = async (req, res) => {
     const building = await Building.findOne({ _id: req.params.buildingId, owner: req.user.id });
     if (!building) return res.status(404).json({ error: 'Building not found or unauthorized' });
 
-    const floors = await Floor.find({ building: req.params.buildingId }).populate('rooms');
-    res.status(200).json(floors);
+    const floors = await Floor.find({ building: req.params.buildingId }).populate({
+      path: 'rooms',
+      populate: {
+        path: 'beds'
+      }
+    });
+
+    const populatedFloors = floors.map(floor => {
+      const floorObj = floor.toObject();
+      const rooms = floorObj.rooms || [];
+      floorObj.totalRooms = rooms.length;
+      
+      let totalBeds = 0;
+      let occupiedBeds = 0;
+      
+      rooms.forEach(room => {
+        const beds = room.beds || [];
+        totalBeds += beds.length;
+        occupiedBeds += beds.filter(b => b.status === 'OCCUPIED' || b.status === 'Occupied').length;
+      });
+      
+      floorObj.totalBeds = totalBeds;
+      floorObj.occupancyPercentage = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+      return floorObj;
+    });
+
+    res.status(200).json(populatedFloors);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 

@@ -86,18 +86,20 @@ exports.getBedStats = async (req, res) => {
     
     const liveFilled = Math.max(liveFilledPhysical, liveFilledVirtual);
 
-    // Use hostel.totalBeds if owner explicitly set it (> 0), else use sum of building totalBeds, else show live total
+    // Use liveTotal if it is greater than 0, otherwise fall back to configuredTotal / hostel.totalBeds
     let totalBeds = liveTotal;
-    if (hostel && hostel.totalBeds > 0) {
-      totalBeds = hostel.totalBeds;
-    } else if (configuredTotal > 0) {
-      totalBeds = configuredTotal;
+    if (liveTotal === 0) {
+      if (hostel && hostel.totalBeds > 0) {
+        totalBeds = hostel.totalBeds;
+      } else if (configuredTotal > 0) {
+        totalBeds = configuredTotal;
+      }
     }
 
     // Determine total rooms
-    const totalRoomsCount = configuredRooms > 0 ? configuredRooms : rIds.length;
+    const totalRoomsCount = rIds.length > 0 ? rIds.length : (configuredRooms > 0 ? configuredRooms : 0);
 
-    const filledBeds   = liveFilled;
+    const filledBeds   = Math.min(liveFilled, totalBeds);
     const availableBeds = Math.max(0, totalBeds - filledBeds);
     const occupancyPct  = totalBeds > 0 ? Math.round((filledBeds / totalBeds) * 100) : 0;
 
@@ -145,10 +147,12 @@ exports.syncFilledBeds = async (req, res) => {
     const liveFilled = Math.max(liveFilledPhysical, liveFilledVirtual);
 
     let totalBeds = liveTotal;
-    if (hostel.totalBeds > 0) {
-      totalBeds = hostel.totalBeds;
-    } else if (configuredTotal > 0) {
-      totalBeds = configuredTotal;
+    if (liveTotal === 0) {
+      if (hostel.totalBeds > 0) {
+        totalBeds = hostel.totalBeds;
+      } else if (configuredTotal > 0) {
+        totalBeds = configuredTotal;
+      }
     }
     
     // Validate: filledBeds cannot exceed totalBeds
