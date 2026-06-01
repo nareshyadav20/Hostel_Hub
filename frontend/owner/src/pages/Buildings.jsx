@@ -437,15 +437,14 @@ const Buildings = () => {
 
   const [loading, setLoading] = useState(false);
 
-  const fetchBuildings = async (showAll = false) => {
+  const fetchBuildings = async () => {
     setLoading(true);
-    console.log("Buildings module fetching for ID:", activeBuildingId, "showAll:", showAll);
+    console.log("Buildings module fetching for ID:", activeBuildingId);
     try {
       const bData = await api.getBuildings(true);
       const safeData = Array.isArray(bData) ? bData : [];
 
-      // showAll bypasses the per-building filter so newly added buildings are visible
-      if (!showAll && activeBuildingId) {
+      if (activeBuildingId) {
         const matchingBuilding = safeData.find(b => (b.id === activeBuildingId || b._id === activeBuildingId));
         if (matchingBuilding) {
           setBuildings([matchingBuilding]); // Isolate to current building only
@@ -807,16 +806,13 @@ const Buildings = () => {
         rating: formData.rating || 4.5,
         amenities: formData.amenities || [],
         isAC: formData.isAC,
-        totalBeds: formData.totalBeds || 0,
         images: formData.imageUrl ? [formData.imageUrl] : []
       });
-      console.log('[AddBuilding] Created successfully in new_build collection:', newB._id || newB.id);
+      setBuildings([...buildings, newB]);
       setIsAddBuildingOpen(false);
       setFormData(INITIAL_FORM_STATE);
-      // showAll=true ensures the new building is visible even when activeBuildingId is set
-      await fetchBuildings(true);
+      fetchBuildings();
     } catch (err) {
-      console.error('[AddBuilding] Error:', err.response?.data || err.message);
       alert("Failed to add building: " + (err.response?.data?.error || err.message));
     }
   };

@@ -70,7 +70,7 @@ const buildingSchema = new mongoose.Schema({
   draftData: { type: mongoose.Schema.Types.Mixed },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   floors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Floor' }]
-}, { timestamps: true, collection: 'new_build' });
+}, { timestamps: true, collection: 'buildings' });
 
 // Performance indexes for common queries
 buildingSchema.index({ owner: 1, status: 1 }); // getBuildings (owner portal)

@@ -120,7 +120,7 @@ exports.getAssetSummary = async (req, res) => {
       },
       {
         $lookup: {
-          from: 'new_build',
+          from: 'buildings',
           localField: '_id.buildingId',
           foreignField: '_id',
           as: 'buildingDetails'
