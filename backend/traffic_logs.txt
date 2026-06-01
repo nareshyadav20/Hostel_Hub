@@ -4353,3 +4353,13 @@
 2026-05-30T10:15:46.551Z API: GET /api/notifications?limit=3
 2026-05-30T10:15:46.654Z API: GET /api/complaints/me
 2026-05-30T10:15:46.676Z API: GET /api/bookings/me
+2026-06-01T04:28:12.752Z API: GET /api/health
+2026-06-01T04:28:13.006Z API: GET /api/buildings/public
+2026-06-01T04:28:13.014Z API: GET /api/notifications?buildingId=6a1aa73a65d63f0abe1f32bb
+2026-06-01T04:28:13.029Z API: GET /api/buildings/public/stats
+2026-06-01T04:28:13.120Z API: GET /api/buildings/public
+2026-06-01T04:28:13.132Z SOCKET: Socket connected: cAAXcPHhweCeYXVOAAAB
+2026-06-01T04:28:13.160Z API: GET /api/notifications?buildingId=6a1aa73a65d63f0abe1f32bb
+2026-06-01T04:28:13.233Z API: GET /api/buildings/public/stats
+2026-06-01T04:29:45.474Z SOCKET: Socket connected: F3VjmZPh8eUvyAItAAAB
+2026-06-01T05:14:03.824Z SOCKET: Socket connected: 5PndunuHYcidNOvmAAAB

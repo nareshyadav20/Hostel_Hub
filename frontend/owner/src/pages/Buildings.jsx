@@ -94,8 +94,8 @@ const PropertyDetailDrawer = ({ isOpen, onClose, target, type, activeTab, onTabC
               {[
                 { label: 'Status', value: target.status || 'Active', icon: <Activity size={16} />, color: '#10B981' },
                 { label: 'Capacity', value: `${target.totalBeds || target.capacity || 0} Beds`, icon: <UsersRound size={16} />, color: '#6366F1' },
-                { label: 'Category', value: target.category || 'Standard', icon: <Building size={16} />, color: '#F59E0B' },
-                { label: 'Residency', value: target.genderType || 'Mixed', icon: <Users size={16} />, color: '#8B5CF6' }
+                { label: 'Category', value: target.category || 'Standard', icon: <BuildingIcon size={16} />, color: '#F59E0B' },
+                { label: 'Residency', value: target.genderType || 'Mixed', icon: <UsersRound size={16} />, color: '#8B5CF6' }
               ].map((kpi, i) => (
                 <div key={i} style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
                   <div style={{ color: kpi.color, marginBottom: '0.4rem' }}>{kpi.icon}</div>
@@ -503,6 +503,44 @@ const Buildings = () => {
     fetchBuildings();
   }, [activeBuildingId]);
 
+  const silentRefresh = async () => {
+    try {
+      const bData = await api.getBuildings();
+      const safeData = Array.isArray(bData) ? bData : [];
+      if (activeBuildingId) {
+        const matchingBuilding = safeData.find(b => (b.id === activeBuildingId || b._id === activeBuildingId));
+        if (matchingBuilding) {
+          setBuildings([matchingBuilding]);
+          if (selectedBuilding && selectedBuilding.id === matchingBuilding.id) {
+            setSelectedBuilding(matchingBuilding);
+          }
+        }
+      } else {
+        setBuildings(safeData);
+      }
+      
+      if (selectedBuilding) {
+        const fData = await api.getFloors(selectedBuilding.id || selectedBuilding._id);
+        setFloors(fData || []);
+      }
+      if (selectedFloor) {
+        const rData = await api.getRooms(selectedFloor.id || selectedFloor._id);
+        setRooms(rData || []);
+      }
+      if (selectedRoom) {
+        const bData = await api.getBeds(selectedRoom.id || selectedRoom._id);
+        setBeds(bData || []);
+      }
+    } catch (e) {
+      console.error("Silent refresh failed", e);
+    }
+  };
+
+  useEffect(() => {
+    const intervalId = setInterval(silentRefresh, 10000); // 10s poll for live data updates
+    return () => clearInterval(intervalId);
+  }, [activeBuildingId, selectedBuilding, selectedFloor, selectedRoom]);
+
   const handleSelectBuilding = async (b) => {
     const bId = b?._id || b?.id;
     if (!bId) return;
@@ -590,6 +628,7 @@ const Buildings = () => {
       setSelectedRoom(updated);
       setRooms(prev => prev.map(r => (r.id === updated.id || r._id === updated._id) ? updated : r));
       setIsEditRoomOpen(false);
+      silentRefresh();
     } catch (err) {
       alert("Failed to update room: " + (err.response?.data?.error || err.message));
     }
@@ -622,6 +661,7 @@ const Buildings = () => {
       // Update beds list
       setBeds(prev => prev.map(b => (b.id === updated.id || b._id === updated._id) ? updated : b));
       setIsEditBedOpen(false);
+      silentRefresh();
     } catch (err) {
       alert("Failed to update bed: " + (err.response?.data?.error || err.message));
     }
@@ -632,6 +672,7 @@ const Buildings = () => {
     try {
       await api.deleteRoom(roomId);
       setRooms(prev => prev.filter(r => r.id !== roomId && r._id !== roomId));
+      silentRefresh();
     } catch (err) {
       alert("Failed to delete room: " + (err.response?.data?.error || err.message));
     }
@@ -642,6 +683,7 @@ const Buildings = () => {
     try {
       await api.deleteBed(bedId);
       setBeds(prev => prev.filter(b => b.id !== bedId && b._id !== bedId));
+      silentRefresh();
     } catch (err) {
       alert("Failed to delete bed: " + (err.response?.data?.error || err.message));
     }
@@ -652,6 +694,7 @@ const Buildings = () => {
     try {
       await api.deleteFloor(floorId);
       setFloors(prev => prev.filter(f => f.id !== floorId && f._id !== floorId));
+      silentRefresh();
     } catch (err) {
       alert("Failed to delete floor: " + (err.response?.data?.error || err.message));
     }
@@ -794,6 +837,7 @@ const Buildings = () => {
       setFloors([...floors, newF]);
       setIsAddFloorOpen(false);
       setFormData(INITIAL_FORM_STATE);
+      silentRefresh();
     } catch (err) {
       alert("Failed to add floor: " + (err.response?.data?.error || err.message));
     }
@@ -827,6 +871,7 @@ const Buildings = () => {
       setRooms([...rooms, newR]);
       setIsAddRoomOpen(false);
       setFormData(INITIAL_FORM_STATE);
+      silentRefresh();
     } catch (err) {
       alert("Failed to deploy room: " + (err.response?.data?.error || err.message));
     }
@@ -859,6 +904,7 @@ const Buildings = () => {
         // Also fire storage event for multi-tab setups
         localStorage.setItem('bedStatsUpdated', Date.now().toString());
       }
+      silentRefresh();
     } catch (err) {
       alert("Failed to add bed: " + (err.response?.data?.error || err.message));
     }
@@ -2394,34 +2440,66 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
   );
 };
 
-const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics, onEditBuilding, onDeleteBuilding }) => (
-  <div>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem', alignItems: 'center' }}>
-      <div>
-        <h2 style={{ fontSize: '2.5rem', fontWeight: '1000', margin: 0, color: '#0F172A', letterSpacing: '-0.04em' }}>Property Portfolio</h2>
-        <p style={{ color: '#64748B', fontSize: '1rem', fontWeight: '700' }}>Manage and monitor your smart building ecosystem.</p>
+const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics, onEditBuilding, onDeleteBuilding }) => {
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const buildingsPerPage = 6;
+  const totalPages = Math.ceil(buildings.length / buildingsPerPage);
+  const indexOfLastBuilding = currentPage * buildingsPerPage;
+  const indexOfFirstBuilding = indexOfLastBuilding - buildingsPerPage;
+  const currentBuildings = buildings.slice(indexOfFirstBuilding, indexOfLastBuilding);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: '1000', margin: 0, color: '#0F172A', letterSpacing: '-0.04em' }}>Property Portfolio</h2>
+          <p style={{ color: '#64748B', fontSize: '1rem', fontWeight: '700' }}>Manage and monitor your smart building ecosystem.</p>
+        </div>
       </div>
-    </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(440px, 1fr))', gap: '3rem' }}>
-      {buildings.length > 0 ? buildings.map((b, i) => (
-        <PremiumBuildingCard
-          key={b._id || b.id || i}
-          building={b}
-          onSelect={onSelect}
-          onViewAnalytics={onViewAnalytics}
-          onEditBuilding={onEditBuilding}
-          onDeleteBuilding={onDeleteBuilding}
-        />
-      )) : (
-        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem 3rem', background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(20px)', borderRadius: '40px', border: '2px dashed #E2E8F0' }}>
-          <BuildingIcon size={64} color="#94A3B8" style={{ marginBottom: '1.5rem' }} />
-          <h3 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#1E293B', marginBottom: '0.5rem' }}>No Properties Registered</h3>
-          <p style={{ color: '#64748B', fontWeight: '700', fontSize: '1.1rem' }}>Register your first smart building to begin administrative oversight.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(440px, 1fr))', gap: '3rem' }}>
+        {currentBuildings.length > 0 ? currentBuildings.map((b, i) => (
+          <PremiumBuildingCard
+            key={b._id || b.id || i}
+            building={b}
+            onSelect={onSelect}
+            onViewAnalytics={onViewAnalytics}
+            onEditBuilding={onEditBuilding}
+            onDeleteBuilding={onDeleteBuilding}
+          />
+        )) : (
+          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem 3rem', background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(20px)', borderRadius: '40px', border: '2px dashed #E2E8F0' }}>
+            <BuildingIcon size={64} color="#94A3B8" style={{ marginBottom: '1.5rem' }} />
+            <h3 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#1E293B', marginBottom: '0.5rem' }}>No Properties Registered</h3>
+            <p style={{ color: '#64748B', fontWeight: '700', fontSize: '1.1rem' }}>Register your first smart building to begin administrative oversight.</p>
+          </div>
+        )}
+      </div>
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
+          <button 
+            disabled={currentPage === 1} 
+            onClick={() => setCurrentPage(prev => prev - 1)} 
+            className="btn"
+            style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+          >
+            Previous
+          </button>
+          <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button 
+            disabled={currentPage === totalPages} 
+            onClick={() => setCurrentPage(prev => prev + 1)} 
+            className="btn"
+            style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+          >
+            Next
+          </button>
         </div>
       )}
     </div>
-  </div>
-);
+  );
+};
 
 const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete }) => {
   const occupancyRate = floor.occupancyPercentage || 0;
@@ -2474,7 +2552,7 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
               </span>
             </div>
             <h3 style={{ fontSize: '1.8rem', fontWeight: '1000', margin: 0, color: '#0F172A', letterSpacing: '-0.04em' }}>
-              {building?.name} <span style={{ fontWeight: '500', color: '#64748B', fontSize: '1.2rem' }}>• Block A</span>
+              {building?.name} <span style={{ fontWeight: '500', color: '#64748B', fontSize: '1.2rem' }}>• {floor.name || `Floor ${floor.floorNumber}`}</span>
             </h3>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -2631,37 +2709,69 @@ const FloorsList = ({ floors, building, onSelect, onBack, onAdd, onDelete, onVie
   </div>
 );
 
-const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onEdit, onDelete, onViewDetails }) => (
-  <div>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}><ArrowLeft size={24} /></button>
-        <div>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: '1000', margin: 0, letterSpacing: '-0.04em', color: '#0F172A' }}>Rooms on Floor {floor?.floorNumber}</h2>
-          <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{building?.name || 'Property'} • Advanced Inventory Management</p>
+const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onEdit, onDelete, onViewDetails }) => {
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const roomsPerPage = 6;
+  const totalPages = Math.ceil(rooms.length / roomsPerPage);
+  const indexOfLastRoom = currentPage * roomsPerPage;
+  const indexOfFirstRoom = indexOfLastRoom - roomsPerPage;
+  const currentRooms = rooms.slice(indexOfFirstRoom, indexOfLastRoom);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}><ArrowLeft size={24} /></button>
+          <div>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: '1000', margin: 0, letterSpacing: '-0.04em', color: '#0F172A' }}>Rooms on Floor {floor?.floorNumber}</h2>
+            <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{building?.name || 'Property'} • Advanced Inventory Management</p>
+          </div>
         </div>
       </div>
-    </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '2rem' }}>
-      {rooms.length > 0 ? rooms.map((r, i) => (
-        <PremiumRoomCard
-          key={r._id || r.id || i}
-          room={r}
-          floor={floor}
-          onSelect={onSelect}
-          onViewDetails={onViewDetails}
-          onEdit={() => onEdit(r)}
-          onDelete={() => onDelete(r.id || r._id)}
-        />
-      )) : (
-        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
-          <DoorOpen size={32} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
-          <p style={{ color: 'var(--text-secondary)' }}>No rooms found on this floor.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '2rem' }}>
+        {currentRooms.length > 0 ? currentRooms.map((r, i) => (
+          <PremiumRoomCard
+            key={r._id || r.id || i}
+            room={r}
+            floor={floor}
+            onSelect={onSelect}
+            onViewDetails={onViewDetails}
+            onEdit={() => onEdit(r)}
+            onDelete={() => onDelete(r.id || r._id)}
+          />
+        )) : (
+          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
+            <DoorOpen size={32} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
+            <p style={{ color: 'var(--text-secondary)' }}>No rooms found on this floor.</p>
+          </div>
+        )}
+      </div>
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
+          <button 
+            disabled={currentPage === 1} 
+            onClick={() => setCurrentPage(prev => prev - 1)} 
+            className="btn"
+            style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+          >
+            Previous
+          </button>
+          <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button 
+            disabled={currentPage === totalPages} 
+            onClick={() => setCurrentPage(prev => prev + 1)} 
+            className="btn"
+            style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+          >
+            Next
+          </button>
         </div>
       )}
     </div>
-  </div>
-);
+  );
+};
 
 const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelete }) => {
   const occupancyRate = Math.round(((room.occupied || 0) / room.capacity) * 100);
@@ -2686,14 +2796,14 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
       style={{
         background: 'rgba(255, 255, 255, 0.7)',
         backdropFilter: 'blur(30px)',
-        borderRadius: '38px',
-        padding: '1.5rem',
+        borderRadius: '32px',
+        padding: '0.8rem',
         border: '1px solid rgba(255, 255, 255, 0.4)',
         boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.12)',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.2rem',
+        gap: '0.6rem',
         cursor: 'pointer',
         overflow: 'hidden',
         minHeight: 'auto',
@@ -2741,7 +2851,7 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
 
       {/* Hero Image Section */}
       <div style={{
-        position: 'relative', height: '220px', borderRadius: '28px', overflow: 'hidden',
+        position: 'relative', height: '80px', borderRadius: '16px', overflow: 'hidden',
         background: '#F1F5F9', border: '1px solid rgba(255,255,255,0.8)', zIndex: 1
       }}>
         <img
@@ -2765,11 +2875,11 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
       </div>
 
       {/* Bento Section: Occupancy */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', zIndex: 1 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.8rem', zIndex: 1 }}>
         {/* Occupancy Bento */}
-        <div style={{ padding: '1.5rem', borderRadius: '28px', background: "var(--bg-card)", border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div style={{ padding: '0.8rem', borderRadius: '16px', background: "var(--bg-card)", border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
               <span style={{ fontSize: '0.8rem', fontWeight: '950', color: '#0F172A' }}>Occupancy</span>
               <UsersRound size={18} color={themeColor} />
             </div>
@@ -2793,14 +2903,14 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
       </div>
 
       {/* Specifications Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.8rem', zIndex: 1 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem', zIndex: 1 }}>
         {[
           { label: 'Floor Type', value: room.floorType || 'Standard', icon: <Ruler size={14} /> },
           { label: 'Facing', value: room.facing || 'Standard', icon: <Sun size={14} /> },
           { label: 'Balcony', value: room.balcony ? 'Yes' : 'No', icon: <ShieldCheck size={14} /> }
         ].map((spec, i) => (
-          <div key={i} style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #F1F5F9' }}>
-            <div style={{ color: '#6366F1', marginBottom: '0.4rem' }}>{spec.icon}</div>
+          <div key={i} style={{ padding: '0.6rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #F1F5F9' }}>
+            <div style={{ color: '#6366F1', marginBottom: '0.3rem' }}>{spec.icon}</div>
             <p style={{ margin: 0, fontSize: '0.55rem', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase' }}>{spec.label}</p>
             <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: '950', color: '#1E293B' }}>{spec.value}</p>
           </div>
@@ -2820,24 +2930,6 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
         </div>
       </div>
 
-      {/* Analytics Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.8rem', zIndex: 1 }}>
-        <div style={{ padding: '1rem', background: '#F0FDFA', borderRadius: '24px', border: '1px solid #CCFBF1' }}>
-          <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: '#0F766E' }}>HYGIENE INDEX</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
-            <Sparkles size={14} color="#10B981" />
-            <span style={{ fontSize: '1.1rem', fontWeight: '1000', color: '#115E59' }}>{room.hygieneRating || 9.0}/10</span>
-          </div>
-        </div>
-        <div style={{ padding: '1rem', background: '#F5F3FF', borderRadius: '24px', border: '1px solid #DDD6FE' }}>
-          <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: '#6D28D9' }}>NATURAL LIGHT</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
-            <Sun size={14} color="#7C3AED" />
-            <span style={{ fontSize: '1.1rem', fontWeight: '1000', color: '#5B21B6' }}>{room.naturalLightScore || 85}%</span>
-          </div>
-        </div>
-      </div>
-
       {/* Washroom Badges */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', zIndex: 1 }}>
         {[
@@ -2852,8 +2944,8 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
 
       {/* Action Footer */}
       <div style={{
-        marginTop: 'auto', display: 'flex', justifyContent: 'space-between', gap: '0.8rem',
-        paddingTop: '1.2rem', borderTop: '1px solid #F1F5F9', zIndex: 1, alignItems: 'center'
+        marginTop: 'auto', display: 'flex', justifyContent: 'space-between', gap: '0.6rem',
+        paddingTop: '0.8rem', borderTop: '1px solid #F1F5F9', zIndex: 1, alignItems: 'center'
       }}>
         <div style={{ display: 'flex', gap: '0.4rem' }}>
           <button
