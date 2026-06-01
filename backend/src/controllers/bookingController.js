@@ -17,6 +17,8 @@ const createBooking = async (req, res) => {
       proofId,
       bedNumber,
       sharingType,
+      bedId,
+      roomId,
       guestName,
       email,
       phone
@@ -127,19 +129,24 @@ const createBooking = async (req, res) => {
       const Bed = require('../models/Bed');
       const Building = require('../models/Building');
 
-      const floors = await Floor.find({ building: buildingId }).select('_id');
-      const fIds = floors.map(f => f._id);
-      
-      // Try to find a room with matching capacity first
-      const roomsPref = await Room.find({ floor: { $in: fIds }, capacity: sharingType }).select('_id');
-      let rIds = roomsPref.map(r => r._id);
-      let availableBed = await Bed.findOne({ room: { $in: rIds }, status: 'AVAILABLE' });
-
-      // Fallback: any available bed in the building
-      if (!availableBed) {
-        const roomsAll = await Room.find({ floor: { $in: fIds } }).select('_id');
-        rIds = roomsAll.map(r => r._id);
+      let availableBed = null;
+      if (isValidObjectId(bedId)) {
+        availableBed = await Bed.findOne({ _id: bedId, status: 'AVAILABLE' });
+        if (!availableBed) {
+           return res.status(409).json({ error: 'Conflict: The selected bed is already occupied or unavailable.' });
+        }
+      } else {
+        // Fallback for legacy flows
+        const floors = await Floor.find({ building: buildingId }).select('_id');
+        const fIds = floors.map(f => f._id);
+        const roomsPref = await Room.find({ floor: { $in: fIds }, capacity: sharingType }).select('_id');
+        let rIds = roomsPref.map(r => r._id);
         availableBed = await Bed.findOne({ room: { $in: rIds }, status: 'AVAILABLE' });
+        if (!availableBed) {
+          const roomsAll = await Room.find({ floor: { $in: fIds } }).select('_id');
+          rIds = roomsAll.map(r => r._id);
+          availableBed = await Bed.findOne({ room: { $in: rIds }, status: 'AVAILABLE' });
+        }
       }
 
       if (availableBed) {
@@ -147,6 +154,28 @@ const createBooking = async (req, res) => {
         availableBed.tenant = actualTenantId;
         await availableBed.save();
         console.log('✅ Bed explicitly allocated:', availableBed._id);
+        
+        // Bottom-up occupancy recalculation (Phase 8)
+        if (availableBed.room || roomId) {
+           const targetRoomId = availableBed.room || roomId;
+           const roomBeds = await Bed.find({ room: targetRoomId });
+           const occBeds = roomBeds.filter(b => b.status === 'OCCUPIED').length;
+           await Room.findByIdAndUpdate(targetRoomId, { occupiedBeds: occBeds });
+           
+           const roomObj = await Room.findById(targetRoomId);
+           if (roomObj && roomObj.floor) {
+              const floorRooms = await Room.find({ floor: roomObj.floor });
+              let floorOccBeds = 0;
+              let floorTotalBeds = 0;
+              for (const r of floorRooms) {
+                 const rBeds = await Bed.find({ room: r._id });
+                 floorTotalBeds += rBeds.length;
+                 floorOccBeds += rBeds.filter(b => b.status === 'OCCUPIED').length;
+              }
+              const occPct = floorTotalBeds > 0 ? Math.round((floorOccBeds / floorTotalBeds) * 100) : 0;
+              await Floor.findByIdAndUpdate(roomObj.floor, { occupancyPercentage: occPct });
+           }
+        }
       } else {
         console.warn('⚠️ No physical Bed document was AVAILABLE to allocate in building', buildingId);
       }

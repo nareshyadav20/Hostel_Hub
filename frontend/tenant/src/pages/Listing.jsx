@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Check, MapPin, Bed, Users, ShieldCheck, Star, DoorOpen, LayoutGrid, Lock, 
-  ChevronDown, ChevronUp, CheckCircle2, ChevronRight, Wind, Bath, Info, Zap, User
+  ChevronDown, ChevronUp, CheckCircle2, ChevronRight, Wind, Bath, Info, Zap, User, ArrowLeft, Heart, Share,
+  Search, List, Filter
 } from 'lucide-react';
 import API from '../api/axios';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
@@ -16,11 +17,16 @@ const Listing = () => {
   const [hostel, setHostel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-
-  // Expanded States for Accordions
-  const [expandedFloor, setExpandedFloor] = useState(null);
-  const [expandedRoom, setExpandedRoom] = useState(null);
+  
+  // Step-by-Step Flow States
+  const [activeFloor, setActiveFloor] = useState(null);
+  const [overlayRoom, setOverlayRoom] = useState(null);
+  
+  // High Volume States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterAC, setFilterAC] = useState('all');
+  const [filterAvailability, setFilterAvailability] = useState('all');
+  const [viewMode, setViewMode] = useState('grid');
   
   // Selection State for Booking
   const [selectedFloor, setSelectedFloor] = useState(null);
@@ -32,6 +38,10 @@ const Listing = () => {
       try {
         const res = await API.get(`/buildings/public/${id}`);
         setHostel(res.data);
+        if (res.data.floors && res.data.floors.length > 0) {
+          // Initialize first floor if none active
+          setActiveFloor(prev => prev ? res.data.floors.find(f => f._id === prev._id) || res.data.floors[0] : res.data.floors[0]);
+        }
       } catch (error) {
         console.error("Failed to fetch building data", error);
       } finally {
@@ -54,24 +64,6 @@ const Listing = () => {
       disconnectSocket();
     };
   }, [id]);
-
-  const toggleFloor = (floor) => {
-    if (expandedFloor?._id === floor._id) {
-      setExpandedFloor(null);
-      setExpandedRoom(null);
-    } else {
-      setExpandedFloor(floor);
-      setExpandedRoom(null);
-    }
-  };
-
-  const toggleRoom = (room) => {
-    if (expandedRoom?._id === room._id) {
-      setExpandedRoom(null);
-    } else {
-      setExpandedRoom(room);
-    }
-  };
 
   const handleBedSelect = (floor, room, bed) => {
     const isOccupied = bed.status === 'OCCUPIED' || (hostel?.filledBeds && hostel.filledBeds.some(b => String(b.bedId) === String(bed._id)));
@@ -109,22 +101,25 @@ const Listing = () => {
 
   if (loading) {
     return (
-      <div className="lst-page loading">
-        <div className="explore-spinner"></div>
+      <div className="liv-page-loading">
+        <div className="liv-pulse-ring"></div>
+        <p>Curating your premium stay...</p>
       </div>
     );
   }
 
   if (!hostel) {
     return (
-      <div className="lst-page not-found">
-        <h2>Property Not Found</h2>
-        <button onClick={() => navigate(-1)} className="lst-btn-reserve">Go Back</button>
+      <div className="liv-page-notfound">
+        <div className="liv-404-card">
+          <h2>Property Unavailable</h2>
+          <p>The property you are looking for has been removed or does not exist.</p>
+          <button onClick={() => navigate(-1)} className="liv-btn-primary">Return to Explore</button>
+        </div>
       </div>
     );
   }
 
-  // Helper for No Data
   const renderField = (value) => {
     if (value === null || value === undefined || value === '') return 'No Data Available';
     return value;
@@ -136,279 +131,275 @@ const Listing = () => {
   const maintenanceCost = hostel.maintenanceCharges || 0;
   const totalDue = currentRent + currentDeposit + foodCost + maintenanceCost;
 
+  // Filter Logic for High Volume Rooms
+  const getFilteredRooms = () => {
+    if (!activeFloor || !activeFloor.rooms) return [];
+    return activeFloor.rooms; // Search and filters removed as requested
+  };
+
+  // Modern Airbnb-style Image Gallery
+  const renderGallery = () => {
+    const images = hostel.images || [];
+    if (images.length === 0) {
+      return <div className="liv-gallery-empty">No Visuals Available</div>;
+    }
+    
+    return (
+      <div className={`liv-gallery-grid ${images.length < 5 ? 'partial' : ''}`}>
+        <div className="liv-gallery-main" onClick={() => setModalInfo({ isOpen: true, image: images[0] })}>
+          <img src={images[0]} alt="Main Property" />
+        </div>
+        {images.length > 1 && (
+          <div className="liv-gallery-sub">
+            {images.slice(1, 5).map((img, idx) => (
+              <div key={idx} className="liv-gallery-item" onClick={() => setModalInfo({ isOpen: true, image: img })}>
+                <img src={img} alt={`Gallery ${idx + 1}`} />
+                {idx === 3 && images.length > 5 && (
+                  <div className="liv-gallery-overlay">+{images.length - 5} photos</div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="lst-page">
-      <header className="lst-header">
-        <button className="lst-back-btn" onClick={() => navigate(-1)}>✕</button>
-        <div className="lst-title-area">
-          <h1 className="lst-title">{renderField(hostel.name)}</h1>
-          <div className="lst-meta-tags">
-            {hostel.rating ? <span className="lst-tag rating"><Star size={12} fill="currentColor" /> {hostel.rating} Rating</span> : null}
-            <span className="lst-tag category">🎓 Category: {renderField(hostel.category)}</span>
-            <span className="lst-tag gender">👥 Gender: {renderField(hostel.genderType)}</span>
+    <div className="liv-property-page">
+      {/* Dynamic Header */}
+      <nav className="liv-top-nav">
+        <div className="liv-nav-inner">
+          <button className="liv-btn-icon" onClick={() => navigate(-1)}><ArrowLeft size={20}/></button>
+          <div className="liv-nav-actions">
+            <button className="liv-btn-text"><Share size={16}/> Share</button>
+            <button className="liv-btn-text"><Heart size={16}/> Save</button>
           </div>
-          <p className="lst-address">
-            <MapPin size={16}/> {renderField(hostel.address)}, {renderField(hostel.locationCity)}
-          </p>
         </div>
-      </header>
+      </nav>
 
-      <div className="lst-hero-gallery">
-        <div className="lst-hg-main" onClick={() => {
-          if(hostel.images && hostel.images.length > 0) {
-             setModalInfo({ isOpen: true, image: hostel.images[activeImageIndex] });
-          }
-        }}>
-          {hostel.images && hostel.images.length > 0 ? (
-            <img src={hostel.images[activeImageIndex]} alt="Property Main" className="lst-hg-img" />
-          ) : (
-            <div className="lst-no-img">No Data Available</div>
-          )}
-          {hostel.images && hostel.images.length > 1 && (
-            <div className="lst-hg-nav">
-              <button onClick={(e) => { e.stopPropagation(); setActiveImageIndex(prev => (prev - 1 + hostel.images.length) % hostel.images.length); }}>❮</button>
-              <button onClick={(e) => { e.stopPropagation(); setActiveImageIndex(prev => (prev + 1) % hostel.images.length); }}>❯</button>
-            </div>
-          )}
+      <div className="liv-container">
+        {/* Title Section */}
+        <div className="liv-title-section">
+          <h1 className="liv-title">{renderField(hostel.name)}</h1>
+          <div className="liv-title-meta">
+            <span className="liv-meta-item highlight"><Star size={14} fill="currentColor"/> {renderField(hostel.rating)}</span>
+            <span className="liv-meta-dot">•</span>
+            <span className="liv-meta-item">{renderField(hostel.locationCity)}</span>
+            <span className="liv-meta-dot">•</span>
+            <span className="liv-meta-item underline">{renderField(hostel.address)}</span>
+          </div>
         </div>
-      </div>
 
-      <div className="lst-layout">
-        <div className="lst-explorer">
-          
-          <section className="lst-block">
-            <h2 className="lst-block-title">Building Overview</h2>
-            <div className="lst-overview-grid">
-               <div className="lst-og-item"><strong>Description:</strong> {renderField(hostel.description)}</div>
-               <div className="lst-og-item"><strong>Total Rooms:</strong> {renderField(hostel.totalRooms)}</div>
-               <div className="lst-og-item"><strong>Total Beds:</strong> {renderField(hostel.totalBeds)}</div>
-               <div className="lst-og-item"><strong>Starting Price:</strong> {hostel.startingPrice ? `₹${hostel.startingPrice}` : 'No Data Available'}</div>
-               <div className="lst-og-item"><strong>Security Deposit:</strong> {hostel.securityDeposit ? `₹${hostel.securityDeposit}` : 'No Data Available'}</div>
-               <div className="lst-og-item"><strong>Food Charges:</strong> {hostel.foodCharges ? `₹${hostel.foodCharges}` : 'No Data Available'}</div>
-               <div className="lst-og-item"><strong>Maintenance Charges:</strong> {hostel.maintenanceCharges ? `₹${hostel.maintenanceCharges}` : 'No Data Available'}</div>
-               <div className="lst-og-item"><strong>Property Features:</strong> {renderField(hostel.popularityLabel)}</div>
-            </div>
+        {/* Gallery */}
+        {renderGallery()}
 
-            <h3 className="lst-sub-title">Amenities</h3>
-            <div className="lst-features-list">
-              {hostel.amenities?.length > 0 ? hostel.amenities.map((amenity, idx) => (
-                <div key={idx} className="lst-feature-pill">
-                  <Check size={14} color="var(--lst-primary)" /> {amenity}
+        {/* Main Content Layout */}
+        <div className="liv-layout">
+          <div className="liv-content-main">
+            
+            <section className="liv-section">
+              <div className="liv-section-header">
+                <h2>{renderField(hostel.name)} Overview</h2>
+                <p>{renderField(hostel.totalRooms)} Rooms • {renderField(hostel.totalBeds)} Beds • {renderField(hostel.genderType)} • {renderField(hostel.category)}</p>
+              </div>
+
+              <div className="liv-divider"></div>
+
+              <h3>About this space</h3>
+              <p className="liv-description">{renderField(hostel.description)}</p>
+
+              <div className="liv-divider"></div>
+
+              <h3>What this place offers</h3>
+              <div className="liv-amenities-grid">
+                {hostel.amenities?.length > 0 ? hostel.amenities.map((am, idx) => (
+                  <div key={idx} className="liv-amenity-item"><Check size={18} strokeWidth={3}/> {am}</div>
+                )) : <div className="liv-text-muted">No Data Available</div>}
+              </div>
+            </section>
+
+            <section className="liv-section liv-explorer">
+              <h2>Property Hierarchy Explorer</h2>
+              <p className="liv-subtitle">Select a floor to view its rooms, then click a room to pick your precise bed.</p>
+
+              <div className="liv-floor-selector">
+                <label>Select Floor:</label>
+                <div className="liv-dropdown-wrap">
+                  <select 
+                    value={activeFloor?._id || ''} 
+                    onChange={(e) => {
+                      const floor = hostel.floors.find(f => f._id === e.target.value);
+                      setActiveFloor(floor);
+                    }}
+                    className="liv-dropdown"
+                  >
+                    {hostel.floors && hostel.floors.map(f => (
+                      <option key={f._id} value={f._id}>Floor {renderField(f.floorNumber)} ({f.rooms ? f.rooms.length : 0} Rooms)</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="liv-dropdown-icon" size={18}/>
                 </div>
-              )) : <span className="lst-none">No Data Available</span>}
-            </div>
+              </div>
 
-            <h3 className="lst-sub-title">House Rules</h3>
-            <div className="lst-overview-grid">
-               <div className="lst-og-item"><strong>Smoking:</strong> {renderField(hostel.policies?.smoking)}</div>
-               <div className="lst-og-item"><strong>Alcohol:</strong> {renderField(hostel.policies?.alcohol)}</div>
-               <div className="lst-og-item"><strong>Pets:</strong> {renderField(hostel.policies?.pets)}</div>
-               <div className="lst-og-item"><strong>Visitors:</strong> {renderField(hostel.policies?.visitors)}</div>
-            </div>
-          </section>
-
-          <section className="lst-block">
-            <h2 className="lst-block-title"><LayoutGrid size={20}/> Floor Explorer</h2>
-            
-            <div className="lst-accordion-container">
-              {hostel.floors && hostel.floors.length > 0 ? (
-                hostel.floors.map(floor => (
-                  <div key={floor._id} className={`lst-floor-accordion ${expandedFloor?._id === floor._id ? 'expanded' : ''}`}>
-                    <div className="lst-floor-header" onClick={() => toggleFloor(floor)}>
-                      <div className="lst-fh-left">
-                        <h3>Floor {renderField(floor.floorNumber)}</h3>
-                        <span className="lst-fh-category">Type: {renderField(floor.floorCategory)}</span>
-                      </div>
-                      <div className="lst-fh-right">
-                        <span className="lst-fh-stats"><DoorOpen size={16}/> {floor.rooms ? floor.rooms.length : 0} Rooms</span>
-                        <div className="lst-fh-icon">
-                          {expandedFloor?._id === floor._id ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {expandedFloor?._id === floor._id && (
-                      <div className="lst-floor-body">
-                        <div className="lst-floor-details-grid">
-                          <div><strong>Description:</strong> {renderField(floor.description)}</div>
-                          <div><strong>Occupancy:</strong> {renderField(floor.occupancyPercentage)}%</div>
-                          <div><strong>Total Rooms:</strong> {renderField(floor.totalRooms)}</div>
-                          <div><strong>Total Beds:</strong> {renderField(floor.totalBeds)}</div>
-                        </div>
-
-                        {floor.facilities && floor.facilities.length > 0 ? (
-                          <div className="lst-floor-facilities">
-                            <strong>Facilities: </strong>
-                            {floor.facilities.map((fac, idx) => <span key={idx} className="lst-fac-pill">{fac}</span>)}
-                          </div>
-                        ) : <div style={{margin: '10px 0'}}><strong>Facilities:</strong> No Data Available</div>}
-                        
-                        <h4 className="lst-explorer-title">Room Explorer</h4>
-                        <div className="lst-rooms-accordion">
-                          {floor.rooms && floor.rooms.length > 0 ? (
-                            floor.rooms.map(room => {
-                               const occupiedCount = room.beds ? room.beds.filter(b => b.status === 'OCCUPIED' || (hostel.filledBeds && hostel.filledBeds.some(fb => String(fb.bedId) === String(b._id)))).length : 0;
-                               const availableCount = (room.beds ? room.beds.length : 0) - occupiedCount;
-
-                               return (
-                              <div key={room._id} className={`lst-room-accordion ${expandedRoom?._id === room._id ? 'expanded' : ''}`}>
-                                <div className="lst-room-header" onClick={() => toggleRoom(room)}>
-                                  <div className="lst-rh-left">
-                                    <h4>Room {renderField(room.roomNumber)}</h4>
-                                    <div className="lst-rh-tags">
-                                      <span className="lst-tag">Type: {renderField(room.roomType)}</span>
-                                      <span className="lst-tag">Status: {renderField(room.status)}</span>
-                                    </div>
-                                  </div>
-                                  <div className="lst-rh-right">
-                                    <div className="lst-rh-price">
-                                      <span className="amount">₹{room.rentAmount ? room.rentAmount.toLocaleString() : 'N/A'}</span>
-                                      <span className="period">/mo</span>
-                                    </div>
-                                    <div className="lst-rh-icon">
-                                      {expandedRoom?._id === room._id ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {expandedRoom?._id === room._id && (
-                                  <div className="lst-room-body">
-                                    <div className="lst-room-details-grid">
-                                      <div><strong>Capacity:</strong> {renderField(room.capacity)}</div>
-                                      <div><strong>Occupied Beds:</strong> {occupiedCount}</div>
-                                      <div><strong>Available Beds:</strong> {availableCount}</div>
-                                      <div><strong>AC:</strong> {room.isAC ? 'Yes' : 'No'}</div>
-                                      <div><strong>Washroom:</strong> {renderField(room.washroomType)}</div>
-                                      <div><strong>Security Deposit:</strong> {room.securityDeposit ? `₹${room.securityDeposit}` : 'No Data Available'}</div>
-                                    </div>
-
-                                    {room.amenities && room.amenities.length > 0 ? (
-                                      <div className="lst-room-amenities">
-                                        <strong>Facilities: </strong>
-                                        {room.amenities.map((am, idx) => <span key={idx}><Check size={12}/> {am}</span>)}
-                                      </div>
-                                    ) : <div style={{margin: '10px 0'}}><strong>Facilities:</strong> No Data Available</div>}
-                                    
-                                    <h5 className="lst-beds-title">Bed Explorer</h5>
-                                    <div className="lst-beds-grid">
-                                      {room.beds && room.beds.length > 0 ? (
-                                        room.beds.map(bed => {
-                                          const isOccupied = bed.status === 'OCCUPIED' || (hostel.filledBeds && hostel.filledBeds.some(b => String(b.bedId) === String(bed._id)));
-                                          const isSelected = selectedBed?._id === bed._id;
-                                          
-                                          return (
-                                            <div 
-                                              key={bed._id} 
-                                              className={`lst-bed-card ${isOccupied ? 'occupied' : ''} ${isSelected ? 'selected' : ''}`}
-                                              onClick={() => handleBedSelect(floor, room, bed)}
-                                            >
-                                              <div className="lst-bc-top">
-                                                <span className="lst-bc-num">#{renderField(bed.bedNumber)}</span>
-                                                <div className="lst-bc-status">
-                                                  {isOccupied ? <><Lock size={12}/> Occupied</> : <><CheckCircle2 size={12}/> Available</>}
-                                                </div>
-                                              </div>
-                                              <div className="lst-bc-mid">
-                                                <span><strong>Type:</strong> {renderField(bed.bedType)}</span>
-                                                <span><strong>Pos:</strong> {renderField(bed.position)}</span>
-                                              </div>
-                                              <div className="lst-bc-badges">
-                                                {bed.smartBadges && bed.smartBadges.length > 0 ? bed.smartBadges.slice(0, 2).map((badge, idx) => <span key={idx} className="lst-bc-badge"><Zap size={10}/> {badge}</span>) : <span>No specific features</span>}
-                                              </div>
-                                            </div>
-                                          );
-                                        })
-                                      ) : (
-                                        <div className="lst-none">No Data Available</div>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                           })
-                          ) : (
-                            <div className="lst-none">No Data Available</div>
-                          )}
-                        </div>
-                      </div>
-                    )}
+              {activeFloor && (
+                <div className="liv-floor-content">
+                  <div className="liv-data-strip">
+                    <div><span>Description</span><strong>{renderField(activeFloor.description)}</strong></div>
+                    <div><span>Total Beds</span><strong>{renderField(activeFloor.totalBeds)}</strong></div>
+                    <div><span>Facilities</span><strong>{activeFloor.facilities?.length > 0 ? activeFloor.facilities.join(', ') : 'No Data Available'}</strong></div>
                   </div>
-                ))
-              ) : (
-                <div className="lst-none-card">No Data Available</div>
+
+                  {/* View Controls */}
+                  <div className="liv-rooms-header-controls" style={{ justifyContent: 'flex-end' }}>
+                    <div className="liv-view-toggles">
+                      <button className={`liv-btn-toggle ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')}><LayoutGrid size={18}/></button>
+                      <button className={`liv-btn-toggle ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')}><List size={18}/></button>
+                    </div>
+                  </div>
+
+                  {/* Scrollable Room Container */}
+                  <div className="liv-rooms-scroll-container">
+                    <div className={`liv-rooms-wrapper ${viewMode}`}>
+                      {getFilteredRooms().length > 0 ? getFilteredRooms().map((room) => {
+                        const occupiedCount = room.beds ? room.beds.filter(b => b.status === 'OCCUPIED' || (hostel.filledBeds && hostel.filledBeds.some(fb => String(fb.bedId) === String(b._id)))).length : 0;
+                        const availableCount = (room.beds ? room.beds.length : 0) - occupiedCount;
+                        const isSelectedRoom = selectedRoom?._id === room._id;
+                        
+                        return (
+                          <div key={room._id} className={`liv-room-card ${isSelectedRoom ? 'selected' : ''}`} onClick={() => setOverlayRoom(room)}>
+                            <div className="liv-rh-info">
+                              <h4>Room {renderField(room.roomNumber)}</h4>
+                              <div className="liv-tags">
+                                <span className="liv-tag type">{room.isAC ? 'AC' : 'Non-AC'}</span>
+                                <span className="liv-tag capacity"><Users size={12}/> Cap: {renderField(room.capacity)}</span>
+                              </div>
+                            </div>
+                            <div className="liv-room-footer">
+                              <span className="liv-availability">{availableCount} Beds Available</span>
+                              <span className="liv-arrow"><ChevronRight size={18}/></span>
+                            </div>
+                          </div>
+                        )
+                      }) : <div className="liv-empty-state">No rooms match your filters.</div>}
+                    </div>
+                  </div>
+                </div>
               )}
-            </div>
-          </section>
-        </div>
+            </section>
+          </div>
 
-        {/* Sidebar: Booking Summary */}
-        <div className="lst-sidebar">
-          <div className="lst-checkout-panel">
-            <h3 className="lst-cp-title">Booking Summary</h3>
-            
-            <div className="lst-cp-selection">
-              <div className="lst-cp-row">
-                <span className="lst-cp-label">Building Name</span>
-                <span className="lst-cp-val">{renderField(hostel.name)}</span>
+          {/* Sticky Checkout Sidebar */}
+          <div className="liv-sidebar-wrapper">
+            <div className="liv-checkout-card glass">
+              <div className="liv-cc-price-header">
+                <h3><span className="currency">₹</span>{totalDue.toLocaleString()}<span>/month total</span></h3>
               </div>
-              <div className="lst-cp-row">
-                <span className="lst-cp-label">Floor Number</span>
-                <span className="lst-cp-val">{selectedFloor ? renderField(selectedFloor.floorNumber) : 'No Data Available'}</span>
+              
+              <div className="liv-cc-selection">
+                <div className="liv-cc-row"><span>Floor</span> <strong>{selectedFloor ? renderField(selectedFloor.floorNumber) : '-'}</strong></div>
+                <div className="liv-cc-row"><span>Room</span> <strong>{selectedRoom ? renderField(selectedRoom.roomNumber) : '-'}</strong></div>
+                <div className="liv-cc-row highlight"><span>Bed</span> <strong>{selectedBed ? `#${renderField(selectedBed.bedNumber)}` : '-'}</strong></div>
               </div>
-              <div className="lst-cp-row">
-                <span className="lst-cp-label">Room Number</span>
-                <span className="lst-cp-val">{selectedRoom ? renderField(selectedRoom.roomNumber) : 'No Data Available'}</span>
-              </div>
-              <div className="lst-cp-row highlight">
-                <span className="lst-cp-label">Bed Number</span>
-                <span className="lst-cp-val">{selectedBed ? renderField(selectedBed.bedNumber) : 'No Data Available'}</span>
-              </div>
-            </div>
 
-            <div className="lst-cp-divider"></div>
+              <div className="liv-divider"></div>
 
-            <div className="lst-cp-pricing">
-              <div className="lst-cp-row">
-                <span>Rent Amount</span>
-                <span>{currentRent ? `₹${currentRent.toLocaleString()}` : 'No Data Available'}</span>
+              <div className="liv-cc-breakdown">
+                <div className="liv-cc-row"><span>Rent</span> <span>{currentRent ? `₹${currentRent.toLocaleString()}` : '-'}</span></div>
+                <div className="liv-cc-row"><span>Deposit</span> <span>{currentDeposit ? `₹${currentDeposit.toLocaleString()}` : '-'}</span></div>
+                <div className="liv-cc-row"><span>Food</span> <span>{foodCost ? `₹${foodCost.toLocaleString()}` : '-'}</span></div>
+                <div className="liv-cc-row"><span>Maintenance</span> <span>{maintenanceCost ? `₹${maintenanceCost.toLocaleString()}` : '-'}</span></div>
               </div>
-              <div className="lst-cp-row">
-                <span>Deposit Amount</span>
-                <span>{currentDeposit ? `₹${currentDeposit.toLocaleString()}` : 'No Data Available'}</span>
+
+              <div className="liv-divider"></div>
+
+              <div className="liv-cc-row total">
+                <span>Total Due Today</span>
+                <span>₹{totalDue.toLocaleString()}</span>
               </div>
-              <div className="lst-cp-row">
-                <span>Food Charges</span>
-                <span>{foodCost ? `₹${foodCost.toLocaleString()}` : 'No Data Available'}</span>
-              </div>
-              <div className="lst-cp-row">
-                <span>Maintenance</span>
-                <span>{maintenanceCost ? `₹${maintenanceCost.toLocaleString()}` : 'No Data Available'}</span>
-              </div>
-              <div className="lst-cp-divider"></div>
-              <div className="lst-cp-row total">
-                <span>Total Amount</span>
-                <span className="amount">₹{totalDue.toLocaleString()}</span>
-              </div>
+
+              <button 
+                className="liv-btn-primary full-width"
+                disabled={!selectedBed}
+                onClick={handleBooking}
+              >
+                {selectedBed ? 'Reserve This Bed' : 'Select a Bed to Reserve'}
+              </button>
             </div>
 
-            <button 
-              className="lst-checkout-btn" 
-              disabled={!selectedBed}
-              onClick={handleBooking}
-            >
-              Proceed to Booking <ChevronRight size={18} />
-            </button>
-            <p className="lst-cp-secure"><ShieldCheck size={14}/> Secure Livora Booking</p>
+            {hostel.policies && (
+              <div className="liv-rules-card">
+                <h4>House Rules</h4>
+                <ul>
+                  <li><span className="icon">🚭</span> <span>Smoking:</span> <strong>{renderField(hostel.policies.smoking)}</strong></li>
+                  <li><span className="icon">🍷</span> <span>Alcohol:</span> <strong>{renderField(hostel.policies.alcohol)}</strong></li>
+                  <li><span className="icon">🐕</span> <span>Pets:</span> <strong>{renderField(hostel.policies.pets)}</strong></li>
+                  <li><span className="icon">⏰</span> <span>Visitors:</span> <strong>{renderField(hostel.policies.visitors)}</strong></li>
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <ImageModal
-        isOpen={modalInfo.isOpen}
-        image={modalInfo.image}
-        onClose={() => setModalInfo({ isOpen: false, image: '' })}
-      />
+      {/* Centered Modal Overlay for Room Beds */}
+      <div className={`liv-overlay-backdrop ${overlayRoom ? 'visible' : ''}`} onClick={() => setOverlayRoom(null)}>
+        <div className={`liv-modal ${overlayRoom ? 'open' : ''}`} onClick={e => e.stopPropagation()}>
+          <div className="liv-modal-header">
+            <div className="liv-modal-title">
+              <h3>Room {overlayRoom ? renderField(overlayRoom.roomNumber) : ''}</h3>
+              <span className="liv-modal-subtitle">Pick your specific bed</span>
+            </div>
+            <button className="liv-btn-close" onClick={() => setOverlayRoom(null)}>✕</button>
+          </div>
+          
+          {overlayRoom && (
+            <div className="liv-modal-content">
+              <div className="liv-modal-meta">
+                <div className="liv-meta-badge"><Bath size={14}/> <span>{renderField(overlayRoom.washroomType)} Washroom</span></div>
+                <div className="liv-meta-badge price"><span className="currency">₹</span> <span>{overlayRoom.rentAmount ? overlayRoom.rentAmount.toLocaleString() : 'N/A'}</span> /mo</div>
+              </div>
+              
+              <div className="liv-divider" style={{margin: '24px 0'}}></div>
+              
+              <h5 className="liv-modal-section-title">Available Beds in this Room</h5>
+              <div className="liv-beds-grid">
+                {overlayRoom.beds && overlayRoom.beds.length > 0 ? overlayRoom.beds.map(bed => {
+                  const isOccupied = bed.status === 'OCCUPIED' || (hostel.filledBeds && hostel.filledBeds.some(b => String(b.bedId) === String(bed._id)));
+                  const isSelected = selectedBed?._id === bed._id;
+                  
+                  return (
+                    <button 
+                      key={bed._id} 
+                      className={`liv-bed-btn ${isOccupied ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
+                      onClick={() => handleBedSelect(activeFloor, overlayRoom, bed)}
+                      disabled={isOccupied}
+                    >
+                      <div className="liv-bb-top">
+                        <span className="liv-bb-num">#{renderField(bed.bedNumber)}</span>
+                        {isOccupied ? <Lock size={16} strokeWidth={2.5}/> : <CheckCircle2 size={16} strokeWidth={2.5}/>}
+                      </div>
+                      <div className="liv-bb-type">{renderField(bed.bedType)}</div>
+                      <div className="liv-bb-pos">{renderField(bed.position)}</div>
+                    </button>
+                  );
+                }) : <div className="liv-text-muted">No Beds Available in this Room</div>}
+              </div>
+              
+              <div className="liv-modal-footer">
+                <button 
+                  className="liv-btn-primary full-width pulse-hover" 
+                  onClick={() => setOverlayRoom(null)}
+                >
+                  {selectedBed && overlayRoom.beds.some(b => b._id === selectedBed._id) ? 'Confirm Bed Selection' : 'Close Details'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <ImageModal isOpen={modalInfo.isOpen} image={modalInfo.image} onClose={() => setModalInfo({ isOpen: false, image: '' })} />
     </div>
   );
 };

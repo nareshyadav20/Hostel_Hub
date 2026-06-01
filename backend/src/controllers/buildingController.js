@@ -347,14 +347,31 @@ const getPublicBuildings = async (req, res) => {
 
 const getPublicBuildingById = async (req, res) => {
   try {
-    const building = await Building.findOne({ _id: req.params.id, status: { $ne: 'Draft' } }).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
+    const building = await Building.findOne({ _id: req.params.id, status: { $ne: 'Draft' } })
+      .select('-draftData -staffInfo -owner -lastStep')
+      .populate({
+        path: 'floors',
+        select: 'floorNumber floorCategory description occupancyPercentage totalRooms totalBeds facilities rooms',
+        populate: {
+          path: 'rooms',
+          select: 'roomNumber roomType capacity isAC washroomType rentAmount securityDeposit amenities status beds',
+          populate: {
+            path: 'beds',
+            select: 'bedNumber status position bedType smartBadges'
+          }
+        }
+      })
+      .lean();
+
     if (!building) return res.status(404).json({ error: 'Building not found' });
 
     // Fetch filled beds for this building
     const BedFilling = require('../models/BedFilling');
-    const filledBeds = await BedFilling.find({ buildingId: building._id, status: 'Occupied' });
+    const filledBeds = await BedFilling.find({ buildingId: building._id, status: 'Occupied' })
+      .select('bedId bedNumber')
+      .lean();
 
-    res.status(200).json({ ...building.toObject(), filledBeds });
+    res.status(200).json({ ...building, filledBeds });
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 

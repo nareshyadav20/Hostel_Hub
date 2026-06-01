@@ -4322,3 +4322,6 @@
 2026-05-30T09:03:23.258Z API: GET /api/buildings/public
 2026-05-30T09:03:29.987Z API: GET /api/buildings/public/6a1aa73a65d63f0abe1f32bb
 2026-05-30T09:03:30.475Z API: GET /api/buildings/public/6a1aa73a65d63f0abe1f32bb
+2026-05-30T10:10:23.560Z API: GET /api/buildings/public
+2026-05-30T10:10:43.068Z API: GET /api/buildings/public/6a12690e6f227214775cd0cb
+2026-05-30T10:11:04.224Z API: GET /api/buildings/public/6a16c579259744d9b17bbb46
