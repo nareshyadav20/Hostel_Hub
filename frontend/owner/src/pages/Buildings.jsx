@@ -374,7 +374,7 @@ const INITIAL_FORM_STATE = {
   rentAmount: 8000, securityDeposit: 16000, noticePeriod: 30, description: '',
   smartMonitoringEnabled: true, realTimeEnabled: true, totalRooms: 0, totalBeds: 0,
   images: [], hygieneRating: 96, washroomsCount: 4, cctvStatus: 'Active',
-  wifiStatus: 'Full', loungesCount: 2, facilities: []
+  wifiStatus: 'Excellent', loungesCount: 2, facilities: []
 };
 
 const Buildings = () => {
@@ -849,6 +849,16 @@ const Buildings = () => {
       setBeds([...beds, newB]);
       setIsAddBedOpen(false);
       setFormData(INITIAL_FORM_STATE);
+
+      // Sync hostel bed stats so Rooms page reflects new count immediately
+      const bId = selectedBuilding?.id || selectedBuilding?._id;
+      if (bId) {
+        try { await api.syncHostelBeds(bId); } catch (_) {}
+        // Signal Rooms.jsx to reload via CustomEvent for SPA same-window updates
+        window.dispatchEvent(new Event('bedStatsUpdated'));
+        // Also fire storage event for multi-tab setups
+        localStorage.setItem('bedStatsUpdated', Date.now().toString());
+      }
     } catch (err) {
       alert("Failed to add bed: " + (err.response?.data?.error || err.message));
     }
@@ -1208,9 +1218,9 @@ const Buildings = () => {
               </div>
               <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WIFI STATUS</label>
                 <select value={formData.wifiStatus} onChange={e => setFormData({ ...formData, wifiStatus: e.target.value })} style={inputStyle}>
-                  <option value="Full">Full</option>
                   <option value="Excellent">Excellent</option>
                   <option value="Good">Good</option>
+                  <option value="Poor">Poor</option>
                   <option value="Offline">Offline</option>
                 </select>
               </div>
@@ -2532,7 +2542,7 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
         {[
           { label: 'Washrooms', value: `${floor.washroomsCount !== undefined ? floor.washroomsCount : 4} Units`, icon: <Droplets size={12} /> },
           { label: 'CCTV', value: floor.cctvStatus || 'Active', icon: <ShieldCheck size={12} /> },
-          { label: 'WiFi', value: floor.wifiStatus || 'Full', icon: <Wifi size={12} /> },
+          { label: 'WiFi', value: floor.wifiStatus || 'Excellent', icon: <Wifi size={12} /> },
           { label: 'Lounges', value: `${floor.loungesCount !== undefined ? floor.loungesCount : 2} Areas`, icon: <Coffee size={12} /> }
         ].map((kpi, i) => (
           <div key={i} style={{ padding: '0.6rem', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #F1F5F9', textAlign: 'center' }}>
