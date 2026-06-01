@@ -25,7 +25,7 @@ async function seedDemo() {
       'owner_buildings', 'owner_floors', 'owner_rooms', 'owner_beds', 
       'owner_tenants', 'owner_payments', 'owner_complaints', 
       'owner_inventory', 'owner_messmenus', 'owner_staff', 'owner_systemsettings',
-      'buildings', 'floors', 'rooms', 'beds', 'tenants', 'payments', 'complaints', 
+      'new_build', 'floors', 'rooms', 'beds', 'tenants', 'payments', 'complaints', 
       'inventory', 'messmenus', 'staff', 'systemsettings', 'ownerprofiles'
     ];
 
@@ -45,7 +45,7 @@ async function seedDemo() {
     for (const b of buildingsData) {
       const data = { ...b, status: 'Active', createdAt: new Date(), updatedAt: new Date() };
       const res = await db.collection('owner_buildings').insertOne(data);
-      await db.collection('buildings').insertOne({ ...data, _id: res.insertedId });
+      await db.collection('new_build').insertOne({ ...data, _id: res.insertedId });
       buildings.push({ ...data, _id: res.insertedId });
     }
 

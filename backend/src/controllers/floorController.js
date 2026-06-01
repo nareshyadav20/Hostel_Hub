@@ -36,16 +36,14 @@ const getFloors = async (req, res) => {
     const building = await Building.findOne({ _id: req.params.buildingId, owner: req.user.id });
     if (!building) return res.status(404).json({ error: 'Building not found or unauthorized' });
 
-    const floors = await Floor.find({ building: req.params.buildingId }).populate({
-      path: 'rooms',
-      populate: {
-        path: 'beds'
-      }
-    });
+    const floors = await Floor.find({ building: req.params.buildingId });
 
-    const populatedFloors = floors.map(floor => {
+    const populatedFloors = await Promise.all(floors.map(async (floor) => {
       const floorObj = floor.toObject();
-      const rooms = floorObj.rooms || [];
+      
+      const Room = require('../models/Room');
+      const rooms = await Room.find({ floor: floor._id }).populate('beds');
+      
       floorObj.totalRooms = rooms.length;
       
       let totalBeds = 0;
@@ -60,7 +58,7 @@ const getFloors = async (req, res) => {
       floorObj.totalBeds = totalBeds;
       floorObj.occupancyPercentage = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
       return floorObj;
-    });
+    }));
 
     res.status(200).json(populatedFloors);
   } catch (error) { res.status(500).json({ error: error.message }); }
