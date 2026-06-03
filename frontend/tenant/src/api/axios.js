@@ -16,7 +16,7 @@ API.interceptors.request.use((config) => {
   if (!config.signal) {
     const controller = new AbortController();
     config.signal = controller.signal;
-    
+
     const timeoutId = setTimeout(() => {
       controller.abort();
       console.warn(`⚠️ Request to ${config.url || 'unknown'} timed out and was aborted.`);
