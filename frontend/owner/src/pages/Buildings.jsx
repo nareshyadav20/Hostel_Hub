@@ -122,7 +122,7 @@ const PropertyDetailDrawer = ({ isOpen, onClose, target, type, activeTab, onTabC
                     <img src={target.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" />
                   </div>
                 )}
-                
+
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
                   {(target.status || target.occupancyPercentage !== undefined) && (
                     <div style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
@@ -643,14 +643,14 @@ const Buildings = () => {
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    
+
     files.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData(prev => ({ 
-          ...prev, 
+        setFormData(prev => ({
+          ...prev,
           imageUrl: prev.imageUrl || reader.result, // keep legacy imageUrl working
-          images: [...(prev.images || []), reader.result] 
+          images: [...(prev.images || []), reader.result]
         }));
       };
       reader.readAsDataURL(file);
@@ -782,7 +782,7 @@ const Buildings = () => {
             current.push(newId);
             sessionStorage.setItem('createdBuildingIds', JSON.stringify(current));
           }
-        } catch (e) {}
+        } catch (e) { }
       }
 
       // Reset to buildings list view
@@ -905,7 +905,7 @@ const Buildings = () => {
       // Sync hostel bed stats so Rooms page reflects new count immediately
       const bId = selectedBuilding?.id || selectedBuilding?._id;
       if (bId) {
-        try { await api.syncHostelBeds(bId); } catch (_) {}
+        try { await api.syncHostelBeds(bId); } catch (_) { }
         // Signal Rooms.jsx to reload via CustomEvent for SPA same-window updates
         window.dispatchEvent(new Event('bedStatsUpdated'));
         // Also fire storage event for multi-tab setups
@@ -1075,7 +1075,7 @@ const Buildings = () => {
                     setIsEditBuildingOpen(true);
                   }}
                   onAdd={() => setIsAddBuildingOpen(true)}
-                  onViewAnalytics={() => {}}
+                  onViewAnalytics={() => { }}
                   onDeleteBuilding={handleDeleteBuilding}
                 />
               </motion.div>
@@ -1089,7 +1089,7 @@ const Buildings = () => {
                   onBack={() => setView('buildings')}
                   onAdd={() => setIsAddFloorOpen(true)}
                   onDelete={handleDeleteFloor}
-                  onViewAnalytics={() => {}}
+                  onViewAnalytics={() => { }}
                 />
               </motion.div>
             )}
@@ -1112,7 +1112,7 @@ const Buildings = () => {
                   onAdd={() => setIsAddRoomOpen(true)}
                   onEdit={handleOpenEditRoom}
                   onDelete={handleDeleteRoom}
-                  onViewDetails={() => {}}
+                  onViewDetails={() => { }}
                 />
               </motion.div>
             )}
@@ -1135,7 +1135,7 @@ const Buildings = () => {
                   onAdd={() => setIsAddBedOpen(true)}
                   onEditBed={handleOpenEditBed}
                   onDelete={handleDeleteBed}
-                  onViewDetails={() => {}}
+                  onViewDetails={() => { }}
                   onViewHistory={(bed) => { setViewingBed(bed); setIsViewBedHistoryOpen(true); }}
                   onAssignTenant={(bed) => { setViewingBed(bed); setIsAssignTenantOpen(true); }}
                 />
@@ -1248,7 +1248,7 @@ const Buildings = () => {
         <Modal isOpen={isAddBuildingOpen} onClose={() => setIsAddBuildingOpen(false)} title="Add New Building">
           <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleAddBuilding}>
             <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING NAME *</label><input placeholder="e.g. Block A" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={inputStyle} required /></div>
-            <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>DESCRIPTION</label><textarea placeholder="Building Description" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} style={{...inputStyle, minHeight: '80px', resize: 'vertical'}} /></div>
+            <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>DESCRIPTION</label><textarea placeholder="Building Description" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} /></div>
             <div className="input-group">
               <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING PHOTOS</label>
               <div style={{ position: 'relative', marginTop: '0.6rem' }}>
@@ -1347,7 +1347,7 @@ const Buildings = () => {
         <Modal isOpen={isAddFloorOpen} onClose={() => setIsAddFloorOpen(false)} title={`Add Floor to ${selectedBuilding?.name}`}>
           <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleAddFloor}>
             <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FLOOR NUMBER</label><input placeholder="e.g. G, 1, 2" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} style={inputStyle} required /></div>
-            
+
             <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '1rem' }}>Floor Equipment & Washrooms</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
@@ -1356,7 +1356,7 @@ const Buildings = () => {
                 <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WASHING MACHINES</label><input type="number" placeholder="1" value={formData.washingMachines} onChange={e => setFormData({ ...formData, washingMachines: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" /></div>
                 <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FRIDGES</label><input type="number" placeholder="1" value={formData.fridges} onChange={e => setFormData({ ...formData, fridges: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" /></div>
               </div>
-              
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, hasStudyArea: !formData.hasStudyArea })}>
                   <div style={{ width: '20px', height: '20px', border: '2px solid var(--accent-primary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.hasStudyArea ? 'var(--accent-primary)' : 'transparent', transition: 'all 0.3s' }}>
@@ -1364,7 +1364,7 @@ const Buildings = () => {
                   </div>
                   <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-primary)' }}>Study Area</span>
                 </div>
-                
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, hasLoungeArea: !formData.hasLoungeArea })}>
                   <div style={{ width: '20px', height: '20px', border: '2px solid var(--accent-primary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.hasLoungeArea ? 'var(--accent-primary)' : 'transparent', transition: 'all 0.3s' }}>
                     {formData.hasLoungeArea && <div style={{ width: '10px', height: '10px', background: "var(--bg-card)", borderRadius: '2px' }} />}
@@ -1387,7 +1387,7 @@ const Buildings = () => {
                 </div>
               </div>
             </div>
-            
+
             <button className="btn btn-primary" type="submit" style={{ padding: '1.1rem', borderRadius: '16px', fontWeight: '900', fontSize: '1rem' }}>Save Floor Structure</button>
           </form>
         </Modal>
@@ -1398,7 +1398,7 @@ const Buildings = () => {
               <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ROOM NO.</label><input placeholder="101" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} style={inputStyle} required /></div>
               <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>CAPACITY (BEDS)</label><input type="number" placeholder="2" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: parseInt(e.target.value) })} style={inputStyle} required min="1" /></div>
             </div>
-            
+
             <div className="input-group">
               <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ROOM PREVIEW</label>
               <div style={{ position: 'relative', marginTop: '0.6rem' }}>
@@ -1429,7 +1429,7 @@ const Buildings = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="input-group">
               <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>FURNITURE & ELECTRONICS & AMENITIES</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', marginTop: '0.5rem' }}>
@@ -1461,7 +1461,7 @@ const Buildings = () => {
                 ))}
               </div>
             </div>
-            
+
             <button className="btn btn-primary" type="submit" style={{ padding: '1.2rem', borderRadius: '18px', fontWeight: '950', marginTop: '0.5rem', fontSize: '1rem' }}>Deploy Room</button>
           </form>
         </Modal>
@@ -1503,7 +1503,7 @@ const Buildings = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="input-group">
               <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>FURNITURE & ELECTRONICS & AMENITIES</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', marginTop: '0.5rem' }}>
@@ -1554,7 +1554,7 @@ const Buildings = () => {
                 </select>
               </div>
             </div>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
               <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED SIZE</label>
                 <select value={formData.bedSize} onChange={e => setFormData({ ...formData, bedSize: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
@@ -1645,7 +1645,7 @@ const Buildings = () => {
                 </select>
               </div>
             </div>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
               <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED SIZE</label>
                 <select value={formData.bedSize} onChange={e => setFormData({ ...formData, bedSize: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
@@ -2404,9 +2404,9 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
   }, [building.images]);
 
   const occupancyRate = building.occupancyPercentage !== undefined ? building.occupancyPercentage : 0;
-  const computedRevenue = building.revenueStats?.monthlyRevenue 
-    ? (building.revenueStats.monthlyRevenue / 100000).toFixed(1) + 'L' 
-    : (building.totalBeds && building.rentSingle ? ((building.totalBeds * building.rentSingle)/100000).toFixed(1) + 'L' : '0.0L');
+  const computedRevenue = building.revenueStats?.monthlyRevenue
+    ? (building.revenueStats.monthlyRevenue / 100000).toFixed(1) + 'L'
+    : (building.totalBeds && building.rentSingle ? ((building.totalBeds * building.rentSingle) / 100000).toFixed(1) + 'L' : '0.0L');
   const hygieneScore = building.healthScores?.hygieneScore || (building.smartConfig?.hasAIHygiene ? 98 : 85);
   const energyEfficiency = building.healthScores?.energyEfficiency || (building.smartConfig?.hasClimateControl ? 92 : 82);
 
@@ -2616,9 +2616,9 @@ const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics, onEditBuil
       </div>
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
-          <button 
-            disabled={currentPage === 1} 
-            onClick={() => setCurrentPage(prev => prev - 1)} 
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(prev => prev - 1)}
             className="btn"
             style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
           >
@@ -2627,9 +2627,9 @@ const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics, onEditBuil
           <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
             Page {currentPage} of {totalPages}
           </span>
-          <button 
-            disabled={currentPage === totalPages} 
-            onClick={() => setCurrentPage(prev => prev + 1)} 
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(prev => prev + 1)}
             className="btn"
             style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
           >
@@ -2884,9 +2884,9 @@ const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onEdit, on
       </div>
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
-          <button 
-            disabled={currentPage === 1} 
-            onClick={() => setCurrentPage(prev => prev - 1)} 
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(prev => prev - 1)}
             className="btn"
             style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
           >
@@ -2895,9 +2895,9 @@ const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onEdit, on
           <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
             Page {currentPage} of {totalPages}
           </span>
-          <button 
-            disabled={currentPage === totalPages} 
-            onClick={() => setCurrentPage(prev => prev + 1)} 
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(prev => prev + 1)}
             className="btn"
             style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
           >
