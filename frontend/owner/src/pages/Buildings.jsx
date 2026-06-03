@@ -1158,6 +1158,10 @@ const Buildings = () => {
               <input placeholder="Block A" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={inputStyle} required />
             </div>
             <div className="input-group">
+              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ADDRESS *</label>
+              <input placeholder="e.g. 123 MG Road, Bengaluru" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} style={inputStyle} required />
+            </div>
+            <div className="input-group">
               <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>DESCRIPTION</label>
               <textarea placeholder="e.g. Premium block for seniors" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }} />
             </div>
@@ -1248,6 +1252,7 @@ const Buildings = () => {
         <Modal isOpen={isAddBuildingOpen} onClose={() => setIsAddBuildingOpen(false)} title="Add New Building">
           <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleAddBuilding}>
             <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING NAME *</label><input placeholder="e.g. Block A" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={inputStyle} required /></div>
+            <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>ADDRESS *</label><input placeholder="e.g. 123 MG Road, Bengaluru" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} style={inputStyle} required /></div>
             <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>DESCRIPTION</label><textarea placeholder="Building Description" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} /></div>
             <div className="input-group">
               <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING PHOTOS</label>

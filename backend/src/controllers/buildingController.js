@@ -119,7 +119,7 @@ const getBuildings = async (req, res) => {
         { propertyId: req.query.propertyId }
       ];
     } else {
-      query.propertyId = { $in: [null, undefined] };
+      query.propertyId = { $in: [null] };
       query.showInPortfolio = { $ne: false };
     }
     console.log(`[DEBUG] getBuildings query:`, JSON.stringify(query));
@@ -377,7 +377,7 @@ const getBuildingById = async (req, res) => {
 const getPublicBuildings = async (req, res) => {
   try {
     const buildings = await Building.find(
-      { status: { $ne: 'Draft' }, propertyId: { $in: [null, undefined] }, showInPortfolio: { $ne: false } },
+      { status: { $ne: 'Draft' }, propertyId: { $in: [null] }, showInPortfolio: { $ne: false } },
       {
         name: 1, address: 1, locationCity: 1, category: 1, rating: 1,
         startingPrice: 1, genderType: 1, amenities: 1, isAC: 1
@@ -466,11 +466,11 @@ const uploadPhotos = async (req, res) => {
 
 const getPlatformStats = async (req, res) => {
   try {
-    const propertiesCount = await Building.countDocuments({ status: { $ne: 'Draft' }, propertyId: { $in: [null, undefined] }, showInPortfolio: { $ne: false } });
+    const propertiesCount = await Building.countDocuments({ status: { $ne: 'Draft' }, propertyId: { $in: [null] }, showInPortfolio: { $ne: false } });
     const tenantsCount = await Tenant.countDocuments();
-    const cities = await Building.distinct('locationCity', { status: { $ne: 'Draft' }, propertyId: { $in: [null, undefined] }, showInPortfolio: { $ne: false } });
+    const cities = await Building.distinct('locationCity', { status: { $ne: 'Draft' }, propertyId: { $in: [null] }, showInPortfolio: { $ne: false } });
 
-    const buildings = await Building.find({ status: { $ne: 'Draft' }, propertyId: { $in: [null, undefined] }, showInPortfolio: { $ne: false } }, 'rating');
+    const buildings = await Building.find({ status: { $ne: 'Draft' }, propertyId: { $in: [null] }, showInPortfolio: { $ne: false } }, 'rating');
     let totalRating = 0;
     let validRatings = 0;
     buildings.forEach(b => {

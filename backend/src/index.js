@@ -103,7 +103,9 @@ app.use(compression()); // Gzip compression for all responses
 
 app.use((req, res, next) => {
   const msg = `${new Date().toISOString()} API: ${req.method} ${req.originalUrl}\n`;
-  require('fs').appendFileSync(require('path').join(__dirname, '../traffic_logs.txt'), msg);
+  try {
+    require('fs').appendFileSync(require('path').join(__dirname, '../traffic_logs.txt'), msg);
+  } catch (_) { /* Ignore filesystem errors on read-only/ephemeral environments like Render */ }
   console.log(req.method, req.originalUrl);
   next();
 });
@@ -244,7 +246,9 @@ const activeSockets = new Map();
 
 io.on('connection', (socket) => {
   const msg = `${new Date().toISOString()} SOCKET: Socket connected: ${socket.id}\n`;
-  require('fs').appendFileSync(require('path').join(__dirname, '../traffic_logs.txt'), msg);
+  try {
+    require('fs').appendFileSync(require('path').join(__dirname, '../traffic_logs.txt'), msg);
+  } catch (_) { /* Ignore filesystem errors on read-only/ephemeral environments like Render */ }
   console.log('⚡ New client connected:', socket.id);
   console.log("Socket connected:", socket.id);
 
