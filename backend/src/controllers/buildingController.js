@@ -12,7 +12,8 @@ const createBuilding = async (req, res) => {
       startingPrice, securityDeposit, maintenanceCharges, foodCharges,
       rentSingle, rentDouble, rentTriple, totalRooms, totalBeds,
       genderType, category, rating, popularityLabel,
-      policies, staffInfo, status, lastStep, draftData, showInPortfolio
+      policies, staffInfo, status, lastStep, draftData, showInPortfolio,
+      propertyId
     } = req.body;
 
     const parseField = (field, defaultValue) => {
@@ -71,6 +72,7 @@ const createBuilding = async (req, res) => {
       lastStep: lastStep || 1,
       draftData: finalDraftData,
       showInPortfolio: showInPortfolio !== undefined ? showInPortfolio : true,
+      propertyId: propertyId || null,
       owner: req.user.id
     });
 
@@ -99,6 +101,15 @@ const getBuildings = async (req, res) => {
       } else {
         query.status = req.query.status;
       }
+    }
+    if (req.query.propertyId) {
+      query.$or = [
+        { _id: req.query.propertyId },
+        { propertyId: req.query.propertyId }
+      ];
+    } else {
+      query.propertyId = { $in: [null, undefined] };
+      query.showInPortfolio = { $ne: false };
     }
     console.log(`[DEBUG] getBuildings query:`, JSON.stringify(query));
     const buildings = await Building.find(query)
@@ -310,8 +321,10 @@ const getBuildingById = async (req, res) => {
 
     const bObj = building.toObject();
 
-    // Query floors directly
-    const floors = await Floor.find({ building: building._id });
+    // Query floors directly for the building and its sub-buildings
+    const subBuildings = await Building.find({ propertyId: building._id }).select('_id');
+    const buildingIds = [building._id, ...subBuildings.map(sb => sb._id)];
+    const floors = await Floor.find({ building: { $in: buildingIds } });
     const bFloors = await Promise.all(floors.map(async (floor) => {
       const floorObj = floor.toObject();
       const rooms = await Room.find({ floor: floor._id }).populate({
@@ -350,7 +363,7 @@ const getBuildingById = async (req, res) => {
 const getPublicBuildings = async (req, res) => {
   try {
     const buildings = await Building.find(
-      { status: { $ne: 'Draft' } },
+      { status: { $ne: 'Draft' }, propertyId: { $in: [null, undefined] }, showInPortfolio: { $ne: false } },
       {
         name: 1, address: 1, locationCity: 1, category: 1, rating: 1,
         startingPrice: 1, genderType: 1, amenities: 1, isAC: 1
@@ -366,48 +379,36 @@ const getPublicBuildingById = async (req, res) => {
   try {
     const building = await Building.findOne({ _id: req.params.id, status: { $ne: 'Draft' } })
       .select('-draftData -staffInfo -owner -lastStep')
-      .populate({
-        path: 'virtualFloors',
-        select: 'floorNumber floorCategory description occupancyPercentage totalRooms totalBeds facilities rooms',
-        populate: {
-          path: 'virtualRooms',
-          select: 'roomNumber roomType capacity isAC washroomType rentAmount securityDeposit amenities status beds',
-          populate: [
-            {
-              path: 'virtualBeds',
-              select: 'bedNumber status position bedType smartBadges'
-            },
-            {
-              path: 'virtualBedsAlias',
-              select: 'bedNumber status position bedType smartBadges'
-            }
-          ]
-        }
-      })
       .lean();
-
-    // Map virtuals to standard keys for frontend compatibility
-    if (building && building.virtualFloors) {
-      building.floors = building.virtualFloors.map(f => {
-        if (f.virtualRooms) {
-          f.rooms = f.virtualRooms.map(r => {
-            r.beds = [...(r.virtualBeds || []), ...(r.virtualBedsAlias || [])];
-            delete r.virtualBeds;
-            delete r.virtualBedsAlias;
-            return r;
-          });
-          delete f.virtualRooms;
-        }
-        return f;
-      });
-      delete building.virtualFloors;
-    }
 
     if (!building) return res.status(404).json({ error: 'Building not found' });
 
+    // Fetch all sub-buildings to get their IDs
+    const subBuildings = await Building.find({ propertyId: building._id }).select('_id');
+    const buildingIds = [building._id, ...subBuildings.map(sb => sb._id)];
+
+    // Find floors for all these buildings and populate their rooms and beds
+    const floors = await Floor.find({ building: { $in: buildingIds } })
+      .select('floorNumber floorCategory description occupancyPercentage totalRooms totalBeds facilities rooms building')
+      .lean();
+
+    const populatedFloors = await Promise.all(floors.map(async (floor) => {
+      const rooms = await Room.find({ floor: floor._id })
+        .select('roomNumber roomType capacity isAC washroomType rentAmount securityDeposit amenities status beds')
+        .populate({
+          path: 'beds',
+          select: 'bedNumber status position bedType smartBadges'
+        })
+        .lean();
+      floor.rooms = rooms;
+      return floor;
+    }));
+
+    building.floors = populatedFloors;
+
     // Fetch filled beds for this building
     const BedFilling = require('../models/BedFilling');
-    const filledBeds = await BedFilling.find({ buildingId: building._id, status: 'Occupied' })
+    const filledBeds = await BedFilling.find({ buildingId: { $in: buildingIds }, status: 'Occupied' })
       .select('bedId bedNumber')
       .lean();
 
@@ -451,11 +452,11 @@ const uploadPhotos = async (req, res) => {
 
 const getPlatformStats = async (req, res) => {
   try {
-    const propertiesCount = await Building.countDocuments({ status: { $ne: 'Draft' } });
+    const propertiesCount = await Building.countDocuments({ status: { $ne: 'Draft' }, propertyId: { $in: [null, undefined] }, showInPortfolio: { $ne: false } });
     const tenantsCount = await Tenant.countDocuments();
-    const cities = await Building.distinct('locationCity', { status: { $ne: 'Draft' } });
+    const cities = await Building.distinct('locationCity', { status: { $ne: 'Draft' }, propertyId: { $in: [null, undefined] }, showInPortfolio: { $ne: false } });
 
-    const buildings = await Building.find({ status: { $ne: 'Draft' } }, 'rating');
+    const buildings = await Building.find({ status: { $ne: 'Draft' }, propertyId: { $in: [null, undefined] }, showInPortfolio: { $ne: false } }, 'rating');
     let totalRating = 0;
     let validRatings = 0;
     buildings.forEach(b => {

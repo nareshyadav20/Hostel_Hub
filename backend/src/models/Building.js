@@ -65,6 +65,7 @@ const buildingSchema = new mongoose.Schema({
   smartBadges: [{ type: String }],
   thumbIntelligence: { type: String, default: '' },
   
+  propertyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building', default: null },
   showInPortfolio: { type: Boolean, default: true },
   status: { type: String, enum: ['Active', 'Draft', 'Inactive'], default: 'Active' },
   lastStep: { type: Number, default: 1 },

@@ -80,14 +80,31 @@ export const api = {
   },
 
   // Buildings & Infrastructure
-  getBuildings: async (bypassCache = false) => {
-    if (bypassCache) {
-      const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Active' } });
+  getBuildings: async (arg1 = null, arg2 = false) => {
+    let propertyId = null;
+    let bypass = false;
+    if (typeof arg1 === 'boolean') {
+      bypass = arg1;
+    } else if (arg1 && typeof arg1 === 'object') {
+      propertyId = arg1.propertyId || null;
+      bypass = !!arg1.bypassCache || !!arg1.lightweight;
+    } else {
+      propertyId = arg1;
+      bypass = arg2;
+    }
+
+    const params = { status: 'Active' };
+    if (propertyId) params.propertyId = propertyId;
+
+    const cacheKey = propertyId ? `buildings_prop_${propertyId}` : 'buildings_active';
+
+    if (bypass) {
+      const res = await axios.get(`${API_URL}/buildings`, { params });
       const data = Array.isArray(res.data) ? res.data : (res.data || []);
-      cacheSet('buildings_active', data);
+      cacheSet(cacheKey, data);
       return handleId(data);
     }
-    return await swrFetch('buildings_active', `${API_URL}/buildings`, { params: { status: 'Active' } });
+    return await swrFetch(cacheKey, `${API_URL}/buildings`, { params });
   },
   getDraftBuildings: async () => {
     return await swrFetch('buildings_draft', `${API_URL}/buildings`, { params: { status: 'Draft' } });
@@ -341,11 +358,17 @@ export const api = {
   addBuilding: async (data) => {
     const res = await axios.post(`${API_URL}/buildings`, data);
     cacheSet('buildings_active', null);
+    if (data.propertyId) {
+      cacheSet(`buildings_prop_${data.propertyId}`, null);
+    }
     return handleId(res.data);
   },
   updateBuilding: async (id, data) => {
     const res = await axios.patch(`${API_URL}/buildings/${id}`, data);
     cacheSet('buildings_active', null);
+    if (data.propertyId) {
+      cacheSet(`buildings_prop_${data.propertyId}`, null);
+    }
     return handleId(res.data);
   },
   deleteBuilding: async (id) => {

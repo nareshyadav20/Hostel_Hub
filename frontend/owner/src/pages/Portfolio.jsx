@@ -126,7 +126,7 @@ const Portfolio = () => {
         api.getStaff().catch(() => ({ staffList: [] }))
       ]);
       setData({
-        buildings: (b || []).filter(bld => bld.showInPortfolio !== false), floors: f || [], rooms: r || [],
+        buildings: (b || []).filter(bld => bld.showInPortfolio !== false && String(bld.showInPortfolio) !== 'false'), floors: f || [], rooms: r || [],
         beds: bd || [], tenants: t || [], complaints: c || [],
         staff: s?.staffList || []
       });

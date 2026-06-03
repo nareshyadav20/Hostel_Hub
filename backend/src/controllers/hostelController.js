@@ -61,10 +61,15 @@ exports.getBedStats = async (req, res) => {
     const hostel = await Hostel.findOne({ owner: req.user.id });
 
     // Walk hierarchy: owner's buildings → floors → rooms → beds
-    // If buildingId is provided, scope to that building only
-    const buildingQuery = buildingId
-      ? { _id: buildingId, owner: req.user.id }
-      : { owner: req.user.id };
+    // If buildingId is provided, scope to that building and its sub-buildings
+    let buildingQuery;
+    if (buildingId) {
+      const subBuildings = await Building.find({ propertyId: buildingId }).select('_id');
+      const bIds = [buildingId, ...subBuildings.map(sb => sb._id)];
+      buildingQuery = { _id: { $in: bIds }, owner: req.user.id };
+    } else {
+      buildingQuery = { owner: req.user.id };
+    }
     const ownerBuildings = await Building.find(buildingQuery).select('_id totalBeds totalRooms');
     const bIds = ownerBuildings.map(b => b._id);
     const configuredTotal = ownerBuildings.reduce((sum, b) => sum + (b.totalBeds || 0), 0);

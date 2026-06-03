@@ -441,7 +441,7 @@ const Buildings = () => {
     setLoading(true);
     console.log("Buildings module fetching for ID:", activeBuildingId);
     try {
-      const bData = await api.getBuildings(true);
+      const bData = await api.getBuildings(activeBuildingId, true);
       const safeData = Array.isArray(bData) ? bData : [];
 
       const getSessionCreatedIds = () => {
@@ -529,7 +529,7 @@ const Buildings = () => {
 
   const silentRefresh = async () => {
     try {
-      const bData = await api.getBuildings(true);
+      const bData = await api.getBuildings(activeBuildingId, true);
       const safeData = Array.isArray(bData) ? bData : [];
 
       const getSessionCreatedIds = () => {
@@ -854,7 +854,8 @@ const Buildings = () => {
         amenities: formData.amenities || [],
         isAC: formData.isAC,
         images: formData.imageUrl ? [formData.imageUrl] : [],
-        showInPortfolio: false
+        showInPortfolio: false,
+        propertyId: activeBuildingId
       });
       setIsAddBuildingOpen(false);
       setFormData(INITIAL_FORM_STATE);
