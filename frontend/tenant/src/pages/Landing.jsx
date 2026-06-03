@@ -438,7 +438,12 @@ const Landing = () => {
               <div className="hostels-grid">
                 {currentHostels.map((hostel, index) => (
                   <div key={hostel.id} className="hostel-card-v flex-in-up" style={{ animationDelay: `${0.05 * index}s` }}>
-                    <div className="card-img-box-v" onClick={() => navigate(`/listing/${hostel.id}`)}>
+                    <div className="card-img-box-v" onClick={() => {
+                        const params = new URLSearchParams();
+                        if (selectedAmenities.length > 0) params.append('amenities', selectedAmenities.join(','));
+                        if (sharing) params.append('sharing', sharing);
+                        navigate(`/listing/${hostel.id}?${params.toString()}`);
+                    }}>
                       <img src={hostel.img} alt={hostel.name} onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'; }} />
                       <div className="rating-pill">
                         <Star size={12} fill="#F59E0B" color="#F59E0B" />
@@ -449,7 +454,12 @@ const Landing = () => {
 
                     <div className="card-details-v">
                       <span className="card-locality-v">📍 {hostel.locality}</span>
-                      <h3 className="card-title-v" onClick={() => navigate(`/listing/${hostel.id}`)}>{hostel.name}</h3>
+                      <h3 className="card-title-v" onClick={() => {
+                        const params = new URLSearchParams();
+                        if (selectedAmenities.length > 0) params.append('amenities', selectedAmenities.join(','));
+                        if (sharing) params.append('sharing', sharing);
+                        navigate(`/listing/${hostel.id}?${params.toString()}`);
+                      }}>{hostel.name}</h3>
 
                       <div className="card-amenities-row">
                         {hostel.amenities.slice(0, 3).map((a, i) => (
@@ -462,7 +472,12 @@ const Landing = () => {
                           <strong>₹{hostel.price.toLocaleString()}</strong>
                           <span>/mo</span>
                         </div>
-                        <button className="details-action-btn" onClick={() => navigate(`/listing/${hostel.id}`)}>
+                        <button className="details-action-btn" onClick={() => {
+                            const params = new URLSearchParams();
+                            if (selectedAmenities.length > 0) params.append('amenities', selectedAmenities.join(','));
+                            if (sharing) params.append('sharing', sharing);
+                            navigate(`/listing/${hostel.id}?${params.toString()}`);
+                        }}>
                           Details
                         </button>
                       </div>

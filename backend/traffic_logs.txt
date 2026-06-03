@@ -4363,3 +4363,18 @@
 2026-06-01T04:28:13.233Z API: GET /api/buildings/public/stats
 2026-06-01T04:29:45.474Z SOCKET: Socket connected: F3VjmZPh8eUvyAItAAAB
 2026-06-01T05:14:03.824Z SOCKET: Socket connected: 5PndunuHYcidNOvmAAAB
+2026-06-01T05:52:32.341Z API: GET /api/buildings/public
+2026-06-01T05:52:32.674Z API: GET /api/buildings/public/6a12690e6f227214775cd0cb
+2026-06-01T06:11:17.761Z API: GET /api/buildings/public
+2026-06-01T06:11:17.843Z API: GET /api/buildings/public/6a12690e6f227214775cd0cb
+2026-06-01T06:11:47.885Z API: GET /api/buildings/public/6a06b59ba42dc8c3a1e0194e
+2026-06-01T06:56:45.558Z API: GET /api/buildings/public
+2026-06-01T06:56:45.651Z API: GET /api/buildings/public/6a12690e6f227214775cd0cb
+2026-06-01T07:01:52.914Z API: GET /api/buildings/public
+2026-06-01T07:01:53.012Z API: GET /api/buildings/public/6a12690e6f227214775cd0cb
+2026-06-01T07:03:09.647Z API: GET /api/buildings/public
+2026-06-01T07:03:09.770Z API: GET /api/buildings/public/6a12690e6f227214775cd0cb
+2026-06-01T07:03:52.668Z API: GET /api/buildings/public
+2026-06-01T07:05:14.521Z API: GET /api/buildings/public
+2026-06-01T07:05:14.624Z API: GET /api/buildings/public/6a12690e6f227214775cd0cb
+2026-06-01T07:06:52.758Z API: GET /api/buildings/public/6a12690e6f227214775cd0cb

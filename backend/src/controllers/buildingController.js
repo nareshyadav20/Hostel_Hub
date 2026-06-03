@@ -350,18 +350,41 @@ const getPublicBuildingById = async (req, res) => {
     const building = await Building.findOne({ _id: req.params.id, status: { $ne: 'Draft' } })
       .select('-draftData -staffInfo -owner -lastStep')
       .populate({
-        path: 'floors',
+        path: 'virtualFloors',
         select: 'floorNumber floorCategory description occupancyPercentage totalRooms totalBeds facilities rooms',
         populate: {
-          path: 'rooms',
+          path: 'virtualRooms',
           select: 'roomNumber roomType capacity isAC washroomType rentAmount securityDeposit amenities status beds',
-          populate: {
-            path: 'beds',
-            select: 'bedNumber status position bedType smartBadges'
-          }
+          populate: [
+            {
+              path: 'virtualBeds',
+              select: 'bedNumber status position bedType smartBadges'
+            },
+            {
+              path: 'virtualBedsAlias',
+              select: 'bedNumber status position bedType smartBadges'
+            }
+          ]
         }
       })
       .lean();
+
+    // Map virtuals to standard keys for frontend compatibility
+    if (building && building.virtualFloors) {
+      building.floors = building.virtualFloors.map(f => {
+        if (f.virtualRooms) {
+          f.rooms = f.virtualRooms.map(r => {
+            r.beds = [...(r.virtualBeds || []), ...(r.virtualBedsAlias || [])];
+            delete r.virtualBeds;
+            delete r.virtualBedsAlias;
+            return r;
+          });
+          delete f.virtualRooms;
+        }
+        return f;
+      });
+      delete building.virtualFloors;
+    }
 
     if (!building) return res.status(404).json({ error: 'Building not found' });
 

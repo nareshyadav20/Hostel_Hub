@@ -57,6 +57,24 @@ const roomSchema = new mongoose.Schema({
   temperature: { type: Number, default: 22.0 },
   smartMonitoringEnabled: { type: Boolean, default: true },
   realTimeEnabled: { type: Boolean, default: true }
-}, { timestamps: true, collection: 'rooms' });
+}, { 
+  timestamps: true, 
+  collection: 'rooms',
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+roomSchema.virtual('virtualBeds', {
+  ref: 'Bed',
+  localField: '_id',
+  foreignField: 'room'
+});
+
+// Alias for seed_demo compatibility
+roomSchema.virtual('virtualBedsAlias', {
+  ref: 'Bed',
+  localField: '_id',
+  foreignField: 'roomId'
+});
 
 module.exports = mongoose.model('Room', roomSchema);

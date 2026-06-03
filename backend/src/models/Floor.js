@@ -54,6 +54,17 @@ const floorSchema = new mongoose.Schema({
   floorThumbnail: { type: String },
   smartMonitoringEnabled: { type: Boolean, default: true },
   realTimeEnabled: { type: Boolean, default: true }
-}, { timestamps: true, collection: 'floors' });
+}, { 
+  timestamps: true, 
+  collection: 'floors',
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+floorSchema.virtual('virtualRooms', {
+  ref: 'Room',
+  localField: '_id',
+  foreignField: 'floor'
+});
 
 module.exports = mongoose.model('Floor', floorSchema);

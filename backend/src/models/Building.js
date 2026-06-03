@@ -70,7 +70,18 @@ const buildingSchema = new mongoose.Schema({
   draftData: { type: mongoose.Schema.Types.Mixed },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   floors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Floor' }]
-}, { timestamps: true, collection: 'buildings' });
+}, { 
+  timestamps: true, 
+  collection: 'buildings',
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+buildingSchema.virtual('virtualFloors', {
+  ref: 'Floor',
+  localField: '_id',
+  foreignField: 'building'
+});
 
 // Performance indexes for common queries
 buildingSchema.index({ owner: 1, status: 1 }); // getBuildings (owner portal)
