@@ -129,8 +129,8 @@ const PropertyDetailDrawer = ({ isOpen, onClose, target, type, activeTab, onTabC
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
               {[
                 { label: 'Monthly ROI', value: '+22.4%', color: '#10B981' },
-                { label: 'Est. Revenue', value: '₹4.2L', color: '#6366F1' },
-                { label: 'Utility Cost', value: '₹12K', color: '#EF4444' }
+                { label: 'Est. Revenue', value: 'Γé╣4.2L', color: '#6366F1' },
+                { label: 'Utility Cost', value: 'Γé╣12K', color: '#EF4444' }
               ].map((stat, i) => (
                 <div key={i} style={{ padding: '1.5rem', background: "var(--bg-card)", borderRadius: '24px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
                   <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '900', color: '#64748B' }}>{stat.label.toUpperCase()}</p>
@@ -444,20 +444,42 @@ const Buildings = () => {
       const bData = await api.getBuildings(true);
       const safeData = Array.isArray(bData) ? bData : [];
 
+      const getSessionCreatedIds = () => {
+        try {
+          const saved = sessionStorage.getItem('createdBuildingIds');
+          return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+          return [];
+        }
+      };
+
+      const createdBuildingIds = getSessionCreatedIds();
+
       if (activeBuildingId) {
         const matchingBuilding = safeData.find(b => (b.id === activeBuildingId || b._id === activeBuildingId));
+        const sessionCreated = safeData.filter(b => createdBuildingIds.includes(b.id) || createdBuildingIds.includes(b._id));
+
+        let filtered = [];
         if (matchingBuilding) {
-          setBuildings([matchingBuilding]); // Isolate to current building only
+          filtered.push(matchingBuilding);
+        }
+        sessionCreated.forEach(b => {
+          if (!filtered.some(f => (f.id === b.id || f._id === b._id))) {
+            filtered.push(b);
+          }
+        });
+
+        setBuildings(filtered);
+
+        if (matchingBuilding) {
           setSelectedBuilding(matchingBuilding);
-          // Pre-fetch floors but stay on buildings view to show the card first
+          // Pre-fetch floors
           try {
             const floorData = await api.getFloors(matchingBuilding._id || matchingBuilding.id);
             setFloors(floorData || []);
           } catch (err) {
             console.error("Failed to pre-load floors:", err);
           }
-        } else {
-          setBuildings(safeData);
         }
       } else {
         setBuildings(safeData);
@@ -509,18 +531,43 @@ const Buildings = () => {
     try {
       const bData = await api.getBuildings(true);
       const safeData = Array.isArray(bData) ? bData : [];
+
+      const getSessionCreatedIds = () => {
+        try {
+          const saved = sessionStorage.getItem('createdBuildingIds');
+          return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+          return [];
+        }
+      };
+
+      const createdBuildingIds = getSessionCreatedIds();
+
       if (activeBuildingId) {
         const matchingBuilding = safeData.find(b => (b.id === activeBuildingId || b._id === activeBuildingId));
+        const sessionCreated = safeData.filter(b => createdBuildingIds.includes(b.id) || createdBuildingIds.includes(b._id));
+
+        let filtered = [];
         if (matchingBuilding) {
-          setBuildings([matchingBuilding]);
-          if (selectedBuilding && selectedBuilding.id === matchingBuilding.id) {
-            setSelectedBuilding(matchingBuilding);
+          filtered.push(matchingBuilding);
+        }
+        sessionCreated.forEach(b => {
+          if (!filtered.some(f => (f.id === b.id || f._id === b._id))) {
+            filtered.push(b);
+          }
+        });
+
+        setBuildings(filtered);
+
+        if (selectedBuilding) {
+          const updatedSelected = filtered.find(b => b.id === selectedBuilding.id || b._id === selectedBuilding._id);
+          if (updatedSelected) {
+            setSelectedBuilding(updatedSelected);
           }
         }
       } else {
         setBuildings(safeData);
       }
-      
       if (selectedBuilding) {
         const fData = await api.getFloors(selectedBuilding.id || selectedBuilding._id);
         setFloors(fData || []);
@@ -806,12 +853,33 @@ const Buildings = () => {
         rating: formData.rating || 4.5,
         amenities: formData.amenities || [],
         isAC: formData.isAC,
-        images: formData.imageUrl ? [formData.imageUrl] : []
+        images: formData.imageUrl ? [formData.imageUrl] : [],
+        showInPortfolio: false
       });
-      setBuildings([...buildings, newB]);
       setIsAddBuildingOpen(false);
       setFormData(INITIAL_FORM_STATE);
-      fetchBuildings();
+
+      // Save the new building ID to sessionStorage
+      const newId = newB.id || newB._id;
+      if (newId) {
+        try {
+          const saved = sessionStorage.getItem('createdBuildingIds');
+          const current = saved ? JSON.parse(saved) : [];
+          if (!current.includes(newId)) {
+            current.push(newId);
+            sessionStorage.setItem('createdBuildingIds', JSON.stringify(current));
+          }
+        } catch (e) {}
+      }
+
+      // Reset to buildings list view
+      setSelectedBuilding(null);
+      setSelectedFloor(null);
+      setSelectedRoom(null);
+      setView('buildings');
+
+      // Fetch/refresh buildings list with the new building included
+      await fetchBuildings();
     } catch (err) {
       alert("Failed to add building: " + (err.response?.data?.error || err.message));
     }
@@ -1310,8 +1378,8 @@ const Buildings = () => {
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>MONTHLY RENT (₹)</label><input type="number" placeholder="8000" value={formData.rentAmount} onChange={e => setFormData({ ...formData, rentAmount: parseInt(e.target.value) })} style={inputStyle} required /></div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>DEPOSIT (₹)</label><input type="number" placeholder="16000" value={formData.securityDeposit} onChange={e => setFormData({ ...formData, securityDeposit: parseInt(e.target.value) })} style={inputStyle} required /></div>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>MONTHLY RENT (Γé╣)</label><input type="number" placeholder="8000" value={formData.rentAmount} onChange={e => setFormData({ ...formData, rentAmount: parseInt(e.target.value) })} style={inputStyle} required /></div>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>DEPOSIT (Γé╣)</label><input type="number" placeholder="16000" value={formData.securityDeposit} onChange={e => setFormData({ ...formData, securityDeposit: parseInt(e.target.value) })} style={inputStyle} required /></div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
               <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>CAPACITY (BEDS)</label><input type="number" placeholder="2" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: parseInt(e.target.value) })} style={inputStyle} required min="1" /></div>
@@ -1413,8 +1481,8 @@ const Buildings = () => {
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>MONTHLY RENT (₹)</label><input type="number" value={formData.rentAmount} onChange={e => setFormData({ ...formData, rentAmount: parseInt(e.target.value) })} style={inputStyle} required /></div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>DEPOSIT (₹)</label><input type="number" value={formData.securityDeposit} onChange={e => setFormData({ ...formData, securityDeposit: parseInt(e.target.value) })} style={inputStyle} required /></div>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>MONTHLY RENT (Γé╣)</label><input type="number" value={formData.rentAmount} onChange={e => setFormData({ ...formData, rentAmount: parseInt(e.target.value) })} style={inputStyle} required /></div>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>DEPOSIT (Γé╣)</label><input type="number" value={formData.securityDeposit} onChange={e => setFormData({ ...formData, securityDeposit: parseInt(e.target.value) })} style={inputStyle} required /></div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
               <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>CAPACITY</label><input type="number" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: parseInt(e.target.value) })} style={inputStyle} required min="1" /></div>
@@ -1595,7 +1663,7 @@ const Buildings = () => {
                   border: '1px solid rgba(255,255,255,0.1)',
                   boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
                 }}>
-                  ₹{viewingBed.price || 8500}<span style={{ opacity: 0.7, fontSize: '0.7rem', fontWeight: '700' }}>/MONTH</span>
+                  Γé╣{viewingBed.price || 8500}<span style={{ opacity: 0.7, fontSize: '0.7rem', fontWeight: '700' }}>/MONTH</span>
                 </div>
               </div>
 
@@ -1709,7 +1777,7 @@ const Buildings = () => {
                   </div>
                   <div>
                     <p style={{ margin: 0, fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', fontWeight: '800' }}>REVENUE LDT</p>
-                    <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '900' }}>₹42,500</p>
+                    <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '900' }}>Γé╣42,500</p>
                   </div>
                 </div>
               </div>
@@ -1729,7 +1797,7 @@ const Buildings = () => {
                 boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
               }}>
                 <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', padding: '0.6rem 1.2rem', borderRadius: '14px', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(12px)', color: "var(--text-on-primary)", fontSize: '0.9rem', fontWeight: '950', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  ₹{previewingRoom.rentAmount || 0}<span style={{ opacity: 0.7, fontSize: '0.7rem' }}>/MONTH</span>
+                  Γé╣{previewingRoom.rentAmount || 0}<span style={{ opacity: 0.7, fontSize: '0.7rem' }}>/MONTH</span>
                 </div>
                 <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', display: 'flex', gap: '0.8rem' }}>
                   <span style={{ padding: '0.5rem 1rem', borderRadius: '12px', background: "var(--bg-card)", color: '#0F172A', fontSize: '0.75rem', fontWeight: '950' }}>{previewingRoom.roomType}</span>
@@ -1878,7 +1946,7 @@ const Buildings = () => {
                     </div>
                     <div>
                       <h5 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '900', color: '#0F172A' }}>{tenant.name}</h5>
-                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748B', fontWeight: '700' }}>{tenant.type} • ID: {tenant.id}</p>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748B', fontWeight: '700' }}>{tenant.type} ΓÇó ID: {tenant.id}</p>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
@@ -1888,7 +1956,7 @@ const Buildings = () => {
                     }}>
                       {tenant.status}
                     </span>
-                    <p style={{ margin: '0.4rem 0 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#0F172A' }}>₹{tenant.rent}</p>
+                    <p style={{ margin: '0.4rem 0 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#0F172A' }}>Γé╣{tenant.rent}</p>
                   </div>
                 </motion.div>
               ))}
@@ -1931,11 +1999,11 @@ const Buildings = () => {
             <div style={{ background: '#F8FAFC', padding: '1.5rem', borderRadius: '24px', border: '1px solid #E2E8F0', textAlign: 'left' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
                 <span style={{ color: '#64748B', fontWeight: '700', fontSize: '0.85rem' }}>Monthly Rent</span>
-                <span style={{ fontWeight: '900', color: '#0F172A' }}>₹{assignData.tenant?.rent || 8500}</span>
+                <span style={{ fontWeight: '900', color: '#0F172A' }}>Γé╣{assignData.tenant?.rent || 8500}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
                 <span style={{ color: '#64748B', fontWeight: '700', fontSize: '0.85rem' }}>Security Deposit</span>
-                <span style={{ fontWeight: '900', color: '#0F172A' }}>₹{(parseInt(assignData.tenant?.rent?.replace(',', '') || 8500) * 2).toLocaleString()}</span>
+                <span style={{ fontWeight: '900', color: '#0F172A' }}>Γé╣{(parseInt(assignData.tenant?.rent?.replace(',', '') || 8500) * 2).toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#64748B', fontWeight: '700', fontSize: '0.85rem' }}>Move-in Date</span>
@@ -2084,7 +2152,7 @@ const Buildings = () => {
               }}>
                 <div style={{ textAlign: 'center' }}>
                   <p style={{ margin: 0, fontSize: '0.7rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase' }}>Lifetime Occupancy</p>
-                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '1.6rem', fontWeight: '1000', color: '#0F172A' }}>94% <span style={{ fontSize: '0.9rem', color: '#10B981', verticalAlign: 'middle' }}>↑ 4%</span></p>
+                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '1.6rem', fontWeight: '1000', color: '#0F172A' }}>94% <span style={{ fontSize: '0.9rem', color: '#10B981', verticalAlign: 'middle' }}>Γåæ 4%</span></p>
                 </div>
                 <div style={{ textAlign: 'center', borderLeft: '1px solid #E2E8F0', borderRight: '1px solid #E2E8F0' }}>
                   <p style={{ margin: 0, fontSize: '0.7rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase' }}>Maintenance Events</p>
@@ -2092,7 +2160,7 @@ const Buildings = () => {
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <p style={{ margin: 0, fontSize: '0.7rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase' }}>Revenue Generated</p>
-                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '1.6rem', fontWeight: '1000', color: '#0F172A' }}>₹1.2L</p>
+                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '1.6rem', fontWeight: '1000', color: '#0F172A' }}>Γé╣1.2L</p>
                 </div>
               </div>
 
@@ -2196,7 +2264,7 @@ const RoomHero = ({ room, onImageUpdate, onEdit }) => (
         <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '1.25rem', fontWeight: '700', marginTop: '0.8rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <span style={{ color: '#10B981', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><UsersRound size={20} /> {room?.occupied || 0}/{room?.capacity} Occupied</span>
           <span style={{ opacity: 0.3 }}>|</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Banknote size={20} /> ₹{room?.rentAmount || 0} / mo</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Banknote size={20} /> Γé╣{room?.rentAmount || 0} / mo</span>
           <span style={{ opacity: 0.3 }}>|</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Clock size={20} /> {room?.noticePeriod || 30}d Notice</span>
         </p>
@@ -2454,10 +2522,10 @@ const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics, onEditBuil
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'center' }}>
         <div>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '1000', margin: 0, color: '#0F172A', letterSpacing: '-0.04em' }}>Property Portfolio</h2>
-          <p style={{ color: '#64748B', fontSize: '1rem', fontWeight: '700' }}>Manage and monitor your smart building ecosystem.</p>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: '800', margin: 0, color: '#0F172A', letterSpacing: '-0.03em' }}>My Buildings</h2>
+          <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '600', marginTop: '0.3rem' }}>All buildings registered under your account.</p>
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(440px, 1fr))', gap: '3rem' }}>
@@ -2556,7 +2624,7 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
               </span>
             </div>
             <h3 style={{ fontSize: '1.8rem', fontWeight: '1000', margin: 0, color: '#0F172A', letterSpacing: '-0.04em' }}>
-              {building?.name} <span style={{ fontWeight: '500', color: '#64748B', fontSize: '1.2rem' }}>• {floor.name || `Floor ${floor.floorNumber}`}</span>
+              {building?.name} <span style={{ fontWeight: '500', color: '#64748B', fontSize: '1.2rem' }}>ΓÇó {floor.name || `Floor ${floor.floorNumber}`}</span>
             </h3>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -2689,7 +2757,7 @@ const FloorsList = ({ floors, building, onSelect, onBack, onAdd, onDelete, onVie
         <motion.button whileHover={{ x: -5 }} onClick={onBack} style={{ width: '45px', height: '45px', borderRadius: '15px', background: "var(--bg-card)", border: '1px solid var(--border-color)', color: '#0F172A', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}><ArrowLeft size={24} /></motion.button>
         <div>
           <h2 style={{ fontSize: '2rem', fontWeight: '1000', margin: 0, letterSpacing: '-0.04em', color: '#0F172A' }}>Floors Management</h2>
-          <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{building?.name} • Infrastructure Overview</p>
+          <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{building?.name} ΓÇó Infrastructure Overview</p>
         </div>
       </div>
     </div>
@@ -2728,7 +2796,7 @@ const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onEdit, on
           <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}><ArrowLeft size={24} /></button>
           <div>
             <h2 style={{ fontSize: '1.8rem', fontWeight: '1000', margin: 0, letterSpacing: '-0.04em', color: '#0F172A' }}>Rooms on Floor {floor?.floorNumber}</h2>
-            <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{building?.name || 'Property'} • Advanced Inventory Management</p>
+            <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{building?.name || 'Property'} ΓÇó Advanced Inventory Management</p>
           </div>
         </div>
       </div>
@@ -2843,12 +2911,12 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
               )}
             </div>
             <h3 style={{ fontSize: '1.8rem', fontWeight: '1000', margin: 0, color: '#0F172A', letterSpacing: '-0.04em' }}>
-              {room.roomType} <span style={{ fontWeight: '500', color: '#64748B', fontSize: '1.2rem' }}>• Suite</span>
+              {room.roomType} <span style={{ fontWeight: '500', color: '#64748B', fontSize: '1.2rem' }}>ΓÇó Suite</span>
             </h3>
           </div>
           <div style={{ textAlign: 'right' }}>
             <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: '900', color: '#64748B', letterSpacing: '0.05em' }}>MONTHLY RENT</p>
-            <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: '1000', color: themeColor }}>₹{room.rentAmount || 0}</p>
+            <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: '1000', color: themeColor }}>Γé╣{room.rentAmount || 0}</p>
           </div>
         </div>
       </div>
@@ -3068,7 +3136,7 @@ const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssi
               )}
             </div>
             <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              {bed.bedType} • {bed.position}
+              {bed.bedType} ΓÇó {bed.position}
             </p>
           </div>
         </div>
@@ -3388,7 +3456,7 @@ const BedsList = ({ beds, room, floor, building, onBack, onAdd, onEditBed, onVie
           </motion.button>
           <div>
             <h2 style={{ fontSize: '2rem', fontWeight: '1000', margin: 0, letterSpacing: '-0.04em', color: '#0F172A' }}>Room {room?.roomNumber}</h2>
-            <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{building?.name} • Floor {floor?.floorNumber || 'N/A'} • Smart Bed Management</p>
+            <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{building?.name} ΓÇó Floor {floor?.floorNumber || 'N/A'} ΓÇó Smart Bed Management</p>
           </div>
         </div>
         <button className="btn btn-primary" onClick={onAdd} style={{ padding: '0.8rem 1.8rem', borderRadius: '16px', fontWeight: '950', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.8rem', boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)' }}>

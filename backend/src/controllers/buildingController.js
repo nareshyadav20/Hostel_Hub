@@ -12,7 +12,7 @@ const createBuilding = async (req, res) => {
       startingPrice, securityDeposit, maintenanceCharges, foodCharges,
       rentSingle, rentDouble, rentTriple, totalRooms, totalBeds,
       genderType, category, rating, popularityLabel,
-      policies, staffInfo, status, lastStep, draftData
+      policies, staffInfo, status, lastStep, draftData, showInPortfolio
     } = req.body;
 
     const parseField = (field, defaultValue) => {
@@ -70,6 +70,7 @@ const createBuilding = async (req, res) => {
       status: status || 'Active',
       lastStep: lastStep || 1,
       draftData: finalDraftData,
+      showInPortfolio: showInPortfolio !== undefined ? showInPortfolio : true,
       owner: req.user.id
     });
 
