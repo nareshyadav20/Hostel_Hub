@@ -8,6 +8,7 @@ const User = require('../models/User');
 const Staff = require('../models/Staff');
 const OwnerProfile = require('../models/OwnerProfile');
 const Payment = require('../models/Payment');
+const Notification = require('../models/Notification');
 
 const createBuilding = async (req, res) => {
   try {
@@ -41,7 +42,9 @@ const createBuilding = async (req, res) => {
       popularityLabel,
       policies: policies || { smoking: 'Not Allowed', alcohol: 'Not Allowed', pets: 'No', visitors: 'Till 8 PM' },
       staffInfo,
-      status: status || 'Active',
+      status: (status === 'Draft') ? 'Draft' : 'Pending Approval',
+      isApproved: false,
+      submittedAt: (status !== 'Draft') ? Date.now() : undefined,
       lastStep: lastStep || 1,
       draftData,
       owner: req.user.id
@@ -54,6 +57,22 @@ const createBuilding = async (req, res) => {
         photoUrl: url
       }));
       await BuildingPhoto.insertMany(photoDocs);
+    }
+
+    if (building.status === 'Pending Approval') {
+      try {
+        await Notification.create({
+          portalType: 'All',
+          category: 'Hostel',
+          title: 'New Hostel Approval Request',
+          message: `Owner has submitted a new hostel "${building.name}" for approval.`,
+          priority: 'High',
+          buildingId: building._id,
+          receiverRole: 'All'
+        });
+      } catch (notifyErr) {
+        console.error('Failed to create admin notification:', notifyErr);
+      }
     }
 
     res.status(201).json(building);
@@ -112,6 +131,18 @@ const getBuildings = async (req, res) => {
 
 const updateBuilding = async (req, res) => {
   try {
+    const existingBuilding = await Building.findById(req.params.id);
+    if (!existingBuilding) return res.status(404).json({ error: 'Building not found' });
+
+    // Intercept transition from Draft to submission
+    let statusChangedToPending = false;
+    if (existingBuilding.status === 'Draft' && req.body.status && req.body.status !== 'Draft') {
+      req.body.status = 'Pending Approval';
+      req.body.isApproved = false;
+      req.body.submittedAt = Date.now();
+      statusChangedToPending = true;
+    }
+
     const building = await Building.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!building) return res.status(404).json({ error: 'Building not found' });
 
@@ -129,6 +160,22 @@ const updateBuilding = async (req, res) => {
     const socketService = require('../utils/socketService');
     socketService.emitUpdate(building._id, 'hostelUpdated', building);
     socketService.emitUpdate(null, 'hostelUpdated', building); // Emit globally for landing/search pages
+
+    if (statusChangedToPending) {
+      try {
+        await Notification.create({
+          portalType: 'All',
+          category: 'Hostel',
+          title: 'New Hostel Approval Request',
+          message: `Owner has submitted a new hostel "${building.name}" for approval.`,
+          priority: 'High',
+          buildingId: building._id,
+          receiverRole: 'All'
+        });
+      } catch (notifyErr) {
+        console.error('Failed to create admin notification:', notifyErr);
+      }
+    }
 
     res.status(200).json(building);
   } catch (error) { res.status(500).json({ error: error.message }); }
@@ -310,7 +357,7 @@ const getBuildingById = async (req, res) => {
 const getPublicBuildings = async (req, res) => {
   try {
     const buildings = await Building.find(
-      { status: { $ne: 'Draft' } },
+      { status: 'Active' },
       {
         name: 1, address: 1, locationCity: 1, category: 1, rating: 1,
         startingPrice: 1, genderType: 1, amenities: 1, isAC: 1
@@ -324,7 +371,7 @@ const getPublicBuildings = async (req, res) => {
 
 const getPublicBuildingById = async (req, res) => {
   try {
-    const building = await Building.findOne({ _id: req.params.id, status: { $ne: 'Draft' } }).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
+    const building = await Building.findOne({ _id: req.params.id, status: 'Active' }).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
     if (!building) return res.status(404).json({ error: 'Building not found' });
 
     // Fetch filled beds for this building

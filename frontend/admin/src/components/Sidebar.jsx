@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Home, Building2, Users, UserCheck, CreditCard, 
   Settings, LogOut, ShieldCheck, BarChart3, 
-  Megaphone, ShieldAlert, Calendar, Zap, User, UsersRound
+  Megaphone, ShieldAlert, Calendar, Zap, User, UsersRound, CheckCircle
 } from 'lucide-react';
 
 const Sidebar = ({ collapsed }) => {
@@ -19,6 +19,7 @@ const Sidebar = ({ collapsed }) => {
       title: 'General',
       items: [
         { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} strokeWidth={2} /> },
+        { name: 'Approvals', path: '/approvals', icon: <CheckCircle size={20} strokeWidth={2} /> },
         { name: 'Hostels', path: '/hostels', icon: <Building2 size={20} strokeWidth={2} /> },
         { name: 'Owners', path: '/owners', icon: <UserCheck size={20} strokeWidth={2} /> },
         { name: 'Tenants', path: '/tenants', icon: <Users size={20} strokeWidth={2} /> },
@@ -30,7 +31,6 @@ const Sidebar = ({ collapsed }) => {
       title: 'Platform',
       items: [
         { name: 'Analytics', path: '/analytics', icon: <BarChart3 size={20} strokeWidth={2} /> },
-        { name: 'CMS', path: '/cms', icon: <Megaphone size={20} strokeWidth={2} /> },
         { name: 'Issues', path: '/issues', icon: <ShieldAlert size={20} strokeWidth={2} /> },
         { name: 'Finance', path: '/finance', icon: <CreditCard size={20} strokeWidth={2} /> },
       ]

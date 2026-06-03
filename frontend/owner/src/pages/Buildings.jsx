@@ -926,13 +926,19 @@ const Buildings = () => {
           {['buildings', 'floors', 'rooms', 'beds'].includes(view) && (
             <button 
               className="btn btn-primary" 
+              disabled={view !== 'buildings' && selectedBuilding && selectedBuilding.status !== 'Active'}
               onClick={() => {
                 if (view === 'buildings') setIsAddBuildingOpen(true);
                 else if (view === 'floors') setIsAddFloorOpen(true);
                 else if (view === 'rooms') setIsAddRoomOpen(true);
                 else if (view === 'beds') setIsAddBedOpen(true);
               }}
-              style={{ padding: '0.7rem 1.5rem', borderRadius: '12px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.6rem'  }}
+              style={{ 
+                padding: '0.7rem 1.5rem', borderRadius: '12px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.6rem',
+                opacity: (view !== 'buildings' && selectedBuilding && selectedBuilding.status !== 'Active') ? 0.5 : 1,
+                cursor: (view !== 'buildings' && selectedBuilding && selectedBuilding.status !== 'Active') ? 'not-allowed' : 'pointer'
+              }}
+              title={view !== 'buildings' && selectedBuilding && selectedBuilding.status !== 'Active' ? 'Property must be Active to add structure' : ''}
             >
               <PlusCircle size={20} /> Add {view === 'buildings' ? 'Building' : view === 'floors' ? 'Floor' : view === 'rooms' ? 'Room' : 'Bed'}
             </button>
@@ -2144,12 +2150,30 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
             <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.9rem', color: '#64748B', fontWeight: '700'  }}>{building.address}</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem'  }}>
-            <motion.div 
-              animate={{ scale: [1, 1.1, 1] }} 
-              transition={{ duration: 2, repeat: Infinity }}
-              style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#10B981', boxShadow: '0 0 10px #10B981'  }} 
-            />
-            <span style={{ fontSize: '0.65rem', fontWeight: '950', color: '#10B981'  }}>LIVE OPERATIONAL</span>
+            {building.status === 'Pending Approval' ? (
+              <>
+                <motion.div 
+                  animate={{ opacity: [0.5, 1, 0.5] }} 
+                  transition={{ duration: 2, repeat: Infinity }}
+                  style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#F59E0B', boxShadow: '0 0 10px #F59E0B'  }} 
+                />
+                <span style={{ fontSize: '0.65rem', fontWeight: '950', color: '#F59E0B'  }}>PENDING APPROVAL</span>
+              </>
+            ) : building.status === 'Rejected' ? (
+              <>
+                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#EF4444', boxShadow: '0 0 10px #EF4444'  }} />
+                <span style={{ fontSize: '0.65rem', fontWeight: '950', color: '#EF4444'  }}>REJECTED</span>
+              </>
+            ) : (
+              <>
+                <motion.div 
+                  animate={{ scale: [1, 1.1, 1] }} 
+                  transition={{ duration: 2, repeat: Infinity }}
+                  style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#10B981', boxShadow: '0 0 10px #10B981'  }} 
+                />
+                <span style={{ fontSize: '0.65rem', fontWeight: '950', color: '#10B981'  }}>LIVE OPERATIONAL</span>
+              </>
+            )}
           </div>
         </div>
       </div>

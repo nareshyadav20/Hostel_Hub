@@ -331,7 +331,7 @@ const Portfolio = () => {
         category: formData.propertyType === 'Co-living' ? 'Luxury' : (formData.propertyType === 'PG' ? 'Student' : 'Professional'),
         rating: 4.5,
         popularityLabel: 'New Property',
-        status: 'Active',
+        status: 'Pending Approval',
         policies: {
           smoking: formData.smokingPolicy || 'Not Allowed',
           alcohol: formData.alcoholPolicy || 'Not Allowed',
@@ -403,9 +403,11 @@ const Portfolio = () => {
         }
         if (amenities.length === 0) amenities = ['WiFi', 'CCTV', 'Power Backup'];
 
-        let status = 'Active';
-        if (occupancyRate < 50) status = 'Low Occupancy';
-        if (bComplaints.filter(c => c?.urgency === 'High').length > 0) status = 'Attention Needed';
+        let status = b?.status || 'Active';
+        if (status !== 'Pending Approval' && status !== 'Rejected' && status !== 'Draft') {
+          if (occupancyRate < 50) status = 'Low Occupancy';
+          if (bComplaints.filter(c => c?.urgency === 'High').length > 0) status = 'Attention Needed';
+        }
 
         const rating = b?.rating || "4.5";
         const popularityLabel = b?.popularityLabel || null;
@@ -1662,7 +1664,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick }) => {
             )}
             <div style={{ padding: '0.5rem 1rem',
               borderRadius: '12px',
-              background: building.status === 'Active' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(245, 158, 11, 0.9)',
+              background: building.status === 'Active' ? 'rgba(16, 185, 129, 0.9)' : building.status === 'Pending Approval' ? 'rgba(59, 130, 246, 0.9)' : building.status === 'Rejected' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(245, 158, 11, 0.9)',
               backdropFilter: 'blur(8px)',
               color: "var(--text-on-primary)",
               fontSize: '0.65rem',

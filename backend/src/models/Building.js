@@ -40,11 +40,17 @@ const buildingSchema = new mongoose.Schema({
     hasCCTVAi:            { type: Boolean, default: false },
     targetComfortScore:   { type: Number, default: 90 }
   },
-  status:     { type: String, enum: ['Active', 'Draft', 'Inactive'], default: 'Active' },
+  status:     { type: String, enum: ['Active', 'Draft', 'Inactive', 'Pending Approval', 'Rejected'], default: 'Active' },
   lastStep:   { type: Number, default: 1 },
   draftData:  { type: mongoose.Schema.Types.Mixed },
   owner:      { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  floors:     [{ type: mongoose.Schema.Types.ObjectId, ref: 'Floor' }]
+  floors:     [{ type: mongoose.Schema.Types.ObjectId, ref: 'Floor' }],
+  isApproved: { type: Boolean, default: false },
+  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  approvedAt: { type: Date },
+  rejectionReason: { type: String },
+  verificationNotes: { type: String },
+  submittedAt: { type: Date }
 }, { timestamps: true, collection: 'buildings' });
 
 // Performance indexes for common queries

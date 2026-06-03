@@ -14,13 +14,14 @@ const Login = () => {
     setLoading(true);
 
     setTimeout(() => {
-      const storedUsers = JSON.parse(localStorage.getItem('staff_users') || '[]');
+            const storedUsers = JSON.parse(localStorage.getItem('staff_users') || '[]');
       const user = storedUsers.find(u => u.email === email && u.password === password);
-
+  
       if (user || (email === 'staff@example.com' && password === 'password')) {
         const loggedUser = user || { name: 'Staff Member', email };
         localStorage.setItem('token', 'mock_token_' + Date.now());
-        localStorage.setItem('user', JSON.stringify(loggedUser));
+        localjkkjkkjjjjjjjjjjjjk 
+        torage.setItem('user', JSON.stringify(loggedUser));
         navigate('/dashboard');
       } else {
         setError('Invalid credentials. (Try staff@example.com / password)');
@@ -28,7 +29,7 @@ const Login = () => {
       setLoading(false);
     }, 800);
   };
-
+ 
   return (
     <div className="auth-container">
       <div className="auth-card">
