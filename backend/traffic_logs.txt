@@ -4692,3 +4692,5 @@
 2026-06-03T04:45:19.392Z SOCKET: Socket connected: xYHhb0Rib8ntLnboAAAJ
 2026-06-03T04:45:19.425Z API: GET /api/tenant-portal/wishlist
 2026-06-03T04:51:43.653Z SOCKET: Socket connected: _gxkBkeZDsFrpe5TAAAL
+2026-06-03T11:59:35.339Z API: POST /api/v1/auth/owner/login
+2026-06-03T11:59:35.371Z API: POST /api/v1/auth/owner/register

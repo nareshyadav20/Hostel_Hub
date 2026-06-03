@@ -9,7 +9,7 @@ const roomSchema = new mongoose.Schema({
   noticePeriod: { type: Number, default: 30 }, // in days
   status:     { type: String, default: 'AVAILABLE' },
   isAC:       { type: Boolean, default: false },
-  washroomType: { type: String, enum: ['Attached', 'Common'], default: 'Attached' },
+  attachedBathroom: { type: Boolean, default: false },
   balcony:    { type: Boolean, default: false },
   facing:     { type: String, default: 'Road' },
   floorType:  { type: String, default: 'Tiles' }, // Marble, Tiles, Wooden
@@ -19,6 +19,19 @@ const roomSchema = new mongoose.Schema({
   images:     [{ type: String }],
   floor:      { type: mongoose.Schema.Types.ObjectId, ref: 'Floor' },
   beds:       [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bed' }],
+  
+  // Detailed Room Metrics (Strict 1:1 with UI)
+  roomSize: { type: String, default: '' },
+  fanCount: { type: Number, default: 1 },
+  chairCount: { type: Number, default: 1 },
+  geyser: { type: Boolean, default: false },
+  studyTable: { type: Boolean, default: false },
+  wardrobe: { type: Boolean, default: false },
+  mirror: { type: Boolean, default: false },
+  tv: { type: Boolean, default: false },
+  refrigerator: { type: Boolean, default: false },
+  microwave: { type: Boolean, default: false },
+  wifi: { type: Boolean, default: true },
 
   // Smart Room Features (Step 4)
   ventilationScore: { type: Number, default: 0 },

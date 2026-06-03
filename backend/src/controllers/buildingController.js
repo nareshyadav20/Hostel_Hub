@@ -8,12 +8,15 @@ const BuildingPhoto = require('../models/BuildingPhoto');
 const createBuilding = async (req, res) => {
   try {
     const {
-      name, address, locationCity, description, amenities, images,
+      name, address, locationCity, description, amenities, images, documents,
       startingPrice, securityDeposit, maintenanceCharges, foodCharges,
-      rentSingle, rentDouble, rentTriple, totalRooms, totalBeds,
+      rentSingle, rentDouble, rentTriple, rent4Sharing, rent5Sharing, rent6Sharing, totalRooms, totalBeds,
       genderType, category, rating, popularityLabel,
       policies, staffInfo, status, lastStep, draftData, showInPortfolio,
-      propertyId
+      propertyId,
+      security, cctv, parking, powerBackup, mess, gym, library, laundry, housekeeping, medicalSupport,
+      lift, wifi, diningHall, commonKitchen, studyHall, laundryRoom, fireSafety, emergencyExit,
+      isAC
     } = req.body;
 
     const parseField = (field, defaultValue) => {
@@ -33,6 +36,7 @@ const createBuilding = async (req, res) => {
     };
 
     let finalImages = parseField(images, []);
+    const finalDocuments = parseField(documents, []);
     if (req.files && req.files.length > 0) {
       const uploadedImages = req.files.map(file => {
         const b64 = file.buffer.toString('base64');
@@ -60,6 +64,9 @@ const createBuilding = async (req, res) => {
       rentSingle,
       rentDouble,
       rentTriple,
+      rent4Sharing,
+      rent5Sharing,
+      rent6Sharing,
       totalRooms: totalRooms || 0,
       totalBeds: totalBeds || 0,
       genderType: genderType || 'Mixed',
@@ -73,6 +80,10 @@ const createBuilding = async (req, res) => {
       draftData: finalDraftData,
       showInPortfolio: showInPortfolio !== undefined ? showInPortfolio : true,
       propertyId: propertyId || null,
+      documents: finalDocuments,
+      security, cctv, parking, powerBackup, mess, gym, library, laundry, housekeeping, medicalSupport,
+      lift, wifi, diningHall, commonKitchen, studyHall, laundryRoom, fireSafety, emergencyExit,
+      isAC,
       owner: req.user.id
     });
 
@@ -168,6 +179,9 @@ const updateBuilding = async (req, res) => {
 
     if (updateData.amenities) {
       updateData.amenities = parseField(updateData.amenities, []);
+    }
+    if (updateData.documents) {
+      updateData.documents = parseField(updateData.documents, []);
     }
     if (updateData.policies) {
       updateData.policies = parseField(updateData.policies, {});
@@ -378,26 +392,26 @@ const getPublicBuildings = async (req, res) => {
 const getPublicBuildingById = async (req, res) => {
   try {
     const building = await Building.findOne({ _id: req.params.id, status: { $ne: 'Draft' } })
-      .select('-draftData -staffInfo -owner -lastStep')
+      .select('-draftData -owner -lastStep')
       .lean();
 
     if (!building) return res.status(404).json({ error: 'Building not found' });
 
-    // Fetch all sub-buildings to get their IDs
-    const subBuildings = await Building.find({ propertyId: building._id }).select('_id');
+    // Fetch all sub-buildings with full details
+    const subBuildings = await Building.find({ propertyId: building._id, status: { $ne: 'Draft' } }).lean();
     const buildingIds = [building._id, ...subBuildings.map(sb => sb._id)];
 
     // Find floors for all these buildings and populate their rooms and beds
-    const floors = await Floor.find({ building: { $in: buildingIds } })
-      .select('floorNumber floorCategory description occupancyPercentage totalRooms totalBeds facilities rooms building')
-      .lean();
+    const floors = await Floor.find({ building: { $in: buildingIds } }).lean();
 
     const populatedFloors = await Promise.all(floors.map(async (floor) => {
       const rooms = await Room.find({ floor: floor._id })
-        .select('roomNumber roomType capacity isAC washroomType rentAmount securityDeposit amenities status beds')
         .populate({
           path: 'beds',
-          select: 'bedNumber status position bedType smartBadges'
+          populate: {
+            path: 'tenant',
+            select: 'name checkInDate targetStayDuration'
+          }
         })
         .lean();
       floor.rooms = rooms;
@@ -412,7 +426,7 @@ const getPublicBuildingById = async (req, res) => {
       .select('bedId bedNumber')
       .lean();
 
-    res.status(200).json({ ...building, filledBeds });
+    res.status(200).json({ ...building, subBuildings, filledBeds });
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 

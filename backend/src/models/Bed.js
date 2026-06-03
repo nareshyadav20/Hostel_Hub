@@ -2,13 +2,27 @@ const mongoose = require('mongoose');
 
 const bedSchema = new mongoose.Schema({
   bedNumber: { type: String, required: true },
-  status:    { type: String, enum: ['AVAILABLE','OCCUPIED','MAINTENANCE','RESERVED'], default: 'AVAILABLE' },
+  status:    { type: String, enum: ['Vacant', 'Occupied', 'Reserved', 'Blocked', 'Maintenance'], default: 'Vacant' },
   position:  { type: String, default: 'Standard' }, // e.g. Window side, Entrance side, Middle
   bedType:   { type: String, default: 'Single' },   // e.g. Lower Bunk, Upper Bunk, Single, Queen
+  bedSize:   { type: String, default: 'Standard' },
+  bedFacing: { type: String, default: 'North' },
   images:    [{ type: String }],
   tenant:    { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
   room:      { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
+  occupantDetails: {
+    tenantName: { type: String },
+    joinDate: { type: Date },
+    exitDate: { type: Date }
+  },
   
+  // Bed-level Equipment Metrics (Strict 1:1 with UI)
+  mattress: { type: Boolean, default: false },
+  pillow: { type: Boolean, default: false },
+  locker: { type: Boolean, default: false },
+  readingLamp: { type: Boolean, default: false },
+  chargingPoint: { type: Boolean, default: false },
+
   // Smart Bed Management (Step 1)
   comfortScore: { type: Number, default: 0 },
   studyFriendly: { type: Boolean, default: false },

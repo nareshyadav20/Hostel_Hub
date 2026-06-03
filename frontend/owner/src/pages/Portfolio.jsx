@@ -21,56 +21,38 @@ import { clearAllCache } from '../cache';
 
 // --- CONSTANTS MOVED OUTSIDE FOR STABILITY ---
 const FEATURE_GROUPS = {
-  '🏠 Accommodation': ['Furnished Rooms', 'AC Rooms', 'Attached Bathroom'],
-  '📶 Connectivity': ['WiFi'],
-  '🔒 Security': ['CCTV', 'Biometric Access'],
-  '⚡ Utilities': ['Power Backup', '24/7 Water', 'Laundry'],
-  '🛋️ Comfort': ['Study Table', 'Wardrobe', 'Lounge Area'],
-  '🍽️ Food & Dining': ['Meals Included', 'RO Drinking Water'],
-  '⭐ Additional Amenities': ['Gym', 'Parking', 'Recreation Area', 'Security Guard']
+  '🔒 Security & Safety': ['Security', 'CCTV', 'Medical Support'],
+  '⚡ Essential Utilities': ['Power Backup', 'Laundry', 'Housekeeping'],
+  '🍽️ Food & Dining': ['Mess'],
+  '⭐ Additional Amenities': ['Gym', 'Parking', 'Library']
 };
 
 const AMENITY_ICONS = {
-  'WiFi': <Wifi size={14} />, 'AC Rooms': <Wind size={14} />, 'Attached Bathroom': <Droplets size={14} />,
-  'CCTV': <Shield size={14} />, 'Security Guard': <ShieldCheck size={14} />, 'Biometric Access': <Fingerprint size={14} />,
-  'Power Backup': <Zap size={14} />, '24/7 Water': <Droplets size={14} />, 'Laundry': <Shirt size={14} />,
-  'Study Table': <BookOpen size={14} />, 'Wardrobe': <Smartphone size={14} />, 'Lounge Area': <Coffee size={14} />,
-  'Gym': <Dumbbell size={14} />, 'Parking': <Car size={14} />, 'Recreation Area': <Gamepad size={14} />,
-  'Furnished Rooms': <Armchair size={14} />, 'Food Included': <Utensils size={14} />,
-  'Meals Included': <Utensils size={14} />, 'RO Drinking Water': <Droplets size={14} />
+  'Security': <ShieldCheck size={14} />, 'CCTV': <Shield size={14} />, 'Medical Support': <Heart size={14} />,
+  'Power Backup': <Zap size={14} />, 'Laundry': <Shirt size={14} />, 'Housekeeping': <ClipboardList size={14} />,
+  'Gym': <Dumbbell size={14} />, 'Parking': <Car size={14} />, 'Library': <BookOpen size={14} />,
+  'Mess': <Utensils size={14} />
 };
 
 const AVAILABLE_FILTER_FEATURES = [
-  'WiFi', 'AC Rooms', 'Food Included', 'CCTV', 'Laundry', 'Parking', 'Power Backup', 'Gym'
+  'Security', 'CCTV', 'Parking', 'Power Backup', 'Mess', 'Gym', 'Library', 'Laundry', 'Housekeeping', 'Medical Support'
 ];
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 5;
 const STEP_CONFIG = [
-  { step: 1, title: 'Basic Info', icon: '🏨', desc: 'Name, type, description' },
+  { step: 1, title: 'Basic Info', icon: '🏨', desc: 'Name, description, media' },
   { step: 2, title: 'Location', icon: '📍', desc: 'Address & landmarks' },
-  { step: 3, title: 'Pricing', icon: '💰', desc: 'Rent & deposits' },
-  { step: 4, title: 'Food & Mess', icon: '🍽️', desc: 'Meals & plans' },
-  { step: 5, title: 'Amenities', icon: '✨', desc: 'Facilities & features' },
-  { step: 6, title: 'Policies', icon: '📋', desc: 'Rules & stay terms' },
-  { step: 7, title: 'Owner Details', icon: '🔑', desc: 'Contact information' },
-  { step: 8, title: 'Review', icon: '✅', desc: 'Final summary' },
+  { step: 3, title: 'Amenities', icon: '✨', desc: 'Facilities & features' },
+  { step: 4, title: 'Owner Details', icon: '🔑', desc: 'Contact information' },
+  { step: 5, title: 'Review', icon: '✅', desc: 'Final summary' },
 ];
 
 const INITIAL_FORM_STATE = {
-  name: '', propertyType: 'Hostel', gender: '',
-  shortDesc: '', longDesc: '', coverImage: null, gallery: [],
+  name: '', shortDesc: '', 
   addr1: '', addr2: '', city: '', state: '', pincode: '', landmark: '',
-  totalRooms: '', totalBeds: '', roomTypes: [],
-  deposit: '', advance: '',
-  rentSingle: '', rentDouble: '', rentTriple: '', rent4Sharing: '', rent5Sharing: '', rent6Sharing: '',
-  foodCharges: '',
-  electricity: 'Included', water: 'Included',
-  roomBaseName: '', roomTypeSelect: 'Single', bedsPerRoom: 1,
-  foodAvailable: 'No', mealPlans: [], foodType: 'Veg', messCharges: '',
-  amenities: [],
-  visitorPolicy: '', smokingPolicy: 'Not Allowed', alcoholPolicy: 'Not Allowed',
-  petsAllowed: 'No', minStay: '', noticePeriod: '', checkIn: '', checkOut: '',
-  ownerName: '', phone: '', altPhone: '', email: ''
+  ownerName: '', phone: '', email: '',
+  coverImage: null, gallery: [], documents: [],
+  amenities: []
 };
 
 const Portfolio = () => {
@@ -222,14 +204,6 @@ const Portfolio = () => {
       status: 'Draft',
       lastStep: step,
       draftData: data,
-      securityDeposit: parseInt(data.deposit) || 0,
-      maintenanceCharges: parseInt(data.advance) || 0,
-      foodCharges: parseInt(data.foodCharges) || 3000,
-      rentSingle: parseInt(data.rentSingle) || 0,
-      rentDouble: parseInt(data.rentDouble) || 0,
-      rentTriple: parseInt(data.rentTriple) || 0,
-      totalRooms: parseInt(data.totalRooms) || 0,
-      totalBeds: parseInt(data.totalBeds) || 0,
     };
     try {
       let bId;
@@ -299,7 +273,7 @@ const Portfolio = () => {
 
     setIsSubmitting(true);
     try {
-      const extendedDesc = `# Property Overview\n**Type:** ${formData.propertyType} | **Gender:** ${formData.gender}\n**Capacity:** ${formData.totalRooms} Rooms, ${formData.totalBeds} Beds\n# Pricing\n- Single: ₹${formData.rentSingle}/mo | 2-Sharing: ₹${formData.rentDouble}/mo | 3-Sharing: ₹${formData.rentTriple}/mo | 4-Sharing: ₹${formData.rent4Sharing}/mo | 5-Sharing: ₹${formData.rent5Sharing}/mo | 6-Sharing: ₹${formData.rent6Sharing}/mo\n- Deposit: ₹${formData.deposit} | Advance: ₹${formData.advance}\n# Contact: ${formData.ownerName} (${formData.phone})\n---\n${formData.longDesc || formData.shortDesc || ''}`;
+      const extendedDesc = `# Property Overview\n**Type:** ${formData.propertyType} | **Gender:** ${formData.gender}\n# Contact: ${formData.ownerName} (${formData.phone})\n---\n${formData.longDesc || formData.shortDesc || ''}`;
 
       const payload = {
         name: formData.name || 'New Hostel',
@@ -307,27 +281,28 @@ const Portfolio = () => {
         locationCity: formData.city || 'Bengaluru',
         description: extendedDesc,
         amenities: formData.amenities || [],
+        
+        // Property Facilities (Strict 1:1)
+        security: formData.amenities?.includes('Security') || false,
+        cctv: formData.amenities?.includes('CCTV') || false,
+        parking: formData.amenities?.includes('Parking') || false,
+        powerBackup: formData.amenities?.includes('Power Backup') || false,
+        mess: formData.amenities?.includes('Mess') || false,
+        gym: formData.amenities?.includes('Gym') || false,
+        library: formData.amenities?.includes('Library') || false,
+        laundry: formData.amenities?.includes('Laundry') || false,
+        housekeeping: formData.amenities?.includes('Housekeeping') || false,
+        medicalSupport: formData.amenities?.includes('Medical Support') || false,
+
         images: formData.gallery?.length > 0 ? formData.gallery : (formData.coverImage ? [formData.coverImage] : []),
-        startingPrice: parseInt(formData.rent6Sharing) || parseInt(formData.rent5Sharing) || parseInt(formData.rent4Sharing) || parseInt(formData.rentTriple) || parseInt(formData.rentDouble) || parseInt(formData.rentSingle) || 5000,
-        securityDeposit: parseInt(formData.deposit) || 0,
-        maintenanceCharges: parseInt(formData.advance) || 0,
-        foodCharges: parseInt(formData.foodCharges) || 3000,
-        rentSingle: parseInt(formData.rentSingle) || 0,
-        rentDouble: parseInt(formData.rentDouble) || 0,
-        rentTriple: parseInt(formData.rentTriple) || 0,
-        totalRooms: parseInt(formData.totalRooms) || 0,
-        totalBeds: parseInt(formData.totalBeds) || 0,
         genderType: formData.gender === 'Co-living (Both)' ? 'Mixed' : formData.gender || 'Mixed',
         category: formData.propertyType === 'Co-living' ? 'Luxury' : (formData.propertyType === 'PG' ? 'Student' : 'Professional'),
         rating: 4.5,
         popularityLabel: 'New Property',
         status: 'Active',
-        policies: {
-          smoking: formData.smokingPolicy || 'Not Allowed',
-          alcohol: formData.alcoholPolicy || 'Not Allowed',
-          pets: formData.petsAllowed || 'No',
-          visitors: formData.visitorPolicy || 'Till 8 PM'
-        }
+        ownerName: formData.ownerName || 'Owner Details',
+        ownerPhone: formData.phone || '',
+        ownerEmail: formData.email || ''
       };
 
       if (activeDraftId) {
@@ -475,25 +450,7 @@ const Portfolio = () => {
             <label>Hostel Name *</label>
             <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Royal Residency" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <div className="input-group">
-              <label>Property Type</label>
-              <select value={formData.propertyType} onChange={e => setFormData({ ...formData, propertyType: e.target.value })}>
-                <option>Hostel</option>
-                <option>PG</option>
-                <option>Co-living</option>
-              </select>
-            </div>
-            <div className="input-group">
-              <label>Gender Allowed *</label>
-              <select required value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
-                <option value="">Select...</option>
-                <option>Boys</option>
-                <option>Girls</option>
-                <option>Co-living (Both)</option>
-              </select>
-            </div>
-          </div>
+
           <div className="input-group">
             <label>Description</label>
             <textarea rows={3} value={formData.shortDesc} onChange={e => setFormData({ ...formData, shortDesc: e.target.value })} placeholder="Provide a premium summary of your property..." />
@@ -548,6 +505,29 @@ const Portfolio = () => {
             )}
             <small style={{ color: '#64748B', fontSize: '0.75rem', marginTop: '0.25rem' }}>Click an image to preview. Double-click to set as cover.</small>
           </div>
+          <div className="input-group">
+            <label>Property Documents (PDFs, Docs)</label>
+            <input
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx"
+              onChange={async (e) => {
+                if (!e.target.files.length) return;
+                const files = Array.from(e.target.files);
+                const mockDocs = files.map(f => ({ name: f.name, url: URL.createObjectURL(f) }));
+                setFormData(prev => ({ ...prev, documents: [...(prev.documents || []), ...mockDocs] }));
+              }}
+            />
+            {formData.documents && formData.documents.length > 0 && (
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                {formData.documents.map((doc, i) => (
+                  <div key={i} style={{ padding: '0.5rem', background: '#F1F5F9', borderRadius: '8px', fontSize: '0.8rem', color: '#475569', fontWeight: '600' }}>
+                    📄 {doc.name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       );
       case 2: return (
@@ -574,16 +554,10 @@ const Portfolio = () => {
             <div className="input-group">
               <label>Pincode *</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <button type="button"
-                  onClick={() => setFormData(p => ({ ...p, pincode: String(Math.max(100000, (parseInt(p.pincode) || 500000) - 1)) }))}
-                  style={{ width: '40px', height: '48px', borderRadius: '10px', border: '1.5px solid #E2E8F0', background: '#F8FAFC', cursor: 'pointer', fontSize: '1.2rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>−</button>
                 <input required value={formData.pincode}
                   onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0,6); setFormData({ ...formData, pincode: v }); }}
                   placeholder="500081" maxLength={6}
-                  style={{ flex: 1, textAlign: 'center', letterSpacing: '0.1em', fontWeight: '800' }} />
-                <button type="button"
-                  onClick={() => setFormData(p => ({ ...p, pincode: String(Math.min(999999, (parseInt(p.pincode) || 500000) + 1)) }))}
-                  style={{ width: '40px', height: '48px', borderRadius: '10px', border: '1.5px solid #E2E8F0', background: '#F8FAFC', cursor: 'pointer', fontSize: '1.2rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>+</button>
+                  style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0', letterSpacing: '0.1em', fontWeight: '800' }} />
               </div>
             </div>
             <div className="input-group">
@@ -594,69 +568,12 @@ const Portfolio = () => {
         </div>
       );
       case 3: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>1 Sharing Rent *</label><input required type="number" value={formData.rentSingle} onChange={e => setFormData({ ...formData, rentSingle: e.target.value })} placeholder="e.g. 18000" /></div>
-            <div className="input-group"><label>2 Sharing Rent *</label><input required type="number" value={formData.rentDouble} onChange={e => setFormData({ ...formData, rentDouble: e.target.value })} placeholder="e.g. 12000" /></div>
-            <div className="input-group"><label>3 Sharing Rent *</label><input required type="number" value={formData.rentTriple} onChange={e => setFormData({ ...formData, rentTriple: e.target.value })} placeholder="e.g. 9000" /></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>4 Sharing Rent</label><input type="number" value={formData.rent4Sharing} onChange={e => setFormData({ ...formData, rent4Sharing: e.target.value })} placeholder="e.g. 7500" /></div>
-            <div className="input-group"><label>5 Sharing Rent</label><input type="number" value={formData.rent5Sharing} onChange={e => setFormData({ ...formData, rent5Sharing: e.target.value })} placeholder="e.g. 6500" /></div>
-            <div className="input-group"><label>6 Sharing Rent</label><input type="number" value={formData.rent6Sharing} onChange={e => setFormData({ ...formData, rent6Sharing: e.target.value })} placeholder="e.g. 5500" /></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>Security Deposit *</label><input required type="number" value={formData.deposit} onChange={e => setFormData({ ...formData, deposit: e.target.value })} /></div>
-            <div className="input-group"><label>Advance</label><input type="number" value={formData.advance} onChange={e => setFormData({ ...formData, advance: e.target.value })} placeholder="e.g. 5000" /></div>
-            <div className="input-group"><label>Food (Monthly)</label><input type="number" value={formData.foodCharges} onChange={e => setFormData({ ...formData, foodCharges: e.target.value })} placeholder="e.g. 3000" /></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>Electricity</label><select value={formData.electricity} onChange={e => setFormData({ ...formData, electricity: e.target.value })}><option>Included</option><option>Meter-based</option></select></div>
-            <div className="input-group"><label>Water</label><select value={formData.water} onChange={e => setFormData({ ...formData, water: e.target.value })}><option>Included</option><option>Extra</option></select></div>
-          </div>
-        </div>
-      );
-      case 4: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div className="input-group">
-            <label>Food Available?</label>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-              {['Yes', 'No'].map(v => (
-                <button type="button" key={v} onClick={() => setFormData({ ...formData, foodAvailable: v })}
-                  style={{ flex: 1, padding: '1rem', borderRadius: '16px', border: '1.5px solid', borderColor: formData.foodAvailable === v ? 'var(--accent-primary)' : '#E2E8F0', background: formData.foodAvailable === v ? 'rgba(79, 70, 229, 0.1)' : '#FFFFFF', color: formData.foodAvailable === v ? 'var(--accent-primary)' : '#64748B', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s' }}>
-                  {v}
-                </button>
-              ))}
-            </div>
-          </div>
-          {formData.foodAvailable === 'Yes' && (
-            <>
-              <div className="input-group">
-                <label>Meal Plans</label>
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                  {['Breakfast', 'Lunch', 'Dinner'].map(m => (
-                    <button type="button" key={m} onClick={() => setFormData(p => ({ ...p, mealPlans: p.mealPlans.includes(m) ? p.mealPlans.filter(x => x !== m) : [...p.mealPlans, m] }))}
-                      style={{ padding: '0.6rem 1.2rem', borderRadius: '20px', border: '1.5px solid', borderColor: formData.mealPlans.includes(m) ? 'var(--accent-primary)' : '#E2E8F0', background: formData.mealPlans.includes(m) ? 'var(--accent-primary)' : '#FFFFFF', color: formData.mealPlans.includes(m) ? '#FFFFFF' : '#64748B', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.2s' }}>
-                      {m}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="input-group"><label>Food Type</label><select value={formData.foodType} onChange={e => setFormData({ ...formData, foodType: e.target.value })}><option>Veg</option><option>Non-Veg</option><option>Both</option></select></div>
-                <div className="input-group"><label>Monthly Mess Charges</label><input type="number" value={formData.messCharges} onChange={e => setFormData({ ...formData, messCharges: e.target.value })} /></div>
-              </div>
-            </>
-          )}
-        </div>
-      );
-      case 5: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem', maxHeight: '420px', overflowY: 'auto', paddingRight: '0.5rem' }}>
           {Object.entries(FEATURE_GROUPS).map(([cat, feats]) => (
             <div key={cat}>
               <h4 style={{ fontSize: '0.8rem', color: '#475569', fontWeight: '900', marginBottom: '0.8rem', letterSpacing: '0.02em' }}>{cat}</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-                {feats.map(f => (
+                 {feats.map(f => (
                   <button type="button" key={f}
                     onClick={() => setFormData(p => ({ ...p, amenities: p.amenities.includes(f) ? p.amenities.filter(x => x !== f) : [...p.amenities, f] }))}
                     style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', borderRadius: '12px', border: '1.5px solid', borderColor: formData.amenities.includes(f) ? 'var(--accent-primary)' : '#F1F5F9', background: formData.amenities.includes(f) ? 'rgba(79, 70, 229, 0.08)' : '#F8FAFC', color: formData.amenities.includes(f) ? 'var(--accent-primary)' : '#475569', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.2s', boxShadow: formData.amenities.includes(f) ? '0 2px 8px rgba(79,70,229,0.15)' : 'none' }}>
@@ -670,40 +587,27 @@ const Portfolio = () => {
           ))}
         </div>
       );
-      case 6: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <div className="input-group"><label>Smoking Policy</label><select value={formData.smokingPolicy} onChange={e => setFormData({ ...formData, smokingPolicy: e.target.value })}><option>Allowed</option><option>Not Allowed</option></select></div>
-            <div className="input-group"><label>Alcohol Policy</label><select value={formData.alcoholPolicy} onChange={e => setFormData({ ...formData, alcoholPolicy: e.target.value })}><option>Allowed</option><option>Not Allowed</option></select></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <div className="input-group"><label>Pets Allowed?</label><select value={formData.petsAllowed} onChange={e => setFormData({ ...formData, petsAllowed: e.target.value })}><option>Yes</option><option>No</option></select></div>
-            <div className="input-group"><label>Visitor Policy</label><input value={formData.visitorPolicy} onChange={e => setFormData({ ...formData, visitorPolicy: e.target.value })} placeholder="e.g. Till 8 PM" /></div>
-          </div>
-        </div>
-      );
-      case 7: return (
+      case 4: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div className="input-group"><label>Owner / Legal Representative Name *</label><input required value={formData.ownerName} onChange={e => setFormData({ ...formData, ownerName: e.target.value })} placeholder="Legal owner name" /></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="input-group"><label>Primary Contact Number *</label><input required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="+91 XXXXX XXXXX" /></div>
-            <div className="input-group"><label>Alternate Number *</label><input required value={formData.altPhone} onChange={e => setFormData({ ...formData, altPhone: e.target.value })} placeholder="+91 XXXXX XXXXX" /></div>
+            <div className="input-group"><label>Alternate Number</label><input value={formData.altPhone} onChange={e => setFormData({ ...formData, altPhone: e.target.value })} placeholder="+91 XXXXX XXXXX" /></div>
           </div>
           <div className="input-group"><label>Official Email Address *</label><input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="owner@example.com" /></div>
         </div>
       );
-      case 8: return (
+      case 5: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ padding: '1rem', background: '#F0FDF4', borderRadius: '16px', border: '1.5px solid #DCFCE7', display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <CheckCircle size={24} color="#10B981" />
             <p style={{ margin: 0, fontSize: '0.88rem', color: '#166534', fontWeight: '700' }}>Review your property details before publishing. Click <b>Edit</b> on any section to make changes.</p>
           </div>
           {[
-            { label: '🏨 Basic Info', step: 1, rows: [{ k: 'Property', v: formData.name }, { k: 'Type', v: formData.propertyType }, { k: 'Gender', v: formData.gender }] },
+            { label: '🏨 Basic Info', step: 1, rows: [{ k: 'Property', v: formData.name }] },
             { label: '📍 Location', step: 2, rows: [{ k: 'Address', v: formData.addr1 }, { k: 'City', v: `${formData.city}, ${formData.state} — ${formData.pincode}` }, { k: 'Landmark', v: formData.landmark }] },
-            { label: '💰 Pricing', step: 3, rows: [{ k: '1-Sharing', v: formData.rentSingle ? `₹${formData.rentSingle}/mo` : '—' }, { k: '2-Sharing', v: formData.rentDouble ? `₹${formData.rentDouble}/mo` : '—' }, { k: '3-Sharing', v: formData.rentTriple ? `₹${formData.rentTriple}/mo` : '—' }, { k: '4-Sharing', v: formData.rent4Sharing ? `₹${formData.rent4Sharing}/mo` : '—' }, { k: '5-Sharing', v: formData.rent5Sharing ? `₹${formData.rent5Sharing}/mo` : '—' }, { k: '6-Sharing', v: formData.rent6Sharing ? `₹${formData.rent6Sharing}/mo` : '—' }, { k: 'Deposit', v: formData.deposit ? `₹${formData.deposit}` : '—' }, { k: 'Advance', v: formData.advance ? `₹${formData.advance}` : '—' }] },
-            { label: '✨ Amenities', step: 5, rows: [{ k: 'Selected', v: formData.amenities.length > 0 ? formData.amenities.join(', ') : 'None selected' }] },
-            { label: '🔑 Owner Details', step: 7, rows: [{ k: 'Name', v: formData.ownerName }, { k: 'Phone', v: formData.phone }, { k: 'Email', v: formData.email }] },
+            { label: '✨ Amenities', step: 3, rows: [{ k: 'Selected', v: formData.amenities.length > 0 ? formData.amenities.join(', ') : 'None selected' }] },
+            { label: '🔑 Owner Details', step: 4, rows: [{ k: 'Name', v: formData.ownerName }, { k: 'Phone', v: formData.phone }, { k: 'Email', v: formData.email }] },
           ].map(section => (
             <div key={section.label} style={{ padding: '1.25rem', background: 'var(--bg-card)', borderRadius: '16px', border: '1.5px solid #F1F5F9' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
@@ -867,36 +771,6 @@ const Portfolio = () => {
             gap: '1rem',
             paddingBottom: '0.5rem'
            }}>
-            {kpis.map((kpi, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="kpi-card-glass"
-                style={{ padding: '0.8rem 1.25rem',
-                  borderRadius: '18px',
-                  background: "var(--bg-card)",
-                  border: '1.5px solid #F1F5F9',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center'
-                 }}
-              >
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '3px', height: '100%', background: kpi.color, opacity: 0.8  }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem'  }}>
-                  <div style={{ padding: '0.35rem', borderRadius: '6px', background: `${kpi.color}10`, color: kpi.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{kpi.icon}</div>
-                  <span style={{ fontWeight: '800', fontSize: '0.6rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap'  }}>{kpi.label}</span>
-                </div>
-                <div style={{ fontSize: '1.3rem', fontWeight: '950', color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.1  }}>{kpi.value || 0}</div>
-                <div style={{ marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.2rem'  }}>
-                  <span style={{ fontSize: '0.55rem', fontWeight: '800', color: '#10B981'  }}>↑ 12%</span>
-                </div>
-              </motion.div>
-            ))}
           </div>
         </div>
 
@@ -963,7 +837,7 @@ const Portfolio = () => {
                 <BuildingCard
                   key={b.id}
                   building={b}
-                  onNavigate={() => navigate(`/owner/building/${b.id}/dashboard`)}
+                  onNavigate={() => navigate(`/owner/building/${b.id}/buildings`)}
                   onRefresh={() => { fetchData(); loadDrafts(); }}
                   onImageClick={(img) => setModalInfo({ isOpen: true, image: img })}
                 />
@@ -1496,21 +1370,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick }) => {
           </div>
 
           <div style={{ position: 'absolute', bottom: '1.25rem', left: '1.25rem', right: '1.25rem', zIndex: 5  }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem'  }}>
-              <div style={{ padding: '0.2rem 0.6rem',
-                borderRadius: '6px',
-                background: 'rgba(255,255,255,0.25)',
-                backdropFilter: 'blur(10px)',
-                color: "var(--text-on-primary)",
-                fontSize: '0.75rem',
-                fontWeight: '900',
-                border: '1px solid rgba(255,255,255,0.3)'
-               }}>
-                <Users size={12} style={{ verticalAlign: 'middle', marginRight: '4px'  }} />
-                {building.occupancyRate}% Occupied
-              </div>
-            </div>
-            <h3 style={{ fontSize: '1.6rem', fontWeight: '950', color: "var(--text-on-primary)", textShadow: '0 2px 8px rgba(0,0,0,0.4)', margin: 0, letterSpacing: '-0.02em'  }}>{building.name}</h3>
+            <h3 style={{ fontSize: '1.8rem', fontWeight: '950', color: "var(--text-on-primary)", textShadow: '0 2px 8px rgba(0,0,0,0.4)', margin: 0, letterSpacing: '-0.02em'  }}>{building.name}</h3>
           </div>
         </div>
 
@@ -1537,20 +1397,23 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick }) => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem'  }}>
-            <div style={{ padding: '0.8rem', borderRadius: '16px', background: '#F8FAFC', border: '1.5px solid #F1F5F9'  }}>
-              <p style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '900', margin: '0 0 0.4rem 0', textTransform: 'uppercase', letterSpacing: '0.05em'  }}>Monthly Fee (3 Sharing)</p>
-              <p style={{ fontSize: '1.25rem', fontWeight: '950', color: '#10B981', margin: 0  }}>₹{(building.rentTriple || building.startingPrice || 5000).toLocaleString()}<span style={{ fontSize: '0.8rem', color: '#94A3B8', fontWeight: '700'  }}>/mo</span></p>
-            </div>
-            <div style={{ padding: '0.8rem', borderRadius: '16px', background: '#F8FAFC', border: '1.5px solid #F1F5F9'  }}>
-              <p style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '900', margin: '0 0 0.4rem 0', textTransform: 'uppercase', letterSpacing: '0.05em'  }}>Live Residents</p>
-              <p style={{ fontSize: '1.25rem', fontWeight: '950', color: '#1E293B', margin: 0  }}>{building.occupiedBeds}<span style={{ fontSize: '0.8rem', color: '#94A3B8', fontWeight: '700'  }}> / {building.totalBeds}</span></p>
-            </div>
-          </div>
-
           <div style={{ marginBottom: '1.5rem'  }}>
+            <p style={{ fontSize: '0.8rem', color: '#475569', margin: '0 0 0.8rem 0', fontWeight: '500', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {building.description || building.shortDesc || "Premium property managed via Livora Hostel Hub."}
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem', marginBottom: '1rem'  }}>
+              <div style={{ padding: '0.6rem', borderRadius: '12px', background: '#F8FAFC', border: '1.5px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontWeight: 'bold' }}>
+                  {(building.ownerName || 'O')[0]}
+                </div>
+                <div>
+                  <p style={{ fontSize: '0.65rem', color: '#94A3B8', fontWeight: '800', margin: '0', textTransform: 'uppercase'  }}>Property Owner</p>
+                  <p style={{ fontSize: '0.85rem', fontWeight: '800', color: '#1E293B', margin: 0  }}>{building.ownerName || 'Owner Details'}</p>
+                </div>
+              </div>
+            </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem'  }}>
-              {(building.features || []).slice(0, 4).map((feat, fidx) => (
+              {(building.amenities && building.amenities.length > 0 ? building.amenities.slice(0, 5) : ['Security', 'CCTV', 'Parking', 'Power Backup', 'Mess']).map((feat, fidx) => (
                 <div
                   key={fidx}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.4rem',
@@ -1559,13 +1422,13 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick }) => {
                     fontSize: '0.75rem', fontWeight: '800', color: '#475569'
                    }}
                 >
-                  <span style={{ color: 'var(--accent-primary)'  }}>{AMENITY_ICONS[feat] || <Star size={12} />}</span>
+                  <span style={{ color: 'var(--accent-primary)'  }}><CheckCircle size={12} /></span>
                   {feat}
                 </div>
               ))}
-              {building.features && building.features.length > 4 && (
+              {building.amenities && building.amenities.length > 5 && (
                 <div style={{ padding: '0.4rem', fontSize: '0.75rem', fontWeight: '900', color: 'var(--accent-primary)', alignSelf: 'center'  }}>
-                  +{building.features.length - 4} More
+                  +{building.amenities.length - 5} More
                 </div>
               )}
             </div>

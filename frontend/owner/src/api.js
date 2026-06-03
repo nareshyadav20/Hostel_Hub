@@ -114,6 +114,10 @@ export const api = {
     const data = Array.isArray(res.data) ? res.data : [];
     return handleId(data);
   },
+  addHostel: async (data) => {
+    const res = await axios.post(`${API_URL}/hostels`, data);
+    return handleId(res.data);
+  },
   // Bed availability stats for the hostel linked to a building
   getHostelBedStats: async (buildingId) => {
     const params = buildingId ? { buildingId } : {};
