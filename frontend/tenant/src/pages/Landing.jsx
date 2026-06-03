@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, SlidersHorizontal, Star, ShieldCheck, ChevronDown, RefreshCw } from 'lucide-react';
-import SearchOverlay from '../components/SearchOverlay';
+
 import './Landing.css';
 import API from '../api/axios';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
@@ -45,7 +45,7 @@ const Landing = () => {
 
   const [selectedCity, setSelectedCity] = useState('All Cities');
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
-  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
 
@@ -305,9 +305,40 @@ const Landing = () => {
         </h2>
         <p className="search-hero-subtitle">Discover premium verified hostels and co-living spaces designed for absolute comfort.</p>
 
-        <div className="search-trigger-pill" onClick={() => setIsSearchOverlayOpen(true)}>
+        <div className="search-trigger-pill" style={{ cursor: 'text' }}>
           <div className="search-pill-icon"><Search size={18} /></div>
-          <span className="search-pill-text">Search for localities, offices, or properties...</span>
+          <input
+            type="text"
+            className="search-pill-text"
+            placeholder="Type a city, locality or property name..."
+            value={searchLocality}
+            onChange={(e) => setSearchLocality(e.target.value)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              font: 'inherit',
+              color: 'inherit',
+              width: '100%',
+              cursor: 'text'
+            }}
+          />
+          {searchLocality && (
+            <button
+              onClick={() => setSearchLocality('')}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#94a3b8',
+                fontSize: '1.1rem',
+                padding: '0 0.5rem',
+                lineHeight: 1
+              }}
+            >
+              ✕
+            </button>
+          )}
         </div>
       </section>
 
@@ -531,22 +562,7 @@ const Landing = () => {
 
       </div>
 
-      <SearchOverlay
-        isOpen={isSearchOverlayOpen}
-        onClose={() => setIsSearchOverlayOpen(false)}
-        initialCity={selectedCity}
-        availableCities={availableCities}
-        availableLocalities={uniqueLocalitiesOfSelectedCity}
-        onSearch={({ selectedCity: city, activeTab: tab, selectedGender: gender, selectedAmenities: amenities, searchLocality: locality, searchProperty: property }) => {
-          setSelectedCity(city);
-          setActiveTab(tab);
-          setSelectedGender(gender);
-          setSelectedAmenities(amenities);
-          setSearchLocality(locality);
-          setSearchProperty(property || '');
-          navigate(`/explore?city=${city.toLowerCase()}&locality=${locality}&gender=${gender}`);
-        }}
-      />
+
 
 
     </div>
