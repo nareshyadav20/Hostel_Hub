@@ -1239,19 +1239,12 @@ const Buildings = () => {
                 </div>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.2rem', marginBottom: '1.2rem' }}>
               <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>GENDER TYPE</label>
                 <select value={formData.genderType} onChange={e => setFormData({ ...formData, genderType: e.target.value })} style={inputStyle}>
-                  <option value="Mixed">Mixed</option>
+                  <option value="Coliving">Coliving</option>
                   <option value="Boys">Boys Only</option>
                   <option value="Girls">Girls Only</option>
-                </select>
-              </div>
-              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>CATEGORY</label>
-                <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} style={inputStyle}>
-                  <option value="Mixed">Mixed</option>
-                  <option value="Student">Student</option>
-                  <option value="Professional">Professional</option>
                 </select>
               </div>
             </div>
