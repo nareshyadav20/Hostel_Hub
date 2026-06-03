@@ -10,9 +10,8 @@ const Login = () => {
   const [password, setPassword] = useState('admin123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showVault, setShowVault] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://livora-hostel-hub-1.onrender.com/api';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,10 +44,7 @@ const Login = () => {
     }
   };
 
-  const handleQuickFill = () => {
-    setEmail('admin@hostelhub.com');
-    setPassword('admin123');
-  };
+
 
   return (
     <div className="auth-container">
@@ -101,51 +97,7 @@ const Login = () => {
           </button>
         </form>
 
-        <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <button
-            type="button"
-            onClick={() => setShowVault(!showVault)}
-            style={{
-              background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)',
-              color: '#818cf8', padding: '0.6rem', borderRadius: '8px', width: '100%',
-              fontSize: '0.85rem', cursor: 'pointer', fontWeight: '600'
-            }}
-          >
-            {showVault ? 'Hide Mock Credentials' : 'View Login Access Vault'}
-          </button>
 
-          {showVault && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              style={{
-                marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)',
-                borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)'
-              }}
-            >
-              <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.8rem', textAlign: 'center' }}>Demo Account (Admin Portal)</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                  <span style={{ color: '#64748b' }}>Email:</span>
-                  <code style={{ color: '#e2e8f0' }}>admin@hostelhub.com</code>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                  <span style={{ color: '#64748b' }}>Pass:</span>
-                  <code style={{ color: '#e2e8f0' }}>admin123</code>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleQuickFill}
-                  style={{
-                    marginTop: '0.5rem', background: '#6366f1', color: 'white', border: 'none',
-                    padding: '0.4rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700'
-                  }}
-                >
-                  Auto-Login Now
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </div>
 
         <div className="auth-footer">
           New admin? <Link to="/signup">Register Admin</Link>

@@ -15,18 +15,19 @@ import {
   Heart, Home, ArrowLeft, Settings, Trash2, ChevronUp
 } from 'lucide-react';
 import ImageModal from '../components/ImageModal';
-import { api } from '../mockData';
+import { api } from '../api';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 import { clearAllCache } from '../cache';
 
 // --- CONSTANTS MOVED OUTSIDE FOR STABILITY ---
 const FEATURE_GROUPS = {
-  'Accommodation': ['Furnished Rooms', 'AC Rooms', 'Attached Bathroom'],
-  'Connectivity': ['WiFi'],
-  'Security': ['CCTV', 'Security Guard', 'Biometric Access'],
-  'Utilities': ['Power Backup', '24/7 Water', 'Laundry'],
-  'Comfort & Lifestyle': ['Study Table', 'Wardrobe', 'Lounge Area'],
-  'Premium': ['Gym', 'Parking', 'Recreation Area']
+  '🏠 Accommodation': ['Furnished Rooms', 'AC Rooms', 'Attached Bathroom'],
+  '📶 Connectivity': ['WiFi'],
+  '🔒 Security': ['CCTV', 'Biometric Access'],
+  '⚡ Utilities': ['Power Backup', '24/7 Water', 'Laundry'],
+  '🛋️ Comfort': ['Study Table', 'Wardrobe', 'Lounge Area'],
+  '🍽️ Food & Dining': ['Meals Included', 'RO Drinking Water'],
+  '⭐ Additional Amenities': ['Gym', 'Parking', 'Recreation Area', 'Security Guard']
 };
 
 const AMENITY_ICONS = {
@@ -35,45 +36,41 @@ const AMENITY_ICONS = {
   'Power Backup': <Zap size={14} />, '24/7 Water': <Droplets size={14} />, 'Laundry': <Shirt size={14} />,
   'Study Table': <BookOpen size={14} />, 'Wardrobe': <Smartphone size={14} />, 'Lounge Area': <Coffee size={14} />,
   'Gym': <Dumbbell size={14} />, 'Parking': <Car size={14} />, 'Recreation Area': <Gamepad size={14} />,
-  'Furnished Rooms': <Armchair size={14} />, 'Food Included': <Utensils size={14} />
+  'Furnished Rooms': <Armchair size={14} />, 'Food Included': <Utensils size={14} />,
+  'Meals Included': <Utensils size={14} />, 'RO Drinking Water': <Droplets size={14} />
 };
 
 const AVAILABLE_FILTER_FEATURES = [
   'WiFi', 'AC Rooms', 'Food Included', 'CCTV', 'Laundry', 'Parking', 'Power Backup', 'Gym'
 ];
 
+const TOTAL_STEPS = 8;
 const STEP_CONFIG = [
   { step: 1, title: 'Basic Info', icon: '🏨', desc: 'Name, type, description' },
   { step: 2, title: 'Location', icon: '📍', desc: 'Address & landmarks' },
-  { step: 3, title: 'Structure', icon: '🏗️', desc: 'Buildings & rooms' },
-  { step: 4, title: 'Pricing', icon: '💰', desc: 'Rent & deposits' },
-  { step: 5, title: 'Room Setup', icon: '🛏️', desc: 'Room configuration' },
-  { step: 6, title: 'Food & Mess', icon: '🍽️', desc: 'Meals & plans' },
-  { step: 7, title: 'Amenities', icon: '✨', desc: 'Facilities & features' },
-  { step: 8, title: 'Intelligence', icon: '🧠', desc: 'Smart IoT & AI' },
-  { step: 9, title: 'Policies', icon: '📋', desc: 'Rules & stay terms' },
-  { step: 10, title: 'Staff', icon: '👤', desc: 'Warden & contacts' },
-  { step: 11, title: 'Owner Details', icon: '🔑', desc: 'Contact information' },
-  { step: 12, title: 'Review', icon: '✅', desc: 'Final summary' },
+  { step: 3, title: 'Pricing', icon: '💰', desc: 'Rent & deposits' },
+  { step: 4, title: 'Food & Mess', icon: '🍽️', desc: 'Meals & plans' },
+  { step: 5, title: 'Amenities', icon: '✨', desc: 'Facilities & features' },
+  { step: 6, title: 'Policies', icon: '📋', desc: 'Rules & stay terms' },
+  { step: 7, title: 'Owner Details', icon: '🔑', desc: 'Contact information' },
+  { step: 8, title: 'Review', icon: '✅', desc: 'Final summary' },
 ];
 
 const INITIAL_FORM_STATE = {
-  name: '', buildingName: '', propertyType: 'Hostel', gender: '',
+  name: '', propertyType: 'Hostel', gender: '',
   shortDesc: '', longDesc: '', coverImage: null, gallery: [],
   addr1: '', addr2: '', city: '', state: '', pincode: '', landmark: '',
-  numBuildings: 1, numFloors: 1, totalRooms: '', totalBeds: '', roomTypes: [],
-  rentBed: '', rentRoom: '', deposit: '', maintenance: '',
-  rentSingle: '', rentDouble: '', rentTriple: '', foodCharges: '',
+  totalRooms: '', totalBeds: '', roomTypes: [],
+  deposit: '', advance: '',
+  rentSingle: '', rentDouble: '', rentTriple: '', rent4Sharing: '', rent5Sharing: '', rent6Sharing: '',
+  foodCharges: '',
   electricity: 'Included', water: 'Included',
   roomBaseName: '', roomTypeSelect: 'Single', bedsPerRoom: 1,
   foodAvailable: 'No', mealPlans: [], foodType: 'Veg', messCharges: '',
   amenities: [],
   visitorPolicy: '', smokingPolicy: 'Not Allowed', alcoholPolicy: 'Not Allowed',
   petsAllowed: 'No', minStay: '', noticePeriod: '', checkIn: '', checkOut: '',
-  staffName: '', staffRole: '', staffContact: '',
-  ownerName: '', phone: '', altPhone: '', email: '',
-  hasSmartAccess: false, hasClimateControl: false, hasAirQualityMonitor: false,
-  hasAIHygiene: false, hasCCTVAi: false, targetComfortScore: 90
+  ownerName: '', phone: '', altPhone: '', email: ''
 };
 
 const Portfolio = () => {
@@ -120,7 +117,7 @@ const Portfolio = () => {
     setError(null);
     try {
       const [b, f, r, bd, t, c, s] = await Promise.all([
-        api.getBuildings().catch(() => []),
+        api.getBuildings({ lightweight: true }).catch(() => []),
         api.getAllFloors().catch(() => []),
         api.getAllRooms().catch(() => []),
         api.getAllBeds().catch(() => []),
@@ -129,7 +126,7 @@ const Portfolio = () => {
         api.getStaff().catch(() => ({ staffList: [] }))
       ]);
       setData({
-        buildings: b || [], floors: f || [], rooms: r || [],
+        buildings: (b || []).filter(bld => bld.showInPortfolio !== false && String(bld.showInPortfolio) !== 'false'), floors: f || [], rooms: r || [],
         beds: bd || [], tenants: t || [], complaints: c || [],
         staff: s?.staffList || []
       });
@@ -161,7 +158,7 @@ const Portfolio = () => {
   // Load drafts from backend buildings with status: 'Draft'
   const loadDrafts = useCallback(async () => {
     try {
-      const draftBuildings = await api.getDraftBuildings();
+      const draftBuildings = await api.getDraftBuildings({ lightweight: true });
       setDrafts((draftBuildings || []).map(b => ({ ...b, id: b._id || b.id })));
     } catch (err) { console.error('Draft load error', err); }
   }, []);
@@ -194,18 +191,11 @@ const Portfolio = () => {
     socket.on('hostelUpdated', refreshAll);
     socket.on('dashboardStatsUpdated', refreshAll);
 
-    // Keep portfolio stats fresh on focus and at intervals as well
-    const onFocus = () => { clearAllCache(); fetchData(); loadDrafts(); };
-    window.addEventListener('focus', onFocus);
-    const interval = setInterval(() => { clearAllCache(); fetchData(); }, 30000);
-
     return () => {
       socket.off('tenantAdded', refreshAll);
       socket.off('complaintCreated', refreshAll);
       socket.off('hostelUpdated', refreshAll);
       socket.off('dashboardStatsUpdated', refreshAll);
-      window.removeEventListener('focus', onFocus);
-      clearInterval(interval);
       // We don't disconnectSocket here as owner might navigate between pages
     };
   }, [fetchData, loadDrafts]);
@@ -233,7 +223,7 @@ const Portfolio = () => {
       lastStep: step,
       draftData: data,
       securityDeposit: parseInt(data.deposit) || 0,
-      maintenanceCharges: parseInt(data.maintenance) || 799,
+      maintenanceCharges: parseInt(data.advance) || 0,
       foodCharges: parseInt(data.foodCharges) || 3000,
       rentSingle: parseInt(data.rentSingle) || 0,
       rentDouble: parseInt(data.rentDouble) || 0,
@@ -300,7 +290,7 @@ const Portfolio = () => {
 
   const handleCreateHostel = async (e) => {
     e.preventDefault();
-    if (currentStep < 12) {
+    if (currentStep < TOTAL_STEPS) {
       // Auto-save as draft when advancing steps
       saveDraftToBackend(formData, currentStep + 1, activeDraftId);
       setCurrentStep(s => s + 1);
@@ -309,7 +299,7 @@ const Portfolio = () => {
 
     setIsSubmitting(true);
     try {
-      const extendedDesc = `# Property Overview\n**Type:** ${formData.propertyType} | **Gender:** ${formData.gender}\n**Capacity:** ${formData.totalRooms} Rooms, ${formData.totalBeds} Beds\n# Pricing\n- Single Rent: ₹${formData.rentSingle}/mo | Double: ₹${formData.rentDouble}/mo | Triple: ₹${formData.rentTriple}/mo\n- Rent per Room: ₹${formData.rentRoom || 'N/A'}/room\n- Deposit: ₹${formData.deposit}\n# Contact: ${formData.ownerName} (${formData.phone})\n---\n${formData.longDesc || formData.shortDesc || ''}`;
+      const extendedDesc = `# Property Overview\n**Type:** ${formData.propertyType} | **Gender:** ${formData.gender}\n**Capacity:** ${formData.totalRooms} Rooms, ${formData.totalBeds} Beds\n# Pricing\n- Single: ₹${formData.rentSingle}/mo | 2-Sharing: ₹${formData.rentDouble}/mo | 3-Sharing: ₹${formData.rentTriple}/mo | 4-Sharing: ₹${formData.rent4Sharing}/mo | 5-Sharing: ₹${formData.rent5Sharing}/mo | 6-Sharing: ₹${formData.rent6Sharing}/mo\n- Deposit: ₹${formData.deposit} | Advance: ₹${formData.advance}\n# Contact: ${formData.ownerName} (${formData.phone})\n---\n${formData.longDesc || formData.shortDesc || ''}`;
 
       const payload = {
         name: formData.name || 'New Hostel',
@@ -318,9 +308,9 @@ const Portfolio = () => {
         description: extendedDesc,
         amenities: formData.amenities || [],
         images: formData.gallery?.length > 0 ? formData.gallery : (formData.coverImage ? [formData.coverImage] : []),
-        startingPrice: parseInt(formData.rentTriple) || parseInt(formData.rentDouble) || parseInt(formData.rentSingle) || 5000,
+        startingPrice: parseInt(formData.rent6Sharing) || parseInt(formData.rent5Sharing) || parseInt(formData.rent4Sharing) || parseInt(formData.rentTriple) || parseInt(formData.rentDouble) || parseInt(formData.rentSingle) || 5000,
         securityDeposit: parseInt(formData.deposit) || 0,
-        maintenanceCharges: parseInt(formData.maintenance) || 799,
+        maintenanceCharges: parseInt(formData.advance) || 0,
         foodCharges: parseInt(formData.foodCharges) || 3000,
         rentSingle: parseInt(formData.rentSingle) || 0,
         rentDouble: parseInt(formData.rentDouble) || 0,
@@ -337,15 +327,6 @@ const Portfolio = () => {
           alcohol: formData.alcoholPolicy || 'Not Allowed',
           pets: formData.petsAllowed || 'No',
           visitors: formData.visitorPolicy || 'Till 8 PM'
-        },
-        staffInfo: { name: formData.staffName, role: formData.staffRole, contact: formData.staffContact },
-        smartConfig: {
-          hasSmartAccess: formData.hasSmartAccess,
-          hasClimateControl: formData.hasClimateControl,
-          hasAirQualityMonitor: formData.hasAirQualityMonitor,
-          hasAIHygiene: formData.hasAIHygiene,
-          hasCCTVAi: formData.hasCCTVAi,
-          targetComfortScore: formData.targetComfortScore
         }
       };
 
@@ -491,18 +472,12 @@ const Portfolio = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 1: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem'  }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem'  }}>
-            <div className="input-group">
-              <label>Hostel Name *</label>
-              <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Royal Residency" />
-            </div>
-            <div className="input-group">
-              <label>Building Name</label>
-              <input value={formData.buildingName} onChange={e => setFormData({ ...formData, buildingName: e.target.value })} placeholder="e.g. Phase 1 Tower" />
-            </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="input-group">
+            <label>Hostel Name *</label>
+            <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Royal Residency" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem'  }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="input-group">
               <label>Property Type</label>
               <select value={formData.propertyType} onChange={e => setFormData({ ...formData, propertyType: e.target.value })}>
@@ -533,13 +508,8 @@ const Portfolio = () => {
               accept="image/*"
               onChange={async (e) => {
                 if (!e.target.files.length) return;
-
-                // Ensure we have a draft ID before uploading, or auto-save one quickly
                 let bId = activeDraftId;
-                if (!bId && formData.name) {
-                  bId = await saveDraftToBackend(formData, currentStep);
-                }
-
+                if (!bId && formData.name) { bId = await saveDraftToBackend(formData, currentStep); }
                 const files = Array.from(e.target.files);
                 const fd = new FormData();
                 if (bId) fd.append('buildingId', bId);
@@ -548,11 +518,7 @@ const Portfolio = () => {
                   setDraftMsg('⏳ Uploading photos...');
                   const res = await api.uploadPhotos(fd);
                   const newImages = res.photoUrls || [];
-                  setFormData(prev => ({
-                    ...prev,
-                    gallery: [...(prev.gallery || []), ...newImages],
-                    coverImage: prev.coverImage || newImages[0] || ''
-                  }));
+                  setFormData(prev => ({ ...prev, gallery: [...(prev.gallery || []), ...newImages], coverImage: prev.coverImage || newImages[0] || '' }));
                   setDraftMsg('✅ Photos uploaded successfully!');
                   setTimeout(() => setDraftMsg(''), 2500);
                 } catch (err) {
@@ -563,15 +529,12 @@ const Portfolio = () => {
               }}
             />
             {formData.gallery && formData.gallery.length > 0 ? (
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap'  }}>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
                 {formData.gallery.map((img, i) => {
-                  const fullUrl = (img.startsWith('data:') || img.startsWith('http')) ? img : `http://localhost:5000${img}`;
+                  const fullUrl = (img.startsWith('data:') || img.startsWith('http')) ? img : `https://livora-hostel-hub-1.onrender.com${img}`;
                   return (
-                    <img
-                      key={i}
-                      src={fullUrl}
-                      alt={`Upload ${i}`}
-                      style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: formData.coverImage === img ? '2px solid var(--accent-primary)' : '1px solid #e2e8f0', cursor: 'zoom-in'  }}
+                    <img key={i} src={fullUrl} alt={`Upload ${i}`}
+                      style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: formData.coverImage === img ? '2px solid var(--accent-primary)' : '1px solid #e2e8f0', cursor: 'zoom-in' }}
                       onClick={() => setModalInfo({ isOpen: true, image: fullUrl })}
                       onDoubleClick={() => setFormData({ ...formData, coverImage: img })}
                       title="Click to preview, double-click to set as cover"
@@ -580,19 +543,17 @@ const Portfolio = () => {
                 })}
               </div>
             ) : formData.coverImage && (
-              <img
-                src={(formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `http://localhost:5000${formData.coverImage}`}
-                alt="Cover"
-                style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', marginTop: '0.5rem', cursor: 'zoom-in'  }}
-                onClick={() => setModalInfo({ isOpen: true, image: (formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `http://localhost:5000${formData.coverImage}` })}
+              <img src={(formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `https://livora-hostel-hub-1.onrender.com${formData.coverImage}`}
+                alt="Cover" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', marginTop: '0.5rem', cursor: 'zoom-in' }}
+                onClick={() => setModalInfo({ isOpen: true, image: (formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `https://livora-hostel-hub-1.onrender.com${formData.coverImage}` })}
               />
             )}
-            <small style={{ color: '#64748B', fontSize: '0.75rem', marginTop: '0.25rem'  }}>Click an image to preview. Double-click to set as cover.</small>
+            <small style={{ color: '#64748B', fontSize: '0.75rem', marginTop: '0.25rem' }}>Click an image to preview. Double-click to set as cover.</small>
           </div>
         </div>
       );
       case 2: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem'  }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div className="input-group">
             <label>Address Line 1 *</label>
             <input required value={formData.addr1} onChange={e => setFormData({ ...formData, addr1: e.target.value })} placeholder="Building No, Street Name" />
@@ -601,7 +562,7 @@ const Portfolio = () => {
             <label>Address Line 2</label>
             <input value={formData.addr2} onChange={e => setFormData({ ...formData, addr2: e.target.value })} placeholder="Area, Locality" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem'  }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="input-group">
               <label>City *</label>
               <input required value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} placeholder="Hyderabad" />
@@ -611,10 +572,21 @@ const Portfolio = () => {
               <input required value={formData.state} onChange={e => setFormData({ ...formData, state: e.target.value })} placeholder="Telangana" />
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem'  }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="input-group">
               <label>Pincode *</label>
-              <input required type="number" value={formData.pincode} onChange={e => setFormData({ ...formData, pincode: e.target.value })} placeholder="500081" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button type="button"
+                  onClick={() => setFormData(p => ({ ...p, pincode: String(Math.max(100000, (parseInt(p.pincode) || 500000) - 1)) }))}
+                  style={{ width: '40px', height: '48px', borderRadius: '10px', border: '1.5px solid #E2E8F0', background: '#F8FAFC', cursor: 'pointer', fontSize: '1.2rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>−</button>
+                <input required value={formData.pincode}
+                  onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0,6); setFormData({ ...formData, pincode: v }); }}
+                  placeholder="500081" maxLength={6}
+                  style={{ flex: 1, textAlign: 'center', letterSpacing: '0.1em', fontWeight: '800' }} />
+                <button type="button"
+                  onClick={() => setFormData(p => ({ ...p, pincode: String(Math.min(999999, (parseInt(p.pincode) || 500000) + 1)) }))}
+                  style={{ width: '40px', height: '48px', borderRadius: '10px', border: '1.5px solid #E2E8F0', background: '#F8FAFC', cursor: 'pointer', fontSize: '1.2rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>+</button>
+              </div>
             </div>
             <div className="input-group">
               <label>Landmark</label>
@@ -624,100 +596,36 @@ const Portfolio = () => {
         </div>
       );
       case 3: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem'  }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'  }}>
-            <div className="input-group"><label>Num Buildings</label><input type="number" value={formData.numBuildings} onChange={e => setFormData({ ...formData, numBuildings: e.target.value })} /></div>
-            <div className="input-group"><label>Num Floors</label><input type="number" value={formData.numFloors} onChange={e => setFormData({ ...formData, numFloors: e.target.value })} /></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'  }}>
-            <div className="input-group"><label>Total Rooms *</label><input required type="number" value={formData.totalRooms} onChange={e => setFormData({ ...formData, totalRooms: e.target.value })} /></div>
-            <div className="input-group"><label>Total Beds *</label><input required type="number" value={formData.totalBeds} onChange={e => setFormData({ ...formData, totalBeds: e.target.value })} /></div>
-          </div>
-          <div className="input-group">
-            <label>Room Types</label>
-            <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginTop: '0.5rem'  }}>
-              {['Single', 'Double', 'Triple', 'Dormitory'].map(t => (
-                <button
-                  type="button"
-                  key={t}
-                  onClick={() => setFormData(p => ({ ...p, roomTypes: p.roomTypes.includes(t) ? p.roomTypes.filter(x => x !== t) : [...p.roomTypes, t] }))}
-                  style={{ padding: '0.75rem 1.25rem',
-                    borderRadius: '12px',
-                    border: '1.5px solid',
-                    borderColor: formData.roomTypes.includes(t) ? 'var(--accent-primary)' : '#E2E8F0',
-                    background: formData.roomTypes.includes(t) ? 'rgba(79, 70, 229, 0.1)' : '#FFFFFF',
-                    color: formData.roomTypes.includes(t) ? 'var(--accent-primary)' : '#64748B',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                   }}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
-      case 4: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem'  }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem'  }}>
-            <div className="input-group"><label>Rent per Room</label><input type="number" value={formData.rentRoom} onChange={e => setFormData({ ...formData, rentRoom: e.target.value })} placeholder="e.g. 25000" /></div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem'  }}>
-            <div className="input-group"><label>1 Sharing (Single) Rent *</label><input required type="number" value={formData.rentSingle} onChange={e => setFormData({ ...formData, rentSingle: e.target.value })} placeholder="e.g. 18000" /></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+            <div className="input-group"><label>1 Sharing Rent *</label><input required type="number" value={formData.rentSingle} onChange={e => setFormData({ ...formData, rentSingle: e.target.value })} placeholder="e.g. 18000" /></div>
             <div className="input-group"><label>2 Sharing Rent *</label><input required type="number" value={formData.rentDouble} onChange={e => setFormData({ ...formData, rentDouble: e.target.value })} placeholder="e.g. 12000" /></div>
             <div className="input-group"><label>3 Sharing Rent *</label><input required type="number" value={formData.rentTriple} onChange={e => setFormData({ ...formData, rentTriple: e.target.value })} placeholder="e.g. 9000" /></div>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem'  }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+            <div className="input-group"><label>4 Sharing Rent</label><input type="number" value={formData.rent4Sharing} onChange={e => setFormData({ ...formData, rent4Sharing: e.target.value })} placeholder="e.g. 7500" /></div>
+            <div className="input-group"><label>5 Sharing Rent</label><input type="number" value={formData.rent5Sharing} onChange={e => setFormData({ ...formData, rent5Sharing: e.target.value })} placeholder="e.g. 6500" /></div>
+            <div className="input-group"><label>6 Sharing Rent</label><input type="number" value={formData.rent6Sharing} onChange={e => setFormData({ ...formData, rent6Sharing: e.target.value })} placeholder="e.g. 5500" /></div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
             <div className="input-group"><label>Security Deposit *</label><input required type="number" value={formData.deposit} onChange={e => setFormData({ ...formData, deposit: e.target.value })} /></div>
-            <div className="input-group"><label>Maintenance (Monthly)</label><input type="number" value={formData.maintenance} onChange={e => setFormData({ ...formData, maintenance: e.target.value })} placeholder="e.g. 799" /></div>
+            <div className="input-group"><label>Advance</label><input type="number" value={formData.advance} onChange={e => setFormData({ ...formData, advance: e.target.value })} placeholder="e.g. 5000" /></div>
             <div className="input-group"><label>Food (Monthly)</label><input type="number" value={formData.foodCharges} onChange={e => setFormData({ ...formData, foodCharges: e.target.value })} placeholder="e.g. 3000" /></div>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'  }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="input-group"><label>Electricity</label><select value={formData.electricity} onChange={e => setFormData({ ...formData, electricity: e.target.value })}><option>Included</option><option>Meter-based</option></select></div>
             <div className="input-group"><label>Water</label><select value={formData.water} onChange={e => setFormData({ ...formData, water: e.target.value })}><option>Included</option><option>Extra</option></select></div>
           </div>
         </div>
       );
-      case 5: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem'  }}>
-          <div style={{ padding: '1rem', background: '#F0F9FF', borderRadius: '16px', borderLeft: '4px solid #0EA5E9', display: 'flex', alignItems: 'center', gap: '1rem'  }}>
-            <div style={{ fontSize: '1.5rem'  }}>ℹ️</div>
-            <p style={{ fontSize: '0.85rem', color: '#0369A1', fontWeight: '600', margin: 0  }}>Standard configuration for your initial property setup. You can customize individual rooms later.</p>
-          </div>
-          <div className="input-group"><label>Base Room Number/Name</label><input value={formData.roomBaseName} onChange={e => setFormData({ ...formData, roomBaseName: e.target.value })} placeholder="e.g. 101" /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'  }}>
-            <div className="input-group"><label>Room Type</label><select value={formData.roomTypeSelect} onChange={e => setFormData({ ...formData, roomTypeSelect: e.target.value })}><option>Single</option><option>Double</option><option>Triple</option><option>Dormitory</option></select></div>
-            <div className="input-group"><label>Beds per Room</label><input type="number" value={formData.bedsPerRoom} onChange={e => setFormData({ ...formData, bedsPerRoom: e.target.value })} /></div>
-          </div>
-        </div>
-      );
-      case 6: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem'  }}>
+      case 4: return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
           <div className="input-group">
             <label>Food Available?</label>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem'  }}>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
               {['Yes', 'No'].map(v => (
-                <button
-                  type="button"
-                  key={v}
-                  onClick={() => setFormData({ ...formData, foodAvailable: v })}
-                  style={{ flex: 1,
-                    padding: '1rem',
-                    borderRadius: '16px',
-                    border: '1.5px solid',
-                    borderColor: formData.foodAvailable === v ? 'var(--accent-primary)' : '#E2E8F0',
-                    background: formData.foodAvailable === v ? 'rgba(79, 70, 229, 0.1)' : '#FFFFFF',
-                    color: formData.foodAvailable === v ? 'var(--accent-primary)' : '#64748B',
-                    fontWeight: '800',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                   }}
-                >
+                <button type="button" key={v} onClick={() => setFormData({ ...formData, foodAvailable: v })}
+                  style={{ flex: 1, padding: '1rem', borderRadius: '16px', border: '1.5px solid', borderColor: formData.foodAvailable === v ? 'var(--accent-primary)' : '#E2E8F0', background: formData.foodAvailable === v ? 'rgba(79, 70, 229, 0.1)' : '#FFFFFF', color: formData.foodAvailable === v ? 'var(--accent-primary)' : '#64748B', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s' }}>
                   {v}
                 </button>
               ))}
@@ -727,30 +635,16 @@ const Portfolio = () => {
             <>
               <div className="input-group">
                 <label>Meal Plans</label>
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem'  }}>
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
                   {['Breakfast', 'Lunch', 'Dinner'].map(m => (
-                    <button
-                      type="button"
-                      key={m}
-                      onClick={() => setFormData(p => ({ ...p, mealPlans: p.mealPlans.includes(m) ? p.mealPlans.filter(x => x !== m) : [...p.mealPlans, m] }))}
-                      style={{ padding: '0.6rem 1.2rem',
-                        borderRadius: '20px',
-                        border: '1.5px solid',
-                        borderColor: formData.mealPlans.includes(m) ? 'var(--accent-primary)' : '#E2E8F0',
-                        background: formData.mealPlans.includes(m) ? 'var(--accent-primary)' : '#FFFFFF',
-                        color: formData.mealPlans.includes(m) ? '#FFFFFF' : '#64748B',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        fontSize: '0.85rem',
-                        transition: 'all 0.2s'
-                       }}
-                    >
+                    <button type="button" key={m} onClick={() => setFormData(p => ({ ...p, mealPlans: p.mealPlans.includes(m) ? p.mealPlans.filter(x => x !== m) : [...p.mealPlans, m] }))}
+                      style={{ padding: '0.6rem 1.2rem', borderRadius: '20px', border: '1.5px solid', borderColor: formData.mealPlans.includes(m) ? 'var(--accent-primary)' : '#E2E8F0', background: formData.mealPlans.includes(m) ? 'var(--accent-primary)' : '#FFFFFF', color: formData.mealPlans.includes(m) ? '#FFFFFF' : '#64748B', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.2s' }}>
                       {m}
                     </button>
                   ))}
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'  }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="input-group"><label>Food Type</label><select value={formData.foodType} onChange={e => setFormData({ ...formData, foodType: e.target.value })}><option>Veg</option><option>Non-Veg</option><option>Both</option></select></div>
                 <div className="input-group"><label>Monthly Mess Charges</label><input type="number" value={formData.messCharges} onChange={e => setFormData({ ...formData, messCharges: e.target.value })} /></div>
               </div>
@@ -758,34 +652,19 @@ const Portfolio = () => {
           )}
         </div>
       );
-      case 7: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem', maxHeight: '420px', overflowY: 'auto', paddingRight: '0.5rem'  }}>
+      case 5: return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem', maxHeight: '420px', overflowY: 'auto', paddingRight: '0.5rem' }}>
           {Object.entries(FEATURE_GROUPS).map(([cat, feats]) => (
             <div key={cat}>
-              <h4 style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: '900', textTransform: 'uppercase', marginBottom: '0.8rem', letterSpacing: '0.1em'  }}>{cat}</h4>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem'  }}>
+              <h4 style={{ fontSize: '0.8rem', color: '#475569', fontWeight: '900', marginBottom: '0.8rem', letterSpacing: '0.02em' }}>{cat}</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
                 {feats.map(f => (
-                  <button
-                    type="button"
-                    key={f}
+                  <button type="button" key={f}
                     onClick={() => setFormData(p => ({ ...p, amenities: p.amenities.includes(f) ? p.amenities.filter(x => x !== f) : [...p.amenities, f] }))}
-                    style={{ display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.6rem',
-                      padding: '0.7rem 1rem',
-                      borderRadius: '12px',
-                      border: '1.5px solid',
-                      borderColor: formData.amenities.includes(f) ? 'var(--accent-primary)' : '#F1F5F9',
-                      background: formData.amenities.includes(f) ? 'rgba(79, 70, 229, 0.05)' : '#F8FAFC',
-                      color: formData.amenities.includes(f) ? 'var(--accent-primary)' : '#475569',
-                      fontWeight: '700',
-                      cursor: 'pointer',
-                      fontSize: '0.85rem',
-                      transition: 'all 0.2s'
-                     }}
-                  >
-                    <span style={{ opacity: formData.amenities.includes(f) ? 1 : 0.6  }}>{AMENITY_ICONS[f] || <Star size={14} />}</span>
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', borderRadius: '12px', border: '1.5px solid', borderColor: formData.amenities.includes(f) ? 'var(--accent-primary)' : '#F1F5F9', background: formData.amenities.includes(f) ? 'rgba(79, 70, 229, 0.08)' : '#F8FAFC', color: formData.amenities.includes(f) ? 'var(--accent-primary)' : '#475569', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.2s', boxShadow: formData.amenities.includes(f) ? '0 2px 8px rgba(79,70,229,0.15)' : 'none' }}>
+                    <span style={{ opacity: formData.amenities.includes(f) ? 1 : 0.6 }}>{AMENITY_ICONS[f] || <Star size={14} />}</span>
                     {f}
+                    {formData.amenities.includes(f) && <CheckCircle size={13} style={{ marginLeft: 'auto' }} />}
                   </button>
                 ))}
               </div>
@@ -793,120 +672,63 @@ const Portfolio = () => {
           ))}
         </div>
       );
-      case 8: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem'  }}>
-          <div style={{ padding: '1rem', background: '#F5F3FF', borderRadius: '16px', borderLeft: '4px solid #7C3AED', display: 'flex', alignItems: 'center', gap: '1rem'  }}>
-            <div style={{ fontSize: '1.5rem'  }}>🧠</div>
-            <p style={{ fontSize: '0.85rem', color: '#5B21B6', fontWeight: '600', margin: 0  }}>Enable ultra-premium smart features powered by AI Property Intelligence.</p>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem'  }}>
-            {[
-              { id: 'hasSmartAccess', label: 'Smart Access', desc: 'RFID & Biometric', icon: <Fingerprint size={18} /> },
-              { id: 'hasClimateControl', label: 'Climate Control', desc: 'Automated HVAC', icon: <Wind size={18} /> },
-              { id: 'hasAirQualityMonitor', label: 'Air Quality', desc: 'AQI Tracking', icon: <Activity size={18} /> },
-              { id: 'hasAIHygiene', label: 'AI Hygiene', desc: 'Sanitization Audit', icon: <ShieldCheck size={18} /> },
-              { id: 'hasCCTVAi', label: 'Neural CCTV', desc: 'AI Security Link', icon: <Shield size={18} /> }
-            ].map(feat => (
-              <div
-                key={feat.id}
-                onClick={() => setFormData(p => ({ ...p, [feat.id]: !p[feat.id] }))}
-                style={{ padding: '1.25rem',
-                  borderRadius: '20px',
-                  border: '2px solid',
-                  background: formData[feat.id] ? '#FFFFFF' : '#F8FAFC',
-                  borderColor: formData[feat.id] ? 'var(--accent-primary)' : '#F1F5F9',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  transition: 'all 0.2s',
-                  boxShadow: formData[feat.id] ? '0 10px 15px -3px rgba(79, 70, 229, 0.1)' : 'none'
-                 }}
-              >
-                <div style={{ width: '40px',
-                  height: '40px',
-                  borderRadius: '12px',
-                  background: formData[feat.id] ? 'var(--accent-primary)' : '#E2E8F0',
-                  color: "var(--text-on-primary)",
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                 }}>
-                  {feat.icon}
-                </div>
-                <div>
-                  <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: formData[feat.id] ? '#1E293B' : '#64748B'  }}>{feat.label}</h4>
-                  <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '600', color: '#94A3B8'  }}>{feat.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="input-group" style={{ marginTop: '0.5rem'  }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center'  }}>
-              <label>Target Comfort Score</label>
-              <span style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--accent-primary)'  }}>{formData.targetComfortScore}%</span>
-            </div>
-            <input type="range" min="50" max="100" value={formData.targetComfortScore} onChange={e => setFormData({ ...formData, targetComfortScore: Number(e.target.value) })} style={{ width: '100%', accentColor: 'var(--accent-primary)', height: '6px', borderRadius: '10px', background: '#E2E8F0'  }} />
-          </div>
-        </div>
-      );
-      case 9: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem'  }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem'  }}>
+      case 6: return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="input-group"><label>Smoking Policy</label><select value={formData.smokingPolicy} onChange={e => setFormData({ ...formData, smokingPolicy: e.target.value })}><option>Allowed</option><option>Not Allowed</option></select></div>
             <div className="input-group"><label>Alcohol Policy</label><select value={formData.alcoholPolicy} onChange={e => setFormData({ ...formData, alcoholPolicy: e.target.value })}><option>Allowed</option><option>Not Allowed</option></select></div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem'  }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="input-group"><label>Pets Allowed?</label><select value={formData.petsAllowed} onChange={e => setFormData({ ...formData, petsAllowed: e.target.value })}><option>Yes</option><option>No</option></select></div>
             <div className="input-group"><label>Visitor Policy</label><input value={formData.visitorPolicy} onChange={e => setFormData({ ...formData, visitorPolicy: e.target.value })} placeholder="e.g. Till 8 PM" /></div>
           </div>
         </div>
       );
-      case 10: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem'  }}>
-          <div className="input-group"><label>Primary Warden / Staff Name</label><input value={formData.staffName} onChange={e => setFormData({ ...formData, staffName: e.target.value })} placeholder="Full name" /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem'  }}>
-            <div className="input-group"><label>Assigned Role</label><select value={formData.staffRole} onChange={e => setFormData({ ...formData, staffRole: e.target.value })}><option value="">Select Role...</option><option>Warden</option><option>Property Manager</option><option>Receptionist</option></select></div>
-            <div className="input-group"><label>Contact Number</label><input value={formData.staffContact} onChange={e => setFormData({ ...formData, staffContact: e.target.value })} placeholder="+91 ..." /></div>
+      case 7: return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="input-group"><label>Owner / Legal Representative Name *</label><input required value={formData.ownerName} onChange={e => setFormData({ ...formData, ownerName: e.target.value })} placeholder="Legal owner name" /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div className="input-group"><label>Primary Contact Number *</label><input required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="+91 XXXXX XXXXX" /></div>
+            <div className="input-group"><label>Alternate Number *</label><input required value={formData.altPhone} onChange={e => setFormData({ ...formData, altPhone: e.target.value })} placeholder="+91 XXXXX XXXXX" /></div>
           </div>
+          <div className="input-group"><label>Official Email Address *</label><input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="owner@example.com" /></div>
         </div>
       );
-      case 11: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem'  }}>
-          <div className="input-group"><label>Owner / Legal Representative Name</label><input value={formData.ownerName} onChange={e => setFormData({ ...formData, ownerName: e.target.value })} placeholder="Legal owner name" /></div>
-          <div className="input-group"><label>Primary Contact Number *</label><input required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="Verification number" /></div>
-          <div className="input-group"><label>Official Email Address</label><input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="owner@example.com" /></div>
-        </div>
-      );
-      case 12: return (
-        <div style={{ padding: '2rem', background: '#F8FAFC', borderRadius: '24px', border: '1.5px solid #E2E8F0'  }}>
-          <h4 style={{ marginBottom: '2rem', color: '#1E293B', fontSize: '1.4rem', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '0.75rem', letterSpacing: '-0.02em'  }}>
-            <CheckCircle size={28} color="#10B981" /> Review Property Profile
-          </h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem'  }}>
-            <div>
-              <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem'  }}><b style={{ color: '#64748B'  }}>Property:</b> <span style={{ color: '#1E293B', fontWeight: '800'  }}>{formData.name || 'Untitled'}</span></p>
-              <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem'  }}><b style={{ color: '#64748B'  }}>Location:</b> <span style={{ color: '#1E293B', fontWeight: '800'  }}>{formData.city}, {formData.state}</span></p>
-              <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem'  }}><b style={{ color: '#64748B'  }}>Pricing:</b> <span style={{ color: '#10B981', fontWeight: '900'  }}>₹{formData.rentBed}/bed</span></p>
-              <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem'  }}><b style={{ color: '#64748B'  }}>Capacity:</b> <span style={{ color: '#1E293B', fontWeight: '800'  }}>{formData.totalRooms} Rooms, {formData.totalBeds} Beds</span></p>
-            </div>
-            <div style={{ padding: '1.25rem', background: "var(--bg-card)", borderRadius: '20px', border: '1.5px solid #F1F5F9', boxShadow: '0 4px 12px rgba(0,0,0,0.03)'  }}>
-              <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.75rem', fontWeight: '900', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em'  }}>Intelligence Stack</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem'  }}>
-                {['hasSmartAccess', 'hasClimateControl', 'hasAirQualityMonitor', 'hasAIHygiene', 'hasCCTVAi'].filter(f => formData[f]).map(f => (
-                  <span key={f} style={{ padding: '0.3rem 0.6rem', background: '#F5F3FF', color: '#7C3AED', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800'  }}>
-                    {f.replace('has', '').replace('AI', ' AI')}
-                  </span>
-                ))}
-                {[formData.hasSmartAccess, formData.hasClimateControl, formData.hasAirQualityMonitor, formData.hasAIHygiene, formData.hasCCTVAi].filter(Boolean).length === 0 && <span style={{ fontSize: '0.8rem', color: '#94A3B8'  }}>No smart features selected</span>}
+      case 8: return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ padding: '1rem', background: '#F0FDF4', borderRadius: '16px', border: '1.5px solid #DCFCE7', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <CheckCircle size={24} color="#10B981" />
+            <p style={{ margin: 0, fontSize: '0.88rem', color: '#166534', fontWeight: '700' }}>Review your property details before publishing. Click <b>Edit</b> on any section to make changes.</p>
+          </div>
+          {[
+            { label: '🏨 Basic Info', step: 1, rows: [{ k: 'Property', v: formData.name }, { k: 'Type', v: formData.propertyType }, { k: 'Gender', v: formData.gender }] },
+            { label: '📍 Location', step: 2, rows: [{ k: 'Address', v: formData.addr1 }, { k: 'City', v: `${formData.city}, ${formData.state} — ${formData.pincode}` }, { k: 'Landmark', v: formData.landmark }] },
+            { label: '💰 Pricing', step: 3, rows: [{ k: '1-Sharing', v: formData.rentSingle ? `₹${formData.rentSingle}/mo` : '—' }, { k: '2-Sharing', v: formData.rentDouble ? `₹${formData.rentDouble}/mo` : '—' }, { k: '3-Sharing', v: formData.rentTriple ? `₹${formData.rentTriple}/mo` : '—' }, { k: '4-Sharing', v: formData.rent4Sharing ? `₹${formData.rent4Sharing}/mo` : '—' }, { k: '5-Sharing', v: formData.rent5Sharing ? `₹${formData.rent5Sharing}/mo` : '—' }, { k: '6-Sharing', v: formData.rent6Sharing ? `₹${formData.rent6Sharing}/mo` : '—' }, { k: 'Deposit', v: formData.deposit ? `₹${formData.deposit}` : '—' }, { k: 'Advance', v: formData.advance ? `₹${formData.advance}` : '—' }] },
+            { label: '✨ Amenities', step: 5, rows: [{ k: 'Selected', v: formData.amenities.length > 0 ? formData.amenities.join(', ') : 'None selected' }] },
+            { label: '🔑 Owner Details', step: 7, rows: [{ k: 'Name', v: formData.ownerName }, { k: 'Phone', v: formData.phone }, { k: 'Email', v: formData.email }] },
+          ].map(section => (
+            <div key={section.label} style={{ padding: '1.25rem', background: 'var(--bg-card)', borderRadius: '16px', border: '1.5px solid #F1F5F9' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                <span style={{ fontWeight: '800', fontSize: '0.9rem', color: '#1E293B' }}>{section.label}</span>
+                <button type="button" onClick={() => setCurrentStep(section.step)}
+                  style={{ padding: '0.3rem 0.8rem', borderRadius: '8px', background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8', fontWeight: '700', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  ✏️ Edit
+                </button>
               </div>
-              <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--accent-primary)', fontWeight: '800'  }}>Target IQ Score: {formData.targetComfortScore}%</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.5rem' }}>
+                {section.rows.filter(r => r.v).map(r => (
+                  <div key={r.k}>
+                    <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase' }}>{r.k}</span>
+                    <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#1E293B', marginTop: '0.15rem' }}>{r.v}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-          <div style={{ padding: '1.25rem', background: '#F0FDF4', borderRadius: '18px', border: '1.5px solid #DCFCE7', display: 'flex', gap: '1rem', alignItems: 'flex-start'  }}>
-            <div style={{ fontSize: '1.5rem'  }}>🚀</div>
-            <p style={{ margin: 0, fontSize: '0.88rem', color: '#166534', fontWeight: '600', lineHeight: 1.6  }}>
-              <b>Everything looks great!</b> Once you publish, your property will be live. You can always edit these details or add more structural info (like specific rooms and beds) from the management dashboard.
+          ))}
+          <div style={{ padding: '1rem', background: '#FFF7ED', borderRadius: '14px', border: '1.5px solid #FED7AA', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <div style={{ fontSize: '1.5rem' }}>🚀</div>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#9A3412', fontWeight: '600', lineHeight: 1.6 }}>
+              <b>Everything looks great!</b> Once published, your property will be live. You can always edit details from the management dashboard.
             </p>
           </div>
         </div>
@@ -915,6 +737,8 @@ const Portfolio = () => {
       default: return null;
     }
   };
+
+
 
   if (error) {
     return (
@@ -1564,7 +1388,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick }) => {
 
   const images = useMemo(() => {
     if (building.images && building.images.length > 0) {
-      return building.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `http://localhost:5000${img}`);
+      return building.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `https://livora-hostel-hub-1.onrender.com${img}`);
     }
     return [
       'https://images.unsplash.com/photo-1555854817-5b2260d19dca?auto=format&fit=crop&q=80&w=800',

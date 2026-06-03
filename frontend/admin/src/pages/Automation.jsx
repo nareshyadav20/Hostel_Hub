@@ -1,15 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Pause, Plus, Zap, Clock, Shield, Bell, CheckCircle, MoreHorizontal, Settings, ArrowRight, Activity, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Automation = () => {
   const navigate = useNavigate();
-  const [workflows] = useState([
-    { id: 1, name: 'Late Rent Reminder', trigger: 'Overdue > 3 Days', action: 'Send WhatsApp + Email', status: 'Active', executions: 42, color: 'primary' },
-    { id: 2, name: 'Low Stock Alert', trigger: 'Inventory < 20%', action: 'Notify Admin + Vendor', status: 'Active', executions: 12, color: 'warning' },
-    { id: 3, name: 'Auto-Assign Complaint', trigger: 'New Complaint', action: 'Route to On-Shift Staff', status: 'Active', executions: 156, color: 'accent' },
-    { id: 4, name: 'KYC Expiry Warning', trigger: 'KYC < 30 Days', action: 'Prompt Tenant to Renew', status: 'Paused', executions: 0, color: 'danger' },
-  ]);
+  const [workflows, setWorkflows] = useState([]);
+
+  useEffect(() => {
+    const fetchWorkflows = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_URL}/automation`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setWorkflows(res.data || []);
+      } catch (err) {
+        console.error("Failed to fetch workflows", err);
+        setWorkflows([]);
+      }
+    };
+    fetchWorkflows();
+  }, []);
 
   return (
     <div className="space-y-8 pb-10">
@@ -50,7 +64,7 @@ const Automation = () => {
         ))}
       </div>
 
-      {/* Workflow Builder Section (Visual Mockup) */}
+      {/* Workflow Builder Section */}
       <div className="layer-3 p-8 bg-gradient-to-br from-primary/5 to-accent/5 overflow-hidden relative">
          <div className="absolute top-0 right-0 p-8 opacity-10">
             <Zap size={200} className="text-primary" />

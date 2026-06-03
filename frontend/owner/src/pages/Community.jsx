@@ -22,7 +22,7 @@ import {
   X,
   Loader2
 } from 'lucide-react';
-import { api } from '../mockData';
+import { api } from '../api';
 import socket, { connectSocket } from '../utils/socket';
 import './Community.css';
 
@@ -302,7 +302,7 @@ const Community = () => {
           <button 
             onClick={async () => {
               try {
-                const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+                const apiBase = import.meta.env.VITE_API_URL || 'https://livora-hostel-hub-1.onrender.com/api';
                 const res = await fetch(`${apiBase}/confidential-reports/debug`);
                 const result = await res.json();
                 alert(`Current Building ID: ${activeBuildingId}\nDB Check: Found ${result.count} total reports in collection.`);

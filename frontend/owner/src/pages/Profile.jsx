@@ -7,7 +7,7 @@ import {
   Globe, Plus, Trash2, Eye, EyeOff, LayoutDashboard, History, Sparkles,
   Smartphone, Monitor, ChevronRight, ExternalLink, BedDouble, UsersRound
 } from 'lucide-react';
-import { api } from '../mockData';
+import { api } from '../api';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -23,21 +23,14 @@ const Profile = () => {
   }, []);
 
   const fetchData = async () => {
+    api.getOwnerStats().then(setStats).catch(console.error);
     try {
-      const [profileData, statsData] = await Promise.all([
-        api.getOwnerProfile(),
-        api.getOwnerStats()
-      ]);
-      setProfile(profileData);
-      setStats(statsData);
-      
-      // Update profile with photo if available in separate model but already included in profileData by getProfile
+      const profileData = await api.getOwnerProfile();
       if (profileData.photo) {
-        setProfile(prev => ({
-          ...prev,
-          personalInfo: { ...prev.personalInfo, profilePhotoUrl: profileData.photo }
-        }));
+        profileData.personalInfo = profileData.personalInfo || {};
+        profileData.personalInfo.profilePhotoUrl = profileData.photo;
       }
+      setProfile(profileData);
     } catch (error) {
       console.error('Error fetching profile:', error);
       setMessage({ type: 'error', text: 'Failed to load profile data.' });

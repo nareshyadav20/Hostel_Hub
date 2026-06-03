@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { cacheGet, cacheSet } from './cache';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://livora-hostel-hub-1.onrender.com/api';
 export const backendOnline = true;
 
 // --- GLOBAL AUTH INTERCEPTOR ---
@@ -49,15 +49,7 @@ const swrFetch = async (cacheKey, url, config = {}) => {
 export const api = {
   // Owner Profile
   getOwnerProfile: async () => {
-    const cached = cacheGet('owner_profile');
-    if (cached) {
-      // Background revalidate
-      axios.get(`${API_URL}/owner/profile`).then(res => cacheSet('owner_profile', res.data));
-      return cached;
-    }
-    const res = await axios.get(`${API_URL}/owner/profile`);
-    cacheSet('owner_profile', res.data);
-    return res.data;
+    return await swrFetch('owner_profile', `${API_URL}/owner/profile`);
   },
   updateOwnerProfile: async (data) => {
     const res = await axios.patch(`${API_URL}/owner/profile`, data);
@@ -65,14 +57,7 @@ export const api = {
     return res.data;
   },
   getOwnerStats: async () => {
-    const cached = cacheGet('owner_stats');
-    if (cached) {
-      axios.get(`${API_URL}/dashboard/summary`).then(res => cacheSet('owner_stats', res.data));
-      return cached;
-    }
-    const res = await axios.get(`${API_URL}/owner/stats`);
-    cacheSet('owner_stats', res.data);
-    return res.data;
+    return await swrFetch('owner_stats', `${API_URL}/owner/stats`);
   },
   getOwnerHistory: async () => {
     const res = await axios.get(`${API_URL}/owner/history`);
@@ -95,8 +80,31 @@ export const api = {
   },
 
   // Buildings & Infrastructure
-  getBuildings: async () => {
-    return await swrFetch('buildings_active', `${API_URL}/buildings`, { params: { status: 'Active' } });
+  getBuildings: async (arg1 = null, arg2 = false) => {
+    let propertyId = null;
+    let bypass = false;
+    if (typeof arg1 === 'boolean') {
+      bypass = arg1;
+    } else if (arg1 && typeof arg1 === 'object') {
+      propertyId = arg1.propertyId || null;
+      bypass = !!arg1.bypassCache || !!arg1.lightweight;
+    } else {
+      propertyId = arg1;
+      bypass = arg2;
+    }
+
+    const params = { status: 'Active' };
+    if (propertyId) params.propertyId = propertyId;
+
+    const cacheKey = propertyId ? `buildings_prop_${propertyId}` : 'buildings_active';
+
+    if (bypass) {
+      const res = await axios.get(`${API_URL}/buildings`, { params });
+      const data = Array.isArray(res.data) ? res.data : (res.data || []);
+      cacheSet(cacheKey, data);
+      return handleId(data);
+    }
+    return await swrFetch(cacheKey, `${API_URL}/buildings`, { params });
   },
   getDraftBuildings: async () => {
     return await swrFetch('buildings_draft', `${API_URL}/buildings`, { params: { status: 'Draft' } });
@@ -138,24 +146,20 @@ export const api = {
     return await swrFetch('all_rooms', `${API_URL}/rooms`);
   },
   getRoomsByBuilding: async (bId) => {
-    const res = await axios.get(`${API_URL}/rooms`, { params: { buildingId: bId } });
-    return handleId(res.data);
+    return await swrFetch(`rooms_b_${bId || 'all'}`, `${API_URL}/rooms`, { params: { buildingId: bId } });
   },
   getAllBeds: async () => {
     return await swrFetch('all_beds', `${API_URL}/beds`);
   },
   getBedsByBuilding: async (bId) => {
-    const res = await axios.get(`${API_URL}/beds`, { params: { buildingId: bId } });
-    const data = Array.isArray(res.data) ? res.data : [];
-    return handleId(data);
+    return await swrFetch(`beds_b_${bId || 'all'}`, `${API_URL}/beds`, { params: { buildingId: bId } });
   },
   recommendBeds: async (buildingId, preferences) => {
     const res = await axios.post(`${API_URL}/beds/recommend`, { buildingId, preferences });
     return handleId(res.data);
   },
   getMaintenanceBeds: async () => {
-    const res = await axios.get(`${API_URL}/beds/maintenance`);
-    return handleId(res.data);
+    return await swrFetch('beds_maintenance', `${API_URL}/beds/maintenance`);
   },
   markBedSanitized: async (id) => {
     const res = await axios.post(`${API_URL}/beds/${id}/sanitize`);
@@ -223,9 +227,7 @@ export const api = {
   },
   getPayments: async (buildingId) => {
     const params = buildingId ? { buildingId } : {};
-    const res = await axios.get(`${API_URL}/payments`, { params });
-    const data = res.data?.payments || res.data;
-    return handleId(Array.isArray(data) ? data : []);
+    return await swrFetch(`payments_${buildingId || 'all'}`, `${API_URL}/payments`, { params });
   },
   updatePaymentStatus: async (id, status) => {
     const res = await axios.patch(`${API_URL}/payments/${id}`, { status });
@@ -355,14 +357,23 @@ export const api = {
   // CRUD Operations
   addBuilding: async (data) => {
     const res = await axios.post(`${API_URL}/buildings`, data);
+    cacheSet('buildings_active', null);
+    if (data.propertyId) {
+      cacheSet(`buildings_prop_${data.propertyId}`, null);
+    }
     return handleId(res.data);
   },
   updateBuilding: async (id, data) => {
     const res = await axios.patch(`${API_URL}/buildings/${id}`, data);
+    cacheSet('buildings_active', null);
+    if (data.propertyId) {
+      cacheSet(`buildings_prop_${data.propertyId}`, null);
+    }
     return handleId(res.data);
   },
   deleteBuilding: async (id) => {
     await axios.delete(`${API_URL}/buildings/${id}`);
+    cacheSet('buildings_active', null);
   },
   uploadPhotos: async (formData) => {
     const res = await axios.post(`${API_URL}/buildings/upload`, formData, {
@@ -374,14 +385,17 @@ export const api = {
   },
   addFloor: async (data) => {
     const res = await axios.post(`${API_URL}/floors`, data);
+    cacheSet('all_floors', null);
     return handleId(res.data);
   },
   updateFloor: async (id, data) => {
     const res = await axios.put(`${API_URL}/floors/${id}`, data);
+    cacheSet('all_floors', null);
     return handleId(res.data);
   },
   deleteFloor: async (id) => {
     await axios.delete(`${API_URL}/floors/${id}`);
+    cacheSet('all_floors', null);
   },
   addRoom: async (data) => {
     const res = await axios.post(`${API_URL}/rooms`, data);

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import socket, { connectSocket } from '../utils/socket';
-import { api } from '../mockData';
+import { api } from '../api';
 
 const NotificationContext = createContext();
 

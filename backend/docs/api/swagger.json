@@ -6,7 +6,7 @@
     "version": "2.0.0"
   },
   "servers": [
-    { "url": "https://hostel-hub-1-0835.onrender.com/api" }
+    { "url": "https://livora-hostel-hub-1.onrender.com/api" }
   ],
   "paths": {
     "/auth/login": {

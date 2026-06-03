@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../pages/Landing.css';
 
-const CITIES = ['Hyderabad', 'Bengaluru', 'Mumbai', 'Delhi', 'Pune', 'Chennai', 'Kolkata'];
+const CITIES = ['Bengaluru', 'Hyderabad', 'Mumbai', 'Chennai', 'Delhi', 'Pune', 'Noida', 'Gurgaon'];
 const ALL_LOCALITIES = [
   'Gachibowli', 'Gopanpally Gachibowli', 'Gowlidoddy', 'HITEC City',
   'Journalist colony', 'KOKAPET', 'Kondapur', 'KPHB', 'Kukatpally',

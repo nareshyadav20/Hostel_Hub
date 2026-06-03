@@ -1,4 +1,5 @@
 const CommunityReport = require('../models/tenant/CommunityReport');
+const TenantUpload    = require('../models/TenantUpload');
 const Reward = require('../models/tenant/Reward');
 const Wishlist = require('../models/tenant/Wishlist');
 const SosAlert = require('../models/SosAlert');
@@ -225,10 +226,14 @@ exports.getCompleteProfile = async (req, res) => {
 exports.uploadPhoto = async (req, res) => {
   try {
     const tenant = await getOrCreateTenant(req.user);
-    const { photoUrl } = req.body;
+    let photoUrl = req.body.photoUrl;
+
+    if (req.file) {
+      photoUrl = `/uploads/profile/${req.file.filename}`;
+    }
 
     if (!photoUrl) {
-      return res.status(400).json({ message: 'Photo URL (base64 or link) is required' });
+      return res.status(400).json({ message: 'Photo URL or uploaded photo file is required' });
     }
 
     const photoRecord = await TenantPhoto.create({
@@ -242,5 +247,77 @@ exports.uploadPhoto = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Error uploading photo', error: error.message });
+  }
+};
+
+// ── Profile Setup Status ──────────────────────────────────────────────────
+exports.getProfileSetupStatus = async (req, res) => {
+  try {
+    const doc = await TenantUpload.findOne({ userId: req.user.id }).lean();
+    if (!doc) return res.status(200).json({ profileCompletion: 50, step3: null, step4: null });
+    res.status(200).json({ profileCompletion: doc.profileCompletion, step3: doc.step3 || null, step4: doc.step4 || null });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching setup status', error: err.message });
+  }
+};
+
+// ── Save Step 3: Lifestyle & Requirements ─────────────────────────────────
+exports.saveStep3 = async (req, res) => {
+  try {
+    const { foodPref, smoking, schedule, roommateType, amenities, budgetMin, budgetMax } = req.body;
+    const doc = await TenantUpload.findOneAndUpdate(
+      { userId: req.user.id },
+      {
+        $set: {
+          'step3.foodPref':     foodPref,
+          'step3.smoking':      smoking,
+          'step3.schedule':     schedule,
+          'step3.roommateType': roommateType,
+          'step3.amenities':    amenities || [],
+          'step3.budgetMin':    budgetMin,
+          'step3.budgetMax':    budgetMax,
+          'step3.completedAt':  new Date(),
+          profileCompletion:    75,
+        },
+      },
+      { upsert: true, new: true }
+    );
+    res.status(200).json({ message: 'Step 3 saved', profileCompletion: doc.profileCompletion, step3: doc.step3 });
+  } catch (err) {
+    res.status(500).json({ message: 'Error saving Step 3', error: err.message });
+  }
+};
+
+// ── Save Step 4: Verification & Final Setup ───────────────────────────────
+exports.saveStep4 = async (req, res) => {
+  try {
+    const { emergencyContact, addressLine1, addressLine2, city, state, pincode, agreedToTerms } = req.body;
+    const update = {
+      $set: {
+        'step4.emergencyContact': emergencyContact,
+        'step4.address.line1':    addressLine1,
+        'step4.address.line2':    addressLine2 || '',
+        'step4.address.city':     city,
+        'step4.address.state':    state,
+        'step4.address.pincode':  pincode,
+        'step4.agreedToTerms':    agreedToTerms === 'true' || agreedToTerms === true,
+        'step4.completedAt':      new Date(),
+        profileCompletion:        100,
+      },
+    };
+    if (req.files?.profilePhoto?.[0]) {
+      update.$set['step4.profilePhotoUrl'] = `/uploads/profile-setup/${req.files.profilePhoto[0].filename}`;
+    }
+    if (req.files?.idProof?.[0]) {
+      update.$set['step4.idProofUrl'] = `/uploads/profile-setup/${req.files.idProof[0].filename}`;
+    }
+    const doc = await TenantUpload.findOneAndUpdate(
+      { userId: req.user.id },
+      update,
+      { upsert: true, new: true }
+    );
+    res.status(200).json({ message: 'Profile setup complete!', profileCompletion: doc.profileCompletion, step4: doc.step4 });
+  } catch (err) {
+    res.status(500).json({ message: 'Error saving Step 4', error: err.message });
   }
 };

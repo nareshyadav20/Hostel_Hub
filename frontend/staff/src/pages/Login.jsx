@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import '@packages/ui-kit/auth.css';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -9,27 +12,23 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
-    setTimeout(() => {
-            const storedUsers = JSON.parse(localStorage.getItem('staff_users') || '[]');
-      const user = storedUsers.find(u => u.email === email && u.password === password);
-  
-      if (user || (email === 'staff@example.com' && password === 'password')) {
-        const loggedUser = user || { name: 'Staff Member', email };
-        localStorage.setItem('token', 'mock_token_' + Date.now());
-        localjkkjkkjjjjjjjjjjjjk 
-        torage.setItem('user', JSON.stringify(loggedUser));
-        navigate('/dashboard');
-      } else {
-        setError('Invalid credentials. (Try staff@example.com / password)');
-      }
+    try {
+      const res = await axios.post(`${API_URL}/auth/login`, { email, password });
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid credentials.');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
- 
+
   return (
     <div className="auth-container">
       <div className="auth-card">

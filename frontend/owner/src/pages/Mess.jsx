@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Utensils, Calendar as CalendarIcon, Users, Edit3, ArrowRight, Sun, Coffee, Moon, CheckCircle, X, Grid, List, TrendingUp } from 'lucide-react';
-import { api } from '../mockData';
+import { api } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import socket from '../utils/socket';
@@ -352,7 +352,7 @@ const Mess = () => {
             <div className="card" style={{ padding: '2rem'  }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}><Utensils size={18} color="var(--accent-primary)"/> Meal Consumption Analytics</h3>
               <div style={{ height: '300px', width: '100%'  }}>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={1}>
                   <BarChart data={[
                     { name: 'Breakfast', consumed: stats.breakfast, fill: '#f59e0b' },
                     { name: 'Lunch', consumed: stats.lunch, fill: '#10b981' },
@@ -387,7 +387,7 @@ const Mess = () => {
               <div className="card" style={{ padding: '2rem', flex: 1, display: 'flex', flexDirection: 'column'  }}>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}><Users size={18} color="#8b5cf6"/> Plan Distribution</h3>
                 <div style={{ flex: 1, position: 'relative', minHeight: '180px'  }}>
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={1}>
                     <PieChart>
                       <Pie
                         data={[

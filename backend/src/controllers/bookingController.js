@@ -5,18 +5,20 @@ const socketService = require('../utils/socketService');
 
 const createBooking = async (req, res) => {
   try {
-    const { 
-      tenantId, 
-      buildingId, 
-      category, 
-      moveInDate, 
-      securityDeposit, 
-      onboardingFee, 
-      totalAmount, 
+    const {
+      tenantId,
+      buildingId,
+      category,
+      moveInDate,
+      securityDeposit,
+      onboardingFee,
+      totalAmount,
       method,
       proofId,
       bedNumber,
       sharingType,
+      bedId,
+      roomId,
       guestName,
       email,
       phone
@@ -44,16 +46,16 @@ const createBooking = async (req, res) => {
     if (tenant) {
       // If already assigned and active in a building, block new booking
       if (tenant.buildingId && tenant.status === 'ACTIVE') {
-        return res.status(400).json({ 
-          error: 'Access Denied: You already have an active residency or booking. A resident can only book one hostel at a time.' 
+        return res.status(400).json({
+          error: 'Access Denied: You already have an active residency or booking. A resident can only book one hostel at a time.'
         });
       }
 
       // Check if they already have a confirmed booking
       const existingBooking = await Booking.findOne({ tenantId: tenant._id, status: 'Confirmed' });
       if (existingBooking) {
-        return res.status(400).json({ 
-          error: 'Booking limit reached: You already have a confirmed reservation. Please manage your existing stay in the dashboard.' 
+        return res.status(400).json({
+          error: 'Booking limit reached: You already have a confirmed reservation. Please manage your existing stay in the dashboard.'
         });
       }
     }
@@ -127,19 +129,24 @@ const createBooking = async (req, res) => {
       const Bed = require('../models/Bed');
       const Building = require('../models/Building');
 
-      const floors = await Floor.find({ building: buildingId }).select('_id');
-      const fIds = floors.map(f => f._id);
-      
-      // Try to find a room with matching capacity first
-      const roomsPref = await Room.find({ floor: { $in: fIds }, capacity: sharingType }).select('_id');
-      let rIds = roomsPref.map(r => r._id);
-      let availableBed = await Bed.findOne({ room: { $in: rIds }, status: 'AVAILABLE' });
-
-      // Fallback: any available bed in the building
-      if (!availableBed) {
-        const roomsAll = await Room.find({ floor: { $in: fIds } }).select('_id');
-        rIds = roomsAll.map(r => r._id);
+      let availableBed = null;
+      if (isValidObjectId(bedId)) {
+        availableBed = await Bed.findOne({ _id: bedId, status: 'AVAILABLE' });
+        if (!availableBed) {
+          return res.status(409).json({ error: 'Conflict: The selected bed is already occupied or unavailable.' });
+        }
+      } else {
+        // Fallback for legacy flows
+        const floors = await Floor.find({ building: buildingId }).select('_id');
+        const fIds = floors.map(f => f._id);
+        const roomsPref = await Room.find({ floor: { $in: fIds }, capacity: sharingType }).select('_id');
+        let rIds = roomsPref.map(r => r._id);
         availableBed = await Bed.findOne({ room: { $in: rIds }, status: 'AVAILABLE' });
+        if (!availableBed) {
+          const roomsAll = await Room.find({ floor: { $in: fIds } }).select('_id');
+          rIds = roomsAll.map(r => r._id);
+          availableBed = await Bed.findOne({ room: { $in: rIds }, status: 'AVAILABLE' });
+        }
       }
 
       if (availableBed) {
@@ -147,6 +154,28 @@ const createBooking = async (req, res) => {
         availableBed.tenant = actualTenantId;
         await availableBed.save();
         console.log('✅ Bed explicitly allocated:', availableBed._id);
+
+        // Bottom-up occupancy recalculation (Phase 8)
+        if (availableBed.room || roomId) {
+          const targetRoomId = availableBed.room || roomId;
+          const roomBeds = await Bed.find({ room: targetRoomId });
+          const occBeds = roomBeds.filter(b => b.status === 'OCCUPIED').length;
+          await Room.findByIdAndUpdate(targetRoomId, { occupiedBeds: occBeds });
+
+          const roomObj = await Room.findById(targetRoomId);
+          if (roomObj && roomObj.floor) {
+            const floorRooms = await Room.find({ floor: roomObj.floor });
+            let floorOccBeds = 0;
+            let floorTotalBeds = 0;
+            for (const r of floorRooms) {
+              const rBeds = await Bed.find({ room: r._id });
+              floorTotalBeds += rBeds.length;
+              floorOccBeds += rBeds.filter(b => b.status === 'OCCUPIED').length;
+            }
+            const occPct = floorTotalBeds > 0 ? Math.round((floorOccBeds / floorTotalBeds) * 100) : 0;
+            await Floor.findByIdAndUpdate(roomObj.floor, { occupancyPercentage: occPct });
+          }
+        }
       } else {
         console.warn('⚠️ No physical Bed document was AVAILABLE to allocate in building', buildingId);
       }
@@ -161,21 +190,21 @@ const createBooking = async (req, res) => {
             const ownerBuildings = await Building.find({ owner: building.owner }).select('_id totalBeds');
             const bIds = ownerBuildings.map(b => b._id);
             const configuredTotal = ownerBuildings.reduce((sum, b) => sum + (b.totalBeds || 0), 0);
-            
+
             const fs = await Floor.find({ building: { $in: bIds } }).select('_id');
             const rs = await Room.find({ floor: { $in: fs.map(f => f._id) } }).select('_id');
             const roomIds = rs.map(r => r._id);
             const occupiedPhysical = await Bed.countDocuments({ room: { $in: roomIds }, status: 'OCCUPIED' });
-            
+
             const BedFillingModel = require('../models/BedFilling');
             const occupiedVirtual = await BedFillingModel.countDocuments({ buildingId: { $in: bIds }, status: 'Occupied' });
-            
+
             const occupiedCount = Math.max(occupiedPhysical, occupiedVirtual);
-            
+
             let totalB = await Bed.countDocuments({ room: { $in: roomIds } });
             if (hostel.totalBeds > 0) totalB = hostel.totalBeds;
             else if (configuredTotal > 0) totalB = configuredTotal;
-            
+
             hostel.filledBeds = Math.min(occupiedCount, totalB);
             await hostel.save();
             console.log('✅ Owner Hostel occupancy synced:', hostel.filledBeds, '/', totalB);
@@ -212,10 +241,10 @@ const createBooking = async (req, res) => {
     // Real-time synchronization
     // Emit booking created to owner portal
     socketService.emitUpdate(null, 'bookingCreated', { booking, payment: populatedPayment });
-    
+
     // Emit payment completed
     socketService.emitUpdate(buildingId, 'paymentCompleted', populatedPayment);
-    
+
     // Emit bed status updated (since booking usually occupies a bed)
     socketService.emitUpdate(buildingId, 'bedStatusUpdated', { status: 'Occupied' });
 
@@ -230,7 +259,7 @@ const getMyBookings = async (req, res) => {
   try {
     const email = req.user.email;
     const userIdFromToken = req.user.id;
-    
+
     console.log(`[DEBUG] getMyBookings for user: ${email} (ID: ${userIdFromToken})`);
 
     const Tenant = require('../models/Tenant');
@@ -246,14 +275,14 @@ const getMyBookings = async (req, res) => {
     console.log(`[DEBUG] Searching bookings for tenant ID: ${tenant._id}`);
 
     // Find bookings strictly belonging to this tenant profile
-    let bookings = await Booking.find({ 
-      tenantId: tenant._id 
+    let bookings = await Booking.find({
+      tenantId: tenant._id
     }).populate('buildingId').sort({ bookingDate: -1 });
 
     // If no formal booking found, also search by userId (legacy records)
     if (bookings.length === 0) {
-      bookings = await Booking.find({ 
-        userId: userIdFromToken 
+      bookings = await Booking.find({
+        userId: userIdFromToken
       }).populate('buildingId').sort({ bookingDate: -1 });
       console.log(`[DEBUG] Fallback userId search found ${bookings.length} bookings`);
     }
@@ -262,9 +291,9 @@ const getMyBookings = async (req, res) => {
     // This handles cases where the Booking doc was lost/misplaced but the tenant profile is active
     if (bookings.length === 0 && tenant.buildingId && tenant.status === 'ACTIVE') {
       console.log(`[DEBUG] No booking docs found, but tenant has active residency at ${tenant.buildingId}. Synthesizing booking.`);
-      
+
       const building = await Building.findById(tenant.buildingId);
-      
+
       // Create a synthetic booking object that matches the Booking schema shape
       const syntheticBooking = {
         _id: `synth_${tenant._id}`,
@@ -281,7 +310,7 @@ const getMyBookings = async (req, res) => {
         createdAt: tenant.createdAt,
         updatedAt: tenant.updatedAt
       };
-      
+
       bookings = [syntheticBooking];
       console.log(`[DEBUG] Synthesized 1 booking from active tenant profile`);
     }

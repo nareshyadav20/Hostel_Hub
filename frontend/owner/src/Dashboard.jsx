@@ -3,7 +3,7 @@ import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { Building, Wallet, Users, ArrowUpRight, ArrowDownRight, Zap, X, UserPlus, CheckCircle, AlertCircle, TrendingUp, LogIn, Utensils, ArrowLeft, Search, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, Link } from 'react-router-dom';
-import { api } from './mockData';
+import { api } from './api';
 import { ComplaintsPanel, MessPanel, StaffPanel, InsightsPanel, ActivityFeed, TenantOverviewPanel, DashboardModal } from './DashboardPanels';
 
 const iStyle = { padding:'0.85rem', borderRadius:'12px', border:'1px solid var(--border-color)', background:'var(--bg-secondary)', color:'var(--text-primary)', fontSize:'0.9rem', outline:'none', width:'100%', boxSizing:'border-box', transition:'all 0.3s' };
@@ -101,7 +101,6 @@ function Dashboard() {
         socket.off('tenantAdded');
         socket.off('transferCreated');
         socket.off('paymentCompleted');
-        disconnectSocket();
       };
     }
   }, [activeBuildingId]);
@@ -242,7 +241,7 @@ function Dashboard() {
               </div>
             </div>
             <div style={{ height: '220px', marginTop: '1rem'  }}>
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1}>
                 <AreaChart data={revenue.dailyRevenue}>
                   <defs>
                     <linearGradient id="colGrad" x1="0" y1="0" x2="0" y2="1">

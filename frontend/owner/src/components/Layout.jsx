@@ -15,7 +15,7 @@ import {
   Utensils,
   Box
 } from 'lucide-react';
-import { api } from '../mockData';
+import { api } from '../api';
 import Sidebar from './Sidebar';
 import ThemeToggle from './ThemeToggle';
 import ProfileDropdown from './ProfileDropdown';
@@ -30,7 +30,7 @@ function useBackendStatus() {
 
   const check = async () => {
     try {
-      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const apiBase = import.meta.env.VITE_API_URL || 'https://livora-hostel-hub-1.onrender.com/api';
       const res = await fetch(`${apiBase}/ping`, { signal: AbortSignal.timeout(3000) });
       if (res.ok) { setStatus('live'); return; }
       throw new Error('non-ok');

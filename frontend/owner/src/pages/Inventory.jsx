@@ -9,7 +9,7 @@ import {
   Info, ArrowLeft, ArrowRight, ScanBarcode, Maximize2, LayoutGrid
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api } from '../mockData';
+import { api } from '../api';
 import socket, { connectSocket } from '../utils/socket';
 
 // --- CONFIGURATION ---

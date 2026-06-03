@@ -1,30 +1,31 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import '@packages/ui-kit/auth.css';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const Signup = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'Staff' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'STAFF' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
-    setTimeout(() => {
-      const storedUsers = JSON.parse(localStorage.getItem('staff_users') || '[]');
-      if (storedUsers.some(u => u.email === formData.email)) {
-        setError('Email already registered.');
-        setLoading(false);
-        return;
-      }
-      storedUsers.push(formData);
-      localStorage.setItem('staff_users', JSON.stringify(storedUsers));
-      localStorage.setItem('token', 'mock_token_' + Date.now());
-      localStorage.setItem('user', JSON.stringify(formData));
+    try {
+      const res = await axios.post(`${API_URL}/auth/register`, formData);
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');
-    }, 800);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

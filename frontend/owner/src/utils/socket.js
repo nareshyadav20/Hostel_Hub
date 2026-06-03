@@ -1,18 +1,21 @@
 import { io } from 'socket.io-client';
 
-const socketUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+const socketUrl = (import.meta.env.VITE_API_URL || 'https://livora-hostel-hub-1.onrender.com/api').replace('/api', '');
 
 const socket = io(socketUrl, {
   autoConnect: false,
   reconnection: true,
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
+  timeout: 10000,
+  transports: ["websocket", "polling"],
+  upgrade: true,
 });
 
 export const connectSocket = (id, type = 'building') => {
   if (!socket.connected) {
     socket.connect();
-    
+
     socket.on('connect', () => {
       console.log('✅ Owner Portal: Connected to Real-time Sync Server');
       // Always join global owners room to receive all tenant events

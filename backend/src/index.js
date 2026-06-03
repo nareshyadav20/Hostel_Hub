@@ -76,7 +76,9 @@ const allowedOrigins = [
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, curl, Postman)
-    if (!origin) return callback(null, true);
+    if (!origin || origin === 'null' || origin.startsWith('file://') || origin.startsWith('capacitor://') || origin.startsWith('ionic://') || origin.startsWith('chrome-extension://')) {
+      return callback(null, true);
+    }
     
     // Auto-allow all localhost/127.0.0.1 origins for easier development
     if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:') || origin === 'http://localhost' || origin === 'http://127.0.0.1') {
@@ -166,6 +168,7 @@ require('./models/AdminCms');
 require('./models/AdminInsights');
 require('./models/AdminSupport');
 require('./models/Task');
+require('./models/Rating');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/buildings', buildingRoutes);
@@ -199,6 +202,10 @@ app.use('/api/assets', require('./routes/assetRoutes'));
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
+});
+
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'healthy', timestamp: new Date() });
 });
 
 app.get('/', (req, res) => {

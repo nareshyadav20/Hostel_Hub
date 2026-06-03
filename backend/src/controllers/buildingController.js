@@ -4,11 +4,6 @@ const Room = require('../models/Room');
 const Bed = require('../models/Bed');
 const Tenant = require('../models/Tenant');
 const BuildingPhoto = require('../models/BuildingPhoto');
-const User = require('../models/User');
-const Staff = require('../models/Staff');
-const OwnerProfile = require('../models/OwnerProfile');
-const Payment = require('../models/Payment');
-const Notification = require('../models/Notification');
 
 const createBuilding = async (req, res) => {
   try {
@@ -17,16 +12,47 @@ const createBuilding = async (req, res) => {
       startingPrice, securityDeposit, maintenanceCharges, foodCharges,
       rentSingle, rentDouble, rentTriple, totalRooms, totalBeds,
       genderType, category, rating, popularityLabel,
-      policies, staffInfo, status, lastStep, draftData
+      policies, staffInfo, status, lastStep, draftData, showInPortfolio,
+      propertyId
     } = req.body;
+
+    const parseField = (field, defaultValue) => {
+      if (!field) return defaultValue;
+      if (typeof field === 'object') return field;
+      try {
+        return JSON.parse(field);
+      } catch (e) {
+        if (typeof field === 'string' && defaultValue && Array.isArray(defaultValue)) {
+          if (field.includes(',')) {
+            return field.split(',').map(s => s.trim());
+          }
+          return [field];
+        }
+        return field || defaultValue;
+      }
+    };
+
+    let finalImages = parseField(images, []);
+    if (req.files && req.files.length > 0) {
+      const uploadedImages = req.files.map(file => {
+        const b64 = file.buffer.toString('base64');
+        return `data:${file.mimetype};base64,${b64}`;
+      });
+      finalImages.push(...uploadedImages);
+    }
+
+    const finalAmenities = parseField(amenities, []);
+    const finalPolicies = parseField(policies, { smoking: 'Not Allowed', alcohol: 'Not Allowed', pets: 'No', visitors: 'Till 8 PM' });
+    const finalStaffInfo = parseField(staffInfo, undefined);
+    const finalDraftData = parseField(draftData, undefined);
 
     const building = await Building.create({
       name: name || 'Untitled Draft',
       address,
       locationCity: locationCity || 'Bengaluru',
       description,
-      amenities: amenities || [],
-      images: images || [],
+      amenities: finalAmenities,
+      images: finalImages,
       startingPrice: startingPrice || 5000,
       securityDeposit: securityDeposit || 0,
       maintenanceCharges: maintenanceCharges || 799,
@@ -40,39 +66,25 @@ const createBuilding = async (req, res) => {
       category: category || 'Student',
       rating: rating || 4.5,
       popularityLabel,
-      policies: policies || { smoking: 'Not Allowed', alcohol: 'Not Allowed', pets: 'No', visitors: 'Till 8 PM' },
-      staffInfo,
-      status: (status === 'Draft') ? 'Draft' : 'Pending Approval',
-      isApproved: false,
-      submittedAt: (status !== 'Draft') ? Date.now() : undefined,
+      policies: finalPolicies,
+      staffInfo: finalStaffInfo,
+      status: status || 'Active',
       lastStep: lastStep || 1,
-      draftData,
+      draftData: finalDraftData,
+      showInPortfolio: showInPortfolio !== undefined ? showInPortfolio : true,
+      propertyId: propertyId || null,
       owner: req.user.id
     });
 
     // Sync photos to BuildingPhoto collection
-    if (images && images.length > 0) {
-      const photoDocs = images.map(url => ({
+    if (finalImages && finalImages.length > 0) {
+      const photoDocs = finalImages.map(url => ({
         buildingId: building._id,
         photoUrl: url
       }));
-      await BuildingPhoto.insertMany(photoDocs);
-    }
-
-    if (building.status === 'Pending Approval') {
-      try {
-        await Notification.create({
-          portalType: 'All',
-          category: 'Hostel',
-          title: 'New Hostel Approval Request',
-          message: `Owner has submitted a new hostel "${building.name}" for approval.`,
-          priority: 'High',
-          buildingId: building._id,
-          receiverRole: 'All'
-        });
-      } catch (notifyErr) {
-        console.error('Failed to create admin notification:', notifyErr);
-      }
+      await BuildingPhoto.insertMany(photoDocs).catch(err => {
+        console.warn('[DEBUG] BuildingPhoto sync warning:', err.message);
+      });
     }
 
     res.status(201).json(building);
@@ -90,39 +102,44 @@ const getBuildings = async (req, res) => {
         query.status = req.query.status;
       }
     }
+    if (req.query.propertyId) {
+      query.$or = [
+        { _id: req.query.propertyId },
+        { propertyId: req.query.propertyId }
+      ];
+    } else {
+      query.propertyId = { $in: [null, undefined] };
+      query.showInPortfolio = { $ne: false };
+    }
     console.log(`[DEBUG] getBuildings query:`, JSON.stringify(query));
     const buildings = await Building.find(query)
-      .select('-floors -images -draftData -gallery -description') // Exclude heavy fields
-      .populate('owner', 'name')
+      .select('-floors -images -draftData -gallery -description')
       .lean();
-    console.log(`[DEBUG] Found ${buildings.length} buildings. Enriching with stats...`);
 
-    // Enrich buildings with Tenant, Staff counts and room stats
-    const enrichedBuildings = await Promise.all(buildings.map(async (b) => {
-      // Fetch stats
-      const tenantCount = await Tenant.countDocuments({ buildingId: b._id });
-      const staffCount = await Staff.countDocuments({ buildingId: b._id });
+    const populatedBuildings = await Promise.all(buildings.map(async (building) => {
+      const floorDocs = await Floor.find({ building: building._id });
+      const floorIds = floorDocs.map(f => f._id);
       
-      const floors = await Floor.find({ building: b._id }, '_id');
-      const floorIds = floors.map(f => f._id);
+      const rooms = await Room.find({ floor: { $in: floorIds } }).populate('beds');
       
-      const totalRoomsCount = await Room.countDocuments({ floor: { $in: floorIds } });
-      const occupiedRoomsCount = await Room.countDocuments({ floor: { $in: floorIds }, status: 'FULL' });
-      const maintenanceRoomsCount = await Room.countDocuments({ floor: { $in: floorIds }, status: 'MAINTENANCE' });
-      const vacantRoomsCount = totalRoomsCount - occupiedRoomsCount - maintenanceRoomsCount;
-
-      return {
-        ...b,
-        tenantCount,
-        staffCount,
-        totalRoomsCount,
-        occupiedRoomsCount,
-        vacantRoomsCount,
-        maintenanceRoomsCount
-      };
+      let totalBeds = 0;
+      let occupiedBeds = 0;
+      
+      rooms.forEach(room => {
+        const beds = room.beds || [];
+        totalBeds += beds.length;
+        occupiedBeds += beds.filter(b => b.status === 'OCCUPIED' || b.status === 'Occupied').length;
+      });
+      
+      building.totalRooms = rooms.length;
+      building.totalBeds = totalBeds;
+      building.occupancyPercentage = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+      
+      return building;
     }));
 
-    res.status(200).json(enrichedBuildings);
+    console.log(`[DEBUG] Found ${populatedBuildings.length} buildings for owner ${req.user.id}`);
+    res.status(200).json(populatedBuildings);
   } catch (error) {
     console.error(`[DEBUG] getBuildings error:`, error);
     res.status(500).json({ error: error.message });
@@ -131,27 +148,60 @@ const getBuildings = async (req, res) => {
 
 const updateBuilding = async (req, res) => {
   try {
-    const existingBuilding = await Building.findById(req.params.id);
-    if (!existingBuilding) return res.status(404).json({ error: 'Building not found' });
+    const updateData = { ...req.body };
 
-    // Intercept transition from Draft to submission
-    let statusChangedToPending = false;
-    if (existingBuilding.status === 'Draft' && req.body.status && req.body.status !== 'Draft') {
-      req.body.status = 'Pending Approval';
-      req.body.isApproved = false;
-      req.body.submittedAt = Date.now();
-      statusChangedToPending = true;
+    const parseField = (field, defaultValue) => {
+      if (!field) return defaultValue;
+      if (typeof field === 'object') return field;
+      try {
+        return JSON.parse(field);
+      } catch (e) {
+        if (typeof field === 'string' && defaultValue && Array.isArray(defaultValue)) {
+          if (field.includes(',')) {
+            return field.split(',').map(s => s.trim());
+          }
+          return [field];
+        }
+        return field || defaultValue;
+      }
+    };
+
+    if (updateData.amenities) {
+      updateData.amenities = parseField(updateData.amenities, []);
+    }
+    if (updateData.policies) {
+      updateData.policies = parseField(updateData.policies, {});
+    }
+    if (updateData.staffInfo) {
+      updateData.staffInfo = parseField(updateData.staffInfo, {});
+    }
+    if (updateData.draftData) {
+      updateData.draftData = parseField(updateData.draftData, {});
     }
 
-    const building = await Building.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    let finalImages = parseField(updateData.images, []);
+    if (req.files && req.files.length > 0) {
+      const uploadedImages = req.files.map(file => {
+        const b64 = file.buffer.toString('base64');
+        return `data:${file.mimetype};base64,${b64}`;
+      });
+      finalImages.push(...uploadedImages);
+    }
+    if (updateData.images || (req.files && req.files.length > 0)) {
+      updateData.images = finalImages;
+    }
+
+    const building = await Building.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!building) return res.status(404).json({ error: 'Building not found' });
 
     // Sync new photos to BuildingPhoto collection
-    if (req.body.images && Array.isArray(req.body.images)) {
-      for (const url of req.body.images) {
+    if (building.images && Array.isArray(building.images)) {
+      for (const url of building.images) {
         const exists = await BuildingPhoto.findOne({ buildingId: building._id, photoUrl: url });
         if (!exists) {
-          await BuildingPhoto.create({ buildingId: building._id, photoUrl: url });
+          await BuildingPhoto.create({ buildingId: building._id, photoUrl: url }).catch(err => {
+            console.warn('[DEBUG] BuildingPhoto creation warning:', err.message);
+          });
         }
       }
     }
@@ -160,22 +210,6 @@ const updateBuilding = async (req, res) => {
     const socketService = require('../utils/socketService');
     socketService.emitUpdate(building._id, 'hostelUpdated', building);
     socketService.emitUpdate(null, 'hostelUpdated', building); // Emit globally for landing/search pages
-
-    if (statusChangedToPending) {
-      try {
-        await Notification.create({
-          portalType: 'All',
-          category: 'Hostel',
-          title: 'New Hostel Approval Request',
-          message: `Owner has submitted a new hostel "${building.name}" for approval.`,
-          priority: 'High',
-          buildingId: building._id,
-          receiverRole: 'All'
-        });
-      } catch (notifyErr) {
-        console.error('Failed to create admin notification:', notifyErr);
-      }
-    }
 
     res.status(200).json(building);
   } catch (error) { res.status(500).json({ error: error.message }); }
@@ -282,82 +316,54 @@ const bulkCreateBuildings = async (req, res) => {
 
 const getBuildingById = async (req, res) => {
   try {
-    let building = await Building.findById(req.params.id).populate({ 
-      path: 'floors', 
-      populate: { 
-        path: 'rooms', 
-        populate: { 
-          path: 'beds',
-          populate: { path: 'tenant' }
-        } 
-      } 
+    const building = await Building.findById(req.params.id);
+    if (!building) return res.status(404).json({ error: 'Building not found' });
+
+    const bObj = building.toObject();
+
+    // Query floors directly for the building and its sub-buildings
+    const subBuildings = await Building.find({ propertyId: building._id }).select('_id');
+    const buildingIds = [building._id, ...subBuildings.map(sb => sb._id)];
+    const floors = await Floor.find({ building: { $in: buildingIds } });
+    const bFloors = await Promise.all(floors.map(async (floor) => {
+      const floorObj = floor.toObject();
+      const rooms = await Room.find({ floor: floor._id }).populate({
+        path: 'beds',
+        populate: { path: 'tenant' }
+      });
+      floorObj.rooms = rooms.map(r => r.toObject());
+      return floorObj;
+    }));
+
+    bObj.floors = bFloors;
+
+    // Dynamically calculate live rooms, beds and occupancy
+    let totalRooms = 0;
+    let totalBeds = 0;
+    let occupiedBeds = 0;
+    
+    bFloors.forEach(floor => {
+      const rooms = floor.rooms || [];
+      totalRooms += rooms.length;
+      rooms.forEach(room => {
+        const beds = room.beds || [];
+        totalBeds += beds.length;
+        occupiedBeds += beds.filter(b => b.status === 'OCCUPIED' || b.status === 'Occupied').length;
+      });
     });
+    
+    bObj.totalRooms = totalRooms;
+    bObj.totalBeds = totalBeds;
+    bObj.occupancyPercentage = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
 
-    if (!building) {
-      const mongoose = require('mongoose');
-      const db = mongoose.connection.db;
-      let objId;
-      try {
-        objId = new mongoose.Types.ObjectId(req.params.id);
-      } catch (e) {
-        return res.status(404).json({ error: 'Building not found' });
-      }
-
-      const b = await db.collection('buildings').findOne({ _id: objId });
-      if (!b) {
-        return res.status(404).json({ error: 'Building not found' });
-      }
-
-      // Batch fetch floors, rooms, beds, and tenants
-      const bFloors = await db.collection('floors').find({ building: b._id }).toArray();
-      const floorIds = bFloors.map(f => f._id);
-      
-      const fRooms = await db.collection('rooms').find({ floor: { $in: floorIds } }).toArray();
-      const roomIds = fRooms.map(r => r._id);
-      
-      const rBeds = await db.collection('beds').find({ roomId: { $in: roomIds } }).toArray();
-      
-      const tenantIds = rBeds.map(bed => bed.tenant).filter(Boolean);
-      const tenantsList = await db.collection('tenants').find({ _id: { $in: tenantIds } }).toArray();
-      const tenantMap = {};
-      tenantsList.forEach(t => {
-        tenantMap[t._id.toString()] = t;
-      });
-
-      const bedsByRoomId = {};
-      rBeds.forEach(bed => {
-        if (bed.tenant) {
-          bed.tenant = tenantMap[bed.tenant.toString()] || null;
-        }
-        const roomIdStr = bed.roomId.toString();
-        if (!bedsByRoomId[roomIdStr]) bedsByRoomId[roomIdStr] = [];
-        bedsByRoomId[roomIdStr].push(bed);
-      });
-
-      const roomsByFloorId = {};
-      fRooms.forEach(room => {
-        room.beds = bedsByRoomId[room._id.toString()] || [];
-        const floorIdStr = room.floor.toString();
-        if (!roomsByFloorId[floorIdStr]) roomsByFloorId[floorIdStr] = [];
-        roomsByFloorId[floorIdStr].push(room);
-      });
-
-      bFloors.forEach(f => {
-        f.rooms = roomsByFloorId[f._id.toString()] || [];
-      });
-
-      b.floors = bFloors;
-      building = b;
-    }
-
-    res.status(200).json(building);
+    res.status(200).json(bObj);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
 const getPublicBuildings = async (req, res) => {
   try {
     const buildings = await Building.find(
-      { status: 'Active' },
+      { status: { $ne: 'Draft' }, propertyId: { $in: [null, undefined] }, showInPortfolio: { $ne: false } },
       {
         name: 1, address: 1, locationCity: 1, category: 1, rating: 1,
         startingPrice: 1, genderType: 1, amenities: 1, isAC: 1
@@ -371,14 +377,42 @@ const getPublicBuildings = async (req, res) => {
 
 const getPublicBuildingById = async (req, res) => {
   try {
-    const building = await Building.findOne({ _id: req.params.id, status: 'Active' }).populate({ path: 'floors', populate: { path: 'rooms', populate: { path: 'beds' } } });
+    const building = await Building.findOne({ _id: req.params.id, status: { $ne: 'Draft' } })
+      .select('-draftData -staffInfo -owner -lastStep')
+      .lean();
+
     if (!building) return res.status(404).json({ error: 'Building not found' });
+
+    // Fetch all sub-buildings to get their IDs
+    const subBuildings = await Building.find({ propertyId: building._id }).select('_id');
+    const buildingIds = [building._id, ...subBuildings.map(sb => sb._id)];
+
+    // Find floors for all these buildings and populate their rooms and beds
+    const floors = await Floor.find({ building: { $in: buildingIds } })
+      .select('floorNumber floorCategory description occupancyPercentage totalRooms totalBeds facilities rooms building')
+      .lean();
+
+    const populatedFloors = await Promise.all(floors.map(async (floor) => {
+      const rooms = await Room.find({ floor: floor._id })
+        .select('roomNumber roomType capacity isAC washroomType rentAmount securityDeposit amenities status beds')
+        .populate({
+          path: 'beds',
+          select: 'bedNumber status position bedType smartBadges'
+        })
+        .lean();
+      floor.rooms = rooms;
+      return floor;
+    }));
+
+    building.floors = populatedFloors;
 
     // Fetch filled beds for this building
     const BedFilling = require('../models/BedFilling');
-    const filledBeds = await BedFilling.find({ buildingId: building._id, status: 'Occupied' });
+    const filledBeds = await BedFilling.find({ buildingId: { $in: buildingIds }, status: 'Occupied' })
+      .select('bedId bedNumber')
+      .lean();
 
-    res.status(200).json({ ...building.toObject(), filledBeds });
+    res.status(200).json({ ...building, filledBeds });
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
@@ -401,7 +435,7 @@ const uploadPhotos = async (req, res) => {
       await BuildingPhoto.insertMany(photoDocs, { ordered: false }).catch(err => {
         console.warn('[DEBUG] BuildingPhoto partial insertion warning:', err.message);
       });
-      
+
       const building = await Building.findById(buildingId);
       if (building) {
         if (!building.images) building.images = [];
@@ -418,11 +452,11 @@ const uploadPhotos = async (req, res) => {
 
 const getPlatformStats = async (req, res) => {
   try {
-    const propertiesCount = await Building.countDocuments({ status: { $ne: 'Draft' } });
+    const propertiesCount = await Building.countDocuments({ status: { $ne: 'Draft' }, propertyId: { $in: [null, undefined] }, showInPortfolio: { $ne: false } });
     const tenantsCount = await Tenant.countDocuments();
-    const cities = await Building.distinct('locationCity', { status: { $ne: 'Draft' } });
+    const cities = await Building.distinct('locationCity', { status: { $ne: 'Draft' }, propertyId: { $in: [null, undefined] }, showInPortfolio: { $ne: false } });
 
-    const buildings = await Building.find({ status: { $ne: 'Draft' } }, 'rating');
+    const buildings = await Building.find({ status: { $ne: 'Draft' }, propertyId: { $in: [null, undefined] }, showInPortfolio: { $ne: false } }, 'rating');
     let totalRating = 0;
     let validRatings = 0;
     buildings.forEach(b => {
@@ -441,256 +475,10 @@ const getPlatformStats = async (req, res) => {
   }
 };
 
-const getBuildingPortfolio = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const mongoose = require('mongoose');
-
-    // 1. Fetch building (hostel) details with robust model and collection fallback
-    let building = await Building.findById(id)
-      .populate({
-        path: 'floors',
-        populate: {
-          path: 'rooms',
-          populate: {
-            path: 'beds',
-            populate: { path: 'tenant', select: 'name phone email' }
-          }
-        }
-      });
-
-    if (!building) {
-      const db = mongoose.connection.db;
-      let objId;
-      try {
-        objId = new mongoose.Types.ObjectId(id);
-      } catch (e) {
-        return res.status(404).json({ error: 'Building ID is invalid' });
-      }
-
-      const b = await db.collection('buildings').findOne({ _id: objId });
-      if (!b) {
-        return res.status(404).json({ error: 'Hostel not found' });
-      }
-
-      // Batch fetch floors, rooms, beds, and tenants
-      const bFloors = await db.collection('floors').find({ building: b._id }).toArray();
-      const floorIds = bFloors.map(f => f._id);
-      
-      const fRooms = await db.collection('rooms').find({ floor: { $in: floorIds } }).toArray();
-      const roomIds = fRooms.map(r => r._id);
-      
-      const rBeds = await db.collection('beds').find({ roomId: { $in: roomIds } }).toArray();
-      
-      const tenantIds = rBeds.map(bed => bed.tenant).filter(Boolean);
-      const tenantsList = await db.collection('tenants').find({ _id: { $in: tenantIds } }, { projection: { name: 1, phone: 1, email: 1 } }).toArray();
-      const tenantMap = {};
-      tenantsList.forEach(t => {
-        tenantMap[t._id.toString()] = t;
-      });
-
-      const bedsByRoomId = {};
-      rBeds.forEach(bed => {
-        if (bed.tenant) {
-          bed.tenant = tenantMap[bed.tenant.toString()] || null;
-        }
-        const roomIdStr = bed.roomId.toString();
-        if (!bedsByRoomId[roomIdStr]) bedsByRoomId[roomIdStr] = [];
-        bedsByRoomId[roomIdStr].push(bed);
-      });
-
-      const roomsByFloorId = {};
-      fRooms.forEach(room => {
-        room.beds = bedsByRoomId[room._id.toString()] || [];
-        const floorIdStr = room.floor.toString();
-        if (!roomsByFloorId[floorIdStr]) roomsByFloorId[floorIdStr] = [];
-        roomsByFloorId[floorIdStr].push(room);
-      });
-
-      bFloors.forEach(f => {
-        f.rooms = roomsByFloorId[f._id.toString()] || [];
-      });
-
-      b.floors = bFloors;
-      building = b;
-    }
-
-    // 2. Fetch Owner details
-    const ownerUser = await User.findById(building.owner).select('-password').lean();
-    const ownerProfile = await OwnerProfile.findOne({ userId: building.owner }).lean();
-    const ownerBuildings = await Building.find({ owner: building.owner }, 'name address').lean();
-
-    const ownerDetails = {
-      name: ownerUser?.name || 'Unknown Owner',
-      phone: ownerUser?.phone || ownerProfile?.personalInfo?.phone || 'N/A',
-      email: ownerUser?.email || ownerProfile?.personalInfo?.email || 'N/A',
-      address: ownerProfile?.personalInfo?.address || 'N/A',
-      profilePhoto: ownerProfile?.personalInfo?.profilePhotoUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',
-      assignedHostels: ownerBuildings.map(ob => ({ id: ob._id, name: ob.name, address: ob.address }))
-    };
-
-    // 3. Fetch Tenant details with payment history
-    const tenants = await Tenant.find({ buildingId: id }).lean();
-    const payments = await Payment.find({ buildingId: id }).sort({ date: -1 }).lean();
-
-    const tenantsEnriched = tenants.map(tenant => {
-      const tenantPayments = payments
-        .filter(p => p.tenantId && p.tenantId.toString() === tenant._id.toString())
-        .map(p => ({
-          id: p._id,
-          amount: p.amount,
-          status: p.status,
-          date: p.date,
-          type: p.type,
-          method: p.method,
-          invoice: p.invoice,
-          transactionId: p.transactionId
-        }));
-
-      const isVerified = tenant.docs && tenant.docs.some(doc => doc.verified);
-
-      return {
-        id: tenant._id,
-        name: tenant.name,
-        email: tenant.email,
-        phone: tenant.phone,
-        room: tenant.room || 'N/A',
-        bedNumber: tenant.bedId ? 'Allocated' : 'N/A',
-        checkInDate: tenant.checkInDate || tenant.createdAt,
-        rentStatus: tenant.rentStatus || 'PENDING',
-        paymentHistory: tenantPayments,
-        isVerified: isVerified ? 'Verified' : 'Pending',
-        profilePhoto: tenant.profilePhoto || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200'
-      };
-    });
-
-    // 4. Fetch Staff details
-    const staffList = await Staff.find({ buildingId: id }).lean();
-    const staffEnriched = staffList.map(s => {
-      const latestSalaryStatus = s.salaryHistory && s.salaryHistory.length > 0
-        ? s.salaryHistory[s.salaryHistory.length - 1].status
-        : 'Paid';
-
-      return {
-        id: s._id,
-        name: s.name,
-        role: s.role,
-        phone: s.phone,
-        email: s.email || 'N/A',
-        shift: s.shift || 'Full Time',
-        salaryStatus: latestSalaryStatus,
-        attendanceStatus: s.attendance?.percentage !== undefined ? `${s.attendance.percentage}%` : '100%',
-        profilePhoto: s.profilePhoto || 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&q=80&w=200',
-        assignedFloors: 'All Floors'
-      };
-    });
-
-    // 5. Aggregate Room & Occupancy Analytics
-    let totalRooms = 0;
-    let occupiedRooms = 0;
-    let vacantRooms = 0;
-    let maintenanceRooms = 0;
-    let totalBeds = 0;
-    let occupiedBeds = 0;
-
-    const floorWiseOccupancy = [];
-
-    if (building.floors && building.floors.length > 0) {
-      building.floors.forEach(floor => {
-        let floorBeds = 0;
-        let floorOccupiedBeds = 0;
-        let floorRoomsCount = 0;
-
-        if (floor.rooms && floor.rooms.length > 0) {
-          floorRoomsCount = floor.rooms.length;
-          totalRooms += floorRoomsCount;
-
-          floor.rooms.forEach(room => {
-            if (room.status === 'MAINTENANCE') {
-              maintenanceRooms++;
-            } else if (room.status === 'AVAILABLE') {
-              vacantRooms++;
-            } else {
-              occupiedRooms++;
-            }
-
-            const capacity = room.capacity || 0;
-            totalBeds += capacity;
-            floorBeds += capacity;
-
-            if (room.beds && room.beds.length > 0) {
-              room.beds.forEach(bed => {
-                if (bed.status === 'OCCUPIED') {
-                  occupiedBeds++;
-                  floorOccupiedBeds++;
-                }
-              });
-            }
-          });
-        }
-
-        floorWiseOccupancy.push({
-          floorId: floor._id,
-          floorNumber: `Floor ${floor.floorNumber}`,
-          totalRooms: floorRoomsCount,
-          totalBeds: floorBeds,
-          occupiedBeds: floorOccupiedBeds,
-          occupancyPercentage: floorBeds > 0 ? Math.round((floorOccupiedBeds / floorBeds) * 100) : 0
-        });
-      });
-    }
-
-    const occupancyRate = totalBeds > 0 ? Math.min(100, Math.round((occupiedBeds / totalBeds) * 100)) : 0;
-    const monthlyRevenue = occupiedBeds * (building.startingPrice || 8500);
-
-    const analytics = {
-      totalRooms,
-      occupiedRooms,
-      vacantRooms,
-      maintenanceRooms,
-      totalBeds,
-      occupiedBeds,
-      vacantBeds: totalBeds - occupiedBeds,
-      occupancyRate,
-      monthlyRevenue,
-      floorWiseOccupancy
-    };
-
-    res.status(200).json({
-      hostelDetails: {
-        id: building._id,
-        name: building.name,
-        address: building.address,
-        locationCity: building.locationCity,
-        category: building.category || 'Mixed',
-        description: building.description || 'Premium PG and residential lodging space.',
-        startingPrice: building.startingPrice || 8500,
-        securityDeposit: building.securityDeposit || 0,
-        maintenanceCharges: building.maintenanceCharges || 799,
-        foodCharges: building.foodCharges || 3000,
-        genderType: building.genderType || 'Mixed',
-        amenities: building.amenities && building.amenities.length > 0 ? building.amenities : ['Wifi', 'AC', 'Gym', 'Laundry'],
-        images: building.images && building.images.length > 0 ? building.images : ['https://images.unsplash.com/photo-1555854817-5b2260d50c63?auto=format&fit=crop&q=80&w=800'],
-        createdAt: building.createdAt || new Date(),
-        policies: building.policies || { smoking: 'Not Allowed', alcohol: 'Not Allowed', pets: 'No', visitors: 'Till 8 PM' }
-      },
-      ownerDetails,
-      tenants: tenantsEnriched,
-      staff: staffEnriched,
-      analytics
-    });
-
-  } catch (error) {
-    console.error('Error fetching building portfolio:', error);
-    res.status(500).json({ error: 'Failed to fetch building portfolio details', details: error.message });
-  }
-};
-
 module.exports = {
   createBuilding,
   getBuildings,
   getBuildingById,
-  getBuildingPortfolio,
   updateBuilding,
   deleteBuilding,
   bulkCreateBuildings,

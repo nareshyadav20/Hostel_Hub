@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wrench, CheckCircle, Clock, AlertTriangle, CheckCircle2, MessageSquare, Zap, Activity, Droplets, Filter, RefreshCw, ChevronDown, X, Shirt, Sparkles, Search } from 'lucide-react';
-import { api } from '../mockData';
+import { api } from '../api';
 import socket, { connectSocket } from '../utils/socket';
 import { clearAllCache } from '../cache';
 
