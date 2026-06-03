@@ -80,7 +80,13 @@ export const api = {
   },
 
   // Buildings & Infrastructure
-  getBuildings: async () => {
+  getBuildings: async (bypassCache = false) => {
+    if (bypassCache) {
+      const res = await axios.get(`${API_URL}/buildings`, { params: { status: 'Active' } });
+      const data = Array.isArray(res.data) ? res.data : (res.data || []);
+      cacheSet('buildings_active', data);
+      return handleId(data);
+    }
     return await swrFetch('buildings_active', `${API_URL}/buildings`, { params: { status: 'Active' } });
   },
   getDraftBuildings: async () => {
@@ -334,14 +340,17 @@ export const api = {
   // CRUD Operations
   addBuilding: async (data) => {
     const res = await axios.post(`${API_URL}/buildings`, data);
+    cacheSet('buildings_active', null);
     return handleId(res.data);
   },
   updateBuilding: async (id, data) => {
     const res = await axios.patch(`${API_URL}/buildings/${id}`, data);
+    cacheSet('buildings_active', null);
     return handleId(res.data);
   },
   deleteBuilding: async (id) => {
     await axios.delete(`${API_URL}/buildings/${id}`);
+    cacheSet('buildings_active', null);
   },
   uploadPhotos: async (formData) => {
     const res = await axios.post(`${API_URL}/buildings/upload`, formData, {
@@ -353,14 +362,17 @@ export const api = {
   },
   addFloor: async (data) => {
     const res = await axios.post(`${API_URL}/floors`, data);
+    cacheSet('all_floors', null);
     return handleId(res.data);
   },
   updateFloor: async (id, data) => {
     const res = await axios.put(`${API_URL}/floors/${id}`, data);
+    cacheSet('all_floors', null);
     return handleId(res.data);
   },
   deleteFloor: async (id) => {
     await axios.delete(`${API_URL}/floors/${id}`);
+    cacheSet('all_floors', null);
   },
   addRoom: async (data) => {
     const res = await axios.post(`${API_URL}/rooms`, data);

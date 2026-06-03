@@ -12,7 +12,7 @@ const createBuilding = async (req, res) => {
       startingPrice, securityDeposit, maintenanceCharges, foodCharges,
       rentSingle, rentDouble, rentTriple, totalRooms, totalBeds,
       genderType, category, rating, popularityLabel,
-      policies, staffInfo, status, lastStep, draftData
+      policies, staffInfo, status, lastStep, draftData, showInPortfolio
     } = req.body;
 
     const parseField = (field, defaultValue) => {
@@ -70,6 +70,7 @@ const createBuilding = async (req, res) => {
       status: status || 'Active',
       lastStep: lastStep || 1,
       draftData: finalDraftData,
+      showInPortfolio: showInPortfolio !== undefined ? showInPortfolio : true,
       owner: req.user.id
     });
 
@@ -101,10 +102,33 @@ const getBuildings = async (req, res) => {
     }
     console.log(`[DEBUG] getBuildings query:`, JSON.stringify(query));
     const buildings = await Building.find(query)
-      .select('-floors -images -draftData -gallery -description') // Exclude heavy fields (base64 images can be 300KB+)
+      .select('-floors -images -draftData -gallery -description')
       .lean();
-    console.log(`[DEBUG] Found ${buildings.length} buildings for owner ${req.user.id}`);
-    res.status(200).json(buildings);
+
+    const populatedBuildings = await Promise.all(buildings.map(async (building) => {
+      const floorDocs = await Floor.find({ building: building._id });
+      const floorIds = floorDocs.map(f => f._id);
+      
+      const rooms = await Room.find({ floor: { $in: floorIds } }).populate('beds');
+      
+      let totalBeds = 0;
+      let occupiedBeds = 0;
+      
+      rooms.forEach(room => {
+        const beds = room.beds || [];
+        totalBeds += beds.length;
+        occupiedBeds += beds.filter(b => b.status === 'OCCUPIED' || b.status === 'Occupied').length;
+      });
+      
+      building.totalRooms = rooms.length;
+      building.totalBeds = totalBeds;
+      building.occupancyPercentage = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+      
+      return building;
+    }));
+
+    console.log(`[DEBUG] Found ${populatedBuildings.length} buildings for owner ${req.user.id}`);
+    res.status(200).json(populatedBuildings);
   } catch (error) {
     console.error(`[DEBUG] getBuildings error:`, error);
     res.status(500).json({ error: error.message });
@@ -281,52 +305,45 @@ const bulkCreateBuildings = async (req, res) => {
 
 const getBuildingById = async (req, res) => {
   try {
-    let building = await Building.findById(req.params.id).populate({
-      path: 'floors',
-      populate: {
-        path: 'rooms',
-        populate: {
-          path: 'beds',
-          populate: { path: 'tenant' }
-        }
-      }
+    const building = await Building.findById(req.params.id);
+    if (!building) return res.status(404).json({ error: 'Building not found' });
+
+    const bObj = building.toObject();
+
+    // Query floors directly
+    const floors = await Floor.find({ building: building._id });
+    const bFloors = await Promise.all(floors.map(async (floor) => {
+      const floorObj = floor.toObject();
+      const rooms = await Room.find({ floor: floor._id }).populate({
+        path: 'beds',
+        populate: { path: 'tenant' }
+      });
+      floorObj.rooms = rooms.map(r => r.toObject());
+      return floorObj;
+    }));
+
+    bObj.floors = bFloors;
+
+    // Dynamically calculate live rooms, beds and occupancy
+    let totalRooms = 0;
+    let totalBeds = 0;
+    let occupiedBeds = 0;
+    
+    bFloors.forEach(floor => {
+      const rooms = floor.rooms || [];
+      totalRooms += rooms.length;
+      rooms.forEach(room => {
+        const beds = room.beds || [];
+        totalBeds += beds.length;
+        occupiedBeds += beds.filter(b => b.status === 'OCCUPIED' || b.status === 'Occupied').length;
+      });
     });
+    
+    bObj.totalRooms = totalRooms;
+    bObj.totalBeds = totalBeds;
+    bObj.occupancyPercentage = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
 
-    if (!building) {
-      const mongoose = require('mongoose');
-      const db = mongoose.connection.db;
-      let objId;
-      try {
-        objId = new mongoose.Types.ObjectId(req.params.id);
-      } catch (e) {
-        return res.status(404).json({ error: 'Building not found' });
-      }
-
-      const b = await db.collection('buildings').findOne({ _id: objId });
-      if (!b) {
-        return res.status(404).json({ error: 'Building not found' });
-      }
-
-      // Populate floors, rooms, beds from 'floors', 'rooms', 'beds'
-      const bFloors = await db.collection('floors').find({ building: b._id }).toArray();
-      for (const f of bFloors) {
-        const fRooms = await db.collection('rooms').find({ floor: f._id }).toArray();
-        for (const r of fRooms) {
-          const rBeds = await db.collection('beds').find({ roomId: r._id }).toArray();
-          for (const bed of rBeds) {
-            if (bed.tenant) {
-              bed.tenant = await db.collection('tenants').findOne({ _id: bed.tenant });
-            }
-          }
-          r.beds = rBeds;
-        }
-        f.rooms = fRooms;
-      }
-      b.floors = bFloors;
-      building = b;
-    }
-
-    res.status(200).json(building);
+    res.status(200).json(bObj);
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
