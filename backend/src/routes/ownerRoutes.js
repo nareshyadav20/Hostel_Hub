@@ -11,6 +11,7 @@ router.patch('/profile', ownerController.updateProfile);
 router.post('/documents', ownerController.uploadDocument);
 router.get('/stats', ownerController.getStats);
 router.get('/history', ownerController.getHistory);
+router.get('/portfolio', ownerController.getPortfolio);
 router.post('/profile/photo', ownerController.uploadPhoto);
 router.get('/profile/photo', ownerController.getOwnerPhoto);
 

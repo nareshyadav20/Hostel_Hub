@@ -289,6 +289,7 @@ body {
   max-width: 1280px;
   margin: 0 auto;
   position: relative;
+  z-index: 20;
 }
 
 .hv2-hero::before {
@@ -306,7 +307,7 @@ body {
 
 .hv2-hero-left {
   position: relative;
-  z-index: 1;
+  z-index: 20;
   display: flex;
   flex-direction: column;
   gap: 0
@@ -484,15 +485,49 @@ body {
   top: calc(100% + 8px);
   left: 0;
   width: max-content;
-  min-width: 180px;
+  min-width: 200px;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1), 0 3px 10px rgba(0, 0, 0, 0.05);
   border: 1px solid #e2e8f0;
   padding: 6px;
+  max-height: 250px;
+  overflow-y: auto;
+  overflow-x: hidden;
   z-index: 3000;
   animation: dropdownSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: top;
+}
+
+.hv2-dropdown-grid-3x3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  min-width: 300px;
+}
+
+.hv2-dropdown-grid-3x3 .hv2-dropdown-item {
+  justify-content: center;
+  text-align: center;
+}
+
+/* Custom Scrollbar for Dropdown */
+.hv2-dropdown-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.hv2-dropdown-list::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 6px 0;
+}
+
+.hv2-dropdown-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.hv2-dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 @keyframes dropdownSlide {
@@ -508,7 +543,7 @@ body {
 }
 
 .hv2-dropdown-item {
-  padding: 8px 12px;
+  padding: 8px 16px 8px 12px;
   border-radius: 8px;
   font-size: 0.88rem;
   font-weight: 600;
@@ -537,7 +572,9 @@ body {
   font-size: 0.8rem;
   font-weight: 900;
   margin-left: auto;
+  padding-left: 8px;
 }
+
 
 .hv2-search-sep {
   width: 1px;
@@ -800,28 +837,78 @@ body {
 
 /* Responsive breakpoints */
 @media (max-width: 1200px) {
-  .hv2-hero { grid-template-columns: 1fr; }
-  .hv2-cat-grid { grid-template-columns: repeat(3, 1fr); }
-  .hv2-hero-img { height: 350px; }
+  .hv2-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .hv2-cat-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .hv2-hero-img {
+    height: 350px;
+  }
 }
+
 @media (max-width: 992px) {
-  .hv2-cat-grid { grid-template-columns: repeat(2, 1fr); }
+  .hv2-cat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
+
 @media (max-width: 768px) {
-  .hv2-hero { padding: 2rem 1.5rem; }
-  .hv2-hero-img { height: 250px; }
-  .hv2-cat-grid { grid-template-columns: 1fr; }
-  .hv2-hero-btns { flex-direction: column; gap: 0.8rem; }
-  .hv2-btn-primary, .hv2-btn-secondary { width: 100%; height: 48px; font-size: 0.95rem; }
+  .hv2-hero {
+    padding: 2rem 1.5rem;
+  }
+
+  .hv2-hero-img {
+    height: 250px;
+  }
+
+  .hv2-cat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hv2-hero-btns {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .hv2-btn-primary,
+  .hv2-btn-secondary {
+    width: 100%;
+    height: 48px;
+    font-size: 0.95rem;
+  }
 }
+
 @media (max-width: 576px) {
-  .hv2-hero { padding: 1.5rem 1rem; }
-  .hv2-hero-h1 { font-size: clamp(32px, 8vw, 48px); }
-  .hv2-hero-desc { font-size: 16px; }
-  .hv2-search-bar { flex-direction: column; gap: 0.5rem; }
-  .hv2-search-field { min-width: 100%; }
-  .hv2-search-btn { width: 100%; }
+  .hv2-hero {
+    padding: 1.5rem 1rem;
+  }
+
+  .hv2-hero-h1 {
+    font-size: clamp(32px, 8vw, 48px);
+  }
+
+  .hv2-hero-desc {
+    font-size: 16px;
+  }
+
+  .hv2-search-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .hv2-search-field {
+    min-width: 100%;
+  }
+
+  .hv2-search-btn {
+    width: 100%;
+  }
 }
+
 .hv2-float-num {
   font-size: 1.6rem;
   font-weight: 900;

@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { AlertCircle, Lightbulb, Bell, Users, Utensils, ShieldCheck, TrendingUp, FileText, ClipboardList, ChevronRight, Download, X, Building } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
-import { api } from './mockData';
+import { api } from './api';
 
 const PIE_COLORS = ['#EF4444','#F59E0B','#8B5CF6','#6B7280'];
 
@@ -33,6 +33,7 @@ export function ComplaintsPanel({ data }) {
   const navigate = useNavigate();
   const { buildingId } = useParams();
   if (!data) return null;
+  const categories = Array.isArray(data.categories) ? data.categories : [];
   return (
     <div className="card" style={{ padding:'1.5rem', borderRadius:'16px', border:'1px solid var(--border-color)', height:'100%', display:'flex', flexDirection:'column'  }}>
       <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.2rem'  }}>
@@ -41,10 +42,10 @@ export function ComplaintsPanel({ data }) {
       </div>
       <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'0.8rem', marginBottom:'1.2rem'  }}>
         {[
-          { label:'Total', value:data.total, color:'var(--text-primary)' },
-          { label:'Open', value:data.open, color:'#EF4444' },
-          { label:'Resolved', value:data.resolved, color:'#10B981' },
-          { label:'High Priority', value:data.highPriority, color:'#F59E0B' },
+          { label:'Total', value:data.total || 0, color:'var(--text-primary)' },
+          { label:'Open', value:data.open || 0, color:'#EF4444' },
+          { label:'Resolved', value:data.resolved || 0, color:'#10B981' },
+          { label:'High Priority', value:data.highPriority || 0, color:'#F59E0B' },
         ].map((s,i) => (
           <div key={i} style={{ background:'var(--bg-tertiary)', padding:'0.8rem', borderRadius:'10px', textAlign:'center'  }}>
             <p style={{ fontSize:'1.3rem', fontWeight:'800', color:s.color, margin:0  }}>{s.value}</p>
@@ -54,10 +55,10 @@ export function ComplaintsPanel({ data }) {
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column'  }}>
         <div style={{ height:'140px', marginTop: '0.5rem'  }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={1}>
             <PieChart>
               <Pie 
-                data={data.categories || []} 
+                data={categories} 
                 dataKey="count" 
                 nameKey="name" 
                 innerRadius={35} 
@@ -65,7 +66,7 @@ export function ComplaintsPanel({ data }) {
                 paddingAngle={5}
                 stroke="none"
               >
-                {(data.categories || []).map((c,i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                {categories.map((c,i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
               </Pie>
               <Tooltip 
                 contentStyle={{ background:'var(--bg-secondary)', border:'1px solid var(--border-color)', borderRadius:'12px', fontSize:'0.75rem' }}
@@ -75,8 +76,8 @@ export function ComplaintsPanel({ data }) {
           </ResponsiveContainer>
         </div>
         <div style={{ display:'flex', flexWrap:'wrap', gap:'0.5rem', marginTop:'0.5rem'  }}>
-          {data.categories.map((c,i) => (
-            <span key={i} style={{ fontSize:'0.72rem', padding:'0.2rem 0.6rem', borderRadius:'100px', background:`${PIE_COLORS[i]}20`, color:PIE_COLORS[i], fontWeight:'700' }}>
+          {categories.map((c,i) => (
+            <span key={i} style={{ fontSize:'0.72rem', padding:'0.2rem 0.6rem', borderRadius:'100px', background:`${PIE_COLORS[i % PIE_COLORS.length]}20`, color:PIE_COLORS[i % PIE_COLORS.length], fontWeight:'700' }}>
               {c.name}: {c.count}
             </span>
           ))}
@@ -100,21 +101,29 @@ export function MessPanel({ data, buildingId: propBuildingId }) {
   const { buildingId: urlBuildingId } = useParams();
   const buildingId = urlBuildingId || propBuildingId;
   if (!data) return null;
+
+  const avgFoodRating = data.avgFoodRating || 0;
+  const mealsServedToday = data.mealsServedToday || 0;
+  const dailyMessCost = data.dailyMessCost || 0;
+  const monthlyMessCost = data.monthlyMessCost || 0;
+  const menuToday = data.menuToday || { breakfast: 'Not Set', lunch: 'Not Set', dinner: 'Not Set' };
+  const inventory = Array.isArray(data.inventory) ? data.inventory : [];
+
   return (
     <div className="card" style={{ padding:'1.5rem', borderRadius:'20px', border:'1px solid var(--border-color)', display: 'flex', flexDirection: 'column', height: '100%'  }}>
       <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1.5rem'  }}>
         <Utensils size={18} color="#8B5CF6" />
         <h3 style={{ fontSize:'1rem', fontWeight:'900'  }}>Mess Management</h3>
         <span style={{ marginLeft:'auto', fontSize:'0.8rem', color:'#10B981', fontWeight:'800', background:'rgba(16, 185, 129, 0.1)', padding:'0.2rem 0.6rem', borderRadius:'100px'  }}>
-          ⭐ {data.avgFoodRating}/5
+          ⭐ {avgFoodRating}/5
         </span>
       </div>
       
       <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'0.8rem', marginBottom:'1.5rem'  }}>
         {[
-          { label:'Meals Today', value:data.mealsServedToday, color:'#8B5CF6', bg: 'rgba(139, 92, 246, 0.05)' },
-          { label:'Daily Cost', value:`₹${(data.dailyMessCost/1000).toFixed(1)}k`, color:'#F59E0B', bg: 'rgba(245, 158, 11, 0.05)' },
-          { label:'Monthly Cost', value:`₹${(data.monthlyMessCost/1000).toFixed(0)}k`, color:'#EF4444', bg: 'rgba(239, 68, 68, 0.05)' },
+          { label:'Meals Today', value:mealsServedToday, color:'#8B5CF6', bg: 'rgba(139, 92, 246, 0.05)' },
+          { label:'Daily Cost', value:`₹${(dailyMessCost/1000).toFixed(1)}k`, color:'#F59E0B', bg: 'rgba(245, 158, 11, 0.05)' },
+          { label:'Monthly Cost', value:`₹${(monthlyMessCost/1000).toFixed(0)}k`, color:'#EF4444', bg: 'rgba(239, 68, 68, 0.05)' },
         ].map((s,i) => (
           <div key={i} style={{ background:s.bg, padding:'1rem 0.5rem', borderRadius:'12px', textAlign:'center', border: '1px solid var(--border-color)'  }}>
             <p style={{ fontSize:'1.4rem', fontWeight:'1000', color:s.color, margin:0  }}>{s.value}</p>
@@ -126,7 +135,7 @@ export function MessPanel({ data, buildingId: propBuildingId }) {
       <div style={{ marginBottom:'1.5rem', padding:'1rem', background:'var(--bg-tertiary)', borderRadius:'16px', border: '1px solid var(--border-color)'  }}>
         <p style={{ fontSize:'0.75rem', fontWeight:'900', color:'var(--text-muted)', marginBottom:'0.8rem', textTransform: 'uppercase', letterSpacing: '0.04em'  }}>Today's Menu</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem'  }}>
-          {Object.entries(data.menuToday).map(([meal, menu]) => (
+          {Object.entries(menuToday).map(([meal, menu]) => (
             <div key={meal} style={{ display:'grid', gridTemplateColumns: '80px 1fr', gap:'1rem', fontSize:'0.85rem', alignItems: 'center'  }}>
               <span style={{ fontWeight:'900', color:'var(--text-muted)', textTransform:'uppercase', fontSize: '0.7rem', letterSpacing: '0.02em'  }}>{meal}</span>
               <span style={{ color:'var(--text-primary)', fontWeight: '700', borderLeft: '2px solid var(--border-color)', paddingLeft: '0.8rem'  }}>{menu}</span>
@@ -138,7 +147,7 @@ export function MessPanel({ data, buildingId: propBuildingId }) {
       <div style={{ flex: 1  }}>
         <p style={{ fontSize:'0.75rem', fontWeight:'900', color:'var(--text-muted)', marginBottom:'0.8rem', textTransform: 'uppercase', letterSpacing: '0.04em'  }}>Low Stock Alerts</p>
         <div style={{ display:'flex', flexDirection:'column', gap:'0.6rem'  }}>
-          {data.inventory.filter(i => i.alert).map((item,i) => (
+          {inventory.filter(i => i.alert).map((item,i) => (
             <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'0.7rem 1rem', background:'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.1)', borderRadius:'12px', fontSize:'0.85rem'  }}>
               <span style={{ fontWeight:'800', color:'#EF4444'  }}>⚠ {item.item}</span>
               <span style={{ color:'var(--text-secondary)', fontWeight:'700'  }}>{item.stock} {item.unit} left</span>

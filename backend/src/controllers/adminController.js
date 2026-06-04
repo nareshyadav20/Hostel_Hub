@@ -11,6 +11,7 @@ const TenantProof = require('../models/TenantProof');
 const AdminCms = require('../models/AdminCms');
 const AdminInsights = require('../models/AdminInsights');
 const AdminSupport = require('../models/AdminSupport');
+const OwnerNotification = require('../models/OwnerNotification');
 
 /**
  * GET /api/admin/owners
@@ -854,6 +855,165 @@ const sendSupportChatMessage = async (req, res) => {
   }
 };
 
+const approveBuilding = async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const db = mongoose.connection.db;
+    
+    let building = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      building = await Building.findById(req.params.id);
+    }
+    
+    const approvedById = mongoose.Types.ObjectId.isValid(req.user.id)
+      ? new mongoose.Types.ObjectId(req.user.id)
+      : req.user.id;
+    
+    const updateData = {
+      status: 'Active',
+      approvalStatus: 'approved',
+      isApproved: true,
+      approvedBy: approvedById,
+      approvedAt: new Date()
+    };
+
+    if (building) {
+      building.status = updateData.status;
+      building.approvalStatus = updateData.approvalStatus;
+      building.isApproved = updateData.isApproved;
+      building.approvedBy = updateData.approvedBy;
+      building.approvedAt = updateData.approvedAt;
+      await building.save();
+    }
+
+    // Now update owner_buildings
+    let obQuery = {};
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      obQuery._id = new mongoose.Types.ObjectId(req.params.id);
+    } else {
+      obQuery._id = req.params.id;
+    }
+
+    const obExists = await db.collection('owner_buildings').findOne(obQuery);
+    if (obExists) {
+      await db.collection('owner_buildings').updateOne(obQuery, { $set: updateData });
+      if (!building) {
+        // Fallback to building object from owner_buildings if not in standard collection
+        building = await db.collection('owner_buildings').findOne(obQuery);
+      }
+    }
+
+    if (!building) return res.status(404).json({ error: 'Building not found' });
+
+    const socketService = require('../utils/socketService');
+    socketService.emitUpdate(building._id, 'hostelUpdated', building);
+    socketService.emitUpdate(null, 'hostelUpdated', building);
+    
+    try {
+      await OwnerNotification.create({
+        moduleName: 'Properties',
+        portalType: 'Owner',
+        category: 'Hostel Approval',
+        title: 'Hostel Approved',
+        message: `Your hostel "${building.name}" has been approved and is now active.`,
+        priority: 'High',
+        type: 'success',
+        receiverId: building.owner ? building.owner.toString() : null,
+        receiverRole: 'Owner',
+        buildingId: building._id,
+        owner: building.owner
+      });
+    } catch (notifErr) {
+      console.error('Failed to notify owner:', notifErr);
+    }
+    
+    res.status(200).json({ message: 'Building approved successfully', building });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to approve building', details: err.message });
+  }
+};
+
+const rejectBuilding = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const mongoose = require('mongoose');
+    const db = mongoose.connection.db;
+    
+    let building = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      building = await Building.findById(req.params.id);
+    }
+    
+    const rejectedById = mongoose.Types.ObjectId.isValid(req.user.id)
+      ? new mongoose.Types.ObjectId(req.user.id)
+      : req.user.id;
+    
+    const updateData = {
+      status: 'Rejected',
+      approvalStatus: 'rejected',
+      isApproved: false,
+      rejectionReason: reason || 'No reason provided',
+      rejectedBy: rejectedById,
+      rejectedAt: new Date()
+    };
+
+    if (building) {
+      building.status = updateData.status;
+      building.approvalStatus = updateData.approvalStatus;
+      building.isApproved = updateData.isApproved;
+      building.rejectionReason = updateData.rejectionReason;
+      building.rejectedBy = updateData.rejectedBy;
+      building.rejectedAt = updateData.rejectedAt;
+      await building.save();
+    }
+
+    // Now update owner_buildings
+    let obQuery = {};
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      obQuery._id = new mongoose.Types.ObjectId(req.params.id);
+    } else {
+      obQuery._id = req.params.id;
+    }
+
+    const obExists = await db.collection('owner_buildings').findOne(obQuery);
+    if (obExists) {
+      await db.collection('owner_buildings').updateOne(obQuery, { $set: updateData });
+      if (!building) {
+        // Fallback to building object from owner_buildings if not in standard collection
+        building = await db.collection('owner_buildings').findOne(obQuery);
+      }
+    }
+
+    if (!building) return res.status(404).json({ error: 'Building not found' });
+    
+    const socketService = require('../utils/socketService');
+    socketService.emitUpdate(building._id, 'hostelUpdated', building);
+    socketService.emitUpdate(null, 'hostelUpdated', building);
+    
+    try {
+      await OwnerNotification.create({
+        moduleName: 'Properties',
+        portalType: 'Owner',
+        category: 'Hostel Approval',
+        title: 'Hostel Rejected',
+        message: `Your hostel "${building.name}" was rejected. Reason: ${updateData.rejectionReason}`,
+        priority: 'High',
+        type: 'error',
+        receiverId: building.owner ? building.owner.toString() : null,
+        receiverRole: 'Owner',
+        buildingId: building._id,
+        owner: building.owner
+      });
+    } catch (notifErr) {
+      console.error('Failed to notify owner:', notifErr);
+    }
+    
+    res.status(200).json({ message: 'Building rejected', building });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to reject building', details: err.message });
+  }
+};
+
 module.exports = { 
   getAllOwners, 
   updateOwnerStatus, 
@@ -873,5 +1033,7 @@ module.exports = {
   getAdminSupport,
   updateAdminSupport,
   escalateSupportTicket,
-  sendSupportChatMessage
+  sendSupportChatMessage,
+  approveBuilding,
+  rejectBuilding
 };

@@ -61,6 +61,9 @@ const createPayment = async (req, res) => {
       tenantId: populated.tenantId?._id,
       actionLink: '/payments'
     });
+
+    // Return the created payment record
+    res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -71,12 +74,12 @@ const getAllPayments = async (req, res) => {
     const ownerId = req.user.id;
     const isPlatformAdmin = req.user && req.user.role && ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role.toUpperCase());
 
-    // 1. Get all buildings owned by this user
-    const buildings = await Building.find(isPlatformAdmin ? {} : { owner: ownerId });
+    // 1. Get building IDs only (no need to fetch full building documents)
+    const buildings = await Building.find(isPlatformAdmin ? {} : { owner: ownerId }).select('_id').lean();
     const buildingIds = buildings.map(b => b._id);
 
     // 2. If specific buildingId is requested, validate ownership
-    const { buildingId } = req.query;
+    const { buildingId, page, limit: queryLimit } = req.query;
     let query;
     if (buildingId) {
       if (!isPlatformAdmin) {
@@ -85,16 +88,35 @@ const getAllPayments = async (req, res) => {
       }
       query = { buildingId };
     } else {
-      query = { buildingId: { $in: buildingIds } };
+      query = isPlatformAdmin ? {} : { buildingId: { $in: buildingIds } };
     }
     
-    // 3. Find payments scoped to the query
-    const payments = await Payment.find(query)
-      .populate({ path: 'tenantId', select: 'name room' })
-      .populate('buildingId')
-      .sort({ date: -1 });
+    // 3. Pagination (default: 200 records, max: 500)
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(500, Math.max(1, parseInt(queryLimit) || 200));
+    const skip = (pageNum - 1) * limitNum;
 
-    res.status(200).json(payments);
+    // 4. Find payments with lean queries and selective population
+    const [payments, total] = await Promise.all([
+      Payment.find(query)
+        .populate({ path: 'tenantId', select: 'name room' })
+        .populate({ path: 'buildingId', select: 'name address' })
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      Payment.countDocuments(query)
+    ]);
+
+    res.status(200).json({
+      payments,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum)
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import './Payments.css';
+import { jsPDF } from 'jspdf';
 
 const Payments = () => {
   const navigate = useNavigate();
@@ -11,6 +12,126 @@ const Payments = () => {
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  const downloadInvoicePDF = (invoice) => {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const primaryColor = [99, 102, 241]; 
+    const secondaryColor = [30, 41, 59]; 
+    const lightGrey = [241, 245, 249]; 
+    const darkGrey = [100, 116, 139]; 
+
+    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.rect(0, 0, 210, 40, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text('LIVORA HOSTEL HUB', 20, 22);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text('Premium Resident Living Services', 20, 28);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text('INVOICE', 190, 25, { align: 'right' });
+
+    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Provider Details:', 20, 52);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Livora Living Solutions Pvt. Ltd.', 20, 57);
+    doc.text('Koramangala 4th Block, Bengaluru', 20, 62);
+    doc.text('GSTIN: 29AAFCL7429L1Z5', 20, 67);
+    doc.text('Contact: warden@livora.com', 20, 72);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Bill To:', 120, 52);
+    doc.setFont('helvetica', 'normal');
+    doc.text(tenantData?.name || 'Resident Name', 120, 57);
+    doc.text(tenantData?.email || 'Resident Email', 120, 62);
+    doc.text(`Phone: ${tenantData?.phone || 'N/A'}`, 120, 67);
+    doc.text(`Status: ${invoice.status}`, 120, 72);
+
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.5);
+    doc.line(20, 80, 190, 80);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Invoice Date:', 20, 90);
+    doc.setFont('helvetica', 'normal');
+    doc.text(invoice.date, 50, 90);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Transaction ID:', 20, 95);
+    doc.setFont('helvetica', 'normal');
+    doc.text(invoice.id, 50, 95);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Payment Status:', 120, 90);
+    doc.setFont('helvetica', 'normal');
+    doc.text(invoice.status, 155, 90);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Payment Method:', 120, 95);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Online Transaction', 155, 95);
+
+    doc.setFillColor(lightGrey[0], lightGrey[1], lightGrey[2]);
+    doc.rect(20, 105, 170, 10, 'F');
+    doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Description', 25, 111);
+    doc.text('Qty', 135, 111, { align: 'right' });
+    doc.text('Rate', 160, 111, { align: 'right' });
+    doc.text('Amount', 185, 111, { align: 'right' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.text(invoice.id.startsWith('BKG-') ? 'Hostel Room Booking Deposit' : 'Monthly Rent Payment', 25, 125);
+    doc.text('1', 135, 125, { align: 'right' });
+    doc.text(`INR ${invoice.amount.toLocaleString()}`, 160, 125, { align: 'right' });
+    doc.text(`INR ${invoice.amount.toLocaleString()}`, 185, 125, { align: 'right' });
+
+    doc.line(20, 132, 190, 132);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Subtotal:', 140, 142, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(`INR ${invoice.amount.toLocaleString()}`, 185, 142, { align: 'right' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Tax (CGST+SGST 0%):', 140, 148, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text('INR 0', 185, 148, { align: 'right' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('Total Paid:', 140, 156, { align: 'right' });
+    doc.text(`INR ${invoice.amount.toLocaleString()}`, 185, 156, { align: 'right' });
+
+    doc.setFillColor(lightGrey[0], lightGrey[1], lightGrey[2]);
+    doc.rect(20, 170, 170, 20, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(darkGrey[0], darkGrey[1], darkGrey[2]);
+    doc.text('Terms & Notes:', 25, 176);
+    doc.setFont('helvetica', 'normal');
+    doc.text('This is a computer-generated document. No physical signature is required.', 25, 182);
+    doc.text('For any billing queries, please contact the hostel warden or finance desk.', 25, 186);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text('Thank you for staying with Livora!', 105, 210, { align: 'center' });
+
+    doc.save(`Invoice_${invoice.id}.pdf`);
+  };
   
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,11 +144,7 @@ const Payments = () => {
         setTenantData(profileRes.data);
         const tId = profileRes.data._id;
         
-        // Mock data fallback if API fails
-        const paymentsRes = await API.get(`/payments/me?tenantId=${tId}`).catch(() => ({ data: [
-          { _id: '1', invoice: 'BKG-850860', amount: 14000, status: 'Paid', createdAt: '2026-05-05T00:00:00Z' },
-          { _id: '2', invoice: 'RENT-1029', amount: 8500, status: 'Pending', createdAt: new Date().toISOString() }
-        ]}));
+        const paymentsRes = await API.get(`/payments/me?tenantId=${tId}`).catch(() => ({ data: [] }));
         
         setInvoices(paymentsRes.data.map(p => ({
           id: p.invoice || `#INV-${p._id.slice(-6)}`,
@@ -189,6 +306,7 @@ const Payments = () => {
                   </td>
                   <td>
                     <button className="btn-table-details" onClick={() => setSelectedInvoice(invoice)}>Details</button>
+                    <button className="btn-table-download" onClick={() => downloadInvoicePDF(invoice)}>Download Invoice (PDF)</button>
                   </td>
                 </tr>
               ))}
@@ -210,9 +328,14 @@ const Payments = () => {
                 </div>
                 <div className="m-amount">₹{invoice.amount.toLocaleString()}</div>
               </div>
-              <button className="btn-mobile-details" onClick={() => setSelectedInvoice(invoice)}>
-                View Details
-              </button>
+              <div className="mobile-card-actions" style={{ display: 'flex', gap: '0.5rem' }}>
+                <button className="btn-mobile-details" style={{ flex: 1 }} onClick={() => setSelectedInvoice(invoice)}>
+                  View Details
+                </button>
+                <button className="btn-mobile-download" style={{ flex: 1, padding: '0.75rem', background: 'var(--primary)', border: 'none', borderRadius: 'var(--radius-sm)', color: 'white', fontWeight: '700', fontSize: '0.8rem', cursor: 'pointer' }} onClick={() => downloadInvoicePDF(invoice)}>
+                  Download PDF
+                </button>
+              </div>
             </div>
           ))}
         </div>

@@ -5,7 +5,7 @@ import {
   BedDouble, User, AlertTriangle, SlidersHorizontal,
   Settings2, History, Filter, Layers, ChevronDown, ChevronRight, Building2, FileText
 } from 'lucide-react';
-import { api } from '../mockData';
+import { api } from '../api.js';
 import socket, { connectSocket } from '../utils/socket';
 
 
@@ -39,6 +39,7 @@ const Rooms = () => {
   const [filterType, setFilterType] = useState('All');
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState('rooms'); // 'rooms' or 'transfers'
+  const [showBedLayoutModal, setShowBedLayoutModal] = useState(false);
   const [transferRequests, setTransferRequests] = useState([]);
 
   const loadRoomsData = useCallback(async () => {
@@ -83,9 +84,21 @@ const Rooms = () => {
   useEffect(() => {
     window.addEventListener('focus', loadRoomsData);
     const interval = setInterval(loadRoomsData, 30000);
+
+    // Reload stats when Buildings page adds a new bed
+    const onStorage = (e) => {
+      if (e.type === 'bedStatsUpdated' || (e.type === 'storage' && e.key === 'bedStatsUpdated')) {
+        loadRoomsData();
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('bedStatsUpdated', onStorage);
+
     return () => {
       window.removeEventListener('focus', loadRoomsData);
       clearInterval(interval);
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('bedStatsUpdated', onStorage);
     };
   }, [loadRoomsData]);
 
@@ -342,12 +355,14 @@ const Rooms = () => {
       {/* ────────────────────────────────────────────────── */}
 
       <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2.5rem' }}>
-        <button
-          onClick={() => setActiveTab('rooms')}
-          style={{ padding: '1rem 2rem', background: 'none', border: 'none', borderBottom: activeTab === 'rooms' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: activeTab === 'rooms' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer' }}
-        >
-          Floors & Rooms
-        </button>
+                    <button
+              className="btn"
+              onClick={() => setShowBedLayoutModal(true)}
+              style={{ padding: '1rem 2rem', background: 'none', border: 'none', borderBottom: activeTab === 'rooms' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: activeTab === 'rooms' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer' }}
+            >
+              View Beds
+            </button>
+          
         <button
           onClick={() => setActiveTab('transfers')}
           style={{ padding: '1rem 2rem', background: 'none', border: 'none', borderBottom: activeTab === 'transfers' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: activeTab === 'transfers' ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
@@ -512,14 +527,6 @@ const Rooms = () => {
                                     </div>
                                   </div>
 
-                                  {/* Smart Room Features Chips */}
-                                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-                                    {room.hygieneRating && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#10b98115', color: '#10b981', borderRadius: '4px', fontWeight: '800' }}>✨ Hygiene {room.hygieneRating}/5</span>}
-                                    {room.studyFriendly && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#3b82f615', color: '#3b82f6', borderRadius: '4px', fontWeight: '800' }}>📚 Study Friendly</span>}
-                                    {room.smartLock && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#8b5cf615', color: '#8b5cf6', borderRadius: '4px', fontWeight: '800' }}>🔒 Smart Lock</span>}
-                                    {room.ventilationScore > 0 && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#0ea5e915', color: '#0ea5e9', borderRadius: '4px', fontWeight: '800' }}>💨 Vent: {room.ventilationScore}/10</span>}
-                                    {room.femaleSafety && <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', background: '#ec489915', color: '#ec4899', borderRadius: '4px', fontWeight: '800' }}>🛡️ Safety Verified</span>}
-                                  </div>
 
                                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                                     <button onClick={() => toggleRoomExpand(room.id)} className="btn btn-primary" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', borderRadius: '8px' }}>
@@ -600,12 +607,137 @@ const Rooms = () => {
         </motion.div>
       )}
 
+        {/* Bed Layout Modal */}
+        {showBedLayoutModal && (
+          <AnimatePresence>
+            <div style={{ position: 'fixed', inset: 0, zIndex: 4000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(12px)' }}
+                onClick={() => setShowBedLayoutModal(false)}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  maxWidth: '900px',
+                  maxHeight: '90vh',
+                  background: "var(--bg-card)",
+                  borderRadius: '24px',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  boxShadow: '0 50px 100px -20px rgba(0,0,0,0.3)'
+                }}
+              >
+                {/* Header */}
+                <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', background: "var(--bg-card)", display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Bed Layout</h2>
+                  <button onClick={() => setShowBedLayoutModal(false)} style={{ background: '#F8FAFC', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '8px', padding: '0.5rem 1rem' }}>Close</button>
+                </div>
+                 {/* Summary Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', padding: '1.5rem 1.5rem 0.5rem 1.5rem' }}>
+                  <div style={{ background: 'var(--bg-primary)', borderRadius: '16px', padding: '1rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.8rem', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)' }}>
+                    <span style={{ fontSize: '1.5rem' }}>🛏️</span>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Beds</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-primary)' }}>{bedStats.totalBeds}</div>
+                    </div>
+                  </div>
+                  <div style={{ background: 'var(--bg-primary)', borderRadius: '16px', padding: '1rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.8rem', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)' }}>
+                    <span style={{ fontSize: '1.5rem' }}>👤</span>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Filled Beds</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#ef4444' }}>{bedStats.filledBeds} / {bedStats.totalBeds}</div>
+                    </div>
+                  </div>
+                  <div style={{ background: 'var(--bg-primary)', borderRadius: '16px', padding: '1rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.8rem', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow-sm)' }}>
+                    <span style={{ fontSize: '1.5rem' }}>✅</span>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Available Beds</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#10b981' }}>{bedStats.availableBeds}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Occupancy Bar */}
+                <div style={{ padding: '0.5rem 1.5rem 1rem 1.5rem' }}>
+                  <div style={{ background: '#e5e7eb', borderRadius: '99px', overflow: 'hidden', height: '12px' }}>
+                    <div style={{ width: `${((bedStats.filledBeds || 0) / (bedStats.totalBeds || 1)) * 100}%`, background: '#10b981', height: '100%', borderRadius: '99px', transition: 'width 0.6s ease' }} />
+                  </div>
+                  <div style={{ fontSize: '0.85rem', marginTop: '0.5rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                    Bed Occupancy: {bedStats.filledBeds} / {bedStats.totalBeds} ({Math.round(((bedStats.filledBeds || 0) / (bedStats.totalBeds || 1)) * 100)}% Occupied)
+                  </div>
+                </div>
+
+                {/* Legend Above Grid */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', margin: '0.5rem 0 1.5rem 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '18px', height: '18px', background: '#10b981', borderRadius: '4px' }}></div>
+                    <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#10b981' }}>Available Bed</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '18px', height: '18px', background: '#ef4444', borderRadius: '4px' }}></div>
+                    <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#ef4444' }}>Filled Bed</span>
+                  </div>
+                </div>
+
+                {/* Grid */}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '0 1.5rem 1.5rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '10px', width: 'fit-content' }}>
+                    {Array.from({ length: bedStats.totalBeds || 100 }, (_, i) => {
+                      const bedLabel = `${i + 1}`;
+                      const occupied = i < (bedStats.filledBeds || 0);
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            width: '64px',
+                            height: '40px',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: '700',
+                            fontSize: '0.9rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            border: occupied ? '2px solid #ef4444' : '2px solid #10b981',
+                            background: occupied ? '#ef4444' : '#ffffff',
+                            color: occupied ? '#ffffff' : '#10b981',
+                            boxShadow: occupied ? '0 1px 4px rgba(239,68,68,0.3)' : 'none',
+                          }}
+                        >
+                          {bedLabel}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Legend Below Grid */}
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem', fontSize: '0.85rem', color: '#10b981', fontWeight: '700' }}>
+                    <span>💡 Red = Filled Bed</span>
+                    <span style={{ color: 'var(--text-muted)' }}>|</span>
+                    <span>Green = Available Bed</span>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </AnimatePresence>
+        )}
+
       {/* Bed Details Modal */}
       <AnimatePresence>
         {selectedBedDetails && (
-          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 5000, padding: '1rem' }}>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setSelectedBedDetails(null)} />
-            <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} style={{ position: 'relative', width: '100%', maxWidth: '440px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', zIndex: 1001, border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} style={{ position: 'relative', width: '100%', maxWidth: '440px', background: 'var(--bg-primary)', padding: '2rem', borderRadius: '24px', zIndex: 5001, border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-2xl)', maxHeight: '90vh', overflowY: 'auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h3 style={{ fontSize: '1.3rem', fontWeight: '900', margin: 0 }}>Bed Assets & Details</h3>
                 <button onClick={() => setSelectedBedDetails(null)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}>✕</button>

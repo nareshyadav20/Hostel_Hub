@@ -1,6 +1,7 @@
 const MessMenu = require('../models/MessMenu');
 const MessAttendance = require('../models/MessAttendance');
 const OwnerPlan = require('../models/OwnerPlan');
+const Rating = require('../models/Rating');
 const socketService = require('../utils/socketService');
 
 const DEFAULT_MENU = {
@@ -150,39 +151,44 @@ exports.updateAttendance = async (req, res) => {
         if (status !== previousMealStatus) {
             try {
                 const Reward = require('../models/tenant/Reward');
-                const pointsToModify = status ? 10 : -10;
+                const User = require('../models/User');
+                // dining = +10 pts, skip = +5 sustainability pts (reward for reducing food waste)
+                const pointsToModify = status ? 10 : 5;
                 let reward = await Reward.findOne({ tenant: tenantId });
-                
+
                 if (!reward) {
+                    // Tenant model has no `user` field — resolve User by email
                     const tenantDoc = await Tenant.findById(tenantId);
                     if (tenantDoc) {
-                        reward = await Reward.create({
-                            tenant: tenantId,
-                            user: tenantDoc.user || tenantId,
-                            points: 100, // Welcome points
-                            lifetimeEarned: 100
-                        });
+                        const userDoc = await User.findOne({ email: tenantDoc.email }).lean();
+                        if (userDoc) {
+                            reward = await Reward.create({
+                                tenant: tenantId,
+                                user: userDoc._id,
+                                points: 100, // Welcome points
+                                lifetimeEarned: 100
+                            });
+                            console.log(`🎁 [REWARDS] Created new Reward wallet for tenant ${tenantId} (user: ${userDoc._id})`);
+                        } else {
+                            console.error(`⚠️ [REWARDS] No User found with email ${tenantDoc.email} — cannot create Reward wallet.`);
+                        }
+                    } else {
+                        console.error(`⚠️ [REWARDS] Tenant ${tenantId} not found — cannot create Reward wallet.`);
                     }
                 }
-                
+
                 if (reward) {
                     reward.points = Math.max(0, reward.points + pointsToModify);
-                    if (pointsToModify > 0) {
-                        reward.lifetimeEarned += pointsToModify;
-                        reward.history.push({
-                            reason: `Mess attendance reward for ${meal} on ${date}`,
-                            points: pointsToModify,
-                            type: 'Earned'
-                        });
-                    } else if (pointsToModify < 0) {
-                        reward.history.push({
-                            reason: `Reversed mess attendance reward for ${meal} on ${date}`,
-                            points: pointsToModify,
-                            type: 'Redeemed'
-                        });
-                    }
+                    reward.lifetimeEarned += pointsToModify;
+                    reward.history.push({
+                        reason: status
+                            ? `Mess attendance reward for ${meal} on ${date}`
+                            : `Sustainability bonus for skipping ${meal} on ${date}`,
+                        points: pointsToModify,
+                        type: 'Earned'
+                    });
                     await reward.save();
-                    console.log(`🎁 [REWARDS] Updated rewards for tenant ${tenantId}: ${pointsToModify} points.`);
+                    console.log(`🎁 [REWARDS] +${pointsToModify} pts for tenant ${tenantId} (${status ? 'dining' : 'skip'}). New balance: ${reward.points}`);
                 }
             } catch (rewardErr) {
                 console.error('⚠️ [REWARDS] Failed to update mess attendance rewards:', rewardErr.message);
@@ -423,6 +429,69 @@ exports.updatePlan = async (req, res) => {
         
         res.json(updated);
     } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.submitRating = async (req, res) => {
+    try {
+        const { rating, feedback } = req.body;
+
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ message: 'Rating must be a number between 1 and 5.' });
+        }
+
+        // JWT carries { id: User._id, email, role }
+        // Look up the Tenant profile by email (always present in the token)
+        const Tenant = require('../models/Tenant');
+        const tenant = await Tenant.findOne({ email: req.user.email });
+
+        if (!tenant) {
+            return res.status(404).json({ message: 'Tenant profile not found for this account.' });
+        }
+
+        const buildingId = tenant.buildingId?._id || tenant.buildingId;
+        if (!buildingId) {
+            return res.status(400).json({ message: 'You must be assigned to a building before submitting a rating.' });
+        }
+
+        // Determine meal type based on current hour (IST-adjusted)
+        const hour = new Date().getHours();
+        let mealType = 'dinner';
+        if (hour < 11) mealType = 'breakfast';
+        else if (hour < 16) mealType = 'lunch';
+
+        const newRating = new Rating({
+            tenantId: tenant._id,
+            buildingId,
+            mealType,
+            rating,
+            feedback: feedback || ''
+        });
+
+        await newRating.save();
+
+        // Notify owner about the new feedback
+        try {
+            const notificationService = require('../utils/notificationService');
+            await notificationService.createNotification({
+                moduleName: 'Mess',
+                portalType: 'Owner',
+                category: 'Feedback',
+                title: `Meal Rated: ${rating}/5 Stars`,
+                message: `${tenant.name} rated their last meal (${mealType}) as ${rating} star${rating > 1 ? 's' : ''}.${feedback ? ` Feedback: "${feedback}"` : ''}`,
+                priority: rating <= 2 ? 'High' : 'Low',
+                type: 'info',
+                buildingId,
+                actionLink: `/owner/building/${buildingId}/notifications`
+            });
+        } catch (notifErr) {
+            console.warn('⚠️ [RATING] Notification failed but rating was saved:', notifErr.message);
+        }
+
+        res.status(201).json({ message: 'Rating submitted successfully', rating: newRating });
+    } catch (err) {
+        console.error('Error submitting rating:', err);
         res.status(500).json({ message: err.message });
     }
 };

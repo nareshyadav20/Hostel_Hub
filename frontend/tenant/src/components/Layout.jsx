@@ -80,7 +80,7 @@ const Layout = ({ children }) => {
   const [aiMessage, setAiMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeToasts, setActiveToasts] = useState([]);
-  
+
   const [aiChat, setAiChat] = useState([
     { role: 'assistant', content: 'Hi! I am your Livora Hostel AI. I can help you with room bookings, mess menus, or any other facility details. How can I assist you today?' }
   ]);
@@ -89,12 +89,12 @@ const Layout = ({ children }) => {
   const isLoggedIn = !!token && !!user.name;
 
   // Use global notification context
-  const { 
-    notifications, 
-    unreadCount, 
-    markAsRead, 
-    markAllAsRead, 
-    refresh: fetchNotifications 
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    refresh: fetchNotifications
   } = useNotifications();
 
   // Toast Listener
@@ -109,7 +109,7 @@ const Layout = ({ children }) => {
         });
       }
     };
-    
+
     socket.on('newNotification', handleNewNotif);
     return () => socket.off('newNotification', handleNewNotif);
   }, []);
@@ -156,7 +156,7 @@ const Layout = ({ children }) => {
     window.location.href = '/';
   };
 
-  const handleSendAiMessage = (msg = null) => {
+  const handleSendAiMessage = async (msg = null) => {
     const text = msg || aiMessage;
     if (!text.trim()) return;
 
@@ -165,69 +165,154 @@ const Layout = ({ children }) => {
     setAiMessage('');
     setIsTyping(true);
 
-    // Expanded Deep Knowledge Base for "Full Training"
+    // Smart keyword matcher helper
+    const lowerText = text.toLowerCase().trim();
+    const match = (keywords) => keywords.some(kw => lowerText.includes(kw));
+
     setTimeout(() => {
-      let response = "I'm sorry, I'm still learning about that. You can contact the warden for specific details, or try asking about rooms, mess, WiFi, or laundry!";
-      const lowerText = text.toLowerCase();
-      
-      // Basic Info & Booking
-      if (lowerText.includes('room') || lowerText.includes('booking') || lowerText.includes('sharing') || lowerText.includes('bed')) {
-        response = "We offer Premium Single, 2-Sharing, and 3-Sharing rooms. All rooms are fully furnished with study tables, wardrobes, and attached washrooms. You can book directly through the Listing page!";
-      } 
-      // Food & Mess
-      else if (lowerText.includes('mess') || lowerText.includes('food') || lowerText.includes('meal') || lowerText.includes('dinner') || lowerText.includes('breakfast') || lowerText.includes('lunch') || lowerText.includes('eat')) {
-        response = "Our mess serves 3 nutritious meals a day. We prioritize hygiene and variety in our weekly menu. Check the 'Mess' section for the full schedule and today's specials!";
-      } 
-      // Pricing & Payments
-      else if (lowerText.includes('price') || lowerText.includes('rent') || lowerText.includes('cost') || lowerText.includes('fee') || lowerText.includes('payment') || lowerText.includes('bill')) {
-        response = "Rent starts from ₹9,000/month for 3-sharing and ₹12,000/month for 2-sharing. This includes food, WiFi, cleaning, and utilities. You can pay your rent via the 'Payments' tab.";
-      } 
-      // Utilities & Tech
-      else if (lowerText.includes('wifi') || lowerText.includes('internet') || lowerText.includes('speed') || lowerText.includes('network')) {
-        response = "We provide high-speed 100 Mbps dedicated WiFi for all residents. There are no data caps, perfect for students and professionals!";
-      } else if (lowerText.includes('power') || lowerText.includes('electricity') || lowerText.includes('backup') || lowerText.includes('ups') || lowerText.includes('generator')) {
-        response = "We have 24/7 power backup through heavy-duty generators. Your fans, lights, and WiFi will work seamlessly during power cuts!";
-      } else if (lowerText.includes('water') || lowerText.includes('drinking') || lowerText.includes('ro') || lowerText.includes('purifier') || lowerText.includes('hot water')) {
-        response = "We have 24/7 hot/cold water supply and UV+RO purifiers on every floor. Safety and hydration are guaranteed!";
-      } else if (lowerText.includes('ac') || lowerText.includes('air conditioning') || lowerText.includes('cooler')) {
-        response = "Premium rooms come with high-efficiency ACs. Standard rooms have heavy-duty ceiling fans and great ventilation.";
+      let response = "";
+
+      // ── Greetings & Conversation ──
+      if (match(['hello', 'hi ', 'hey', 'hii', 'hola', 'namaste', 'good morning', 'good afternoon', 'good evening', 'good night', 'sup', 'howdy', 'yo']) || lowerText === 'hi') {
+        const greetings = [
+          `Hey ${user.name ? user.name.split(' ')[0] : 'there'}! 👋 Welcome to Livora AI. How can I help you today? You can ask about rooms, mess, payments, WiFi, or anything about hostel life!`,
+          `Hi there! 😊 I'm your Livora assistant. Feel free to ask me about room availability, mess menus, laundry, WiFi, or any hostel facilities!`,
+          `Hello! 🏠 Great to see you. I can help with bookings, pricing, amenities, complaints, and more. What would you like to know?`
+        ];
+        response = greetings[Math.floor(Math.random() * greetings.length)];
       }
-      // Amenities & Facilities
-      else if (lowerText.includes('gym') || lowerText.includes('fitness') || lowerText.includes('workout') || lowerText.includes('exercise')) {
-        response = "Yes! We have a dedicated fitness zone with modern equipment available for all residents from 6 AM to 10 PM.";
-      } else if (lowerText.includes('laundry') || lowerText.includes('wash') || lowerText.includes('cloth') || lowerText.includes('iron')) {
-        response = "Professional laundry services are available 3 times a week. Drop your clothes at the desk, and they'll be returned clean and folded!";
-      } else if (lowerText.includes('parking') || lowerText.includes('bike') || lowerText.includes('cycle') || lowerText.includes('car')) {
-        response = "We provide secure basement parking for 2-wheelers. 4-wheeler parking is available in the vicinity with prior notice.";
-      } else if (lowerText.includes('tv') || lowerText.includes('movie') || lowerText.includes('common') || lowerText.includes('game') || lowerText.includes('recreation')) {
-        response = "Our common lounge has a 65-inch Smart TV, board games, and comfy seating for community chill-out sessions.";
+      // ── Thank you / Bye ──
+      else if (match(['thank', 'thanks', 'thx', 'appreciate', 'helpful', 'awesome', 'great', 'nice', 'cool', 'perfect'])) {
+        const thanks = [
+          "You're welcome! 😊 Feel free to ask anytime. I'm here 24/7 to help!",
+          "Happy to help! If you need anything else, just ask. 🙌",
+          "Glad I could assist! Don't hesitate to reach out again. 💪"
+        ];
+        response = thanks[Math.floor(Math.random() * thanks.length)];
       }
-      // Safety & Rules
-      else if (lowerText.includes('safety') || lowerText.includes('secure') || lowerText.includes('security') || lowerText.includes('emergency') || lowerText.includes('guard')) {
-        response = "Your safety is our priority. 24/7 CCTV, biometric entry, and on-site security. Use the SOS button in the 'Safety' section for emergencies.";
-      } else if (lowerText.includes('visitor') || lowerText.includes('friend') || lowerText.includes('parent') || lowerText.includes('guest')) {
-        response = "Visitors are allowed in the lobby from 9 AM to 8 PM. Parents can stay overnight in designated guest rooms with warden's permission.";
-      } else if (lowerText.includes('curfew') || lowerText.includes('time') || lowerText.includes('late') || lowerText.includes('entry')) {
-        response = "Our standard in-time is 10:30 PM for safety. Late entries are allowed for work or study with a simple digital gate pass.";
+      else if (match(['bye', 'goodbye', 'see you', 'later', 'gotta go', 'ttyl'])) {
+        response = `Bye ${user.name ? user.name.split(' ')[0] : ''}! 👋 Have a great day. I'm always here whenever you need help!`;
       }
-      // Management & Admin
-      else if (lowerText.includes('complaint') || lowerText.includes('problem') || lowerText.includes('issue') || lowerText.includes('broken') || lowerText.includes('fix')) {
-        response = "If you face any issue, raise a ticket in the 'Complaints' section. Our maintenance team usually fixes it within 24 hours!";
-      } else if (lowerText.includes('notice') || lowerText.includes('leave') || lowerText.includes('vacate') || lowerText.includes('refund')) {
-        response = "We require a 30-day notice period before vacating. Security deposits are processed within 15 days of checkout.";
-      } else if (lowerText.includes('document') || lowerText.includes('id') || lowerText.includes('aadhaar') || lowerText.includes('proof')) {
-        response = "For move-in, we need your ID proof (Aadhaar/DL), college/work ID, and 2 passport-size photos for the hostel registry.";
-      } else if (lowerText.includes('event') || lowerText.includes('party') || lowerText.includes('celebration') || lowerText.includes('birthday')) {
-        response = "We love community! We celebrate birthdays, festivals, and organize monthly social events for all residents.";
-      } else if (lowerText.includes('warden') || lowerText.includes('manager') || lowerText.includes('contact desk')) {
-        response = "You can contact the Warden (Mr. Rajesh) at +91 98765 43210. His office is located on the Ground Floor near the main entrance.";
-      } else if (lowerText.includes('livora') || lowerText.includes('who') || lowerText.includes('about')) {
-        response = "Livora is a premium student living brand providing a high-end 'Home away from Home' with focus on comfort, safety, and community.";
+      // ── Help / What can you do ──
+      else if (match(['help', 'assist', 'what can you', 'what do you', 'support', 'guide', 'how to', 'how do i', 'can you'])) {
+        response = "I can help you with:\n\n🏠 **Rooms & Booking** — availability, types, pricing\n🍽️ **Mess & Food** — menus, timings, diet options\n💰 **Payments & Rent** — bills, dues, payment methods\n📶 **WiFi & Internet** — speed, connectivity\n👕 **Laundry** — schedules, services\n🔒 **Safety & Security** — CCTV, SOS, guards\n🏋️ **Amenities** — gym, parking, common areas\n📝 **Complaints** — raise and track issues\n📞 **Contact Warden** — phone, office location\n\nJust type your question and I'll do my best!";
+      }
+      // ── Room & Booking ──
+      else if (match(['room', 'booking', 'sharing', 'bed', 'occupancy', 'vacancy', 'available', 'accommodation', 'stay', 'allot', 'assign', 'single', 'double', 'triple', 'dormitory', 'dorm', 'furnished'])) {
+        response = "🏠 We offer Premium Single, 2-Sharing, and 3-Sharing rooms. All rooms are fully furnished with study tables, wardrobes, and attached washrooms. You can book directly through the Listing page! Use the 'Room Availability' quick action to see what's open.";
+      }
+      // ── Food & Mess ──
+      else if (match(['mess', 'food', 'meal', 'dinner', 'breakfast', 'lunch', 'eat', 'menu', 'snack', 'tiffin', 'canteen', 'kitchen', 'diet', 'veg', 'non-veg', 'nonveg', 'jain', 'nutrition', 'hungry', 'thali'])) {
+        response = "🍽️ Our mess serves 3 nutritious meals a day with both veg and non-veg options. We prioritize hygiene and variety in our weekly rotating menu. Check the 'Mess' section in the app for the full schedule, today's specials, and upcoming menus!";
+      }
+      // ── Pricing & Payments ──
+      else if (match(['price', 'rent', 'cost', 'fee', 'payment', 'bill', 'money', 'charge', 'deposit', 'amount', 'dues', 'pay', 'upi', 'transaction', 'invoice', 'receipt', 'affordable', 'budget', 'expensive', 'cheap'])) {
+        response = "💰 Rent starts from ₹9,000/month for 3-sharing and ₹12,000/month for 2-sharing. This includes food, WiFi, cleaning, and utilities. You can view and pay your rent via the 'Payments' tab in the app. We accept UPI, net banking, and card payments!";
+      }
+      // ── WiFi & Internet ──
+      else if (match(['wifi', 'wi-fi', 'internet', 'speed', 'network', 'broadband', 'data', 'bandwidth', 'connection', 'online', 'stream', 'download'])) {
+        response = "📶 We provide high-speed 100 Mbps dedicated WiFi for all residents — no data caps! Perfect for streaming, studying, and video calls. If you face connectivity issues, report it via the Complaints section.";
+      }
+      // ── Power & Electricity ──
+      else if (match(['power', 'electricity', 'backup', 'ups', 'generator', 'inverter', 'voltage', 'outage', 'blackout', 'current'])) {
+        response = "⚡ We have 24/7 power backup through heavy-duty generators. Your fans, lights, and WiFi will work seamlessly during power cuts — zero downtime guaranteed!";
+      }
+      // ── Water ──
+      else if (match(['water', 'drinking', 'purifier', 'hot water', 'geyser', 'shower', 'bath'])) {
+        response = "💧 We have 24/7 hot & cold water supply and UV+RO purifiers on every floor. Hot water geysers are available in all washrooms for comfortable bathing!";
+      }
+      // ── AC & Cooling ──
+      else if (match(['ac', 'air conditioning', 'cooler', 'fan', 'cooling', 'heater', 'temperature'])) {
+        response = "❄️ Premium rooms come with high-efficiency split ACs. Standard rooms have heavy-duty ceiling fans and great ventilation. You can request AC room upgrades through the app!";
+      }
+      // ── Gym & Fitness ──
+      else if (match(['gym', 'fitness', 'workout', 'exercise', 'yoga', 'sports', 'play'])) {
+        response = "🏋️ Yes! We have a dedicated fitness zone with modern equipment available from 6 AM to 10 PM. Some properties also have outdoor sports areas and yoga spaces!";
+      }
+      // ── Laundry ──
+      else if (match(['laundry', 'wash', 'cloth', 'iron', 'pressing', 'dry clean', 'dryer'])) {
+        response = "👕 Professional laundry services are available 3 times a week (Mon/Wed/Fri). Drop your clothes at the collection desk by 9 AM, and they'll be returned clean and folded the same evening!";
+      }
+      // ── Parking & Transport ──
+      else if (match(['parking', 'bike', 'cycle', 'car', 'vehicle', 'scooter', 'two wheeler', 'garage'])) {
+        response = "🅿️ We provide secure basement parking for 2-wheelers with CCTV monitoring. 4-wheeler parking is available nearby with prior notice. Bicycle stands are available at the entrance!";
+      }
+      // ── Common Areas & Recreation ──
+      else if (match(['tv', 'movie', 'common', 'game', 'recreation', 'lounge', 'hangout', 'chill', 'entertainment'])) {
+        response = "🎮 Our common lounge has a 65-inch Smart TV, board games, TT table, and comfy seating for community hangouts. Movie nights are organized every weekend!";
+      }
+      // ── Safety & Security ──
+      else if (match(['safety', 'secure', 'security', 'emergency', 'guard', 'cctv', 'camera', 'sos', 'fire', 'theft', 'biometric', 'lock'])) {
+        response = "🔒 Your safety is our top priority! We have 24/7 CCTV surveillance, biometric entry, fire extinguishers, and trained security guards. Use the SOS feature in the app for emergencies!";
+      }
+      // ── Visitors & Guests ──
+      else if (match(['visitor', 'friend', 'parent', 'guest', 'relative', 'visit'])) {
+        response = "👥 Visitors are allowed in the lobby area from 9 AM to 8 PM. Parents can stay overnight in designated guest rooms with warden's permission. All visitors must register at the reception.";
+      }
+      // ── Curfew & Timings ──
+      else if (match(['curfew', 'timing', 'late', 'in-time', 'gate', 'entry time', 'closing', 'open', 'hours', 'schedule'])) {
+        response = "🕐 Standard in-time is 10:30 PM for safety. Late entries are allowed for work or study with a simple digital gate pass — apply through the app before 9 PM!";
+      }
+      // ── Complaints & Issues ──
+      else if (match(['complaint', 'problem', 'issue', 'broken', 'fix', 'repair', 'maintenance', 'not working', 'damage', 'bug', 'report', 'ticket'])) {
+        response = "📝 If you face any issue, raise a ticket in the 'Complaints' section of the app. Our maintenance team usually resolves issues within 24 hours. You can track your complaint status in real-time!";
+      }
+      // ── Notice & Vacating ──
+      else if (match(['notice', 'vacate', 'refund', 'checkout', 'check-out', 'moving out', 'cancel', 'cancellation', 'terminate'])) {
+        response = "📋 We require a 30-day notice period before vacating. Security deposits are processed within 15 business days of checkout. Submit your notice through the app or contact the warden directly.";
+      }
+      // ── Check-in & Move-in ──
+      else if (match(['check-in', 'checkin', 'check in', 'move-in', 'move in', 'moving in', 'join', 'admission', 'register', 'enroll', 'onboard'])) {
+        response = "🏡 Welcome aboard! For check-in, bring your ID proof (Aadhaar/DL), college/work ID, and 2 passport-size photos. Complete your profile setup in the app to speed up the process!";
+      }
+      // ── Documents & ID ──
+      else if (match(['document', 'aadhaar', 'proof', 'verification', 'verify', 'kyc', 'passport', 'id proof', 'identity', 'pan card'])) {
+        response = "📄 For move-in, we need your ID proof (Aadhaar/DL), college/work ID, and 2 passport-size photos. You can upload these digitally through the profile setup section in the app!";
+      }
+      // ── Events & Community ──
+      else if (match(['event', 'party', 'celebration', 'birthday', 'festival', 'diwali', 'holi', 'christmas', 'new year', 'social'])) {
+        response = "🎉 We love community! We celebrate birthdays, festivals (Diwali, Holi, and more), and organize monthly social events, movie nights, and game tournaments for all residents!";
+      }
+      // ── Warden & Contact ──
+      else if (match(['warden', 'manager', 'contact', 'phone', 'call', 'reach', 'office', 'reception', 'front desk', 'admin', 'staff'])) {
+        response = "📞 You can contact the Warden (Mr. Rajesh) at +91 98765 43210. His office is on the Ground Floor near the main entrance, open 9 AM – 6 PM. For urgent matters, use the SOS feature!";
+      }
+      // ── About Livora ──
+      else if (match(['livora', 'who', 'about', 'what is', 'tell me'])) {
+        response = "🏠 Livora is a premium student living brand providing a high-end 'Home away from Home' experience. We focus on comfort, safety, community, and smart technology to make hostel life amazing!";
+      }
+      // ── Cleaning & Housekeeping ──
+      else if (match(['clean', 'housekeep', 'sweep', 'mop', 'dust', 'hygiene', 'sanitize', 'pest', 'cockroach', 'mosquito'])) {
+        response = "🧹 Daily housekeeping is included! Common areas are cleaned twice a day, and room cleaning happens 3 times a week. Pest control is done monthly. Report any hygiene concerns via the Complaints section.";
+      }
+      // ── Study & Work ──
+      else if (match(['study', 'library', 'reading', 'exam', 'work from home', 'wfh', 'workspace', 'desk', 'quiet'])) {
+        response = "📚 We have a dedicated study room/library that's open 24/7 with high-speed WiFi, charging points, and quiet zones. Perfect for exam prep and work-from-home sessions!";
+      }
+      // ── Medical & Health ──
+      else if (match(['medical', 'doctor', 'health', 'sick', 'hospital', 'clinic', 'fever', 'medicine', 'first aid', 'ambulance', 'ill', 'unwell'])) {
+        response = "🏥 We have a first-aid kit at the reception and tie-ups with nearby hospitals. For medical emergencies, use the SOS feature or contact the warden immediately. A doctor-on-call service is available!";
+      }
+      // ── Roommate ──
+      else if (match(['roommate', 'room mate', 'partner', 'sharing with', 'co-living', 'coliving', 'neighbor', 'neighbour'])) {
+        response = "🤝 Roommates are assigned based on your preferences (occupation, lifestyle). You can request specific roommates or a roommate change through the warden. We aim for the best compatibility!";
+      }
+      // ── Location & Address ──
+      else if (match(['location', 'address', 'where', 'direction', 'map', 'nearby', 'area', 'landmark', 'distance'])) {
+        response = "📍 Check the hostel location and nearby landmarks on the Listing page. Each property page shows the full address, Google Maps link, and distance from key locations like metro stations and colleges!";
+      }
+      // ── Rules & Policies ──
+      else if (match(['rule', 'policy', 'regulation', 'guideline', 'allowed', 'prohibited', 'banned', 'smoking', 'alcohol', 'drugs', 'noise', 'pet'])) {
+        response = "📜 Key rules: No smoking/alcohol on premises, quiet hours from 10 PM – 7 AM, and guests must be registered. Pets are not allowed. Full hostel guidelines are available in the app under 'Rules & Policies'.";
+      }
+      // ── Default Fallback (Improved) ──
+      else {
+        response = `🤔 I'm not sure about that specific query, but I'd love to help! Here are some topics I know well:\n\n• 🏠 Rooms & Booking\n• 🍽️ Mess & Food\n• 💰 Pricing & Payments\n• 📶 WiFi & Internet\n• 👕 Laundry\n• 🔒 Safety & Security\n• 🏋️ Gym & Amenities\n• 📝 Complaints\n• 🧹 Cleaning\n• 📞 Warden Contact\n• 📋 Check-in/Check-out\n\nTry asking about any of these, or contact the warden at +91 98765 43210 for specific queries!`;
       }
 
       setAiChat([...newChat, { role: 'assistant', content: response }]);
       setIsTyping(false);
-    }, 1200);
+    }, 800);
   };
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -244,17 +329,23 @@ const Layout = ({ children }) => {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  const handleProfileSubmit = (e) => {
+  const handleProfileSubmit = async (e) => {
     e.preventDefault();
     const updatedUser = { ...user, ...modalData, profileCompletion: 50 };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-
-    const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
-    const userIndex = users.findIndex(u => u.email === user.email);
-    if (userIndex > -1) {
-      users[userIndex] = updatedUser;
-      localStorage.setItem('mock_users', JSON.stringify(users));
+    
+    try {
+      // Send profile update to backend
+      const token = localStorage.getItem('token');
+      if (token) {
+        await API.put('/tenant/profile', updatedUser, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch (err) {
+      console.error('Failed to update profile on backend', err);
     }
+    
+    localStorage.setItem('user', JSON.stringify(updatedUser));
     setShowProfileModal(false);
     window.location.reload();
   };
@@ -265,10 +356,10 @@ const Layout = ({ children }) => {
       <div style={{ position: 'fixed', top: '24px', right: '24px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '12px', pointerEvents: 'none' }}>
         <AnimatePresence>
           {activeToasts.map(toast => (
-            <Toast 
-              key={toast.toastId} 
-              notification={toast} 
-              onClose={() => setActiveToasts(prev => prev.filter(t => t.toastId !== toast.toastId))} 
+            <Toast
+              key={toast.toastId}
+              notification={toast}
+              onClose={() => setActiveToasts(prev => prev.filter(t => t.toastId !== toast.toastId))}
             />
           ))}
         </AnimatePresence>
@@ -279,180 +370,180 @@ const Layout = ({ children }) => {
 
       <main className={isLoggedIn ? "main-content" : "main-content guest"}>
         {!(isLoggedIn && isListingPage) && (
-        <header className="content-header">
-          {isLoggedIn && (
-            <button className="hamburger-btn" onClick={toggleSidebar}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
-            </button>
-          )}
-
-          <div className="user-profile">
-            <ThemeToggle />
-            {isLoggedIn ? (
-              <>
-                <div className="notifications-container" ref={notifRef} style={{ position: 'relative' }}>
-                  <div className="notifications" onClick={() => setShowNotifDropdown(!showNotifDropdown)}>
-                    <Bell size={20} />
-                    {unreadCount > 0 && (
-                      <span className="notification-badge badge-pulse" style={{ 
-                        position: 'absolute', top: '-5px', right: '-5px', 
-                        background: '#EF4444', color: 'white', borderRadius: '50%', 
-                        width: '18px', height: '18px', display: 'flex', 
-                        alignItems: 'center', justifyContent: 'center',
-                        fontSize: '10px', fontWeight: '900' 
-                      }}>
-                        {unreadCount}
-                      </span>
-                    )}
-                  </div>
-
-                  <AnimatePresence>
-                    {showNotifDropdown && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="profile-dropdown glass-card" 
-                        style={{ right: '-10px', width: '320px', padding: '0', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}
-                      >
-                        <div className="dropdown-header" style={{ background: 'var(--bg-tertiary)', padding: '1.2rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800' }}>Notifications</h4>
-                          {unreadCount > 0 && (
-                            <button onClick={markAllAsRead} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '800' }}>Mark all read</button>
-                          )}
-                        </div>
-                        <div style={{ maxHeight: '350px', overflowY: 'auto', scrollbarWidth: 'none' }}>
-                          {notifications.length === 0 ? (
-                            <div style={{ padding: '3rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                              <Bell size={40} style={{ opacity: 0.1, marginBottom: '1rem' }} />
-                              <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>All caught up!</p>
-                            </div>
-                          ) : (
-                            notifications.map((n, i) => (
-                              <div key={i} style={{ padding: '1.25rem', borderBottom: '1px solid var(--border-color)', background: n.isRead ? 'transparent' : 'rgba(99,102,241,0.03)', display: 'flex', gap: '1rem', cursor: 'pointer', transition: '0.2s' }}
-                                onClick={async () => {
-                                  if (!n.isRead) markAsRead(n._id || n.id);
-                                  setShowNotifDropdown(false);
-                                  if (n.moduleName === 'Complaints') navigate('/complaints');
-                                  if (n.moduleName === 'Payments') navigate('/payments');
-                                  if (n.moduleName === 'Mess') navigate('/mess');
-                                }}>
-                                <div style={{ flex: 1 }}>
-                                  <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', fontWeight: '750', color: 'var(--text-primary)' }}>{n.title}</h5>
-                                  <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{n.message}</p>
-                                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem', display: 'block' }}>
-                                    <Clock size={10} style={{ display: 'inline', marginRight: '4px' }} /> 
-                                    {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                  </span>
-                                </div>
-                                {!n.isRead && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)', alignSelf: 'center', flexShrink: 0 }}></div>}
-                              </div>
-                            ))
-                          )}
-                        </div>
-                        <div className="dropdown-footer" style={{ padding: '1rem', textAlign: 'center', borderTop: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
-                          <button 
-                            onClick={() => { setShowNotifDropdown(false); navigate('/notifications'); }}
-                            style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.85rem', cursor: 'pointer', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto' }}
-                          >
-                            View All Notifications
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                <div className="avatar-container" ref={dropdownRef}>
-                  <div className="profile-mini-box" onClick={() => setShowDropdown(!showDropdown)}>
-                    <div className="profile-text">
-                      <span className="p-name">{user.name || 'Guest User'}</span>
-                      <span className="p-role">Premium Resident</span>
-                    </div>
-                    <div className="profile-avatar">
-                      <img
-                        src={user.profileImage || `https://ui-avatars.com/api/?name=${user.name || 'User'}&background=10b981&color=fff`}
-                        alt="Profile"
-                      />
-                    </div>
-                  </div>
-
-                  {showDropdown && (
-                    <div className="profile-dropdown glass-card">
-                      <div className="dropdown-header">
-                        <div className="dropdown-avatar-large">
-                          {user.name ? user.name[0].toUpperCase() : 'U'}
-                        </div>
-                        <div className="dropdown-user-info">
-                          <h4>{user.name || 'uma'}</h4>
-                          <p>{user.email || 'uma@gmail.com'}</p>
-                        </div>
-                      </div>
-                      <div className="dropdown-divider"></div>
-
-                      {user.profileCompletion && user.profileCompletion < 100 && (
-                        <div className="setup-progress-card">
-                          <div className="setup-progress-header">
-                            <span>Setup Progress</span>
-                            <span className="setup-percent">{user.profileCompletion}%</span>
-                          </div>
-                          <div className="setup-progress-bar">
-                            <div className="setup-progress-fill" style={{ width: `${user.profileCompletion}%` }}></div>
-                          </div>
-
-                          {user.profileCompletion < 50 && (
-                            <button className="btn-primary-small" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
-                              Complete Profile
-                            </button>
-                          )}
-                          {user.profileCompletion === 50 && (
-                            <div className="setup-next-step">
-                              Next: Book a Room to Verify ID
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="dropdown-divider"></div>
-                      <button className="dropdown-item" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                          <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                        Profile
-                      </button>
-                      <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/payments'); }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                          <line x1="1" y1="10" x2="23" y2="10"></line>
-                        </svg>
-                        Payments
-                      </button>
-                      <div className="dropdown-divider"></div>
-                      <button className="dropdown-item logout" onClick={handleLogout}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                          <polyline points="16 17 21 12 16 7"></polyline>
-                          <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="guest-nav">
-                <Link to="/login" className="nav-btn">Sign In</Link>
-                <Link to="/signup" className="nav-btn primary">Sign Up</Link>
-              </div>
+          <header className="content-header">
+            {isLoggedIn && (
+              <button className="hamburger-btn" onClick={toggleSidebar}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
             )}
-          </div>
-        </header>
+
+            <div className="user-profile">
+              <ThemeToggle />
+              {isLoggedIn ? (
+                <>
+                  <div className="notifications-container" ref={notifRef} style={{ position: 'relative' }}>
+                    <div className="notifications" onClick={() => setShowNotifDropdown(!showNotifDropdown)}>
+                      <Bell size={20} />
+                      {unreadCount > 0 && (
+                        <span className="notification-badge badge-pulse" style={{
+                          position: 'absolute', top: '-5px', right: '-5px',
+                          background: '#EF4444', color: 'white', borderRadius: '50%',
+                          width: '18px', height: '18px', display: 'flex',
+                          alignItems: 'center', justifyContent: 'center',
+                          fontSize: '10px', fontWeight: '900'
+                        }}>
+                          {unreadCount}
+                        </span>
+                      )}
+                    </div>
+
+                    <AnimatePresence>
+                      {showNotifDropdown && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          className="profile-dropdown glass-card"
+                          style={{ right: '-10px', width: '320px', padding: '0', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}
+                        >
+                          <div className="dropdown-header" style={{ background: 'var(--bg-tertiary)', padding: '1.2rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '800' }}>Notifications</h4>
+                            {unreadCount > 0 && (
+                              <button onClick={markAllAsRead} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '800' }}>Mark all read</button>
+                            )}
+                          </div>
+                          <div style={{ maxHeight: '350px', overflowY: 'auto', scrollbarWidth: 'none' }}>
+                            {notifications.length === 0 ? (
+                              <div style={{ padding: '3rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                <Bell size={40} style={{ opacity: 0.1, marginBottom: '1rem' }} />
+                                <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>All caught up!</p>
+                              </div>
+                            ) : (
+                              notifications.map((n, i) => (
+                                <div key={i} style={{ padding: '1.25rem', borderBottom: '1px solid var(--border-color)', background: n.isRead ? 'transparent' : 'rgba(99,102,241,0.03)', display: 'flex', gap: '1rem', cursor: 'pointer', transition: '0.2s' }}
+                                  onClick={async () => {
+                                    if (!n.isRead) markAsRead(n._id || n.id);
+                                    setShowNotifDropdown(false);
+                                    if (n.moduleName === 'Complaints') navigate('/complaints');
+                                    if (n.moduleName === 'Payments') navigate('/payments');
+                                    if (n.moduleName === 'Mess') navigate('/mess');
+                                  }}>
+                                  <div style={{ flex: 1 }}>
+                                    <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', fontWeight: '750', color: 'var(--text-primary)' }}>{n.title}</h5>
+                                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{n.message}</p>
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem', display: 'block' }}>
+                                      <Clock size={10} style={{ display: 'inline', marginRight: '4px' }} />
+                                      {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                  {!n.isRead && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)', alignSelf: 'center', flexShrink: 0 }}></div>}
+                                </div>
+                              ))
+                            )}
+                          </div>
+                          <div className="dropdown-footer" style={{ padding: '1rem', textAlign: 'center', borderTop: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
+                            <button
+                              onClick={() => { setShowNotifDropdown(false); navigate('/notifications'); }}
+                              style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.85rem', cursor: 'pointer', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto' }}
+                            >
+                              View All Notifications
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  <div className="avatar-container" ref={dropdownRef}>
+                    <div className="profile-mini-box" onClick={() => setShowDropdown(!showDropdown)}>
+                      <div className="profile-text">
+                        <span className="p-name">{user.name || 'Guest User'}</span>
+                        <span className="p-role">Premium Resident</span>
+                      </div>
+                      <div className="profile-avatar">
+                        <img
+                          src={user.profileImage || `https://ui-avatars.com/api/?name=${user.name || 'User'}&background=10b981&color=fff`}
+                          alt="Profile"
+                        />
+                      </div>
+                    </div>
+
+                    {showDropdown && (
+                      <div className="profile-dropdown glass-card">
+                        <div className="dropdown-header">
+                          <div className="dropdown-avatar-large">
+                            {user.name ? user.name[0].toUpperCase() : 'U'}
+                          </div>
+                          <div className="dropdown-user-info">
+                            <h4>{user.name || 'uma'}</h4>
+                            <p>{user.email || 'uma@gmail.com'}</p>
+                          </div>
+                        </div>
+                        <div className="dropdown-divider"></div>
+
+                        {user.profileCompletion && user.profileCompletion < 100 && (
+                          <div className="setup-progress-card">
+                            <div className="setup-progress-header">
+                              <span>Setup Progress</span>
+                              <span className="setup-percent">{user.profileCompletion}%</span>
+                            </div>
+                            <div className="setup-progress-bar">
+                              <div className="setup-progress-fill" style={{ width: `${user.profileCompletion}%` }}></div>
+                            </div>
+
+                            {user.profileCompletion < 50 && (
+                              <button className="btn-primary-small" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
+                                Complete Profile
+                              </button>
+                            )}
+                            {user.profileCompletion === 50 && (
+                              <div className="setup-next-step">
+                                Next: Book a Room to Verify ID
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="dropdown-divider"></div>
+                        <button className="dropdown-item" onClick={() => { setShowDropdown(false); setShowProfileModal(true); }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                          </svg>
+                          Profile
+                        </button>
+                        <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/payments'); }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                          </svg>
+                          Payments
+                        </button>
+                        <div className="dropdown-divider"></div>
+                        <button className="dropdown-item logout" onClick={handleLogout}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                          </svg>
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="guest-nav">
+                  <Link to="/login" className="nav-btn">Sign In</Link>
+                  <Link to="/signup" className="nav-btn primary">Sign Up</Link>
+                </div>
+              )}
+            </div>
+          </header>
         )}
 
         <div className="content-body">
@@ -461,9 +552,9 @@ const Layout = ({ children }) => {
           </div>
 
           {!(isLoggedIn && isListingPage) && (
-          <footer className="layout-footer">
-            <p>© 2026 Livora All rights reserved.</p>
-          </footer>
+            <footer className="layout-footer">
+              <p>© 2026 Livora All rights reserved.</p>
+            </footer>
           )}
         </div>
 
@@ -475,7 +566,7 @@ const Layout = ({ children }) => {
                 <Bot size={22} />
               </div>
               <div className="ai-fab-text">
-                <strong>Hostel AI</strong>
+                <strong>AI</strong>
                 <span>Instant Help</span>
               </div>
             </div>
@@ -554,9 +645,9 @@ const Layout = ({ children }) => {
 
               <div className="ai-chat-input-area">
                 <div className="ai-input-container">
-                  <input 
-                    type="text" 
-                    placeholder="Ask Livora AI..." 
+                  <input
+                    type="text"
+                    placeholder="Ask Livora AI..."
                     value={aiMessage}
                     onChange={(e) => setAiMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendAiMessage()}

@@ -45,8 +45,36 @@ const roomSchema = new mongoose.Schema({
   seasonalPricing: { type: Boolean, default: false },
 
   // Smart Energy Features (Step 15)
-  energyEfficient: { type: Boolean, default: false }
+  energyEfficient: { type: Boolean, default: false },
 
-}, { timestamps: true, collection: 'rooms' });
+  // Operational Analytics & Monitoring
+  occupancyState: { type: String, enum: ['Vacant', 'Partially Occupied', 'Fully Occupied'], default: 'Vacant' },
+  operationalInsights: [{ type: String }],
+  aiInsights: [{ type: String }],
+  systemHeartbeat: { type: String, default: 'Stable' },
+  airQualityScore: { type: Number, default: 100 },
+  lastCleaned: { type: Date },
+  temperature: { type: Number, default: 22.0 },
+  smartMonitoringEnabled: { type: Boolean, default: true },
+  realTimeEnabled: { type: Boolean, default: true }
+}, { 
+  timestamps: true, 
+  collection: 'rooms',
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+roomSchema.virtual('virtualBeds', {
+  ref: 'Bed',
+  localField: '_id',
+  foreignField: 'room'
+});
+
+// Alias for seed_demo compatibility
+roomSchema.virtual('virtualBedsAlias', {
+  ref: 'Bed',
+  localField: '_id',
+  foreignField: 'roomId'
+});
 
 module.exports = mongoose.model('Room', roomSchema);

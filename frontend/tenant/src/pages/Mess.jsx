@@ -121,15 +121,15 @@ const Mess = () => {
     return () => {
       socket.off('menuUpdated');
       socket.off('attendanceUpdated');
-      disconnectSocket();
     };
   }, []);
 
   const updateMyAttendance = async (status) => {
     try {
       const bId = localStorage.getItem('buildingId');
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const tenantId = user.tenantId || user._id;
+      // 'tenantId' in localStorage is set at login to tenantProfile._id (the actual Tenant _id)
+      // Do NOT use user._id — that is the User _id, not the Tenant _id
+      const tenantId = localStorage.getItem('tenantId');
       const todayDate = new Date().toLocaleDateString('sv-SE');
       
       // Determine which meal to update based on time
@@ -161,6 +161,25 @@ const Mess = () => {
 
   const handleSkipMeal = () => updateMyAttendance('skipped');
   const handleDining = () => updateMyAttendance('dining');
+
+  const handleSubmitRating = async () => {
+    try {
+      await API.post('/mess/rating', { rating });
+      setFeedbackMessage({
+        type: 'success',
+        text: `Thank you! Your ${rating}-star feedback has been recorded.`
+      });
+      setRating(0);
+      setTimeout(() => setFeedbackMessage(null), 4000);
+    } catch (err) {
+      console.error('Failed to submit rating:', err);
+      setFeedbackMessage({
+        type: 'error',
+        text: 'Failed to submit feedback. Please try again.'
+      });
+      setTimeout(() => setFeedbackMessage(null), 4000);
+    }
+  };
 
   if (loading) return (
     <div className="staynest-dashboard loading-state">
@@ -269,10 +288,7 @@ const Mess = () => {
               ))}
             </div>
             {rating > 0 && (
-              <button className="btn-primary-small submit-rating-btn fade-in" onClick={() => {
-                alert(`Thank you! Your ${rating}-star feedback has been recorded.`);
-                setRating(0);
-              }}>
+              <button className="btn-primary-small submit-rating-btn fade-in" onClick={handleSubmitRating}>
                 Submit Feedback
               </button>
             )}

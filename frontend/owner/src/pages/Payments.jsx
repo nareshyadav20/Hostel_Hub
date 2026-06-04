@@ -9,7 +9,7 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
-import { api } from '../mockData';
+import { api } from '../api';
 import socket from '../utils/socket';
 
 const METHOD_CONFIG = {
@@ -149,7 +149,8 @@ const Payments = () => {
       setTenants(filteredTenants);
 
       // Enrich and filter payments
-      const enriched = (pData || [])
+      const paymentsList = Array.isArray(pData) ? pData : (pData?.payments || []);
+      const enriched = paymentsList
         .map(p => {
           // p.tenantId might be populated or an ID
           const pTenant = p.tenantId;
@@ -282,7 +283,7 @@ const Payments = () => {
         <div className="card" style={{ padding: '1.5rem'  }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}><TrendingUp size={18} color="var(--accent-primary)" /> Monthly Revenue Trend</h3>
           <div style={{ height: '250px'  }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1}>
               <AreaChart data={monthlyData}>
                 <defs>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
@@ -302,7 +303,7 @@ const Payments = () => {
         <div className="card" style={{ padding: '1.5rem'  }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.5rem'  }}>Revenue by Plan</h3>
           <div style={{ height: '250px'  }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1}>
               <PieChart>
                 <Pie data={planData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" stroke="none">
                   {planData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}

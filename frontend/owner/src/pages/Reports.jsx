@@ -11,7 +11,7 @@ import { ResponsiveContainer, AreaChart, Area, BarChart, Bar,
   Cell, Legend, LineChart, Line 
 } from 'recharts';
 import { useParams } from 'react-router-dom';
-import { api } from '../mockData';
+import { api } from '../api';
 
 const Reports = () => {
   const { buildingId: urlBuildingId } = useParams();
@@ -49,7 +49,7 @@ const Reports = () => {
       setData({ 
         buildings: b || [], 
         tenants: t || [], 
-        payments: p || [], 
+        payments: Array.isArray(p) ? p : (p?.payments || []), 
         complaints: c || [], 
         settings: s, 
         rooms: r || [], 

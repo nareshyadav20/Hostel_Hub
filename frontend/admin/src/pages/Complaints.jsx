@@ -29,6 +29,8 @@ const Complaints = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedId, setExpandedId] = useState(null);
   const [selectedTickets, setSelectedTickets] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 6;
 
   const fetchComplaintsData = async () => {
     try {
@@ -127,6 +129,8 @@ const Complaints = () => {
     return matchesSearch && matchesStatus && matchesCategory && matchesPriority && matchesProperty;
   });
 
+  const displayedComplaints = filteredComplaints.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
+
   return (
     <div className="space-y-10 pb-20">
       
@@ -165,7 +169,7 @@ const Complaints = () => {
                className="w-full bg-card border border-divider rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all text-text-primary shadow-subtle"
                placeholder="Search tickets by Subject, Tenant, or ID..."
                value={searchTerm}
-               onChange={(e) => setSearchTerm(e.target.value)}
+               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(0); }}
             />
          </div>
          
@@ -174,7 +178,7 @@ const Complaints = () => {
                {['All', 'Open', 'In Progress', 'Resolved'].map((status) => (
                  <button
                    key={status}
-                   onClick={() => setActiveFilter(status)}
+                   onClick={() => { setActiveFilter(status); setCurrentPage(0); }}
                    className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                      activeFilter === status ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-text-muted hover:text-text-primary'
                    }`}
@@ -213,7 +217,7 @@ const Complaints = () => {
                      <select
                         className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer font-bold"
                         value={intelligenceFilters.category}
-                        onChange={(e) => setIntelligenceFilters({ ...intelligenceFilters, category: e.target.value })}
+                        onChange={(e) => { setIntelligenceFilters({ ...intelligenceFilters, category: e.target.value }); setCurrentPage(0); }}
                      >
                         <option value="All">All Categories</option>
                         <option value="Maintenance">Maintenance</option>
@@ -232,7 +236,7 @@ const Complaints = () => {
                      <select
                         className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer font-bold"
                         value={intelligenceFilters.priority}
-                        onChange={(e) => setIntelligenceFilters({ ...intelligenceFilters, priority: e.target.value })}
+                        onChange={(e) => { setIntelligenceFilters({ ...intelligenceFilters, priority: e.target.value }); setCurrentPage(0); }}
                      >
                         <option value="All">All Priorities</option>
                         <option value="High">High Priority</option>
@@ -247,14 +251,14 @@ const Complaints = () => {
                      <select
                         className="w-full bg-background border border-divider rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-primary transition-all text-text-primary cursor-pointer font-bold"
                         value={intelligenceFilters.property}
-                        onChange={(e) => setIntelligenceFilters({ ...intelligenceFilters, property: e.target.value })}
+                        onChange={(e) => { setIntelligenceFilters({ ...intelligenceFilters, property: e.target.value }); setCurrentPage(0); }}
                      >
                         <option value="All">All Facilities</option>
                         {buildings.map(b => (
-                          <option key={b._id} value={b._id}>{b.name}</option>
+                           <option key={b._id} value={b._id}>{b.name}</option>
                         ))}
-                      </select>
-                    </div>
+                     </select>
+                  </div>
                  </div>
               </motion.div>
            )}
@@ -291,7 +295,7 @@ const Complaints = () => {
                     </tr>
                  </thead>
                  <tbody className="divide-y divide-border/30">
-                    {filteredComplaints.map((c) => (
+                    {displayedComplaints.map((c) => (
                       <React.Fragment key={c._id}>
                          <tr 
                            onClick={() => setExpandedId(expandedId === c._id ? null : c._id)}
@@ -444,12 +448,28 @@ const Complaints = () => {
       {/* --- PAGINATION --- */}
       <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-6 p-6 card-classic bg-slate-50/50 dark:bg-white/2">
          <div className="flex items-center gap-4">
-            <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Showing {filteredComplaints.length} of {totalCount} reports</span>
+            <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">
+               Showing {filteredComplaints.length === 0 ? 0 : currentPage * itemsPerPage + 1} to {Math.min((currentPage + 1) * itemsPerPage, filteredComplaints.length)} of {filteredComplaints.length} reports
+            </span>
             <div className="h-4 w-px bg-border" />
             <div className="flex items-center gap-2 bg-background border border-divider rounded-xl px-3 py-1.5 shadow-subtle">
                <FileText size={14} className="text-primary" />
                <button className="text-[10px] font-black uppercase tracking-widest text-text-secondary" onClick={fetchComplaintsData}>Refresh Dashboard</button>
             </div>
+         </div>
+         
+         {/* Pagination Controls */}
+         <div className="flex justify-center gap-2">
+           {currentPage > 0 && (
+             <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))} className="px-4 py-2 bg-primary text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-primary-dark transition-colors">
+               Prev
+             </button>
+           )}
+           {(currentPage + 1) * itemsPerPage < filteredComplaints.length && (
+             <button onClick={() => setCurrentPage(prev => prev + 1)} className="px-4 py-2 bg-primary text-white rounded text-xs font-bold uppercase tracking-widest hover:bg-primary-dark transition-colors">
+               Next
+             </button>
+           )}
          </div>
       </div>
     </div>

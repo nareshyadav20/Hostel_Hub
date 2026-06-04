@@ -276,6 +276,27 @@
   border-color: var(--primary);
 }
 
+.btn-table-download {
+  padding: 0.6rem 1.2rem;
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: white;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  margin-left: 0.5rem;
+}
+
+.btn-table-download:hover {
+  background: var(--primary-dark, #4f46e5);
+  border-color: var(--primary-dark, #4f46e5);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+  transform: translateY(-1px);
+}
+
+
 /* Parent Modal */
 .phone-input-wrapper {
   display: flex;
