@@ -142,6 +142,7 @@ const staffRoutes = require('./routes/staffRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const profileRoutes = require('./routes/profileRoutes');
 const notificationService = require('./utils/notificationService');
 const procurementRoutes = require('./routes/procurementRoutes');
 const taskRoutes = require('./routes/taskRoutes');
@@ -201,6 +202,10 @@ app.use('/api/tenant-proofs', require('./routes/tenantProofRoutes'));
 app.use('/api/admin', adminRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/assets', require('./routes/assetRoutes'));
+app.use('/api/profile', profileRoutes);
+app.use('/api/wishlist', require('./routes/wishlistRoutes'));
+app.use('/api/booking', require('./routes/mobileBookingRoutes'));
+
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
