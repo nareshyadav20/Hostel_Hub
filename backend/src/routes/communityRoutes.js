@@ -13,7 +13,7 @@ router.get('/lost-found', async (req, res) => {
   try {
     const query = {};
     if (req.user) {
-      const ownerBuildings = await Building.find({ owner: req.user._id }, '_id').lean();
+      const ownerBuildings = await Building.find({ owner: req.user.id }, '_id').lean();
       const ownerBuildingIds = ownerBuildings.map(b => b._id);
       if (ownerBuildingIds.length > 0) {
         query.buildingId = { $in: ownerBuildingIds };
@@ -37,7 +37,7 @@ router.get('/sos', async (req, res) => {
   try {
     const query = {};
     if (req.user) {
-      const ownerBuildings = await Building.find({ owner: req.user._id }, '_id').lean();
+      const ownerBuildings = await Building.find({ owner: req.user.id }, '_id').lean();
       const ownerBuildingIds = ownerBuildings.map(b => b._id);
       if (ownerBuildingIds.length > 0) {
         query.buildingId = { $in: ownerBuildingIds };

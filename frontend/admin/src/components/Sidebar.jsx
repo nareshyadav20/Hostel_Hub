@@ -6,7 +6,7 @@ import {
   Megaphone, ShieldAlert, Calendar, Zap, User, UsersRound, CheckCircle
 } from 'lucide-react';
 
-const Sidebar = ({ collapsed }) => {
+const Sidebar = ({ collapsed, setCollapsed }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -47,7 +47,7 @@ const Sidebar = ({ collapsed }) => {
   ];
 
   return (
-    <aside className={`fixed top-0 left-0 h-screen bg-white transition-all duration-300 ease-in-out z-50 flex flex-col border-r border-divider shadow-soft ${collapsed ? 'w-20' : 'w-64'}`}>
+    <aside className={`fixed top-0 left-0 h-screen bg-white transition-all duration-300 ease-in-out z-50 flex flex-col border-r border-divider shadow-soft ${collapsed ? '-translate-x-full md:translate-x-0 w-20' : 'translate-x-0 w-64'}`}>
       
       {/* BRANDING */}
       <div className="h-16 flex items-center px-6 border-b border-divider bg-white">
@@ -76,6 +76,11 @@ const Sidebar = ({ collapsed }) => {
           <NavLink
             key={item.name}
             to={item.path}
+            onClick={() => {
+              if (window.innerWidth <= 768 && setCollapsed) {
+                setCollapsed(true);
+              }
+            }}
             className={({ isActive }) =>
               `flex items-center gap-3.5 py-3 px-4 mx-3 rounded-xl transition-all duration-200 group ${isActive
                 ? 'font-bold text-primary bg-primary-light'

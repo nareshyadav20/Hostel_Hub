@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Building2, CheckCircle, XCircle, Clock, 
   MapPin, Users, Activity, FileText, ArrowLeft, 
-  Search, Filter, Eye, AlertCircle
+  Search, Filter, Eye, AlertCircle, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +20,11 @@ const HostelApprovalCenter = () => {
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [actionModal, setActionModal] = useState({ isOpen: false, type: null, reason: '' });
 
+  const [detailedBuilding, setDetailedBuilding] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [modalTab, setModalTab] = useState('Overview');
+  const [expandedFloors, setExpandedFloors] = useState({});
+
   const fetchBuildings = async () => {
     try {
       setLoading(true);
@@ -36,6 +41,28 @@ const HostelApprovalCenter = () => {
   useEffect(() => {
     fetchBuildings();
   }, []);
+
+  useEffect(() => {
+    if (selectedBuilding?._id) {
+      const fetchDetails = async () => {
+        try {
+          setLoadingDetails(true);
+          const response = await API.get(`/buildings/${selectedBuilding._id}`);
+          setDetailedBuilding(response.data);
+        } catch (err) {
+          console.error('Failed to fetch building details:', err);
+          showToast('error', 'Failed to load property details');
+        } finally {
+          setLoadingDetails(false);
+        }
+      };
+      fetchDetails();
+      setModalTab('Overview');
+      setExpandedFloors({});
+    } else {
+      setDetailedBuilding(null);
+    }
+  }, [selectedBuilding?._id]);
 
   const handleApprove = async () => {
     try {
@@ -65,11 +92,21 @@ const HostelApprovalCenter = () => {
     }
   };
 
+  const toggleFloor = (floorId) => {
+    setExpandedFloors(prev => ({ ...prev, [floorId]: !prev[floorId] }));
+  };
+
   const filteredBuildings = buildings.filter(b => {
     let statusMatch = false;
-    if (activeTab === 'Pending') statusMatch = b.status === 'Pending Approval';
-    if (activeTab === 'Approved') statusMatch = b.status === 'Active';
-    if (activeTab === 'Rejected') statusMatch = b.status === 'Rejected';
+    if (activeTab === 'Pending') {
+      statusMatch = b.approvalStatus === 'pending' || b.status === 'Pending Approval' || b.status === 'Pending';
+    }
+    if (activeTab === 'Approved') {
+      statusMatch = b.approvalStatus === 'approved' || b.isApproved === true || b.status === 'Active';
+    }
+    if (activeTab === 'Rejected') {
+      statusMatch = b.approvalStatus === 'rejected' || b.status === 'Rejected';
+    }
     
     const searchMatch = (b.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
                         (b.address || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -214,25 +251,249 @@ const HostelApprovalCenter = () => {
                 <p className="text-slate-500">{selectedBuilding.address}</p>
               </div>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-slate-50 rounded-xl">
-                <p className="text-sm text-slate-500 mb-1">Submitted On</p>
-                <p className="font-semibold text-slate-900">
-                  {selectedBuilding.submittedAt ? new Date(selectedBuilding.submittedAt).toLocaleDateString() : 'N/A'}
-                </p>
+
+            {loadingDetails ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="spinner w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
               </div>
-              <div className="p-4 bg-slate-50 rounded-xl">
-                <p className="text-sm text-slate-500 mb-1">Owner Contact</p>
-                <p className="font-semibold text-slate-900">{selectedBuilding.owner?.phone || 'N/A'}</p>
-              </div>
-            </div>
+            ) : (
+              <>
+                {/* Modal Sub-Tabs */}
+                <div className="flex border-b border-divider mb-4">
+                  {['Overview', 'Amenities & Policies', 'Infrastructure'].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setModalTab(tab)}
+                      className={`flex-1 py-2 text-center text-sm font-semibold border-b-2 transition-all ${
+                        modalTab === tab
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-slate-500 hover:text-slate-900'
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+
+                {modalTab === 'Overview' && (
+                  <div className="space-y-4">
+                    {/* Description */}
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Description</h4>
+                      <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl leading-relaxed">
+                        {detailedBuilding?.description || 'No description provided.'}
+                      </p>
+                    </div>
+
+                    {/* Metadata Grid */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
+                        <span className="text-xs text-slate-400 font-bold block mb-0.5">Gender Specificity</span>
+                        <span className="text-sm font-semibold text-slate-800">{detailedBuilding?.genderType || 'Mixed'}</span>
+                      </div>
+                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
+                        <span className="text-xs text-slate-400 font-bold block mb-0.5">Category</span>
+                        <span className="text-sm font-semibold text-slate-800">{detailedBuilding?.category || 'Student'}</span>
+                      </div>
+                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
+                        <span className="text-xs text-slate-400 font-bold block mb-0.5">Starting Rent</span>
+                        <span className="text-sm font-semibold text-slate-800">₹{detailedBuilding?.startingPrice || 'N/A'}/mo</span>
+                      </div>
+                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
+                        <span className="text-xs text-slate-400 font-bold block mb-0.5">Security Deposit</span>
+                        <span className="text-sm font-semibold text-slate-800">₹{detailedBuilding?.securityDeposit || 0}</span>
+                      </div>
+                    </div>
+
+                    {/* Owner Info Card */}
+                    <div className="p-4 bg-slate-50 rounded-xl border border-divider space-y-2">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Owner Profile</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-1 text-sm text-slate-700">
+                        <div>
+                          <span className="text-xs text-slate-400 block">Name</span>
+                          <span className="font-semibold">{detailedBuilding?.owner?.name || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="text-xs text-slate-400 block">Email</span>
+                          <span className="font-semibold text-slate-900 break-all">{detailedBuilding?.owner?.email || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="text-xs text-slate-400 block">Phone</span>
+                          <span className="font-semibold">{detailedBuilding?.owner?.phone || 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {modalTab === 'Amenities & Policies' && (
+                  <div className="space-y-4">
+                    {/* Amenities */}
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Amenities</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {detailedBuilding?.amenities && detailedBuilding.amenities.length > 0 ? (
+                          detailedBuilding.amenities.map((amenity, idx) => (
+                            <span key={idx} className="px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full border border-primary/20">
+                              {amenity}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-sm text-slate-500 italic">No amenities specified.</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Policies */}
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Hostel Policies</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-3 bg-slate-50 rounded-xl border border-divider">
+                          <span className="text-xs text-slate-400 font-bold block mb-0.5">Smoking</span>
+                          <span className="text-sm font-semibold text-slate-700">{detailedBuilding?.policies?.smoking || 'Not Allowed'}</span>
+                        </div>
+                        <div className="p-3 bg-slate-50 rounded-xl border border-divider">
+                          <span className="text-xs text-slate-400 font-bold block mb-0.5">Alcohol</span>
+                          <span className="text-sm font-semibold text-slate-700">{detailedBuilding?.policies?.alcohol || 'Not Allowed'}</span>
+                        </div>
+                        <div className="p-3 bg-slate-50 rounded-xl border border-divider">
+                          <span className="text-xs text-slate-400 font-bold block mb-0.5">Visitors</span>
+                          <span className="text-sm font-semibold text-slate-700">{detailedBuilding?.policies?.visitors || 'Allowed till 8 PM'}</span>
+                        </div>
+                        <div className="p-3 bg-slate-50 rounded-xl border border-divider">
+                          <span className="text-xs text-slate-400 font-bold block mb-0.5">Pets</span>
+                          <span className="text-sm font-semibold text-slate-700">{detailedBuilding?.policies?.pets || 'No'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Staff info */}
+                    {detailedBuilding?.staffInfo && (detailedBuilding.staffInfo.name || detailedBuilding.staffInfo.contact) && (
+                      <div className="p-4 bg-slate-50 rounded-xl border border-divider">
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Staff Info</h4>
+                        <div className="grid grid-cols-2 gap-4 text-sm text-slate-700">
+                          <div>
+                            <span className="text-xs text-slate-400 block">Name</span>
+                            <span className="font-semibold">{detailedBuilding.staffInfo.name || 'N/A'}</span>
+                          </div>
+                          <div>
+                            <span className="text-xs text-slate-400 block">Role & Contact</span>
+                            <span className="font-semibold">{detailedBuilding.staffInfo.role || 'Warden'} ({detailedBuilding.staffInfo.contact || 'N/A'})</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {modalTab === 'Infrastructure' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
+                        <span className="text-xs text-slate-400 font-bold block">Floors</span>
+                        <span className="text-lg font-bold text-slate-800">{detailedBuilding?.floors?.length || 0}</span>
+                      </div>
+                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
+                        <span className="text-xs text-slate-400 font-bold block">Total Rooms</span>
+                        <span className="text-lg font-bold text-slate-800">{detailedBuilding?.totalRooms || 0}</span>
+                      </div>
+                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
+                        <span className="text-xs text-slate-400 font-bold block">Total Beds</span>
+                        <span className="text-lg font-bold text-slate-800">{detailedBuilding?.totalBeds || 0}</span>
+                      </div>
+                    </div>
+
+                    {/* Floors tree */}
+                    <div className="space-y-2 max-h-[35vh] overflow-y-auto pr-1">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Infrastructure Details</h4>
+                      {detailedBuilding?.floors && detailedBuilding.floors.length > 0 ? (
+                        detailedBuilding.floors.map((floor) => {
+                          const isExpanded = expandedFloors[floor._id];
+                          return (
+                            <div key={floor._id} className="border border-divider rounded-xl overflow-hidden bg-white mb-2">
+                              <button
+                                type="button"
+                                onClick={() => toggleFloor(floor._id)}
+                                className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-slate-800 text-sm">
+                                    Floor {floor.floorNumber}
+                                  </span>
+                                  <span className="text-xs bg-slate-200 px-2 py-0.5 rounded-full text-slate-600">
+                                    {floor.rooms?.length || 0} Rooms
+                                  </span>
+                                </div>
+                                <ChevronDown
+                                  size={18}
+                                  className={`text-slate-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                />
+                              </button>
+
+                              {isExpanded && (
+                                <div className="p-3 divide-y divide-divider space-y-3 bg-white">
+                                  {floor.rooms && floor.rooms.length > 0 ? (
+                                    floor.rooms.map((room) => (
+                                      <div key={room._id} className="pt-2 first:pt-0">
+                                        <div className="flex justify-between items-start mb-2">
+                                          <div>
+                                            <h5 className="font-bold text-slate-800 text-sm">
+                                              Room {room.roomNumber}
+                                            </h5>
+                                            <span className="text-xs text-slate-500">
+                                              {room.roomType || 'Standard'} • {room.isAC ? 'AC' : 'Non-AC'}
+                                            </span>
+                                          </div>
+                                          <span className="text-xs font-bold text-primary">
+                                            ₹{room.rentAmount || 'N/A'}/mo
+                                          </span>
+                                        </div>
+                                        
+                                        {/* Beds list */}
+                                        <div className="grid grid-cols-2 gap-2 mt-2">
+                                          {room.beds && room.beds.length > 0 ? (
+                                            room.beds.map((bed) => {
+                                              const isOccupied = (bed.status || '').toUpperCase() === 'OCCUPIED';
+                                              return (
+                                                <div key={bed._id} className="flex items-center gap-2 p-1.5 bg-slate-50 rounded-lg border border-divider">
+                                                  <span className={`w-2 h-2 rounded-full ${isOccupied ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                                                  <span className="text-xs font-semibold text-slate-700">
+                                                    Bed {bed.bedNumber}
+                                                  </span>
+                                                  <span className="text-[10px] text-slate-400 ml-auto">
+                                                    {isOccupied ? 'Occupied' : 'Available'}
+                                                  </span>
+                                                </div>
+                                              );
+                                            })
+                                          ) : (
+                                            <span className="text-xs text-slate-400 italic col-span-full">No beds defined.</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <p className="text-xs text-slate-400 italic p-2">No rooms on this floor.</p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-sm text-slate-500 italic py-2">No floor infrastructure details available.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
 
             {selectedBuilding.rejectionReason && (
               <div className="p-4 bg-red-50 text-red-700 rounded-xl flex gap-3">
                 <AlertCircle className="shrink-0 mt-0.5" size={20} />
                 <div>
-                  <h4 className="font-bold">Rejection Reason</h4>
+                  <h4 className="font-bold text-sm">Rejection Reason</h4>
                   <p className="text-sm mt-1">{selectedBuilding.rejectionReason}</p>
                 </div>
               </div>

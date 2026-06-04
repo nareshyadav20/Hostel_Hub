@@ -857,16 +857,54 @@ const sendSupportChatMessage = async (req, res) => {
 
 const approveBuilding = async (req, res) => {
   try {
-    const building = await Building.findById(req.params.id);
+    const mongoose = require('mongoose');
+    const db = mongoose.connection.db;
+    
+    let building = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      building = await Building.findById(req.params.id);
+    }
+    
+    const approvedById = mongoose.Types.ObjectId.isValid(req.user.id)
+      ? new mongoose.Types.ObjectId(req.user.id)
+      : req.user.id;
+    
+    const updateData = {
+      status: 'Active',
+      approvalStatus: 'approved',
+      isApproved: true,
+      approvedBy: approvedById,
+      approvedAt: new Date()
+    };
+
+    if (building) {
+      building.status = updateData.status;
+      building.approvalStatus = updateData.approvalStatus;
+      building.isApproved = updateData.isApproved;
+      building.approvedBy = updateData.approvedBy;
+      building.approvedAt = updateData.approvedAt;
+      await building.save();
+    }
+
+    // Now update owner_buildings
+    let obQuery = {};
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      obQuery._id = new mongoose.Types.ObjectId(req.params.id);
+    } else {
+      obQuery._id = req.params.id;
+    }
+
+    const obExists = await db.collection('owner_buildings').findOne(obQuery);
+    if (obExists) {
+      await db.collection('owner_buildings').updateOne(obQuery, { $set: updateData });
+      if (!building) {
+        // Fallback to building object from owner_buildings if not in standard collection
+        building = await db.collection('owner_buildings').findOne(obQuery);
+      }
+    }
+
     if (!building) return res.status(404).json({ error: 'Building not found' });
-    
-    building.status = 'Active';
-    building.isApproved = true;
-    building.approvedBy = req.user.id;
-    building.approvedAt = Date.now();
-    
-    await building.save();
-    
+
     const socketService = require('../utils/socketService');
     socketService.emitUpdate(building._id, 'hostelUpdated', building);
     socketService.emitUpdate(null, 'hostelUpdated', building);
@@ -898,14 +936,55 @@ const approveBuilding = async (req, res) => {
 const rejectBuilding = async (req, res) => {
   try {
     const { reason } = req.body;
-    const building = await Building.findById(req.params.id);
+    const mongoose = require('mongoose');
+    const db = mongoose.connection.db;
+    
+    let building = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      building = await Building.findById(req.params.id);
+    }
+    
+    const rejectedById = mongoose.Types.ObjectId.isValid(req.user.id)
+      ? new mongoose.Types.ObjectId(req.user.id)
+      : req.user.id;
+    
+    const updateData = {
+      status: 'Rejected',
+      approvalStatus: 'rejected',
+      isApproved: false,
+      rejectionReason: reason || 'No reason provided',
+      rejectedBy: rejectedById,
+      rejectedAt: new Date()
+    };
+
+    if (building) {
+      building.status = updateData.status;
+      building.approvalStatus = updateData.approvalStatus;
+      building.isApproved = updateData.isApproved;
+      building.rejectionReason = updateData.rejectionReason;
+      building.rejectedBy = updateData.rejectedBy;
+      building.rejectedAt = updateData.rejectedAt;
+      await building.save();
+    }
+
+    // Now update owner_buildings
+    let obQuery = {};
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      obQuery._id = new mongoose.Types.ObjectId(req.params.id);
+    } else {
+      obQuery._id = req.params.id;
+    }
+
+    const obExists = await db.collection('owner_buildings').findOne(obQuery);
+    if (obExists) {
+      await db.collection('owner_buildings').updateOne(obQuery, { $set: updateData });
+      if (!building) {
+        // Fallback to building object from owner_buildings if not in standard collection
+        building = await db.collection('owner_buildings').findOne(obQuery);
+      }
+    }
+
     if (!building) return res.status(404).json({ error: 'Building not found' });
-    
-    building.status = 'Rejected';
-    building.isApproved = false;
-    building.rejectionReason = reason || 'No reason provided';
-    
-    await building.save();
     
     const socketService = require('../utils/socketService');
     socketService.emitUpdate(building._id, 'hostelUpdated', building);
@@ -917,7 +996,7 @@ const rejectBuilding = async (req, res) => {
         portalType: 'Owner',
         category: 'Hostel Approval',
         title: 'Hostel Rejected',
-        message: `Your hostel "${building.name}" was rejected. Reason: ${building.rejectionReason}`,
+        message: `Your hostel "${building.name}" was rejected. Reason: ${updateData.rejectionReason}`,
         priority: 'High',
         type: 'error',
         receiverId: building.owner ? building.owner.toString() : null,

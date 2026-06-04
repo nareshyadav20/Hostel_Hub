@@ -50,6 +50,14 @@ const Layout = ({ children }) => {
     // Dynamic interval polling every 30 seconds
     const interval = setInterval(fetchNotificationsCount, 30000);
 
+    const handleResize = () => {
+      if (window.innerWidth <= 1024) {
+        setCollapsed(true);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
     const down = (e) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
@@ -62,6 +70,7 @@ const Layout = ({ children }) => {
       window.removeEventListener('user-profile-updated', fetchProfile);
       window.removeEventListener('notifications-updated', fetchNotificationsCount);
       clearInterval(interval);
+      window.removeEventListener('resize', handleResize);
       document.removeEventListener('keydown', down);
     };
   }, []);
@@ -75,9 +84,15 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-background flex font-inter text-text-main overflow-hidden">
-      <Sidebar collapsed={collapsed} />
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      {!collapsed && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setCollapsed(true)}
+        />
+      )}
 
-      <main className={`flex-1 flex flex-col transition-all duration-300 ease-in-out relative ${collapsed ? 'ml-20' : 'ml-64'}`}>
+      <main className={`flex-1 flex flex-col transition-all duration-300 ease-in-out relative ml-0 md:ml-20 ${collapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
 
         {/* TOP NAVBAR */}
         <header className="h-16 px-8 bg-surface border-b border-divider flex items-center justify-between sticky top-0 z-40 shadow-sm">

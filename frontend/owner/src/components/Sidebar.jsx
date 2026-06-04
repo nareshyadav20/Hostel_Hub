@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { NavLink, useParams, Link, useLocation } from 'react-router-dom';
+import React from 'react';
+import { NavLink, useParams, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Building2,
@@ -13,11 +13,12 @@ import {
   BarChart3,
   Settings,
   BellRing,
-  User
+  User,
+  X
 } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const { buildingId: urlBuildingId } = useParams();
   const iconProps = { size: 24, strokeWidth: 2.25 };
 
@@ -42,8 +43,8 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+      <div className="sidebar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Link to={`/owner/building/${activeBuildingId}/dashboard`} className="brand-logo" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.8rem'  }}>
           <svg className="sidebar-logo-svg" width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2L3 9V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V9L12 2Z" fill="url(#sidebar_logo_gradient)" stroke="var(--primary-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -60,6 +61,25 @@ const Sidebar = () => {
             <span className="logo-sub" style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--primary-green)', letterSpacing: '0.05em'  }}>OWNER PORTAL</span>
           </div>
         </Link>
+        
+        {/* Close button for split screens / mobile */}
+        <button 
+          onClick={onClose}
+          className="sidebar-close-btn"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--text-secondary)',
+            cursor: 'pointer',
+            padding: '4px',
+            display: 'none',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '50%'
+          }}
+        >
+          <X size={20} />
+        </button>
       </div>
 
       <div className="sidebar-nav">
@@ -69,6 +89,7 @@ const Sidebar = () => {
             <NavLink
               to={item.path}
               className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}
+              onClick={() => onClose && onClose()}
             >
               <span className="icon">{item.icon}</span>
               <span className="label">{item.name}</span>
@@ -76,7 +97,6 @@ const Sidebar = () => {
           </div>
         ))}
       </div>
-
     </aside>
   );
 };

@@ -149,7 +149,8 @@ const Payments = () => {
       setTenants(filteredTenants);
 
       // Enrich and filter payments
-      const enriched = (pData || [])
+      const paymentsList = Array.isArray(pData) ? pData : (pData?.payments || []);
+      const enriched = paymentsList
         .map(p => {
           // p.tenantId might be populated or an ID
           const pTenant = p.tenantId;

@@ -49,7 +49,7 @@ const Reports = () => {
       setData({ 
         buildings: b || [], 
         tenants: t || [], 
-        payments: p || [], 
+        payments: Array.isArray(p) ? p : (p?.payments || []), 
         complaints: c || [], 
         settings: s, 
         rooms: r || [], 

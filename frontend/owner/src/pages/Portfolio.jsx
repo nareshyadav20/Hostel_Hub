@@ -116,37 +116,17 @@ const Portfolio = () => {
     setLoading(true);
     setError(null);
     try {
-      const [b, f, r, bd, t, c, s] = await Promise.all([
-        api.getBuildings({ lightweight: true }).catch(() => []),
-        api.getAllFloors().catch(() => []),
-        api.getAllRooms().catch(() => []),
-        api.getAllBeds().catch(() => []),
-        api.getTenants().catch(() => []),
-        api.getComplaints().catch(() => []),
-        api.getStaff().catch(() => ({ staffList: [] }))
-      ]);
+      const response = await api.getPortfolio();
+      const portfolioData = response?.success ? (response.data || []) : [];
       setData({
-        buildings: (b || []).filter(bld => bld.showInPortfolio !== false && String(bld.showInPortfolio) !== 'false'), floors: f || [], rooms: r || [],
-        beds: bd || [], tenants: t || [], complaints: c || [],
-        staff: s?.staffList || []
+        buildings: portfolioData.filter(bld => bld.showInPortfolio !== false && String(bld.showInPortfolio) !== 'false'),
+        floors: [],
+        rooms: [],
+        beds: [],
+        tenants: [],
+        complaints: [],
+        staff: []
       });
-
-      // Fetch authoritative hostel bed stats per building to avoid client-side mapping mismatches
-      try {
-        const statsArr = await Promise.all((b || []).map(async (building) => {
-          const id = building.id || building._id;
-          try {
-            const s = await api.getHostelBedStats(id);
-            return [id, s || { totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 }];
-          } catch (err) {
-            return [id, { totalBeds: 0, filledBeds: 0, availableBeds: 0, occupancyPct: 0 }];
-          }
-        }));
-        const map = Object.fromEntries(statsArr);
-        setHostelStatsMap(map);
-      } catch (err) {
-        console.warn('Failed to load hostel stats map', err);
-      }
     } catch (err) {
       console.error("Data fetch error", err);
       setError("Failed to load property data. Please try again.");
@@ -350,60 +330,55 @@ const Portfolio = () => {
     }
   };
 
+  const handleResubmit = async (buildingId) => {
+    try {
+      setLoading(true);
+      await api.updateBuilding(buildingId, { status: 'Pending Approval' });
+      clearAllCache();
+      await fetchData();
+      loadDrafts();
+    } catch (err) {
+      console.error('Failed to resubmit property:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const buildingStats = useMemo(() => {
     if (!data?.buildings || !Array.isArray(data.buildings)) return [];
 
     return data.buildings.map(b => {
       try {
-        const bId = b?.id || b?._id || `temp-${Math.random()}`;
-        const bFloors = (data.floors || []).filter(f => f?.building === bId || f?.buildingId === bId);
-        const bRooms = (data.rooms || []).filter(r => r && bFloors.some(f => f && (f._id === (r.floor?._id || r.floor) || f.id === (r.floorId || r.floor))));
-        // Prefer authoritative stats fetched from server if present
-        const stats = hostelStatsMap[bId] || null;
-        let totalBeds = 0;
-        let occupiedBeds = 0;
-        if (stats && typeof stats.totalBeds === 'number') {
-          totalBeds = stats.totalBeds || 0;
-          occupiedBeds = stats.filledBeds || 0;
-        } else {
-          const bBeds = (data.beds || []).filter(bed => bed && bRooms.some(r => r && (r._id === (bed.room?._id || bed.room) || r.id === (bed.roomId || bed.room))));
-          totalBeds = bBeds.length;
-          occupiedBeds = bBeds.filter(bed => bed?.status === 'OCCUPIED').length;
-        }
+        const bId = b?._id || b?.id;
+        const totalRooms = b.totalRooms || 0;
+        const totalBeds = b.totalBeds || 0;
+        const occupiedBeds = b.occupiedBeds || 0;
+        const vacantBeds = b.vacantBeds || 0;
         const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
 
         const monthlyRevenue = occupiedBeds * 8500;
         const pendingDues = Math.round(monthlyRevenue * 0.12);
 
-        const bRoomNumbers = bRooms.map(r => r?.roomNumber).filter(Boolean);
-        const bComplaints = (data.complaints || []).filter(c => c && bRoomNumbers.includes(c.room));
-
         let amenities = Array.isArray(b?.amenities) ? [...b.amenities] : [];
-        if (bRooms.some(r => r?.roomNumber?.includes('-AC'))) {
-          if (!amenities.includes('AC Rooms')) amenities.push('AC Rooms');
-        }
         if (amenities.length === 0) amenities = ['WiFi', 'CCTV', 'Power Backup'];
 
-        let status = b?.status || 'Active';
-        if (status !== 'Pending Approval' && status !== 'Rejected' && status !== 'Draft') {
-          if (occupancyRate < 50) status = 'Low Occupancy';
-          if (bComplaints.filter(c => c?.urgency === 'High').length > 0) status = 'Attention Needed';
-        }
-
-        const rating = b?.rating || "4.5";
-        const popularityLabel = b?.popularityLabel || null;
+        const status = b.buildingStatus || b.status || 'Active';
+        const rating = b.rating || "4.5";
+        const popularityLabel = b.popularityLabel || null;
 
         return {
           ...b,
           id: bId,
-          name: b?.name || 'Unnamed Property',
-          totalRooms: bRooms.length,
+          name: b.buildingName || b.name || 'Unnamed Property',
+          totalRooms,
           totalBeds,
           occupiedBeds,
+          vacantBeds,
+          totalFloors: b.totalFloors || 0,
           occupancyRate,
           monthlyRevenue,
           pendingDues,
-          complaintsCount: bComplaints.length,
+          complaintsCount: 0,
           status,
           rating,
           popularityLabel,
@@ -413,25 +388,29 @@ const Portfolio = () => {
         return { id: `err-${Date.now()}`, name: 'Error Loading', occupancyRate: 0, features: [], status: 'Error' };
       }
     });
-  }, [data, hostelStatsMap]);
+  }, [data.buildings]);
 
   const globalStats = useMemo(() => {
-    if (!buildingStats || buildingStats.length === 0) return { totalBuildings: 0, totalRooms: 0, totalBeds: 0, occupiedBeds: 0, occupancyRate: 0, totalRevenue: 0, totalDues: 0, totalComplaints: 0, totalStaff: 0 };
+    if (!buildingStats || buildingStats.length === 0) {
+      return { totalBuildings: 0, totalFloors: 0, totalRooms: 0, totalBeds: 0, occupiedBeds: 0, vacantBeds: 0 };
+    }
     try {
+      const totalBuildings = buildingStats.length;
+      const totalFloors = buildingStats.reduce((acc, b) => acc + (b.totalFloors || 0), 0);
+      const totalRooms = buildingStats.reduce((acc, b) => acc + (b.totalRooms || 0), 0);
       const totalBeds = buildingStats.reduce((acc, b) => acc + (b.totalBeds || 0), 0);
       const occupiedBeds = buildingStats.reduce((acc, b) => acc + (b.occupiedBeds || 0), 0);
+      const vacantBeds = buildingStats.reduce((acc, b) => acc + (b.vacantBeds || 0), 0);
       return {
-        totalBuildings: buildingStats.length,
-        totalRooms: buildingStats.reduce((acc, b) => acc + (b.totalRooms || 0), 0),
-        totalBeds, occupiedBeds,
-        occupancyRate: totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0,
-        totalRevenue: buildingStats.reduce((acc, b) => acc + (b.monthlyRevenue || 0), 0),
-        totalDues: buildingStats.reduce((acc, b) => acc + (b.pendingDues || 0), 0),
-        totalComplaints: buildingStats.reduce((acc, b) => acc + (b.complaintsCount || 0), 0),
-        totalStaff: (data.staff || []).length
+        totalBuildings,
+        totalFloors,
+        totalRooms,
+        totalBeds,
+        occupiedBeds,
+        vacantBeds
       };
     } catch (_err) {
-      return { totalBuildings: 0, totalRooms: 0, totalBeds: 0, occupiedBeds: 0, occupancyRate: 0, totalRevenue: 0, totalDues: 0, totalComplaints: 0 };
+      return { totalBuildings: 0, totalFloors: 0, totalRooms: 0, totalBeds: 0, occupiedBeds: 0, vacantBeds: 0 };
     }
   }, [buildingStats]);
 
@@ -460,16 +439,17 @@ const Portfolio = () => {
   }, [buildingStats, searchTerm, occupancyFilter, selectedFeatures, sortBy]);
 
   const kpis = [
-    { label: 'Properties', value: globalStats.totalBuildings, icon: <Building2 size={16} />, color: 'var(--accent-primary)' },
-    { label: 'Total Beds', value: globalStats.totalBeds, icon: <BedDouble size={16} />, color: '#8B5CF6' },
-    { label: 'Occupancy', value: `${globalStats.occupancyRate}%`, icon: <Activity size={16} />, color: '#10B981' },
-    { label: 'Revenue', value: `₹${(globalStats.totalRevenue / 100000).toFixed(1)}L`, icon: <DollarSign size={16} />, color: '#10B981' },
-    { label: 'Complaints', value: globalStats.totalComplaints, icon: <AlertCircle size={16} />, color: '#F59E0B' },
-    { label: 'Staff', value: globalStats.totalStaff, icon: <Users size={16} />, color: '#6366F1' }
+    { label: 'Total Buildings', value: globalStats.totalBuildings, icon: <Building2 size={16} />, color: 'var(--accent-primary)' },
+    { label: 'Total Floors', value: globalStats.totalFloors, icon: <Building size={16} />, color: '#6366F1' },
+    { label: 'Total Rooms', value: globalStats.totalRooms, icon: <Home size={16} />, color: '#8B5CF6' },
+    { label: 'Total Beds', value: globalStats.totalBeds, icon: <BedDouble size={16} />, color: '#EC4899' },
+    { label: 'Occupied Beds', value: globalStats.occupiedBeds, icon: <UsersRound size={16} />, color: '#10B981' },
+    { label: 'Vacant Beds', value: globalStats.vacantBeds, icon: <Activity size={16} />, color: '#3B82F6' }
   ];
 
 
   const renderStep = () => {
+    const baseServerUrl = (import.meta.env.VITE_API_URL || 'https://livora-hostel-hub-1.onrender.com/api').replace('/api', '');
     switch (currentStep) {
       case 1: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -531,7 +511,7 @@ const Portfolio = () => {
             {formData.gallery && formData.gallery.length > 0 ? (
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
                 {formData.gallery.map((img, i) => {
-                  const fullUrl = (img.startsWith('data:') || img.startsWith('http')) ? img : `https://livora-hostel-hub-1.onrender.com${img}`;
+                  const fullUrl = (img.startsWith('data:') || img.startsWith('http')) ? img : `${baseServerUrl}${img}`;
                   return (
                     <img key={i} src={fullUrl} alt={`Upload ${i}`}
                       style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: formData.coverImage === img ? '2px solid var(--accent-primary)' : '1px solid #e2e8f0', cursor: 'zoom-in' }}
@@ -543,9 +523,9 @@ const Portfolio = () => {
                 })}
               </div>
             ) : formData.coverImage && (
-              <img src={(formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `https://livora-hostel-hub-1.onrender.com${formData.coverImage}`}
+              <img src={(formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `${baseServerUrl}${formData.coverImage}`}
                 alt="Cover" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', marginTop: '0.5rem', cursor: 'zoom-in' }}
-                onClick={() => setModalInfo({ isOpen: true, image: (formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `https://livora-hostel-hub-1.onrender.com${formData.coverImage}` })}
+                onClick={() => setModalInfo({ isOpen: true, image: (formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `${baseServerUrl}${formData.coverImage}` })}
               />
             )}
             <small style={{ color: '#64748B', fontSize: '0.75rem', marginTop: '0.25rem' }}>Click an image to preview. Double-click to set as cover.</small>
@@ -968,12 +948,20 @@ const Portfolio = () => {
                   onNavigate={() => navigate(`/owner/building/${b.id}/dashboard`)}
                   onRefresh={() => { fetchData(); loadDrafts(); }}
                   onImageClick={(img) => setModalInfo({ isOpen: true, image: img })}
+                  onResubmit={handleResubmit}
                 />
               ))
-            ) : (
+            ) : data.buildings.length === 0 ? (
               <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem', background: "var(--bg-card)", borderRadius: '24px', border: '2px dashed #E2E8F0'  }}>
                 <div style={{ fontSize: '3rem', marginBottom: '1rem'  }}>🏢</div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1E293B', margin: 0  }}>No Properties Found</h3>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1E293B', margin: 0  }}>No Building Portfolio Data Available</h3>
+                <p style={{ color: '#64748B', marginTop: '0.5rem'  }}>Start by adding your first building to your portfolio.</p>
+                <button onClick={openFreshForm} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '12px', background: 'linear-gradient(135deg, var(--accent-primary), #4F46E5)', border: 'none', color: "var(--text-on-primary)", fontWeight: '800', cursor: 'pointer'  }}>+ Add Property</button>
+              </div>
+            ) : (
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem', background: "var(--bg-card)", borderRadius: '24px', border: '2px dashed #E2E8F0'  }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem'  }}>🔍</div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1E293B', margin: 0  }}>No Matching Properties Found</h3>
                 <p style={{ color: '#64748B', marginTop: '0.5rem'  }}>Try adjusting your search or filters to find what you're looking for.</p>
                 <button onClick={() => { setSearchTerm(''); setOccupancyFilter('All'); }} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#3B82F6', fontWeight: '800', cursor: 'pointer'  }}>Clear All Filters</button>
               </div>
@@ -1380,18 +1368,22 @@ const Portfolio = () => {
   );
 };
 
-const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick }) => {
+const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmit }) => {
   const [imgIdx, setImgIdx] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const isPending = building.status === 'Pending Approval' || building.status === 'Pending';
+  const isRejected = building.status === 'Rejected';
+
   const images = useMemo(() => {
+    const baseServerUrl = (import.meta.env.VITE_API_URL || 'https://livora-hostel-hub-1.onrender.com/api').replace('/api', '');
     if (building.images && building.images.length > 0) {
-      return building.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `https://livora-hostel-hub-1.onrender.com${img}`);
+      return building.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `${baseServerUrl}${img}`);
     }
     return [
-      'https://images.unsplash.com/photo-1555854817-5b2260d19dca?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1555854817-5b2260d50c63?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1522770179533-24471fcdba45?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=800'
     ];
@@ -1418,12 +1410,18 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick }) => {
           borderRadius: '28px',
           border: '1.5px solid #F1F5F9',
           background: "var(--bg-card)",
-          cursor: 'pointer',
+          cursor: (isPending || isRejected) ? 'default' : 'pointer',
           height: '100%',
           display: 'flex',
           flexDirection: 'column'
          }}
-        onClick={onNavigate}
+        onClick={(e) => {
+          if (isPending || isRejected) {
+            e.stopPropagation();
+            return;
+          }
+          onNavigate();
+        }}
       >
         <div style={{ height: '220px', position: 'relative', overflow: 'hidden'  }}>
           <AnimatePresence mode="wait">
@@ -1539,14 +1537,46 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick }) => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem'  }}>
-            <div style={{ padding: '0.8rem', borderRadius: '16px', background: '#F8FAFC', border: '1.5px solid #F1F5F9'  }}>
-              <p style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '900', margin: '0 0 0.4rem 0', textTransform: 'uppercase', letterSpacing: '0.05em'  }}>Monthly Fee (3 Sharing)</p>
-              <p style={{ fontSize: '1.25rem', fontWeight: '950', color: '#10B981', margin: 0  }}>₹{(building.rentTriple || building.startingPrice || 5000).toLocaleString()}<span style={{ fontSize: '0.8rem', color: '#94A3B8', fontWeight: '700'  }}>/mo</span></p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', padding: '0.8rem 1rem', borderRadius: '16px', background: '#F8FAFC', border: '1.5px solid #F1F5F9', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Building Code</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.buildingCode || 'N/A'}</span>
             </div>
-            <div style={{ padding: '0.8rem', borderRadius: '16px', background: '#F8FAFC', border: '1.5px solid #F1F5F9'  }}>
-              <p style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '900', margin: '0 0 0.4rem 0', textTransform: 'uppercase', letterSpacing: '0.05em'  }}>Live Residents</p>
-              <p style={{ fontSize: '1.25rem', fontWeight: '950', color: '#1E293B', margin: 0  }}>{building.occupiedBeds}<span style={{ fontSize: '0.8rem', color: '#94A3B8', fontWeight: '700'  }}> / {building.totalBeds}</span></p>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Building Type</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.buildingType || 'N/A'}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Building Status</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: building.status === 'Active' ? '#10B981' : '#EF4444' }}>{building.buildingStatus || building.status || 'N/A'}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>City</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.city || 'N/A'}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>State</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.state || 'N/A'}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Floors</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.totalFloors}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Rooms</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.totalRooms}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Beds</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.totalBeds}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Occupied Beds</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#10B981' }}>{building.occupiedBeds}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Vacant Beds</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#6366F1' }}>{building.vacantBeds}</span>
             </div>
           </div>
 
@@ -1573,26 +1603,84 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick }) => {
             </div>
           </div>
 
+          {isRejected && building.rejectionReason && (
+            <div style={{
+              background: '#FEF2F2',
+              border: '1.5px solid #FEE2E2',
+              borderRadius: '16px',
+              padding: '0.8rem 1rem',
+              marginBottom: '1.2rem',
+              display: 'flex',
+              gap: '0.5rem',
+              alignItems: 'flex-start'
+            }}>
+              <AlertCircle size={16} color="#EF4444" style={{ marginTop: '2px', flexShrink: 0 }} />
+              <div>
+                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '850', color: '#991B1B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rejection Reason</p>
+                <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', fontWeight: '600', color: '#EF4444', lineHeight: 1.4 }}>{building.rejectionReason}</p>
+              </div>
+            </div>
+          )}
+
           <div style={{ marginTop: 'auto', display: 'flex', gap: '0.8rem', alignItems: 'center'  }}>
-            <button
-              style={{ flex: 1,
-                padding: '0.9rem',
-                borderRadius: '16px',
-                fontSize: '0.9rem',
-                fontWeight: '900',
-                background: 'linear-gradient(135deg, var(--accent-primary), #4F46E5)',
-                color: "var(--text-on-primary)",
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 12px rgba(79, 70, 229, 0.2)'
-               }}
-              onClick={(e) => { e.stopPropagation(); onNavigate(); }}
-              onMouseEnter={(e) => e.target.style.filter = 'brightness(1.1)'}
-              onMouseLeave={(e) => e.target.style.filter = 'none'}
-            >
-              Manage Property
-            </button>
+            {isPending ? (
+              <button
+                disabled
+                style={{ flex: 1,
+                  padding: '0.9rem',
+                  borderRadius: '16px',
+                  fontSize: '0.9rem',
+                  fontWeight: '900',
+                  background: '#E2E8F0',
+                  color: '#94A3B8',
+                  border: 'none',
+                  cursor: 'not-allowed',
+                  transition: 'all 0.2s'
+                 }}
+              >
+                Pending Approval
+              </button>
+            ) : isRejected ? (
+              <button
+                style={{ flex: 1,
+                  padding: '0.9rem',
+                  borderRadius: '16px',
+                  fontSize: '0.9rem',
+                  fontWeight: '900',
+                  background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                  color: "#FFFFFF",
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)'
+                 }}
+                onClick={(e) => { e.stopPropagation(); onResubmit(building.id); }}
+                onMouseEnter={(e) => e.target.style.filter = 'brightness(1.1)'}
+                onMouseLeave={(e) => e.target.style.filter = 'none'}
+              >
+                Resubmit for Approval
+              </button>
+            ) : (
+              <button
+                style={{ flex: 1,
+                  padding: '0.9rem',
+                  borderRadius: '16px',
+                  fontSize: '0.9rem',
+                  fontWeight: '900',
+                  background: 'linear-gradient(135deg, var(--accent-primary), #4F46E5)',
+                  color: "var(--text-on-primary)",
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 4px 12px rgba(79, 70, 229, 0.2)'
+                 }}
+                onClick={(e) => { e.stopPropagation(); onNavigate(); }}
+                onMouseEnter={(e) => e.target.style.filter = 'brightness(1.1)'}
+                onMouseLeave={(e) => e.target.style.filter = 'none'}
+              >
+                Manage Property
+              </button>
+            )}
             <button
               style={{ width: '48px',
                 height: '48px',
