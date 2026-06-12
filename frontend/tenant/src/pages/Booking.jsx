@@ -16,10 +16,10 @@ const Booking = () => {
   const location = useLocation();
   const idUploadRef = useRef(null);
   const photoUploadRef = useRef(null);
-  
+
   // Data passed from Listing.jsx
   const {
-    floorId, roomId, bedId, rentAmount, securityDeposit, 
+    floorId, roomId, bedId, rentAmount, securityDeposit,
     foodCharges, maintenanceCharges, roomNumber, bedNumber, floorNumber
   } = location.state || {};
 
@@ -43,15 +43,15 @@ const Booking = () => {
       const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
       setUser(storedUser);
       const tenantId = localStorage.getItem('tenantId') || storedUser.id || storedUser._id;
-      
+
       try {
         if (tenantId && buildingId) {
           const profileRes = await API.get('/tenants/me').catch(() => null);
           if (profileRes?.data?.buildingId && profileRes?.data?.status === 'ACTIVE') {
-             const bName = profileRes.data.buildingId?.name || "a hostel";
-             const rNum = profileRes.data.room || "Room TBD";
-             setApiError(`Active Residency Found: You are already registered at ${bName} (Room: ${rNum}).`);
-             return;
+            const bName = profileRes.data.buildingId?.name || "a hostel";
+            const rNum = profileRes.data.room || "Room TBD";
+            setApiError(`Active Residency Found: You are already registered at ${bName} (Room: ${rNum}).`);
+            return;
           }
         }
 
@@ -66,10 +66,10 @@ const Booking = () => {
           const res = await API.get('/bookings/me');
           setBookings(res.data || []);
         }
-      } catch (err) { 
-        console.error('Fetch error:', err); 
-      } finally { 
-        setLoading(false); 
+      } catch (err) {
+        console.error('Fetch error:', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchInitialData();
@@ -226,22 +226,22 @@ const Booking = () => {
         {step === 1 && (
           <div className="fade-in flow-section">
             <h2 className="section-title">Confirm Selection & Move-in</h2>
-            
-            <div className="summary-card-pro" style={{marginBottom: '24px'}}>
-               <div className="summary-item-row"><span className="item-label">Property</span><span className="item-value">{hostel?.name}</span></div>
-               <div className="summary-item-row"><span className="item-label">Floor</span><span className="item-value">{floorNumber}</span></div>
-               <div className="summary-item-row"><span className="item-label">Room</span><span className="item-value">{roomNumber}</span></div>
-               <div className="summary-item-row"><span className="item-label">Bed</span><span className="item-value">#{bedNumber}</span></div>
+
+            <div className="summary-card-pro" style={{ marginBottom: '24px' }}>
+              <div className="summary-item-row"><span className="item-label">Property</span><span className="item-value">{hostel?.name}</span></div>
+              <div className="summary-item-row"><span className="item-label">Floor</span><span className="item-value">{floorNumber}</span></div>
+              <div className="summary-item-row"><span className="item-label">Room</span><span className="item-value">{roomNumber}</span></div>
+              <div className="summary-item-row"><span className="item-label">Bed</span><span className="item-value">#{bedNumber}</span></div>
             </div>
-            
+
             <div className="date-selection-row">
               <div className="input-group-pro">
                 <label>Target Move-in Date</label>
-                <input 
-                  type="date" 
-                  value={formData.moveInDate} 
-                  onChange={e => setFormData({...formData, moveInDate: e.target.value})} 
-                  required 
+                <input
+                  type="date"
+                  value={formData.moveInDate}
+                  onChange={e => setFormData({ ...formData, moveInDate: e.target.value })}
+                  required
                 />
               </div>
             </div>
@@ -257,28 +257,28 @@ const Booking = () => {
           <div className="fade-in flow-section">
             <h2 className="section-title">Identity Verification</h2>
             <p className="section-subtitle">Please upload clear documents for faster processing.</p>
-            
-            <div className="upload-grid-pro">
-               <div className={`upload-card-premium ${formData.idProof ? 'uploaded' : ''}`} onClick={() => idUploadRef.current.click()}>
-                  <div className="upload-info">
-                    <h4>ID Proof (Aadhaar/PAN)</h4>
-                    <p>{formData.idProof ? formData.idProof.name : 'Click to upload document'}</p>
-                  </div>
-                  <input type="file" ref={idUploadRef} accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => setFormData({...formData, idProof: e.target.files[0] || null})} />
-               </div>
 
-               <div className={`upload-card-premium ${formData.profilePhoto ? 'uploaded' : ''}`} onClick={() => photoUploadRef.current.click()}>
-                  <div className="upload-info">
-                    <h4>Profile Photograph</h4>
-                    <p>{formData.profilePhoto ? formData.profilePhoto.name : 'Click to upload photo'}</p>
-                  </div>
-                  <input type="file" ref={photoUploadRef} accept="image/*" style={{ display: 'none' }} onChange={e => setFormData({...formData, profilePhoto: e.target.files[0] || null})} />
-               </div>
+            <div className="upload-grid-pro">
+              <div className={`upload-card-premium ${formData.idProof ? 'uploaded' : ''}`} onClick={() => idUploadRef.current.click()}>
+                <div className="upload-info">
+                  <h4>ID Proof (Aadhaar/PAN)</h4>
+                  <p>{formData.idProof ? formData.idProof.name : 'Click to upload document'}</p>
+                </div>
+                <input type="file" ref={idUploadRef} accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => setFormData({ ...formData, idProof: e.target.files[0] || null })} />
+              </div>
+
+              <div className={`upload-card-premium ${formData.profilePhoto ? 'uploaded' : ''}`} onClick={() => photoUploadRef.current.click()}>
+                <div className="upload-info">
+                  <h4>Profile Photograph</h4>
+                  <p>{formData.profilePhoto ? formData.profilePhoto.name : 'Click to upload photo'}</p>
+                </div>
+                <input type="file" ref={photoUploadRef} accept="image/*" style={{ display: 'none' }} onChange={e => setFormData({ ...formData, profilePhoto: e.target.files[0] || null })} />
+              </div>
             </div>
 
             <div className="agreement-check-pro">
               <label className="checkbox-container">
-                <input type="checkbox" checked={formData.agreementSigned} onChange={e => setFormData({...formData, agreementSigned: e.target.checked})} />
+                <input type="checkbox" checked={formData.agreementSigned} onChange={e => setFormData({ ...formData, agreementSigned: e.target.checked })} />
                 <span className="checkmark-pro"></span>
                 <span className="agreement-text">I have read and agree to the <strong>Digital Rental Agreement</strong> and the hostel policies.</span>
               </label>
@@ -330,19 +330,19 @@ const Booking = () => {
         {step === 3 && (
           <div className="fade-in flow-section">
             <h2 className="section-title">Booking Summary</h2>
-            
+
             <div className="summary-card-pro">
-               <div className="summary-item-row"><span className="item-label">Room Rent</span><span className="item-value">₹{rentAmount?.toLocaleString()}</span></div>
-               <div className="summary-item-row"><span className="item-label">Security Deposit</span><span className="item-value">₹{securityDeposit?.toLocaleString()}</span></div>
-               <div className="summary-item-row"><span className="item-label">Food (Monthly)</span><span className="item-value">₹{foodCharges?.toLocaleString()}</span></div>
-               <div className="summary-item-row"><span className="item-label">Maintenance</span><span className="item-value">₹{maintenanceCharges?.toLocaleString()}</span></div>
-               <div className="summary-divider"></div>
-               <div className="summary-total-row">
-                 <div className="total-label-group">
-                   <span className="total-label">Total Due (Move-in)</span>
-                 </div>
-                 <span className="total-amount-val">₹{totalAmount?.toLocaleString()}</span>
-               </div>
+              <div className="summary-item-row"><span className="item-label">Room Rent</span><span className="item-value">₹{rentAmount?.toLocaleString()}</span></div>
+              <div className="summary-item-row"><span className="item-label">Security Deposit</span><span className="item-value">₹{securityDeposit?.toLocaleString()}</span></div>
+              <div className="summary-item-row"><span className="item-label">Food (Monthly)</span><span className="item-value">₹{foodCharges?.toLocaleString()}</span></div>
+              <div className="summary-item-row"><span className="item-label">Maintenance</span><span className="item-value">₹{maintenanceCharges?.toLocaleString()}</span></div>
+              <div className="summary-divider"></div>
+              <div className="summary-total-row">
+                <div className="total-label-group">
+                  <span className="total-label">Total Due (Move-in)</span>
+                </div>
+                <span className="total-amount-val">₹{totalAmount?.toLocaleString()}</span>
+              </div>
             </div>
 
             <div className="payment-options-section fade-in">
@@ -351,10 +351,10 @@ const Booking = () => {
                 {['UPI', 'Debit Card', 'Credit Card'].map(method => (
                   <div key={method} className="payment-method-wrapper">
                     <label className={`payment-method-card ${paymentMethod === method ? 'selected' : ''}`}>
-                      <input 
-                        type="radio" 
-                        name="paymentMethod" 
-                        value={method} 
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value={method}
                         checked={paymentMethod === method}
                         onChange={(e) => setPaymentMethod(e.target.value)}
                         style={{ display: 'none' }}

@@ -1,56 +1,44 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Home.css';
 
 const Terms = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="hv2-root">
+    <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700;800&display=swap');
-        
         .legal-page {
           font-family: 'Inter', sans-serif;
-          color: #1f2937;
-          background: #f8fafc;
-          min-height: 100vh;
+          color: #374151;
+          background: white;
+          min-height: calc(100vh - 88px);
+          padding: 2rem 2.5rem 3rem;
+          max-width: 800px;
+          margin: 0 auto;
         }
 
-        .legal-hero {
-          background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
-          padding: 10rem 2rem 6rem;
+        .legal-header {
           text-align: center;
-          position: relative;
-          color: white;
+          margin-bottom: 1.5rem;
+          padding-bottom: 1.2rem;
+          border-bottom: 1px solid #f1f5f9;
         }
 
         .legal-title {
-          font-family: 'Playfair Display', serif;
-          font-size: 3.5rem;
-          font-weight: 900;
-          margin-bottom: 1rem;
-          color: #ffffff;
+          font-size: 1.8rem;
+          font-weight: 800;
+          color: #1e1b4b;
+          margin-top: 0;
+          margin-bottom: 0.25rem;
         }
 
         .legal-subtitle {
-          color: #d1d5db;
-          font-size: 1.1rem;
-        }
-
-        .legal-content-wrap {
-          max-width: 900px;
-          margin: -3rem auto 4rem;
-          background: white;
-          padding: 4rem;
-          border-radius: 24px;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.05);
-          position: relative;
-          z-index: 10;
+          color: #64748b;
+          font-size: 0.95rem;
         }
 
         .legal-section {
-          margin-bottom: 3rem;
+          margin-bottom: 1.2rem;
         }
 
         .legal-section:last-child {
@@ -58,96 +46,39 @@ const Terms = () => {
         }
 
         .legal-section h3 {
-          font-family: 'Playfair Display', serif;
-          font-size: 1.8rem;
-          font-weight: 800;
+          font-size: 1.05rem;
+          font-weight: 700;
           color: #111827;
-          margin-bottom: 1.2rem;
+          margin-bottom: 0.4rem;
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: 0.5rem;
         }
 
         .legal-section h3 span {
           background: #EEF2FF;
           color: #4f46e5;
-          width: 40px;
-          height: 40px;
+          min-width: 24px;
+          height: 24px;
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 10px;
-          font-size: 1.2rem;
+          border-radius: 6px;
+          font-size: 0.85rem;
+          font-weight: 800;
         }
 
         .legal-section p {
-          font-size: 1.05rem;
-          line-height: 1.8;
-          color: #4b5563;
-        }
-
-        .about-footer {
-          background: #f8fafc;
-          padding: 4rem 2rem 2rem;
-          border-top: 1px solid #e5e7eb;
-        }
-
-        .about-footer-main {
-          max-width: 1200px;
-          margin: 0 auto;
-          display: grid;
-          grid-template-columns: 1fr 2fr;
-          gap: 4rem;
-        }
-
-        .about-footer-brand h2 {
-          font-family: 'Playfair Display', serif;
-          font-size: 2rem;
-          color: #4f46e5;
-          margin-bottom: 1rem;
-        }
-
-        .about-footer-tagline {
-          color: #6b7280;
-          line-height: 1.6;
-          font-size: 1rem;
-          max-width: 300px;
-        }
-
-        .about-footer-links {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 2rem;
-        }
-
-        .about-footer-col h4 {
-          font-size: 1.1rem;
-          font-weight: 700;
-          color: #111827;
-          margin-bottom: 1.5rem;
-        }
-
-        .about-footer-col p, .about-footer-col a {
-          color: #4b5563;
           font-size: 0.95rem;
-          line-height: 1.8;
-          display: block;
-          text-decoration: none;
-          margin-bottom: 0.5rem;
-        }
-
-        .about-footer-bottom {
-          max-width: 1200px;
-          margin: 3rem auto 0;
-          padding-top: 2rem;
-          border-top: 1px solid #e5e7eb;
-          text-align: center;
-          color: #9ca3af;
-          font-size: 0.9rem;
+          line-height: 1.5;
+          color: #4b5563;
+          margin-left: 2rem;
         }
 
         .agree-btn-container {
-          margin-top: 4rem;
+          margin-top: 1.5rem;
+          padding-top: 1.5rem;
+          border-top: 1px solid #f1f5f9;
           text-align: center;
         }
 
@@ -155,59 +86,71 @@ const Terms = () => {
           background: #4f46e5;
           color: white;
           border: none;
-          padding: 1rem 3rem;
-          font-size: 1.1rem;
+          padding: 0.7rem 2rem;
+          font-size: 0.95rem;
           font-weight: 600;
-          border-radius: 12px;
+          border-radius: 8px;
           cursor: pointer;
-          transition: all 0.3s ease;
-          font-family: 'Inter', sans-serif;
+          transition: all 0.2s ease;
           box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
         }
 
         .agree-btn:hover {
           background: #4338ca;
-          transform: translateY(-2px);
-          box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+          transform: translateY(-1px);
+          box-shadow: 0 6px 10px -2px rgba(79, 70, 229, 0.3);
         }
 
         @media (max-width: 768px) {
-          .legal-title { font-size: 2.5rem; }
-          .legal-content-wrap { padding: 2rem; margin: -2rem 1rem 4rem; }
-          .about-footer-main { grid-template-columns: 1fr; gap: 2rem; }
-          .about-footer-links { grid-template-columns: 1fr 1fr; gap: 2rem; }
+          .legal-page { padding: 1.5rem; }
+          .legal-title { font-size: 1.5rem; }
+          .legal-section p { margin-left: 0; margin-top: 0.4rem; }
         }
       `}</style>
 
-
-
       <main className="legal-page">
-        <section className="legal-hero">
-          <h1 className="legal-title">Livora Hostel Residency Agreement</h1>
-          <p className="legal-subtitle">Last Updated: May 2026</p>
-        </section>
+        <div className="legal-header">
+          <h1 className="legal-title">Residency Agreement</h1>
+          <p className="legal-subtitle">Terms &amp; Conditions of Livora Hostel</p>
+        </div>
 
-        <div className="legal-content-wrap">
-          <div className="legal-section">
-            <h3><span>1</span> CONDITIONS FOR USER REGISTRATION</h3>
-            <p>Registration on the platform is free. By using this website/app, you imply that you agree with the usage terms completely. You must be at least eighteen (18) years of age or above to use Livora Hostel services.</p>
-          </div>
+        <div className="legal-section">
+          <h3><span>1</span> USER REGISTRATION &amp; ELIGIBILITY</h3>
+          <p>Registration is free. By using this platform, you agree to these terms. You must be 18 years or older to register. Minors may only use the platform under parental supervision.</p>
+        </div>
 
-          <div className="legal-section">
-            <h3><span>2</span> TERMS & CONDITIONS OF USE</h3>
-            <p>The platform enables guests to connect with properties listed. By making a reservation at the listed properties, the guest enters into commercial/contractual terms as agreed upon at the time of booking.</p>
-          </div>
+        <div className="legal-section">
+          <h3><span>2</span> BOOKING &amp; PAYMENTS</h3>
+          <p>Livora connects guests with independent hosts. Ensure your payment information is secure during booking. Rent is typically due by the 5th of every month. Late payments may incur a penalty.</p>
+        </div>
 
-          <div className="agree-btn-container">
-            <button className="agree-btn" onClick={() => navigate(-1)}>
-              I Understand & Agree
-            </button>
-          </div>
+        <div className="legal-section">
+          <h3><span>3</span> PROPERTY RULES &amp; QUIET HOURS</h3>
+          <p>Tenants are expected to maintain peace and respect the community. Quiet hours are generally from 10:00 PM to 6:00 AM. Loud music and disruptive behavior are strictly prohibited.</p>
+        </div>
+
+        <div className="legal-section">
+          <h3><span>4</span> VISITORS &amp; SECURITY</h3>
+          <p>For the safety of all residents, outside visitors are not allowed in residential areas or private rooms without prior approval from the hostel management. All guests must sign in at the reception.</p>
+        </div>
+
+        <div className="legal-section">
+          <h3><span>5</span> MAINTENANCE &amp; DAMAGES</h3>
+          <p>Tenants must take care of the provided furniture and appliances. Any intentional or negligent damages to the property will be deducted from the security deposit.</p>
+        </div>
+
+        <div className="legal-section">
+          <h3><span>6</span> CODE OF CONDUCT</h3>
+          <p>Strict prohibition of smoking, alcohol, and illegal substances on the premises. Violation of these rules may lead to immediate eviction without refund.</p>
+        </div>
+
+        <div className="agree-btn-container">
+          <button className="agree-btn" onClick={() => navigate(-1)}>
+            I Understand &amp; Agree
+          </button>
         </div>
       </main>
-
-
-    </div>
+    </>
   );
 };
 

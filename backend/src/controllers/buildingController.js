@@ -130,22 +130,22 @@ const getBuildings = async (req, res) => {
     const populatedBuildings = await Promise.all(buildings.map(async (building) => {
       const floorDocs = await Floor.find({ building: building._id });
       const floorIds = floorDocs.map(f => f._id);
-      
+
       const rooms = await Room.find({ floor: { $in: floorIds } }).populate('beds');
-      
+
       let totalBeds = 0;
       let occupiedBeds = 0;
-      
+
       rooms.forEach(room => {
         const beds = room.beds || [];
         totalBeds += beds.length;
         occupiedBeds += beds.filter(b => b.status === 'OCCUPIED' || b.status === 'Occupied').length;
       });
-      
+
       building.totalRooms = rooms.length;
       building.totalBeds = totalBeds;
       building.occupancyPercentage = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
-      
+
       return building;
     }));
 
@@ -355,7 +355,7 @@ const getBuildingById = async (req, res) => {
     let totalRooms = 0;
     let totalBeds = 0;
     let occupiedBeds = 0;
-    
+
     bFloors.forEach(floor => {
       const rooms = floor.rooms || [];
       totalRooms += rooms.length;
@@ -365,7 +365,7 @@ const getBuildingById = async (req, res) => {
         occupiedBeds += beds.filter(b => b.status === 'OCCUPIED' || b.status === 'Occupied').length;
       });
     });
-    
+
     bObj.totalRooms = totalRooms;
     bObj.totalBeds = totalBeds;
     bObj.occupancyPercentage = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
@@ -380,7 +380,9 @@ const getPublicBuildings = async (req, res) => {
       { status: { $ne: 'Draft' }, propertyId: { $in: [null] }, showInPortfolio: { $ne: false } },
       {
         name: 1, address: 1, locationCity: 1, category: 1, rating: 1,
-        startingPrice: 1, genderType: 1, amenities: 1, isAC: 1
+        startingPrice: 1, genderType: 1, amenities: 1, isAC: 1,
+        rentSingle: 1, rentDouble: 1, rentTriple: 1, rent4Sharing: 1,
+        rent5Sharing: 1, rent6Sharing: 1
       }
     ).lean();
     res.status(200).json(buildings);
@@ -466,26 +468,139 @@ const uploadPhotos = async (req, res) => {
 
 const getPlatformStats = async (req, res) => {
   try {
-    const propertiesCount = await Building.countDocuments({ status: { $ne: 'Draft' }, propertyId: { $in: [null] }, showInPortfolio: { $ne: false } });
+    const baseQuery = { status: { $ne: 'Draft' }, propertyId: { $in: [null] }, showInPortfolio: { $ne: false } };
+    const propertiesCount = await Building.countDocuments(baseQuery);
     const tenantsCount = await Tenant.countDocuments();
-    const cities = await Building.distinct('locationCity', { status: { $ne: 'Draft' }, propertyId: { $in: [null] }, showInPortfolio: { $ne: false } });
+    const cities = await Building.distinct('locationCity', baseQuery);
 
-    const buildings = await Building.find({ status: { $ne: 'Draft' }, propertyId: { $in: [null] }, showInPortfolio: { $ne: false } }, 'rating');
+    const buildings = await Building.find(baseQuery, 'rating locationCity genderType category');
     let totalRating = 0;
     let validRatings = 0;
+
+    // City-level property counts
+    const cityMap = {};
+    // Category-level property counts
+    const categoryCounts = { mens: 0, womens: 0, coliving: 0, premium: 0, student: 0 };
+
     buildings.forEach(b => {
       if (b.rating) { totalRating += b.rating; validRatings++; }
+
+      // City counts
+      if (b.locationCity) {
+        const city = b.locationCity.toLowerCase();
+        const normalizedCity = (city === 'hydrabad' || city === 'hyderabad') ? 'hyderabad'
+          : city;
+        cityMap[normalizedCity] = (cityMap[normalizedCity] || 0) + 1;
+      }
+
+      // Category counts based on genderType and category
+      const gender = (b.genderType || '').toLowerCase();
+      const cat = (b.category || '').toLowerCase();
+      
+      if (cat === 'luxury' || cat === 'premium') {
+        // Triggering nodemon restart
+        categoryCounts.premium++;
+      } else if (cat === 'student') {
+        categoryCounts.student++;
+      } else if (gender === 'mixed' || gender === 'co-living' || cat === 'co-living' || cat === 'coliving') {
+        categoryCounts.coliving++;
+      } else if (gender === 'boys' || gender === "men's" || gender === 'male' || gender === 'mens') {
+        categoryCounts.mens++;
+      } else if (gender === 'girls' || gender === "women's" || gender === 'female' || gender === 'womens') {
+        categoryCounts.womens++;
+      } else {
+        categoryCounts.coliving++; // Default fallback
+      }
     });
+
     const avgRating = validRatings > 0 ? (totalRating / validRatings).toFixed(1) : "4.8";
 
     res.status(200).json({
       tenants: tenantsCount,
       properties: propertiesCount,
       cities: cities.length,
-      rating: `${avgRating}/5`
+      rating: `${avgRating}/5`,
+      cityStats: cityMap,
+      categoryStats: categoryCounts,
+      debugBuildings: buildings
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+const seedBalanced = async (req, res) => {
+  try {
+    const CITIES = ['Bengaluru', 'Hyderabad', 'Mumbai', 'Chennai', 'Delhi', 'Pune', 'Noida', 'Gurgaon'];
+    const CATEGORIES = [
+      { genderType: 'Boys', category: 'Student' }, // Mens & Student -> falls into student or mens depending on order
+      { genderType: 'Girls', category: 'Student' }, 
+      { genderType: 'Mixed', category: 'Co-living' }, 
+      { genderType: 'Mixed', category: 'Premium' }, 
+      { genderType: 'Boys', category: 'Professional' }, 
+      { genderType: 'Girls', category: 'Professional' }
+    ];
+    const AMENITIES = ['WiFi', 'CCTV', 'Power Backup', 'Gym', 'Laundry', 'Meals', 'AC'];
+
+    // Grab the actual User model
+    const User = require('../models/User');
+    let owner = await User.findOne({ role: 'OWNER' }) || await User.findOne(); 
+    const ownerId = owner ? owner._id : '654321098765432109876543';
+
+    // Clear old properties
+    await Building.deleteMany({});
+    const buildings = [];
+    let counter = 1;
+
+    for (const city of CITIES) {
+      // 5 properties per city to make it balanced (total 40 properties)
+      for (let i = 0; i < 5; i++) {
+        const catCombo = CATEGORIES[i % CATEGORIES.length];
+        
+        // Force specific categories for perfect balancing using valid enums
+        let finalGender = 'Mixed';
+        let finalCat = 'Mixed';
+        
+        if (i === 0) { finalGender = 'Boys'; finalCat = 'Professional'; } // mens
+        if (i === 1) { finalGender = 'Girls'; finalCat = 'Professional'; } // womens
+        if (i === 2) { finalGender = 'Mixed'; finalCat = 'Mixed'; } // coliving (gender: mixed, category: mixed)
+        if (i === 3) { finalGender = 'Mixed'; finalCat = 'Luxury'; } // premium (category: luxury)
+        if (i === 4) { finalGender = 'Boys'; finalCat = 'Student'; } // student
+
+        const rentSingle = 12000 + Math.floor(Math.random() * 3000);
+        const rentDouble = 10000 + Math.floor(Math.random() * 2000);
+        const rentTriple = 8000 + Math.floor(Math.random() * 1500);
+        const rent4Sharing = 7000 + Math.floor(Math.random() * 1000);
+        const rent5Sharing = 6000 + Math.floor(Math.random() * 1000);
+
+        buildings.push({
+          name: `${city} Stay ${counter++}`,
+          address: `Central Hub, ${city}`,
+          locationCity: city,
+          description: `A beautiful and secure stay located in the heart of ${city}.`,
+          startingPrice: rent5Sharing,
+          rentSingle,
+          rentDouble,
+          rentTriple,
+          rent4Sharing,
+          rent5Sharing,
+          genderType: finalGender,
+          category: finalCat,
+          amenities: AMENITIES.slice(0, 3 + Math.floor(Math.random() * 4)),
+          images: ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'],
+          status: 'Active',
+          owner: ownerId,
+          showInPortfolio: true
+        });
+      }
+    }
+
+    await Building.insertMany(buildings);
+    console.log(`[SEED] Inserted ${buildings.length} balanced buildings`);
+    res.status(200).json({ message: `Successfully seeded ${buildings.length} balanced properties.` });
+  } catch (error) {
+    console.error('[SEED ERROR]', error);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 };
 
@@ -499,5 +614,6 @@ module.exports = {
   getPublicBuildings,
   getPublicBuildingById,
   uploadPhotos,
-  getPlatformStats
+  getPlatformStats,
+  seedBalanced
 };

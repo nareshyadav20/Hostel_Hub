@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Search, SlidersHorizontal, Star, ShieldCheck, ChevronDown, RefreshCw } from 'lucide-react';
+import { Search, SlidersHorizontal, Star, ShieldCheck, RefreshCw, MapPin, X, ChevronRight, ChevronDown } from 'lucide-react';
 
 import './Landing.css';
 import API from '../api/axios';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 
 const EXPLORE_CACHE_KEY = 'hh_explore_buildings_v2';
-const EXPLORE_CACHE_TTL = 3 * 60 * 1000; // 3 minutes
+const EXPLORE_CACHE_TTL = 3 * 60 * 1000;
 
 const getCachedBuildings = () => {
   try {
@@ -24,16 +24,14 @@ const setCachedBuildings = (data) => {
 };
 
 const CITY_LOCALITIES = {
-  hyderabad: [
-    'Gachibowli', 'Gopanpally Gachibowli', 'Gowlidoddy', 'HITEC City',
-    'Journalist colony', 'KOKAPET', 'Kondapur', 'KPHB', 'Kukatpally',
-    'Lanco Hills Manikonda', 'Madhapur', 'Manikonda', 'Miyapur', 'Serilingampally'
-  ],
+  hyderabad: ['Gachibowli', 'Gopanpally', 'HITEC City', 'Kondapur', 'KPHB', 'Kukatpally', 'Madhapur', 'Manikonda', 'Miyapur', 'Serilingampally'],
   bengaluru: ['Koramangala', 'HSR Layout', 'Indiranagar', 'Whitefield', 'Marathahalli', 'BTM Layout', 'Jayanagar', 'Hebbal'],
   mumbai: ['Andheri', 'Bandra', 'Powai', 'Worli', 'Thane', 'Dadar', 'Juhu', 'Borivali'],
   delhi: ['Connaught Place', 'Saket', 'Karol Bagh', 'Dwarka', 'Rajouri Garden', 'Vasant Kunj', 'Hauz Khas', 'Greater Kailash'],
   pune: ['Koregaon Park', 'Kothrud', 'Hinjewadi', 'Viman Nagar', 'Baner', 'Kalyani Nagar', 'Hadapsar', 'Wakad'],
-  chennai: ['Adyar', 'Velachery', 'Anna Nagar', 'OMR', 'T-Nagar', 'Guindy', 'Mylapore', 'Nungambakkam']
+  chennai: ['Adyar', 'Velachery', 'Anna Nagar', 'OMR', 'T-Nagar', 'Guindy', 'Mylapore', 'Nungambakkam'],
+  noida: ['Sector 18', 'Sector 62', 'Sector 137', 'Greater Noida', 'Sector 50'],
+  gurgaon: ['DLF Phase 1', 'Cyber City', 'Sohna Road', 'MG Road', 'Golf Course Road'],
 };
 
 const CITIES_LIST = ['Bengaluru', 'Hyderabad', 'Mumbai', 'Chennai', 'Delhi', 'Pune', 'Noida', 'Gurgaon'];
@@ -42,73 +40,44 @@ const Landing = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const cityDropdownRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   const [selectedCity, setSelectedCity] = useState('All Cities');
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
-
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('all');
 
   const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [searchLocality, setSearchLocality] = useState('');
-  const [searchProperty, setSearchProperty] = useState('');
   const [hostelType, setHostelType] = useState('');
   const [sharing, setSharing] = useState('');
-
   const [sortBy, setSortBy] = useState('');
   const [budgetMin, setBudgetMin] = useState(0);
   const [budgetMax, setBudgetMax] = useState(60000);
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
+  const itemsPerPage = 6;
 
-  // Parse URL parameters dynamically whenever navigation occurs (resolves HMR & updates not going to change)
+  // Parse URL parameters
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-
-    // Check both 'city' and 'location' params to support homepage search redirects
     const rawLocationInput = queryParams.get('city') || queryParams.get('location');
     if (rawLocationInput) {
       const lowerLoc = rawLocationInput.toLowerCase();
-      // Verify if it matches a known city name or a typo variation
-      const isKnownCity = CITIES_LIST.some(c => c.toLowerCase() === lowerLoc || (c.toLowerCase() === 'hyderabad' && lowerLoc === 'hydrabad'));
-
+      const isKnownCity = CITIES_LIST.some(c => c.toLowerCase() === lowerLoc);
       if (isKnownCity) {
-        const formattedCity = lowerLoc === 'hydrabad' || lowerLoc === 'hyderabad' ? 'Hyderabad' : rawLocationInput.charAt(0).toUpperCase() + rawLocationInput.slice(1).toLowerCase();
-        setSelectedCity(formattedCity);
+        setSelectedCity(rawLocationInput.charAt(0).toUpperCase() + rawLocationInput.slice(1).toLowerCase());
       } else {
-        // If it's a neighborhood search, preserve the city as Hyderabad and filter the locality
         setSelectedCity('Hyderabad');
         setSearchLocality(rawLocationInput);
       }
     }
-
-    const typeParam = queryParams.get('type');
-    if (typeParam) {
-      setActiveTab(typeParam);
-    }
-
-    const hostelTypeParam = queryParams.get('hostelType');
-    if (hostelTypeParam) {
-      setHostelType(hostelTypeParam);
-    }
-
+    const typeParam = queryParams.get('hostelType');
+    if (typeParam) setHostelType(typeParam);
     const stayTypeParam = queryParams.get('stayType');
-    if (stayTypeParam) {
-      setSharing(stayTypeParam);
-    }
-
+    if (stayTypeParam) setSharing(stayTypeParam);
     const localityParam = queryParams.get('locality');
-    if (localityParam) {
-      setSearchLocality(localityParam);
-    }
-
-    const propertyParam = queryParams.get('property');
-    if (propertyParam) {
-      setSearchProperty(propertyParam);
-    }
-
+    if (localityParam) setSearchLocality(localityParam);
     const budgetParam = queryParams.get('budget');
     if (budgetParam) {
       if (budgetParam.includes('Under')) { setBudgetMin(0); setBudgetMax(8000); }
@@ -127,7 +96,7 @@ const Landing = () => {
         city = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
       }
       const address = b.address || b.location || 'Hyderabad';
-      let locality = 'Hyderabad';
+      let locality = 'Central Hub';
       const parenMatch = address.match(/\(([^)]+)\)/);
       if (parenMatch && parenMatch[1]) {
         locality = parenMatch[1].trim();
@@ -135,6 +104,36 @@ const Landing = () => {
         const firstPart = address.split(',')[0].trim();
         locality = firstPart.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
       }
+
+      let lowestSharingLabel = 'Sharing';
+      const rents = [
+        { val: b.rentSingle, label: 'Single Room' },
+        { val: b.rentDouble, label: '2 Sharing' },
+        { val: b.rentTriple, label: '3 Sharing' },
+        { val: b.rent4Sharing, label: '4 Sharing' },
+        { val: b.rent5Sharing, label: '5 Sharing' },
+        { val: b.rent6Sharing, label: '6 Sharing' },
+      ].filter(r => r.val > 0);
+
+      let has1 = (b.rentSingle || 0) > 0;
+      let has2 = (b.rentDouble || 0) > 0;
+      let has3 = (b.rentTriple || 0) > 0;
+      let has4 = (b.rent4Sharing || 0) > 0;
+      let has5 = (b.rent5Sharing || 0) > 0;
+      let has6 = (b.rent6Sharing || 0) > 0;
+
+      if (rents.length > 0) {
+        const minRent = rents.reduce((prev, curr) => prev.val < curr.val ? prev : curr);
+        lowestSharingLabel = minRent.label;
+        b.startingPrice = minRent.val;
+      } else {
+        if (b.startingPrice >= 12000) { lowestSharingLabel = 'Single Room'; has1 = true; }
+        else if (b.startingPrice >= 10000) { lowestSharingLabel = '2 Sharing'; has2 = true; }
+        else if (b.startingPrice >= 8000) { lowestSharingLabel = '3 Sharing'; has3 = true; }
+        else if (b.startingPrice >= 7000) { lowestSharingLabel = '4 Sharing'; has4 = true; }
+        else { lowestSharingLabel = '5 Sharing'; has5 = true; }
+      }
+
       return {
         id: b._id,
         city,
@@ -143,10 +142,17 @@ const Landing = () => {
         fullAddress: address,
         rating: b.rating || 4.5,
         price: b.startingPrice || 8000,
+        sharingLabel: lowestSharingLabel,
         img: b.images && b.images[0] ? ((b.images[0].startsWith('http') || b.images[0].startsWith('data:')) ? b.images[0] : `http://localhost:5000${b.images[0]}`) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
-        amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['Free WiFi', 'A/C', 'Mess'],
-        gender: b.genderType || 'Unisex',
-        category: b.category || 'Student'
+        amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['WiFi', 'AC', 'Food/Mess'],
+        gender: (b.genderType && !['mixed', 'unisex'].includes(b.genderType.toLowerCase())) ? b.genderType : 'Coliving',
+        category: b.category || 'Student',
+        hasSingle: has1,
+        hasDouble: has2,
+        hasTriple: has3,
+        has4: has4,
+        has5: has5,
+        has6: has6
       };
     });
   };
@@ -170,28 +176,19 @@ const Landing = () => {
     if (cached) {
       setHostels(cached);
       setLoading(false);
-      fetchHostels(true); // background refresh
+      fetchHostels(true);
     } else {
-      fetchHostels(false); // foreground fetch
+      fetchHostels(false);
     }
-
-    // Real-time synchronization — silent refresh, no spinner flicker
     connectSocket();
-    socket.on('hostelUpdated', () => {
-      console.log('🔄 Explore page updating in real-time (silent)');
-      fetchHostels(true); // always silent on socket events
-    });
-
-    return () => {
-      socket.off('hostelUpdated');
-    };
+    socket.on('hostelUpdated', () => fetchHostels(true));
+    return () => { socket.off('hostelUpdated'); };
   }, []);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCity, activeTab, selectedAmenities, searchLocality, searchProperty, hostelType, sharing, sortBy, budgetMin, budgetMax]);
+  }, [selectedCity, selectedAmenities, searchLocality, hostelType, sharing, sortBy, budgetMin, budgetMax]);
 
-  // Close dropdown on click outside
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (cityDropdownRef.current && !cityDropdownRef.current.contains(e.target)) {
@@ -205,366 +202,459 @@ const Landing = () => {
   const resetAllFilters = () => {
     setSelectedAmenities([]);
     setSearchLocality('');
-    setSearchProperty('');
     setHostelType('');
     setSharing('');
     setSortBy('');
     setBudgetMin(0);
     setBudgetMax(60000);
+    setSelectedCity('All Cities');
     navigate('/explore');
   };
 
-  // Compile available cities list dynamically from the fetched properties
-  const dynamicCities = Array.from(new Set(hostels.map(h => {
-    let c = h.city || 'Hyderabad';
-    return (c.toLowerCase() === 'hydrabad' || c.toLowerCase() === 'hyderabad')
-      ? 'Hyderabad'
-      : c.charAt(0).toUpperCase() + c.slice(1).toLowerCase();
-  })));
-  // ALWAYS show the default cities, plus any new ones found in the database
+  // Dynamic cities from DB
+  const dynamicCities = Array.from(new Set(hostels.map(h => h.city)));
   const availableCities = Array.from(new Set(['All Cities', ...CITIES_LIST, ...dynamicCities]));
 
-  // Extract localities: Use actual db active localities for the selected city
-  const dynamicLocalities = Array.from(new Set(
-    hostels.filter(h => selectedCity === 'All Cities' || h.city.toLowerCase() === selectedCity.toLowerCase() ||
-      (selectedCity.toLowerCase() === 'hyderabad' && h.city.toLowerCase() === 'hydrabad'))
+  // Localities: ONLY DB localities for selected city
+  const uniqueLocalities = Array.from(new Set(
+    hostels
+      .filter(h => selectedCity === 'All Cities' || h.city.toLowerCase() === selectedCity.toLowerCase())
       .map(h => h.locality)
-  ));
+      .filter(Boolean)
+  )).sort();
 
-  // ONLY show localities for the selected city that actually have properties in the database
-  const uniqueLocalitiesOfSelectedCity = dynamicLocalities;
-
+  // Filtering
   const filteredHostels = hostels.filter(h => {
     try {
-      if (selectedCity !== 'All Cities' && h.city.toLowerCase() !== selectedCity.toLowerCase()) return false;
-      if (searchLocality && h.locality && !h.locality.toLowerCase().includes(searchLocality.toLowerCase())) return false;
-      if (searchProperty && h.name && !h.name.toLowerCase().includes(searchProperty.toLowerCase())) return false;
-      
-      // Temporary bypass of other strict filters to ensure properties load
+      let bypassCityFilter = false;
+
+      if (searchLocality) {
+        const query = searchLocality.toLowerCase();
+        const matchesCity = h.city && h.city.toLowerCase().includes(query);
+        const matchesLocality = h.locality && h.locality.toLowerCase().includes(query);
+        const matchesName = h.name && h.name.toLowerCase().includes(query);
+        
+        if (!matchesCity && !matchesLocality && !matchesName) return false;
+        if (matchesCity) bypassCityFilter = true;
+      }
+
+      if (selectedCity !== 'All Cities' && !bypassCityFilter) {
+        if (h.city.toLowerCase() !== selectedCity.toLowerCase()) return false;
+      }
+
+      // Budget
+      if (budgetMin > 0 && h.price < budgetMin) return false;
+      if (budgetMax < 60000 && h.price > budgetMax) return false;
+
+      // Hostel Type (Gender)
+      if (hostelType && hostelType !== 'Any') {
+        const typeStr = hostelType.toLowerCase();
+        const genderStr = (h.gender || '').toLowerCase();
+        if (typeStr === "men's" && !['boys', 'male', 'men', "men's"].includes(genderStr)) return false;
+        if (typeStr === "women's" && !['girls', 'female', 'women', "women's"].includes(genderStr)) return false;
+        if (typeStr === "co-living" && !['unisex', 'co-living', 'coliving', 'both'].includes(genderStr)) return false;
+      }
+
+      // Sharing
+      if (sharing && sharing !== 'Any') {
+         if (sharing === 'Single' && !h.hasSingle) return false;
+         if (sharing === '2' && !h.hasDouble) return false;
+         if (sharing === '3' && !h.hasTriple) return false;
+         if (sharing === '4' && !h.has4) return false;
+         if (sharing === '5' && !h.has5) return false;
+         if (sharing === '6' && !h.has6) return false;
+      }
+
+      // Amenities
+      if (selectedAmenities && selectedAmenities.length > 0) {
+        const hasAll = selectedAmenities.every(a => {
+          if (!h.amenities) return false;
+          const aLower = a.toLowerCase();
+          return h.amenities.some(ha => {
+            const haLower = ha.toLowerCase();
+            if (haLower.includes(aLower)) return true;
+            if (aLower === 'ac' && (haLower.includes('a/c') || haLower.includes('air condition'))) return true;
+            if (aLower === 'food/mess' && (haLower.includes('food') || haLower.includes('mess') || haLower.includes('meal'))) return true;
+            if (aLower === 'wifi' && (haLower.includes('wi-fi') || haLower.includes('internet'))) return true;
+            if (aLower === 'power backup' && (haLower.includes('power') || haLower.includes('generator') || haLower.includes('backup'))) return true;
+            return false;
+          });
+        });
+        if (!hasAll) return false;
+      }
+
       return true;
-    } catch (e) {
-      console.error('Filter error on hostel:', h, e);
-      return true; // fail open
-    }
+    } catch { return true; }
   });
 
-  if (sortBy === 'price_low_high') {
-    filteredHostels.sort((a, b) => a.price - b.price);
-  } else if (sortBy === 'price_high_low') {
-    filteredHostels.sort((a, b) => b.price - a.price);
-  }
+  if (sortBy === 'price_low_high') filteredHostels.sort((a, b) => a.price - b.price);
+  else if (sortBy === 'price_high_low') filteredHostels.sort((a, b) => b.price - a.price);
 
-  // Pagination Logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentHostels = filteredHostels.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredHostels.length / itemsPerPage);
 
+  const activeFilterCount = [
+    hostelType, sharing, searchLocality,
+    selectedAmenities.length > 0 ? 'a' : '',
+    (budgetMin > 0 || budgetMax < 60000) ? 'b' : ''
+  ].filter(Boolean).length;
+
+  const goToListing = (hostelId) => {
+    const params = new URLSearchParams();
+    if (selectedAmenities.length > 0) params.append('amenities', selectedAmenities.join(','));
+    if (sharing) params.append('sharing', sharing);
+    navigate(`/listing/${hostelId}?${params.toString()}`);
+  };
+
+  const genderColor = (g) => {
+    if (!g) return '#64748b';
+    const lower = g.toLowerCase();
+    if (lower === 'boys' || lower === "men's" || lower === 'male') return '#3B82F6';
+    if (lower === 'girls' || lower === "women's" || lower === 'female') return '#EC4899';
+    return '#8B5CF6';
+  };
+
   return (
-    <div className={`landing-page ${isMobileFilterOpen ? 'filter-open' : ''}`}>
-
-
-      {/* Hero Banner */}
-      <section className="search-hero" style={{ position: 'relative' }}>
-        <button
-          onClick={() => navigate('/')}
-          style={{ position: 'absolute', top: '16px', right: '16px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 100, color: '#64748b', fontWeight: 'bold' }}
-        >
-          ✕
-        </button>
-        <span className="search-hero-eyebrow">Explore Stays</span>
-        <h2 className="search-hero-title">
-          Perfect Stays In{' '}
-          <span
-            className="city-highlight-dropdown"
-            ref={cityDropdownRef}
-            onClick={() => setIsCityDropdownOpen(!isCityDropdownOpen)}
-          >
-            {selectedCity} <ChevronDown size={28} className="city-chevron" />
-
-            {isCityDropdownOpen && (
-              <div className="hero-city-dropdown">
-                {availableCities.map(city => (
-                  <div
-                    key={city}
-                    className="hero-city-option"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedCity(city);
-                      setSearchLocality(''); // Clear locality filter on city switch
-                      setIsCityDropdownOpen(false);
-                      navigate(`/explore?city=${city.toLowerCase()}`);
-                    }}
-                  >
-                    {city}
+    <div className="exp-root">
+      {/* ── HERO STRIP ── */}
+      <div className="exp-hero">
+        <div className="exp-hero-inner">
+          <div className="exp-hero-text">
+            <h1 className="exp-hero-title">
+              Find Your Perfect Room in{' '}
+              <span className="exp-city-trigger" ref={cityDropdownRef} onClick={() => setIsCityDropdownOpen(!isCityDropdownOpen)}>
+                {selectedCity}
+                <ChevronDown size={20} className={`exp-city-chevron ${isCityDropdownOpen ? 'open' : ''}`} />
+                {isCityDropdownOpen && (
+                  <div className="exp-city-dropdown">
+                    {availableCities.map(city => (
+                      <div
+                        key={city}
+                        className={`exp-city-option ${selectedCity === city ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCity(city);
+                          setSearchLocality('');
+                          setIsCityDropdownOpen(false);
+                          navigate(`/explore?city=${city.toLowerCase()}`);
+                        }}
+                      >
+                        {city !== 'All Cities' && <MapPin size={14} />} {city}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+              </span>
+            </h1>
+          </div>
+
+          <div className="exp-search-bar">
+            <Search size={18} className="exp-search-icon" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search by locality or property name..."
+              value={searchLocality}
+              onChange={(e) => setSearchLocality(e.target.value)}
+              className="exp-search-input"
+            />
+            {searchLocality && (
+              <button className="exp-search-clear" onClick={() => setSearchLocality('')}>
+                <X size={16} />
+              </button>
             )}
-          </span>
-        </h2>
-        <p className="search-hero-subtitle">Discover premium verified hostels and co-living spaces designed for absolute comfort.</p>
-
-        <div className="search-trigger-pill" style={{ cursor: 'text' }}>
-          <div className="search-pill-icon"><Search size={18} /></div>
-          <input
-            type="text"
-            className="search-pill-text"
-            placeholder="Type a city, locality or property name..."
-            value={searchLocality}
-            onChange={(e) => setSearchLocality(e.target.value)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              font: 'inherit',
-              color: 'inherit',
-              width: '100%',
-              cursor: 'text'
-            }}
-          />
-          {searchLocality && (
-            <button
-              onClick={() => setSearchLocality('')}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#94a3b8',
-                fontSize: '1.1rem',
-                padding: '0 0.5rem',
-                lineHeight: 1
-              }}
-            >
-              ✕
-            </button>
-          )}
-        </div>
-      </section>
-
-      {/* Mobile Filter Sticky Bar */}
-      <div className="mobile-filter-bar">
-        <button className="btn-mobile-filter" onClick={() => setIsMobileFilterOpen(true)}>
-          <SlidersHorizontal size={16} /> Filters
-        </button>
-        <div className="filter-summary">
-          {hostelType && <span className="summary-chip">{hostelType}</span>}
-          {sharing && <span className="summary-chip">{sharing}</span>}
-          {activeTab === 'student' && <span className="summary-chip">Student</span>}
-          {selectedAmenities.length > 0 && <span className="summary-chip">{selectedAmenities.length} Amenities</span>}
+          </div>
         </div>
       </div>
 
-      <div className="landing-container split-layout">
+      {/* ── MOBILE FILTER BAR ── */}
+      <div className="exp-mobile-bar">
+        <button className="exp-mobile-filter-btn" onClick={() => setIsMobileFilterOpen(true)}>
+          <SlidersHorizontal size={16} />
+          Filters
+          {activeFilterCount > 0 && <span className="exp-filter-badge">{activeFilterCount}</span>}
+        </button>
+        <div className="exp-mobile-chips">
+          {hostelType && <span className="exp-chip">{hostelType} <X size={10} onClick={() => setHostelType('')} /></span>}
+          {sharing && <span className="exp-chip">{sharing} Sharing <X size={10} onClick={() => setSharing('')} /></span>}
+          {searchLocality && <span className="exp-chip">{searchLocality} <X size={10} onClick={() => setSearchLocality('')} /></span>}
+        </div>
+        <select className="exp-sort-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+          <option value="">Sort: Relevance</option>
+          <option value="price_low_high">Price: Low to High</option>
+          <option value="price_high_low">Price: High to Low</option>
+        </select>
+      </div>
 
-        {/* Sidebar Filters */}
-        <aside className="filters-sidebar">
-          <div className="sidebar-header">
-            <h3>Filters</h3>
-            <button className="reset-all-btn" onClick={resetAllFilters}>
-              <RefreshCw size={12} /> Reset All
+      {/* ── MAIN LAYOUT ── */}
+      <div className="exp-layout">
+
+        {/* ── SIDEBAR FILTERS ── */}
+        <aside className={`exp-sidebar ${isMobileFilterOpen ? 'mobile-open' : ''}`}>
+          <div className="exp-sidebar-head">
+            <div className="exp-sidebar-title">
+              <SlidersHorizontal size={16} />
+              <span>Filters</span>
+              {activeFilterCount > 0 && <span className="exp-filter-badge">{activeFilterCount}</span>}
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button className="exp-reset-btn" onClick={resetAllFilters}>
+                <RefreshCw size={12} /> Reset
+              </button>
+              <button className="exp-sidebar-close-mobile" onClick={() => setIsMobileFilterOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Filter scroll area */}
+          <div className="exp-sidebar-scroll">
+
+            {/* Location — cities */}
+            <div className="exp-filter-block">
+              <h4 className="exp-filter-label">Location</h4>
+              <select 
+                className="exp-select" 
+                value={selectedCity} 
+                onChange={e => {
+                  const city = e.target.value;
+                  setSelectedCity(city);
+                  setSearchLocality('');
+                  navigate(`/explore${city === 'All Cities' ? '' : `?city=${city.toLowerCase()}`}`);
+                }}
+              >
+                {['All Cities', ...CITIES_LIST].map(city => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Localities — dynamic from selected city */}
+            {uniqueLocalities.length > 0 && (
+              <div className="exp-filter-block">
+                <h4 className="exp-filter-label">
+                  Localities in {selectedCity}
+                </h4>
+                <select
+                  className="exp-select"
+                  value={searchLocality}
+                  onChange={e => setSearchLocality(e.target.value)}
+                >
+                  <option value="">All Localities</option>
+                  {uniqueLocalities.map(loc => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Budget */}
+            <div className="exp-filter-block">
+              <h4 className="exp-filter-label">Monthly Budget</h4>
+              <div className="exp-radio-group">
+                {[
+                  { label: 'Any Budget', min: 0, max: 60000 },
+                  { label: 'Under ₹8k', min: 0, max: 8000 },
+                  { label: '₹8k – ₹12k', min: 8000, max: 12000 },
+                  { label: '₹12k – ₹18k', min: 12000, max: 18000 },
+                  { label: 'Above ₹18k', min: 18000, max: 60000 },
+                ].map(opt => (
+                  <label key={opt.label} className={`exp-radio-item ${budgetMin === opt.min && budgetMax === opt.max ? 'active' : ''}`}>
+                    <input type="radio" name="budget"
+                      checked={budgetMin === opt.min && budgetMax === opt.max}
+                      onChange={() => { setBudgetMin(opt.min); setBudgetMax(opt.max); }}
+                    />
+                    <span className="exp-radio-dot"></span>
+                    {opt.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Hostel Type */}
+            <div className="exp-filter-block">
+              <h4 className="exp-filter-label">Hostel Type</h4>
+              <div className="exp-pill-group">
+                {["Any", "Men's", "Women's", 'Co-living'].map(t => (
+                  <button key={t}
+                    className={`exp-pill ${(!hostelType && t === 'Any') || hostelType === t ? 'active' : ''}`}
+                    onClick={() => setHostelType(t === 'Any' ? '' : t)}
+                  >{t}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sharing Type */}
+            <div className="exp-filter-block">
+              <h4 className="exp-filter-label">Sharing Type</h4>
+              <div className="exp-pill-group">
+                <button className={`exp-pill ${!sharing ? 'active' : ''}`} onClick={() => setSharing('')}>Any</button>
+                <button className={`exp-pill ${sharing === 'Single' ? 'active' : ''}`} onClick={() => setSharing(sharing === 'Single' ? '' : 'Single')}>Single</button>
+              </div>
+              <div className="exp-pill-group" style={{ marginTop: '8px' }}>
+                {['2', '3', '4', '5', '6'].map(n => (
+                  <button key={n}
+                    className={`exp-pill exp-pill-num ${sharing === n ? 'active' : ''}`}
+                    onClick={() => setSharing(sharing === n ? '' : n)}
+                  >{n}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Amenities */}
+            <div className="exp-filter-block">
+              <h4 className="exp-filter-label">Amenities</h4>
+              <div className="exp-amenities-grid">
+                {['WiFi', 'AC', 'Gym', 'Food/Mess', 'Parking', 'Power Backup', 'Laundry', 'CCTV'].map(a => (
+                  <button
+                    key={a}
+                    className={`exp-amenity-pill ${selectedAmenities.includes(a) ? 'active' : ''}`}
+                    onClick={() => {
+                      if (selectedAmenities.includes(a)) {
+                        setSelectedAmenities(selectedAmenities.filter(item => item !== a));
+                      } else {
+                        setSelectedAmenities([...selectedAmenities, a]);
+                      }
+                    }}
+                  >
+                    {a}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Apply */}
+          <div className="exp-sidebar-mobile-footer">
+            <button className="exp-apply-btn" onClick={() => setIsMobileFilterOpen(false)}>
+              Show {filteredHostels.length} Properties
             </button>
-          </div>
-
-          {/* Budget */}
-          <div className="filter-section">
-            <h4>Monthly Budget</h4>
-            <div className="budget-filter-list">
-              {[
-                { label: 'Any Budget', min: 0, max: 60000 },
-                { label: 'Under ₹8k', min: 0, max: 8000 },
-                { label: '₹8k – ₹12k', min: 8000, max: 12000 },
-                { label: '₹12k – ₹18k', min: 12000, max: 18000 },
-                { label: 'Above ₹18k', min: 18000, max: 60000 },
-              ].map(opt => (
-                <label className="radio-label" key={opt.label}>
-                  <input
-                    type="radio"
-                    name="budget"
-                    checked={budgetMin === opt.min && budgetMax === opt.max}
-                    onChange={() => { setBudgetMin(opt.min); setBudgetMax(opt.max); }}
-                  />
-                  <span className="radio-custom"></span> {opt.label}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Hostel Type */}
-          <div className="filter-section">
-            <h4>Hostel Type</h4>
-            <div className="explore-pill-group">
-              {["Any Hostel", "Men's", "Women's", 'Co-living'].map(t => (
-                <button
-                  key={t}
-                  className={`explore-pill-btn ${(hostelType === t) || (!hostelType && t === 'Any Hostel') ? 'active' : ''}`}
-                  onClick={() => setHostelType(t === 'Any Hostel' ? '' : t)}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Sharing */}
-          <div className="filter-section">
-            <h4>Sharing Type</h4>
-            <div className="explore-sharing-grid">
-              {['No Pref', 'Single', '2 Sharing', '3 Sharing', '4 Sharing', '5 Sharing', '6 Sharing', 'Dormitory', 'Other'].map(opt => (
-                <button
-                  key={opt}
-                  className={`explore-sharing-btn ${(sharing === opt) || (!sharing && opt === 'No Pref') ? 'active' : ''}`}
-                  onClick={() => setSharing(opt === 'No Pref' ? '' : opt)}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Amenities */}
-          <div className="filter-section">
-            <h4>Amenities</h4>
-            {['AC', 'Gym', 'Food', 'Fridge', 'Parking', 'Power Backup'].map(a => (
-              <label className="checkbox-label" key={a}>
-                <input
-                  type="checkbox"
-                  checked={selectedAmenities.includes(a)}
-                  onChange={(e) => {
-                    if (e.target.checked) setSelectedAmenities([...selectedAmenities, a]);
-                    else setSelectedAmenities(selectedAmenities.filter(item => item !== a));
-                  }}
-                />
-                <span className="checkbox-custom"></span> {a}
-              </label>
-            ))}
-          </div>
-
-          {/* Localities */}
-          <div className="filter-section border-0">
-            <h4>Localities in {selectedCity}</h4>
-            <div className="locality-list">
-              {dynamicLocalities.map(loc => (
-                <label className="radio-label" key={loc}>
-                  <input type="radio" name="localityFilter" checked={searchLocality === loc}
-                    onChange={() => setSearchLocality(searchLocality === loc ? '' : loc)}
-                    onClick={(e) => { if (searchLocality === loc) { e.preventDefault(); setSearchLocality(''); } }}
-                  />
-                  <span className="radio-custom"></span> {loc}
-                </label>
-              ))}
-            </div>
           </div>
         </aside>
 
-        {/* Properties Grid */}
-        <main className="hostels-main-view">
-          {loading ? (
-            <div className="explore-loading-wrap">
-              <span className="explore-spinner"></span>
-              <p>Curating best properties for you...</p>
-            </div>
-          ) : filteredHostels.length > 0 ? (
-            <>
-              <div className="hostels-grid">
-                {currentHostels.map((hostel, index) => (
-                  <div key={hostel.id} className="hostel-card-v flex-in-up" style={{ animationDelay: `${0.05 * index}s` }}>
-                    <div className="card-img-box-v" onClick={() => {
-                        const params = new URLSearchParams();
-                        if (selectedAmenities.length > 0) params.append('amenities', selectedAmenities.join(','));
-                        if (sharing) params.append('sharing', sharing);
-                        navigate(`/listing/${hostel.id}?${params.toString()}`);
-                    }}>
-                      <img src={hostel.img} alt={hostel.name} onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'; }} />
-                      <div className="rating-pill">
-                        <Star size={12} fill="#F59E0B" color="#F59E0B" />
-                        <span>{hostel.rating.toFixed(1)}</span>
-                      </div>
-                      <span className="gender-tag">{hostel.gender}</span>
-                    </div>
+        {/* Mobile Overlay */}
+        {isMobileFilterOpen && (
+          <div className="exp-sidebar-overlay" onClick={() => setIsMobileFilterOpen(false)} />
+        )}
 
-                    <div className="card-details-v">
-                      <span className="card-locality-v">📍 {hostel.locality}</span>
-                      <h3 className="card-title-v" onClick={() => {
-                        const params = new URLSearchParams();
-                        if (selectedAmenities.length > 0) params.append('amenities', selectedAmenities.join(','));
-                        if (sharing) params.append('sharing', sharing);
-                        navigate(`/listing/${hostel.id}?${params.toString()}`);
-                      }}>{hostel.name}</h3>
+        {/* ── PROPERTIES LIST ── */}
+        <main className="exp-main">
+          {/* Desktop sort bar */}
+          <div className="exp-results-bar">
+            <p className="exp-results-count">
+              <strong>{filteredHostels.length}</strong> properties in {selectedCity}
+              {searchLocality && <span className="exp-results-locality"> · {searchLocality}</span>}
+            </p>
+            <select className="exp-select exp-desktop-sort" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+              <option value="">Sort: Relevance</option>
+              <option value="price_low_high">Price: Low → High</option>
+              <option value="price_high_low">Price: High → Low</option>
+            </select>
+          </div>
 
-                      <div className="card-amenities-row">
-                        {hostel.amenities.slice(0, 3).map((a, i) => (
-                          <span key={i} className="amenity-chip-v">{a}</span>
-                        ))}
-                      </div>
-
-                      <div className="card-footer-v">
-                        <div className="price-display-v">
-                          <strong>₹{hostel.price.toLocaleString()}</strong>
-                          <span>/mo</span>
-                        </div>
-                        <button className="details-action-btn" onClick={() => {
-                            const params = new URLSearchParams();
-                            if (selectedAmenities.length > 0) params.append('amenities', selectedAmenities.join(','));
-                            if (sharing) params.append('sharing', sharing);
-                            navigate(`/listing/${hostel.id}?${params.toString()}`);
-                        }}>
-                          Details
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+          {/* Hostel cards scroll area */}
+          <div className="exp-cards-scroll">
+            {loading ? (
+              <div className="exp-loading">
+                <div className="exp-spinner"></div>
+                <p>Finding the best stays for you...</p>
               </div>
+            ) : currentHostels.length > 0 ? (
+              <>
+                <div className="exp-cards-grid">
+                  {currentHostels.map((hostel, idx) => (
+                    <div key={hostel.id} className="exp-card" style={{ animationDelay: `${0.05 * idx}s` }}>
+                      <div className="exp-card-img" onClick={() => goToListing(hostel.id)}>
+                        <img
+                          src={hostel.img}
+                          alt={hostel.name}
+                          onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'; }}
+                        />
+                        <div className="exp-card-img-overlay"></div>
+                        <span className="exp-gender-tag" style={{ background: genderColor(hostel.gender) }}>
+                          {hostel.gender}
+                        </span>
+                        <div className="exp-rating-pill">
+                          <Star size={11} fill="#F59E0B" color="#F59E0B" />
+                          <span>{hostel.rating.toFixed(1)}</span>
+                        </div>
+                      </div>
 
-              {/* Pagination UI */}
-              {totalPages > 1 && (
-                <div className="pagination-wrapper">
-                  <button
-                    className="pagi-btn"
-                    disabled={currentPage === 1}
-                    onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  >
-                    Previous
-                  </button>
-                  <div className="pagi-numbers">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
-                      <button
-                        key={num}
-                        className={`pagi-num ${currentPage === num ? 'active' : ''}`}
-                        onClick={() => { setCurrentPage(num); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                      >
-                        {num}
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    className="pagi-btn"
-                    disabled={currentPage === totalPages}
-                    onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  >
-                    Next
-                  </button>
+                      <div className="exp-card-body">
+                        <div className="exp-card-top">
+                          <p className="exp-card-locality">
+                            <MapPin size={12} /> {hostel.locality}, {hostel.city}
+                          </p>
+                          <h3 className="exp-card-title" onClick={() => goToListing(hostel.id)}>
+                            {hostel.name}
+                          </h3>
+                        </div>
+
+                        <div className="exp-card-amenities">
+                          {hostel.amenities.slice(0, 3).map((a, i) => (
+                            <span key={i} className="exp-amenity-tag">{a}</span>
+                          ))}
+                          {hostel.amenities.length > 3 && (
+                            <span className="exp-amenity-more">+{hostel.amenities.length - 3}</span>
+                          )}
+                        </div>
+
+                        <div className="exp-card-footer">
+                          <div className="exp-price-block">
+                            <span className="exp-price-label">Starts at</span>
+                            <div className="exp-price-row">
+                              <span className="exp-price-value">₹{hostel.price.toLocaleString()}</span>
+                              <span className="exp-price-per">/mo</span>
+                            </div>
+                            <span className="exp-sharing-tag">{hostel.sharingLabel}</span>
+                          </div>
+                          <button className="exp-details-btn" onClick={() => goToListing(hostel.id)}>
+                            Details <ChevronRight size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </>
-          ) : (
-            <div className="explore-empty-wrap">
-              <ShieldCheck size={48} color="#94a3b8" />
-              <h3>No Properties Found</h3>
-              <p>Try adjusting your search filters or price limits for {selectedCity}.</p>
-              <button className="clear-filters-btn" onClick={resetAllFilters}>
-                Clear All Filters
-              </button>
-            </div>
-          )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="exp-pagination">
+                    <button
+                      className="exp-pagi-btn"
+                      disabled={currentPage === 1}
+                      onClick={() => { setCurrentPage(p => p - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    >← Prev</button>
+                    <div className="exp-pagi-nums">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
+                        <button
+                          key={num}
+                          className={`exp-pagi-num ${currentPage === num ? 'active' : ''}`}
+                          onClick={() => { setCurrentPage(num); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        >{num}</button>
+                      ))}
+                    </div>
+                    <button
+                      className="exp-pagi-btn"
+                      disabled={currentPage === totalPages}
+                      onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    >Next →</button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="exp-empty">
+                <ShieldCheck size={52} color="#cbd5e1" />
+                <h3>No Properties Found</h3>
+                <p>Try adjusting your search filters or selecting a different city.</p>
+                <button className="exp-reset-full-btn" onClick={resetAllFilters}>Reset All Filters</button>
+              </div>
+            )}
+          </div>
         </main>
-
       </div>
-
-
-
-
     </div>
   );
 };
