@@ -7,6 +7,7 @@ const router = express.Router();
 // Public routes for Tenant Portal
 router.get('/public/seed-balanced', buildingController.seedBalanced);
 router.get('/public/stats', buildingController.getPlatformStats);
+router.get('/', buildingController.getPublicBuildings);
 router.get('/public', buildingController.getPublicBuildings);
 router.get('/public/:id', buildingController.getPublicBuildingById);
 

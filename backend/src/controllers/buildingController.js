@@ -376,16 +376,37 @@ const getBuildingById = async (req, res) => {
 
 const getPublicBuildings = async (req, res) => {
   try {
-    const buildings = await Building.find(
-      { status: { $ne: 'Draft' }, propertyId: { $in: [null] }, showInPortfolio: { $ne: false } },
-      {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const filter = { status: { $ne: 'Draft' }, propertyId: { $in: [null] }, showInPortfolio: { $ne: false } };
+
+    const [total, buildings] = await Promise.all([
+      Building.countDocuments(filter),
+      Building.find(filter, {
         name: 1, address: 1, locationCity: 1, category: 1, rating: 1,
         startingPrice: 1, genderType: 1, amenities: 1, isAC: 1,
         rentSingle: 1, rentDouble: 1, rentTriple: 1, rent4Sharing: 1,
         rent5Sharing: 1, rent6Sharing: 1
+      })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    res.status(200).json({
+      success: true,
+      data: buildings,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: totalPages
       }
-    ).lean();
-    res.status(200).json(buildings);
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
