@@ -10,6 +10,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5174,
+    host: true,
     fs: {
       allow: ['..', '../../packages', '../../../']
     }
@@ -18,10 +19,6 @@ export default defineConfig({
     alias: {
       '@packages': path.resolve(__dirname, '../../packages'),
     }
-  },
-  server: {
-    port: 5174,
-    host: true
   },
   optimizeDeps: {
     include: ['socket.io-client', 'recharts', 'react-is']
