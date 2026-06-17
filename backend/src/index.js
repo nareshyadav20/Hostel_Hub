@@ -172,8 +172,10 @@ require('./models/AdminInsights');
 require('./models/AdminSupport');
 require('./models/Task');
 require('./models/Rating');
+require('./models/ForgotPassword');
 
 app.use('/api/auth', authRoutes);
+app.use('/api/auth/forgot-password', require('./routes/forgotPasswordRoutes'));
 app.use('/api/buildings', buildingRoutes);
 app.use('/api/floors', floorRoutes);
 app.use('/api/rooms', roomRoutes);

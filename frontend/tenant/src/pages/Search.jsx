@@ -201,16 +201,16 @@ const Search = () => {
   }, []);
 
   useEffect(() => {
-    let filtered = [...allHostels];
+    let filtered = [...allHostels];      
 
     if (filters.location) {
-      const loc = filters.location.toLowerCase();
+      const loc = filters.location.toLowerCase();      
       filtered = filtered.filter(h =>
         (h.city || '').toLowerCase().includes(loc) ||
-        (h.location || '').toLowerCase().includes(loc) ||
+        (h.location || '').toLowerCase().includes(loc) ||     
         (h.name || '').toLowerCase().includes(loc)
       );
-    }
+    }   
 
     if (filters.budget && filters.budget !== 'all') {
       filtered = filtered.filter(h => filterByBudget(h.price, filters.budget));

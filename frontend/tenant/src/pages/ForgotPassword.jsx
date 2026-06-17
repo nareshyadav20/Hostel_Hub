@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './auth.css';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const ForgotPassword = () => {
   const [formData, setFormData] = useState({
@@ -10,25 +13,45 @@ const ForgotPassword = () => {
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errorMsg) setErrorMsg('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
+
     if (formData.newPassword !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      setErrorMsg('Passwords do not match. Please try again.');
       return;
     }
+
+    if (formData.newPassword.length < 6) {
+      setErrorMsg('Password must be at least 6 characters.');
+      return;
+    }
+
     setLoading(true);
-    // Simulate reset logic
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await axios.post(`${API_URL}/auth/forgot-password`, {
+        email: formData.email.trim().toLowerCase(),
+        newPassword: formData.newPassword,
+      });
+
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 2000);
-    }, 1500);
+      setTimeout(() => navigate('/login'), 2500);
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        'Something went wrong. Please try again.';
+      setErrorMsg(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -40,27 +63,52 @@ const ForgotPassword = () => {
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         </button>
+
         <div className="auth-header">
           <div className="auth-logo" style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
             <span style={{ fontSize: '2.5rem', fontWeight: '950', background: 'linear-gradient(to right, #0ea5e9, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Livora</span>
           </div>
           <h1>Reset Password</h1>
-          <p>Create a new secure password for your account</p>
+          <p>Enter your email and choose a new secure password</p>
         </div>
 
         {success ? (
           <div className="success-message" style={{ textAlign: 'center', padding: '2rem' }}>
-            <div style={{ color: 'var(--accent-success)', marginBottom: '1rem' }}>
+            <div style={{ color: '#10b981', marginBottom: '1rem' }}>
               <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
             </div>
-            <h3>Password Reset Successful!</h3>
-            <p>Redirecting you to login...</p>
+            <h3 style={{ color: '#10b981', marginBottom: '0.5rem' }}>Password Reset Successful!</h3>
+            <p style={{ color: '#64748b' }}>Your password has been updated. Redirecting to login...</p>
           </div>
         ) : (
           <form className="auth-form" onSubmit={handleSubmit}>
+            {/* Error banner */}
+            {errorMsg && (
+              <div style={{
+                background: '#fef2f2',
+                border: '1px solid #fca5a5',
+                borderRadius: '10px',
+                padding: '0.75rem 1rem',
+                marginBottom: '1rem',
+                color: '#dc2626',
+                fontSize: '0.88rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                {errorMsg}
+              </div>
+            )}
+
             <div className="input-group">
               <label>Email Address</label>
               <div style={{ position: 'relative' }}>
@@ -78,6 +126,7 @@ const ForgotPassword = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -94,11 +143,12 @@ const ForgotPassword = () => {
                 <input
                   type="password"
                   name="newPassword"
-                  placeholder="New Password"
+                  placeholder="Minimum 6 characters"
                   style={{ paddingLeft: '3rem' }}
                   value={formData.newPassword}
                   onChange={handleChange}
                   required
+                  autoComplete="new-password"
                 />
               </div>
             </div>
@@ -119,12 +169,20 @@ const ForgotPassword = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
+                  autoComplete="new-password"
                 />
               </div>
             </div>
 
             <button type="submit" className="auth-btn" disabled={loading}>
-              {loading ? 'Resetting...' : 'Reset Password'}
+              {loading ? (
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                  </svg>
+                  Resetting Password...
+                </span>
+              ) : 'Reset Password'}
             </button>
           </form>
         )}
@@ -133,6 +191,10 @@ const ForgotPassword = () => {
           Remember your password? <Link to="/login">Sign In</Link>
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 };
