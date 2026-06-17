@@ -30,18 +30,30 @@ const handleId = (data) => {
   return data;
 };
 
+// Unwrap common API envelope shapes → always returns a plain array
+const unwrapArray = (raw) => {
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === 'object') {
+    // Try common envelope keys in priority order
+    for (const key of ['buildings', 'data', 'results', 'items', 'records']) {
+      if (Array.isArray(raw[key])) return raw[key];
+    }
+  }
+  return [];
+};
+
 // SWR (Stale-While-Revalidate) helper to prevent React request storms
 const swrFetch = async (cacheKey, url, config = {}) => {
   const cached = cacheGet(cacheKey);
   if (cached) {
     // Silently revalidate in background
     axios.get(url, config)
-      .then(res => cacheSet(cacheKey, handleId(Array.isArray(res.data) ? res.data : (res.data || []))))
+      .then(res => cacheSet(cacheKey, handleId(unwrapArray(res.data))))
       .catch(err => console.warn(`SWR Background fetch failed for ${cacheKey}`, err));
     return handleId(cached);
   }
   const res = await axios.get(url, config);
-  const data = Array.isArray(res.data) ? res.data : (res.data || []);
+  const data = unwrapArray(res.data);
   cacheSet(cacheKey, data);
   return handleId(data);
 };
@@ -100,7 +112,7 @@ export const api = {
 
     if (bypass) {
       const res = await axios.get(`${API_URL}/buildings`, { params });
-      const data = Array.isArray(res.data) ? res.data : (res.data || []);
+      const data = unwrapArray(res.data);
       cacheSet(cacheKey, data);
       return handleId(data);
     }

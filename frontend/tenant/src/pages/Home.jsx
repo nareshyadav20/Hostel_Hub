@@ -151,10 +151,21 @@ const Home = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const unwrapBuildingsArray = (raw) => {
+    if (Array.isArray(raw)) return raw;
+    if (raw && typeof raw === 'object') {
+      for (const key of ['buildings', 'data', 'results', 'items', 'records']) {
+        if (Array.isArray(raw[key])) return raw[key];
+      }
+    }
+    return [];
+  };
+
   const fetchRooms = async () => {
     try {
       const res = await API.get('/buildings/public');
-      const formatted = res.data.map((b, i) => {
+      const rawList = unwrapBuildingsArray(res.data);
+      const formatted = rawList.map((b, i) => {
         let lowestSharingLabel = 'Sharing';
         const rents = [
           { val: b.rentSingle, label: 'Single Room' },

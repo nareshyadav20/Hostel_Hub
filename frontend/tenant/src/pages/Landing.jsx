@@ -157,11 +157,22 @@ const Landing = () => {
     });
   };
 
+  const unwrapBuildingsArray = (raw) => {
+    if (Array.isArray(raw)) return raw;
+    if (raw && typeof raw === 'object') {
+      for (const key of ['buildings', 'data', 'results', 'items', 'records']) {
+        if (Array.isArray(raw[key])) return raw[key];
+      }
+    }
+    return [];
+  };
+
   const fetchHostels = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
       const res = await API.get('/buildings/public');
-      const formatted = formatBuildings(res.data);
+      const rawData = unwrapBuildingsArray(res.data);
+      const formatted = formatBuildings(rawData);
       setCachedBuildings(formatted);
       setHostels(formatted);
     } catch (error) {
