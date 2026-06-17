@@ -6,7 +6,7 @@ import './Landing.css';
 import API from '../api/axios';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 
-const EXPLORE_CACHE_KEY = 'hh_explore_buildings_v2';
+const EXPLORE_CACHE_KEY = 'hh_explore_buildings_v3';
 const EXPLORE_CACHE_TTL = 3 * 60 * 1000;
 
 const getCachedBuildings = () => {
@@ -160,8 +160,10 @@ const Landing = () => {
   const fetchHostels = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const res = await API.get('/buildings/public');
-      const formatted = formatBuildings(res.data);
+      const res = await API.get('/buildings/public?limit=200');
+      // Backend may return paginated { success, data, pagination } or a plain array
+      const rawData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      const formatted = formatBuildings(rawData);
       setCachedBuildings(formatted);
       setHostels(formatted);
     } catch (error) {

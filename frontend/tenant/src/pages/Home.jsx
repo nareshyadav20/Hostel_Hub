@@ -153,8 +153,10 @@ const Home = () => {
 
   const fetchRooms = async () => {
     try {
-      const res = await API.get('/buildings/public');
-      const formatted = res.data.map((b, i) => {
+      const res = await API.get('/buildings/public?limit=200');
+      // Backend may return paginated { success, data, pagination } or a plain array
+      const buildings = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      const formatted = buildings.map((b, i) => {
         let lowestSharingLabel = 'Sharing';
         const rents = [
           { val: b.rentSingle, label: 'Single Room' },
@@ -277,7 +279,7 @@ const Home = () => {
   };
 
   const stats = [
-    { icon: <Users size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.tenants} suffix="+" />, label: 'Happy Tenants' },
+    { icon: <Users size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.tenants} suffix="+" />, label: 'Happy Residents' },
     { icon: <Building size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.properties} suffix="+" />, label: 'Verified Properties' },
     { icon: <MapPin size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.cities} suffix="+" />, label: 'Cities' },
     { icon: <Star size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.rating.split('/')[0]} suffix="/5" isFloat={true} />, label: 'Average Rating' },
@@ -286,7 +288,7 @@ const Home = () => {
   const steps = [
     { num: 1, icon: <Search size={44} color="#4F46E5" />, title: 'Search Location', desc: 'Choose your city and preferred location' },
     { num: 2, icon: <HomeIcon size={44} color="#4F46E5" />, title: 'Compare Rooms', desc: 'Explore verified rooms and compare amenities & prices' },
-    { num: 3, icon: <CalendarCheck size={44} color="#4F46E5" />, title: 'Book Instantly', desc: 'Select your room and move in hassle-free' },
+    { num: 3, icon: <CalendarCheck size={44} color="#4F46E5" />, title: 'Reserve Your Room', desc: 'Select your room and move in hassle-free' },
     { num: 4, icon: <Sparkles size={44} color="#4F46E5" />, title: 'Experience Livora', desc: 'Enjoy premium amenities and a vibrant community' },
   ];
 
@@ -294,17 +296,17 @@ const Home = () => {
 
   const features = [
     { icon: <Bed size={26} color="#0f172a" />, title: 'Premium Furnishing', desc: 'Move-in ready spaces with modern furniture' },
-    { icon: <UtensilsCrossed size={26} color="#0f172a" />, title: 'Home-style Meals', desc: 'Nutritious & hygienic food prepared daily' },
-    { icon: <Wifi size={26} color="#0f172a" />, title: 'Seamless WiFi', desc: 'Uninterrupted high-speed internet access' },
-    { icon: <Users size={26} color="#0f172a" />, title: 'Vibrant Community', desc: 'Engaging events, workshops & networking' },
+    { icon: <UtensilsCrossed size={26} color="#0f172a" />, title: 'Home-style Meals', desc: 'Freshly prepared meals served daily' },
+    { icon: <Wifi size={26} color="#0f172a" />, title: 'High-Speed Internet', desc: 'Uninterrupted high-speed internet access' },
+    { icon: <Users size={26} color="#0f172a" />, title: 'Community & Networking', desc: 'Engaging events, workshops & networking' },
     { icon: <Lock size={26} color="#0f172a" />, title: 'Top-notch Security', desc: 'Biometric access and 24/7 CCTV surveillance' },
-    { icon: <Sparkles size={26} color="#0f172a" />, title: 'Regular Housekeeping', desc: 'Professional cleaning for pristine living spaces' },
+    { icon: <Sparkles size={26} color="#0f172a" />, title: 'Professional Housekeeping', desc: 'Professional cleaning for pristine living spaces' },
     { icon: <Clock size={26} color="#0f172a" />, title: '24/7 Support', desc: 'Dedicated staff available round the clock' },
     { icon: <ShieldCheck size={26} color="#0f172a" />, title: 'No Hidden Charges', desc: 'Transparent pricing with zero surprises' },
   ];
 
   const testimonials = [
-    { name: 'Ananya R.', role: 'Resident, Koramangala', text: '"Livora is not just a place to stay — it\'s a place to belong. The community, amenities and support are truly amazing!"', rating: 5 },
+    { name: 'Ananya R.', role: 'Resident at Livora Koramangala', text: '"Livora is not just a place to stay — it\'s a place to belong. The community, amenities and support are truly amazing!"', rating: 5 },
     { name: 'Aarav M.', role: 'Software Engineer, Bengaluru', text: '"I\'ve lived across 3 Livora properties. The quality and community vibe is absolutely unmatched across cities."', rating: 5 },
     { name: 'Priya S.', role: 'Product Manager, Hyderabad', text: '"Raised a maintenance request at 11pm — fixed by morning. Never had this experience in any PG before Livora!"', rating: 5 },
   ];
@@ -346,7 +348,17 @@ const Home = () => {
   const [activeModal, setActiveModal] = useState(null); // 'services', 'amenities', 'terms'
   const [isLocationsOpen, setIsLocationsOpen] = useState(false);
 
-
+  const handleCategoryClick = (catName) => {
+    let url = '/explore';
+    if (catName === "Men's Hostel") {
+      url += "?hostelType=Men's";
+    } else if (catName === "Women's Hostel") {
+      url += "?hostelType=Women's";
+    } else if (catName === "Co-living Spaces") {
+      url += "?hostelType=Co-living";
+    }
+    navigate(url);
+  };
 
   return (
     <>
@@ -354,12 +366,12 @@ const Home = () => {
       {/* ── HERO ── */}
       <section className="hv2-hero" id="hero">
         <div className="hv2-hero-left">
-          <div className="hv2-hero-tag">🏆 India’s #1 Hostel & PG Network</div>
+          <div className="hv2-hero-tag">🏆 Discover Better Shared Living</div>
           <h1 className="hv2-hero-h1">
             Find Your Perfect Stay<br />
             <span className="hv2-hero-accent">That Fits Your Lifestyle<span className="hv2-dot">.</span></span>
           </h1>
-          <p className="hv2-hero-desc">Premium spaces for students & professionals. Quality living, zero hassle.</p>
+          <p className="hv2-hero-desc">Move into thoughtfully designed spaces built for comfort, productivity, and community living.</p>
 
           {/* Search Bar */}
           <div className="hv2-search-bar" ref={searchBarRef}>
@@ -484,7 +496,7 @@ const Home = () => {
             <div className="hv2-float-badge">
               <div className="hv2-float-info">
                 <div className="hv2-float-num">⭐ 4.9/5</div>
-                <div className="hv2-float-label">Top Rated in India</div>
+                <div className="hv2-float-label">Trusted by Residents</div>
               </div>
             </div>
           </div>
@@ -524,9 +536,9 @@ const Home = () => {
             { name: "Premium Stays", count: categoryStats.premium || 0, icon: <Crown size={24} color="currentColor" />, img: chairsReal },
             { name: "Student PGs", count: categoryStats.student || 0, icon: <GraduationCap size={24} color="currentColor" />, img: stayEasy }
           ].map((cat, i) => (
-            <div key={i} className="hv2-cat-card" onClick={() => navigate('/explore')}>
+            <div key={i} className="hv2-cat-card" onClick={() => handleCategoryClick(cat.name)}>
               <div className="hv2-cat-img-box">
-                <img src={cat.img} alt={cat.name} className="hv2-cat-img" />
+                <img src={cat.img} alt="" className="hv2-cat-img" />
                 <div className="hv2-cat-overlay">
                   <div className="hv2-cat-icon">{cat.icon}</div>
                   <h3 className="hv2-cat-name">{cat.name}</h3>
@@ -634,8 +646,8 @@ const Home = () => {
         </div>
         <div className="hv2-testi-container">
           <div className="hv2-testi-track">
-            {[...testimonials, ...testimonials, ...testimonials].map((t, i) => (
-              <div key={i} className={`hv2-testi-card ${i % testimonials.length === 1 ? 'hv2-testi-featured' : ''}`}>
+            {testimonials.map((t, i) => (
+              <div key={i} className={`hv2-testi-card ${i === 1 ? 'hv2-testi-featured' : ''}`}>
                 <div className="hv2-testi-stars">{'★'.repeat(t.rating)}</div>
                 <p className="hv2-testi-text">{t.text}</p>
                 <div className="hv2-testi-author">
@@ -666,10 +678,10 @@ const Home = () => {
         <div className="hv2-cities-grid">
           {displayedCities.map((c, i) => (
             <div key={i} className="hv2-city-card" onClick={() => navigate(`/search?location=${c.name}`)}>
-              <img src={c.img} alt={c.name} className="hv2-city-img" />
+              <img src={c.img} alt="" className="hv2-city-img" />
               <div className="hv2-city-overlay">
                 <div className="hv2-city-name">{c.name}</div>
-                <div className="hv2-city-props">{c.props} Properties</div>
+                <div className="hv2-city-props">{c.props} Premium Properties</div>
               </div>
             </div>
           ))}

@@ -10,10 +10,10 @@ const PublicLayout = ({ children }) => {
   const [activeNav, setActiveNav] = useState('Home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeModal, setActiveModal] = useState(null); 
+  const [activeModal, setActiveModal] = useState(null);
   const [isLocationsOpen, setIsLocationsOpen] = useState(false);
   const [showAllCities, setShowAllCities] = useState(false);
-  
+
   const [searchParams] = useSearchParams();
   const selectedLoc = searchParams.get('location');
   const displayLoc = selectedLoc && selectedLoc !== 'all' ? selectedLoc.charAt(0).toUpperCase() + selectedLoc.slice(1) : 'Locations';
@@ -42,7 +42,7 @@ const PublicLayout = ({ children }) => {
     setActiveNav(item.label);
     setIsMenuOpen(false);
     if (item.id === 'services') {
-      setActiveModal('services');
+      navigate('/our-services');
     } else if (item.id === 'explore') {
       navigate('/explore');
     } else if (['about', 'contact'].includes(item.id)) {
@@ -72,6 +72,10 @@ const PublicLayout = ({ children }) => {
       setActiveNav('About Us');
     } else if (location.pathname === '/contact') {
       setActiveNav('Contact');
+    } else if (location.pathname === '/our-services') {
+      setActiveNav('Services');
+    } else if (location.pathname === '/') {
+      setActiveNav('Home');
     }
 
     if (location.pathname !== '/') {
@@ -113,49 +117,61 @@ const PublicLayout = ({ children }) => {
     { category: 'Security & Safety', items: [{ icon: <Video color={iconColor} size={20} />, name: 'CCTV' }] }
   ];
   const servicesData = [
-    { category: 'Daily Care & Conveniences', items: [
-      { icon: (
-        // Broom / sweeping icon
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="20" y1="4" x2="9" y2="15" />
-          <path d="M7 17 L3 21 L7 23 L13 17 L11 15 Z" />
-        </svg>
-      ), name: 'Room cleaning' }, 
-      { icon: (
-        // Food bowl with steam icon
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 12h18" />
-          <path d="M3 12Q3 20 12 20Q21 20 21 12" />
-          <path d="M8 8Q7.5 6 8 4" />
-          <path d="M12 8Q11.5 6 12 4" />
-          <path d="M16 8Q15.5 6 16 4" />
-        </svg>
-      ), name: 'Food/mess service' }, 
-      { icon: (
-        // Washing machine icon
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="2" width="20" height="20" rx="2" />
-          <line x1="2" y1="7" x2="22" y2="7" />
-          <circle cx="12" cy="14" r="4" />
-          <circle cx="5.5" cy="4.5" r="0.6" fill={iconColor} stroke="none" />
-          <circle cx="8.5" cy="4.5" r="0.6" fill={iconColor} stroke="none" />
-          <path d="M10 13Q12 11 14 13" />
-        </svg>
-      ), name: 'Laundry pickup service' }
-    ] },
-    { category: 'Support Operations', items: [
-      { icon: <Settings color={iconColor} size={20} />, name: 'Maintenance support' }, 
-      { icon: (
-        // Security guard shield with person
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2L4 5V11C4 16.5 7.5 20.5 12 22C16.5 20.5 20 16.5 20 11V5L12 2Z" />
-          <circle cx="12" cy="9" r="2" />
-          <path d="M8 16C8 13.8 9.8 13 12 13S16 13.8 16 16" />
-        </svg>
-      ), name: 'Security assistance' }, 
-      { icon: <MessageSquare color={iconColor} size={20} />, name: 'Complaint resolution' }, 
-      { icon: <HeartPulse color={iconColor} size={20} />, name: 'Medical assistance' }
-    ] }
+    {
+      category: 'Daily Care & Conveniences', items: [
+        {
+          icon: (
+            // Broom / sweeping icon
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="20" y1="4" x2="9" y2="15" />
+              <path d="M7 17 L3 21 L7 23 L13 17 L11 15 Z" />
+            </svg>
+          ), name: 'Room cleaning'
+        },
+        {
+          icon: (
+            // Food bowl with steam icon
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12h18" />
+              <path d="M3 12Q3 20 12 20Q21 20 21 12" />
+              <path d="M8 8Q7.5 6 8 4" />
+              <path d="M12 8Q11.5 6 12 4" />
+              <path d="M16 8Q15.5 6 16 4" />
+            </svg>
+          ), name: 'Food/mess service'
+        },
+        {
+          icon: (
+            // Washing machine icon
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="2" />
+              <line x1="2" y1="7" x2="22" y2="7" />
+              <circle cx="12" cy="14" r="4" />
+              <circle cx="5.5" cy="4.5" r="0.6" fill={iconColor} stroke="none" />
+              <circle cx="8.5" cy="4.5" r="0.6" fill={iconColor} stroke="none" />
+              <path d="M10 13Q12 11 14 13" />
+            </svg>
+          ), name: 'Laundry pickup service'
+        }
+      ]
+    },
+    {
+      category: 'Support Operations', items: [
+        { icon: <Settings color={iconColor} size={20} />, name: 'Maintenance support' },
+        {
+          icon: (
+            // Security guard shield with person
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2L4 5V11C4 16.5 7.5 20.5 12 22C16.5 20.5 20 16.5 20 11V5L12 2Z" />
+              <circle cx="12" cy="9" r="2" />
+              <path d="M8 16C8 13.8 9.8 13 12 13S16 13.8 16 16" />
+            </svg>
+          ), name: 'Security assistance'
+        },
+        { icon: <MessageSquare color={iconColor} size={20} />, name: 'Complaint resolution' },
+        { icon: <HeartPulse color={iconColor} size={20} />, name: 'Medical assistance' }
+      ]
+    }
   ];
 
   return (
@@ -378,7 +394,7 @@ const PublicLayout = ({ children }) => {
                 <span>Amenities</span>
                 <ChevronRight size={14} className="hv2-sb-chevron" />
               </div>
-              <div className="hv2-sb-item" onClick={() => { setIsSidebarOpen(false); setActiveModal('services'); }}>
+              <div className="hv2-sb-item" onClick={() => { setIsSidebarOpen(false); navigate('/our-services'); }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                 <span>Services</span>
                 <ChevronRight size={14} className="hv2-sb-chevron" />
