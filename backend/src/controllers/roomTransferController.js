@@ -6,33 +6,33 @@ exports.createTransfer = async (req, res) => {
   try {
     const { newRoom, reason } = req.body;
     let tenant = await Tenant.findOne({ email: req.user.email });
-    
+
     if (!tenant) {
-        const User = require('../models/User');
-        const user = await User.findById(req.user.id);
-        if (!user) return res.status(404).json({ message: 'User not found' });
-        
-        tenant = await Tenant.create({
-          name: user.name,
-          email: user.email,
-          phone: user.phone || 'N/A',
-          emergencyContact: 'N/A',
-          status: 'PENDING'
-        });
+      const User = require('../models/User');
+      const user = await User.findById(req.user.id);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      tenant = await Tenant.create({
+        name: user.name,
+        email: user.email,
+        phone: user.phone || 'N/A',
+        emergencyContact: 'N/A',
+        status: 'PENDING'
+      });
     }
 
     let buildingId = tenant.buildingId;
     if (!buildingId && tenant.room) {
       const Room = require('../models/Room');
       const Floor = require('../models/Floor');
-      
-      const roomObj = await Room.findOne({ 
+
+      const roomObj = await Room.findOne({
         $or: [
           { _id: require('mongoose').Types.ObjectId.isValid(tenant.room) ? tenant.room : null },
           { roomNumber: tenant.room }
         ]
       }).populate('floor');
-      
+
       if (roomObj && roomObj.floor) {
         buildingId = roomObj.floor.building;
       }
@@ -51,7 +51,7 @@ exports.createTransfer = async (req, res) => {
     // Real-time sync: Notify owner portal of new transfer request
     const socketService = require('../utils/socketService');
     const notificationService = require('../utils/notificationService');
-    
+
     await notificationService.createNotification({
       moduleName: 'Rooms',
       portalType: 'Owner',
@@ -119,7 +119,7 @@ exports.getAllTransfers = async (req, res) => {
 exports.updateTransferStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    
+
     const transfer = await RoomTransfer.findById(req.params.id).populate('tenant', 'name email');
     if (!transfer) return res.status(404).json({ message: 'Transfer request not found' });
 
@@ -131,16 +131,16 @@ exports.updateTransferStatus = async (req, res) => {
 
     transfer.status = status;
     await transfer.save();
-    
+
     if (status === 'ACCEPTED' || status === 'Approved') {
-        await Tenant.findByIdAndUpdate(transfer.tenant._id, { room: transfer.newRoom });
+      await Tenant.findByIdAndUpdate(transfer.tenant._id, { room: transfer.newRoom });
     }
 
     // Real-time sync: Notify tenant portal of status update instantly
     const socketService = require('../utils/socketService');
     const notificationService = require('../utils/notificationService');
     const updatedTransfer = transfer.toObject();
-    
+
     await notificationService.createNotification({
       moduleName: 'Rooms',
       portalType: 'Tenant',
@@ -158,6 +158,46 @@ exports.updateTransferStatus = async (req, res) => {
     socketService.emitToOwner('transferStatusChanged', updatedTransfer);
 
     res.json(transfer);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+exports.getTransferById = async (req, res) => {
+  try {
+    const transfer = await RoomTransfer.findById(req.params.id)
+      .populate('tenant', 'name room email phone');
+    if (!transfer) return res.status(404).json({ message: 'Transfer not found' });
+
+    // Allow access to the requesting tenant or any owner
+    const isOwner = transfer.buildingId &&
+      await Building.findOne({ _id: transfer.buildingId, owner: req.user.id });
+    const isTenant = transfer.user.toString() === req.user.id;
+
+    if (!isOwner && !isTenant) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+    res.json(transfer);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.cancelTransfer = async (req, res) => {
+  try {
+    const transfer = await RoomTransfer.findById(req.params.id);
+    if (!transfer) return res.status(404).json({ message: 'Transfer not found' });
+
+    // Only the requesting tenant can cancel
+    if (transfer.user.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized — only the requester can cancel' });
+    }
+
+    if (transfer.status !== 'PENDING') {
+      return res.status(400).json({ message: `Cannot cancel a transfer that is already ${transfer.status}` });
+    }
+
+    await RoomTransfer.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Transfer request cancelled successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

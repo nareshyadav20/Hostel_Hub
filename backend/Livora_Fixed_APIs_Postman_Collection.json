@@ -1,0 +1,313 @@
+{
+	"info": {
+		"name": "Livora Hostel Hub - Fixed APIs",
+		"description": "Postman Collection containing all the fixed and standardized APIs for the Livora Hostel Hub project, ready for testing.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication & Profile",
+			"item": [
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/refresh",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "refresh"]
+						}
+					}
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{ "key": "token", "value": "{{access_token}}", "type": "string" }
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Name\",\n    \"address\": \"New City Address\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Forgot Password - Step 1 (Request OTP)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"owner@hostelhub.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/forgot-password",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "forgot-password"]
+						}
+					}
+				},
+				{
+					"name": "Forgot Password - Step 2 (Verify OTP)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"owner@hostelhub.com\",\n    \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/verify-otp",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "verify-otp"]
+						}
+					}
+				},
+				{
+					"name": "Forgot Password - Step 3 (Reset Password)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"resetToken\": \"token_from_step_2\",\n    \"newPassword\": \"newSecurePassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/reset-password",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "reset-password"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Hostels",
+			"item": [
+				{
+					"name": "Get All Hostels (Unified)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/hostels?page=1&limit=20&location=Bengaluru",
+							"host": ["{{base_url}}"],
+							"path": ["api", "hostels"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "20" },
+								{ "key": "location", "value": "Bengaluru" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Single Hostel Detail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/hostels/:hostelId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "hostels", ":hostelId"],
+							"variable": [
+								{ "key": "hostelId", "value": "replace_with_hostel_id" }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Room Transfers",
+			"item": [
+				{
+					"name": "Create Transfer Request",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{ "key": "token", "value": "{{access_token}}", "type": "string" }
+							]
+						},
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newRoom\": \"205B\",\n    \"reason\": \"AC not working\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/room-transfer",
+							"host": ["{{base_url}}"],
+							"path": ["api", "room-transfer"]
+						}
+					}
+				},
+				{
+					"name": "Get Single Transfer",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{ "key": "token", "value": "{{access_token}}", "type": "string" }
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/room-transfer/:transferId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "room-transfer", ":transferId"],
+							"variable": [
+								{ "key": "transferId", "value": "replace_with_transfer_id" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Cancel Pending Transfer",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{ "key": "token", "value": "{{access_token}}", "type": "string" }
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/room-transfer/:transferId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "room-transfer", ":transferId"],
+							"variable": [
+								{ "key": "transferId", "value": "replace_with_transfer_id" }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Rewards",
+			"item": [
+				{
+					"name": "Get Combined Rewards (Me)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{ "key": "token", "value": "{{access_token}}", "type": "string" }
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/rewards/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "rewards", "me"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Mess Services",
+			"item": [
+				{
+					"name": "Get Mess Menu",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{ "key": "token", "value": "{{access_token}}", "type": "string" }
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/mess/menu?buildingId={{building_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mess", "menu"],
+							"query": [
+								{ "key": "buildingId", "value": "{{building_id}}" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Mess Attendance",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{ "key": "token", "value": "{{access_token}}", "type": "string" }
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"buildingId\": \"{{building_id}}\",\n    \"date\": \"2026-06-17\",\n    \"meal\": \"lunch\",\n    \"status\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/mess/attendance",
+							"host": ["{{base_url}}"],
+							"path": ["api", "mess", "attendance"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "your_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "your_refresh_token_here",
+			"type": "string"
+		},
+		{
+			"key": "building_id",
+			"value": "your_building_id_here",
+			"type": "string"
+		}
+	]
+}

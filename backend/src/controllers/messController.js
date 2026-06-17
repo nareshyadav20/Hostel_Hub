@@ -109,11 +109,25 @@ exports.getAttendance = async (req, res) => {
 
 exports.updateAttendance = async (req, res) => {
     try {
-        const { tenantId, buildingId, date, meal, status } = req.body;
+        let { tenantId, buildingId, date, meal, status } = req.body;
         console.log('🍽️ ATTENDANCE_UPDATE_REQUEST:', { tenantId, buildingId, meal, status });
         
         const Tenant = require('../models/Tenant');
         const mongoose = require('mongoose');
+
+        // Self-healing fallback: Resolve tenantId from authenticated user if not provided
+        if (!tenantId && req.user && req.user.email) {
+            const tenantDoc = await Tenant.findOne({ email: req.user.email });
+            if (tenantDoc) {
+                tenantId = tenantDoc._id;
+            } else {
+                return res.status(404).json({ message: 'Tenant profile not found for this user.' });
+            }
+        }
+
+        if (!tenantId) {
+            return res.status(400).json({ message: 'tenantId is required and could not be resolved.' });
+        }
 
         let finalBuildingId = buildingId;
         
