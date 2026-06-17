@@ -1382,3 +1382,23 @@
 2026-06-17T10:02:15.617Z SOCKET: Socket connected: jJpoWWk_akSLXmc4AAAH
 2026-06-17T10:04:50.758Z SOCKET: Socket connected: BSzRzdg-wG49acmMAAAJ
 2026-06-17T10:06:00.495Z SOCKET: Socket connected: IN6WT5PpuDpH1tFKAAAL
+2026-06-17T10:12:22.142Z API: GET /api/buildings/public/stats
+2026-06-17T10:12:24.476Z API: GET /api/buildings/public
+2026-06-17T10:12:24.724Z SOCKET: Socket connected: Y2ADgY3KQVxGTQGMAAAN
+2026-06-17T10:12:25.069Z API: GET /api/buildings/public
+2026-06-17T10:12:25.408Z API: GET /api/buildings/public/stats
+2026-06-17T10:19:43.816Z API: POST /api/auth/forgot-password
+2026-06-17T10:19:52.202Z API: POST /api/auth/login
+2026-06-17T10:19:52.657Z API: GET /api/tenants/me
+2026-06-17T10:19:52.675Z API: GET /api/complaints/me
+2026-06-17T10:19:52.684Z API: GET /api/notifications?limit=3
+2026-06-17T10:19:52.692Z API: GET /api/bookings/me
+2026-06-17T10:19:52.756Z API: GET /api/tenants/me
+2026-06-17T10:19:52.834Z API: GET /api/notifications?limit=3
+2026-06-17T10:19:52.839Z API: GET /api/bookings/me
+2026-06-17T10:19:52.862Z API: GET /api/complaints/me
+2026-06-17T10:20:02.140Z API: GET /api/buildings/public
+2026-06-17T10:20:02.156Z API: GET /api/buildings/public/stats
+2026-06-17T10:20:02.193Z API: GET /api/buildings/public
+2026-06-17T10:20:02.307Z API: GET /api/buildings/public/stats
+2026-06-17T10:20:03.253Z SOCKET: Socket connected: k4E1Uk9xelbwYjjHAAAP
