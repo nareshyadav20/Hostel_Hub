@@ -12,8 +12,14 @@ router.get('/list', hostelController.getHostelsPaginated);
 // GET /api/hostels/search?location=...&sortBy=... → Search + sort + paginate
 router.get('/search', hostelController.searchHostels);
 
-// GET /api/hostels/:hostelId/detail              → Full detail for one hostel
+// GET /api/hostels?page=1&limit=20&location=...  → Spec-compliant unified endpoint
+router.get('/', hostelController.searchHostels);
+
+// GET /api/hostels/:hostelId/detail              → Full detail for one hostel (legacy)
 router.get('/:hostelId/detail', hostelController.getHostelDetail);
+
+// GET /api/hostels/:hostelId                     → Spec-compliant shorthand detail
+router.get('/:hostelId', hostelController.getHostelDetail);
 
 // ─── Owner-protected Routes ───────────────────────────────────────────────────
 router.use(authMiddleware);

@@ -12,4 +12,7 @@ router.get('/', profileController.getProfile);
 // PUT  /api/profile  → update profile (email/mobileNumber blocked)
 router.put('/', profileController.updateProfile);
 
+// PATCH /api/profile → same as PUT (spec-compliant alias)
+router.patch('/', profileController.updateProfile);
+
 module.exports = router;
