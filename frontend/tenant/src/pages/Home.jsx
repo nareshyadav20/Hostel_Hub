@@ -573,7 +573,6 @@ const Home = () => {
           {steps.map((s, i) => (
             <React.Fragment key={i}>
               <div className={`hv2-step-card hv2-step-anim-${i + 1}`}>
-                <div className="hv2-step-num">{s.num}</div>
                 <div className="hv2-step-icon">{s.icon}</div>
                 <h4 className="hv2-step-title">{s.title}</h4>
                 <p className="hv2-step-desc">{s.desc}</p>

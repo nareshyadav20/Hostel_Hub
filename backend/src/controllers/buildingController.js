@@ -1006,17 +1006,33 @@ const getPlatformStats = async (req, res) => {
 
     const uniqueCities = new Set([...cities, ...obCities].filter(Boolean));
 
-    const buildings = await Building.find(statsQuery, 'rating').lean();
-    const obBuildings = await db.collection('owner_buildings').find(statsQuery, { projection: { rating: 1 } }).toArray();
+    const buildings = await Building.find(statsQuery, 'rating genderType category locationCity').lean();
+    const obBuildings = await db.collection('owner_buildings').find(statsQuery, { projection: { rating: 1, genderType: 1, category: 1, locationCity: 1 } }).toArray();
+
+    const allBuildings = [...buildings, ...obBuildings];
 
     let totalRating = 0;
     let validRatings = 0;
+    const categoryStats = { mens: 0, womens: 0, coliving: 0, premium: 0, student: 0 };
+    const cityStats = {};
 
-    buildings.forEach(b => {
+    allBuildings.forEach(b => {
       if (b.rating) { totalRating += b.rating; validRatings++; }
-    });
-    obBuildings.forEach(b => {
-      if (b.rating) { totalRating += b.rating; validRatings++; }
+      
+      if (b.locationCity) {
+        const cityKey = b.locationCity.toLowerCase();
+        cityStats[cityKey] = (cityStats[cityKey] || 0) + 1;
+      }
+
+      const gender = (b.genderType || '').toLowerCase();
+      const cat = (b.category || '').toLowerCase();
+
+      if (['boys', 'male', 'men', "men's"].includes(gender)) categoryStats.mens++;
+      if (['girls', 'female', 'women', "women's"].includes(gender)) categoryStats.womens++;
+      if (['unisex', 'mixed', 'co-living', 'coliving', 'both'].includes(gender)) categoryStats.coliving++;
+      
+      if (cat === 'luxury' || cat === 'premium') categoryStats.premium++;
+      if (cat === 'student') categoryStats.student++;
     });
 
     const avgRating = validRatings > 0 ? (totalRating / validRatings).toFixed(1) : "4.8";
@@ -1025,7 +1041,9 @@ const getPlatformStats = async (req, res) => {
       tenants: tenantsCount,
       properties: propertiesCount + obCount,
       cities: uniqueCities.size,
-      rating: `${avgRating}/5`
+      rating: `${avgRating}/5`,
+      categoryStats,
+      cityStats
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
