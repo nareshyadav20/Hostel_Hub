@@ -163,10 +163,8 @@ const Home = () => {
 
   const fetchRooms = async () => {
     try {
-      const res = await API.get('/buildings/public?limit=200');
-      // Backend may return paginated { success, data, pagination } or a plain array
-      const buildings = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-      const formatted = buildings.map((b, i) => {
+      const res = await API.get('/buildings/public');
+      const formatted = res.data.map((b, i) => {
         let lowestSharingLabel = 'Sharing';
         const rents = [
           { val: b.rentSingle, label: 'Single Room' },

@@ -183,10 +183,8 @@ const Landing = () => {
   const fetchHostels = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const res = await API.get('/buildings/public?limit=200');
-      // Backend may return paginated { success, data, pagination } or a plain array
-      const rawData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-      const formatted = formatBuildings(rawData);
+      const res = await API.get('/buildings/public');
+      const formatted = formatBuildings(res.data);
       setCachedBuildings(formatted);
       setHostels(formatted);
     } catch (error) {
@@ -258,7 +256,7 @@ const Landing = () => {
         const matchesCity = h.city && h.city.toLowerCase().includes(query);
         const matchesLocality = h.locality && h.locality.toLowerCase().includes(query);
         const matchesName = h.name && h.name.toLowerCase().includes(query);
-
+        
         if (!matchesCity && !matchesLocality && !matchesName) return false;
         if (matchesCity) bypassCityFilter = true;
       }
@@ -285,12 +283,12 @@ const Landing = () => {
 
       // Sharing
       if (sharing && sharing !== 'Any') {
-        if (sharing === 'Single' && !h.hasSingle) return false;
-        if (sharing === '2' && !h.hasDouble) return false;
-        if (sharing === '3' && !h.hasTriple) return false;
-        if (sharing === '4' && !h.has4) return false;
-        if (sharing === '5' && !h.has5) return false;
-        if (sharing === '6' && !h.has6) return false;
+         if (sharing === 'Single' && !h.hasSingle) return false;
+         if (sharing === '2' && !h.hasDouble) return false;
+         if (sharing === '3' && !h.hasTriple) return false;
+         if (sharing === '4' && !h.has4) return false;
+         if (sharing === '5' && !h.has5) return false;
+         if (sharing === '6' && !h.has6) return false;
       }
 
       // Amenities
@@ -443,9 +441,9 @@ const Landing = () => {
             {/* Location — cities */}
             <div className="exp-filter-block">
               <h4 className="exp-filter-label">Location</h4>
-              <select
-                className="exp-select"
-                value={selectedCity}
+              <select 
+                className="exp-select" 
+                value={selectedCity} 
                 onChange={e => {
                   const city = e.target.value;
                   setSelectedCity(city);
