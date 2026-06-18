@@ -43,13 +43,20 @@ const unwrapArray = (raw) => {
 };
 
 // SWR (Stale-While-Revalidate) helper to prevent React request storms
+const _revalidatingKeys = {};
+const SWR_COOLDOWN_MS = 30000; // Only revalidate in background once every 30s per key
+
 const swrFetch = async (cacheKey, url, config = {}) => {
   const cached = cacheGet(cacheKey);
   if (cached) {
-    // Silently revalidate in background
-    axios.get(url, config)
-      .then(res => cacheSet(cacheKey, handleId(unwrapArray(res.data))))
-      .catch(err => console.warn(`SWR Background fetch failed for ${cacheKey}`, err));
+    // Silently revalidate in background, but throttle to avoid request storms
+    const now = Date.now();
+    if (!_revalidatingKeys[cacheKey] || (now - _revalidatingKeys[cacheKey]) > SWR_COOLDOWN_MS) {
+      _revalidatingKeys[cacheKey] = now;
+      axios.get(url, config)
+        .then(res => cacheSet(cacheKey, handleId(Array.isArray(res.data) ? res.data : (res.data || []))))
+        .catch(err => console.warn(`SWR Background fetch failed for ${cacheKey}`, err));
+    }
     return handleId(cached);
   }
   const res = await axios.get(url, config);
@@ -73,6 +80,10 @@ export const api = {
   },
   getOwnerHistory: async () => {
     const res = await axios.get(`${API_URL}/owner/history`);
+    return res.data;
+  },
+  getPortfolio: async () => {
+    const res = await axios.get(`${API_URL}/owner/portfolio`);
     return res.data;
   },
   updateOwnerDocuments: async (doc) => {
@@ -105,10 +116,16 @@ export const api = {
       bypass = arg2;
     }
 
-    const params = { status: 'Active' };
+    const params = {};
     if (propertyId) params.propertyId = propertyId;
+    if (arg1 && typeof arg1 === 'object' && arg1.status) {
+      if (arg1.status !== 'all') params.status = arg1.status;
+    } else {
+      params.status = 'Active';
+    }
 
-    const cacheKey = propertyId ? `buildings_prop_${propertyId}` : 'buildings_active';
+    const statusVal = params.status || 'all';
+    const cacheKey = propertyId ? `buildings_prop_${propertyId}` : `buildings_${statusVal}`;
 
     if (bypass) {
       const res = await axios.get(`${API_URL}/buildings`, { params });
@@ -243,7 +260,8 @@ export const api = {
   },
   getPayments: async (buildingId) => {
     const params = buildingId ? { buildingId } : {};
-    return await swrFetch(`payments_${buildingId || 'all'}`, `${API_URL}/payments`, { params });
+    const res = await swrFetch(`payments_${buildingId || 'all'}`, `${API_URL}/payments`, { params });
+    return Array.isArray(res) ? res : (res?.payments || []);
   },
   updatePaymentStatus: async (id, status) => {
     const res = await axios.patch(`${API_URL}/payments/${id}`, { status });
@@ -295,7 +313,7 @@ export const api = {
       return data;
     };
     if (cached) {
-      axios.get(`${API_URL}/staff`, { params: { buildingId: bId } }).then(res => cacheSet(cacheKey, processData(res.data))).catch(()=>{});
+      axios.get(`${API_URL}/staff`, { params: { buildingId: bId } }).then(res => cacheSet(cacheKey, processData(res.data))).catch(() => { });
       return processData(cached);
     }
     const res = await axios.get(`${API_URL}/staff`, { params: { buildingId: bId } });

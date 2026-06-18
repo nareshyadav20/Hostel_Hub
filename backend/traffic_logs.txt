@@ -5509,6 +5509,11 @@
 2026-06-13T09:37:23.060Z API: GET /api/notifications?buildingId=6a1fca83cca3e387aa581bca
 2026-06-13T09:37:23.708Z SOCKET: Socket connected: guhuo794C3fa0QyWAAAD
 2026-06-18T06:21:02.676Z SOCKET: Socket connected: 6HncxALmP3ORRonKAAAB
+<<<<<<< HEAD
 2026-06-18T07:11:33.449Z API: GET /api/buildings/public
 2026-06-18T07:11:33.491Z API: GET /api/buildings/public/stats
 2026-06-18T07:11:34.433Z SOCKET: Socket connected: fG3wSGFR9HRpVudKAAAB
+=======
+2026-06-18T07:03:42.187Z SOCKET: Socket connected: A2QOIA1CmoVO_nfnAAAB
+>>>>>>> switch-admin
+2026-06-18T07:38:22.090Z SOCKET: Socket connected: 4NBWR5_A05q08dTEAAAB

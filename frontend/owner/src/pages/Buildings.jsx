@@ -440,7 +440,7 @@ const Buildings = () => {
   };
 
   useEffect(() => {
-    const intervalId = setInterval(silentRefresh, 10000); // 10s poll for live data updates
+    const intervalId = setInterval(silentRefresh, 60000); // 60s poll for live data updates
     return () => clearInterval(intervalId);
   }, [activeBuildingId, selectedBuilding, selectedFloor, selectedRoom]);
 
@@ -2399,8 +2399,9 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
   const [imgIdx, setImgIdx] = useState(0);
 
   const images = useMemo(() => {
+    const baseServerUrl = (import.meta.env.VITE_API_URL || 'https://livora-hostel-hub-1.onrender.com/api').replace('/api', '');
     if (building.images && building.images.length > 0) {
-      return building.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `https://livora-hostel-hub-1.onrender.com${img}`);
+      return building.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `${baseServerUrl}${img}`);
     }
     return [
       'https://images.unsplash.com/photo-1545324418-f1d3c5b53571?auto=format&fit=crop&w=800&q=80',

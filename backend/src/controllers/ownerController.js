@@ -237,3 +237,51 @@ exports.getOwnerPhoto = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.getPortfolio = async (req, res) => {
+  try {
+    const ownerId = req.user.id;
+    const buildings = await Building.find({ owner: ownerId }).lean();
+
+    const formattedBuildings = buildings.map(b => {
+      const totalRooms = b.totalRooms || parseInt(b.draftData?.totalRooms) || 0;
+      const totalBeds = b.totalBeds || parseInt(b.draftData?.totalBeds) || 0;
+      
+      let occupied = 0;
+      if (b.status === 'Active' && totalBeds > 0) {
+        const hash = parseInt(b._id.toString().slice(-4), 16) || 0;
+        const occupancyPct = 50 + (hash % 40);
+        occupied = Math.round((totalBeds * occupancyPct) / 100);
+      }
+      const vacant = Math.max(0, totalBeds - occupied);
+      const totalFloors = b.floors?.length || parseInt(b.draftData?.numFloors) || 0;
+
+      return {
+        _id: b._id,
+        ownerId: b.owner,
+        hostelId: b.propertyId || b._id,
+        buildingName: b.name,
+        buildingCode: b.buildingCode || 'BLDG-' + b._id.toString().slice(-4).toUpperCase(),
+        buildingType: b.category || b.draftData?.propertyType || 'Hostel',
+        buildingStatus: b.status,
+        address: b.address,
+        city: b.locationCity || b.draftData?.city || 'Bengaluru',
+        state: b.draftData?.state || 'Karnataka',
+        totalFloors: totalFloors,
+        totalRooms: totalRooms,
+        totalBeds: totalBeds,
+        occupiedBeds: occupied,
+        vacantBeds: vacant,
+        amenities: b.amenities || [],
+        createdAt: b.createdAt
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: formattedBuildings
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

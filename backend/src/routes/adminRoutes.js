@@ -43,4 +43,8 @@ router.put('/support', adminController.updateAdminSupport);
 router.post('/support/escalate', adminController.escalateSupportTicket);
 router.post('/support/chat', adminController.sendSupportChatMessage);
 
+// Buildings Management
+router.patch('/buildings/:id/approve', adminController.approveBuilding);
+router.patch('/buildings/:id/reject', adminController.rejectBuilding);
+
 module.exports = router;

@@ -261,11 +261,28 @@ const Tenants = () => {
     );
   };
 
+  const [page, setPage] = useState(0);
+  const cardsPerPage = 6;
+  const [tenantPage, setTenantPage] = useState(0);
+  const tenantCardsPerPage = 6;
+  // Compute filtered tenants based on search and status
+  // Compute filtered tenants based on search and status
+  const filteredTenants = tenants.filter(t => {
+    const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) || t.room.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'All' || t.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
+  const displayedTenants = filteredTenants.slice(tenantPage * tenantCardsPerPage, (tenantPage + 1) * tenantCardsPerPage);
   const stats = [
-    { label: 'Active Residents', value: tenants.filter(t => t.status === 'Active').length.toString(), change: '+5.4%', icon: <UserCheck />, color: 'success', description: 'Verified Stay' },
+    { label: 'Total Tenants', value: tenants.length.toString(), change: '+0%', icon: <Users />, color: 'primary', description: 'All Residents' },
+    { label: 'Active Residents', value: tenants.filter(t => t.status && t.status.toLowerCase() === 'active').length.toString(), change: '+5.4%', icon: <UserCheck />, color: 'success', description: 'Verified Stay' },
     { label: 'Occupancy Rate', value: '92.4%', change: '+2.1%', icon: <PieChart />, color: 'primary', description: 'Global Average' },
     { label: 'Rent Collected', value: `₹${(tenants.filter(t => t.rentStatus === 'Paid').length * 8.5).toFixed(1)}L`, change: '+12.5%', icon: <DollarSign />, color: 'indigo', description: 'MTD Revenue' },
   ];
+  const displayedStats = stats.slice(page * cardsPerPage, (page + 1) * cardsPerPage);
+
+
+
 
   return (
     <div className="space-y-10 pb-20 animate-fade">
@@ -314,7 +331,7 @@ const Tenants = () => {
 
       {/* --- ANALYTICS HUD --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((stat, i) => (
+        {displayedStats.map((stat, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 20 }}
@@ -341,6 +358,15 @@ const Tenants = () => {
           </motion.div>
         ))}
       </div>
+{/* Pagination Controls */}
+<div className="flex justify-center mt-4 gap-2">
+  {page > 0 && (
+    <button onClick={() => setPage(prev => Math.max(prev - 1, 0))} className="px-4 py-2 bg-primary text-white rounded">Prev</button>
+  )}
+  {(page + 1) * cardsPerPage < stats.length && (
+    <button onClick={() => setPage(prev => prev + 1)} className="px-4 py-2 bg-primary text-white rounded">Next</button>
+  )}
+</div>
 
       {/* --- STICKY CONTROL BAR --- */}
       <div className="sticky top-0 z-40 py-4 bg-background/80 backdrop-blur-xl border-b border-divider/50 -mx-4 px-4 flex flex-col lg:flex-row gap-6">
@@ -405,13 +431,7 @@ const Tenants = () => {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8"
             >
-              {tenants
-                .filter(t => {
-                  const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) || t.room.toLowerCase().includes(searchTerm.toLowerCase());
-                  const matchesStatus = filterStatus === 'All' || t.status === filterStatus;
-                  return matchesSearch && matchesStatus;
-                })
-                .map((t) => (
+              {displayedTenants.map((t) => (
                   <motion.div
                     key={t.id}
                     layout
@@ -579,13 +599,7 @@ const Tenants = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/50">
-                    {tenants
-                      .filter(t => {
-                        const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) || t.room.toLowerCase().includes(searchTerm.toLowerCase());
-                        const matchesStatus = filterStatus === 'All' || t.status === filterStatus;
-                        return matchesSearch && matchesStatus;
-                      })
-                      .map((t) => (
+                    {displayedTenants.map((t) => (
                         <tr key={t.id} className="group hover:bg-background transition-all cursor-pointer">
                           <td className="py-5 px-8">
                             <div className="flex items-center gap-4">
@@ -629,6 +643,20 @@ const Tenants = () => {
           )}
         </AnimatePresence>
       )}
+
+      {/* Pagination Controls for Tenants */}
+      <div className="flex justify-center mt-4 gap-2">
+        {tenantPage > 0 && (
+          <button onClick={() => setTenantPage(prev => Math.max(prev - 1, 0))} className="px-4 py-2 bg-primary text-white rounded">
+            Prev
+          </button>
+        )}
+        {(tenantPage + 1) * tenantCardsPerPage < filteredTenants.length && (
+          <button onClick={() => setTenantPage(prev => prev + 1)} className="px-4 py-2 bg-primary text-white rounded">
+            Next
+          </button>
+        )}
+      </div>
 
       {/* --- DIRECTORY FOOTER --- */}
       <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-6 p-6 card-classic bg-slate-50/50 dark:bg-white/2">

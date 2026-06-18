@@ -26,4 +26,9 @@ const paymentSchema = new mongoose.Schema({
   transactionId: { type: String }
 }, { timestamps: true, collection: 'payments' });
 
+// Performance indexes for common queries
+paymentSchema.index({ buildingId: 1, date: -1 }); // getAllPayments (admin/owner finance)
+paymentSchema.index({ tenantId: 1, date: -1 });    // getMyPayments (tenant portal)
+paymentSchema.index({ status: 1 });                 // status-based filtering
+
 module.exports = mongoose.model('Payment', paymentSchema);

@@ -58,13 +58,28 @@ const Finance = () => {
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
 
+  // In-memory cache to avoid refetching on component re-mount
+  const cacheRef = React.useRef(null);
+
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchFinanceData = async () => {
       try {
-        setLoading(true);
-        const res = await API.get('/payments');
-        const mappedTx = res.data.map(p => ({
-          id: p.invoice || p._id.toString().slice(0,8).toUpperCase(),
+        // Show cached data immediately if available
+        if (cacheRef.current) {
+          setTransactions(cacheRef.current);
+          setLoading(false);
+        } else {
+          setLoading(true);
+        }
+
+        const res = await API.get('/payments?limit=500', { signal: controller.signal });
+        const rawData = res.data?.payments || res.data || [];
+        const paymentList = Array.isArray(rawData) ? rawData : [];
+        
+        const mappedTx = paymentList.map(p => ({
+          id: p.invoice || (p._id ? p._id.toString().slice(0,8).toUpperCase() : 'N/A'),
           entity: `${p.tenantId?.name || 'System Guest'} - ${p.buildingId?.name || 'Global'}`,
           cat: p.type || p.category || 'Revenue',
           amount: `+₹${p.amount}`,
@@ -74,8 +89,11 @@ const Finance = () => {
           trend: 'up',
           _id: p._id
         }));
+
+        cacheRef.current = mappedTx;
         setTransactions(mappedTx);
       } catch (err) {
+        if (err.name === 'CanceledError' || err.name === 'AbortError') return;
         console.error('Failed to fetch financial records:', err);
         showToast('Failed to sync financial data from backend.', 'error');
       } finally {
@@ -83,6 +101,8 @@ const Finance = () => {
       }
     };
     fetchFinanceData();
+
+    return () => controller.abort();
   }, []);
 
   const filteredTx = transactions.filter(tx => {
