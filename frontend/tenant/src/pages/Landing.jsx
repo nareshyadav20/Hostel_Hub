@@ -183,8 +183,9 @@ const Landing = () => {
   const fetchHostels = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const res = await API.get('/buildings/public');
-      const formatted = formatBuildings(res.data);
+      const res = await API.get('/buildings/public?limit=200');
+      const rawArray = unwrapBuildingsArray(res.data);
+      const formatted = formatBuildings(rawArray);
       setCachedBuildings(formatted);
       setHostels(formatted);
     } catch (error) {
