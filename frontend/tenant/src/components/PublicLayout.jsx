@@ -264,9 +264,7 @@ const PublicLayout = ({ children }) => {
             </div>
           </div>
         </div>
-        <div className="hv2-footer-bottom-line">
-          <p>© 2026 Livora Private Limited. All rights reserved.</p>
-        </div>
+
       </footer>
 
       <a href="https://wa.me/919876543213" target="_blank" rel="noreferrer" className="hv2-whatsapp-fab" title="Chat with us on WhatsApp">

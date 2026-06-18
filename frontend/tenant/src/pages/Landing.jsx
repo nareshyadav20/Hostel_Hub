@@ -58,9 +58,20 @@ const Landing = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  // Parse URL parameters
+  // Parse URL parameters — reset all filters first, then apply only what's in the URL
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
+
+    // Reset all filters first so switching categories doesn't carry over old filters
+    setSelectedCity('All Cities');
+    setSelectedAmenities([]);
+    setSearchLocality('');
+    setHostelType('');
+    setSharing('');
+    setSortBy('');
+    setBudgetMin(0);
+    setBudgetMax(60000);
+
     const rawLocationInput = queryParams.get('city') || queryParams.get('location');
     if (rawLocationInput) {
       const lowerLoc = rawLocationInput.toLowerCase();
@@ -74,6 +85,8 @@ const Landing = () => {
     }
     const typeParam = queryParams.get('hostelType');
     if (typeParam) setHostelType(typeParam);
+    const catParam = queryParams.get('category');
+    if (catParam) setHostelType(catParam === 'Luxury' ? 'Premium' : catParam);
     const stayTypeParam = queryParams.get('stayType');
     if (stayTypeParam) setSharing(stayTypeParam);
     const localityParam = queryParams.get('locality');
@@ -146,7 +159,7 @@ const Landing = () => {
         img: b.images && b.images[0] ? ((b.images[0].startsWith('http') || b.images[0].startsWith('data:')) ? b.images[0] : `http://localhost:5000${b.images[0]}`) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
         amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['WiFi', 'AC', 'Food/Mess'],
         gender: (b.genderType && !['mixed', 'unisex'].includes(b.genderType.toLowerCase())) ? b.genderType : 'Coliving',
-        category: b.category || 'Student',
+        category: b.category || '',
         hasSingle: has1,
         hasDouble: has2,
         hasTriple: has3,
@@ -248,13 +261,16 @@ const Landing = () => {
       if (budgetMin > 0 && h.price < budgetMin) return false;
       if (budgetMax < 60000 && h.price > budgetMax) return false;
 
-      // Hostel Type (Gender)
+      // Hostel Type (Gender + Category combined)
       if (hostelType && hostelType !== 'Any') {
         const typeStr = hostelType.toLowerCase();
         const genderStr = (h.gender || '').toLowerCase();
+        const catStr = (h.category || '').toLowerCase();
         if (typeStr === "men's" && !['boys', 'male', 'men', "men's"].includes(genderStr)) return false;
         if (typeStr === "women's" && !['girls', 'female', 'women', "women's"].includes(genderStr)) return false;
         if (typeStr === "co-living" && !['unisex', 'co-living', 'coliving', 'both'].includes(genderStr)) return false;
+        if (typeStr === 'premium' && catStr !== 'luxury') return false;
+        if (typeStr === 'student' && catStr !== 'student') return false;
       }
 
       // Sharing
@@ -479,7 +495,7 @@ const Landing = () => {
             <div className="exp-filter-block">
               <h4 className="exp-filter-label">Hostel Type</h4>
               <div className="exp-pill-group">
-                {["Any", "Men's", "Women's", 'Co-living'].map(t => (
+                {["Any", "Men's", "Women's", 'Co-living', 'Premium', 'Student'].map(t => (
                   <button key={t}
                     className={`exp-pill ${(!hostelType && t === 'Any') || hostelType === t ? 'active' : ''}`}
                     onClick={() => setHostelType(t === 'Any' ? '' : t)}

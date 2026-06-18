@@ -356,6 +356,10 @@ const Home = () => {
       url += "?hostelType=Women's";
     } else if (catName === "Co-living Spaces") {
       url += "?hostelType=Co-living";
+    } else if (catName === "Premium Stays") {
+      url += "?category=Luxury";
+    } else if (catName === "Student PGs") {
+      url += "?category=Student";
     }
     navigate(url);
   };

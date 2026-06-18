@@ -255,7 +255,7 @@ const Offers = () => {
       </div>
 
       <footer className="offers-footer">
-        <p>© 2026 Livora Private Limited. Offers subject to availability & terms.</p>
+
       </footer>
     </div>
   );
