@@ -388,7 +388,7 @@ const getPublicBuildings = async (req, res) => {
         name: 1, address: 1, locationCity: 1, category: 1, rating: 1,
         startingPrice: 1, genderType: 1, amenities: 1, isAC: 1,
         rentSingle: 1, rentDouble: 1, rentTriple: 1, rent4Sharing: 1,
-        rent5Sharing: 1, rent6Sharing: 1
+        rent5Sharing: 1, rent6Sharing: 1, images: 1
       })
         .skip(skip)
         .limit(limit)

@@ -157,15 +157,16 @@ const Search = () => {
   const fetchHostels = async () => {
     try {
       const [response, wishRes] = await Promise.all([
-        API.get('/buildings/public').catch(() => ({ data: [] })),
+        API.get('/buildings/public?limit=200').catch(() => ({ data: { data: [] } })),
         API.get('/tenant-portal/wishlist').catch(() => ({ data: [] }))
       ]);
 
       setWishlist(Array.isArray(wishRes.data) ? wishRes.data : []);
 
       let mapped = [];
-      if (response.data && Array.isArray(response.data)) {
-        mapped = response.data.map(b => ({
+      const rawData = response.data && response.data.data ? response.data.data : (Array.isArray(response.data) ? response.data : []);
+      if (Array.isArray(rawData)) {
+        mapped = rawData.map(b => ({
           id: b._id,
           name: b.name,
           location: b.address || b.location || 'Location unknown',
