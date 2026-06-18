@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, IndianRupee, Home as HomeIcon, CalendarCheck, Sparkles, Users, Building, Star, Utensils, Wifi, User, Crown, GraduationCap, ChevronDown, X, ChevronRight, Bed, BookOpen, Shirt, Droplet, Car, Video, Wrench, ShieldCheck, MessageSquare, HeartPulse, Clock, UtensilsCrossed, Lock, Settings } from 'lucide-react';
+import { Search, MapPin, IndianRupee, Home as HomeIcon, CalendarCheck, Sparkles, Users, Building, Star, Utensils, Wifi, User, Crown, GraduationCap, ChevronDown, X, ChevronRight, Bed, BookOpen, Shirt, Droplet, Car, Video, Wrench, ShieldCheck, MessageSquare, HeartPulse, Clock, UtensilsCrossed, Lock, Settings, Heart } from 'lucide-react';
 import './Home.css';
 import API from '../api/axios';
 import SearchOverlay from '../components/SearchOverlay';
@@ -64,21 +64,40 @@ const RoomCard = ({ room, wishlist, toggleWishlist, setModalInfo, navigate }) =>
     <div className="hv2-room-card">
       <div className="hv2-room-img-box" onClick={() => setModalInfo({ isOpen: true, image: currentImage })} style={{ cursor: 'zoom-in' }}>
         <img src={currentImage} alt={room.name} className="hv2-room-img" style={{ transition: 'opacity 0.5s ease-in-out' }} />
-        <span className="hv2-room-badge" style={{ background: room.badgeColor }}>{room.badge}</span>
-        <span className="hv2-trending-badge">🔥 Trending</span>
+        <div className="hv2-room-img-overlay"></div>
+        <div className="hv2-room-badges-top">
+          <span className="hv2-room-badge" style={{ background: room.badgeColor }}>{room.badge}</span>
+          <span className="hv2-trending-badge"><Sparkles size={12} style={{ marginRight: '4px' }} />Trending</span>
+        </div>
         <button className={`hv2-heart ${wishlist.includes(room.id) ? 'liked' : ''}`} onClick={(e) => { e.stopPropagation(); toggleWishlist(room.id); }}>
-          {wishlist.includes(room.id) ? '❤️' : '🤍'}
+          <Heart size={18} fill={wishlist.includes(room.id) ? '#EF4444' : 'transparent'} stroke={wishlist.includes(room.id) ? '#EF4444' : 'currentColor'} />
         </button>
       </div>
       <div className="hv2-room-body">
-        <h4 className="hv2-room-name">{room.name}</h4>
-        <p className="hv2-room-loc">📍 {room.loc}</p>
+        <div className="hv2-room-title-row">
+          <h4 className="hv2-room-name">{room.name}</h4>
+          <div className="hv2-room-rating">
+            <Star size={14} fill="#F59E0B" color="#F59E0B" /> <span>{room.rating || '4.8'}</span>
+          </div>
+        </div>
+        <p className="hv2-room-loc"><MapPin size={14} style={{ marginRight: '4px' }} />{room.loc}</p>
+
         <div className="hv2-amenity-row">
           {room.amenities.map(a => <span key={a} className="hv2-amenity">{a}</span>)}
         </div>
+
         <div className="hv2-room-footer">
-          <div className="hv2-price-wrap"><span className="hv2-price">{room.price}</span><span className="hv2-per">/mo</span></div>
-          <button className="hv2-details-btn-wide" onClick={(e) => { e.stopPropagation(); navigate(`/listing/${room.id}`); }}>View Details</button>
+          <div className="hv2-price-wrap">
+            <span className="hv2-price-label">Starts at</span>
+            <div className="hv2-price-value">
+              <span className="hv2-price">{room.price}</span>
+              <span className="hv2-per">/mo</span>
+            </div>
+            <span className="hv2-sharing-label">{room.sharingLabel}</span>
+          </div>
+          <button className="hv2-details-btn-wide" onClick={(e) => { e.stopPropagation(); navigate(`/listing/${room.id}`); }}>
+            View Details <ChevronRight size={16} />
+          </button>
         </div>
       </div>
     </div>
@@ -94,6 +113,8 @@ const Home = () => {
   const [hostelType, setHostelType] = useState('');
   const [wishlist, setWishlist] = useState([]);
   const [rooms, setRooms] = useState([]);
+
+
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
   const [isStayTypeOpen, setIsStayTypeOpen] = useState(false);
   const [isHostelTypeOpen, setIsHostelTypeOpen] = useState(false);
@@ -101,6 +122,8 @@ const Home = () => {
   const searchBarRef = useRef(null);
 
   const [platformStats, setPlatformStats] = useState({ tenants: 0, properties: 0, cities: 0, rating: '0' });
+  const [categoryStats, setCategoryStats] = useState({ mens: 0, womens: 0, coliving: 0, premium: 0, student: 0 });
+  const [cityStats, setCityStats] = useState({});
 
   const fetchStats = async () => {
     try {
@@ -111,6 +134,8 @@ const Home = () => {
         cities: res.data.cities || 0,
         rating: res.data.rating || '0/5'
       });
+      if (res.data.categoryStats) setCategoryStats(res.data.categoryStats);
+      if (res.data.cityStats) setCityStats(res.data.cityStats);
     } catch (err) {
       console.error('Failed to load stats', err);
     }
@@ -126,19 +151,55 @@ const Home = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const unwrapBuildingsArray = (raw) => {
+    if (Array.isArray(raw)) return raw;
+    if (raw && typeof raw === 'object') {
+      for (const key of ['buildings', 'data', 'results', 'items', 'records']) {
+        if (Array.isArray(raw[key])) return raw[key];
+      }
+    }
+    return [];
+  };
+
   const fetchRooms = async () => {
     try {
       const res = await API.get('/buildings/public');
-      const formatted = res.data.map((b, i) => ({
-        id: b._id,
-        badge: b.popularityLabel || (i === 0 ? 'Premium' : i === 1 ? 'Popular' : 'New'),
-        badgeColor: i === 0 ? '#4F46E5' : i === 1 ? '#10B981' : '#F59E0B',
-        images: b.images && b.images.length > 0 ? b.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `https://livora-hostel-hub-1.onrender.com${img}`) : [extReal],
-        name: b.name,
-        loc: b.address + ', ' + b.locationCity,
-        price: `₹${b.startingPrice?.toLocaleString() || '9,000'}`,
-        amenities: b.amenities && b.amenities.length > 0 ? b.amenities.slice(0, 4) : ['WiFi', 'Meals', 'AC', 'Laundry']
-      }));
+      const formatted = res.data.map((b, i) => {
+        let lowestSharingLabel = 'Sharing';
+        const rents = [
+          { val: b.rentSingle, label: 'Single Room' },
+          { val: b.rentDouble, label: '2 Sharing' },
+          { val: b.rentTriple, label: '3 Sharing' },
+          { val: b.rent4Sharing, label: '4 Sharing' },
+          { val: b.rent5Sharing, label: '5 Sharing' },
+          { val: b.rent6Sharing, label: '6 Sharing' },
+        ].filter(r => r.val > 0);
+
+        if (rents.length > 0) {
+          const minRent = rents.reduce((prev, curr) => prev.val < curr.val ? prev : curr);
+          lowestSharingLabel = minRent.label;
+          b.startingPrice = minRent.val;
+        } else {
+          // Fallback logic for old unseeded properties based on startingPrice
+          if (b.startingPrice >= 12000) lowestSharingLabel = 'Single Room';
+          else if (b.startingPrice >= 10000) lowestSharingLabel = '2 Sharing';
+          else if (b.startingPrice >= 8000) lowestSharingLabel = '3 Sharing';
+          else if (b.startingPrice >= 7000) lowestSharingLabel = '4 Sharing';
+          else lowestSharingLabel = '5 Sharing';
+        }
+
+        return {
+          id: b._id,
+          badge: b.popularityLabel || (i === 0 ? 'Premium' : i === 1 ? 'Popular' : 'New'),
+          badgeColor: i === 0 ? '#4F46E5' : i === 1 ? '#10B981' : '#F59E0B',
+          images: b.images && b.images.length > 0 ? b.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `https://livora-hostel-hub-1.onrender.com${img}`) : [extReal],
+          name: b.name,
+          loc: b.address + ', ' + b.locationCity,
+          price: `₹${b.startingPrice?.toLocaleString() || '9,000'}`,
+          sharingLabel: lowestSharingLabel,
+          amenities: b.amenities && b.amenities.length > 0 ? b.amenities.slice(0, 4) : ['WiFi', 'Meals', 'AC', 'Laundry']
+        };
+      });
       setRooms(formatted.slice(0, 3)); // Show top 3
     } catch (err) {
       console.error(err);
@@ -178,7 +239,6 @@ const Home = () => {
     { label: 'Home', id: 'hero' },
     { label: 'Explore', id: 'explore' },
     { label: 'Services', id: 'services' },
-    { label: 'Reviews', id: 'reviews' },
     { label: 'About Us', id: 'about' },
     { label: 'Contact', id: 'contact' }
   ];
@@ -227,7 +287,7 @@ const Home = () => {
   };
 
   const stats = [
-    { icon: <Users size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.tenants} suffix="+" />, label: 'Happy Tenants' },
+    { icon: <Users size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.tenants} suffix="+" />, label: 'Happy Residents' },
     { icon: <Building size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.properties} suffix="+" />, label: 'Verified Properties' },
     { icon: <MapPin size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.cities} suffix="+" />, label: 'Cities' },
     { icon: <Star size={32} color="currentColor" />, value: <CountUpAnimation endValue={platformStats.rating.split('/')[0]} suffix="/5" isFloat={true} />, label: 'Average Rating' },
@@ -236,38 +296,46 @@ const Home = () => {
   const steps = [
     { num: 1, icon: <Search size={44} color="#4F46E5" />, title: 'Search Location', desc: 'Choose your city and preferred location' },
     { num: 2, icon: <HomeIcon size={44} color="#4F46E5" />, title: 'Compare Rooms', desc: 'Explore verified rooms and compare amenities & prices' },
-    { num: 3, icon: <CalendarCheck size={44} color="#4F46E5" />, title: 'Book Instantly', desc: 'Select your room and move in hassle-free' },
+    { num: 3, icon: <CalendarCheck size={44} color="#4F46E5" />, title: 'Reserve Your Room', desc: 'Select your room and move in hassle-free' },
     { num: 4, icon: <Sparkles size={44} color="#4F46E5" />, title: 'Experience Livora', desc: 'Enjoy premium amenities and a vibrant community' },
   ];
 
   // rooms state populated via API
 
   const features = [
-    { icon: <Bed size={36} color="#0f172a" />, title: 'Fully Furnished', desc: 'Move-in with just your suitcase' },
-    { icon: <UtensilsCrossed size={36} color="#0f172a" />, title: 'Daily Meals', desc: 'Nutritious & hygienic meals everyday' },
-    { icon: <Wifi size={36} color="#0f172a" />, title: 'High-Speed WiFi', desc: 'Work, study & stream without limits' },
-    { icon: <Users size={36} color="#0f172a" />, title: 'Community Living', desc: 'Make friends & create lasting memories' },
-    { icon: <Clock size={36} color="#0f172a" />, title: '24/7 Support', desc: "We're always here for you, round the clock" },
-    { icon: <ShieldCheck size={36} color="#0f172a" />, title: 'No Hidden Charges', desc: 'Transparent pricing, zero surprises' },
+    { icon: <Bed size={26} color="#0f172a" />, title: 'Premium Furnishing', desc: 'Move-in ready spaces with modern furniture' },
+    { icon: <UtensilsCrossed size={26} color="#0f172a" />, title: 'Home-style Meals', desc: 'Freshly prepared meals served daily' },
+    { icon: <Wifi size={26} color="#0f172a" />, title: 'High-Speed Internet', desc: 'Uninterrupted high-speed internet access' },
+    { icon: <Users size={26} color="#0f172a" />, title: 'Community & Networking', desc: 'Engaging events, workshops & networking' },
+    { icon: <Lock size={26} color="#0f172a" />, title: 'Top-notch Security', desc: 'Biometric access and 24/7 CCTV surveillance' },
+    { icon: <Sparkles size={26} color="#0f172a" />, title: 'Professional Housekeeping', desc: 'Professional cleaning for pristine living spaces' },
+    { icon: <Clock size={26} color="#0f172a" />, title: '24/7 Support', desc: 'Dedicated staff available round the clock' },
+    { icon: <ShieldCheck size={26} color="#0f172a" />, title: 'No Hidden Charges', desc: 'Transparent pricing with zero surprises' },
   ];
 
   const testimonials = [
-    { name: 'Ananya R.', role: 'Resident, Koramangala', text: '"Livora is not just a place to stay — it\'s a place to belong. The community, amenities and support are truly amazing!"', rating: 5 },
+    { name: 'Ananya R.', role: 'Resident at Livora Koramangala', text: '"Livora is not just a place to stay — it\'s a place to belong. The community, amenities and support are truly amazing!"', rating: 5 },
     { name: 'Aarav M.', role: 'Software Engineer, Bengaluru', text: '"I\'ve lived across 3 Livora properties. The quality and community vibe is absolutely unmatched across cities."', rating: 5 },
     { name: 'Priya S.', role: 'Product Manager, Hyderabad', text: '"Raised a maintenance request at 11pm — fixed by morning. Never had this experience in any PG before Livora!"', rating: 5 },
   ];
 
   const [showAllCities, setShowAllCities] = useState(false);
 
+  // Helper to get city count from live DB, with fallback to 0
+  const getCityCount = (cityName) => {
+    const key = cityName.toLowerCase();
+    return cityStats[key] || cityStats[cityName] || 0;
+  };
+
   const cities = [
-    { name: 'Bengaluru', props: 120, img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Hyderabad', props: 85, img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Downtown_hyderabad_drone.png/960px-Downtown_hyderabad_drone.png' },
-    { name: 'Mumbai', props: 64, img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Chennai', props: 42, img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Delhi', props: 95, img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Pune', props: 58, img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Pune_West_skyline_-_March_2017.jpg/960px-Pune_West_skyline_-_March_2017.jpg' },
-    { name: 'Noida', props: 37, img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Sector_78_Noida_with_Moonlight.jpg/960px-Sector_78_Noida_with_Moonlight.jpg' },
-    { name: 'Gurgaon', props: 72, img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Cyber_City_View.jpg/960px-Cyber_City_View.jpg' },
+    { name: 'Bengaluru', props: getCityCount('bengaluru'), img: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Hyderabad', props: getCityCount('hyderabad'), img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Downtown_hyderabad_drone.png/960px-Downtown_hyderabad_drone.png' },
+    { name: 'Mumbai', props: getCityCount('mumbai'), img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Chennai', props: getCityCount('chennai'), img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Delhi', props: getCityCount('delhi'), img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Pune', props: getCityCount('pune'), img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Pune_West_skyline_-_March_2017.jpg/960px-Pune_West_skyline_-_March_2017.jpg' },
+    { name: 'Noida', props: getCityCount('noida'), img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Sector_78_Noida_with_Moonlight.jpg/960px-Sector_78_Noida_with_Moonlight.jpg' },
+    { name: 'Gurgaon', props: getCityCount('gurgaon'), img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Cyber_City_View.jpg/960px-Cyber_City_View.jpg' },
   ];
 
   const displayedCities = showAllCities ? cities : cities.slice(0, 4);
@@ -288,7 +356,21 @@ const Home = () => {
   const [activeModal, setActiveModal] = useState(null); // 'services', 'amenities', 'terms'
   const [isLocationsOpen, setIsLocationsOpen] = useState(false);
 
-
+  const handleCategoryClick = (catName) => {
+    let url = '/explore';
+    if (catName === "Men's Hostel") {
+      url += "?hostelType=Men's";
+    } else if (catName === "Women's Hostel") {
+      url += "?hostelType=Women's";
+    } else if (catName === "Co-living Spaces") {
+      url += "?hostelType=Co-living";
+    } else if (catName === "Premium Stays") {
+      url += "?category=Luxury";
+    } else if (catName === "Student PGs") {
+      url += "?category=Student";
+    }
+    navigate(url);
+  };
 
   return (
     <>
@@ -296,12 +378,12 @@ const Home = () => {
       {/* ── HERO ── */}
       <section className="hv2-hero" id="hero">
         <div className="hv2-hero-left">
-          <div className="hv2-hero-tag">🏆 India’s #1 Hostel & PG Network</div>
+          <div className="hv2-hero-tag">🏆 Discover Better Shared Living</div>
           <h1 className="hv2-hero-h1">
             Find Your Perfect Stay<br />
             <span className="hv2-hero-accent">That Fits Your Lifestyle<span className="hv2-dot">.</span></span>
           </h1>
-          <p className="hv2-hero-desc">Premium spaces for students & professionals. Quality living, zero hassle.</p>
+          <p className="hv2-hero-desc">Move into thoughtfully designed spaces built for comfort, productivity, and community living.</p>
 
           {/* Search Bar */}
           <div className="hv2-search-bar" ref={searchBarRef}>
@@ -368,13 +450,31 @@ const Home = () => {
                 </div>
               </div>
               {isStayTypeOpen && (
-                <div className="hv2-dropdown-list hv2-dropdown-grid-3x3">
-                  {['No Pref', 'Single', '2 Sharing', '3 Sharing', '4 Sharing', '5 Sharing', '6 Sharing', 'Dormitory', 'Other'].map(opt => (
-                    <div key={opt} className={`hv2-dropdown-item ${stayType === opt || (!stayType && opt === 'No Pref') ? 'selected' : ''}`}
-                      onClick={(e) => { e.stopPropagation(); setStayType(opt === 'No Pref' ? '' : opt); setIsStayTypeOpen(false); }}>
-                      {opt}
-                    </div>
-                  ))}
+                <div className="hv2-dropdown-list hv2-sharing-dropdown" onClick={e => e.stopPropagation()}>
+                  {/* Row 1: No Pref + Single */}
+                  <div className="hv2-sharing-row1">
+                    {['No Pref', 'Single'].map(opt => (
+                      <button
+                        key={opt}
+                        className={`hv2-sharing-btn hv2-sharing-wide ${stayType === opt || (!stayType && opt === 'No Pref') ? 'active' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); setStayType(opt === 'No Pref' ? '' : opt); setIsStayTypeOpen(false); }}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Row 2: 2,3,4,5,6 */}
+                  <div className="hv2-sharing-row2">
+                    {['2', '3', '4', '5', '6'].map(opt => (
+                      <button
+                        key={opt}
+                        className={`hv2-sharing-btn hv2-sharing-num ${stayType === opt ? 'active' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); setStayType(opt); setIsStayTypeOpen(false); }}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -408,7 +508,7 @@ const Home = () => {
             <div className="hv2-float-badge">
               <div className="hv2-float-info">
                 <div className="hv2-float-num">⭐ 4.9/5</div>
-                <div className="hv2-float-label">Top Rated in India</div>
+                <div className="hv2-float-label">Trusted by Residents</div>
               </div>
             </div>
           </div>
@@ -442,19 +542,19 @@ const Home = () => {
         </div>
         <div className="hv2-cat-grid">
           {[
-            { name: "Men's Hostel", count: '200+ Properties', icon: <User size={24} color="currentColor" />, img: extReal },
-            { name: "Women's Hostel", count: '150+ Properties', icon: <User size={24} color="currentColor" />, img: womensHostelImg },
-            { name: "Co-living Spaces", count: '100+ Properties', icon: <Users size={24} color="currentColor" />, img: heroCouple },
-            { name: "Premium Stays", count: '80+ Properties', icon: <Crown size={24} color="currentColor" />, img: chairsReal },
-            { name: "Student PGs", count: '300+ Properties', icon: <GraduationCap size={24} color="currentColor" />, img: stayEasy }
+            { name: "Men's Hostel", count: categoryStats.mens || 0, icon: <User size={24} color="currentColor" />, img: extReal },
+            { name: "Women's Hostel", count: categoryStats.womens || 0, icon: <User size={24} color="currentColor" />, img: womensHostelImg },
+            { name: "Co-living Spaces", count: categoryStats.coliving || 0, icon: <Users size={24} color="currentColor" />, img: heroCouple },
+            { name: "Premium Stays", count: categoryStats.premium || 0, icon: <Crown size={24} color="currentColor" />, img: chairsReal },
+            { name: "Student PGs", count: categoryStats.student || 0, icon: <GraduationCap size={24} color="currentColor" />, img: stayEasy }
           ].map((cat, i) => (
-            <div key={i} className="hv2-cat-card" onClick={() => navigate('/explore')}>
+            <div key={i} className="hv2-cat-card" onClick={() => handleCategoryClick(cat.name)}>
               <div className="hv2-cat-img-box">
-                <img src={cat.img} alt={cat.name} className="hv2-cat-img" />
+                <img src={cat.img} alt="" className="hv2-cat-img" />
                 <div className="hv2-cat-overlay">
                   <div className="hv2-cat-icon">{cat.icon}</div>
                   <h3 className="hv2-cat-name">{cat.name}</h3>
-                  <p className="hv2-cat-count">{cat.count}</p>
+                  <p className="hv2-cat-count">{cat.count}+ Properties</p>
                 </div>
               </div>
             </div>
@@ -558,8 +658,8 @@ const Home = () => {
         </div>
         <div className="hv2-testi-container">
           <div className="hv2-testi-track">
-            {[...testimonials, ...testimonials, ...testimonials].map((t, i) => (
-              <div key={i} className={`hv2-testi-card ${i % testimonials.length === 1 ? 'hv2-testi-featured' : ''}`}>
+            {testimonials.map((t, i) => (
+              <div key={i} className={`hv2-testi-card ${i === 1 ? 'hv2-testi-featured' : ''}`}>
                 <div className="hv2-testi-stars">{'★'.repeat(t.rating)}</div>
                 <p className="hv2-testi-text">{t.text}</p>
                 <div className="hv2-testi-author">
@@ -590,10 +690,10 @@ const Home = () => {
         <div className="hv2-cities-grid">
           {displayedCities.map((c, i) => (
             <div key={i} className="hv2-city-card" onClick={() => navigate(`/search?location=${c.name}`)}>
-              <img src={c.img} alt={c.name} className="hv2-city-img" />
+              <img src={c.img} alt="" className="hv2-city-img" />
               <div className="hv2-city-overlay">
                 <div className="hv2-city-name">{c.name}</div>
-                <div className="hv2-city-props">{c.props} Properties</div>
+                <div className="hv2-city-props">{c.props} Premium Properties</div>
               </div>
             </div>
           ))}
@@ -607,3 +707,4 @@ const Home = () => {
 };
 
 export default Home;
+

@@ -12,11 +12,13 @@ const Wishlist = () => {
   useEffect(() => {
     const fetchWishlist = async () => {
       try {
-        const res = await API.get('/tenant-portal/wishlist').catch(() => ({ data: [
-          { _id: '1', hostelId: '101', hostelName: 'Alpha Tower', hostelLocation: 'Alpha Tower Street, Bengaluru', hostelPrice: 16700, gender: 'Boys', type: 'Premium', hostelImage: 'https://images.unsplash.com/photo-1555854817-5b27344481c7?auto=format&fit=crop&q=80&w=1000' },
-          { _id: '2', hostelId: '102', hostelName: 'Cyber Hub Stay', hostelLocation: 'Cyber Hub Street, Pune', hostelPrice: 19100, gender: 'Boys', type: 'Student', hostelImage: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=1000' },
-          { _id: '3', hostelId: '103', hostelName: 'Theta Terraces', hostelLocation: 'Theta Terraces Street, Hyderabad', hostelPrice: 15500, gender: 'Girls', type: 'Professional', hostelImage: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000' }
-        ]}));
+        const res = await API.get('/tenant-portal/wishlist').catch(() => ({
+          data: [
+            { _id: '1', hostelId: '101', hostelName: 'Alpha Tower', hostelLocation: 'Alpha Tower Street, Bengaluru', hostelPrice: 16700, gender: 'Boys', type: 'Premium', hostelImage: 'https://images.unsplash.com/photo-1555854817-5b27344481c7?auto=format&fit=crop&q=80&w=1000' },
+            { _id: '2', hostelId: '102', hostelName: 'Cyber Hub Stay', hostelLocation: 'Cyber Hub Street, Pune', hostelPrice: 19100, gender: 'Boys', type: 'Student', hostelImage: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=1000' },
+            { _id: '3', hostelId: '103', hostelName: 'Theta Terraces', hostelLocation: 'Theta Terraces Street, Hyderabad', hostelPrice: 15500, gender: 'Girls', type: 'Professional', hostelImage: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=1000' }
+          ]
+        }));
         setWishlist(res.data || []);
       } catch (err) {
         console.error('Error fetching wishlist:', err);
@@ -72,9 +74,9 @@ const Wishlist = () => {
         <div className="wishlist-grid">
           {wishlist.map((hostel) => (
             <div key={hostel._id} className="wishlist-card-premium">
-              <div 
-                className="card-image-section" 
-                style={{ 
+              <div
+                className="card-image-section"
+                style={{
                   backgroundImage: `url(${hostel.hostelImage && hostel.hostelImage.startsWith('/uploads') ? `https://livora-hostel-hub-1.onrender.com${hostel.hostelImage}` : hostel.hostelImage})`,
                   cursor: 'zoom-in'
                 }}
@@ -102,7 +104,7 @@ const Wishlist = () => {
                     </svg>
                     {hostel.hostelLocation}
                   </p>
-                  
+
                   <div className="spec-tags">
                     <span className="spec-pill gender">{hostel.gender}</span>
                     <span className="spec-pill type">{hostel.type}</span>
@@ -130,10 +132,10 @@ const Wishlist = () => {
           ))}
         </div>
       )}
-      <ImageModal 
-        isOpen={modalInfo.isOpen} 
-        image={modalInfo.image} 
-        onClose={() => setModalInfo({ isOpen: false, image: '' })} 
+      <ImageModal
+        isOpen={modalInfo.isOpen}
+        image={modalInfo.image}
+        onClose={() => setModalInfo({ isOpen: false, image: '' })}
       />
     </div>
   );

@@ -3,8 +3,8 @@
 import { io } from "socket.io-client";
 
 const SOCKET_URL = (
-  import.meta.env.VITE_API_URL ||
-  "https://livora-hostel-hub-1.onrender.com"
+  import.meta.env.VITE_API_URL || 
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000/api' : 'https://livora-hostel-hub-1.onrender.com/api')
 ).replace("/api", "");
 
 const socket = io(SOCKET_URL, {

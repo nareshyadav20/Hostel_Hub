@@ -14,7 +14,7 @@ connectDB().then(() => {
     try {
       const Notification = require('./models/Notification');
       const OwnerNotification = require('./models/OwnerNotification');
-      
+
       const count = await Notification.countDocuments({
         $or: [
           { portalType: 'Owner' },
@@ -22,7 +22,7 @@ connectDB().then(() => {
           { target: 'Owner' }
         ]
       });
-      
+
       if (count > 0) {
         console.log(`📡 [AUTO_MIGRATION] Found ${count} legacy owner notifications. Migrating lazily...`);
         const oldOwnerNotifs = await Notification.find({
@@ -32,7 +32,7 @@ connectDB().then(() => {
             { target: 'Owner' }
           ]
         }).lean();
-        
+
         let migrated = 0;
         for (const notif of oldOwnerNotifs) {
           const exists = await OwnerNotification.findOne({ _id: notif._id });
@@ -41,7 +41,7 @@ connectDB().then(() => {
             migrated++;
           }
         }
-        
+
         // Remove migrated notifications from the old notifications collection to avoid cluttering
         await Notification.deleteMany({
           $or: [
@@ -50,7 +50,7 @@ connectDB().then(() => {
             { target: 'Owner' }
           ]
         });
-        
+
         console.log(`✅ [AUTO_MIGRATION] Successfully migrated and cleaned up ${migrated} owner notifications!`);
       }
     } catch (err) {
@@ -79,13 +79,13 @@ app.use(cors({
     if (!origin || origin === 'null' || origin.startsWith('file://') || origin.startsWith('capacitor://') || origin.startsWith('ionic://') || origin.startsWith('chrome-extension://')) {
       return callback(null, true);
     }
-    
+
     // Auto-allow all localhost/127.0.0.1 origins for easier development
     if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:') || origin === 'http://localhost' || origin === 'http://127.0.0.1') {
       return callback(null, true);
     }
 
-    const allowed = allowedOrigins.some(o => 
+    const allowed = allowedOrigins.some(o =>
       typeof o === 'string' ? o === origin : o.test(origin)
     );
     if (allowed) return callback(null, true);
@@ -103,7 +103,9 @@ app.use(compression()); // Gzip compression for all responses
 
 app.use((req, res, next) => {
   const msg = `${new Date().toISOString()} API: ${req.method} ${req.originalUrl}\n`;
-  require('fs').appendFileSync(require('path').join(__dirname, '../traffic_logs.txt'), msg);
+  try {
+    require('fs').appendFileSync(require('path').join(__dirname, '../traffic_logs.txt'), msg);
+  } catch (_) { /* Ignore filesystem errors on read-only/ephemeral environments like Render */ }
   console.log(req.method, req.originalUrl);
   next();
 });
@@ -140,6 +142,7 @@ const staffRoutes = require('./routes/staffRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const profileRoutes = require('./routes/profileRoutes');
 const notificationService = require('./utils/notificationService');
 const procurementRoutes = require('./routes/procurementRoutes');
 const taskRoutes = require('./routes/taskRoutes');
@@ -169,8 +172,11 @@ require('./models/AdminInsights');
 require('./models/AdminSupport');
 require('./models/Task');
 require('./models/Rating');
+require('./models/ForgotPassword');
+require('./models/PasswordReset');
 
 app.use('/api/auth', authRoutes);
+app.use('/api/auth/forgot-password', require('./routes/forgotPasswordRoutes'));
 app.use('/api/buildings', buildingRoutes);
 app.use('/api/floors', floorRoutes);
 app.use('/api/rooms', roomRoutes);
@@ -199,6 +205,10 @@ app.use('/api/tenant-proofs', require('./routes/tenantProofRoutes'));
 app.use('/api/admin', adminRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/assets', require('./routes/assetRoutes'));
+app.use('/api/profile', profileRoutes);
+app.use('/api/wishlist', require('./routes/wishlistRoutes'));
+app.use('/api/booking', require('./routes/mobileBookingRoutes'));
+
 
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
@@ -244,7 +254,9 @@ const activeSockets = new Map();
 
 io.on('connection', (socket) => {
   const msg = `${new Date().toISOString()} SOCKET: Socket connected: ${socket.id}\n`;
-  require('fs').appendFileSync(require('path').join(__dirname, '../traffic_logs.txt'), msg);
+  try {
+    require('fs').appendFileSync(require('path').join(__dirname, '../traffic_logs.txt'), msg);
+  } catch (_) { /* Ignore filesystem errors on read-only/ephemeral environments like Render */ }
   console.log('⚡ New client connected:', socket.id);
   console.log("Socket connected:", socket.id);
 

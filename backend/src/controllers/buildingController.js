@@ -9,12 +9,15 @@ const BuildingPhoto = require('../models/BuildingPhoto');
 const createBuilding = async (req, res) => {
   try {
     const {
-      name, address, locationCity, description, amenities, images,
+      name, address, locationCity, description, amenities, images, documents,
       startingPrice, securityDeposit, maintenanceCharges, foodCharges,
-      rentSingle, rentDouble, rentTriple, totalRooms, totalBeds,
+      rentSingle, rentDouble, rentTriple, rent4Sharing, rent5Sharing, rent6Sharing, totalRooms, totalBeds,
       genderType, category, rating, popularityLabel,
       policies, staffInfo, status, lastStep, draftData, showInPortfolio,
-      propertyId
+      propertyId,
+      security, cctv, parking, powerBackup, mess, gym, library, laundry, housekeeping, medicalSupport,
+      lift, wifi, diningHall, commonKitchen, studyHall, laundryRoom, fireSafety, emergencyExit,
+      isAC
     } = req.body;
 
     const parseField = (field, defaultValue) => {
@@ -34,6 +37,7 @@ const createBuilding = async (req, res) => {
     };
 
     let finalImages = parseField(images, []);
+    const finalDocuments = parseField(documents, []);
     if (req.files && req.files.length > 0) {
       const uploadedImages = req.files.map(file => {
         const b64 = file.buffer.toString('base64');
@@ -63,6 +67,9 @@ const createBuilding = async (req, res) => {
       rentSingle,
       rentDouble,
       rentTriple,
+      rent4Sharing,
+      rent5Sharing,
+      rent6Sharing,
       totalRooms: totalRooms || 0,
       totalBeds: totalBeds || 0,
       genderType: genderType || 'Mixed',
@@ -78,6 +85,10 @@ const createBuilding = async (req, res) => {
       draftData: finalDraftData,
       showInPortfolio: showInPortfolio !== undefined ? showInPortfolio : true,
       propertyId: propertyId || null,
+      documents: finalDocuments,
+      security, cctv, parking, powerBackup, mess, gym, library, laundry, housekeeping, medicalSupport,
+      lift, wifi, diningHall, commonKitchen, studyHall, laundryRoom, fireSafety, emergencyExit,
+      isAC,
       owner: req.user.id
     });
 
@@ -121,7 +132,7 @@ const getBuildings = async (req, res) => {
   try {
     const db = mongoose.connection.db;
     const isPlatformAdmin = req.user && req.user.role && ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role.toUpperCase());
-    
+
     // Support querying owner IDs as both target mapped owner ID and original owner ID
     const ownerIds = ['69f5d174bb94a186e2747924', '6a0ef3a802c53c64d99e42d4'];
     if (req.user && req.user.id && !ownerIds.includes(req.user.id)) {
@@ -150,7 +161,7 @@ const getBuildings = async (req, res) => {
         { propertyId: req.query.propertyId }
       ];
     } else {
-      query.propertyId = { $in: [null, undefined] };
+      query.propertyId = { $in: [null] };
       query.showInPortfolio = { $ne: false };
     }
     console.log(`[DEBUG] getBuildings query:`, JSON.stringify(query));
@@ -208,7 +219,7 @@ const getBuildings = async (req, res) => {
 
       const roomsMap = new Map();
       roomDocs.forEach(r => roomsMap.set(r._id.toString(), r));
-      
+
       if (rawOwnerRooms.length > 0) {
         const ownerRoomIds = rawOwnerRooms.map(r => r._id);
         const rawBeds = await Bed.find({ room: { $in: ownerRoomIds } }).lean();
@@ -226,8 +237,8 @@ const getBuildings = async (req, res) => {
 
         rawOwnerRooms.forEach(room => {
           const roomIdStr = room._id.toString();
-          room.beds = allBedsForOwnerRooms.filter(b => 
-            (b.room && b.room.toString() === roomIdStr) || 
+          room.beds = allBedsForOwnerRooms.filter(b =>
+            (b.room && b.room.toString() === roomIdStr) ||
             (b.roomId && b.roomId.toString() === roomIdStr)
           );
           roomsMap.set(roomIdStr, room);
@@ -235,20 +246,20 @@ const getBuildings = async (req, res) => {
       }
 
       const allRooms = Array.from(roomsMap.values());
-      
+
       let totalBeds = 0;
       let occupiedBeds = 0;
-      
+
       allRooms.forEach(room => {
         const beds = room.beds || [];
         totalBeds += beds.length;
         occupiedBeds += beds.filter(b => b.status === 'OCCUPIED' || b.status === 'Occupied').length;
       });
-      
+
       building.totalRooms = allRooms.length;
       building.totalBeds = totalBeds;
       building.occupancyPercentage = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
-      
+
       return building;
     }));
 
@@ -282,6 +293,9 @@ const updateBuilding = async (req, res) => {
 
     if (updateData.amenities) {
       updateData.amenities = parseField(updateData.amenities, []);
+    }
+    if (updateData.documents) {
+      updateData.documents = parseField(updateData.documents, []);
     }
     if (updateData.policies) {
       updateData.policies = parseField(updateData.policies, {});
@@ -610,7 +624,7 @@ const getBuildingById = async (req, res) => {
         }).lean();
 
         const populatedOwnerBeds = ownerBeds.map(b => {
-          const tenantDoc = tenants.find(t => 
+          const tenantDoc = tenants.find(t =>
             (t.bedId && t.bedId.toString() === b._id.toString())
           );
           return { ...b, tenant: tenantDoc || null };
@@ -623,8 +637,8 @@ const getBuildingById = async (req, res) => {
 
         ownerRooms.forEach(room => {
           const roomIdStr = room._id.toString();
-          room.beds = allBeds.filter(b => 
-            (b.room && b.room.toString() === roomIdStr) || 
+          room.beds = allBeds.filter(b =>
+            (b.room && b.room.toString() === roomIdStr) ||
             (b.roomId && b.roomId.toString() === roomIdStr)
           );
           roomsMap.set(roomIdStr, room);
@@ -641,7 +655,7 @@ const getBuildingById = async (req, res) => {
     let totalRooms = 0;
     let totalBeds = 0;
     let occupiedBeds = 0;
-    
+
     bFloors.forEach(floor => {
       const rooms = floor.rooms || [];
       totalRooms += rooms.length;
@@ -651,7 +665,7 @@ const getBuildingById = async (req, res) => {
         occupiedBeds += beds.filter(b => b.status === 'OCCUPIED' || b.status === 'Occupied').length;
       });
     });
-    
+
     bObj.totalRooms = totalRooms;
     bObj.totalBeds = totalBeds;
     bObj.occupancyPercentage = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
@@ -759,10 +773,12 @@ const getPublicBuildingById = async (req, res) => {
 
     const populatedFloors = await Promise.all(allFloors.map(async (floor) => {
       const rooms = await Room.find({ floor: floor._id })
-        .select('roomNumber roomType capacity isAC washroomType rentAmount securityDeposit amenities status beds')
         .populate({
           path: 'beds',
-          select: 'bedNumber status position bedType smartBadges'
+          populate: {
+            path: 'tenant',
+            select: 'name checkInDate targetStayDuration'
+          }
         })
         .lean();
       const ownerRooms = await db.collection('owner_rooms').find({ floor: floor._id }).toArray();
@@ -789,8 +805,8 @@ const getPublicBuildingById = async (req, res) => {
 
         ownerRooms.forEach(room => {
           const roomIdStr = room._id.toString();
-          room.beds = allBeds.filter(b => 
-            (b.room && b.room.toString() === roomIdStr) || 
+          room.beds = allBeds.filter(b =>
+            (b.room && b.room.toString() === roomIdStr) ||
             (b.roomId && b.roomId.toString() === roomIdStr)
           );
           roomsMap.set(roomIdStr, room);
@@ -809,7 +825,7 @@ const getPublicBuildingById = async (req, res) => {
       .select('bedId bedNumber')
       .lean();
 
-    res.status(200).json({ ...building, filledBeds });
+    res.status(200).json({ ...building, subBuildings, filledBeds });
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
@@ -929,8 +945,8 @@ const getBuildingPortfolio = async (req, res) => {
 
         ownerRooms.forEach(room => {
           const roomIdStr = room._id.toString();
-          room.beds = allBeds.filter(b => 
-            (b.room && b.room.toString() === roomIdStr) || 
+          room.beds = allBeds.filter(b =>
+            (b.room && b.room.toString() === roomIdStr) ||
             (b.roomId && b.roomId.toString() === roomIdStr)
           );
           roomsMap.set(roomIdStr, room);
@@ -984,25 +1000,25 @@ const getPlatformStats = async (req, res) => {
     const obCount = await db.collection('owner_buildings').countDocuments(statsQuery);
 
     const tenantsCount = await Tenant.countDocuments();
-    
+
     const cities = await Building.distinct('locationCity', statsQuery);
     const obCities = await db.collection('owner_buildings').distinct('locationCity', statsQuery);
-    
+
     const uniqueCities = new Set([...cities, ...obCities].filter(Boolean));
 
     const buildings = await Building.find(statsQuery, 'rating').lean();
     const obBuildings = await db.collection('owner_buildings').find(statsQuery, { projection: { rating: 1 } }).toArray();
-    
+
     let totalRating = 0;
     let validRatings = 0;
-    
+
     buildings.forEach(b => {
       if (b.rating) { totalRating += b.rating; validRatings++; }
     });
     obBuildings.forEach(b => {
       if (b.rating) { totalRating += b.rating; validRatings++; }
     });
-    
+
     const avgRating = validRatings > 0 ? (totalRating / validRatings).toFixed(1) : "4.8";
 
     res.status(200).json({
@@ -1013,6 +1029,81 @@ const getPlatformStats = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+const seedBalanced = async (req, res) => {
+  try {
+    const CITIES = ['Bengaluru', 'Hyderabad', 'Mumbai', 'Chennai', 'Delhi', 'Pune', 'Noida', 'Gurgaon'];
+    const CATEGORIES = [
+      { genderType: 'Boys', category: 'Student' }, // Mens & Student -> falls into student or mens depending on order
+      { genderType: 'Girls', category: 'Student' },
+      { genderType: 'Mixed', category: 'Co-living' },
+      { genderType: 'Mixed', category: 'Premium' },
+      { genderType: 'Boys', category: 'Professional' },
+      { genderType: 'Girls', category: 'Professional' }
+    ];
+    const AMENITIES = ['WiFi', 'CCTV', 'Power Backup', 'Gym', 'Laundry', 'Meals', 'AC'];
+
+    // Grab the actual User model
+    const User = require('../models/User');
+    let owner = await User.findOne({ role: 'OWNER' }) || await User.findOne();
+    const ownerId = owner ? owner._id : '654321098765432109876543';
+
+    // Clear old properties
+    await Building.deleteMany({});
+    const buildings = [];
+    let counter = 1;
+
+    for (const city of CITIES) {
+      // 5 properties per city to make it balanced (total 40 properties)
+      for (let i = 0; i < 5; i++) {
+        const catCombo = CATEGORIES[i % CATEGORIES.length];
+
+        // Force specific categories for perfect balancing using valid enums
+        let finalGender = 'Mixed';
+        let finalCat = 'Mixed';
+
+        if (i === 0) { finalGender = 'Boys'; finalCat = 'Professional'; } // mens
+        if (i === 1) { finalGender = 'Girls'; finalCat = 'Professional'; } // womens
+        if (i === 2) { finalGender = 'Mixed'; finalCat = 'Mixed'; } // coliving (gender: mixed, category: mixed)
+        if (i === 3) { finalGender = 'Mixed'; finalCat = 'Luxury'; } // premium (category: luxury)
+        if (i === 4) { finalGender = 'Boys'; finalCat = 'Student'; } // student
+
+        const rentSingle = 12000 + Math.floor(Math.random() * 3000);
+        const rentDouble = 10000 + Math.floor(Math.random() * 2000);
+        const rentTriple = 8000 + Math.floor(Math.random() * 1500);
+        const rent4Sharing = 7000 + Math.floor(Math.random() * 1000);
+        const rent5Sharing = 6000 + Math.floor(Math.random() * 1000);
+
+        buildings.push({
+          name: `${city} Stay ${counter++}`,
+          address: `Central Hub, ${city}`,
+          locationCity: city,
+          description: `A beautiful and secure stay located in the heart of ${city}.`,
+          startingPrice: rent5Sharing,
+          rentSingle,
+          rentDouble,
+          rentTriple,
+          rent4Sharing,
+          rent5Sharing,
+          genderType: finalGender,
+          category: finalCat,
+          amenities: AMENITIES.slice(0, 3 + Math.floor(Math.random() * 4)),
+          images: ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'],
+          status: 'Active',
+          owner: ownerId,
+          showInPortfolio: true
+        });
+      }
+    }
+
+    await Building.insertMany(buildings);
+    console.log(`[SEED] Inserted ${buildings.length} balanced buildings`);
+    res.status(200).json({ message: `Successfully seeded ${buildings.length} balanced properties.` });
+  } catch (error) {
+    console.error('[SEED ERROR]', error);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 };
 
@@ -1027,5 +1118,6 @@ module.exports = {
   getPublicBuildings,
   getPublicBuildingById,
   uploadPhotos,
-  getPlatformStats
+  getPlatformStats,
+  seedBalanced
 };

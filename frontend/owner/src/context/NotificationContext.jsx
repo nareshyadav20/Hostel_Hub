@@ -47,13 +47,13 @@ export const NotificationProvider = ({ children, activeBuildingId: propBuildingI
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-    if (activeBuildingId) {
-      console.log('🔄 [CONTEXT_SYNC] Context switching building:', activeBuildingId);
-      fetchNotifications(activeBuildingId);
-      connectSocket(activeBuildingId);
-    }
-    return () => { mounted = false; };
+    // Don't connect socket or fetch on unauthenticated pages (login/signup)
+    const token = localStorage.getItem('token');
+    if (!token || !activeBuildingId) return;
+
+    console.log('🔄 [CONTEXT_SYNC] Context switching building:', activeBuildingId);
+    fetchNotifications(activeBuildingId);
+    connectSocket(activeBuildingId);
   }, [activeBuildingId, fetchNotifications]);
 
   useEffect(() => {
@@ -98,7 +98,8 @@ export const NotificationProvider = ({ children, activeBuildingId: propBuildingI
 
     socket.on('newNotification', handleNewNotification);
     return () => socket.off('newNotification', handleNewNotification);
-  }, [socket, activeBuildingId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBuildingId]);
 
   const markAsRead = async (id) => {
     try {

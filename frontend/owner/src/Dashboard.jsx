@@ -43,7 +43,7 @@ function Dashboard() {
       const [summary, revenue, occupancy, alerts, complaints, mess, staff, activity, tenants] = results.map(r => r.status === 'fulfilled' ? r.value : null);
 
       setD({ 
-        summary: summary || d.summary || { buildingName: 'Property', totalBeds: 0, occupiedBeds: 0, occupancyRate: 0, todayRevenue: 0, pendingPaymentsAmount: 0, pendingPaymentsCount: 0 }, 
+        summary: summary || { buildingName: 'Property', totalBeds: 0, occupiedBeds: 0, occupancyRate: 0, todayRevenue: 0, pendingPaymentsAmount: 0, pendingPaymentsCount: 0 }, 
         revenue: revenue || { rentMetrics: { netProfit: 0 }, dailyRevenue: [] }, 
         occupancy: occupancy || { buildingWise: [], floorWise: [] }, 
         alerts: alerts || { alerts: [], insights: [] }, 

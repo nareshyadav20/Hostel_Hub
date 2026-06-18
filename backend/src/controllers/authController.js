@@ -150,4 +150,22 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const refreshToken = async (req, res) => {
+  // Accept both `refreshToken` (spec) and legacy `token` field
+  const token = req.body.refreshToken || req.body.token;
+  if (!token) return res.status(400).json({ message: 'Refresh token required' });
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
+    const newToken = jwt.sign({ id: payload.id, role: payload.role, email: payload.email }, process.env.JWT_SECRET, { expiresIn: '15m' });
+    return res.json({ token: newToken, accessToken: newToken });
+  } catch (err) {
+    return res.status(401).json({ message: 'Invalid refresh token' });
+  }
+};
+
+const logout = async (req, res) => {
+  // Client should discard token; if using cookies, clear them here
+  return res.json({ success: true, message: 'Logged out' });
+};
+
+module.exports = { register, login, refreshToken, logout };

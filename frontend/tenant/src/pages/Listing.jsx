@@ -202,10 +202,12 @@ const Listing = () => {
   // ─── Pricing ────────────────────────────────────────────────────────────────
 
   const currentRent = (selectedRoom?.rentAmount > 0) ? selectedRoom.rentAmount :
-    (selectedRoom?.capacity === 1 && hostel.singleRent) ? hostel.singleRent :
-    (selectedRoom?.capacity === 2 && hostel.doubleRent) ? hostel.doubleRent :
-    (selectedRoom?.capacity >= 3 && hostel.tripleRent) ? hostel.tripleRent :
-    (hostel.roomRent) ? hostel.roomRent :
+    (selectedRoom?.capacity === 1 && hostel.rentSingle) ? hostel.rentSingle :
+    (selectedRoom?.capacity === 2 && hostel.rentDouble) ? hostel.rentDouble :
+    (selectedRoom?.capacity === 3 && hostel.rentTriple) ? hostel.rentTriple :
+    (selectedRoom?.capacity === 4 && hostel.rent4Sharing) ? hostel.rent4Sharing :
+    (selectedRoom?.capacity === 5 && hostel.rent5Sharing) ? hostel.rent5Sharing :
+    (selectedRoom?.capacity >= 6 && hostel.rent6Sharing) ? hostel.rent6Sharing :
     (hostel.startingPrice || 0);
 
   const currentDeposit = selectedRoom?.securityDeposit || hostel.securityDeposit || 0;
@@ -435,18 +437,20 @@ const Listing = () => {
                   
                   <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
                   
-                  <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 12px 0' }}>Pricing</h2>
-                  <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px', fontSize: '0.95rem' }}>
-                    <span>- Single Rent: ₹{hostel.singleRent || '30000'}/mo</span>
-                    <span style={{ color: '#cbd5e1' }}>|</span>
-                    <span>Double: ₹{hostel.doubleRent || '15000'}/mo</span>
-                    <span style={{ color: '#cbd5e1' }}>|</span>
-                    <span>Triple: ₹{hostel.tripleRent || '10000'}/mo</span>
-                    <span style={{ color: '#cbd5e1' }}>|</span>
-                    <span>Rent per Room: ₹{hostel.roomRent || '30000'}/room</span>
-                    <span style={{ color: '#cbd5e1' }}>|</span>
-                    <span>Deposit: ₹{hostel.securityDeposit || '60000'}</span>
-                  </div>
+                  {(hostel.rentSingle || hostel.rentDouble || hostel.rentTriple || hostel.rent4Sharing || hostel.rent5Sharing || hostel.rent6Sharing) && (
+                    <>
+                      <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 12px 0' }}>Pricing Options</h2>
+                      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px', fontSize: '0.95rem' }}>
+                        {hostel.rentSingle && <><span>Single: ₹{hostel.rentSingle.toLocaleString()}/mo</span><span style={{ color: '#cbd5e1' }}>|</span></>}
+                        {hostel.rentDouble && <><span>Double: ₹{hostel.rentDouble.toLocaleString()}/mo</span><span style={{ color: '#cbd5e1' }}>|</span></>}
+                        {hostel.rentTriple && <><span>Triple: ₹{hostel.rentTriple.toLocaleString()}/mo</span><span style={{ color: '#cbd5e1' }}>|</span></>}
+                        {hostel.rent4Sharing && <><span>4-Sharing: ₹{hostel.rent4Sharing.toLocaleString()}/mo</span><span style={{ color: '#cbd5e1' }}>|</span></>}
+                        {hostel.rent5Sharing && <><span>5-Sharing: ₹{hostel.rent5Sharing.toLocaleString()}/mo</span><span style={{ color: '#cbd5e1' }}>|</span></>}
+                        {hostel.rent6Sharing && <><span>6-Sharing: ₹{hostel.rent6Sharing.toLocaleString()}/mo</span><span style={{ color: '#cbd5e1' }}>|</span></>}
+                        <span>Deposit: ₹{(hostel.securityDeposit || 0).toLocaleString()}</span>
+                      </div>
+                    </>
+                  )}
                   
                   <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
                   
@@ -691,7 +695,7 @@ const Listing = () => {
 
                               <div className="liv-rfc-footer">
                                 <div className="liv-rfc-price">
-                                  <strong>₹{(room.rentAmount > 0 ? room.rentAmount : (room.capacity === 1 && hostel.singleRent) ? hostel.singleRent : (room.capacity === 2 && hostel.doubleRent) ? hostel.doubleRent : (room.capacity >= 3 && hostel.tripleRent) ? hostel.tripleRent : hostel.roomRent || hostel.startingPrice || 0).toLocaleString()}</strong>
+                                  <strong>₹{(room.rentAmount > 0 ? room.rentAmount : (room.capacity === 1 && hostel.rentSingle) ? hostel.rentSingle : (room.capacity === 2 && hostel.rentDouble) ? hostel.rentDouble : (room.capacity === 3 && hostel.rentTriple) ? hostel.rentTriple : (room.capacity === 4 && hostel.rent4Sharing) ? hostel.rent4Sharing : (room.capacity === 5 && hostel.rent5Sharing) ? hostel.rent5Sharing : (room.capacity >= 6 && hostel.rent6Sharing) ? hostel.rent6Sharing : hostel.startingPrice || 0).toLocaleString()}</strong>
                                   <span>/month</span>
                                 </div>
                                 <button

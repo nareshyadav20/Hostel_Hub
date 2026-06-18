@@ -176,13 +176,17 @@ const Layout = ({ children }) => {
     }
   }, [activeBuildingId, contextBuildingId, setContextBuildingId]);
 
-  console.log('🔔 [BELL_LOGS] Layout bell render:', { 
-    notificationsCount: notifications.length, 
-    unreadCount,
-    activeBuildingId,
-    contextBuildingId,
-    urlBuildingId
-  });
+  // Debug log — only runs when these values actually change
+  useEffect(() => {
+    console.log('🔔 [BELL_LOGS] Layout bell render:', { 
+      notificationsCount: notifications.length, 
+      unreadCount,
+      activeBuildingId,
+      contextBuildingId,
+      urlBuildingId
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notifications.length, unreadCount, activeBuildingId, contextBuildingId, urlBuildingId]);
 
   // Toast Listener (Still needed here for UI)
   useEffect(() => {

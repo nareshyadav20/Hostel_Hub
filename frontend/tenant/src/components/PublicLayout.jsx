@@ -10,10 +10,10 @@ const PublicLayout = ({ children }) => {
   const [activeNav, setActiveNav] = useState('Home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeModal, setActiveModal] = useState(null); 
+  const [activeModal, setActiveModal] = useState(null);
   const [isLocationsOpen, setIsLocationsOpen] = useState(false);
   const [showAllCities, setShowAllCities] = useState(false);
-  
+
   const [searchParams] = useSearchParams();
   const selectedLoc = searchParams.get('location');
   const displayLoc = selectedLoc && selectedLoc !== 'all' ? selectedLoc.charAt(0).toUpperCase() + selectedLoc.slice(1) : 'Locations';
@@ -22,7 +22,6 @@ const PublicLayout = ({ children }) => {
     { label: 'Home', id: 'hero' },
     { label: 'Explore', id: 'explore' },
     { label: 'Services', id: 'services' },
-    { label: 'Reviews', id: 'reviews' },
     { label: 'About Us', id: 'about' },
     { label: 'Contact', id: 'contact' }
   ];
@@ -43,7 +42,7 @@ const PublicLayout = ({ children }) => {
     setActiveNav(item.label);
     setIsMenuOpen(false);
     if (item.id === 'services') {
-      setActiveModal('services');
+      navigate('/our-services');
     } else if (item.id === 'explore') {
       navigate('/explore');
     } else if (['about', 'contact'].includes(item.id)) {
@@ -73,6 +72,10 @@ const PublicLayout = ({ children }) => {
       setActiveNav('About Us');
     } else if (location.pathname === '/contact') {
       setActiveNav('Contact');
+    } else if (location.pathname === '/our-services') {
+      setActiveNav('Services');
+    } else if (location.pathname === '/') {
+      setActiveNav('Home');
     }
 
     if (location.pathname !== '/') {
@@ -114,49 +117,61 @@ const PublicLayout = ({ children }) => {
     { category: 'Security & Safety', items: [{ icon: <Video color={iconColor} size={20} />, name: 'CCTV' }] }
   ];
   const servicesData = [
-    { category: 'Daily Care & Conveniences', items: [
-      { icon: (
-        // Broom / sweeping icon
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="20" y1="4" x2="9" y2="15" />
-          <path d="M7 17 L3 21 L7 23 L13 17 L11 15 Z" />
-        </svg>
-      ), name: 'Room cleaning' }, 
-      { icon: (
-        // Food bowl with steam icon
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 12h18" />
-          <path d="M3 12Q3 20 12 20Q21 20 21 12" />
-          <path d="M8 8Q7.5 6 8 4" />
-          <path d="M12 8Q11.5 6 12 4" />
-          <path d="M16 8Q15.5 6 16 4" />
-        </svg>
-      ), name: 'Food/mess service' }, 
-      { icon: (
-        // Washing machine icon
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="2" width="20" height="20" rx="2" />
-          <line x1="2" y1="7" x2="22" y2="7" />
-          <circle cx="12" cy="14" r="4" />
-          <circle cx="5.5" cy="4.5" r="0.6" fill={iconColor} stroke="none" />
-          <circle cx="8.5" cy="4.5" r="0.6" fill={iconColor} stroke="none" />
-          <path d="M10 13Q12 11 14 13" />
-        </svg>
-      ), name: 'Laundry pickup service' }
-    ] },
-    { category: 'Support Operations', items: [
-      { icon: <Settings color={iconColor} size={20} />, name: 'Maintenance support' }, 
-      { icon: (
-        // Security guard shield with person
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2L4 5V11C4 16.5 7.5 20.5 12 22C16.5 20.5 20 16.5 20 11V5L12 2Z" />
-          <circle cx="12" cy="9" r="2" />
-          <path d="M8 16C8 13.8 9.8 13 12 13S16 13.8 16 16" />
-        </svg>
-      ), name: 'Security assistance' }, 
-      { icon: <MessageSquare color={iconColor} size={20} />, name: 'Complaint resolution' }, 
-      { icon: <HeartPulse color={iconColor} size={20} />, name: 'Medical assistance' }
-    ] }
+    {
+      category: 'Daily Care & Conveniences', items: [
+        {
+          icon: (
+            // Broom / sweeping icon
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="20" y1="4" x2="9" y2="15" />
+              <path d="M7 17 L3 21 L7 23 L13 17 L11 15 Z" />
+            </svg>
+          ), name: 'Room cleaning'
+        },
+        {
+          icon: (
+            // Food bowl with steam icon
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12h18" />
+              <path d="M3 12Q3 20 12 20Q21 20 21 12" />
+              <path d="M8 8Q7.5 6 8 4" />
+              <path d="M12 8Q11.5 6 12 4" />
+              <path d="M16 8Q15.5 6 16 4" />
+            </svg>
+          ), name: 'Food/mess service'
+        },
+        {
+          icon: (
+            // Washing machine icon
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="2" />
+              <line x1="2" y1="7" x2="22" y2="7" />
+              <circle cx="12" cy="14" r="4" />
+              <circle cx="5.5" cy="4.5" r="0.6" fill={iconColor} stroke="none" />
+              <circle cx="8.5" cy="4.5" r="0.6" fill={iconColor} stroke="none" />
+              <path d="M10 13Q12 11 14 13" />
+            </svg>
+          ), name: 'Laundry pickup service'
+        }
+      ]
+    },
+    {
+      category: 'Support Operations', items: [
+        { icon: <Settings color={iconColor} size={20} />, name: 'Maintenance support' },
+        {
+          icon: (
+            // Security guard shield with person
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2L4 5V11C4 16.5 7.5 20.5 12 22C16.5 20.5 20 16.5 20 11V5L12 2Z" />
+              <circle cx="12" cy="9" r="2" />
+              <path d="M8 16C8 13.8 9.8 13 12 13S16 13.8 16 16" />
+            </svg>
+          ), name: 'Security assistance'
+        },
+        { icon: <MessageSquare color={iconColor} size={20} />, name: 'Complaint resolution' },
+        { icon: <HeartPulse color={iconColor} size={20} />, name: 'Medical assistance' }
+      ]
+    }
   ];
 
   return (
@@ -238,7 +253,7 @@ const PublicLayout = ({ children }) => {
             </div>
             <div className="hv2-footer-column">
               <h4>Legal</h4>
-              <span onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setActiveModal('terms'); }}>Terms &amp; Conditions</span>
+              <span onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); navigate('/terms'); }}>Terms &amp; Conditions</span>
               <span onClick={() => navigate('/privacy')}>Privacy Policy</span>
             </div>
             <div className="hv2-footer-column">
@@ -249,9 +264,7 @@ const PublicLayout = ({ children }) => {
             </div>
           </div>
         </div>
-        <div className="hv2-footer-bottom-line">
-          <p>© 2026 Livora Private Limited. All rights reserved.</p>
-        </div>
+
       </footer>
 
       <a href="https://wa.me/919876543213" target="_blank" rel="noreferrer" className="hv2-whatsapp-fab" title="Chat with us on WhatsApp">
@@ -267,7 +280,7 @@ const PublicLayout = ({ children }) => {
               <h2 className="hv2-cm-title">
                 {activeModal === 'services' && <><span className="hv2-cm-title-icon">🛎️</span>Services</>}
                 {activeModal === 'amenities' && <><span className="hv2-cm-title-icon">🏠</span>Amenities</>}
-                {activeModal === 'terms' && 'Terms & Conditions'}
+
                 {activeModal === 'faq' && <><span className="hv2-cm-title-icon">❓</span>FAQ & Support</>}
               </h2>
               <button className="hv2-cm-close" onClick={() => setActiveModal(null)}>✕</button>
@@ -293,17 +306,7 @@ const PublicLayout = ({ children }) => {
                   ))}
                 </div>
               )}
-              {activeModal === 'terms' && (
-                <div className="hv2-cm-document">
-                  <h3>Hostel_Hub Terms & Conditions</h3>
-                  <p><strong>1. User Registration & Eligibility</strong><br />Registration is free. By using this platform, you agree to these terms. You must be 18 years or older to register. Minors may only use the platform under parental supervision.</p>
-                  <p><strong>2. Booking & Payments</strong><br />Livora connects guests with independent hosts. Ensure your payment information is secure during booking. Rent is typically due by the 5th of every month. Late payments may incur a penalty.</p>
-                  <p><strong>3. Property Rules & Quiet Hours</strong><br />Tenants are expected to maintain peace and respect the community. Quiet hours are generally from 10:00 PM to 6:00 AM. Loud music and disruptive behavior are strictly prohibited.</p>
-                  <p><strong>4. Visitors & Security</strong><br />For the safety of all residents, outside visitors are not allowed in residential areas or private rooms without prior approval from the hostel management. All guests must sign in at the reception.</p>
-                  <p><strong>5. Maintenance & Damages</strong><br />Tenants must take care of the provided furniture and appliances. Any intentional or negligent damages to the property will be deducted from the security deposit.</p>
-                  <p><strong>6. Code of Conduct</strong><br />Strict prohibition of smoking, alcohol, and illegal substances on the premises. Violation of these rules may lead to immediate eviction without refund.</p>
-                </div>
-              )}
+
               {activeModal === 'faq' && (
                 <div className="hv2-cm-document">
                   <h3>Frequently Asked Questions</h3>
@@ -317,11 +320,7 @@ const PublicLayout = ({ children }) => {
                 </div>
               )}
             </div>
-            {activeModal === 'terms' && (
-              <div className="hv2-cm-footer">
-                <button className="hv2-cm-btn" onClick={() => setActiveModal(null)}>I Understand & Agree</button>
-              </div>
-            )}
+
             {activeModal === 'faq' && (
               <div className="hv2-cm-footer">
                 <button className="hv2-cm-btn" onClick={() => navigate('/contact')}>Contact Support</button>
@@ -393,7 +392,7 @@ const PublicLayout = ({ children }) => {
                 <span>Amenities</span>
                 <ChevronRight size={14} className="hv2-sb-chevron" />
               </div>
-              <div className="hv2-sb-item" onClick={() => { setIsSidebarOpen(false); setActiveModal('services'); }}>
+              <div className="hv2-sb-item" onClick={() => { setIsSidebarOpen(false); navigate('/our-services'); }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                 <span>Services</span>
                 <ChevronRight size={14} className="hv2-sb-chevron" />
@@ -403,7 +402,7 @@ const PublicLayout = ({ children }) => {
           <div className="hv2-sb-section">
             <h4 className="hv2-sb-title">Support & Policies</h4>
             <div className="hv2-sb-group-card">
-              <div className="hv2-sb-item" onClick={() => { setIsSidebarOpen(false); setActiveModal('terms'); }}>
+              <div className="hv2-sb-item" onClick={() => { setIsSidebarOpen(false); navigate('/terms'); }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 <span>Terms & Conditions</span>
                 <ChevronRight size={14} className="hv2-sb-chevron" />

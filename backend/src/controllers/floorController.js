@@ -24,7 +24,12 @@ const createFloor = async (req, res) => {
       cctvStatus: req.body.cctvStatus || 'Active',
       wifiStatus: WIFI_NORMALIZE[req.body.wifiStatus] || req.body.wifiStatus || 'Excellent',
       loungesCount: req.body.loungesCount || 0,
-      facilities: req.body.facilities || []
+      facilities: req.body.facilities || [],
+      waterPoints: req.body.waterPoints || 0,
+      washingMachines: req.body.washingMachines || 0,
+      fridges: req.body.fridges || 0,
+      hasStudyArea: req.body.hasStudyArea || false,
+      hasLoungeArea: req.body.hasLoungeArea || false
     });
     building.floors.push(floor._id);
     await building.save();

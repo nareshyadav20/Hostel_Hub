@@ -38,9 +38,15 @@ const floorSchema = new mongoose.Schema({
   waterSystemStatus: { type: String, enum: ['Stable', 'Low', 'Critical'], default: 'Stable' },
   securityGridStatus: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
 
-  // Facilities
-  facilities: [{ type: String }], // Laundry, Smart Access, Pantry, Gaming Zone, Study Hall
-  loungesCount: { type: Number, default: 0 },
+  // Facilities (Strict 1:1 with UI)
+  commonWashroom: { type: Number, default: 0 },
+  waterPoint: { type: Number, default: 0 },
+  studyArea: { type: Boolean, default: false },
+  loungeArea: { type: Boolean, default: false },
+  balcony: { type: Boolean, default: false },
+  waitingArea: { type: Boolean, default: false },
+  washingMachine: { type: Number, default: 0 },
+  fridge: { type: Number, default: 0 },
 
   // Live Monitoring
   operationalLogs: [{ message: String, timestamp: { type: Date, default: Date.now } }],

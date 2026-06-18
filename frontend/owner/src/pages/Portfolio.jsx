@@ -21,56 +21,38 @@ import { clearAllCache } from '../cache';
 
 // --- CONSTANTS MOVED OUTSIDE FOR STABILITY ---
 const FEATURE_GROUPS = {
-  '🏠 Accommodation': ['Furnished Rooms', 'AC Rooms', 'Attached Bathroom'],
-  '📶 Connectivity': ['WiFi'],
-  '🔒 Security': ['CCTV', 'Biometric Access'],
-  '⚡ Utilities': ['Power Backup', '24/7 Water', 'Laundry'],
-  '🛋️ Comfort': ['Study Table', 'Wardrobe', 'Lounge Area'],
-  '🍽️ Food & Dining': ['Meals Included', 'RO Drinking Water'],
-  '⭐ Additional Amenities': ['Gym', 'Parking', 'Recreation Area', 'Security Guard']
+  '🔒 Security & Safety': ['Security', 'CCTV', 'Medical Support'],
+  '⚡ Essential Utilities': ['Power Backup', 'Laundry', 'Housekeeping'],
+  '🍽️ Food & Dining': ['Mess'],
+  '⭐ Additional Amenities': ['Gym', 'Parking', 'Library']
 };
 
 const AMENITY_ICONS = {
-  'WiFi': <Wifi size={14} />, 'AC Rooms': <Wind size={14} />, 'Attached Bathroom': <Droplets size={14} />,
-  'CCTV': <Shield size={14} />, 'Security Guard': <ShieldCheck size={14} />, 'Biometric Access': <Fingerprint size={14} />,
-  'Power Backup': <Zap size={14} />, '24/7 Water': <Droplets size={14} />, 'Laundry': <Shirt size={14} />,
-  'Study Table': <BookOpen size={14} />, 'Wardrobe': <Smartphone size={14} />, 'Lounge Area': <Coffee size={14} />,
-  'Gym': <Dumbbell size={14} />, 'Parking': <Car size={14} />, 'Recreation Area': <Gamepad size={14} />,
-  'Furnished Rooms': <Armchair size={14} />, 'Food Included': <Utensils size={14} />,
-  'Meals Included': <Utensils size={14} />, 'RO Drinking Water': <Droplets size={14} />
+  'Security': <ShieldCheck size={14} />, 'CCTV': <Shield size={14} />, 'Medical Support': <Heart size={14} />,
+  'Power Backup': <Zap size={14} />, 'Laundry': <Shirt size={14} />, 'Housekeeping': <ClipboardList size={14} />,
+  'Gym': <Dumbbell size={14} />, 'Parking': <Car size={14} />, 'Library': <BookOpen size={14} />,
+  'Mess': <Utensils size={14} />
 };
 
 const AVAILABLE_FILTER_FEATURES = [
-  'WiFi', 'AC Rooms', 'Food Included', 'CCTV', 'Laundry', 'Parking', 'Power Backup', 'Gym'
+  'Security', 'CCTV', 'Parking', 'Power Backup', 'Mess', 'Gym', 'Library', 'Laundry', 'Housekeeping', 'Medical Support'
 ];
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 5;
 const STEP_CONFIG = [
-  { step: 1, title: 'Basic Info', icon: '🏨', desc: 'Name, type, description' },
+  { step: 1, title: 'Basic Info', icon: '🏨', desc: 'Name, description, media' },
   { step: 2, title: 'Location', icon: '📍', desc: 'Address & landmarks' },
-  { step: 3, title: 'Pricing', icon: '💰', desc: 'Rent & deposits' },
-  { step: 4, title: 'Food & Mess', icon: '🍽️', desc: 'Meals & plans' },
-  { step: 5, title: 'Amenities', icon: '✨', desc: 'Facilities & features' },
-  { step: 6, title: 'Policies', icon: '📋', desc: 'Rules & stay terms' },
-  { step: 7, title: 'Owner Details', icon: '🔑', desc: 'Contact information' },
-  { step: 8, title: 'Review', icon: '✅', desc: 'Final summary' },
+  { step: 3, title: 'Amenities', icon: '✨', desc: 'Facilities & features' },
+  { step: 4, title: 'Owner Details', icon: '🔑', desc: 'Contact information' },
+  { step: 5, title: 'Review', icon: '✅', desc: 'Final summary' },
 ];
 
 const INITIAL_FORM_STATE = {
-  name: '', propertyType: 'Hostel', gender: '',
-  shortDesc: '', longDesc: '', coverImage: null, gallery: [],
+  name: '', shortDesc: '',
   addr1: '', addr2: '', city: '', state: '', pincode: '', landmark: '',
-  totalRooms: '', totalBeds: '', roomTypes: [],
-  deposit: '', advance: '',
-  rentSingle: '', rentDouble: '', rentTriple: '', rent4Sharing: '', rent5Sharing: '', rent6Sharing: '',
-  foodCharges: '',
-  electricity: 'Included', water: 'Included',
-  roomBaseName: '', roomTypeSelect: 'Single', bedsPerRoom: 1,
-  foodAvailable: 'No', mealPlans: [], foodType: 'Veg', messCharges: '',
-  amenities: [],
-  visitorPolicy: '', smokingPolicy: 'Not Allowed', alcoholPolicy: 'Not Allowed',
-  petsAllowed: 'No', minStay: '', noticePeriod: '', checkIn: '', checkOut: '',
-  ownerName: '', phone: '', altPhone: '', email: ''
+  ownerName: '', phone: '', email: '',
+  coverImage: null, gallery: [], documents: [],
+  amenities: []
 };
 
 const Portfolio = () => {
@@ -202,14 +184,6 @@ const Portfolio = () => {
       status: 'Draft',
       lastStep: step,
       draftData: data,
-      securityDeposit: parseInt(data.deposit) || 0,
-      maintenanceCharges: parseInt(data.advance) || 0,
-      foodCharges: parseInt(data.foodCharges) || 3000,
-      rentSingle: parseInt(data.rentSingle) || 0,
-      rentDouble: parseInt(data.rentDouble) || 0,
-      rentTriple: parseInt(data.rentTriple) || 0,
-      totalRooms: parseInt(data.totalRooms) || 0,
-      totalBeds: parseInt(data.totalBeds) || 0,
     };
     try {
       let bId;
@@ -279,7 +253,7 @@ const Portfolio = () => {
 
     setIsSubmitting(true);
     try {
-      const extendedDesc = `# Property Overview\n**Type:** ${formData.propertyType} | **Gender:** ${formData.gender}\n**Capacity:** ${formData.totalRooms} Rooms, ${formData.totalBeds} Beds\n# Pricing\n- Single: ₹${formData.rentSingle}/mo | 2-Sharing: ₹${formData.rentDouble}/mo | 3-Sharing: ₹${formData.rentTriple}/mo | 4-Sharing: ₹${formData.rent4Sharing}/mo | 5-Sharing: ₹${formData.rent5Sharing}/mo | 6-Sharing: ₹${formData.rent6Sharing}/mo\n- Deposit: ₹${formData.deposit} | Advance: ₹${formData.advance}\n# Contact: ${formData.ownerName} (${formData.phone})\n---\n${formData.longDesc || formData.shortDesc || ''}`;
+      const extendedDesc = `# Property Overview\n**Type:** ${formData.propertyType} | **Gender:** ${formData.gender}\n# Contact: ${formData.ownerName} (${formData.phone})\n---\n${formData.longDesc || formData.shortDesc || ''}`;
 
       const payload = {
         name: formData.name || 'New Hostel',
@@ -287,16 +261,20 @@ const Portfolio = () => {
         locationCity: formData.city || 'Bengaluru',
         description: extendedDesc,
         amenities: formData.amenities || [],
+
+        // Property Facilities (Strict 1:1)
+        security: formData.amenities?.includes('Security') || false,
+        cctv: formData.amenities?.includes('CCTV') || false,
+        parking: formData.amenities?.includes('Parking') || false,
+        powerBackup: formData.amenities?.includes('Power Backup') || false,
+        mess: formData.amenities?.includes('Mess') || false,
+        gym: formData.amenities?.includes('Gym') || false,
+        library: formData.amenities?.includes('Library') || false,
+        laundry: formData.amenities?.includes('Laundry') || false,
+        housekeeping: formData.amenities?.includes('Housekeeping') || false,
+        medicalSupport: formData.amenities?.includes('Medical Support') || false,
+
         images: formData.gallery?.length > 0 ? formData.gallery : (formData.coverImage ? [formData.coverImage] : []),
-        startingPrice: parseInt(formData.rent6Sharing) || parseInt(formData.rent5Sharing) || parseInt(formData.rent4Sharing) || parseInt(formData.rentTriple) || parseInt(formData.rentDouble) || parseInt(formData.rentSingle) || 5000,
-        securityDeposit: parseInt(formData.deposit) || 0,
-        maintenanceCharges: parseInt(formData.advance) || 0,
-        foodCharges: parseInt(formData.foodCharges) || 3000,
-        rentSingle: parseInt(formData.rentSingle) || 0,
-        rentDouble: parseInt(formData.rentDouble) || 0,
-        rentTriple: parseInt(formData.rentTriple) || 0,
-        totalRooms: parseInt(formData.totalRooms) || 0,
-        totalBeds: parseInt(formData.totalBeds) || 0,
         genderType: formData.gender === 'Co-living (Both)' ? 'Mixed' : formData.gender || 'Mixed',
         category: formData.propertyType === 'Co-living' ? 'Luxury' : (formData.propertyType === 'PG' ? 'Student' : 'Professional'),
         rating: 4.5,
@@ -457,25 +435,7 @@ const Portfolio = () => {
             <label>Hostel Name *</label>
             <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Royal Residency" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <div className="input-group">
-              <label>Property Type</label>
-              <select value={formData.propertyType} onChange={e => setFormData({ ...formData, propertyType: e.target.value })}>
-                <option>Hostel</option>
-                <option>PG</option>
-                <option>Co-living</option>
-              </select>
-            </div>
-            <div className="input-group">
-              <label>Gender Allowed *</label>
-              <select required value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
-                <option value="">Select...</option>
-                <option>Boys</option>
-                <option>Girls</option>
-                <option>Co-living (Both)</option>
-              </select>
-            </div>
-          </div>
+
           <div className="input-group">
             <label>Description</label>
             <textarea rows={3} value={formData.shortDesc} onChange={e => setFormData({ ...formData, shortDesc: e.target.value })} placeholder="Provide a premium summary of your property..." />
@@ -530,6 +490,29 @@ const Portfolio = () => {
             )}
             <small style={{ color: '#64748B', fontSize: '0.75rem', marginTop: '0.25rem' }}>Click an image to preview. Double-click to set as cover.</small>
           </div>
+          <div className="input-group">
+            <label>Property Documents (PDFs, Docs)</label>
+            <input
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx"
+              onChange={async (e) => {
+                if (!e.target.files.length) return;
+                const files = Array.from(e.target.files);
+                const mockDocs = files.map(f => ({ name: f.name, url: URL.createObjectURL(f) }));
+                setFormData(prev => ({ ...prev, documents: [...(prev.documents || []), ...mockDocs] }));
+              }}
+            />
+            {formData.documents && formData.documents.length > 0 && (
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                {formData.documents.map((doc, i) => (
+                  <div key={i} style={{ padding: '0.5rem', background: '#F1F5F9', borderRadius: '8px', fontSize: '0.8rem', color: '#475569', fontWeight: '600' }}>
+                    📄 {doc.name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       );
       case 2: return (
@@ -556,16 +539,10 @@ const Portfolio = () => {
             <div className="input-group">
               <label>Pincode *</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <button type="button"
-                  onClick={() => setFormData(p => ({ ...p, pincode: String(Math.max(100000, (parseInt(p.pincode) || 500000) - 1)) }))}
-                  style={{ width: '40px', height: '48px', borderRadius: '10px', border: '1.5px solid #E2E8F0', background: '#F8FAFC', cursor: 'pointer', fontSize: '1.2rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>−</button>
                 <input required value={formData.pincode}
-                  onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0,6); setFormData({ ...formData, pincode: v }); }}
+                  onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 6); setFormData({ ...formData, pincode: v }); }}
                   placeholder="500081" maxLength={6}
-                  style={{ flex: 1, textAlign: 'center', letterSpacing: '0.1em', fontWeight: '800' }} />
-                <button type="button"
-                  onClick={() => setFormData(p => ({ ...p, pincode: String(Math.min(999999, (parseInt(p.pincode) || 500000) + 1)) }))}
-                  style={{ width: '40px', height: '48px', borderRadius: '10px', border: '1.5px solid #E2E8F0', background: '#F8FAFC', cursor: 'pointer', fontSize: '1.2rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>+</button>
+                  style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0', letterSpacing: '0.1em', fontWeight: '800' }} />
               </div>
             </div>
             <div className="input-group">
@@ -576,63 +553,6 @@ const Portfolio = () => {
         </div>
       );
       case 3: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>1 Sharing Rent *</label><input required type="number" value={formData.rentSingle} onChange={e => setFormData({ ...formData, rentSingle: e.target.value })} placeholder="e.g. 18000" /></div>
-            <div className="input-group"><label>2 Sharing Rent *</label><input required type="number" value={formData.rentDouble} onChange={e => setFormData({ ...formData, rentDouble: e.target.value })} placeholder="e.g. 12000" /></div>
-            <div className="input-group"><label>3 Sharing Rent *</label><input required type="number" value={formData.rentTriple} onChange={e => setFormData({ ...formData, rentTriple: e.target.value })} placeholder="e.g. 9000" /></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>4 Sharing Rent</label><input type="number" value={formData.rent4Sharing} onChange={e => setFormData({ ...formData, rent4Sharing: e.target.value })} placeholder="e.g. 7500" /></div>
-            <div className="input-group"><label>5 Sharing Rent</label><input type="number" value={formData.rent5Sharing} onChange={e => setFormData({ ...formData, rent5Sharing: e.target.value })} placeholder="e.g. 6500" /></div>
-            <div className="input-group"><label>6 Sharing Rent</label><input type="number" value={formData.rent6Sharing} onChange={e => setFormData({ ...formData, rent6Sharing: e.target.value })} placeholder="e.g. 5500" /></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>Security Deposit *</label><input required type="number" value={formData.deposit} onChange={e => setFormData({ ...formData, deposit: e.target.value })} /></div>
-            <div className="input-group"><label>Advance</label><input type="number" value={formData.advance} onChange={e => setFormData({ ...formData, advance: e.target.value })} placeholder="e.g. 5000" /></div>
-            <div className="input-group"><label>Food (Monthly)</label><input type="number" value={formData.foodCharges} onChange={e => setFormData({ ...formData, foodCharges: e.target.value })} placeholder="e.g. 3000" /></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="input-group"><label>Electricity</label><select value={formData.electricity} onChange={e => setFormData({ ...formData, electricity: e.target.value })}><option>Included</option><option>Meter-based</option></select></div>
-            <div className="input-group"><label>Water</label><select value={formData.water} onChange={e => setFormData({ ...formData, water: e.target.value })}><option>Included</option><option>Extra</option></select></div>
-          </div>
-        </div>
-      );
-      case 4: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div className="input-group">
-            <label>Food Available?</label>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-              {['Yes', 'No'].map(v => (
-                <button type="button" key={v} onClick={() => setFormData({ ...formData, foodAvailable: v })}
-                  style={{ flex: 1, padding: '1rem', borderRadius: '16px', border: '1.5px solid', borderColor: formData.foodAvailable === v ? 'var(--accent-primary)' : '#E2E8F0', background: formData.foodAvailable === v ? 'rgba(79, 70, 229, 0.1)' : '#FFFFFF', color: formData.foodAvailable === v ? 'var(--accent-primary)' : '#64748B', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s' }}>
-                  {v}
-                </button>
-              ))}
-            </div>
-          </div>
-          {formData.foodAvailable === 'Yes' && (
-            <>
-              <div className="input-group">
-                <label>Meal Plans</label>
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                  {['Breakfast', 'Lunch', 'Dinner'].map(m => (
-                    <button type="button" key={m} onClick={() => setFormData(p => ({ ...p, mealPlans: p.mealPlans.includes(m) ? p.mealPlans.filter(x => x !== m) : [...p.mealPlans, m] }))}
-                      style={{ padding: '0.6rem 1.2rem', borderRadius: '20px', border: '1.5px solid', borderColor: formData.mealPlans.includes(m) ? 'var(--accent-primary)' : '#E2E8F0', background: formData.mealPlans.includes(m) ? 'var(--accent-primary)' : '#FFFFFF', color: formData.mealPlans.includes(m) ? '#FFFFFF' : '#64748B', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.2s' }}>
-                      {m}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="input-group"><label>Food Type</label><select value={formData.foodType} onChange={e => setFormData({ ...formData, foodType: e.target.value })}><option>Veg</option><option>Non-Veg</option><option>Both</option></select></div>
-                <div className="input-group"><label>Monthly Mess Charges</label><input type="number" value={formData.messCharges} onChange={e => setFormData({ ...formData, messCharges: e.target.value })} /></div>
-              </div>
-            </>
-          )}
-        </div>
-      );
-      case 5: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem', maxHeight: '420px', overflowY: 'auto', paddingRight: '0.5rem' }}>
           {Object.entries(FEATURE_GROUPS).map(([cat, feats]) => (
             <div key={cat}>
@@ -652,40 +572,27 @@ const Portfolio = () => {
           ))}
         </div>
       );
-      case 6: return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <div className="input-group"><label>Smoking Policy</label><select value={formData.smokingPolicy} onChange={e => setFormData({ ...formData, smokingPolicy: e.target.value })}><option>Allowed</option><option>Not Allowed</option></select></div>
-            <div className="input-group"><label>Alcohol Policy</label><select value={formData.alcoholPolicy} onChange={e => setFormData({ ...formData, alcoholPolicy: e.target.value })}><option>Allowed</option><option>Not Allowed</option></select></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <div className="input-group"><label>Pets Allowed?</label><select value={formData.petsAllowed} onChange={e => setFormData({ ...formData, petsAllowed: e.target.value })}><option>Yes</option><option>No</option></select></div>
-            <div className="input-group"><label>Visitor Policy</label><input value={formData.visitorPolicy} onChange={e => setFormData({ ...formData, visitorPolicy: e.target.value })} placeholder="e.g. Till 8 PM" /></div>
-          </div>
-        </div>
-      );
-      case 7: return (
+      case 4: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div className="input-group"><label>Owner / Legal Representative Name *</label><input required value={formData.ownerName} onChange={e => setFormData({ ...formData, ownerName: e.target.value })} placeholder="Legal owner name" /></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="input-group"><label>Primary Contact Number *</label><input required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="+91 XXXXX XXXXX" /></div>
-            <div className="input-group"><label>Alternate Number *</label><input required value={formData.altPhone} onChange={e => setFormData({ ...formData, altPhone: e.target.value })} placeholder="+91 XXXXX XXXXX" /></div>
+            <div className="input-group"><label>Alternate Number</label><input value={formData.altPhone} onChange={e => setFormData({ ...formData, altPhone: e.target.value })} placeholder="+91 XXXXX XXXXX" /></div>
           </div>
           <div className="input-group"><label>Official Email Address *</label><input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="owner@example.com" /></div>
         </div>
       );
-      case 8: return (
+      case 5: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ padding: '1rem', background: '#F0FDF4', borderRadius: '16px', border: '1.5px solid #DCFCE7', display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <CheckCircle size={24} color="#10B981" />
             <p style={{ margin: 0, fontSize: '0.88rem', color: '#166534', fontWeight: '700' }}>Review your property details before publishing. Click <b>Edit</b> on any section to make changes.</p>
           </div>
           {[
-            { label: '🏨 Basic Info', step: 1, rows: [{ k: 'Property', v: formData.name }, { k: 'Type', v: formData.propertyType }, { k: 'Gender', v: formData.gender }] },
+            { label: '🏨 Basic Info', step: 1, rows: [{ k: 'Property', v: formData.name }] },
             { label: '📍 Location', step: 2, rows: [{ k: 'Address', v: formData.addr1 }, { k: 'City', v: `${formData.city}, ${formData.state} — ${formData.pincode}` }, { k: 'Landmark', v: formData.landmark }] },
-            { label: '💰 Pricing', step: 3, rows: [{ k: '1-Sharing', v: formData.rentSingle ? `₹${formData.rentSingle}/mo` : '—' }, { k: '2-Sharing', v: formData.rentDouble ? `₹${formData.rentDouble}/mo` : '—' }, { k: '3-Sharing', v: formData.rentTriple ? `₹${formData.rentTriple}/mo` : '—' }, { k: '4-Sharing', v: formData.rent4Sharing ? `₹${formData.rent4Sharing}/mo` : '—' }, { k: '5-Sharing', v: formData.rent5Sharing ? `₹${formData.rent5Sharing}/mo` : '—' }, { k: '6-Sharing', v: formData.rent6Sharing ? `₹${formData.rent6Sharing}/mo` : '—' }, { k: 'Deposit', v: formData.deposit ? `₹${formData.deposit}` : '—' }, { k: 'Advance', v: formData.advance ? `₹${formData.advance}` : '—' }] },
-            { label: '✨ Amenities', step: 5, rows: [{ k: 'Selected', v: formData.amenities.length > 0 ? formData.amenities.join(', ') : 'None selected' }] },
-            { label: '🔑 Owner Details', step: 7, rows: [{ k: 'Name', v: formData.ownerName }, { k: 'Phone', v: formData.phone }, { k: 'Email', v: formData.email }] },
+            { label: '✨ Amenities', step: 3, rows: [{ k: 'Selected', v: formData.amenities.length > 0 ? formData.amenities.join(', ') : 'None selected' }] },
+            { label: '🔑 Owner Details', step: 4, rows: [{ k: 'Name', v: formData.ownerName }, { k: 'Phone', v: formData.phone }, { k: 'Email', v: formData.email }] },
           ].map(section => (
             <div key={section.label} style={{ padding: '1.25rem', background: 'var(--bg-card)', borderRadius: '16px', border: '1.5px solid #F1F5F9' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
@@ -722,12 +629,12 @@ const Portfolio = () => {
 
   if (error) {
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)'  }}>
-        <div className="card" style={{ padding: '3rem', textAlign: 'center'  }}>
-          <AlertCircle size={48} color="var(--accent-error)" style={{ marginBottom: '1.5rem'  }} />
+      <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
+        <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
+          <AlertCircle size={48} color="var(--accent-error)" style={{ marginBottom: '1.5rem' }} />
           <h2>System Error</h2>
-          <p style={{ margin: '1rem 0 2rem'  }}>{error}</p>
-          <button onClick={() => window.location.reload()} className="btn-primary" style={{ padding: '0.8rem 2rem'  }}>Reload Application</button>
+          <p style={{ margin: '1rem 0 2rem' }}>{error}</p>
+          <button onClick={() => window.location.reload()} className="btn-primary" style={{ padding: '0.8rem 2rem' }}>Reload Application</button>
         </div>
       </div>
     );
@@ -735,30 +642,34 @@ const Portfolio = () => {
 
   return (
     <>
-      <div style={{ height: '100vh',
+      <div style={{
+        height: '100vh',
         display: 'flex',
         flexDirection: 'column',
         background: 'var(--bg-primary)',
         overflow: 'hidden',
         color: 'var(--text-primary)'
-       }}>
+      }}>
         {/* ── PART 1: FIXED TOP SECTION (Approx 25% height) ── */}
-        <div style={{ flex: '0 0 auto',
+        <div style={{
+          flex: '0 0 auto',
           padding: '1.5rem 2.5rem 1rem',
           background: "var(--bg-card)",
           borderBottom: '1.5px solid #F1F5F9',
           zIndex: 10,
           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)'
-         }}>
-          <header style={{ marginBottom: '1.5rem',
+        }}>
+          <header style={{
+            marginBottom: '1.5rem',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             flexWrap: 'wrap',
             gap: '2rem'
-           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem'  }}>
-              <div style={{ width: '56px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{
+                width: '56px',
                 height: '56px',
                 borderRadius: '18px',
                 background: 'linear-gradient(135deg, var(--accent-primary), #4F46E5)',
@@ -766,34 +677,37 @@ const Portfolio = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: '0 8px 20px -4px rgba(79, 70, 229, 0.4)'
-               }}>
+              }}>
                 <Building2 size={28} color="white" />
               </div>
               <div>
-                <h1 style={{ fontSize: '2.4rem',
+                <h1 style={{
+                  fontSize: '2.4rem',
                   fontWeight: '950',
                   letterSpacing: '-0.05em',
                   margin: 0,
                   color: '#0F172A',
                   lineHeight: 1
-                 }}>My Portfolio</h1>
-                <p style={{ color: '#64748B',
+                }}>My Portfolio</h1>
+                <p style={{
+                  color: '#64748B',
                   fontWeight: '600',
                   margin: '0.25rem 0 0 0',
                   fontSize: '0.95rem'
-                 }}>Managing {globalStats.totalBuildings} premium properties</p>
+                }}>Managing {globalStats.totalBuildings} premium properties</p>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center'  }}>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center'  }}>
-                <Search size={18} style={{ position: 'absolute', left: '1.2rem', color: '#94A3B8'  }} />
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <Search size={18} style={{ position: 'absolute', left: '1.2rem', color: '#94A3B8' }} />
                 <input
                   type="text"
                   placeholder="Search properties..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{ padding: '0.9rem 1.2rem 0.9rem 3.5rem',
+                  style={{
+                    padding: '0.9rem 1.2rem 0.9rem 3.5rem',
                     borderRadius: '18px',
                     border: '1.5px solid #E2E8F0',
                     background: '#F8FAFC',
@@ -802,11 +716,12 @@ const Portfolio = () => {
                     fontSize: '0.95rem',
                     fontWeight: '600',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                   }}
+                  }}
                 />
               </div>
 
-              <button onClick={() => setShowDrafts(s => !s)} style={{ padding: '0.9rem 1.5rem',
+              <button onClick={() => setShowDrafts(s => !s)} style={{
+                padding: '0.9rem 1.5rem',
                 position: 'relative',
                 background: "var(--bg-card)",
                 border: '1.5px solid #E2E8F0',
@@ -816,16 +731,17 @@ const Portfolio = () => {
                 color: '#475569',
                 cursor: 'pointer',
                 display: 'flex', gap: '0.6rem', alignItems: 'center'
-               }}>
+              }}>
                 <Briefcase size={18} /> Drafts
                 {(drafts.length + (isAddModalOpen ? 1 : 0)) > 0 && (
-                  <span style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#EF4444', color: "var(--text-on-primary)", borderRadius: '50%', minWidth: '24px', height: '24px', fontSize: '0.75rem', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #FFFFFF'  }}>
+                  <span style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#EF4444', color: "var(--text-on-primary)", borderRadius: '50%', minWidth: '24px', height: '24px', fontSize: '0.75rem', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #FFFFFF' }}>
                     {drafts.length + (isAddModalOpen ? 1 : 0)}
                   </span>
                 )}
               </button>
 
-              <button onClick={openFreshForm} style={{ padding: '0.9rem 2.2rem',
+              <button onClick={openFreshForm} style={{
+                padding: '0.9rem 2.2rem',
                 borderRadius: '18px',
                 background: 'linear-gradient(135deg, var(--accent-primary), #4F46E5)',
                 color: "var(--text-on-primary)",
@@ -835,60 +751,33 @@ const Portfolio = () => {
                 cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: '0.6rem',
                 boxShadow: '0 8px 24px -4px rgba(79, 70, 229, 0.4)'
-               }}>
+              }}>
                 <Plus size={20} strokeWidth={3} /> Add Property
               </button>
 
-              <button onClick={() => fetchData()} style={{ width: '52px', height: '52px', borderRadius: '18px', background: "var(--bg-card)", border: '1.5px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--accent-primary)'  }} title="Refresh Data"><Activity size={22} /></button>
-              <button onClick={handleLogout} style={{ width: '52px', height: '52px', borderRadius: '18px', background: "var(--bg-card)", border: '1.5px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#EF4444'  }}><LogOut size={22} /></button>
+              <button onClick={() => fetchData()} style={{ width: '52px', height: '52px', borderRadius: '18px', background: "var(--bg-card)", border: '1.5px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--accent-primary)' }} title="Refresh Data"><Activity size={22} /></button>
+              <button onClick={handleLogout} style={{ width: '52px', height: '52px', borderRadius: '18px', background: "var(--bg-card)", border: '1.5px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#EF4444' }}><LogOut size={22} /></button>
             </div>
           </header>
 
-          <div style={{ display: 'grid',
+          <div style={{
+            display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
             gap: '1rem',
             paddingBottom: '0.5rem'
-           }}>
-            {kpis.map((kpi, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="kpi-card-glass"
-                style={{ padding: '0.8rem 1.25rem',
-                  borderRadius: '18px',
-                  background: "var(--bg-card)",
-                  border: '1.5px solid #F1F5F9',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center'
-                 }}
-              >
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '3px', height: '100%', background: kpi.color, opacity: 0.8  }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem'  }}>
-                  <div style={{ padding: '0.35rem', borderRadius: '6px', background: `${kpi.color}10`, color: kpi.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{kpi.icon}</div>
-                  <span style={{ fontWeight: '800', fontSize: '0.6rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap'  }}>{kpi.label}</span>
-                </div>
-                <div style={{ fontSize: '1.3rem', fontWeight: '950', color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1.1  }}>{kpi.value || 0}</div>
-                <div style={{ marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.2rem'  }}>
-                  <span style={{ fontSize: '0.55rem', fontWeight: '800', color: '#10B981'  }}>↑ 12%</span>
-                </div>
-              </motion.div>
-            ))}
+          }}>
           </div>
         </div>
 
         {/* ── PART 2: SCROLLABLE BOTTOM SECTION (Approx 75% height) ── */}
-        <div style={{ flex: 1,
+        <div style={{
+          flex: 1,
           overflowY: 'auto',
           padding: '2rem 2.5rem 4rem',
           background: '#F8FAFC'
-         }}>
-          <div style={{ display: 'flex',
+        }}>
+          <div style={{
+            display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '2rem',
@@ -897,35 +786,36 @@ const Portfolio = () => {
             borderRadius: '20px',
             border: '1.5px solid #F1F5F9',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
-           }}>
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center'  }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginRight: '0.5rem', textTransform: 'uppercase'  }}>Filter Occupancy:</span>
+          }}>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#64748B', marginRight: '0.5rem', textTransform: 'uppercase' }}>Filter Occupancy:</span>
               {['All', 'High', 'Medium', 'Low'].map(f => (
                 <button
                   key={f}
                   onClick={() => setOccupancyFilter(f)}
-                  style={{ padding: '0.5rem 1.25rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: '800',
+                  style={{
+                    padding: '0.5rem 1.25rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: '800',
                     border: '1.5px solid', borderColor: occupancyFilter === f ? 'var(--accent-primary)' : '#E2E8F0',
                     background: occupancyFilter === f ? 'var(--accent-primary)' : '#FFFFFF', color: occupancyFilter === f ? '#FFFFFF' : '#64748B',
                     cursor: 'pointer', transition: 'all 0.2s', boxShadow: occupancyFilter === f ? '0 4px 12px rgba(79, 70, 229, 0.2)' : 'none'
-                   }}
+                  }}
                 >
                   {f}
                 </button>
               ))}
-              <div style={{ width: '1px', height: '24px', background: '#E2E8F0', margin: '0 0.5rem'  }} />
-              <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '700'  }}>
-                <Building size={14} style={{ verticalAlign: 'middle', marginRight: '6px'  }} />
+              <div style={{ width: '1px', height: '24px', background: '#E2E8F0', margin: '0 0.5rem' }} />
+              <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '700' }}>
+                <Building size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
                 {processedBuildings.length} Properties
               </span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem'  }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#64748B', textTransform: 'uppercase'  }}>Sort:</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#64748B', textTransform: 'uppercase' }}>Sort:</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: '#F8FAFC', border: '1.5px solid #E2E8F0', color: '#1E293B', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer', outline: 'none'  }}
+                style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: '#F8FAFC', border: '1.5px solid #E2E8F0', color: '#1E293B', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer', outline: 'none' }}
               >
                 <option value="name">Alphabetical</option>
                 <option value="revenue">Highest Revenue</option>
@@ -934,36 +824,36 @@ const Portfolio = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem'  }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
             {loading ? (
-              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem'  }}>
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem' }}>
                 <div className="premium-spinner"></div>
-                <p style={{ marginTop: '1.5rem', color: '#64748B', fontWeight: '700'  }}>Analyzing portfolio data...</p>
+                <p style={{ marginTop: '1.5rem', color: '#64748B', fontWeight: '700' }}>Analyzing portfolio data...</p>
               </div>
             ) : processedBuildings.length > 0 ? (
               processedBuildings.map((b) => (
                 <BuildingCard
                   key={b.id}
                   building={b}
-                  onNavigate={() => navigate(`/owner/building/${b.id}/dashboard`)}
+                  onNavigate={() => navigate(`/owner/building/${b.id}/buildings`)}
                   onRefresh={() => { fetchData(); loadDrafts(); }}
                   onImageClick={(img) => setModalInfo({ isOpen: true, image: img })}
                   onResubmit={handleResubmit}
                 />
               ))
             ) : data.buildings.length === 0 ? (
-              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem', background: "var(--bg-card)", borderRadius: '24px', border: '2px dashed #E2E8F0'  }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem'  }}>🏢</div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1E293B', margin: 0  }}>No Building Portfolio Data Available</h3>
-                <p style={{ color: '#64748B', marginTop: '0.5rem'  }}>Start by adding your first building to your portfolio.</p>
-                <button onClick={openFreshForm} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '12px', background: 'linear-gradient(135deg, var(--accent-primary), #4F46E5)', border: 'none', color: "var(--text-on-primary)", fontWeight: '800', cursor: 'pointer'  }}>+ Add Property</button>
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem', background: "var(--bg-card)", borderRadius: '24px', border: '2px dashed #E2E8F0' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏢</div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1E293B', margin: 0 }}>No Building Portfolio Data Available</h3>
+                <p style={{ color: '#64748B', marginTop: '0.5rem' }}>Start by adding your first building to your portfolio.</p>
+                <button onClick={openFreshForm} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '12px', background: 'linear-gradient(135deg, var(--accent-primary), #4F46E5)', border: 'none', color: "var(--text-on-primary)", fontWeight: '800', cursor: 'pointer' }}>+ Add Property</button>
               </div>
             ) : (
-              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem', background: "var(--bg-card)", borderRadius: '24px', border: '2px dashed #E2E8F0'  }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem'  }}>🔍</div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1E293B', margin: 0  }}>No Matching Properties Found</h3>
-                <p style={{ color: '#64748B', marginTop: '0.5rem'  }}>Try adjusting your search or filters to find what you're looking for.</p>
-                <button onClick={() => { setSearchTerm(''); setOccupancyFilter('All'); }} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#3B82F6', fontWeight: '800', cursor: 'pointer'  }}>Clear All Filters</button>
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem', background: "var(--bg-card)", borderRadius: '24px', border: '2px dashed #E2E8F0' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1E293B', margin: 0 }}>No Matching Properties Found</h3>
+                <p style={{ color: '#64748B', marginTop: '0.5rem' }}>Try adjusting your search or filters to find what you're looking for.</p>
+                <button onClick={() => { setSearchTerm(''); setOccupancyFilter('All'); }} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#3B82F6', fontWeight: '800', cursor: 'pointer' }}>Clear All Filters</button>
               </div>
             )}
           </div>
@@ -983,11 +873,12 @@ const Portfolio = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowDrafts(false)}
-              style={{ position: 'fixed', inset: 0,
+              style={{
+                position: 'fixed', inset: 0,
                 background: 'rgba(0,0,0,0.55)',
                 backdropFilter: 'blur(6px)',
                 zIndex: 1500
-               }}
+              }}
             />
 
             {/* Overlay Panel — slides up from bottom, covers full screen */}
@@ -996,73 +887,75 @@ const Portfolio = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-              style={{ position: 'fixed',
+              style={{
+                position: 'fixed',
                 inset: 0,
                 zIndex: 1501,
                 display: 'flex',
                 flexDirection: 'column',
                 background: 'var(--bg-primary)',
                 overflow: 'hidden'
-               }}
+              }}
             >
               {/* ── HEADER ── */}
-              <div style={{ padding: '1.5rem 2rem',
+              <div style={{
+                padding: '1.5rem 2rem',
                 borderBottom: '1px solid var(--border-color)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 background: 'var(--bg-secondary)',
                 flexShrink: 0
-               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem'  }}>
-                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem'  }}>📂</div>
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>📂</div>
                   <div>
-                    <h2 style={{ fontSize: '1.4rem', fontWeight: '900', margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)'  }}>Saved Hostel Drafts</h2>
-                    <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, fontWeight: '600'  }}>
+                    <h2 style={{ fontSize: '1.4rem', fontWeight: '900', margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>Saved Hostel Drafts</h2>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, fontWeight: '600' }}>
                       {drafts.length} draft{drafts.length !== 1 ? 's' : ''} saved — click any card to continue filling details
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowDrafts(false)}
-                  style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)'  }}
+                  style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}
                 >
                   <X size={20} />
                 </button>
               </div>
 
               {/* ── CONTENT ── */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '2rem'  }}>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '2rem' }}>
 
                 {/* IN-PROGRESS CARD — wizard currently open */}
                 {isAddModalOpen && (
-                  <div style={{ marginBottom: '2rem'  }}>
-                    <p style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.8rem'  }}>Currently Editing</p>
+                  <div style={{ marginBottom: '2rem' }}>
+                    <p style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.8rem' }}>Currently Editing</p>
                     <motion.div
                       whileHover={{ y: -3, boxShadow: '0 12px 32px rgba(59,130,246,0.2)' }}
                       onClick={() => setShowDrafts(false)}
-                      style={{ padding: '1.4rem', borderRadius: '16px', border: '2px solid #3B82F6', background: 'linear-gradient(135deg, #EFF6FF, #F0FDF4)', display: 'flex', flexDirection: 'column', gap: '0.8rem', cursor: 'pointer', maxWidth: '480px'  }}
+                      style={{ padding: '1.4rem', borderRadius: '16px', border: '2px solid #3B82F6', background: 'linear-gradient(135deg, #EFF6FF, #F0FDF4)', display: 'flex', flexDirection: 'column', gap: '0.8rem', cursor: 'pointer', maxWidth: '480px' }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'  }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem'  }}>
-                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem'  }}>✍️</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>✍️</div>
                           <div>
-                            <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#1D4ED8'  }}>{formData.name || 'Untitled — Currently Editing'}</div>
-                            <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.15rem'  }}>Currently being filled</div>
+                            <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#1D4ED8' }}>{formData.name || 'Untitled — Currently Editing'}</div>
+                            <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.15rem' }}>Currently being filled</div>
                           </div>
                         </div>
-                        <span style={{ padding: '0.25rem 0.6rem', borderRadius: '20px', background: '#DBEAFE', color: '#1D4ED8', fontSize: '0.65rem', fontWeight: '800'  }}>⏳ In Progress</span>
+                        <span style={{ padding: '0.25rem 0.6rem', borderRadius: '20px', background: '#DBEAFE', color: '#1D4ED8', fontSize: '0.65rem', fontWeight: '800' }}>⏳ In Progress</span>
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: '#475569', fontWeight: '600'  }}>📍 Step: <b>{STEP_CONFIG[currentStep - 1]?.title}</b></div>
+                      <div style={{ fontSize: '0.78rem', color: '#475569', fontWeight: '600' }}>📍 Step: <b>{STEP_CONFIG[currentStep - 1]?.title}</b></div>
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '6px', fontWeight: '700'  }}>
-                          <span>Progress</span><span style={{ color: '#3B82F6'  }}>{Math.round((currentStep / 12) * 100)}%</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '6px', fontWeight: '700' }}>
+                          <span>Progress</span><span style={{ color: '#3B82F6' }}>{Math.round((currentStep / 12) * 100)}%</span>
                         </div>
-                        <div style={{ height: '7px', background: '#DBEAFE', borderRadius: '100px', overflow: 'hidden'  }}>
+                        <div style={{ height: '7px', background: '#DBEAFE', borderRadius: '100px', overflow: 'hidden' }}>
                           <div style={{ width: `${Math.round((currentStep / 12) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #6366F1)', borderRadius: '100px' }} />
                         </div>
                       </div>
-                      <div style={{ padding: '0.65rem', borderRadius: '10px', background: '#3B82F6', color: "var(--text-on-primary)", fontWeight: '800', fontSize: '0.82rem', textAlign: 'center'  }}>
+                      <div style={{ padding: '0.65rem', borderRadius: '10px', background: '#3B82F6', color: "var(--text-on-primary)", fontWeight: '800', fontSize: '0.82rem', textAlign: 'center' }}>
                         → Continue Editing
                       </div>
                     </motion.div>
@@ -1070,21 +963,21 @@ const Portfolio = () => {
                 )}
 
                 {/* SAVED DRAFTS GRID */}
-                <p style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1rem'  }}>
+                <p style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1rem' }}>
                   {drafts.length > 0 ? 'Saved Drafts' : ''}
                 </p>
 
                 {drafts.length === 0 && !isAddModalOpen ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '40vh', gap: '1rem'  }}>
-                    <div style={{ fontSize: '4rem', opacity: 0.3  }}>📂</div>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-secondary)', margin: 0  }}>No saved drafts yet</h3>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0  }}>Start creating a hostel and save your progress to resume later.</p>
-                    <button onClick={() => { setShowDrafts(false); openFreshForm(); }} style={{ marginTop: '0.5rem', padding: '0.8rem 1.6rem', borderRadius: '12px', background: 'var(--accent-primary)', color: "var(--text-on-primary)", border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.9rem'  }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '40vh', gap: '1rem' }}>
+                    <div style={{ fontSize: '4rem', opacity: 0.3 }}>📂</div>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-secondary)', margin: 0 }}>No saved drafts yet</h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Start creating a hostel and save your progress to resume later.</p>
+                    <button onClick={() => { setShowDrafts(false); openFreshForm(); }} style={{ marginTop: '0.5rem', padding: '0.8rem 1.6rem', borderRadius: '12px', background: 'var(--accent-primary)', color: "var(--text-on-primary)", border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.9rem' }}>
                       + Create New Hostel
                     </button>
                   </div>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem'  }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                     {drafts.map(draft => {
                       const progress = Math.round(((draft.lastStep || 1) / 12) * 100);
                       const stepLabel = STEP_CONFIG[(draft.lastStep || 1) - 1]?.title || 'Basic Info';
@@ -1094,7 +987,8 @@ const Portfolio = () => {
                           key={draft._id}
                           whileHover={{ y: -5, boxShadow: '0 20px 48px rgba(99,102,241,0.2)', borderColor: '#6366F1' }}
                           onClick={() => resumeDraft(draft)}
-                          style={{ padding: '1.5rem',
+                          style={{
+                            padding: '1.5rem',
                             borderRadius: '18px',
                             border: '1.5px solid var(--border-color)',
                             background: 'var(--bg-secondary)',
@@ -1105,43 +999,43 @@ const Portfolio = () => {
                             position: 'relative',
                             overflow: 'hidden',
                             transition: 'border-color 0.2s'
-                           }}
+                          }}
                         >
                           {/* Progress accent stripe at top */}
                           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: `linear-gradient(90deg, #6366F1 ${progress}%, var(--border-color) ${progress}%)`, borderRadius: '4px 4px 0 0' }} />
 
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'  }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem'  }}>
-                              <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', flexShrink: 0  }}>🏨</div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+                              <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', flexShrink: 0 }}>🏨</div>
                               <div>
-                                <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)'  }}>{draft.name || 'Untitled Draft'}</div>
-                                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '0.2rem'  }}>Last saved {ago}</div>
+                                <div style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>{draft.name || 'Untitled Draft'}</div>
+                                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Last saved {ago}</div>
                               </div>
                             </div>
-                            <span style={{ padding: '0.3rem 0.7rem', borderRadius: '20px', background: '#FEF3C7', color: '#D97706', fontSize: '0.68rem', fontWeight: '800', textTransform: 'uppercase', flexShrink: 0  }}>Draft</span>
+                            <span style={{ padding: '0.3rem 0.7rem', borderRadius: '20px', background: '#FEF3C7', color: '#D97706', fontSize: '0.68rem', fontWeight: '800', textTransform: 'uppercase', flexShrink: 0 }}>Draft</span>
                           </div>
 
-                          <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.4rem'  }}>
-                            <span style={{ color: 'var(--accent-primary)'  }}>📍</span> Paused at: <b style={{ color: 'var(--text-primary)'  }}>{stepLabel}</b>
+                          <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <span style={{ color: 'var(--accent-primary)' }}>📍</span> Paused at: <b style={{ color: 'var(--text-primary)' }}>{stepLabel}</b>
                           </div>
 
                           <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '6px', fontWeight: '700'  }}>
-                              <span style={{ color: 'var(--text-secondary)'  }}>Completion</span>
-                              <span style={{ color: 'var(--accent-primary)', fontWeight: '900'  }}>{progress}%</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '6px', fontWeight: '700' }}>
+                              <span style={{ color: 'var(--text-secondary)' }}>Completion</span>
+                              <span style={{ color: 'var(--accent-primary)', fontWeight: '900' }}>{progress}%</span>
                             </div>
-                            <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '100px', overflow: 'hidden'  }}>
+                            <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '100px', overflow: 'hidden' }}>
                               <div style={{ width: `${progress}%`, height: '100%', background: 'linear-gradient(90deg, #6366F1, #3B82F6)', borderRadius: '100px', transition: 'width 0.6s ease' }} />
                             </div>
                           </div>
 
-                          <div style={{ display: 'flex', gap: '0.8rem'  }}>
-                            <div style={{ flex: 1, padding: '0.75rem', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', color: "var(--text-on-primary)", fontWeight: '800', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'  }}>
+                          <div style={{ display: 'flex', gap: '0.8rem' }}>
+                            <div style={{ flex: 1, padding: '0.75rem', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', color: "var(--text-on-primary)", fontWeight: '800', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                               ▶ Continue Filling
                             </div>
                             <button
                               onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: draft._id, name: draft.name || 'Untitled Draft', type: 'draft' }); }}
-                              style={{ padding: '0.75rem 1rem', borderRadius: '12px', background: '#FEE2E2', color: '#EF4444', border: 'none', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', flexShrink: 0  }}
+                              style={{ padding: '0.75rem 1rem', borderRadius: '12px', background: '#FEE2E2', color: '#EF4444', border: 'none', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', flexShrink: 0 }}
                             >
                               🗑
                             </button>
@@ -1154,9 +1048,9 @@ const Portfolio = () => {
               </div>
 
               {/* ── FOOTER ── */}
-              <div style={{ padding: '1.2rem 2rem', borderTop: '1px solid var(--border-color)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0  }}>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600'  }}>Drafts are auto-saved as you fill in the wizard</span>
-                <button onClick={() => { setShowDrafts(false); openFreshForm(); }} style={{ padding: '0.7rem 1.4rem', borderRadius: '10px', background: 'var(--accent-primary)', color: "var(--text-on-primary)", border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem'  }}>
+              <div style={{ padding: '1.2rem 2rem', borderTop: '1px solid var(--border-color)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>Drafts are auto-saved as you fill in the wizard</span>
+                <button onClick={() => { setShowDrafts(false); openFreshForm(); }} style={{ padding: '0.7rem 1.4rem', borderRadius: '10px', background: 'var(--accent-primary)', color: "var(--text-on-primary)", border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Plus size={16} /> New Hostel
                 </button>
               </div>
@@ -1173,47 +1067,47 @@ const Portfolio = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 2000, display: 'flex', flexDirection: 'column'  }}
+            style={{ position: 'fixed', inset: 0, background: '#F8FAFC', zIndex: 2000, display: 'flex', flexDirection: 'column' }}
           >
             {/* TOP BAR */}
-            <div style={{ background: "var(--bg-card)", borderBottom: '1px solid #E2E8F0', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0  }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem'  }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: "var(--text-on-primary)", fontSize: '1.1rem'  }}>🏨</div>
+            <div style={{ background: "var(--bg-card)", borderBottom: '1px solid #E2E8F0', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: "var(--text-on-primary)", fontSize: '1.1rem' }}>🏨</div>
                 <div>
-                  <h2 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#0F172A', margin: 0  }}>Register New Hostel</h2>
-                  <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0  }}>Complete all steps to publish your listing</p>
+                  <h2 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>Register New Hostel</h2>
+                  <p style={{ fontSize: '0.75rem', color: '#64748B', margin: 0 }}>Complete all steps to publish your listing</p>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center'  }}>
+              <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                 {draftMsg && (
-                  <span style={{ fontSize: '0.8rem', fontWeight: '700', color: draftMsg.includes('✅') ? '#059669' : draftMsg.includes('🔄') ? '#3B82F6' : '#EF4444', background: draftMsg.includes('✅') ? '#DCFCE7' : draftMsg.includes('🔄') ? '#EFF6FF' : '#FEE2E2', padding: '0.4rem 0.8rem', borderRadius: '8px'  }}>{draftMsg}</span>
+                  <span style={{ fontSize: '0.8rem', fontWeight: '700', color: draftMsg.includes('✅') ? '#059669' : draftMsg.includes('🔄') ? '#3B82F6' : '#EF4444', background: draftMsg.includes('✅') ? '#DCFCE7' : draftMsg.includes('🔄') ? '#EFF6FF' : '#FEE2E2', padding: '0.4rem 0.8rem', borderRadius: '8px' }}>{draftMsg}</span>
                 )}
                 <button
                   type="button"
                   onClick={() => saveDraftToBackend(formData, currentStep, activeDraftId)}
-                  style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', background: '#F1F5F9', color: '#475569', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '0.4rem'  }}
+                  style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', background: '#F1F5F9', color: '#475569', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                 >
                   💾 Save Draft
                 </button>
-                <button onClick={() => setIsAddModalOpen(false)} style={{ background: '#F1F5F9', border: 'none', color: '#64748B', cursor: 'pointer', padding: '0.6rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center'  }}><X size={20} /></button>
+                <button onClick={() => setIsAddModalOpen(false)} style={{ background: '#F1F5F9', border: 'none', color: '#64748B', cursor: 'pointer', padding: '0.6rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
               </div>
             </div>
 
             {/* PROGRESS BAR */}
-            <div style={{ background: "var(--bg-card)", borderBottom: '1px solid #E2E8F0', padding: '0.8rem 2rem', flexShrink: 0, overflowX: 'auto'  }}>
-              <div style={{ display: 'flex', gap: 0, minWidth: 'max-content'  }}>
+            <div style={{ background: "var(--bg-card)", borderBottom: '1px solid #E2E8F0', padding: '0.8rem 2rem', flexShrink: 0, overflowX: 'auto' }}>
+              <div style={{ display: 'flex', gap: 0, minWidth: 'max-content' }}>
                 {STEP_CONFIG.map((s, i) => {
                   const done = currentStep > s.step;
                   const active = currentStep === s.step;
                   return (
-                    <div key={s.step} style={{ display: 'flex', alignItems: 'center'  }}>
-                      <div onClick={() => done && setCurrentStep(s.step)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '8px', cursor: done ? 'pointer' : 'default', background: active ? '#EFF6FF' : 'transparent'  }}>
-                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: done ? '#10B981' : active ? '#3B82F6' : '#E2E8F0', color: "var(--text-on-primary)", display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '900', flexShrink: 0  }}>
+                    <div key={s.step} style={{ display: 'flex', alignItems: 'center' }}>
+                      <div onClick={() => done && setCurrentStep(s.step)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '8px', cursor: done ? 'pointer' : 'default', background: active ? '#EFF6FF' : 'transparent' }}>
+                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: done ? '#10B981' : active ? '#3B82F6' : '#E2E8F0', color: "var(--text-on-primary)", display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '900', flexShrink: 0 }}>
                           {done ? '✓' : s.step}
                         </div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: active ? '800' : '600', color: active ? '#1D4ED8' : done ? '#059669' : '#94A3B8', whiteSpace: 'nowrap'  }}>{s.title}</span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: active ? '800' : '600', color: active ? '#1D4ED8' : done ? '#059669' : '#94A3B8', whiteSpace: 'nowrap' }}>{s.title}</span>
                       </div>
-                      {i < STEP_CONFIG.length - 1 && <div style={{ width: '20px', height: '2px', background: done ? '#10B981' : '#E2E8F0', flexShrink: 0  }} />}
+                      {i < STEP_CONFIG.length - 1 && <div style={{ width: '20px', height: '2px', background: done ? '#10B981' : '#E2E8F0', flexShrink: 0 }} />}
                     </div>
                   );
                 })}
@@ -1221,37 +1115,38 @@ const Portfolio = () => {
             </div>
 
             {/* CONTENT AREA */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '2rem', display: 'flex', justifyContent: 'center'  }}>
-              <div style={{ width: '100%', maxWidth: '700px'  }}>
-                <div style={{ marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid #E2E8F0'  }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '2rem', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: '100%', maxWidth: '700px' }}>
+                <div style={{ marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid #E2E8F0' }}>
                   {activeDraftId && (
-                    <div style={{ marginBottom: '1rem', padding: '0.7rem 1rem', background: '#EFF6FF', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: '700', color: '#1D4ED8', borderLeft: '3px solid #3B82F6'  }}>
+                    <div style={{ marginBottom: '1rem', padding: '0.7rem 1rem', background: '#EFF6FF', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: '700', color: '#1D4ED8', borderLeft: '3px solid #3B82F6' }}>
                       📝 Editing saved draft &mdash; changes auto-saved
                     </div>
                   )}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.3rem'  }}>
-                    <span style={{ fontSize: '1.8rem'  }}>{STEP_CONFIG[currentStep - 1]?.icon}</span>
-                    <h3 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#0F172A', margin: 0  }}>{STEP_CONFIG[currentStep - 1]?.title}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.3rem' }}>
+                    <span style={{ fontSize: '1.8rem' }}>{STEP_CONFIG[currentStep - 1]?.icon}</span>
+                    <h3 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{STEP_CONFIG[currentStep - 1]?.title}</h3>
                   </div>
-                  <p style={{ color: '#64748B', fontSize: '0.95rem', margin: 0  }}>{STEP_CONFIG[currentStep - 1]?.desc}</p>
+                  <p style={{ color: '#64748B', fontSize: '0.95rem', margin: 0 }}>{STEP_CONFIG[currentStep - 1]?.desc}</p>
                 </div>
 
-                <form onSubmit={handleCreateHostel} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem'  }}>
+                <form onSubmit={handleCreateHostel} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   {renderStep()}
                   {/* FOOTER BUTTONS */}
-                  <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #E2E8F0'  }}>
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #E2E8F0' }}>
                     {currentStep > 1 && (
-                      <button type="button" onClick={() => setCurrentStep(s => s - 1)} style={{ width: '80px', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: "var(--bg-card)", color: '#475569', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'  }}>
+                      <button type="button" onClick={() => setCurrentStep(s => s - 1)} style={{ width: '80px', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: "var(--bg-card)", color: '#475569', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <ChevronLeft size={18} />
                       </button>
                     )}
-                    <button type="button" onClick={() => saveDraftToBackend(formData, currentStep, activeDraftId)} style={{ flex: 1, padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: "var(--bg-card)", color: '#3B82F6', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem'  }}>
+                    <button type="button" onClick={() => saveDraftToBackend(formData, currentStep, activeDraftId)} style={{ flex: 1, padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', background: "var(--bg-card)", color: '#3B82F6', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
                       <FileText size={16} /> Save Draft
                     </button>
                     <button
                       disabled={isSubmitting}
                       type="submit"
-                      style={{ flex: 2,
+                      style={{
+                        flex: 2,
                         padding: '1rem',
                         borderRadius: '12px',
                         border: 'none',
@@ -1264,7 +1159,7 @@ const Portfolio = () => {
                         justifyContent: 'center',
                         gap: '0.5rem',
                         fontSize: '0.95rem'
-                       }}
+                      }}
                     >
                       {isSubmitting ? 'Processing...' : currentStep === 12 ? '🚀 Finalize & Publish' : 'Continue'} <ChevronRight size={18} />
                     </button>
@@ -1336,26 +1231,26 @@ const Portfolio = () => {
 
       {/* REUSABLE DELETE MODAL FOR DRAFTS */}
       {itemToDelete && createPortal(
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'  }}>
-          <div onClick={() => setItemToDelete(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)'  }} />
-          <div style={{ position: 'relative', zIndex: 1, background: "var(--bg-card)", borderRadius: '24px', padding: '2.5rem', width: '100%', maxWidth: '440px', boxShadow: '0 32px 64px -12px rgba(0,0,0,0.5)'  }}>
-            <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem'  }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div onClick={() => setItemToDelete(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }} />
+          <div style={{ position: 'relative', zIndex: 1, background: "var(--bg-card)", borderRadius: '24px', padding: '2.5rem', width: '100%', maxWidth: '440px', boxShadow: '0 32px 64px -12px rgba(0,0,0,0.5)' }}>
+            <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
               <Trash2 size={30} color="#EF4444" />
             </div>
-            <h2 style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: '900', margin: '0 0 0.4rem', color: '#0F172A'  }}>Delete {itemToDelete.type === 'draft' ? 'Draft' : 'Property'}?</h2>
-            <p style={{ textAlign: 'center', color: '#64748B', fontSize: '0.9rem', margin: '0 0 1rem'  }}>You are about to permanently delete</p>
-            <p style={{ textAlign: 'center', fontWeight: '800', fontSize: '1rem', color: '#1E293B', margin: '0 0 1.2rem', background: '#F8FAFC', padding: '0.6rem 1rem', borderRadius: '12px', border: '1.5px solid #F1F5F9'  }}>
+            <h2 style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: '900', margin: '0 0 0.4rem', color: '#0F172A' }}>Delete {itemToDelete.type === 'draft' ? 'Draft' : 'Property'}?</h2>
+            <p style={{ textAlign: 'center', color: '#64748B', fontSize: '0.9rem', margin: '0 0 1rem' }}>You are about to permanently delete</p>
+            <p style={{ textAlign: 'center', fontWeight: '800', fontSize: '1rem', color: '#1E293B', margin: '0 0 1.2rem', background: '#F8FAFC', padding: '0.6rem 1rem', borderRadius: '12px', border: '1.5px solid #F1F5F9' }}>
               {itemToDelete.type === 'draft' ? '📝' : '🏢'} {itemToDelete.name}
             </p>
-            <p style={{ textAlign: 'center', color: '#DC2626', fontSize: '0.8rem', fontWeight: '700', margin: '0 0 2rem', padding: '0.75rem 1rem', background: '#FFF1F2', borderRadius: '10px', border: '1px solid #FECACA'  }}>
+            <p style={{ textAlign: 'center', color: '#DC2626', fontSize: '0.8rem', fontWeight: '700', margin: '0 0 2rem', padding: '0.75rem 1rem', background: '#FFF1F2', borderRadius: '10px', border: '1px solid #FECACA' }}>
               ⚠️ This action is irreversible.
             </p>
-            <div style={{ display: 'flex', gap: '0.75rem'  }}>
-              <button onClick={() => setItemToDelete(null)} style={{ flex: 1, padding: '0.9rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#475569', fontWeight: '800', cursor: 'pointer'  }}>Cancel</button>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button onClick={() => setItemToDelete(null)} style={{ flex: 1, padding: '0.9rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#475569', fontWeight: '800', cursor: 'pointer' }}>Cancel</button>
               <button
                 disabled={isDeletingItem}
                 onClick={() => itemToDelete.type === 'draft' ? deleteDraft(itemToDelete.id) : null}
-                style={{ flex: 1, padding: '0.9rem', borderRadius: '12px', background: '#EF4444', color: "var(--text-on-primary)", fontWeight: '900', cursor: 'pointer'  }}
+                style={{ flex: 1, padding: '0.9rem', borderRadius: '12px', background: '#EF4444', color: "var(--text-on-primary)", fontWeight: '900', cursor: 'pointer' }}
               >
                 {isDeletingItem ? 'Deleting...' : 'Delete Now'}
               </button>
@@ -1404,7 +1299,8 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
         whileHover={{ y: -10, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className="property-card-premium"
-        style={{ padding: 0,
+        style={{
+          padding: 0,
           overflow: 'hidden',
           position: 'relative',
           borderRadius: '28px',
@@ -1414,7 +1310,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
           height: '100%',
           display: 'flex',
           flexDirection: 'column'
-         }}
+        }}
         onClick={(e) => {
           if (isPending || isRejected) {
             e.stopPropagation();
@@ -1423,7 +1319,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
           onNavigate();
         }}
       >
-        <div style={{ height: '220px', position: 'relative', overflow: 'hidden'  }}>
+        <div style={{ height: '220px', position: 'relative', overflow: 'hidden' }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={imgIdx}
@@ -1443,15 +1339,15 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
           </AnimatePresence>
 
           {/* Overlays */}
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.8) 100%)'  }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.8) 100%)' }} />
 
           {/* Navigation Arrows */}
           {images.length > 1 && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0.5rem', zIndex: 10  }}>
-              <button onClick={(e) => { e.stopPropagation(); setImgIdx(prev => (prev - 1 + images.length) % images.length); }} style={{ background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)', color: '#1E293B'  }}>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0.5rem', zIndex: 10 }}>
+              <button onClick={(e) => { e.stopPropagation(); setImgIdx(prev => (prev - 1 + images.length) % images.length); }} style={{ background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)', color: '#1E293B' }}>
                 <ChevronLeft size={20} />
               </button>
-              <button onClick={(e) => { e.stopPropagation(); setImgIdx(prev => (prev + 1) % images.length); }} style={{ background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)', color: '#1E293B'  }}>
+              <button onClick={(e) => { e.stopPropagation(); setImgIdx(prev => (prev + 1) % images.length); }} style={{ background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)', color: '#1E293B' }}>
                 <ChevronRight size={20} />
               </button>
             </div>
@@ -1461,7 +1357,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
           {onImageClick && (
             <button
               onClick={(e) => { e.stopPropagation(); onImageClick(images[imgIdx]); }}
-              style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', zIndex: 10, background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-in', backdropFilter: 'blur(4px)', color: '#1E293B'  }}
+              style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', zIndex: 10, background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-in', backdropFilter: 'blur(4px)', color: '#1E293B' }}
               title="View Full Image"
             >
               <Search size={16} />
@@ -1469,9 +1365,10 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
           )}
 
           {/* Badges */}
-          <div style={{ position: 'absolute', top: '1.25rem', left: '1.25rem', zIndex: 5, display: 'flex', flexWrap: 'wrap', gap: '0.5rem'  }}>
+          <div style={{ position: 'absolute', top: '1.25rem', left: '1.25rem', zIndex: 5, display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             {building.popularityLabel && (
-              <div style={{ padding: '0.5rem 1rem',
+              <div style={{
+                padding: '0.5rem 1rem',
                 borderRadius: '12px',
                 background: 'linear-gradient(135deg, #FF6B6B, #EE5253)',
                 color: "var(--text-on-primary)",
@@ -1480,11 +1377,12 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
                 boxShadow: '0 4px 12px rgba(238, 82, 83, 0.4)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em'
-               }}>
+              }}>
                 {building.popularityLabel}
               </div>
             )}
-            <div style={{ padding: '0.5rem 1rem',
+            <div style={{
+              padding: '0.5rem 1rem',
               borderRadius: '12px',
               background: building.status === 'Active' ? 'rgba(16, 185, 129, 0.9)' : building.status === 'Pending Approval' ? 'rgba(59, 130, 246, 0.9)' : building.status === 'Rejected' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(245, 158, 11, 0.9)',
               backdropFilter: 'blur(8px)',
@@ -1492,37 +1390,24 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
               fontSize: '0.65rem',
               fontWeight: '900',
               textTransform: 'uppercase'
-             }}>{building.status}</div>
+            }}>{building.status}</div>
           </div>
 
-          <div style={{ position: 'absolute', bottom: '1.25rem', left: '1.25rem', right: '1.25rem', zIndex: 5  }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem'  }}>
-              <div style={{ padding: '0.2rem 0.6rem',
-                borderRadius: '6px',
-                background: 'rgba(255,255,255,0.25)',
-                backdropFilter: 'blur(10px)',
-                color: "var(--text-on-primary)",
-                fontSize: '0.75rem',
-                fontWeight: '900',
-                border: '1px solid rgba(255,255,255,0.3)'
-               }}>
-                <Users size={12} style={{ verticalAlign: 'middle', marginRight: '4px'  }} />
-                {building.occupancyRate}% Occupied
-              </div>
-            </div>
-            <h3 style={{ fontSize: '1.6rem', fontWeight: '950', color: "var(--text-on-primary)", textShadow: '0 2px 8px rgba(0,0,0,0.4)', margin: 0, letterSpacing: '-0.02em'  }}>{building.name}</h3>
+          <div style={{ position: 'absolute', bottom: '1.25rem', left: '1.25rem', right: '1.25rem', zIndex: 5 }}>
+            <h3 style={{ fontSize: '1.8rem', fontWeight: '950', color: "var(--text-on-primary)", textShadow: '0 2px 8px rgba(0,0,0,0.4)', margin: 0, letterSpacing: '-0.02em' }}>{building.name}</h3>
           </div>
         </div>
 
-        <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column'  }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.2rem'  }}>
-            <div style={{ flex: 1  }}>
-              <p style={{ fontSize: '0.85rem', color: '#64748B', margin: 0, fontWeight: '600'  }}>
-                <MapPin size={14} style={{ verticalAlign: 'text-bottom', marginRight: '6px', color: '#3B82F6'  }} />
+        <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.2rem' }}>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '0.85rem', color: '#64748B', margin: 0, fontWeight: '600' }}>
+                <MapPin size={14} style={{ verticalAlign: 'text-bottom', marginRight: '6px', color: '#3B82F6' }} />
                 {building.address || 'Address not set'}
               </p>
             </div>
-            <div style={{ display: 'flex',
+            <div style={{
+              display: 'flex',
               alignItems: 'center',
               gap: '0.4rem',
               background: '#FFFBEB',
@@ -1532,7 +1417,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
               fontSize: '0.85rem',
               fontWeight: '900',
               border: '1px solid #FEF3C7'
-             }}>
+            }}>
               <Star size={16} fill="#D97706" /> {building.rating}
             </div>
           </div>
@@ -1580,24 +1465,25 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
             </div>
           </div>
 
-          <div style={{ marginBottom: '1.5rem'  }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem'  }}>
-              {(building.features || []).slice(0, 4).map((feat, fidx) => (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {(building.amenities && building.amenities.length > 0 ? building.amenities.slice(0, 5) : ['Security', 'CCTV', 'Parking', 'Power Backup', 'Mess']).map((feat, fidx) => (
                 <div
                   key={fidx}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.4rem',
                     padding: '0.4rem 0.8rem', borderRadius: '10px',
                     background: "var(--bg-card)", border: '1.5px solid #F1F5F9',
                     fontSize: '0.75rem', fontWeight: '800', color: '#475569'
-                   }}
+                  }}
                 >
-                  <span style={{ color: 'var(--accent-primary)'  }}>{AMENITY_ICONS[feat] || <Star size={12} />}</span>
+                  <span style={{ color: 'var(--accent-primary)' }}><CheckCircle size={12} /></span>
                   {feat}
                 </div>
               ))}
-              {building.features && building.features.length > 4 && (
-                <div style={{ padding: '0.4rem', fontSize: '0.75rem', fontWeight: '900', color: 'var(--accent-primary)', alignSelf: 'center'  }}>
-                  +{building.features.length - 4} More
+              {building.amenities && building.amenities.length > 5 && (
+                <div style={{ padding: '0.4rem', fontSize: '0.75rem', fontWeight: '900', color: 'var(--accent-primary)', alignSelf: 'center' }}>
+                  +{building.amenities.length - 5} More
                 </div>
               )}
             </div>
@@ -1622,11 +1508,12 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
             </div>
           )}
 
-          <div style={{ marginTop: 'auto', display: 'flex', gap: '0.8rem', alignItems: 'center'  }}>
+          <div style={{ marginTop: 'auto', display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
             {isPending ? (
               <button
                 disabled
-                style={{ flex: 1,
+                style={{
+                  flex: 1,
                   padding: '0.9rem',
                   borderRadius: '16px',
                   fontSize: '0.9rem',
@@ -1636,13 +1523,14 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
                   border: 'none',
                   cursor: 'not-allowed',
                   transition: 'all 0.2s'
-                 }}
+                }}
               >
                 Pending Approval
               </button>
             ) : isRejected ? (
               <button
-                style={{ flex: 1,
+                style={{
+                  flex: 1,
                   padding: '0.9rem',
                   borderRadius: '16px',
                   fontSize: '0.9rem',
@@ -1653,7 +1541,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)'
-                 }}
+                }}
                 onClick={(e) => { e.stopPropagation(); onResubmit(building.id); }}
                 onMouseEnter={(e) => e.target.style.filter = 'brightness(1.1)'}
                 onMouseLeave={(e) => e.target.style.filter = 'none'}
@@ -1662,7 +1550,8 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
               </button>
             ) : (
               <button
-                style={{ flex: 1,
+                style={{
+                  flex: 1,
                   padding: '0.9rem',
                   borderRadius: '16px',
                   fontSize: '0.9rem',
@@ -1673,7 +1562,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   boxShadow: '0 4px 12px rgba(79, 70, 229, 0.2)'
-                 }}
+                }}
                 onClick={(e) => { e.stopPropagation(); onNavigate(); }}
                 onMouseEnter={(e) => e.target.style.filter = 'brightness(1.1)'}
                 onMouseLeave={(e) => e.target.style.filter = 'none'}
@@ -1682,7 +1571,8 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
               </button>
             )}
             <button
-              style={{ width: '48px',
+              style={{
+                width: '48px',
                 height: '48px',
                 padding: 0,
                 borderRadius: '16px',
@@ -1693,7 +1583,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer'
-               }}
+              }}
               onClick={(e) => { e.stopPropagation(); setShowDeleteModal(true); }}
               title="Delete Property"
             >
@@ -1708,60 +1598,62 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
       {showDeleteModal && createPortal(
         <div
           onClick={(e) => e.stopPropagation()}
-          style={{ position: 'fixed', inset: 0, zIndex: 99999,
+          style={{
+            position: 'fixed', inset: 0, zIndex: 99999,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '1rem'
-           }}
+          }}
         >
           {/* Blurred Backdrop */}
           <div
             onClick={() => setShowDeleteModal(false)}
-            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)'  }}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
           />
 
           {/* Modal Card */}
-          <div style={{ position: 'relative', zIndex: 1,
+          <div style={{
+            position: 'relative', zIndex: 1,
             background: 'var(--bg-primary, #ffffff)',
             borderRadius: '24px',
             padding: 'clamp(1.5rem, 5vw, 2.5rem)',
             width: '100%', maxWidth: '440px',
             border: '1px solid rgba(239,68,68,0.2)',
             boxShadow: '0 32px 64px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)'
-           }}>
+          }}>
 
             {/* Red icon circle */}
-            <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg, #FEE2E2, #FECACA)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', boxShadow: '0 8px 20px rgba(239,68,68,0.25)'  }}>
+            <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg, #FEE2E2, #FECACA)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', boxShadow: '0 8px 20px rgba(239,68,68,0.25)' }}>
               <Trash2 size={30} color="#EF4444" />
             </div>
 
-            <h2 style={{ textAlign: 'center', fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', fontWeight: '900', margin: '0 0 0.4rem', color: 'var(--text-primary, #111)'  }}>
+            <h2 style={{ textAlign: 'center', fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', fontWeight: '900', margin: '0 0 0.4rem', color: 'var(--text-primary, #111)' }}>
               Delete Property?
             </h2>
-            <p style={{ textAlign: 'center', color: 'var(--text-secondary, #555)', fontSize: '0.9rem', margin: '0 0 1rem'  }}>
+            <p style={{ textAlign: 'center', color: 'var(--text-secondary, #555)', fontSize: '0.9rem', margin: '0 0 1rem' }}>
               You are about to permanently delete
             </p>
 
             {/* Building name badge */}
-            <p style={{ textAlign: 'center', fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary, #111)', margin: '0 0 1.2rem', background: 'var(--bg-tertiary, #f5f5f5)', padding: '0.6rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color, #e5e7eb)'  }}>
+            <p style={{ textAlign: 'center', fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary, #111)', margin: '0 0 1.2rem', background: 'var(--bg-tertiary, #f5f5f5)', padding: '0.6rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color, #e5e7eb)' }}>
               🏢 {building.name}
             </p>
 
             {/* Warning */}
-            <p style={{ textAlign: 'center', color: '#DC2626', fontSize: '0.8rem', fontWeight: '700', margin: '0 0 2rem', padding: '0.75rem 1rem', background: '#FFF1F2', borderRadius: '10px', border: '1px solid #FECACA', lineHeight: 1.6  }}>
+            <p style={{ textAlign: 'center', color: '#DC2626', fontSize: '0.8rem', fontWeight: '700', margin: '0 0 2rem', padding: '0.75rem 1rem', background: '#FFF1F2', borderRadius: '10px', border: '1px solid #FECACA', lineHeight: 1.6 }}>
               ⚠️ This action is <strong>irreversible</strong>. All associated rooms, beds, and tenant records will be permanently removed.
             </p>
 
             {deleteError && (
-              <div style={{ marginBottom: '1.5rem', padding: '0.8rem', borderRadius: '12px', background: '#FEF2F2', border: '1px solid #FEE2E2', color: '#B91C1C', fontSize: '0.8rem', fontWeight: '700', textAlign: 'center'  }}>
+              <div style={{ marginBottom: '1.5rem', padding: '0.8rem', borderRadius: '12px', background: '#FEF2F2', border: '1px solid #FEE2E2', color: '#B91C1C', fontSize: '0.8rem', fontWeight: '700', textAlign: 'center' }}>
                 ❌ {deleteError}
               </div>
             )}
 
             {/* Action buttons */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap'  }}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button
                 onClick={() => setShowDeleteModal(false)}
-                style={{ flex: 1, minWidth: '120px', padding: '0.9rem', borderRadius: '12px', background: 'var(--bg-tertiary, #f5f5f5)', border: '1px solid var(--border-color, #e5e7eb)', color: 'var(--text-primary, #111)', fontWeight: '800', cursor: 'pointer', fontSize: '0.95rem', transition: 'all 0.2s'  }}
+                style={{ flex: 1, minWidth: '120px', padding: '0.9rem', borderRadius: '12px', background: 'var(--bg-tertiary, #f5f5f5)', border: '1px solid var(--border-color, #e5e7eb)', color: 'var(--text-primary, #111)', fontWeight: '800', cursor: 'pointer', fontSize: '0.95rem', transition: 'all 0.2s' }}
               >
                 Cancel
               </button>
@@ -1779,7 +1671,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
                     setIsDeleting(false);
                   }
                 }}
-                style={{ flex: 1, minWidth: '120px', padding: '0.9rem', borderRadius: '12px', background: isDeleting ? '#FCA5A5' : 'linear-gradient(135deg, #EF4444, #DC2626)', border: 'none', color: "var(--text-on-primary)", fontWeight: '900', cursor: isDeleting ? 'not-allowed' : 'pointer', fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: isDeleting ? 'none' : '0 4px 14px rgba(239,68,68,0.4)', transition: 'all 0.2s'  }}
+                style={{ flex: 1, minWidth: '120px', padding: '0.9rem', borderRadius: '12px', background: isDeleting ? '#FCA5A5' : 'linear-gradient(135deg, #EF4444, #DC2626)', border: 'none', color: "var(--text-on-primary)", fontWeight: '900', cursor: isDeleting ? 'not-allowed' : 'pointer', fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: isDeleting ? 'none' : '0 4px 14px rgba(239,68,68,0.4)', transition: 'all 0.2s' }}
               >
                 {isDeleting ? 'Deleting...' : <><Trash2 size={16} /> Delete Forever</>}
               </button>

@@ -21,6 +21,7 @@ import Transfers from './pages/Transfers';
 import Discounts from './pages/Discounts';
 import Offers from './pages/Offers';
 import Services from './pages/Services';
+import OurServices from './pages/OurServices';
 import Community from './pages/Community';
 import Safety from './pages/Safety';
 import Profile from './pages/Profile';
@@ -206,6 +207,15 @@ function App() {
           element={
             <PublicLayout>
               <Privacy />
+            </PublicLayout>
+          }
+        />
+
+        <Route
+          path="/our-services"
+          element={
+            <PublicLayout>
+              <OurServices />
             </PublicLayout>
           }
         />

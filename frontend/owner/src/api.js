@@ -30,6 +30,18 @@ const handleId = (data) => {
   return data;
 };
 
+// Unwrap common API envelope shapes → always returns a plain array
+const unwrapArray = (raw) => {
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === 'object') {
+    // Try common envelope keys in priority order
+    for (const key of ['buildings', 'data', 'results', 'items', 'records']) {
+      if (Array.isArray(raw[key])) return raw[key];
+    }
+  }
+  return [];
+};
+
 // SWR (Stale-While-Revalidate) helper to prevent React request storms
 const _revalidatingKeys = {};
 const SWR_COOLDOWN_MS = 30000; // Only revalidate in background once every 30s per key
@@ -48,7 +60,7 @@ const swrFetch = async (cacheKey, url, config = {}) => {
     return handleId(cached);
   }
   const res = await axios.get(url, config);
-  const data = Array.isArray(res.data) ? res.data : (res.data || []);
+  const data = unwrapArray(res.data);
   cacheSet(cacheKey, data);
   return handleId(data);
 };
@@ -117,7 +129,7 @@ export const api = {
 
     if (bypass) {
       const res = await axios.get(`${API_URL}/buildings`, { params });
-      const data = Array.isArray(res.data) ? res.data : (res.data || []);
+      const data = unwrapArray(res.data);
       cacheSet(cacheKey, data);
       return handleId(data);
     }
@@ -130,6 +142,10 @@ export const api = {
     const res = await axios.get(`${API_URL}/hostels`);
     const data = Array.isArray(res.data) ? res.data : [];
     return handleId(data);
+  },
+  addHostel: async (data) => {
+    const res = await axios.post(`${API_URL}/hostels`, data);
+    return handleId(res.data);
   },
   // Bed availability stats for the hostel linked to a building
   getHostelBedStats: async (buildingId) => {
@@ -297,7 +313,7 @@ export const api = {
       return data;
     };
     if (cached) {
-      axios.get(`${API_URL}/staff`, { params: { buildingId: bId } }).then(res => cacheSet(cacheKey, processData(res.data))).catch(()=>{});
+      axios.get(`${API_URL}/staff`, { params: { buildingId: bId } }).then(res => cacheSet(cacheKey, processData(res.data))).catch(() => { });
       return processData(cached);
     }
     const res = await axios.get(`${API_URL}/staff`, { params: { buildingId: bId } });

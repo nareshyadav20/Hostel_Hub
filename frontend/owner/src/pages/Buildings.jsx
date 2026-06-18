@@ -75,210 +75,6 @@ const Modal = ({ isOpen, onClose, title, children }) => (
 const PropertyDetailDrawer = ({ isOpen, onClose, target, type, activeTab, onTabChange }) => {
   if (!target) return null;
 
-  const tabs = ['Overview', 'Analytics', 'Safety', 'Hygiene', 'AI Insights', 'Smart Features'];
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'Overview':
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ position: 'relative', height: '120px', borderRadius: '20px', overflow: 'hidden' }}>
-              <img
-                src={target.images?.[0] || 'https://images.unsplash.com/photo-1545324418-f1d3c5b53571?auto=format&fit=crop&w=800&q=80'}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                alt="Property"
-              />
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-              {[
-                { label: 'Status', value: target.status || 'Active', icon: <Activity size={16} />, color: '#10B981' },
-                { label: 'Capacity', value: `${target.totalBeds || target.capacity || 0} Beds`, icon: <UsersRound size={16} />, color: '#6366F1' },
-                { label: 'Category', value: target.category || 'Standard', icon: <BuildingIcon size={16} />, color: '#F59E0B' },
-                { label: 'Residency', value: target.genderType || 'Mixed', icon: <UsersRound size={16} />, color: '#8B5CF6' }
-              ].map((kpi, i) => (
-                <div key={i} style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
-                  <div style={{ color: kpi.color, marginBottom: '0.4rem' }}>{kpi.icon}</div>
-                  <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: '#64748B', letterSpacing: '0.05em' }}>{kpi.label.toUpperCase()}</p>
-                  <p style={{ margin: 0, fontSize: '1rem', fontWeight: '950', color: '#0F172A' }}>{kpi.value}</p>
-                </div>
-              ))}
-            </div>
-
-            {target.address && (
-              <div style={{ padding: '1.2rem', borderRadius: '16px', background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
-                <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.8rem', fontWeight: '900', color: '#475569' }}>Location</h5>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: '#0F172A', fontWeight: '700' }}>{target.address}</p>
-              </div>
-            )}
-          </div>
-        );
-      case 'Analytics':
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            <div style={{ height: '300px', background: '#F8FAFC', borderRadius: '32px', display: 'flex', alignItems: 'flex-end', gap: '1rem', padding: '2rem', border: '1px solid #E2E8F0' }}>
-              {[60, 45, 80, 55, 90, 75, 85, 60, 95, 70, 80, 100].map((h, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ height: 0 }}
-                  animate={{ height: `${h}%` }}
-                  style={{ flex: 1, background: 'linear-gradient(to top, #6366F1, #A5B4FC)', borderRadius: '8px 8px 0 0' }}
-                />
-              ))}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-              {[
-                { label: 'Monthly ROI', value: '+22.4%', color: '#10B981' },
-                { label: 'Est. Revenue', value: 'Γé╣4.2L', color: '#6366F1' },
-                { label: 'Utility Cost', value: 'Γé╣12K', color: '#EF4444' }
-              ].map((stat, i) => (
-                <div key={i} style={{ padding: '1.5rem', background: "var(--bg-card)", borderRadius: '24px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
-                  <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '900', color: '#64748B' }}>{stat.label.toUpperCase()}</p>
-                  <p style={{ margin: '0.4rem 0 0 0', fontSize: '1.4rem', fontWeight: '1000', color: stat.color }}>{stat.value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      case 'Safety':
-        return (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-            <div style={{ padding: '2rem', background: '#FEF2F2', borderRadius: '32px', border: '1px solid #FEE2E2' }}>
-              <ShieldCheck size={32} color="#EF4444" style={{ marginBottom: '1rem' }} />
-              <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.2rem', fontWeight: '1000', color: '#991B1B' }}>Active Security</h4>
-              <p style={{ fontSize: '0.9rem', color: '#B91C1C', fontWeight: '700', lineHeight: '1.6' }}>
-                All 24/7 monitoring systems are operational. Emergency protocols synced with local authorities.
-              </p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {[
-                { label: 'CCTV Health', value: '100%', status: 'Stable' },
-                { label: 'Fire Systems', value: 'Verified', status: 'Active' },
-                { label: 'Smart Access', value: 'RFID+QR', status: 'Online' },
-                { label: 'Emergency Resp', value: '< 2 mins', status: 'Optimal' }
-              ].map((item, i) => (
-                <div key={i} style={{ padding: '1.2rem', background: '#F8FAFC', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '900', color: '#0F172A' }}>{item.label}</p>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748B', fontWeight: '700' }}>{item.value}</p>
-                  </div>
-                  <span style={{ fontSize: '0.7rem', fontWeight: '950', color: '#10B981', background: '#ECFDF5', padding: '0.3rem 0.6rem', borderRadius: '8px' }}>{item.status}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      case 'Hygiene':
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.2rem' }}>
-              {[
-                { label: 'Last Sanitized', value: '2h ago', icon: <Sparkles size={18} /> },
-                { label: 'Cleanliness Index', value: '98%', icon: <Droplets size={18} /> },
-                { label: 'Audit Status', value: 'Passed', icon: <CheckSquare size={18} /> }
-              ].map((h, i) => (
-                <div key={i} style={{ padding: '1.5rem', background: '#F0FDFA', borderRadius: '24px', border: '1px solid #CCFBF1', textAlign: 'center' }}>
-                  <div style={{ color: '#10B981', marginBottom: '0.8rem', display: 'flex', justifyContent: 'center' }}>{h.icon}</div>
-                  <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '900', color: '#0F766E' }}>{h.label.toUpperCase()}</p>
-                  <p style={{ margin: '0.4rem 0 0 0', fontSize: '1.3rem', fontWeight: '1000', color: '#115E59' }}>{h.value}</p>
-                </div>
-              ))}
-            </div>
-            <div style={{ padding: '2rem', background: "var(--bg-card)", borderRadius: '32px', border: '1px solid #E2E8F0' }}>
-              <h4 style={{ margin: '0 0 1.5rem 0', fontSize: '1rem', fontWeight: '900' }}>Maintenance Backlog</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {[
-                  { task: 'HVAC Filter Replacement', priority: 'High', date: 'Today' },
-                  { task: 'Biometric Scanner Calibration', priority: 'Medium', date: 'Tomorrow' },
-                  { task: 'General Sanitization Cycle', priority: 'Routine', date: '08 May' }
-                ].map((task, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#F8FAFC', borderRadius: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: "var(--bg-card)", display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366F1' }}><Wrench size={18} /></div>
-                      <div>
-                        <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: '#1E293B' }}>{task.task}</p>
-                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748B', fontWeight: '700' }}>{task.date}</p>
-                      </div>
-                    </div>
-                    <span style={{ fontSize: '0.65rem', fontWeight: '950', color: task.priority === 'High' ? '#EF4444' : '#6366F1' }}>{task.priority.toUpperCase()}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-      case 'AI Insights':
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ position: 'relative', height: '120px', borderRadius: '24px', overflow: 'hidden', marginBottom: '0.5rem' }}>
-              <img
-                src={target.images?.[0] || 'https://images.unsplash.com/photo-1545324418-f1d3c5b53571?auto=format&fit=crop&w=800&q=80'}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }}
-                alt="Intelligence Context"
-              />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent, rgba(15, 23, 42, 0.9))' }} />
-              <div style={{ position: 'absolute', bottom: '1.5rem', left: '2rem' }}>
-                <h3 style={{ color: "var(--text-on-primary)", fontSize: '1.2rem', fontWeight: '900', margin: 0 }}>
-                  Intelligence Context: {target.name || (target.roomNumber ? `Room ${target.roomNumber}` : target.floorNumber ? `Floor ${target.floorNumber}` : target.bedNumber ? `Bed ${target.bedNumber}` : 'Unit')}
-                </h3>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontWeight: '700', margin: '0.2rem 0 0 0' }}>AI-DRIVEN VISUAL ANALYSIS ACTIVE</p>
-              </div>
-            </div>
-
-            <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', borderRadius: '24px', color: "var(--text-on-primary)", position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: '-100px', left: '-100px', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%)' }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '14px', background: 'rgba(99, 102, 241, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818CF8' }}><Sparkles size={24} /></div>
-                <div>
-                  <h4 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '1000', letterSpacing: '-0.02em' }}>Intelligence Engine</h4>
-                  <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.6, fontWeight: '700' }}>Real-time predictive modeling</p>
-                </div>
-              </div>
-              <p style={{ fontSize: '1.1rem', fontWeight: '700', lineHeight: '1.6', marginBottom: '2rem' }}>
-                Based on historical churn trends and current market demand, we forecast a <span style={{ color: '#818CF8' }}>14.2% surge</span> in occupancy for this {type}.
-                Recommendation: Implement dynamic pricing for the next 48 hours to capture peak revenue.
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-                {[
-                  { label: 'Comfort Score', val: 92 },
-                  { label: 'Privacy Score', val: 88 },
-                  { label: 'Market Demand', val: 96 }
-                ].map(s => (
-                  <div key={s.label} style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: 'rgba(255,255,255,0.5)' }}>{s.label.toUpperCase()}</p>
-                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '1.2rem', fontWeight: '1000' }}>{s.val}%</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-      case 'Smart Features':
-        return (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-            {[
-              { label: 'Smart Access', desc: 'RFID + Mobile QR active', icon: <Lock size={18} />, color: '#6366F1' },
-              { label: 'Climate Control', desc: 'Automated HVAC enabled', icon: <Wind size={18} />, color: '#10B981' },
-              { label: 'Energy Monitor', desc: 'Real-time wattage tracking', icon: <Zap size={18} />, color: '#F59E0B' },
-              { label: 'Air Quality', desc: 'High natural airflow score', icon: <Flame size={18} />, color: '#EF4444' }
-            ].map((f, i) => (
-              <div key={i} style={{ padding: '1.2rem', background: "var(--bg-card)", borderRadius: '20px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: `${f.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: f.color }}>
-                  {f.icon}
-                </div>
-                <div>
-                  <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '950', color: '#0F172A' }}>{f.label}</h4>
-                  <p style={{ margin: '0.3rem 0 0 0', fontSize: '0.75rem', color: '#64748B', fontWeight: '700', lineHeight: '1.4' }}>{f.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -296,67 +92,64 @@ const PropertyDetailDrawer = ({ isOpen, onClose, target, type, activeTab, onTabC
             exit={{ opacity: 0, scale: 0.95, y: 30 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             style={{
-              position: 'relative', width: '100%', maxWidth: '800px', height: '90vh',
+              position: 'relative', width: '100%', maxWidth: '600px', maxHeight: '80vh',
               background: "var(--bg-card)", borderRadius: '24px', overflow: 'hidden',
               display: 'flex', flexDirection: 'column', boxShadow: '0 50px 100px -20px rgba(0,0,0,0.3)'
             }}
           >
-            {/* Drawer Header */}
             <div style={{ padding: '1.5rem', borderBottom: '1px solid #F1F5F9', background: "var(--bg-card)", zIndex: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.6rem', flexWrap: 'wrap' }}>
                     <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: '#0F172A', color: "var(--text-on-primary)", fontSize: '0.65rem', fontWeight: '950', letterSpacing: '0.05em' }}>
-                      {type.toUpperCase()} ID: {target.id?.slice(-6).toUpperCase() || 'SYS-INFRA'}
-                    </span>
-                    <span style={{ fontSize: '0.65rem', fontWeight: '800', color: '#6366F1', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                      <Activity size={12} /> LIVE MONITORING
+                      {type.toUpperCase()} DETAILS
                     </span>
                   </div>
                   <h2 style={{ fontSize: '1.8rem', fontWeight: '1000', color: '#0F172A', margin: 0, letterSpacing: '-0.04em' }}>
-                    {target.name || (target.roomNumber ? `Room ${target.roomNumber}` : target.floorNumber ? `Floor ${target.floorNumber}` : target.bedNumber ? `Bed ${target.bedNumber}` : 'Intelligence')}
+                    {target.name || (target.roomNumber ? `Room ${target.roomNumber}` : target.floorNumber ? `Floor ${target.floorNumber}` : target.bedNumber ? `Bed ${target.bedNumber}` : 'Details')}
                   </h2>
                 </div>
                 <button onClick={onClose} style={{ width: '36px', height: '36px', borderRadius: '12px', background: '#F8FAFC', border: '1px solid #F1F5F9', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                   <X size={20} />
                 </button>
               </div>
-
-              {/* Tab Navigation */}
-              <div style={{ display: 'flex', gap: '0.4rem', marginTop: '1.5rem', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: '0.4rem' }}>
-                {tabs.map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => onTabChange(tab)}
-                    style={{
-                      padding: '0.8rem 1.4rem', borderRadius: '14px',
-                      background: activeTab === tab ? '#0F172A' : '#F8FAFC',
-                      color: activeTab === tab ? 'white' : '#64748B',
-                      border: '1px solid',
-                      borderColor: activeTab === tab ? '#0F172A' : '#F1F5F9',
-                      fontSize: '0.85rem', fontWeight: '950', whiteSpace: 'nowrap',
-                      cursor: 'pointer', transition: 'all 0.2s'
-                    }}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
             </div>
 
-            {/* Drawer Content */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '2.5rem', background: "var(--bg-card)", scrollbarWidth: 'none' }}>
-              {renderTabContent()}
-            </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {target.images?.[0] && (
+                  <div style={{ position: 'relative', height: '160px', borderRadius: '20px', overflow: 'hidden' }}>
+                    <img src={target.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" />
+                  </div>
+                )}
 
-            {/* Drawer Footer Actions */}
-            <div style={{ padding: '2rem 2.5rem', borderTop: '1px solid #F1F5F9', background: '#F8FAFC', display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-              <button className="btn" style={{ flex: '1 1 min-content', padding: '1.2rem', borderRadius: '18px', background: "var(--bg-card)", border: '1px solid #E2E8F0', color: '#0F172A', fontWeight: '950', fontSize: '1rem', whiteSpace: 'nowrap' }}>
-                Download Report
-              </button>
-              <button className="btn btn-primary" style={{ flex: '1.5 1 min-content', padding: '1.2rem', borderRadius: '18px', fontWeight: '950', fontSize: '1rem', boxShadow: '0 15px 30px rgba(99, 102, 241, 0.3)', whiteSpace: 'nowrap' }}>
-                Manage Operational Logic
-              </button>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                  {(target.status || target.occupancyPercentage !== undefined) && (
+                    <div style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
+                      <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: '#64748B', letterSpacing: '0.05em' }}>STATUS</p>
+                      <p style={{ margin: 0, fontSize: '1rem', fontWeight: '950', color: '#0F172A' }}>{target.status || `${target.occupancyPercentage}% Occupied`}</p>
+                    </div>
+                  )}
+                  {(target.totalBeds !== undefined || target.capacity !== undefined) && (
+                    <div style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
+                      <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: '#64748B', letterSpacing: '0.05em' }}>CAPACITY</p>
+                      <p style={{ margin: 0, fontSize: '1rem', fontWeight: '950', color: '#0F172A' }}>{target.totalBeds || target.capacity} Beds</p>
+                    </div>
+                  )}
+                  {target.category && (
+                    <div style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
+                      <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: '#64748B', letterSpacing: '0.05em' }}>CATEGORY</p>
+                      <p style={{ margin: 0, fontSize: '1rem', fontWeight: '950', color: '#0F172A' }}>{target.category}</p>
+                    </div>
+                  )}
+                  {target.genderType && (
+                    <div style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
+                      <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: '#64748B', letterSpacing: '0.05em' }}>RESIDENCY</p>
+                      <p style={{ margin: 0, fontSize: '1rem', fontWeight: '950', color: '#0F172A' }}>{target.genderType}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -371,11 +164,27 @@ const INITIAL_FORM_STATE = {
   isAC: false, washroomType: 'Attached', balcony: false, facing: 'Road',
   position: 'Standard', bedType: 'Single', floorType: 'Tiles', windowCount: 1,
   furniture: [], amenities: [],
-  rentAmount: 8000, securityDeposit: 16000, noticePeriod: 30, description: '',
+  rentAmount: 8000, securityDeposit: 0, noticePeriod: 30, description: '',
   smartMonitoringEnabled: true, realTimeEnabled: true, totalRooms: 0, totalBeds: 0,
   images: [], hygieneRating: 96, washroomsCount: 4, cctvStatus: 'Active',
-  wifiStatus: 'Excellent', loungesCount: 2, facilities: []
+  wifiStatus: 'Excellent', loungesCount: 2, facilities: [],
+  waterPoints: 0, washingMachines: 0, fridges: 0, hasStudyArea: false, hasLoungeArea: false,
+  roomSize: '', fanCount: 1, chairCount: 1, hasGeyser: false, hasStudyTable: false, hasWardrobe: false, hasMirror: false, hasTV: false, hasRefrigerator: false, hasMicrowave: false, hasWiFi: true,
+  hasMattress: true, pillowCount: 1, bedSheetCount: 1, hasBlanket: false, hasDustbin: false,
+  // New Building Level attributes
+  wardenName: '',
+  wardenContact: '',
+  rentSingle: 0,
+  rentDouble: 0,
+  rentTriple: 0,
+  rent4Sharing: 0,
+  rent5Sharing: 0,
+  rent6Sharing: 0,
+  foodCharges: 3000,
+  maintenanceCharges: 799,
+  documents: []
 };
+
 
 const Buildings = () => {
   const { buildingId: urlBuildingId } = useParams();
@@ -425,15 +234,32 @@ const Buildings = () => {
   const [detailType, setDetailType] = useState('building'); // 'building', 'floor', 'room', 'bed'
   const [activeDetailTab, setActiveDetailTab] = useState('Overview');
 
-  const handleViewDetail = (target, type) => {
-    setDetailTarget(target);
-    setDetailType(type);
-    setIsDetailDrawerOpen(true);
-    setActiveDetailTab('Overview');
-  };
+
 
   // Form states
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
+  const [docNameInput, setDocNameInput] = useState('');
+  const [docUrlInput, setDocUrlInput] = useState('');
+
+  const handleAddDocumentToForm = () => {
+    if (!docNameInput || !docUrlInput) {
+      alert("Please provide both document name and URL link.");
+      return;
+    }
+    setFormData(prev => ({
+      ...prev,
+      documents: [...(prev.documents || []), { name: docNameInput, url: docUrlInput }]
+    }));
+    setDocNameInput('');
+    setDocUrlInput('');
+  };
+
+  const handleRemoveDocumentFromForm = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      documents: (prev.documents || []).filter((_, idx) => idx !== index)
+    }));
+  };
 
   const [loading, setLoading] = useState(false);
 
@@ -499,7 +325,35 @@ const Buildings = () => {
         name: formData.name,
         address: formData.address,
         description: formData.description,
-        type: formData.type
+        type: formData.type,
+        genderType: formData.genderType || 'Mixed',
+        category: formData.category || 'Mixed',
+        amenities: formData.amenities || [],
+        // Building Facilities (Strict 1:1)
+        lift: formData.amenities?.includes('Lift') || false,
+        wifi: formData.amenities?.includes('WiFi') || false,
+        diningHall: formData.amenities?.includes('Dining Hall') || false,
+        commonKitchen: formData.amenities?.includes('Common Kitchen') || false,
+        studyHall: formData.amenities?.includes('Study Hall') || false,
+        laundryRoom: formData.amenities?.includes('Laundry Room') || false,
+        fireSafety: formData.amenities?.includes('Fire Safety') || false,
+        emergencyExit: formData.amenities?.includes('Emergency Exit') || false,
+        isAC: formData.isAC,
+        securityDeposit: formData.securityDeposit || 0,
+        foodCharges: formData.foodCharges || 0,
+        maintenanceCharges: formData.maintenanceCharges || 0,
+        rentSingle: formData.rentSingle || 0,
+        rentDouble: formData.rentDouble || 0,
+        rentTriple: formData.rentTriple || 0,
+        rent4Sharing: formData.rent4Sharing || 0,
+        rent5Sharing: formData.rent5Sharing || 0,
+        rent6Sharing: formData.rent6Sharing || 0,
+        staffInfo: {
+          name: formData.wardenName,
+          role: 'Warden',
+          contact: formData.wardenContact
+        },
+        documents: formData.documents || []
       });
       setBuildings(prev => prev.map(b => (b.id === updated.id || b._id === updated._id) ? updated : b));
       setSelectedBuilding(updated);
@@ -647,7 +501,15 @@ const Buildings = () => {
       id: r.id || r._id,
       number: r.roomNumber,
       type: r.roomType,
-      imageUrl: r.images?.[0] || ''
+      imageUrl: r.images?.[0] || '',
+      hasGeyser: r.geyser || false,
+      hasStudyTable: r.studyTable || false,
+      hasWardrobe: r.wardrobe || false,
+      hasMirror: r.mirror || false,
+      hasTV: r.tv || false,
+      hasRefrigerator: r.refrigerator || false,
+      hasMicrowave: r.microwave || false,
+      hasWiFi: r.wifi || false
     });
     setIsEditRoomOpen(true);
   };
@@ -663,7 +525,7 @@ const Buildings = () => {
         securityDeposit: formData.securityDeposit,
         noticePeriod: formData.noticePeriod,
         isAC: formData.isAC,
-        washroomType: formData.washroomType,
+        attachedBathroom: formData.attachedBathroom,
         balcony: formData.balcony,
         facing: formData.facing,
         floorType: formData.floorType,
@@ -671,7 +533,14 @@ const Buildings = () => {
         furniture: formData.furniture,
         ventilationScore: formData.ventilationScore || 85,
         naturalLightScore: formData.naturalLightScore || 85,
-        hygieneRating: formData.hygieneRating || 9.0,
+        geyser: formData.hasGeyser,
+        studyTable: formData.hasStudyTable,
+        wardrobe: formData.hasWardrobe,
+        mirror: formData.hasMirror,
+        tv: formData.hasTV,
+        refrigerator: formData.hasRefrigerator,
+        microwave: formData.hasMicrowave,
+        wifi: formData.hasWiFi,
         images: formData.images?.length > 0 ? formData.images : (formData.imageUrl ? [formData.imageUrl] : [])
       });
       setSelectedRoom(updated);
@@ -689,7 +558,15 @@ const Buildings = () => {
       ...b,
       id: b.id || b._id,
       number: b.bedNumber,
-      imageUrl: b.images?.[0] || ''
+      imageUrl: b.images?.[0] || '',
+      hasMattress: b.mattress || false,
+      hasPillow: b.pillow || false,
+      hasLocker: b.locker || false,
+      readingLight: b.readingLamp || false,
+      chargingPoint: b.chargingPoint || false,
+      tenantName: b.occupantDetails?.tenantName || '',
+      joinDate: b.occupantDetails?.joinDate ? new Date(b.occupantDetails.joinDate).toISOString().split('T')[0] : '',
+      exitDate: b.occupantDetails?.exitDate ? new Date(b.occupantDetails.exitDate).toISOString().split('T')[0] : ''
     });
     setIsEditBedOpen(true);
   };
@@ -702,10 +579,21 @@ const Buildings = () => {
         status: formData.status,
         position: formData.position,
         bedType: formData.bedType,
+        bedSize: formData.bedSize,
+        bedFacing: formData.bedFacing,
         images: formData.images?.length > 0 ? formData.images : (formData.imageUrl ? [formData.imageUrl] : []),
         comfortScore: formData.comfortScore || 85,
         privacyCurtain: formData.privacyCurtain || false,
-        readingLight: formData.readingLight || false
+        readingLamp: formData.readingLight,
+        mattress: formData.hasMattress,
+        pillow: formData.hasPillow,
+        locker: formData.hasLocker,
+        chargingPoint: formData.chargingPoint,
+        occupantDetails: (formData.status === 'Occupied' || formData.status === 'Reserved') ? {
+          tenantName: formData.tenantName,
+          joinDate: formData.joinDate,
+          exitDate: formData.exitDate
+        } : undefined
       });
       // Update beds list
       setBeds(prev => prev.map(b => (b.id === updated.id || b._id === updated._id) ? updated : b));
@@ -755,14 +643,14 @@ const Buildings = () => {
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    
+
     files.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData(prev => ({ 
-          ...prev, 
+        setFormData(prev => ({
+          ...prev,
           imageUrl: prev.imageUrl || reader.result, // keep legacy imageUrl working
-          images: [...(prev.images || []), reader.result] 
+          images: [...(prev.images || []), reader.result]
         }));
       };
       reader.readAsDataURL(file);
@@ -852,10 +740,34 @@ const Buildings = () => {
         category: formData.category || 'Mixed',
         rating: formData.rating || 4.5,
         amenities: formData.amenities || [],
+        // Building Facilities (Strict 1:1)
+        lift: formData.amenities?.includes('Lift') || false,
+        wifi: formData.amenities?.includes('WiFi') || false,
+        diningHall: formData.amenities?.includes('Dining Hall') || false,
+        commonKitchen: formData.amenities?.includes('Common Kitchen') || false,
+        studyHall: formData.amenities?.includes('Study Hall') || false,
+        laundryRoom: formData.amenities?.includes('Laundry Room') || false,
+        fireSafety: formData.amenities?.includes('Fire Safety') || false,
+        emergencyExit: formData.amenities?.includes('Emergency Exit') || false,
         isAC: formData.isAC,
         images: formData.imageUrl ? [formData.imageUrl] : [],
         showInPortfolio: false,
-        propertyId: activeBuildingId
+        propertyId: activeBuildingId,
+        securityDeposit: formData.securityDeposit || 0,
+        foodCharges: formData.foodCharges || 0,
+        maintenanceCharges: formData.maintenanceCharges || 0,
+        rentSingle: formData.rentSingle || 0,
+        rentDouble: formData.rentDouble || 0,
+        rentTriple: formData.rentTriple || 0,
+        rent4Sharing: formData.rent4Sharing || 0,
+        rent5Sharing: formData.rent5Sharing || 0,
+        rent6Sharing: formData.rent6Sharing || 0,
+        staffInfo: {
+          name: formData.wardenName,
+          role: 'Warden',
+          contact: formData.wardenContact
+        },
+        documents: formData.documents || []
       });
       setIsAddBuildingOpen(false);
       setFormData(INITIAL_FORM_STATE);
@@ -870,7 +782,7 @@ const Buildings = () => {
             current.push(newId);
             sessionStorage.setItem('createdBuildingIds', JSON.stringify(current));
           }
-        } catch (e) {}
+        } catch (e) { }
       }
 
       // Reset to buildings list view
@@ -895,15 +807,16 @@ const Buildings = () => {
         buildingId: bId,
         floorNumber: formData.number,
         description: formData.description,
-        specializationCategory: formData.specialization || 'General',
         totalRooms: formData.totalRooms,
         totalBeds: formData.totalBeds,
-        hygieneRating: formData.hygieneRating,
-        washroomsCount: formData.washroomsCount,
-        cctvStatus: formData.cctvStatus,
-        wifiStatus: formData.wifiStatus,
-        loungesCount: formData.loungesCount,
-        facilities: formData.facilities,
+        commonWashroom: formData.washroomsCount,
+        waterPoint: formData.waterPoints,
+        washingMachine: formData.washingMachines,
+        fridge: formData.fridges,
+        studyArea: formData.hasStudyArea,
+        loungeArea: formData.hasLoungeArea,
+        balcony: formData.hasBalcony,
+        waitingArea: formData.hasWaitingArea,
         images: formData.images?.length > 0 ? formData.images : (formData.imageUrl ? [formData.imageUrl] : [])
       });
       setFloors([...floors, newF]);
@@ -929,7 +842,7 @@ const Buildings = () => {
         securityDeposit: formData.securityDeposit,
         noticePeriod: formData.noticePeriod,
         isAC: formData.isAC,
-        washroomType: formData.washroomType,
+        attachedBathroom: formData.attachedBathroom,
         balcony: formData.balcony,
         facing: formData.facing,
         floorType: formData.floorType,
@@ -938,6 +851,17 @@ const Buildings = () => {
         ventilationScore: formData.ventilationScore || 85,
         naturalLightScore: formData.naturalLightScore || 85,
         hygieneRating: formData.hygieneRating || 9.0,
+        roomSize: formData.roomSize,
+        fanCount: formData.fanCount,
+        chairCount: formData.chairCount,
+        geyser: formData.hasGeyser,
+        studyTable: formData.hasStudyTable,
+        wardrobe: formData.hasWardrobe,
+        mirror: formData.hasMirror,
+        tv: formData.hasTV,
+        refrigerator: formData.hasRefrigerator,
+        microwave: formData.hasMicrowave,
+        wifi: formData.hasWiFi,
         images: formData.images?.length > 0 ? formData.images : (formData.imageUrl ? [formData.imageUrl] : [])
       });
       setRooms([...rooms, newR]);
@@ -958,10 +882,21 @@ const Buildings = () => {
         status: formData.status,
         position: formData.position,
         bedType: formData.bedType,
+        bedSize: formData.bedSize,
+        bedFacing: formData.bedFacing,
         images: formData.images?.length > 0 ? formData.images : (formData.imageUrl ? [formData.imageUrl] : []),
         comfortScore: formData.comfortScore || 85,
         privacyCurtain: formData.privacyCurtain || false,
-        readingLight: formData.readingLight || false
+        readingLamp: formData.readingLight,
+        mattress: formData.hasMattress,
+        pillow: formData.hasPillow,
+        locker: formData.hasLocker,
+        chargingPoint: formData.chargingPoint,
+        occupantDetails: (formData.status === 'Occupied' || formData.status === 'Reserved') ? {
+          tenantName: formData.tenantName,
+          joinDate: formData.joinDate,
+          exitDate: formData.exitDate
+        } : undefined
       });
       setBeds([...beds, newB]);
       setIsAddBedOpen(false);
@@ -970,7 +905,7 @@ const Buildings = () => {
       // Sync hostel bed stats so Rooms page reflects new count immediately
       const bId = selectedBuilding?.id || selectedBuilding?._id;
       if (bId) {
-        try { await api.syncHostelBeds(bId); } catch (_) {}
+        try { await api.syncHostelBeds(bId); } catch (_) { }
         // Signal Rooms.jsx to reload via CustomEvent for SPA same-window updates
         window.dispatchEvent(new Event('bedStatsUpdated'));
         // Also fire storage event for multi-tab setups
@@ -1119,9 +1054,28 @@ const Buildings = () => {
                     (filterType === 'All' || (filterType === 'AC' && b.isAC) || (filterType === 'Non-AC' && !b.isAC))
                   )}
                   onSelect={handleSelectBuilding}
-                  onEditBuilding={(b) => { setSelectedBuilding(b); setFormData({ ...INITIAL_FORM_STATE, ...b }); setIsEditBuildingOpen(true); }}
+                  onEditBuilding={(b) => {
+                    setSelectedBuilding(b);
+                    setFormData({
+                      ...INITIAL_FORM_STATE,
+                      ...b,
+                      wardenName: b.staffInfo?.name || '',
+                      wardenContact: b.staffInfo?.contact || '',
+                      documents: b.documents || [],
+                      rentSingle: b.rentSingle || 0,
+                      rentDouble: b.rentDouble || 0,
+                      rentTriple: b.rentTriple || 0,
+                      rent4Sharing: b.rent4Sharing || 0,
+                      rent5Sharing: b.rent5Sharing || 0,
+                      rent6Sharing: b.rent6Sharing || 0,
+                      foodCharges: b.foodCharges !== undefined ? b.foodCharges : 3000,
+                      maintenanceCharges: b.maintenanceCharges !== undefined ? b.maintenanceCharges : 799,
+                      securityDeposit: b.securityDeposit !== undefined ? b.securityDeposit : 0
+                    });
+                    setIsEditBuildingOpen(true);
+                  }}
                   onAdd={() => setIsAddBuildingOpen(true)}
-                  onViewAnalytics={(target, type) => handleViewDetail(target, type)}
+                  onViewAnalytics={() => { }}
                   onDeleteBuilding={handleDeleteBuilding}
                 />
               </motion.div>
@@ -1135,7 +1089,7 @@ const Buildings = () => {
                   onBack={() => setView('buildings')}
                   onAdd={() => setIsAddFloorOpen(true)}
                   onDelete={handleDeleteFloor}
-                  onViewAnalytics={(target, type) => handleViewDetail(target, type)}
+                  onViewAnalytics={() => { }}
                 />
               </motion.div>
             )}
@@ -1158,7 +1112,7 @@ const Buildings = () => {
                   onAdd={() => setIsAddRoomOpen(true)}
                   onEdit={handleOpenEditRoom}
                   onDelete={handleDeleteRoom}
-                  onViewDetails={(room) => handleViewDetail(room, 'room')}
+                  onViewDetails={() => { }}
                 />
               </motion.div>
             )}
@@ -1181,7 +1135,7 @@ const Buildings = () => {
                   onAdd={() => setIsAddBedOpen(true)}
                   onEditBed={handleOpenEditBed}
                   onDelete={handleDeleteBed}
-                  onViewDetails={(bed) => handleViewDetail(bed, 'bed')}
+                  onViewDetails={() => { }}
                   onViewHistory={(bed) => { setViewingBed(bed); setIsViewBedHistoryOpen(true); }}
                   onAssignTenant={(bed) => { setViewingBed(bed); setIsAssignTenantOpen(true); }}
                 />
@@ -1197,61 +1151,34 @@ const Buildings = () => {
 
         {/* --- Addition Modals --- */}
         {/* Edit Building Modal */}
-        <Modal isOpen={isEditBuildingOpen} onClose={() => setIsEditBuildingOpen(false)} title={`Edit Property - ${selectedBuilding?.name}`}>
+        <Modal isOpen={isEditBuildingOpen} onClose={() => setIsEditBuildingOpen(false)} title={`Edit Building - ${selectedBuilding?.name}`}>
           <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleUpdateBuilding}>
             <div className="input-group">
-              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>PROPERTY NAME</label>
-              <input placeholder="Elite Skyline" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={inputStyle} required />
+              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING NAME *</label>
+              <input placeholder="Block A" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={inputStyle} required />
             </div>
             <div className="input-group">
-              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ADDRESS</label>
-              <input placeholder="123 Tech Park" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} style={inputStyle} required />
+              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ADDRESS *</label>
+              <input placeholder="e.g. 123 MG Road, Bengaluru" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} style={inputStyle} required />
             </div>
             <div className="input-group">
               <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>DESCRIPTION</label>
-              <textarea placeholder="Premium student housing..." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }} />
+              <textarea placeholder="e.g. Premium block for seniors" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} style={{ ...inputStyle, minHeight: '100px', resize: 'vertical' }} />
             </div>
-            <div className="input-group">
-              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>PROPERTY TYPE</label>
-              <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
-                <option value="Student">Student Housing</option>
-                <option value="Professional">Professional Suites</option>
-                <option value="Mixed">Mixed Occupancy</option>
-              </select>
-            </div>
-            <button className="btn btn-primary" type="submit" style={{ padding: '1.2rem', borderRadius: '18px', fontWeight: '950', marginTop: '0.5rem', fontSize: '1rem' }}>Save Property Changes</button>
-          </form>
-        </Modal>
-
-        <Modal isOpen={isAddBuildingOpen} onClose={() => setIsAddBuildingOpen(false)} title="Register New Smart Property">
-          <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleAddBuilding}>
-            <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING NAME</label><input placeholder="Royal residency" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={inputStyle} required /></div>
-            <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>ADDRESS</label><input placeholder="123 tech street" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} style={inputStyle} required /></div>
-            <div className="input-group">
-              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING PHOTOS (MULTIPLE)</label>
-              <div style={{ position: 'relative', marginTop: '0.6rem' }}>
-                <input type="file" multiple accept="image/*" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }} />
-                <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(99, 102, 241, 0.05)', borderColor: 'rgba(99, 102, 241, 0.3)', minHeight: '60px' }}>
-                  <ImageIcon size={22} color="var(--accent-primary)" />
-                  <span style={{ fontSize: '0.95rem', color: formData.images?.length > 0 ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '800' }}>
-                    {formData.images?.length > 0 ? `${formData.images.length} Photos Selected` : 'Choose Multiple Photos'}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.2rem', marginBottom: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>GENDER TYPE</label>
-                <select value={formData.genderType} onChange={e => setFormData({ ...formData, genderType: e.target.value })} style={inputStyle}>
-                  <option value="Coliving">Coliving</option>
-                  <option value="Boys">Boys Only</option>
-                  <option value="Girls">Girls Only</option>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.2rem' }}>
+              <div className="input-group">
+                <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING TYPE *</label>
+                <select required value={formData.genderType} onChange={e => setFormData({ ...formData, genderType: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
+                  <option value="Boys">Boys</option>
+                  <option value="Girls">Girls</option>
+                  <option value="Mixed">Co-Living</option>
                 </select>
               </div>
             </div>
             <div className="input-group">
-              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>AMENITIES</label>
+              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FACILITIES</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginTop: '0.5rem' }}>
-                {['Wi-Fi', 'CCTV', 'Power Backup', 'Laundry', 'Parking', 'Kitchen', 'Gym'].map(a => (
+                {['Lift', 'WiFi', 'Dining Hall', 'Common Kitchen', 'Study Hall', 'Laundry Room', 'Fire Safety', 'Emergency Exit'].map(a => (
                   <div
                     key={a} onClick={() => {
                       const newAm = formData.amenities?.includes(a) ? formData.amenities.filter(i => i !== a) : [...(formData.amenities || []), a];
@@ -1264,23 +1191,160 @@ const Buildings = () => {
                 ))}
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '18px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, isAC: !formData.isAC })}>
-              <div style={{ width: '24px', height: '24px', border: '2px solid var(--accent-primary)', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.isAC ? 'var(--accent-primary)' : 'transparent', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-                {formData.isAC && <div style={{ width: '10px', height: '10px', background: "var(--bg-card)", borderRadius: '2px' }} />}
+
+            {/* Warden Details Section */}
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '1rem' }}>Warden Details</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WARDEN NAME</label>
+                  <input placeholder="Warden Name" value={formData.wardenName} onChange={e => setFormData({ ...formData, wardenName: e.target.value })} style={inputStyle} />
+                </div>
               </div>
-              <span style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)' }}>Full Centralized AC</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem', marginTop: '0.5rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>TOTAL CAPACITY (BEDS)</label><input type="number" value={formData.totalBeds} onChange={e => setFormData({ ...formData, totalBeds: parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
-              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>SMART ACCESS SYSTEM</label>
-                <select value={formData.smartAccessSystem} onChange={e => setFormData({ ...formData, smartAccessSystem: e.target.value })} style={inputStyle}>
-                  <option value="None">None</option>
-                  <option value="Biometric + RFID Active">Biometric + RFID Active</option>
-                  <option value="RFID Only">RFID Only</option>
-                  <option value="Biometric Only">Biometric Only</option>
+
+            {/* Sharing Prices (Per Bed Rent) */}
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '1rem' }}>Sharing Prices (Per Bed Rent / Month)</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.2rem' }}>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>1 SHARING RENT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.rentSingle} onChange={e => setFormData({ ...formData, rentSingle: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>2 SHARING RENT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.rentDouble} onChange={e => setFormData({ ...formData, rentDouble: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>3 SHARING RENT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.rentTriple} onChange={e => setFormData({ ...formData, rentTriple: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>4 SHARING RENT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.rent4Sharing} onChange={e => setFormData({ ...formData, rent4Sharing: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>5 SHARING RENT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.rent5Sharing} onChange={e => setFormData({ ...formData, rent5Sharing: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>6 SHARING RENT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.rent6Sharing} onChange={e => setFormData({ ...formData, rent6Sharing: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+              </div>
+            </div>
+
+            {/* General Charges & Deposit */}
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '1rem' }}>Financials</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.2rem' }}>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>SECURITY DEPOSIT AMOUNT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.securityDeposit} onChange={e => setFormData({ ...formData, securityDeposit: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+              </div>
+            </div>
+
+            <button className="btn btn-primary" type="submit" style={{ padding: '1.2rem', borderRadius: '18px', fontWeight: '950', marginTop: '0.5rem', fontSize: '1rem' }}>Save Building Changes</button>
+          </form>
+        </Modal>
+
+        <Modal isOpen={isAddBuildingOpen} onClose={() => setIsAddBuildingOpen(false)} title="Add New Building">
+          <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleAddBuilding}>
+            <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING NAME *</label><input placeholder="e.g. Block A" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={inputStyle} required /></div>
+            <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>ADDRESS *</label><input placeholder="e.g. 123 MG Road, Bengaluru" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} style={inputStyle} required /></div>
+            <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>DESCRIPTION</label><textarea placeholder="Building Description" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} /></div>
+            <div className="input-group">
+              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING PHOTOS</label>
+              <div style={{ position: 'relative', marginTop: '0.6rem' }}>
+                <input type="file" multiple accept="image/*" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }} />
+                <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(99, 102, 241, 0.05)', borderColor: 'rgba(99, 102, 241, 0.3)', minHeight: '60px' }}>
+                  <ImageIcon size={22} color="var(--accent-primary)" />
+                  <span style={{ fontSize: '0.95rem', color: formData.images?.length > 0 ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '800' }}>
+                    {formData.images?.length > 0 ? `${formData.images.length} Photos Selected` : 'Choose Photos'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.2rem' }}>
+              <div className="input-group">
+                <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>BUILDING TYPE *</label>
+                <select required value={formData.genderType || 'Boys'} onChange={e => setFormData({ ...formData, genderType: e.target.value })} style={inputStyle}>
+                  <option value="Boys">Boys</option>
+                  <option value="Girls">Girls</option>
+                  <option value="Mixed">Co-Living</option>
                 </select>
               </div>
             </div>
+            <div className="input-group">
+              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FACILITIES</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginTop: '0.5rem' }}>
+                {['Lift', 'WiFi', 'Dining Hall', 'Common Kitchen', 'Study Hall', 'Laundry Room', 'Fire Safety', 'Emergency Exit'].map(a => (
+                  <div
+                    key={a} onClick={() => {
+                      const newAm = formData.amenities?.includes(a) ? formData.amenities.filter(i => i !== a) : [...(formData.amenities || []), a];
+                      setFormData({ ...formData, amenities: newAm });
+                    }}
+                    style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '800', cursor: 'pointer', background: formData.amenities?.includes(a) ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: formData.amenities?.includes(a) ? 'white' : 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
+                  >
+                    {a}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Warden Details Section */}
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '1rem' }}>Warden Details</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.2rem' }}>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WARDEN NAME</label>
+                  <input placeholder="Warden Name" value={formData.wardenName} onChange={e => setFormData({ ...formData, wardenName: e.target.value })} style={inputStyle} />
+                </div>
+              </div>
+            </div>
+
+            {/* Sharing Prices (Per Bed Rent) */}
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '1rem' }}>Sharing Prices (Per Bed Rent / Month)</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.2rem' }}>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>1 SHARING RENT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.rentSingle} onChange={e => setFormData({ ...formData, rentSingle: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>2 SHARING RENT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.rentDouble} onChange={e => setFormData({ ...formData, rentDouble: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>3 SHARING RENT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.rentTriple} onChange={e => setFormData({ ...formData, rentTriple: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>4 SHARING RENT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.rent4Sharing} onChange={e => setFormData({ ...formData, rent4Sharing: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>5 SHARING RENT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.rent5Sharing} onChange={e => setFormData({ ...formData, rent5Sharing: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>6 SHARING RENT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.rent6Sharing} onChange={e => setFormData({ ...formData, rent6Sharing: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+              </div>
+            </div>
+
+            {/* General Charges & Deposit */}
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '1rem' }}>Financials</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.2rem' }}>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>SECURITY DEPOSIT (₹)</label>
+                  <input type="number" placeholder="0" value={formData.securityDeposit} onChange={e => setFormData({ ...formData, securityDeposit: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+              </div>
+            </div>
+
             <button className="btn btn-primary" type="submit" style={{ padding: '1.2rem', borderRadius: '18px', fontWeight: '950', marginTop: '1rem', fontSize: '1.1rem', boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)' }}>Create Property</button>
           </form>
         </Modal>
@@ -1288,73 +1352,47 @@ const Buildings = () => {
         <Modal isOpen={isAddFloorOpen} onClose={() => setIsAddFloorOpen(false)} title={`Add Floor to ${selectedBuilding?.name}`}>
           <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleAddFloor}>
             <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FLOOR NUMBER</label><input placeholder="e.g. G, 1, 2" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} style={inputStyle} required /></div>
-            <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>DESCRIPTION</label><textarea placeholder="e.g. Common Area, Library, etc." value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} style={{ ...inputStyle, minHeight: '80px', paddingTop: '0.8rem' }} /></div>
-            <div className="input-group">
-              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FLOOR SPECIALIZATION</label>
-              <select value={formData.specialization} onChange={e => setFormData({ ...formData, specialization: e.target.value })} style={inputStyle}>
-                <option value="General">General Use</option>
-                <option value="Female-only">Female Only</option>
-                <option value="Male-only">Male Only</option>
-                <option value="Working Professionals">Working Professionals</option>
-                <option value="Students">Students</option>
-                <option value="Quiet Zone">Quiet Zone</option>
-              </select>
-            </div>
-            <div className="input-group">
-              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FLOOR LAYOUT PHOTOS (MULTIPLE)</label>
-              <div style={{ position: 'relative', marginTop: '0.6rem' }}>
-                <input type="file" multiple accept="image/*" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }} />
-                <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(99, 102, 241, 0.05)', borderColor: 'rgba(99, 102, 241, 0.3)', minHeight: '60px' }}>
-                  <ImageIcon size={22} color="var(--accent-primary)" />
-                  <span style={{ fontSize: '0.95rem', color: formData.images?.length > 0 ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '800' }}>
-                    {formData.images?.length > 0 ? `${formData.images.length} Photos Loaded` : 'Upload Multiple Photos'}
-                  </span>
+
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '1rem' }}>Floor Equipment & Washrooms</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>COMMON WASHROOMS</label><input type="number" placeholder="2" value={formData.washroomsCount} onChange={e => setFormData({ ...formData, washroomsCount: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" /></div>
+                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WATER POINTS</label><input type="number" placeholder="2" value={formData.waterPoints} onChange={e => setFormData({ ...formData, waterPoints: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" /></div>
+                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WASHING MACHINES</label><input type="number" placeholder="1" value={formData.washingMachines} onChange={e => setFormData({ ...formData, washingMachines: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" /></div>
+                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FRIDGES</label><input type="number" placeholder="1" value={formData.fridges} onChange={e => setFormData({ ...formData, fridges: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" /></div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, hasStudyArea: !formData.hasStudyArea })}>
+                  <div style={{ width: '20px', height: '20px', border: '2px solid var(--accent-primary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.hasStudyArea ? 'var(--accent-primary)' : 'transparent', transition: 'all 0.3s' }}>
+                    {formData.hasStudyArea && <div style={{ width: '10px', height: '10px', background: "var(--bg-card)", borderRadius: '2px' }} />}
+                  </div>
+                  <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-primary)' }}>Study Area</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, hasLoungeArea: !formData.hasLoungeArea })}>
+                  <div style={{ width: '20px', height: '20px', border: '2px solid var(--accent-primary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.hasLoungeArea ? 'var(--accent-primary)' : 'transparent', transition: 'all 0.3s' }}>
+                    {formData.hasLoungeArea && <div style={{ width: '10px', height: '10px', background: "var(--bg-card)", borderRadius: '2px' }} />}
+                  </div>
+                  <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-primary)' }}>Lounge Area</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, hasBalcony: !formData.hasBalcony })}>
+                  <div style={{ width: '20px', height: '20px', border: '2px solid var(--accent-primary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.hasBalcony ? 'var(--accent-primary)' : 'transparent', transition: 'all 0.3s' }}>
+                    {formData.hasBalcony && <div style={{ width: '10px', height: '10px', background: "var(--bg-card)", borderRadius: '2px' }} />}
+                  </div>
+                  <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-primary)' }}>Balcony</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, hasWaitingArea: !formData.hasWaitingArea })}>
+                  <div style={{ width: '20px', height: '20px', border: '2px solid var(--accent-primary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.hasWaitingArea ? 'var(--accent-primary)' : 'transparent', transition: 'all 0.3s' }}>
+                    {formData.hasWaitingArea && <div style={{ width: '10px', height: '10px', background: "var(--bg-card)", borderRadius: '2px' }} />}
+                  </div>
+                  <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-primary)' }}>Waiting Area</span>
                 </div>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>TOTAL ROOMS</label><input type="number" value={formData.totalRooms} onChange={e => setFormData({ ...formData, totalRooms: parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
-              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>TOTAL BEDS</label><input type="number" value={formData.totalBeds} onChange={e => setFormData({ ...formData, totalBeds: parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>HYGIENE SCORE</label><input type="number" value={formData.hygieneRating} onChange={e => setFormData({ ...formData, hygieneRating: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
-              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WASHROOMS COUNT</label><input type="number" value={formData.washroomsCount} onChange={e => setFormData({ ...formData, washroomsCount: parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>CCTV STATUS</label>
-                <select value={formData.cctvStatus} onChange={e => setFormData({ ...formData, cctvStatus: e.target.value })} style={inputStyle}>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                  <option value="Maintenance">Maintenance</option>
-                </select>
-              </div>
-              <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WIFI STATUS</label>
-                <select value={formData.wifiStatus} onChange={e => setFormData({ ...formData, wifiStatus: e.target.value })} style={inputStyle}>
-                  <option value="Excellent">Excellent</option>
-                  <option value="Good">Good</option>
-                  <option value="Poor">Poor</option>
-                  <option value="Offline">Offline</option>
-                </select>
-              </div>
-            </div>
-            <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>LOUNGES</label><input type="number" value={formData.loungesCount} onChange={e => setFormData({ ...formData, loungesCount: parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
-            
-            <div className="input-group">
-              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>LIVE FACILITIES</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginTop: '0.5rem' }}>
-                {['Laundry', 'Smart Access', 'Pantry', 'Gaming Zone', 'Study Hall'].map(f => (
-                  <div
-                    key={f} onClick={() => {
-                      const newFac = formData.facilities?.includes(f) ? formData.facilities.filter(i => i !== f) : [...(formData.facilities || []), f];
-                      setFormData({ ...formData, facilities: newFac });
-                    }}
-                    style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '800', cursor: 'pointer', background: formData.facilities?.includes(f) ? 'var(--accent-primary)' : 'var(--bg-tertiary)', color: formData.facilities?.includes(f) ? 'white' : 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
-                  >
-                    {f}
-                  </div>
-                ))}
-              </div>
-            </div>
+
             <button className="btn btn-primary" type="submit" style={{ padding: '1.1rem', borderRadius: '16px', fontWeight: '900', fontSize: '1rem' }}>Save Floor Structure</button>
           </form>
         </Modal>
@@ -1363,22 +1401,9 @@ const Buildings = () => {
           <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleAddRoom}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
               <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ROOM NO.</label><input placeholder="101" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} style={inputStyle} required /></div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ROOM TYPE</label>
-                <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} style={{ ...inputStyle, width: '100%' }} required>
-                  <option value="Single">Single Suite</option>
-                  <option value="Shared">Shared Room</option>
-                  <option value="Dormitory">Dormitory</option>
-                </select>
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>MONTHLY RENT (Γé╣)</label><input type="number" placeholder="8000" value={formData.rentAmount} onChange={e => setFormData({ ...formData, rentAmount: parseInt(e.target.value) })} style={inputStyle} required /></div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>DEPOSIT (Γé╣)</label><input type="number" placeholder="16000" value={formData.securityDeposit} onChange={e => setFormData({ ...formData, securityDeposit: parseInt(e.target.value) })} style={inputStyle} required /></div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
               <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>CAPACITY (BEDS)</label><input type="number" placeholder="2" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: parseInt(e.target.value) })} style={inputStyle} required min="1" /></div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>NOTICE PERIOD (DAYS)</label><input type="number" placeholder="30" value={formData.noticePeriod} onChange={e => setFormData({ ...formData, noticePeriod: parseInt(e.target.value) })} style={inputStyle} required /></div>
             </div>
+
             <div className="input-group">
               <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ROOM PREVIEW</label>
               <div style={{ position: 'relative', marginTop: '0.6rem' }}>
@@ -1391,73 +1416,57 @@ const Buildings = () => {
                 </div>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, isAC: !formData.isAC })}>
-                <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.isAC ? 'var(--accent-primary)' : 'transparent' }}>
-                  {formData.isAC && <div style={{ width: '8px', height: '8px', background: "var(--bg-card)", borderRadius: '1px' }} />}
-                </div>
-                <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>AC</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, balcony: !formData.balcony })}>
-                <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.balcony ? 'var(--accent-primary)' : 'transparent' }}>
-                  {formData.balcony && <div style={{ width: '8px', height: '8px', background: "var(--bg-card)", borderRadius: '1px' }} />}
-                </div>
-                <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>Balcony</span>
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>WASHROOM</label>
-                <select value={formData.washroomType} onChange={e => setFormData({ ...formData, washroomType: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
-                  <option value="Attached">Attached</option>
-                  <option value="Common">Common / Shared</option>
-                </select>
-              </div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>FACING</label>
-                <input placeholder="e.g. Garden, Road" value={formData.facing} onChange={e => setFormData({ ...formData, facing: e.target.value })} style={inputStyle} />
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>FLOORING</label>
-                <select value={formData.floorType} onChange={e => setFormData({ ...formData, floorType: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
-                  <option value="Tiles">Ceramic Tiles</option>
-                  <option value="Marble">Premium Marble</option>
-                  <option value="Wooden">Wooden Finish</option>
-                </select>
-              </div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>WINDOWS</label>
-                <input type="number" value={formData.windowCount} onChange={e => setFormData({ ...formData, windowCount: parseInt(e.target.value) })} style={inputStyle} min="0" />
-              </div>
-            </div>
+
             <div className="input-group">
-              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>FURNITURE & AMENITIES</label>
+              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ROOM METRICS & FITTINGS</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.2rem', marginTop: '0.5rem' }}>
+                <div className="input-group" style={{ margin: 0 }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: '900', color: 'var(--text-muted)' }}>ROOM SIZE</label>
+                  <input placeholder="e.g. 12x12 sqft" value={formData.roomSize} onChange={e => setFormData({ ...formData, roomSize: e.target.value })} style={inputStyle} />
+                </div>
+                <div className="input-group" style={{ margin: 0 }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: '900', color: 'var(--text-muted)' }}>FANS</label>
+                  <input type="number" value={formData.fanCount} onChange={e => setFormData({ ...formData, fanCount: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" />
+                </div>
+                <div className="input-group" style={{ margin: 0 }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: '900', color: 'var(--text-muted)' }}>CHAIRS</label>
+                  <input type="number" value={formData.chairCount} onChange={e => setFormData({ ...formData, chairCount: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" />
+                </div>
+              </div>
+            </div>
+
+            <div className="input-group">
+              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>FURNITURE & ELECTRONICS & AMENITIES</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', marginTop: '0.5rem' }}>
-                {['Bed', 'Cupboard', 'Study Table', 'Mirror', 'Fan', 'Curtains'].map(item => (
+                {[
+                  { key: 'isAC', label: 'AC' },
+                  { key: 'attachedBathroom', label: 'Attached Bathroom' },
+                  { key: 'hasGeyser', label: 'Geyser' },
+                  { key: 'hasStudyTable', label: 'Study Table' },
+                  { key: 'hasWardrobe', label: 'Wardrobe' },
+                  { key: 'hasMirror', label: 'Mirror' },
+                  { key: 'balcony', label: 'Balcony' },
+                  { key: 'hasTV', label: 'TV' },
+                  { key: 'hasRefrigerator', label: 'Refrigerator' },
+                  { key: 'hasMicrowave', label: 'Microwave' },
+                  { key: 'hasWiFi', label: 'WiFi' }
+                ].map(item => (
                   <div
-                    key={item}
-                    onClick={() => {
-                      const currentFurn = Array.isArray(formData.furniture) ? formData.furniture : [];
-                      const newFurn = currentFurn.includes(item)
-                        ? currentFurn.filter(i => i !== item)
-                        : [...currentFurn, item];
-                      setFormData({ ...formData, furniture: newFurn });
-                    }}
+                    key={item.key}
+                    onClick={() => setFormData({ ...formData, [item.key]: !formData[item.key] })}
                     style={{
                       padding: '0.5rem 1rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '800', cursor: 'pointer',
-                      background: (Array.isArray(formData.furniture) && formData.furniture.includes(item)) ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                      color: (Array.isArray(formData.furniture) && formData.furniture.includes(item)) ? 'white' : 'var(--text-secondary)',
+                      background: formData[item.key] ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                      color: formData[item.key] ? 'white' : 'var(--text-secondary)',
                       border: '1px solid var(--border-color)', transition: 'all 0.2s'
                     }}
                   >
-                    {item}
+                    {item.label}
                   </div>
                 ))}
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>VENTILATION (0-100)</label><input type="number" value={formData.ventilationScore || ''} onChange={e => setFormData({ ...formData, ventilationScore: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>NATURAL LIGHT</label><input type="number" value={formData.naturalLightScore || ''} onChange={e => setFormData({ ...formData, naturalLightScore: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>HYGIENE RATING</label><input type="number" step="0.1" value={formData.hygieneRating || ''} onChange={e => setFormData({ ...formData, hygieneRating: parseFloat(e.target.value) })} style={inputStyle} min="0" max="10" /></div>
-            </div>
+
             <button className="btn btn-primary" type="submit" style={{ padding: '1.2rem', borderRadius: '18px', fontWeight: '950', marginTop: '0.5rem', fontSize: '1rem' }}>Deploy Room</button>
           </form>
         </Modal>
@@ -1466,113 +1475,124 @@ const Buildings = () => {
           <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleUpdateRoom}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
               <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ROOM NO.</label><input placeholder="101" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} style={inputStyle} required /></div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ROOM TYPE</label>
-                <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} style={{ ...inputStyle, width: '100%' }} required>
-                  <option value="Single">Single Suite</option>
-                  <option value="Shared">Shared Room</option>
-                  <option value="Dormitory">Dormitory</option>
-                </select>
-              </div>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>CAPACITY (BEDS)</label><input type="number" placeholder="2" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: parseInt(e.target.value) })} style={inputStyle} required min="1" /></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>MONTHLY RENT (Γé╣)</label><input type="number" value={formData.rentAmount} onChange={e => setFormData({ ...formData, rentAmount: parseInt(e.target.value) })} style={inputStyle} required /></div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>DEPOSIT (Γé╣)</label><input type="number" value={formData.securityDeposit} onChange={e => setFormData({ ...formData, securityDeposit: parseInt(e.target.value) })} style={inputStyle} required /></div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>CAPACITY</label><input type="number" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: parseInt(e.target.value) })} style={inputStyle} required min="1" /></div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>NOTICE PERIOD</label><input type="number" value={formData.noticePeriod} onChange={e => setFormData({ ...formData, noticePeriod: parseInt(e.target.value) })} style={inputStyle} required /></div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, isAC: !formData.isAC })}>
-                <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.isAC ? 'var(--accent-primary)' : 'transparent' }}>
-                  {formData.isAC && <div style={{ width: '8px', height: '8px', background: "var(--bg-card)", borderRadius: '1px' }} />}
+
+            <div className="input-group">
+              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ROOM PREVIEW</label>
+              <div style={{ position: 'relative', marginTop: '0.6rem' }}>
+                <input type="file" multiple accept="image/*" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }} />
+                <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(99, 102, 241, 0.05)', borderColor: 'rgba(99, 102, 241, 0.3)', minHeight: '60px' }}>
+                  <ImageIcon size={20} color="var(--accent-primary)" />
+                  <span style={{ fontSize: '0.9rem', color: (formData.images?.length || formData.imageUrl) ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '800' }}>
+                    {formData.images?.length > 0 ? `${formData.images.length} Photos Loaded` : (formData.imageUrl ? 'Photo Ready' : 'Upload Multiple Photos')}
+                  </span>
                 </div>
-                <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>AC</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, balcony: !formData.balcony })}>
-                <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.balcony ? 'var(--accent-primary)' : 'transparent' }}>
-                  {formData.balcony && <div style={{ width: '8px', height: '8px', background: "var(--bg-card)", borderRadius: '1px' }} />}
+            </div>
+
+            <div className="input-group">
+              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>ROOM METRICS & FITTINGS</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.2rem', marginTop: '0.5rem' }}>
+                <div className="input-group" style={{ margin: 0 }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: '900', color: 'var(--text-muted)' }}>ROOM SIZE</label>
+                  <input placeholder="e.g. 12x12 sqft" value={formData.roomSize} onChange={e => setFormData({ ...formData, roomSize: e.target.value })} style={inputStyle} />
                 </div>
-                <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>Balcony</span>
+                <div className="input-group" style={{ margin: 0 }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: '900', color: 'var(--text-muted)' }}>FANS</label>
+                  <input type="number" value={formData.fanCount} onChange={e => setFormData({ ...formData, fanCount: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" />
+                </div>
+                <div className="input-group" style={{ margin: 0 }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: '900', color: 'var(--text-muted)' }}>CHAIRS</label>
+                  <input type="number" value={formData.chairCount} onChange={e => setFormData({ ...formData, chairCount: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" />
+                </div>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>WASHROOM</label>
-                <select value={formData.washroomType} onChange={e => setFormData({ ...formData, washroomType: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
-                  <option value="Attached">Attached</option>
-                  <option value="Common">Common / Shared</option>
-                </select>
-              </div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>FACING</label>
-                <input placeholder="Garden" value={formData.facing} onChange={e => setFormData({ ...formData, facing: e.target.value })} style={inputStyle} />
+
+            <div className="input-group">
+              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>FURNITURE & ELECTRONICS & AMENITIES</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', marginTop: '0.5rem' }}>
+                {[
+                  { key: 'isAC', label: 'AC' },
+                  { key: 'attachedBathroom', label: 'Attached Bathroom' },
+                  { key: 'hasGeyser', label: 'Geyser' },
+                  { key: 'hasStudyTable', label: 'Study Table' },
+                  { key: 'hasWardrobe', label: 'Wardrobe' },
+                  { key: 'hasMirror', label: 'Mirror' },
+                  { key: 'balcony', label: 'Balcony' },
+                  { key: 'hasTV', label: 'TV' },
+                  { key: 'hasRefrigerator', label: 'Refrigerator' },
+                  { key: 'hasMicrowave', label: 'Microwave' },
+                  { key: 'hasWiFi', label: 'WiFi' }
+                ].map(item => (
+                  <div
+                    key={item.key}
+                    onClick={() => setFormData({ ...formData, [item.key]: !formData[item.key] })}
+                    style={{
+                      padding: '0.5rem 1rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '800', cursor: 'pointer',
+                      background: formData[item.key] ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                      color: formData[item.key] ? 'white' : 'var(--text-secondary)',
+                      border: '1px solid var(--border-color)', transition: 'all 0.2s'
+                    }}
+                  >
+                    {item.label}
+                  </div>
+                ))}
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>VENTILATION (0-100)</label><input type="number" value={formData.ventilationScore || ''} onChange={e => setFormData({ ...formData, ventilationScore: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>NATURAL LIGHT</label><input type="number" value={formData.naturalLightScore || ''} onChange={e => setFormData({ ...formData, naturalLightScore: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>HYGIENE RATING</label><input type="number" step="0.1" value={formData.hygieneRating || ''} onChange={e => setFormData({ ...formData, hygieneRating: parseFloat(e.target.value) })} style={inputStyle} min="0" max="10" /></div>
-            </div>
+
             <button className="btn btn-primary" type="submit" style={{ padding: '1.2rem', borderRadius: '18px', fontWeight: '950', marginTop: '0.5rem', fontSize: '1rem' }}>Save Changes</button>
           </form>
         </Modal>
 
         <Modal isOpen={isEditBedOpen} onClose={() => setIsEditBedOpen(false)} title={`Edit Bed ${formData.number}`}>
           <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleUpdateBed}>
-            <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED NO.</label><input value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} style={inputStyle} required /></div>
-            <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>STATUS</label>
-              <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
-                <option value="AVAILABLE">AVAILABLE</option>
-                <option value="OCCUPIED">OCCUPIED</option>
-                <option value="MAINTENANCE">MAINTENANCE</option>
-              </select>
-            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>TYPE</label>
-                <select value={formData.bedType} onChange={e => setFormData({ ...formData, bedType: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
-                  <option value="Single">Single</option>
-                  <option value="Lower Bunk">Lower Bunk</option>
-                  <option value="Upper Bunk">Upper Bunk</option>
-                </select>
-              </div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>POSITION</label>
-                <select value={formData.position} onChange={e => setFormData({ ...formData, position: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
-                  <option value="Standard">Standard</option>
-                  <option value="Window side">Window Side</option>
-                  <option value="Corner">Corner</option>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED NO.</label><input value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} style={inputStyle} required /></div>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>STATUS</label>
+                <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
+                  <option value="Vacant">Vacant</option>
+                  <option value="Occupied">Occupied</option>
+                  <option value="Reserved">Reserved</option>
+                  <option value="Blocked">Blocked</option>
+                  <option value="Maintenance">Maintenance</option>
                 </select>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>COMFORT SCORE</label><input type="number" value={formData.comfortScore || ''} onChange={e => setFormData({ ...formData, comfortScore: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, privacyCurtain: !formData.privacyCurtain })}>
-                <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.privacyCurtain ? 'var(--accent-primary)' : 'transparent' }}>
-                  {formData.privacyCurtain && <div style={{ width: '8px', height: '8px', background: "var(--bg-card)", borderRadius: '1px' }} />}
-                </div>
-                <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>Privacy Curtain</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, readingLight: !formData.readingLight })}>
-                <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.readingLight ? 'var(--accent-primary)' : 'transparent' }}>
-                  {formData.readingLight && <div style={{ width: '8px', height: '8px', background: "var(--bg-card)", borderRadius: '1px' }} />}
-                </div>
-                <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>Reading Light</span>
-              </div>
-            </div>
-            <button className="btn btn-primary" type="submit" style={{ padding: '1.1rem', borderRadius: '16px', fontWeight: '900' }}>Save Bed Details</button>
-          </form>
-        </Modal>
 
-        <Modal isOpen={isAddBedOpen} onClose={() => setIsAddBedOpen(false)} title={`Configure New Bed in Room ${selectedRoom?.roomNumber}`}>
-          <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleAddBed}>
-            <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED IDENTIFIER</label><input placeholder="e.g. A, B, 101-A" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} style={inputStyle} required /></div>
-            <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>AVAILABILITY STATUS</label>
-              <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} style={{ ...inputStyle, width: '100%' }} required>
-                <option value="AVAILABLE">AVAILABLE</option>
-                <option value="OCCUPIED">OCCUPIED</option>
-                <option value="MAINTENANCE">MAINTENANCE</option>
-              </select>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED SIZE</label>
+                <select value={formData.bedSize} onChange={e => setFormData({ ...formData, bedSize: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
+                  <option value="">Select Size</option>
+                  <option value="Single">Single</option>
+                  <option value="Double">Double</option>
+                  <option value="Queen">Queen</option>
+                  <option value="King">King</option>
+                  <option value="Bunk Bed">Bunk Bed</option>
+                </select>
+              </div>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED FACING</label>
+                <select value={formData.bedFacing} onChange={e => setFormData({ ...formData, bedFacing: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
+                  <option value="">Select Facing</option>
+                  <option value="Window">Window</option>
+                  <option value="Wall">Wall</option>
+                  <option value="Corner">Corner</option>
+                  <option value="Door">Door</option>
+                </select>
+              </div>
             </div>
+
+            {formData.status === 'Occupied' && (
+              <div className="input-group">
+                <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>OCCUPANT DETAILS</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.2rem', marginTop: '0.5rem' }}>
+                  <input placeholder="Tenant Name" value={formData.tenantName || ''} onChange={e => setFormData({ ...formData, tenantName: e.target.value })} style={inputStyle} required />
+                  <input type="date" placeholder="Join Date" value={formData.joinDate || ''} onChange={e => setFormData({ ...formData, joinDate: e.target.value })} style={inputStyle} required />
+                  <input type="date" placeholder="Exit Date" value={formData.exitDate || ''} onChange={e => setFormData({ ...formData, exitDate: e.target.value })} style={inputStyle} />
+                </div>
+              </div>
+            )}
+
             <div className="input-group">
               <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED PHOTO</label>
               <div style={{ position: 'relative', marginTop: '0.6rem' }}>
@@ -1585,46 +1605,124 @@ const Buildings = () => {
                 </div>
               </div>
             </div>
+
+            <div className="input-group">
+              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED FEATURES & AMENITIES</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', marginTop: '0.5rem' }}>
+                {[
+                  { key: 'hasMattress', label: 'Mattress' },
+                  { key: 'hasPillow', label: 'Pillow' },
+                  { key: 'hasLocker', label: 'Locker' },
+                  { key: 'readingLight', label: 'Reading Lamp' },
+                  { key: 'chargingPoint', label: 'Charging Point' }
+                ].map(item => (
+                  <div
+                    key={item.key}
+                    onClick={() => setFormData({ ...formData, [item.key]: !formData[item.key] })}
+                    style={{
+                      padding: '0.5rem 1rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '800', cursor: 'pointer',
+                      background: formData[item.key] ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                      color: formData[item.key] ? 'white' : 'var(--text-secondary)',
+                      border: '1px solid var(--border-color)', transition: 'all 0.2s'
+                    }}
+                  >
+                    {item.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button className="btn btn-primary" type="submit" style={{ padding: '1.2rem', borderRadius: '18px', fontWeight: '950', marginTop: '0.5rem', fontSize: '1.05rem' }}>Save Bed Details</button>
+          </form>
+        </Modal>
+
+        <Modal isOpen={isAddBedOpen} onClose={() => setIsAddBedOpen(false)} title={`Configure New Bed in Room ${selectedRoom?.roomNumber}`}>
+          <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleAddBed}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED TYPE</label>
-                <select value={formData.bedType} onChange={e => setFormData({ ...formData, bedType: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED NO.</label><input placeholder="e.g. A, B, 101-A" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} style={inputStyle} required /></div>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>STATUS</label>
+                <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} style={{ ...inputStyle, width: '100%' }} required>
+                  <option value="Vacant">Vacant</option>
+                  <option value="Occupied">Occupied</option>
+                  <option value="Reserved">Reserved</option>
+                  <option value="Blocked">Blocked</option>
+                  <option value="Maintenance">Maintenance</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED SIZE</label>
+                <select value={formData.bedSize} onChange={e => setFormData({ ...formData, bedSize: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
+                  <option value="">Select Size</option>
                   <option value="Single">Single</option>
-                  <option value="Lower Bunk">Lower Bunk</option>
-                  <option value="Upper Bunk">Upper Bunk</option>
-                  <option value="Queen">Queen Size</option>
+                  <option value="Double">Double</option>
+                  <option value="Queen">Queen</option>
+                  <option value="King">King</option>
+                  <option value="Bunk Bed">Bunk Bed</option>
                 </select>
               </div>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>POSITION</label>
-                <select value={formData.position} onChange={e => setFormData({ ...formData, position: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
-                  <option value="Standard">Standard</option>
-                  <option value="Window side">Window Side</option>
-                  <option value="Entrance side">Entrance Side</option>
+              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED FACING</label>
+                <select value={formData.bedFacing} onChange={e => setFormData({ ...formData, bedFacing: e.target.value })} style={{ ...inputStyle, width: '100%' }}>
+                  <option value="">Select Facing</option>
+                  <option value="Window">Window</option>
+                  <option value="Wall">Wall</option>
+                  <option value="Corner">Corner</option>
+                  <option value="Door">Door</option>
                 </select>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem' }}>
-              <div className="input-group"><label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>COMFORT SCORE</label><input type="number" value={formData.comfortScore || ''} onChange={e => setFormData({ ...formData, comfortScore: parseInt(e.target.value) })} style={inputStyle} min="0" max="100" /></div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, privacyCurtain: !formData.privacyCurtain })}>
-                <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.privacyCurtain ? 'var(--accent-primary)' : 'transparent' }}>
-                  {formData.privacyCurtain && <div style={{ width: '8px', height: '8px', background: "var(--bg-card)", borderRadius: '1px' }} />}
+
+            {formData.status === 'Occupied' && (
+              <div className="input-group">
+                <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>OCCUPANT DETAILS</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.2rem', marginTop: '0.5rem' }}>
+                  <input placeholder="Tenant Name" value={formData.tenantName || ''} onChange={e => setFormData({ ...formData, tenantName: e.target.value })} style={inputStyle} required />
+                  <input type="date" placeholder="Join Date" value={formData.joinDate || ''} onChange={e => setFormData({ ...formData, joinDate: e.target.value })} style={inputStyle} required />
+                  <input type="date" placeholder="Exit Date" value={formData.exitDate || ''} onChange={e => setFormData({ ...formData, exitDate: e.target.value })} style={inputStyle} />
                 </div>
-                <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>Privacy Curtain</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, readingLight: !formData.readingLight })}>
-                <div style={{ width: '18px', height: '18px', border: '2px solid var(--accent-primary)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData.readingLight ? 'var(--accent-primary)' : 'transparent' }}>
-                  {formData.readingLight && <div style={{ width: '8px', height: '8px', background: "var(--bg-card)", borderRadius: '1px' }} />}
+            )}
+
+            <div className="input-group">
+              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED PHOTO</label>
+              <div style={{ position: 'relative', marginTop: '0.6rem' }}>
+                <input type="file" multiple accept="image/*" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 2 }} />
+                <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', gap: '1.2rem', background: 'rgba(99, 102, 241, 0.05)', borderColor: 'rgba(99, 102, 241, 0.3)', minHeight: '65px' }}>
+                  <ImageIcon size={22} color="var(--accent-primary)" />
+                  <span style={{ fontSize: '0.95rem', color: (formData.images?.length || formData.imageUrl) ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: '800' }}>
+                    {formData.images?.length > 0 ? `${formData.images.length} Photos Loaded` : (formData.imageUrl ? 'Photo Ready' : 'Upload Multiple Photos')}
+                  </span>
                 </div>
-                <span style={{ fontSize: '0.85rem', fontWeight: '800' }}>Reading Light</span>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-tertiary)', padding: '1.2rem', borderRadius: '18px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, operationalMonitoringEnabled: formData.operationalMonitoringEnabled === undefined ? true : !formData.operationalMonitoringEnabled })}>
-              <div style={{ width: '24px', height: '24px', border: '2px solid var(--accent-primary)', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: (formData.operationalMonitoringEnabled !== false) ? 'var(--accent-primary)' : 'transparent', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-                {(formData.operationalMonitoringEnabled !== false) && <div style={{ width: '10px', height: '10px', background: "var(--bg-card)", borderRadius: '2px' }} />}
+
+            <div className="input-group">
+              <label style={{ fontSize: '0.75rem', fontWeight: '900', color: 'var(--text-muted)' }}>BED FEATURES & AMENITIES</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', marginTop: '0.5rem' }}>
+                {[
+                  { key: 'hasMattress', label: 'Mattress' },
+                  { key: 'hasPillow', label: 'Pillow' },
+                  { key: 'hasLocker', label: 'Locker' },
+                  { key: 'readingLight', label: 'Reading Lamp' },
+                  { key: 'chargingPoint', label: 'Charging Point' }
+                ].map(item => (
+                  <div
+                    key={item.key}
+                    onClick={() => setFormData({ ...formData, [item.key]: !formData[item.key] })}
+                    style={{
+                      padding: '0.5rem 1rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '800', cursor: 'pointer',
+                      background: formData[item.key] ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                      color: formData[item.key] ? 'white' : 'var(--text-secondary)',
+                      border: '1px solid var(--border-color)', transition: 'all 0.2s'
+                    }}
+                  >
+                    {item.label}
+                  </div>
+                ))}
               </div>
-              <span style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)' }}>Enable IoT Bed Monitoring</span>
             </div>
+
             <button className="btn btn-primary" type="submit" style={{ padding: '1.2rem', borderRadius: '18px', fontWeight: '950', marginTop: '0.5rem', fontSize: '1.05rem' }}>Save Bed Assignment</button>
           </form>
         </Modal>
@@ -1674,9 +1772,11 @@ const Buildings = () => {
                     {[
                       { label: 'Bed Type', value: viewingBed.bedType || 'Single Bunk', icon: <BedDouble size={16} /> },
                       { label: 'Position', value: viewingBed.position || 'Window Side', icon: <Sun size={16} /> },
-                      { label: 'Material', value: 'High-Grade Steel', icon: <Ruler size={16} /> },
-                      { label: 'Mattress', value: 'Memory Foam', icon: <Heart size={16} /> },
-                      { label: 'Capacity', value: '180kg Max', icon: <Weight size={16} /> },
+                      { label: 'Mattress', value: viewingBed.hasMattress !== false ? 'Yes' : 'No', icon: <Heart size={16} /> },
+                      { label: 'Pillows', value: viewingBed.pillowCount || 0, icon: <Layers size={16} /> },
+                      { label: 'Bed Sheets', value: viewingBed.bedSheetCount || 0, icon: <FileText size={16} /> },
+                      { label: 'Blanket', value: viewingBed.hasBlanket ? 'Yes' : 'No', icon: <Coffee size={16} /> },
+                      { label: 'Dustbin', value: viewingBed.hasDustbin ? 'Yes' : 'No', icon: <Trash2 size={16} /> },
                       { label: 'Power', value: 'USB-C Ready', icon: <BatteryCharging size={16} /> }
                     ].map((spec, i) => (
                       <div key={i} style={{ padding: '1rem', borderRadius: '16px', background: '#F8FAFC', border: '1px solid #F1F5F9' }}>
@@ -2034,16 +2134,7 @@ const Buildings = () => {
           </div>
         </Modal>
 
-        {/* Smart Property Intelligence Drawer */}
-        <PropertyDetailDrawer
-          isOpen={isDetailDrawerOpen}
-          onClose={() => setIsDetailDrawerOpen(false)}
-          target={detailTarget}
-          type={detailType}
-          activeTab={activeDetailTab}
-          onTabChange={setActiveDetailTab}
-        />
-
+        {/* Smart Property Intelligence Drawer removed as per user request */}
         {/* --- Smart Analytics Modal (Legacy, being phased out) --- */}
         <Modal isOpen={isAnalyticsModalOpen} onClose={() => setIsAnalyticsModalOpen(false)} title={`Advanced Analytics - ${analyticsTarget?.name || 'Level ' + analyticsTarget?.floorNumber}`}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -2319,9 +2410,9 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
   }, [building.images]);
 
   const occupancyRate = building.occupancyPercentage !== undefined ? building.occupancyPercentage : 0;
-  const computedRevenue = building.revenueStats?.monthlyRevenue 
-    ? (building.revenueStats.monthlyRevenue / 100000).toFixed(1) + 'L' 
-    : (building.totalBeds && building.rentSingle ? ((building.totalBeds * building.rentSingle)/100000).toFixed(1) + 'L' : '0.0L');
+  const computedRevenue = building.revenueStats?.monthlyRevenue
+    ? (building.revenueStats.monthlyRevenue / 100000).toFixed(1) + 'L'
+    : (building.totalBeds && building.rentSingle ? ((building.totalBeds * building.rentSingle) / 100000).toFixed(1) + 'L' : '0.0L');
   const hygieneScore = building.healthScores?.hygieneScore || (building.smartConfig?.hasAIHygiene ? 98 : 85);
   const energyEfficiency = building.healthScores?.energyEfficiency || (building.smartConfig?.hasClimateControl ? 92 : 82);
 
@@ -2382,14 +2473,6 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
             </h3>
             <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.9rem', color: '#64748B', fontWeight: '700' }}>{building.address}</p>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#10B981', boxShadow: '0 0 10px #10B981' }}
-            />
-            <span style={{ fontSize: '0.65rem', fontWeight: '950', color: '#10B981' }}>LIVE OPERATIONAL</span>
-          </div>
         </div>
       </div>
 
@@ -2431,17 +2514,13 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
         <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', right: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '1.5rem' }}>
             <div>
-              <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.05em' }}>TOTAL CAPACITY</p>
-              <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: '950', color: "var(--text-on-primary)" }}>{building.totalBeds || stats.beds} Beds</p>
-            </div>
-            <div>
               <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.05em' }}>RESIDENCY</p>
               <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: '950', color: "var(--text-on-primary)" }}>{building.genderType}</p>
             </div>
-          </div>
-          <div style={{ padding: '0.8rem 1.2rem', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.3)', color: "var(--text-on-primary)" }}>
-            <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', textAlign: 'center', opacity: 0.8 }}>OCCUPANCY</p>
-            <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '1000' }}>{occupancyRate}%</p>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.6rem', fontWeight: '900', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.05em' }}>WARDEN</p>
+              <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: '950', color: "var(--text-on-primary)" }}>{building.wardenName || building.staffInfo?.name || 'N/A'}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -2451,15 +2530,15 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
       {/* Infrastructure KPI Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.8rem', zIndex: 1 }}>
         {[
-          { label: 'Power', value: building.infrastructure?.powerBackup || 'Backup', icon: <Zap size={14} /> },
-          { label: 'Water', value: building.infrastructure?.waterSupply || '24/7', icon: <Waves size={14} /> },
-          { label: 'Fire', value: building.infrastructure?.fireSafety || 'Secure', icon: <Flame size={14} /> },
-          { label: 'Lift', value: building.infrastructure?.liftStatus || 'Smart', icon: <ArrowUp size={14} /> }
+          { label: 'WiFi', active: building.amenities?.includes('WiFi'), icon: <Wifi size={14} /> },
+          { label: 'Lift', active: building.amenities?.includes('Lift'), icon: <ArrowUp size={14} /> },
+          { label: 'Fire', active: building.amenities?.includes('Fire Safety'), icon: <Flame size={14} /> },
+          { label: 'Kitchen', active: building.amenities?.includes('Common Kitchen'), icon: <Coffee size={14} /> }
         ].map((kpi, i) => (
-          <div key={i} style={{ padding: '0.8rem', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #F1F5F9', textAlign: 'center' }}>
-            <div style={{ color: '#6366F1', marginBottom: '0.4rem', display: 'flex', justifyContent: 'center' }}>{kpi.icon}</div>
+          <div key={i} style={{ padding: '0.8rem', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #F1F5F9', textAlign: 'center', opacity: kpi.active ? 1 : 0.5 }}>
+            <div style={{ color: kpi.active ? '#6366F1' : '#94A3B8', marginBottom: '0.4rem', display: 'flex', justifyContent: 'center' }}>{kpi.icon}</div>
             <p style={{ margin: 0, fontSize: '0.55rem', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase' }}>{kpi.label}</p>
-            <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '950', color: '#1E293B' }}>{kpi.value}</p>
+            <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '950', color: '#1E293B' }}>{kpi.active ? 'Yes' : 'No'}</p>
           </div>
         ))}
       </div>
@@ -2543,9 +2622,9 @@ const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics, onEditBuil
       </div>
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
-          <button 
-            disabled={currentPage === 1} 
-            onClick={() => setCurrentPage(prev => prev - 1)} 
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(prev => prev - 1)}
             className="btn"
             style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
           >
@@ -2554,9 +2633,9 @@ const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics, onEditBuil
           <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
             Page {currentPage} of {totalPages}
           </span>
-          <button 
-            disabled={currentPage === totalPages} 
-            onClick={() => setCurrentPage(prev => prev + 1)} 
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(prev => prev + 1)}
             className="btn"
             style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
           >
@@ -2644,8 +2723,8 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
         }} />
         <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', right: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div>
-            <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '900', color: 'rgba(255,255,255,0.7)', letterSpacing: '0.05em' }}>FLOOR TYPE</p>
-            <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '950', color: "var(--text-on-primary)" }}>{floor.floorCategory || 'General Use'}</p>
+            <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '900', color: 'rgba(255,255,255,0.7)', letterSpacing: '0.05em' }}></p>
+            <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '950', color: "var(--text-on-primary)" }}></p>
           </div>
           <div style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.3)', color: "var(--text-on-primary)", fontSize: '0.7rem', fontWeight: '900' }}>
             {floor.occupancyPercentage || occupancyRate}% OCCUPIED
@@ -2685,10 +2764,10 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
       {/* Infrastructure KPI Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.6rem', zIndex: 1 }}>
         {[
-          { label: 'Washrooms', value: `${floor.washroomsCount !== undefined ? floor.washroomsCount : 4} Units`, icon: <Droplets size={12} /> },
-          { label: 'CCTV', value: floor.cctvStatus || 'Active', icon: <ShieldCheck size={12} /> },
-          { label: 'WiFi', value: floor.wifiStatus || 'Excellent', icon: <Wifi size={12} /> },
-          { label: 'Lounges', value: `${floor.loungesCount !== undefined ? floor.loungesCount : 2} Areas`, icon: <Coffee size={12} /> }
+          { label: 'Washrooms', value: `${floor.washroomsCount !== undefined ? floor.washroomsCount : 0}`, icon: <Droplets size={12} /> },
+          { label: 'Water Pts', value: `${floor.waterPoints || 0}`, icon: <Waves size={12} /> },
+          { label: 'Laundry', value: `${floor.washingMachines || 0}`, icon: <Layers size={12} /> },
+          { label: 'Fridges', value: `${floor.fridges || 0}`, icon: <Coffee size={12} /> }
         ].map((kpi, i) => (
           <div key={i} style={{ padding: '0.6rem', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #F1F5F9', textAlign: 'center' }}>
             <div style={{ color: '#6366F1', marginBottom: '0.2rem', display: 'flex', justifyContent: 'center' }}>{kpi.icon}</div>
@@ -2700,17 +2779,13 @@ const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete
 
       {/* Quick Access Facilities */}
       <div style={{ zIndex: 1 }}>
-        <p style={{ fontSize: '0.75rem', fontWeight: '950', color: '#0F172A', marginBottom: '0.8rem' }}>LIVE FACILITIES</p>
+        <p style={{ fontSize: '0.75rem', fontWeight: '950', color: '#0F172A', marginBottom: '0.8rem' }}>SPACES & FACILITIES</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-          {floor.facilities && floor.facilities.length > 0 ? (
-            floor.facilities.map(f => (
-              <span key={f} style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>
-                {f}
-              </span>
-            ))
-          ) : (
-            <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: '700' }}>No facilities listed</span>
-          )}
+          {floor.hasStudyArea && <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>Study Area</span>}
+          {floor.hasLoungeArea && <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>Lounge Area</span>}
+          {floor.hasBalcony && <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>Balcony</span>}
+          {floor.hasWaitingArea && <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>Waiting Area</span>}
+          {(!floor.hasStudyArea && !floor.hasLoungeArea && !floor.hasBalcony && !floor.hasWaitingArea) && <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: '700' }}>No facilities listed</span>}
         </div>
       </div>
 
@@ -2815,9 +2890,9 @@ const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onEdit, on
       </div>
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
-          <button 
-            disabled={currentPage === 1} 
-            onClick={() => setCurrentPage(prev => prev - 1)} 
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(prev => prev - 1)}
             className="btn"
             style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
           >
@@ -2826,9 +2901,9 @@ const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onEdit, on
           <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
             Page {currentPage} of {totalPages}
           </span>
-          <button 
-            disabled={currentPage === totalPages} 
-            onClick={() => setCurrentPage(prev => prev + 1)} 
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(prev => prev + 1)}
             className="btn"
             style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
           >
@@ -2906,12 +2981,12 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
               )}
             </div>
             <h3 style={{ fontSize: '1.8rem', fontWeight: '1000', margin: 0, color: '#0F172A', letterSpacing: '-0.04em' }}>
-              {room.roomType} <span style={{ fontWeight: '500', color: '#64748B', fontSize: '1.2rem' }}>ΓÇó Suite</span>
+              Suite
             </h3>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: '900', color: '#64748B', letterSpacing: '0.05em' }}>MONTHLY RENT</p>
-            <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: '1000', color: themeColor }}>Γé╣{room.rentAmount || 0}</p>
+            <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: '900', color: '#64748B', letterSpacing: '0.05em' }}></p>
+            <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: '1000', color: themeColor }}></p>
           </div>
         </div>
       </div>
@@ -2972,8 +3047,8 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
       {/* Specifications Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem', zIndex: 1 }}>
         {[
-          { label: 'Floor Type', value: room.floorType || 'Standard', icon: <Ruler size={14} /> },
-          { label: 'Facing', value: room.facing || 'Standard', icon: <Sun size={14} /> },
+          { label: 'Attached Bath', value: room.attachedBathroom ? 'Yes' : 'No', icon: <Droplets size={14} /> },
+          { label: 'Room Size', value: room.roomSize || 'N/A', icon: <Maximize size={14} /> },
           { label: 'Balcony', value: room.balcony ? 'Yes' : 'No', icon: <ShieldCheck size={14} /> }
         ].map((spec, i) => (
           <div key={i} style={{ padding: '0.6rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #F1F5F9' }}>
@@ -2984,29 +3059,33 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
         ))}
       </div>
 
-      {/* Amenities Section */}
-      <div style={{ zIndex: 1 }}>
-        <p style={{ fontSize: '0.75rem', fontWeight: '950', color: '#0F172A', marginBottom: '0.8rem' }}>AMENITIES</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-          {(room.furniture?.length > 0 ? room.furniture : ['Standard']).slice(0, 4).map(a => (
-            <span key={a} style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>
-              {a}
-            </span>
-          ))}
-          {room.furniture?.length > 4 && <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: '#F1F5F9', color: '#64748B', fontSize: '0.7rem', fontWeight: '800' }}>+{room.furniture.length - 4} more</span>}
-        </div>
+      {/* Appliances & Details */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.6rem', zIndex: 1 }}>
+        {[
+          { label: 'Fans', value: room.fanCount || 0, icon: <Fan size={12} /> },
+          { label: 'Chairs', value: room.chairCount || 0, icon: <LayoutGrid size={12} /> },
+          { label: 'Geyser', value: room.hasGeyser ? 'Yes' : 'No', icon: <Droplets size={12} /> },
+          { label: 'TV', value: room.hasTV ? 'Yes' : 'No', icon: <Monitor size={12} /> }
+        ].map((kpi, i) => (
+          <div key={i} style={{ padding: '0.5rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #F1F5F9', textAlign: 'center' }}>
+            <div style={{ color: '#6366F1', marginBottom: '0.2rem', display: 'flex', justifyContent: 'center' }}>{kpi.icon}</div>
+            <p style={{ margin: 0, fontSize: '0.5rem', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase' }}>{kpi.label}</p>
+            <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '950', color: '#1E293B' }}>{kpi.value}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Washroom Badges */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', zIndex: 1 }}>
-        {[
-          { label: `${room.washroomType} Washroom`, icon: <ShieldCheck size={12} />, color: '#6366F1' },
-          { label: `${room.windowCount || 0} Windows`, icon: <Wind size={12} />, color: '#3B82F6' }
-        ].map(tag => (
-          <span key={tag.label} style={{ padding: '0.4rem 0.8rem', borderRadius: '10px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <span style={{ color: tag.color }}>{tag.icon}</span> {tag.label}
-          </span>
-        ))}
+      {/* Amenities Section */}
+      <div style={{ zIndex: 1 }}>
+        <p style={{ fontSize: '0.75rem', fontWeight: '950', color: '#0F172A', marginBottom: '0.6rem' }}>AMENITIES</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+          {room.hasStudyTable && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Study Table</span>}
+          {room.hasWardrobe && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Wardrobe</span>}
+          {room.hasMirror && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Mirror</span>}
+          {room.hasRefrigerator && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Fridge</span>}
+          {room.hasMicrowave && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Microwave</span>}
+          {room.hasWiFi && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>WiFi</span>}
+        </div>
       </div>
 
       {/* Action Footer */}
@@ -3015,6 +3094,18 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
         paddingTop: '0.8rem', borderTop: '1px solid #F1F5F9', zIndex: 1, alignItems: 'center'
       }}>
         <div style={{ display: 'flex', gap: '0.4rem' }}>
+          <button
+            className="btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              const text = encodeURIComponent(`Check out Room ${room.roomNumber} (${room.roomType}) at our property!\nRent: ₹${room.rentAmount}/month\nCapacity: ${room.capacity} Beds\nContact us for booking!`);
+              window.open(`https://wa.me/?text=${text}`, '_blank');
+            }}
+            style={{ padding: '0.9rem', borderRadius: '12px', background: '#DCFCE7', border: 'none', color: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            title="Share to WhatsApp"
+          >
+            <Smartphone size={16} />
+          </button>
           <button
             className="btn"
             onClick={(e) => {
@@ -3049,9 +3140,9 @@ const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelet
 };
 
 const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssign, onDelete }) => {
-  const isAvailable = bed.status === 'AVAILABLE';
-  const isOccupied = bed.status === 'OCCUPIED';
-  const isMaintenance = bed.status === 'MAINTENANCE';
+  const isAvailable = bed.status === 'Vacant';
+  const isOccupied = bed.status === 'Occupied';
+  const isMaintenance = bed.status === 'Maintenance';
 
 
 
@@ -3131,7 +3222,7 @@ const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssi
               )}
             </div>
             <p style={{ fontSize: '0.75rem', fontWeight: '800', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              {bed.bedType} ΓÇó {bed.position}
+              {bed.bedSize || 'Standard'} Size ΓÇó {bed.isWindowSide ? 'Window Side' : bed.isCorner ? 'Corner' : bed.isMiddle ? 'Middle' : 'Standard'}
             </p>
           </div>
         </div>
@@ -3236,90 +3327,42 @@ const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssi
           transition: 'all 0.3s ease'
         }}>
           <h4 style={{ fontSize: '0.65rem', fontWeight: '900', color: '#94A3B8', margin: 0, letterSpacing: '0.05em' }}>SPECS</h4>
-          {[
-            { label: 'Status', value: bed.status, icon: <Sparkles size={14} /> },
-            { label: 'Position', value: bed.position || 'Standard', icon: <Wind size={14} /> }
-          ].map((s, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ color: '#6366F1' }}>{s.icon}</div>
-              <div style={{ lineHeight: 1 }}>
-                <p style={{ fontSize: '0.8rem', fontWeight: '800', color: '#1E293B', margin: 0 }}>{s.value}</p>
-                <p style={{ fontSize: '0.6rem', color: '#64748B', margin: 0, fontWeight: '700' }}>{s.label}</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem' }}>
+            {[
+              { label: 'Status', value: bed.status, icon: <Sparkles size={14} /> }
+            ].map((s, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ color: '#6366F1' }}>{s.icon}</div>
+                <div style={{ lineHeight: 1 }}>
+                  <p style={{ fontSize: '0.7rem', fontWeight: '800', color: '#1E293B', margin: 0 }}>{s.value}</p>
+                  <p style={{ fontSize: '0.55rem', color: '#64748B', margin: 0, fontWeight: '700' }}>{s.label}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Comfort Score */}
-        <div className="bento-item" style={{
-          background: 'rgba(248, 250, 252, 0.8)',
-          padding: '1rem',
-          borderRadius: '20px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          position: 'relative',
-          transition: 'all 0.3s ease'
-        }}>
-          <div style={{
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
-            background: 'conic-gradient(#6366F1 85%, #E2E8F0 0)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '0.5rem'
-          }}>
-            <div style={{
-              width: '50px',
-              height: '50px',
-              borderRadius: '50%',
-              background: "var(--bg-card)",
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1rem',
-              fontWeight: '1000',
-              color: '#1E293B'
-            }}>{bed.comfortScore || 85}%</div>
+            ))}
           </div>
-          <p style={{ fontSize: '0.65rem', fontWeight: '900', color: '#64748B', margin: 0 }}>COMFORT SCORE</p>
         </div>
 
-        {/* Smart Features */}
+        {/* Features */}
         <div className="bento-item" style={{
-          gridColumn: 'span 2',
           background: 'rgba(248, 250, 252, 0.8)',
           padding: '1rem',
           borderRadius: '20px',
           transition: 'all 0.3s ease'
         }}>
-          <h4 style={{ fontSize: '0.65rem', fontWeight: '900', color: '#94A3B8', margin: '0 0 0.8rem 0', letterSpacing: '0.05em' }}>SMART FEATURES</h4>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
-            {bed.readingLight && (
-              <div style={{ padding: '0.4rem 0.6rem', borderRadius: '10px', background: "var(--bg-card)", border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>
-                <span style={{ color: '#6366F1' }}><Lightbulb size={12} /></span> Reading Light
-              </div>
-            )}
-            {bed.privacyCurtain && (
-              <div style={{ padding: '0.4rem 0.6rem', borderRadius: '10px', background: "var(--bg-card)", border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>
-                <span style={{ color: '#6366F1' }}><ShieldCheck size={12} /></span> Privacy Curtain
-              </div>
-            )}
-            {!bed.readingLight && !bed.privacyCurtain && (
-              <div style={{ padding: '0.4rem 0.6rem', borderRadius: '10px', background: "var(--bg-card)", border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>
-                <span style={{ color: '#64748B' }}>Standard Config</span>
-              </div>
-            )}
+          <h4 style={{ fontSize: '0.65rem', fontWeight: '900', color: '#94A3B8', margin: '0 0 0.8rem 0', letterSpacing: '0.05em' }}>FEATURES</h4>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+            {bed.hasMattress && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Mattress</span>}
+            {bed.hasPillow && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Pillow</span>}
+            {bed.hasLocker && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Locker</span>}
+            {bed.readingLight && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Reading Lamp</span>}
+            {bed.chargingPoint && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Charging Point</span>}
+            {!bed.hasMattress && !bed.hasPillow && !bed.hasLocker && !bed.readingLight && !bed.chargingPoint && <span style={{ fontSize: '0.65rem', color: '#94A3B8', fontWeight: '700' }}>Standard</span>}
           </div>
         </div>
       </div>
 
       {/* Tenant Section (If occupied) */}
-      {bed.tenant && (
+      {(bed.tenant || bed.occupantDetails?.name) && (
         <div style={{
           marginTop: '0.4rem',
           padding: '0.8rem',
@@ -3331,11 +3374,11 @@ const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssi
           gap: '0.8rem'
         }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#6366F1', color: "var(--text-on-primary)", display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: '900' }}>
-            {typeof bed.tenant === 'object' ? bed.tenant.name?.[0] : bed.tenant?.[0]}
+            {bed.occupantDetails?.name ? bed.occupantDetails.name[0] : (typeof bed.tenant === 'object' ? bed.tenant.name?.[0] : bed.tenant?.[0])}
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
             <p style={{ fontSize: '0.8rem', fontWeight: '900', color: '#1E293B', margin: 0, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-              {typeof bed.tenant === 'object' ? bed.tenant.name : bed.tenant}
+              {bed.occupantDetails?.name || (typeof bed.tenant === 'object' ? bed.tenant.name : bed.tenant)}
             </p>
             <p style={{ fontSize: '0.65rem', color: '#64748B', margin: 0, fontWeight: '700' }}>Verified Tenant</p>
           </div>
@@ -3370,32 +3413,7 @@ const SmartBedCard = ({ bed, floor, onEdit, onViewDetails, onViewHistory, onAssi
             <UserCheck size={16} /> {isOccupied ? 'Reassign' : 'Assign'}
           </motion.button>
         )}
-        <motion.button
-          whileHover={{ scale: 1.05, background: '#1E293B' }}
-          whileTap={{ scale: 0.95 }}
-          onClick={(e) => { e.stopPropagation(); onViewDetails(bed, 'bed'); }}
-          style={{
-            flex: isAvailable ? 'none' : 1,
-            width: isAvailable ? 'auto' : 'auto',
-            padding: '0.6rem 1rem',
-            borderRadius: '14px',
-            background: '#0F172A',
-            color: "var(--text-on-primary)",
-            border: 'none',
-            fontSize: '0.8rem',
-            fontWeight: '900',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.8rem'
-          }}
-        >
-          <div style={{ width: '28px', height: '28px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
-            <img src={bed.images?.[0] || 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=100&q=80'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Thumb" />
-          </div>
-          {!isAvailable && 'Intelligence'}
-        </motion.button>
+
         <motion.button
           whileHover={{ scale: 1.1, background: '#FEF2F2' }}
           whileTap={{ scale: 0.9 }}
@@ -3425,11 +3443,11 @@ const BedsList = ({ beds, room, floor, building, onBack, onAdd, onEditBed, onVie
 
   const filteredBeds = beds.filter(b => {
     if (activeFilter === 'All Beds') return true;
-    if (activeFilter === 'Lower Bunk') return b.bedType === 'Lower Bunk';
-    if (activeFilter === 'Upper Bunk') return b.bedType === 'Upper Bunk';
-    if (activeFilter === 'Window Side') return b.position?.toLowerCase().includes('window');
-    if (activeFilter === 'Budget') return (b.price || 8500) < 9000;
-    if (activeFilter === 'Premium') return (b.price || 8500) >= 9000;
+    if (activeFilter === 'Vacant') return b.status === 'Vacant';
+    if (activeFilter === 'Occupied') return b.status === 'Occupied';
+    if (activeFilter === 'Reserved') return b.status === 'Reserved';
+    if (activeFilter === 'Blocked') return b.status === 'Blocked';
+    if (activeFilter === 'Maintenance') return b.status === 'Maintenance';
     return true;
   });
 
@@ -3454,14 +3472,25 @@ const BedsList = ({ beds, room, floor, building, onBack, onAdd, onEditBed, onVie
             <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{building?.name} ΓÇó Floor {floor?.floorNumber || 'N/A'} ΓÇó Smart Bed Management</p>
           </div>
         </div>
-        <button className="btn btn-primary" onClick={onAdd} style={{ padding: '0.8rem 1.8rem', borderRadius: '16px', fontWeight: '950', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.8rem', boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)' }}>
-          <PlusCircle size={22} /> Deploy New Bed
+        <button
+          className="btn btn-primary"
+          onClick={onAdd}
+          disabled={beds.length >= (room?.capacity || Infinity)}
+          style={{
+            padding: '0.8rem 1.8rem', borderRadius: '16px', fontWeight: '950', fontSize: '1rem',
+            display: 'flex', alignItems: 'center', gap: '0.8rem',
+            boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)',
+            opacity: beds.length >= (room?.capacity || Infinity) ? 0.5 : 1,
+            cursor: beds.length >= (room?.capacity || Infinity) ? 'not-allowed' : 'pointer'
+          }}
+        >
+          <PlusCircle size={22} /> {beds.length >= (room?.capacity || Infinity) ? 'Room at Capacity' : 'Deploy New Bed'}
         </button>
       </div>
 
       {/* Filter Chips Bar */}
       <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '2.5rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none' }}>
-        {['All Beds', 'Lower Bunk', 'Upper Bunk', 'Window Side', 'Budget', 'Premium'].map((f) => (
+        {['All Beds', 'Vacant', 'Occupied', 'Reserved', 'Blocked', 'Maintenance'].map((f) => (
           <button
             key={f}
             onClick={() => setActiveFilter(f)}
