@@ -209,13 +209,6 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/wishlist', require('./routes/wishlistRoutes'));
 app.use('/api/booking', require('./routes/mobileBookingRoutes'));
 
-// ─── Spec-compliant singular path aliases ─────────────────────────────────────
-// The API spec uses singular nouns; backend uses plural. Both now work.
-app.use('/api/room-transfer', require('./routes/roomTransferRoutes'));
-app.use('/api/confidential-report', require('./routes/confidentialReportRoutes'));
-app.use('/api/service', require('./routes/serviceRoutes'));
-
-
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
 });

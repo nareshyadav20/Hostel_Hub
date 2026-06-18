@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
+
+.os-page {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #f8f9fb;
+  min-height: 100vh;
+  padding: 2.5rem 5% 4rem;
+}
+
+.os-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── HEADER ─────────────────────── */
+.os-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.os-eyebrow {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 0.8rem;
+}
+
+.os-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.8rem;
+}
+
+.os-divider {
+  width: 50px;
+  height: 2px;
+  background: #4f46e5;
+  margin: 0 auto 1rem;
+  border-radius: 2px;
+}
+
+.os-subtitle {
+  font-size: 0.95rem;
+  color: #6b7280;
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ── GRID ───────────────────────── */
+.os-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+}
+
+/* ── CARD ───────────────────────── */
+.os-card {
+  background: #ffffff;
+  border: 1px solid #e9eaec;
+  border-radius: 16px;
+  padding: 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+}
+
+.os-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.07);
+  border-color: #c7d2fe;
+}
+
+.os-card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.os-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.os-card-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.os-card-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 400;
+}
+
+/* ── RESPONSIVE ─────────────────── */
+@media (max-width: 900px) {
+  .os-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 580px) {
+  .os-page { padding: 2rem 1.2rem 3rem; }
+  .os-grid { grid-template-columns: 1fr; }
+}

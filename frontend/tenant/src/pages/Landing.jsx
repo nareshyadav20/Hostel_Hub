@@ -6,7 +6,7 @@ import './Landing.css';
 import API from '../api/axios';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 
-const EXPLORE_CACHE_KEY = 'hh_explore_buildings_v2';
+const EXPLORE_CACHE_KEY = 'hh_explore_buildings_v3';
 const EXPLORE_CACHE_TTL = 3 * 60 * 1000;
 
 const getCachedBuildings = () => {
@@ -58,9 +58,20 @@ const Landing = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  // Parse URL parameters
+  // Parse URL parameters — reset all filters first, then apply only what's in the URL
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
+
+    // Reset all filters first so switching categories doesn't carry over old filters
+    setSelectedCity('All Cities');
+    setSelectedAmenities([]);
+    setSearchLocality('');
+    setHostelType('');
+    setSharing('');
+    setSortBy('');
+    setBudgetMin(0);
+    setBudgetMax(60000);
+
     const rawLocationInput = queryParams.get('city') || queryParams.get('location');
     if (rawLocationInput) {
       const lowerLoc = rawLocationInput.toLowerCase();
@@ -74,6 +85,8 @@ const Landing = () => {
     }
     const typeParam = queryParams.get('hostelType');
     if (typeParam) setHostelType(typeParam);
+    const catParam = queryParams.get('category');
+    if (catParam) setHostelType(catParam === 'Luxury' ? 'Premium' : catParam);
     const stayTypeParam = queryParams.get('stayType');
     if (stayTypeParam) setSharing(stayTypeParam);
     const localityParam = queryParams.get('locality');
@@ -146,7 +159,7 @@ const Landing = () => {
         img: b.images && b.images[0] ? ((b.images[0].startsWith('http') || b.images[0].startsWith('data:')) ? b.images[0] : `http://localhost:5000${b.images[0]}`) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
         amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['WiFi', 'AC', 'Food/Mess'],
         gender: (b.genderType && !['mixed', 'unisex'].includes(b.genderType.toLowerCase())) ? b.genderType : 'Coliving',
-        category: b.category || 'Student',
+        category: b.category || '',
         hasSingle: has1,
         hasDouble: has2,
         hasTriple: has3,
@@ -170,8 +183,9 @@ const Landing = () => {
   const fetchHostels = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const res = await API.get('/buildings/public');
-      const rawData = unwrapBuildingsArray(res.data);
+      const res = await API.get('/buildings/public?limit=200');
+      // Backend may return paginated { success, data, pagination } or a plain array
+      const rawData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       const formatted = formatBuildings(rawData);
       setCachedBuildings(formatted);
       setHostels(formatted);
@@ -244,7 +258,7 @@ const Landing = () => {
         const matchesCity = h.city && h.city.toLowerCase().includes(query);
         const matchesLocality = h.locality && h.locality.toLowerCase().includes(query);
         const matchesName = h.name && h.name.toLowerCase().includes(query);
-        
+
         if (!matchesCity && !matchesLocality && !matchesName) return false;
         if (matchesCity) bypassCityFilter = true;
       }
@@ -257,23 +271,26 @@ const Landing = () => {
       if (budgetMin > 0 && h.price < budgetMin) return false;
       if (budgetMax < 60000 && h.price > budgetMax) return false;
 
-      // Hostel Type (Gender)
+      // Hostel Type (Gender + Category combined)
       if (hostelType && hostelType !== 'Any') {
         const typeStr = hostelType.toLowerCase();
         const genderStr = (h.gender || '').toLowerCase();
+        const catStr = (h.category || '').toLowerCase();
         if (typeStr === "men's" && !['boys', 'male', 'men', "men's"].includes(genderStr)) return false;
         if (typeStr === "women's" && !['girls', 'female', 'women', "women's"].includes(genderStr)) return false;
         if (typeStr === "co-living" && !['unisex', 'co-living', 'coliving', 'both'].includes(genderStr)) return false;
+        if (typeStr === 'premium' && catStr !== 'luxury') return false;
+        if (typeStr === 'student' && catStr !== 'student') return false;
       }
 
       // Sharing
       if (sharing && sharing !== 'Any') {
-         if (sharing === 'Single' && !h.hasSingle) return false;
-         if (sharing === '2' && !h.hasDouble) return false;
-         if (sharing === '3' && !h.hasTriple) return false;
-         if (sharing === '4' && !h.has4) return false;
-         if (sharing === '5' && !h.has5) return false;
-         if (sharing === '6' && !h.has6) return false;
+        if (sharing === 'Single' && !h.hasSingle) return false;
+        if (sharing === '2' && !h.hasDouble) return false;
+        if (sharing === '3' && !h.hasTriple) return false;
+        if (sharing === '4' && !h.has4) return false;
+        if (sharing === '5' && !h.has5) return false;
+        if (sharing === '6' && !h.has6) return false;
       }
 
       // Amenities
@@ -426,9 +443,9 @@ const Landing = () => {
             {/* Location — cities */}
             <div className="exp-filter-block">
               <h4 className="exp-filter-label">Location</h4>
-              <select 
-                className="exp-select" 
-                value={selectedCity} 
+              <select
+                className="exp-select"
+                value={selectedCity}
                 onChange={e => {
                   const city = e.target.value;
                   setSelectedCity(city);
@@ -488,7 +505,7 @@ const Landing = () => {
             <div className="exp-filter-block">
               <h4 className="exp-filter-label">Hostel Type</h4>
               <div className="exp-pill-group">
-                {["Any", "Men's", "Women's", 'Co-living'].map(t => (
+                {["Any", "Men's", "Women's", 'Co-living', 'Premium', 'Student'].map(t => (
                   <button key={t}
                     className={`exp-pill ${(!hostelType && t === 'Any') || hostelType === t ? 'active' : ''}`}
                     onClick={() => setHostelType(t === 'Any' ? '' : t)}
