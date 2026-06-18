@@ -206,7 +206,6 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/wishlist', require('./routes/wishlistRoutes'));
 app.use('/api/booking', require('./routes/mobileBookingRoutes'));
 
-
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
 });
