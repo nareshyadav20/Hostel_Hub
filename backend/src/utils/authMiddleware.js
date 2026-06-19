@@ -1,10 +1,14 @@
 const jwt = require('jsonwebtoken');
 
 const authMiddleware = (req, res, next) => {
+  console.log(`[AUTH DEBUG] Route: ${req.originalUrl}`);
+  console.log(`[AUTH DEBUG] Authorization Header:`, req.headers.authorization);
+  
   const authHeader = req.header('Authorization');
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
 
   if (!token) {
+    console.log(`[AUTH DEBUG] Token missing. Request rejected.`);
     return res.status(401).json({ success: false, message: 'No token, authorization denied' });
   }
 

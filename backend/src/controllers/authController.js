@@ -163,9 +163,64 @@ const refreshToken = async (req, res) => {
   }
 };
 
+const sendOtp = async (req, res) => {
+  const { phone } = req.body;
+  if (!phone) return res.status(400).json({ success: false, message: 'Phone number is required' });
+
+  try {
+    const PasswordReset = require('../models/PasswordReset');
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+    const resetToken = require('crypto').randomBytes(32).toString('hex');
+    
+    // Store phone in the email field of PasswordReset schema for re-usability
+    await PasswordReset.create({ email: phone, otp, resetToken, expiresAt });
+    
+    console.log(`📱 [DEV_OTP] Sending OTP ${otp} to phone ${phone}`);
+    res.status(200).json({ success: true, message: 'OTP sent successfully', devOtp: otp });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error generating OTP', error: error.message });
+  }
+};
+
+const verifyOtp = async (req, res) => {
+  const { phone, otp } = req.body;
+  if (!phone || !otp) return res.status(400).json({ success: false, message: 'Phone and OTP required' });
+
+  try {
+    const PasswordReset = require('../models/PasswordReset');
+    const record = await PasswordReset.findOne({ email: phone, otp, used: false, expiresAt: { $gt: new Date() } });
+    if (!record) return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+    
+    record.used = true;
+    await record.save();
+
+    let user = await User.findOne({ phone });
+    if (!user) {
+      // Auto-register new user on successful OTP if not exists
+      user = await User.create({
+        phone,
+        email: `${phone}@temp.com`, // dummy email
+        password: require('crypto').randomBytes(16).toString('hex'),
+        name: 'Tenant User',
+        role: 'TENANT'
+      });
+      const Tenant = require('../models/Tenant');
+      await Tenant.create({ name: user.name, email: user.email, phone: user.phone, status: 'PENDING' });
+    }
+
+    const token = jwt.sign({ id: user._id, role: user.role, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const refreshTokenStr = jwt.sign({ id: user._id, role: user.role, email: user.email }, process.env.JWT_SECRET, { expiresIn: '30d' });
+
+    res.status(200).json({ success: true, message: 'OTP verified', user, token, refreshToken: refreshTokenStr, accessToken: token });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
 const logout = async (req, res) => {
   // Client should discard token; if using cookies, clear them here
   return res.json({ success: true, message: 'Logged out' });
 };
 
-module.exports = { register, login, refreshToken, logout };
+module.exports = { register, login, refreshToken, logout, sendOtp, verifyOtp };

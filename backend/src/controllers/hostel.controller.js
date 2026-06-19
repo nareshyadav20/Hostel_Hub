@@ -89,6 +89,19 @@ const getHostels = async (req, res) => {
   }
 };
 
+const getHostelById = async (req, res) => {
+  try {
+    const hostel = await HostelListing.findById(req.params.id);
+    if (!hostel) {
+      return res.status(404).json({ success: false, message: 'Hostel not found' });
+    }
+    res.status(200).json({ success: true, data: hostel });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
 module.exports = {
-  getHostels
+  getHostels,
+  getHostelById
 };

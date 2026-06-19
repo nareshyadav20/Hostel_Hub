@@ -209,6 +209,8 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/wishlist', require('./routes/wishlistRoutes'));
 app.use('/api/booking', require('./routes/mobileBookingRoutes'));
 app.use('/api/v1/hostels', require('./routes/hostel.routes'));
+app.use('/api/amenities', require('./routes/amenitiesRoutes'));
+app.use('/api/reviews', require('./routes/reviewRoutes'));
 
 
 app.get('/api/ping', (req, res) => {

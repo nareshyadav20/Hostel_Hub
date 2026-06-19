@@ -12,6 +12,9 @@ router.get('/list', hostelController.getHostelsPaginated);
 // GET /api/hostels/search?location=...&sortBy=... → Search + sort + paginate
 router.get('/search', hostelController.searchHostels);
 
+// GET /api/hostels/public                        → Public alias (prevents /public hitting /:hostelId wildcard)
+router.get('/public', hostelController.searchHostels);
+
 // GET /api/hostels?page=1&limit=20&location=...  → Spec-compliant unified endpoint
 router.get('/', hostelController.searchHostels);
 

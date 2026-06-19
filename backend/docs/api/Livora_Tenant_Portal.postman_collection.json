@@ -1,0 +1,124 @@
+﻿{
+  "info": {
+    "name": "Livora Hostel Hub Tenant Portal APIs",
+    "_postman_id": "livora-hostel-hub-tenant-v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://livora-hostel-hub-1.onrender.com", "type": "string" },
+    { "key": "token", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        { "name": "Register", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] }, "body": { "mode": "raw", "raw": "{\n  \"name\": \"Test Tenant\",\n  \"email\": \"tenant@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"TENANT\",\n  \"phone\": \"+919876543210\"\n}" } } },
+        { "name": "Login", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const j = pm.response.json(); if(j.token) pm.collectionVariables.set('token', j.token);"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] }, "body": { "mode": "raw", "raw": "{\n  \"email\": \"tenant@example.com\",\n  \"password\": \"password123\"\n}" } } },
+        { "name": "Send OTP (Phone)", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/api/auth/send-otp", "host": ["{{baseUrl}}"], "path": ["api","auth","send-otp"] }, "body": { "mode": "raw", "raw": "{\n  \"phone\": \"+919876543210\"\n}" } } },
+        { "name": "Verify OTP (Phone)", "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const j = pm.response.json(); if(j.token) pm.collectionVariables.set('token', j.token);"] } }], "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/api/auth/verify-otp", "host": ["{{baseUrl}}"], "path": ["api","auth","verify-otp"] }, "body": { "mode": "raw", "raw": "{\n  \"phone\": \"+919876543210\",\n  \"otp\": \"123456\"\n}" } } },
+        { "name": "Refresh Token", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/api/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api","auth","refresh"] }, "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{token}}\"\n}" } } },
+        { "name": "Logout", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": { "raw": "{{baseUrl}}/api/auth/logout", "host": ["{{baseUrl}}"], "path": ["api","auth","logout"] } } },
+        { "name": "Forgot Password", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": { "raw": "{{baseUrl}}/api/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["api","auth","forgot-password"] }, "body": { "mode": "raw", "raw": "{\n  \"email\": \"tenant@example.com\"\n}" } } }
+      ]
+    },
+    {
+      "name": "Public - Buildings",
+      "item": [
+        { "name": "Get All Public Buildings", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/buildings/public?limit=20&page=1", "host": ["{{baseUrl}}"], "path": ["api","buildings","public"], "query": [{"key":"limit","value":"20"},{"key":"page","value":"1"}] } } },
+        { "name": "Get Public Building by ID", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/buildings/public/:id", "host": ["{{baseUrl}}"], "path": ["api","buildings","public",":id"], "variable": [{"key":"id","value":"BUILDING_ID"}] } } },
+        { "name": "Get Platform Stats", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/buildings/public/stats", "host": ["{{baseUrl}}"], "path": ["api","buildings","public","stats"] } } }
+      ]
+    },
+    {
+      "name": "Public - Hostels",
+      "item": [
+        { "name": "Search Hostels", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/hostels?location=Hyderabad&sortBy=rating&sortOrder=desc&page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["api","hostels"], "query": [{"key":"location","value":"Hyderabad"},{"key":"sortBy","value":"rating"},{"key":"sortOrder","value":"desc"},{"key":"page","value":"1"},{"key":"limit","value":"20"}] } } },
+        { "name": "Get Public Hostels (alias)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/hostels/public", "host": ["{{baseUrl}}"], "path": ["api","hostels","public"] } } },
+        { "name": "Get Hostel Detail by ID", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/hostels/:hostelId", "host": ["{{baseUrl}}"], "path": ["api","hostels",":hostelId"], "variable": [{"key":"hostelId","value":"HOSTEL_ID"}] } } }
+      ]
+    },
+    {
+      "name": "Public - Rooms",
+      "item": [
+        { "name": "Get Public Rooms", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/rooms/public?page=1&limit=50", "host": ["{{baseUrl}}"], "path": ["api","rooms","public"], "query": [{"key":"page","value":"1"},{"key":"limit","value":"50"}] } } }
+      ]
+    },
+    {
+      "name": "Public - Floors",
+      "item": [
+        { "name": "Get Public Floors", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/floors/public", "host": ["{{baseUrl}}"], "path": ["api","floors","public"] } } }
+      ]
+    },
+    {
+      "name": "Public - Amenities",
+      "item": [
+        { "name": "Get All Amenities", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/amenities/public", "host": ["{{baseUrl}}"], "path": ["api","amenities","public"] } } }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        { "name": "Get Reviews (Public)", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/reviews?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["api","reviews"], "query": [{"key":"buildingId","value":""},{"key":"page","value":"1"},{"key":"limit","value":"20"}] } } },
+        { "name": "Submit Review (Protected)", "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/reviews", "host": ["{{baseUrl}}"], "path": ["api","reviews"] }, "body": { "mode": "raw", "raw": "{\n  \"buildingId\": \"BUILDING_ID\",\n  \"rating\": 4,\n  \"comment\": \"Great hostel!\"\n}" } } },
+        { "name": "Get My Reviews (Protected)", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/reviews/me", "host": ["{{baseUrl}}"], "path": ["api","reviews","me"] } } }
+      ]
+    },
+    {
+      "name": "Profile (Protected)",
+      "item": [
+        { "name": "Get Profile", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/profile", "host": ["{{baseUrl}}"], "path": ["api","profile"] } } },
+        { "name": "Update Profile", "request": { "method": "PUT", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/profile", "host": ["{{baseUrl}}"], "path": ["api","profile"] }, "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"+919999999999\"\n}" } } },
+        { "name": "Get Complete Tenant Profile", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/tenant-portal/complete-profile", "host": ["{{baseUrl}}"], "path": ["api","tenant-portal","complete-profile"] } } }
+      ]
+    },
+    {
+      "name": "Bookings (Protected)",
+      "item": [
+        { "name": "Get My Bookings", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/bookings/me", "host": ["{{baseUrl}}"], "path": ["api","bookings","me"] } } },
+        { "name": "Create Booking", "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/bookings", "host": ["{{baseUrl}}"], "path": ["api","bookings"] }, "body": { "mode": "raw", "raw": "{\n  \"buildingId\": \"BUILDING_ID\",\n  \"tenantId\": \"TENANT_ID\",\n  \"category\": \"Standard\",\n  \"moveInDate\": \"2026-07-01\",\n  \"securityDeposit\": 5000,\n  \"onboardingFee\": 500,\n  \"totalAmount\": 8000,\n  \"method\": \"UPI\",\n  \"sharingType\": 2,\n  \"guestName\": \"Test Tenant\",\n  \"email\": \"tenant@example.com\",\n  \"phone\": \"+919876543210\"\n}" } } }
+      ]
+    },
+    {
+      "name": "Payments (Protected)",
+      "item": [
+        { "name": "Get My Payments", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/payments", "host": ["{{baseUrl}}"], "path": ["api","payments"] } } }
+      ]
+    },
+    {
+      "name": "Complaints (Protected)",
+      "item": [
+        { "name": "Get My Complaints", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/complaints", "host": ["{{baseUrl}}"], "path": ["api","complaints"] } } },
+        { "name": "Create Complaint", "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/complaints", "host": ["{{baseUrl}}"], "path": ["api","complaints"] }, "body": { "mode": "raw", "raw": "{\n  \"title\": \"Water leakage\",\n  \"description\": \"Water leakage in room 204.\",\n  \"category\": \"Maintenance\",\n  \"priority\": \"High\"\n}" } } }
+      ]
+    },
+    {
+      "name": "Notifications (Protected)",
+      "item": [
+        { "name": "Get My Notifications", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/notifications", "host": ["{{baseUrl}}"], "path": ["api","notifications"] } } }
+      ]
+    },
+    {
+      "name": "Wishlist (Protected)",
+      "item": [
+        { "name": "Get My Wishlist", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/wishlist", "host": ["{{baseUrl}}"], "path": ["api","wishlist"] } } },
+        { "name": "Add to Wishlist", "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/wishlist", "host": ["{{baseUrl}}"], "path": ["api","wishlist"] }, "body": { "mode": "raw", "raw": "{\n  \"hostelId\": \"BUILDING_ID\",\n  \"hostelName\": \"Sample Hostel\",\n  \"hostelLocation\": \"Hyderabad\",\n  \"hostelPrice\": 7000,\n  \"hostelRating\": 4.5,\n  \"type\": \"Boys\"\n}" } } },
+        { "name": "Remove from Wishlist", "request": { "method": "DELETE", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/wishlist/:id", "host": ["{{baseUrl}}"], "path": ["api","wishlist",":id"], "variable": [{"key":"id","value":"ITEM_ID"}] } } }
+      ]
+    },
+    {
+      "name": "Dashboard (Protected)",
+      "item": [
+        { "name": "Summary KPIs", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/dashboard/summary", "host": ["{{baseUrl}}"], "path": ["api","dashboard","summary"] } } },
+        { "name": "Revenue Analytics", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/dashboard/revenue", "host": ["{{baseUrl}}"], "path": ["api","dashboard","revenue"] } } },
+        { "name": "Occupancy Stats", "request": { "method": "GET", "header": [{"key":"Authorization","value":"Bearer {{token}}"}], "url": { "raw": "{{baseUrl}}/api/dashboard/occupancy", "host": ["{{baseUrl}}"], "path": ["api","dashboard","occupancy"] } } }
+      ]
+    },
+    {
+      "name": "Health Checks",
+      "item": [
+        { "name": "Ping", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/ping", "host": ["{{baseUrl}}"], "path": ["api","ping"] } } },
+        { "name": "Health", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/health", "host": ["{{baseUrl}}"], "path": ["api","health"] } } }
+      ]
+    }
+  ]
+}

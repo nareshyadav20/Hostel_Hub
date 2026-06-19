@@ -6844,3 +6844,132 @@
 2026-06-19T06:43:57.115Z SOCKET: Socket connected: 6fQU6ZD7w01sGlwFAAAP
 2026-06-19T06:43:57.120Z API: GET /api/buildings/public
 2026-06-19T06:43:57.272Z API: GET /api/buildings/public/stats
+2026-06-19T07:00:14.087Z SOCKET: Socket connected: KC61N-cZTzyR4pt9AAAB
+2026-06-19T07:02:09.019Z API: GET /api/buildings/public
+2026-06-19T07:04:12.791Z SOCKET: Socket connected: 163N1NiWAIaRLFEGAAAB
+2026-06-19T07:04:52.248Z API: GET /api/buildings/public
+2026-06-19T07:05:21.800Z SOCKET: Socket connected: dOy572FfTD6FL0_1AAAB
+2026-06-19T07:05:39.915Z API: GET /api/v1/hostels
+2026-06-19T07:05:39.984Z API: GET /api/v1/hostels/60d21b4667d0d8992e610c85
+2026-06-19T07:05:39.990Z API: GET /api/v1/hostels?location=Hyderabad
+2026-06-19T07:05:40.052Z API: GET /api/v1/hostels?gender=MALE
+2026-06-19T07:05:40.112Z API: GET /api/v1/hostels?gender=FEMALE
+2026-06-19T07:05:40.171Z API: GET /api/v1/hostels?rating=4
+2026-06-19T07:05:40.230Z API: GET /api/v1/hostels?minPrice=5000&maxPrice=10000
+2026-06-19T07:05:40.293Z API: GET /api/v1/hostels?sortBy=price&order=asc
+2026-06-19T07:05:40.350Z API: GET /api/v1/hostels?sortBy=price&order=desc
+2026-06-19T07:05:40.410Z API: GET /api/v1/hostels?sortBy=rating&order=desc
+2026-06-19T07:05:40.468Z API: GET /api/v1/hostels?page=1&limit=10
+2026-06-19T07:05:40.528Z API: GET /api/v1/hostels?location=Hyderabad&gender=MALE&rating=4&minPrice=5000&maxPrice=10000&sortBy=price&order=asc&page=1&limit=10
+2026-06-19T07:05:57.788Z SOCKET: Socket connected: LtOfISoeMwmwuAdRAAAB
+2026-06-19T07:06:07.775Z SOCKET: Socket connected: UA_QdgT6OvzL0AadAAAB
+2026-06-19T07:11:50.701Z API: GET /api/v1/hostels
+2026-06-19T07:11:50.782Z API: GET /api/v1/hostels/60d21b4667d0d8992e610c85
+2026-06-19T07:11:50.819Z API: GET /api/v1/hostels?location=Hyderabad
+2026-06-19T07:11:50.894Z API: GET /api/v1/hostels?gender=MALE
+2026-06-19T07:11:50.958Z API: GET /api/v1/hostels?gender=FEMALE
+2026-06-19T07:11:51.020Z API: GET /api/v1/hostels?rating=4
+2026-06-19T07:11:51.089Z API: GET /api/v1/hostels?minPrice=5000&maxPrice=10000
+2026-06-19T07:11:51.149Z API: GET /api/v1/hostels?sortBy=price&order=asc
+2026-06-19T07:11:51.217Z API: GET /api/v1/hostels?sortBy=price&order=desc
+2026-06-19T07:11:51.284Z API: GET /api/v1/hostels?sortBy=rating&order=desc
+2026-06-19T07:11:51.341Z API: GET /api/v1/hostels?page=1&limit=10
+2026-06-19T07:11:51.413Z API: GET /api/v1/hostels?location=Hyderabad&gender=MALE&rating=4&minPrice=5000&maxPrice=10000&sortBy=price&order=asc&page=1&limit=10
+2026-06-19T08:10:00.960Z API: GET /api/health
+2026-06-19T08:10:01.076Z API: GET /api/buildings/public
+2026-06-19T08:10:01.102Z API: GET /api/buildings/public/stats
+2026-06-19T08:10:01.117Z SOCKET: Socket connected: AGJ27A2Lm_DNYmiUAAAD
+2026-06-19T08:10:01.390Z API: GET /api/buildings/public
+2026-06-19T08:10:01.552Z API: GET /api/buildings/public/stats
+2026-06-19T08:10:04.291Z API: GET /api/buildings/public?limit=200
+2026-06-19T08:10:04.312Z API: GET /api/tenant-portal/wishlist
+2026-06-19T08:10:04.628Z API: GET /api/tenant-portal/wishlist
+2026-06-19T08:10:04.802Z API: GET /api/buildings/public?limit=200
+2026-06-19T08:10:05.231Z API: GET /api/health
+2026-06-19T08:10:07.408Z API: GET /api/buildings/public
+2026-06-19T08:10:07.594Z API: GET /api/buildings/public/stats
+2026-06-19T08:10:07.684Z SOCKET: Socket connected: zK2MBVAm3fQoM_qvAAAF
+2026-06-19T08:10:07.788Z API: GET /api/buildings/public
+2026-06-19T08:10:08.064Z API: GET /api/buildings/public/stats
+2026-06-19T08:10:15.212Z API: POST /api/auth/login
+2026-06-19T08:10:16.977Z API: GET /api/notifications?limit=3
+2026-06-19T08:10:17.097Z API: GET /api/tenants/me
+2026-06-19T08:10:17.112Z API: GET /api/complaints/me
+2026-06-19T08:10:17.156Z API: GET /api/bookings/me
+2026-06-19T08:10:18.609Z API: GET /api/tenant-portal/wishlist
+2026-06-19T08:10:18.712Z API: GET /api/buildings/public?limit=200
+2026-06-19T08:10:18.769Z SOCKET: Socket connected: O7klC22PaRJA7gY_AAAH
+2026-06-19T08:10:18.859Z API: GET /api/notifications?limit=3
+2026-06-19T08:10:18.943Z API: GET /api/tenants/me
+2026-06-19T08:10:19.073Z API: GET /api/tenant-portal/wishlist
+2026-06-19T08:10:19.114Z API: GET /api/buildings/public?limit=200
+2026-06-19T08:10:19.879Z API: GET /api/bookings/me
+2026-06-19T08:10:20.241Z API: GET /api/complaints/me
+2026-06-19T08:11:33.667Z SOCKET: Socket connected: DFvGaNarZYJHAE8VAAAB
+2026-06-19T08:11:42.870Z SOCKET: Socket connected: REWcRCKcE6Br9HTjAAAB
+2026-06-19T08:13:12.924Z SOCKET: Socket connected: BjukoCw8ZlOKMiDcAAAB
+2026-06-19T08:14:03.325Z SOCKET: Socket connected: le_uwMT0gA_NXWMRAAAB
+2026-06-19T08:27:46.554Z API: GET /api/buildings/public
+2026-06-19T08:27:46.660Z API: GET /api/rooms/public
+2026-06-19T08:27:46.672Z API: GET /api/floors/public
+2026-06-19T08:27:46.679Z API: GET /api/amenities/public
+2026-06-19T08:27:46.686Z API: GET /api/hostels/public
+2026-06-19T08:27:46.708Z API: POST /api/auth/register
+2026-06-19T08:27:47.029Z API: GET /api/profile
+2026-06-19T08:27:47.069Z API: GET /api/tenants
+2026-06-19T08:27:47.144Z API: GET /api/bookings
+2026-06-19T08:27:47.245Z API: GET /api/payments
+2026-06-19T08:27:47.314Z API: GET /api/complaints
+2026-06-19T08:27:47.477Z API: GET /api/notifications
+2026-06-19T08:27:47.591Z API: GET /api/wishlist
+2026-06-19T08:27:47.629Z API: GET /api/reviews
+2026-06-19T08:27:47.633Z API: GET /api/dashboard/summary
+2026-06-19T08:27:48.024Z API: POST /api/auth/send-otp
+2026-06-19T08:27:48.073Z API: POST /api/auth/verify-otp
+2026-06-19T08:29:02.106Z SOCKET: Socket connected: J0ubjP0a7w8P5On3AAAB
+2026-06-19T08:29:17.848Z SOCKET: Socket connected: 1DYOHxbNq4c9Q_PXAAAB
+2026-06-19T08:29:30.785Z SOCKET: Socket connected: jeejwMf3ULwbbFZPAAAB
+2026-06-19T08:29:46.820Z SOCKET: Socket connected: WxZBhW35up3xgcZyAAAB
+2026-06-19T08:30:03.871Z SOCKET: Socket connected: 7hCyUeIQS8Azbt6dAAAB
+2026-06-19T08:30:26.788Z SOCKET: Socket connected: 2OriF-gTq8ZYw30mAAAB
+2026-06-19T08:30:34.688Z API: GET /api/health
+2026-06-19T08:30:34.782Z API: GET /api/buildings?status=Draft
+2026-06-19T08:30:34.812Z API: GET /api/owner/portfolio
+2026-06-19T08:30:34.824Z SOCKET: Socket connected: yEtcf6tqNhZBZkyRAAAD
+2026-06-19T08:30:34.857Z API: GET /api/owner/portfolio
+2026-06-19T08:30:34.882Z API: GET /api/buildings?status=Draft
+2026-06-19T08:30:39.365Z API: POST /api/auth/login
+2026-06-19T08:30:46.399Z API: GET /api/buildings?status=Draft
+2026-06-19T08:30:47.311Z API: GET /api/owner/portfolio
+2026-06-19T08:30:47.858Z API: GET /api/owner/portfolio
+2026-06-19T08:30:59.191Z API: POST /api/auth/login
+2026-06-19T08:31:08.605Z API: GET /api/owner/portfolio
+2026-06-19T08:31:08.643Z API: GET /api/owner/portfolio
+2026-06-19T08:31:10.562Z API: GET /api/buildings/public
+2026-06-19T08:31:10.653Z API: GET /api/rooms/public
+2026-06-19T08:31:10.694Z API: GET /api/floors/public
+2026-06-19T08:31:10.742Z API: GET /api/amenities/public
+2026-06-19T08:31:10.781Z API: GET /api/hostels/public
+2026-06-19T08:31:10.859Z API: POST /api/auth/register
+2026-06-19T08:31:11.218Z API: GET /api/profile
+2026-06-19T08:31:11.242Z API: GET /api/owner/portfolio
+2026-06-19T08:31:11.255Z API: GET /api/buildings?status=Draft
+2026-06-19T08:31:11.273Z API: GET /api/tenants
+2026-06-19T08:31:11.290Z API: GET /api/owner/portfolio
+2026-06-19T08:31:11.331Z API: GET /api/buildings?status=Draft
+2026-06-19T08:31:11.347Z API: GET /api/bookings
+2026-06-19T08:31:11.475Z API: GET /api/payments
+2026-06-19T08:31:11.547Z API: GET /api/complaints
+2026-06-19T08:31:11.742Z API: GET /api/notifications
+2026-06-19T08:31:11.898Z API: GET /api/wishlist
+2026-06-19T08:31:11.933Z API: GET /api/reviews
+2026-06-19T08:31:11.970Z API: GET /api/dashboard/summary
+2026-06-19T08:31:12.404Z API: POST /api/auth/send-otp
+2026-06-19T08:31:12.456Z API: POST /api/auth/verify-otp
+2026-06-19T08:31:30.010Z SOCKET: Socket connected: CAuaeB29_-bQfn01AAAB
+2026-06-19T08:31:30.077Z API: POST /api/auth/login
+2026-06-19T08:31:35.659Z API: GET /api/buildings?status=Draft
+2026-06-19T08:31:37.102Z API: GET /api/owner/portfolio
+2026-06-19T08:31:37.654Z API: GET /api/owner/portfolio
+2026-06-19T08:32:21.132Z SOCKET: Socket connected: Vq0yjEwm780EgU7OAAAB
+2026-06-19T08:34:32.783Z SOCKET: Socket connected: ijo6wQXDFz5XtBf8AAAB

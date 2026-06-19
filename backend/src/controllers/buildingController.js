@@ -686,7 +686,7 @@ const getPublicBuildings = async (req, res) => {
     };
 
     const buildings = await Building.find(
-      publicQuery,
+      {},
       {
         name: 1, address: 1, locationCity: 1, category: 1, rating: 1,
         startingPrice: 1, genderType: 1, amenities: 1, isAC: 1
@@ -695,7 +695,7 @@ const getPublicBuildings = async (req, res) => {
 
     const db = mongoose.connection.db;
     const ownerBuildings = await db.collection('owner_buildings').find(
-      publicQuery,
+      {},
       {
         projection: {
           name: 1, address: 1, locationCity: 1, category: 1, rating: 1,
