@@ -237,14 +237,7 @@ const Landing = () => {
         city = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
       }
       const address = b.address || b.location || 'Hyderabad';
-      let locality = 'Central Hub';
-      const parenMatch = address.match(/\(([^)]+)\)/);
-      if (parenMatch && parenMatch[1]) {
-        locality = parenMatch[1].trim();
-      } else {
-        const firstPart = address.split(',')[0].trim();
-        locality = firstPart.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-      }
+      let locality = b.locality || 'Central Hub';
 
       let lowestSharingLabel = 'Sharing';
       const rents = [

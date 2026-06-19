@@ -55,6 +55,6 @@ const bedSchema = new mongoose.Schema({
   operationalMonitoringEnabled: { type: Boolean, default: true },
   healthStatus: { type: String, default: 'Optimal' },
   realTimeEnabled: { type: Boolean, default: true }
-}, { timestamps: true, collection: 'beds' });
+}, { timestamps: true, collection: 'owner_beds' });
 
 module.exports = mongoose.model('Bed', bedSchema);

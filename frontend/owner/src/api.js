@@ -135,6 +135,10 @@ export const api = {
     }
     return await swrFetch(cacheKey, `${API_URL}/buildings`, { params });
   },
+  getBuildingById: async (id) => {
+    const res = await axios.get(`${API_URL}/buildings/${id}`);
+    return res.data;
+  },
   getDraftBuildings: async () => {
     return await swrFetch('buildings_draft', `${API_URL}/buildings`, { params: { status: 'Draft' } });
   },
@@ -410,11 +414,7 @@ export const api = {
     cacheSet('buildings_active', null);
   },
   uploadPhotos: async (formData) => {
-    const res = await axios.post(`${API_URL}/buildings/upload`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
+    const res = await axios.post(`${API_URL}/buildings/upload`, formData);
     return res.data;
   },
   addFloor: async (data) => {

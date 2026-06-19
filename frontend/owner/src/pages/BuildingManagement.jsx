@@ -9,7 +9,7 @@ import {
   Heart, ShieldCheck, Sparkles, Wind, Sun, BatteryCharging, Wifi, Monitor, Coffee, Lock, UserCheck, Star,
   MapPin, Thermometer, Fan, Smartphone, Tablet, Luggage, Lightbulb, Ruler, Weight, FileText, Wrench, History,
   Maximize, ArrowUp, Brush, Palette, LayoutGrid, Activity, Droplets, ChevronLeft,
-  TrendingUp, Coins, BarChart3, HardDrive, Waves, Flame, Fingerprint
+  TrendingUp, Coins, BarChart3, HardDrive, Waves, Flame, Fingerprint, Settings
 } from 'lucide-react';
 
 import { api } from '../api';
@@ -186,14 +186,14 @@ const INITIAL_FORM_STATE = {
 };
 
 
-const Buildings = () => {
+const BuildingManagement = () => {
   const { buildingId: urlBuildingId } = useParams();
   const navigate = useNavigate();
 
   // Step 1: Restore context
   const activeBuildingId = urlBuildingId || localStorage.getItem('selectedBuildingId');
 
-  const [view, setView] = useState('buildings');
+  const [view, setView] = useState(activeBuildingId ? 'floors' : 'buildings');
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('All');
@@ -675,55 +675,84 @@ const Buildings = () => {
 
   // Generic Breadcrumb
   const renderBreadcrumb = () => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '2.5rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-      <button
-        onClick={() => {
-          setView('buildings');
-          setSelectedBuilding(null);
-          setSelectedFloor(null);
-          setSelectedRoom(null);
-          // Clear isolated state to show full portfolio
-          localStorage.removeItem('selectedBuildingId');
-          fetchBuildings(); // Refresh to show all buildings
-        }}
-        style={{ background: 'none', border: 'none', color: view === 'buildings' ? 'var(--accent-primary)' : 'inherit', cursor: 'pointer', fontWeight: '900' }}
-      >
-        Infrastructure
-      </button>
-      {selectedBuilding && (
-        <>
-          <ChevronRight size={14} style={{ opacity: 0.5 }} />
-          <button
-            onClick={() => {
-              setView('floors');
-              setSelectedFloor(null);
-              setSelectedRoom(null);
-            }}
-            style={{ background: 'none', border: 'none', color: view === 'floors' ? 'var(--accent-primary)' : 'inherit', cursor: 'pointer', fontWeight: '900' }}
-          >
-            {selectedBuilding.name}
-          </button>
-        </>
-      )}
-      {selectedFloor && (view === 'rooms' || view === 'beds') && (
-        <>
-          <ChevronRight size={14} style={{ opacity: 0.5 }} />
-          <button
-            onClick={() => {
-              setView('rooms');
-              setSelectedRoom(null);
-            }}
-            style={{ background: 'none', border: 'none', color: view === 'rooms' ? 'var(--accent-primary)' : 'inherit', cursor: 'pointer', fontWeight: '900' }}
-          >
-            Floor {selectedFloor.floorNumber}
-          </button>
-        </>
-      )}
-      {selectedRoom && view === 'beds' && (
-        <>
-          <ChevronRight size={14} style={{ opacity: 0.5 }} />
-          <span style={{ color: 'var(--text-primary)', fontWeight: '900' }}>Room {selectedRoom.roomNumber}</span>
-        </>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <button
+          onClick={() => {
+            setView('buildings');
+            setSelectedBuilding(null);
+            setSelectedFloor(null);
+            setSelectedRoom(null);
+            localStorage.removeItem('selectedBuildingId');
+            navigate('/owner/portfolio');
+          }}
+          style={{ background: 'none', border: 'none', color: view === 'buildings' ? 'var(--accent-primary)' : 'inherit', cursor: 'pointer', fontWeight: '900' }}
+        >
+          Portfolio
+        </button>
+        {selectedBuilding && (
+          <>
+            <ChevronRight size={14} style={{ opacity: 0.5 }} />
+            <button
+              onClick={() => {
+                setView('floors');
+                setSelectedFloor(null);
+                setSelectedRoom(null);
+              }}
+              style={{ background: 'none', border: 'none', color: view === 'floors' ? 'var(--accent-primary)' : 'inherit', cursor: 'pointer', fontWeight: '900' }}
+            >
+              {selectedBuilding.name}
+            </button>
+          </>
+        )}
+        {selectedFloor && (view === 'rooms' || view === 'beds') && (
+          <>
+            <ChevronRight size={14} style={{ opacity: 0.5 }} />
+            <button
+              onClick={() => {
+                setView('rooms');
+                setSelectedRoom(null);
+              }}
+              style={{ background: 'none', border: 'none', color: view === 'rooms' ? 'var(--accent-primary)' : 'inherit', cursor: 'pointer', fontWeight: '900' }}
+            >
+              Floor {selectedFloor.floorNumber}
+            </button>
+          </>
+        )}
+        {selectedRoom && view === 'beds' && (
+          <>
+            <ChevronRight size={14} style={{ opacity: 0.5 }} />
+            <span style={{ color: 'var(--text-primary)', fontWeight: '900' }}>Room {selectedRoom.roomNumber}</span>
+          </>
+        )}
+      </div>
+      {view === 'floors' && selectedBuilding && (
+        <button
+          className="btn btn-secondary"
+          onClick={() => {
+            const b = selectedBuilding;
+            setFormData({
+              ...INITIAL_FORM_STATE,
+              ...b,
+              wardenName: b.staffInfo?.name || '',
+              wardenContact: b.staffInfo?.contact || '',
+              documents: b.documents || [],
+              rentSingle: b.rentSingle || 0,
+              rentDouble: b.rentDouble || 0,
+              rentTriple: b.rentTriple || 0,
+              rent4Sharing: b.rent4Sharing || 0,
+              rent5Sharing: b.rent5Sharing || 0,
+              rent6Sharing: b.rent6Sharing || 0,
+              foodCharges: b.foodCharges !== undefined ? b.foodCharges : 3000,
+              maintenanceCharges: b.maintenanceCharges !== undefined ? b.maintenanceCharges : 799,
+              securityDeposit: b.securityDeposit !== undefined ? b.securityDeposit : 0
+            });
+            setIsEditBuildingOpen(true);
+          }}
+          style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800' }}
+        >
+          <Settings size={14} /> Edit Building
+        </button>
       )}
     </div>
   );
@@ -3543,92 +3572,4 @@ const BedsList = ({ beds, room, floor, building, onBack, onAdd, onEditBed, onVie
   );
 };
 
-const AssignFloors = ({ buildings, onBack }) => {
-  const [hostels, setHostels] = useState([]);
-  const [selectedHostel, setSelectedHostel] = useState('');
-  const [selectedBuilding, setSelectedBuilding] = useState('');
-  const [floors, setFloors] = useState([]);
-  const [assignedFloors, setAssignedFloors] = useState(new Set());
-
-  useEffect(() => {
-    api.getHostels().then(setHostels);
-  }, []);
-
-  useEffect(() => {
-    if (selectedBuilding) {
-      api.getFloors(selectedBuilding).then(setFloors);
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFloors([]);
-    }
-  }, [selectedBuilding]);
-
-  useEffect(() => {
-    if (selectedHostel) {
-      api.getAssignedFloors(selectedHostel).then(fIds => setAssignedFloors(new Set(fIds || [])));
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setAssignedFloors(new Set());
-    }
-  }, [selectedHostel]);
-
-  const toggleFloor = (floorId) => {
-    const newSet = new Set(assignedFloors);
-    if (newSet.has(floorId)) newSet.delete(floorId);
-    else newSet.add(floorId);
-    setAssignedFloors(newSet);
-  };
-
-  const handleSave = () => {
-    alert("Saved assignments: " + Array.from(assignedFloors).join(', '));
-  };
-
-  return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}><ArrowLeft size={24} /></button>
-        <h2 style={{ fontSize: '1.8rem', fontWeight: '800' }}>Assign Floors to Hostel</h2>
-      </div>
-
-      <div className="card" style={{ padding: '2rem', maxWidth: '800px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Select Hostel</label>
-            <select value={selectedHostel} onChange={e => setSelectedHostel(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}>
-              <option value="">-- Choose a Hostel --</option>
-              {hostels.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Select Building</label>
-            <select value={selectedBuilding} onChange={e => setSelectedBuilding(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}>
-              <option value="">-- Choose a Building --</option>
-              {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
-          </div>
-        </div>
-
-        {selectedHostel && selectedBuilding && (
-          <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '2rem' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '1rem' }}>Available Floors</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {floors.map(f => (
-                <div key={f.id} onClick={() => toggleFloor(f.id)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', borderRadius: '8px', background: assignedFloors.has(f.id) ? 'rgba(99, 102, 241, 0.1)' : 'var(--bg-tertiary)', border: `1px solid ${assignedFloors.has(f.id) ? 'var(--accent-primary)' : 'var(--border-color)'}`, cursor: 'pointer', transition: 'all 0.2s' }}>
-                  {assignedFloors.has(f.id) ? <CheckSquare color="var(--accent-primary)" /> : <Square color="var(--text-secondary)" />}
-                  <span style={{ fontSize: '1.1rem', fontWeight: '600' }}>Floor {f.floorNumber}</span>
-                </div>
-              ))}
-              {floors.length === 0 && <p style={{ color: 'var(--text-muted)' }}>No floors available in this building.</p>}
-            </div>
-
-            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
-              <button className="btn btn-primary" onClick={handleSave} disabled={floors.length === 0}>Save Assignments</button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default Buildings;
+export default BuildingManagement;

@@ -5,6 +5,6 @@ const rewardsWalletSchema = new mongoose.Schema({
   availablePoints: { type: Number, default: 0 },
   lifetimeEarned: { type: Number, default: 0 },
   totalRedeemed: { type: Number, default: 0 }
-}, { timestamps: true, collection: 'rewardsWallet' });
+}, { timestamps: true, collection: 'rewards' });
 
 module.exports = mongoose.model('RewardsWallet', rewardsWalletSchema);

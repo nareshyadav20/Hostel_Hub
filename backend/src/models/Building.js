@@ -4,6 +4,7 @@ const buildingSchema = new mongoose.Schema({
   name: { type: String, required: true },
   address: { type: String, required: true },
   locationCity: { type: String, default: 'Bengaluru' },
+  locality: { type: String },
   description: { type: String },
   startingPrice: { type: Number },
   securityDeposit: { type: Number, default: 0 },
@@ -19,8 +20,11 @@ const buildingSchema = new mongoose.Schema({
   category: { type: String, enum: ['Student', 'Professional', 'Luxury', 'Mixed'], default: 'Mixed' },
   rating: { type: Number, default: 4.5 },
   popularityLabel: { type: String },
+  stayQuality: { type: String, enum: ['Standard', 'Premium', 'Luxury'], default: 'Standard' },
+  buildingAge: { type: Number },
   amenities: [{ type: String }],
   warden: { type: String },
+  wardenNumber: { type: String },
   // Building Facilities (Strict 1:1)
   lift: { type: Boolean, default: false },
   wifi: { type: Boolean, default: false },
@@ -94,8 +98,6 @@ const buildingSchema = new mongoose.Schema({
   smartBadges: [{ type: String }],
   thumbIntelligence: { type: String, default: '' },
   
-  propertyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Building', default: null },
-  showInPortfolio: { type: Boolean, default: true },
   status: { type: String, enum: ['Active', 'Draft', 'Inactive', 'Pending Approval', 'Rejected'], default: 'Active' },
   approvalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   isApproved: { type: Boolean, default: false },
@@ -113,7 +115,7 @@ const buildingSchema = new mongoose.Schema({
   floors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Floor' }]
 }, { 
   timestamps: true, 
-  collection: 'buildings',
+  collection: 'owner_buildings',
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });

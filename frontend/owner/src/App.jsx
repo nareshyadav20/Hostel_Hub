@@ -5,7 +5,7 @@ import Signup from './pages/Signup';
 import Dashboard from './Dashboard';
 import Portfolio from './pages/Portfolio';
 import Profile from './pages/Profile';
-import Buildings from './pages/Buildings';
+import BuildingManagement from './pages/BuildingManagement';
 import Rooms from './pages/Rooms';
 import Tenants from './pages/Tenants';
 import Payments from './pages/Payments';
@@ -36,7 +36,7 @@ function App() {
         {/* Building specific routes */}
         <Route path="/owner/building/:buildingId/dashboard" element={<Layout><Dashboard /></Layout>} />
         <Route path="/owner/building/:buildingId/profile" element={<Layout><Profile /></Layout>} />
-        <Route path="/owner/building/:buildingId/buildings" element={<Layout><Buildings /></Layout>} />
+        <Route path="/owner/building/:buildingId/manage" element={<Layout><BuildingManagement /></Layout>} />
         <Route path="/owner/building/:buildingId/rooms" element={<Layout><Rooms /></Layout>} />
         <Route path="/owner/building/:buildingId/tenants" element={<Layout><Tenants /></Layout>} />
         <Route path="/owner/building/:buildingId/payments" element={<Layout><Payments /></Layout>} />
