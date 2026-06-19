@@ -81,6 +81,50 @@ Consolidated listing, searching, filtering, sorting, and pagination.
 
 ---
 
+## 🏨 Hostels API v1 (Public)
+### GET `/api/v1/hostels`
+Dynamic Hostel Listing API with robust filtering, sorting, and pagination.
+
+#### Query Parameters
+| Param | Type | Description |
+|------|------|-------------|
+| `page` | int | Page number (≥ 1). Default 1 |
+| `limit` | int | Items per page. Default 10 |
+| `location` | string | Partial case‑insensitive city/location name |
+| `minPrice` | number | Minimum price range |
+| `maxPrice` | number | Maximum price range |
+| `rating` | number | Minimum average rating |
+| `gender` | string | `MALE`, `FEMALE`, `BOTH` |
+| `sortBy` | string | Field to sort by: `price`, `rating`, `createdAt` |
+| `order` | string | `asc` or `desc` |
+
+#### Example Query
+`/api/v1/hostels?location=Hyderabad&gender=MALE&rating=4&minPrice=5000&maxPrice=10000&sortBy=price&order=asc&page=1&limit=10`
+
+#### Response (200)
+```json
+{
+  "success": true,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 5,
+  "totalHostels": 50,
+  "data": [
+    {
+      "_id": "...",
+      "name": "ABC Boys Hostel",
+      "location": "Hyderabad",
+      "gender": "MALE",
+      "price": 7000,
+      "rating": 4.5,
+      "amenities": ["Wifi", "AC", "Food"]
+    }
+  ]
+}
+```
+
+---
+
 ## 🏨 Hostel Details (Public)
 ### GET `/hostels/{hostelId}`
 #### Path
