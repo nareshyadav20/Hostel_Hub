@@ -681,6 +681,7 @@ const getPublicBuildings = async (req, res) => {
       gender,
       minPrice,
       maxPrice,
+      search,
       sortBy = 'createdAt',
       order = 'desc',
       page = 1,
@@ -701,6 +702,18 @@ const getPublicBuildings = async (req, res) => {
     ];
     matchStage.propertyId = { $in: [null, undefined] };
     matchStage.showInPortfolio = { $ne: false };
+
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      matchStage.$and = matchStage.$and || [];
+      matchStage.$and.push({
+        $or: [
+          { name: searchRegex },
+          { locationCity: searchRegex },
+          { genderType: searchRegex }
+        ]
+      });
+    }
 
     if (location && location.trim()) {
       matchStage.locationCity = new RegExp(location.trim(), 'i');
@@ -729,6 +742,55 @@ const getPublicBuildings = async (req, res) => {
       { $sort: sortStage },
       { $skip: skip },
       { $limit: limitNum },
+      {
+        $project: {
+          hostelName: '$name',
+          location: '$locationCity',
+          gender: '$genderType',
+          startingPrice: 1,
+          rating: 1
+        }
+      }
+    ];
+
+    const db = mongoose.connection.db;
+    const results = await db.collection('owner_buildings').aggregate(pipeline).toArray();
+
+    res.status(200).json({ success: true, count: results.length, data: results });
+  } catch (error) {
+    console.error('[API] /buildings/public Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+const getPublicBuildingById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let matchCondition = {};
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      matchCondition = {
+        $or: [
+          { _id: new mongoose.Types.ObjectId(id) },
+          { _id: id }
+        ]
+      };
+    } else {
+      matchCondition = { _id: id };
+    }
+
+    // Status filters (publicly visible)
+    matchCondition.$and = [
+      {
+        $or: [
+          { approvalStatus: 'approved', isApproved: true },
+          { status: 'Active', approvalStatus: { $in: [null, undefined] } }
+        ]
+      }
+    ];
+
+    const pipeline = [
+      { $match: matchCondition },
       // Lookup Floors
       {
         $lookup: {
@@ -813,121 +875,15 @@ const getPublicBuildings = async (req, res) => {
     const db = mongoose.connection.db;
     const results = await db.collection('owner_buildings').aggregate(pipeline).toArray();
 
-    res.status(200).json(results);
+    if (!results || results.length === 0) {
+      return res.status(404).json({ success: false, message: 'Building not found or not public' });
+    }
+
+    res.status(200).json({ success: true, data: results[0] });
   } catch (error) {
-    console.error('[API] /buildings/public Error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('[API] /buildings/public/:id Error:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
-};
-
-const getPublicBuildingById = async (req, res) => {
-  try {
-    let building = null;
-    const publicQuery = {
-      $or: [
-        { approvalStatus: 'approved', isApproved: true },
-        { status: 'Active', approvalStatus: { $in: [null, undefined] } }
-      ]
-    };
-
-    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-      building = await Building.findOne({ _id: req.params.id, ...publicQuery })
-        .select('-draftData -staffInfo -owner -lastStep')
-        .lean();
-    }
-    const db = mongoose.connection.db;
-    if (!building) {
-      let obQuery = { ...publicQuery };
-      if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-        obQuery._id = new mongoose.Types.ObjectId(req.params.id);
-      } else {
-        obQuery._id = req.params.id;
-      }
-      const rawBuilding = await db.collection('owner_buildings').findOne(obQuery);
-      if (rawBuilding) {
-        const { draftData, staffInfo, owner, lastStep, ...rest } = rawBuilding;
-        building = rest;
-      }
-    }
-    if (!building) return res.status(404).json({ error: 'Building not found or not approved' });
-
-    // Fetch all sub-buildings to get their IDs
-    const subBuildings = await Building.find({ propertyId: building._id }).select('_id').lean();
-    const subOwnerBuildings = await db.collection('owner_buildings').find({ propertyId: building._id }).toArray();
-    const buildingIds = [building._id, ...subBuildings.map(sb => sb._id), ...subOwnerBuildings.map(sb => sb._id)];
-
-    // Find floors for all these buildings and populate their rooms and beds
-    const floors = await Floor.find({ building: { $in: buildingIds } })
-      .select('floorNumber floorCategory description occupancyPercentage totalRooms totalBeds facilities rooms building')
-      .lean();
-    const ownerFloors = await db.collection('owner_floors').find({
-      $or: [
-        { building: { $in: buildingIds } },
-        { buildingId: { $in: buildingIds } }
-      ]
-    }).toArray();
-
-    const floorsMap = new Map();
-    floors.forEach(f => floorsMap.set(f._id.toString(), f));
-    ownerFloors.forEach(f => floorsMap.set(f._id.toString(), f));
-    const allFloors = Array.from(floorsMap.values());
-
-    const populatedFloors = await Promise.all(allFloors.map(async (floor) => {
-      const rooms = await Room.find({ floor: floor._id })
-        .populate({
-          path: 'beds',
-          populate: {
-            path: 'tenant',
-            select: 'name checkInDate targetStayDuration'
-          }
-        })
-        .lean();
-      const ownerRooms = await db.collection('owner_rooms').find({ floor: floor._id }).toArray();
-
-      const roomsMap = new Map();
-      rooms.forEach(r => roomsMap.set(r._id.toString(), r));
-
-      if (ownerRooms.length > 0) {
-        const ownerRoomIds = ownerRooms.map(r => r._id);
-        const beds = await Bed.find({ room: { $in: ownerRoomIds } })
-          .select('bedNumber status position bedType smartBadges')
-          .lean();
-        const ownerBeds = await db.collection('owner_beds').find({
-          $or: [
-            { room: { $in: ownerRoomIds } },
-            { roomId: { $in: ownerRoomIds } }
-          ]
-        }).toArray();
-
-        const bedsMap = new Map();
-        beds.forEach(b => bedsMap.set(b._id.toString(), b));
-        ownerBeds.forEach(b => bedsMap.set(b._id.toString(), b));
-        const allBeds = Array.from(bedsMap.values());
-
-        ownerRooms.forEach(room => {
-          const roomIdStr = room._id.toString();
-          room.beds = allBeds.filter(b =>
-            (b.room && b.room.toString() === roomIdStr) ||
-            (b.roomId && b.roomId.toString() === roomIdStr)
-          );
-          roomsMap.set(roomIdStr, room);
-        });
-      }
-
-      floor.rooms = Array.from(roomsMap.values());
-      return floor;
-    }));
-
-    building.floors = populatedFloors;
-
-    // Fetch filled beds for this building
-    const BedFilling = require('../models/BedFilling');
-    const filledBeds = await BedFilling.find({ buildingId: { $in: buildingIds }, status: 'Occupied' })
-      .select('bedId bedNumber')
-      .lean();
-
-    res.status(200).json({ ...building, subBuildings, filledBeds });
-  } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
 const uploadPhotos = async (req, res) => {
