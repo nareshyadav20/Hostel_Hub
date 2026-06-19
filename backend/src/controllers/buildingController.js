@@ -676,45 +676,146 @@ const getBuildingById = async (req, res) => {
 
 const getPublicBuildings = async (req, res) => {
   try {
-    const publicQuery = {
-      $or: [
-        { approvalStatus: 'approved', isApproved: true },
-        { status: 'Active', approvalStatus: { $in: [null, undefined] } }
-      ],
-      propertyId: { $in: [null, undefined] },
-      showInPortfolio: { $ne: false }
-    };
+    const {
+      location,
+      gender,
+      minPrice,
+      maxPrice,
+      sortBy = 'createdAt',
+      order = 'desc',
+      page = 1,
+      limit = 20
+    } = req.query;
 
-    const buildings = await Building.find(
-      {},
-      {
-        name: 1, address: 1, locationCity: 1, category: 1, rating: 1,
-        startingPrice: 1, genderType: 1, amenities: 1, isAC: 1
-      }
-    ).lean();
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
 
-    const db = mongoose.connection.db;
-    const ownerBuildings = await db.collection('owner_buildings').find(
-      {},
+    // 1. Build Match Stage (Filters)
+    const matchStage = {};
+    
+    // Status filters (publicly visible)
+    matchStage.$or = [
+      { approvalStatus: 'approved', isApproved: true },
+      { status: 'Active', approvalStatus: { $in: [null, undefined] } }
+    ];
+    matchStage.propertyId = { $in: [null, undefined] };
+    matchStage.showInPortfolio = { $ne: false };
+
+    if (location && location.trim()) {
+      matchStage.locationCity = new RegExp(location.trim(), 'i');
+    }
+    
+    if (gender && gender !== 'BOTH') {
+      matchStage.genderType = new RegExp(`^${gender}$`, 'i');
+    }
+
+    if (minPrice || maxPrice) {
+      matchStage.startingPrice = {};
+      if (minPrice) matchStage.startingPrice.$gte = parseInt(minPrice);
+      if (maxPrice) matchStage.startingPrice.$lte = parseInt(maxPrice);
+    }
+
+    // 2. Build Sort Stage
+    const sortStage = {};
+    const sortOrder = order === 'asc' ? 1 : -1;
+    if (sortBy === 'price') sortStage.startingPrice = sortOrder;
+    else if (sortBy === 'rating') sortStage.rating = sortOrder;
+    else sortStage.createdAt = sortOrder;
+
+    // 3. Aggregation Pipeline
+    const pipeline = [
+      { $match: matchStage },
+      { $sort: sortStage },
+      { $skip: skip },
+      { $limit: limitNum },
+      // Lookup Floors
       {
-        projection: {
-          name: 1, address: 1, locationCity: 1, category: 1, rating: 1,
-          startingPrice: 1, genderType: 1, amenities: 1, isAC: 1
+        $lookup: {
+          from: 'owner_floors',
+          let: { bId: '$_id', bIdStr: { $toString: '$_id' } },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $eq: ['$building', '$$bId'] },
+                    { $eq: ['$buildingId', '$$bId'] },
+                    { $eq: ['$building', '$$bIdStr'] },
+                    { $eq: ['$buildingId', '$$bIdStr'] }
+                  ]
+                }
+              }
+            },
+            // Lookup Rooms inside Floors
+            {
+              $lookup: {
+                from: 'owner_rooms',
+                let: { fId: '$_id', fIdStr: { $toString: '$_id' } },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $or: [
+                          { $eq: ['$floor', '$$fId'] },
+                          { $eq: ['$floorId', '$$fId'] },
+                          { $eq: ['$floor', '$$fIdStr'] },
+                          { $eq: ['$floorId', '$$fIdStr'] }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    $project: {
+                      roomId: '$_id',
+                      roomNumber: 1,
+                      roomType: 1,
+                      price: '$rentAmount',
+                      totalBeds: '$capacity',
+                      availableBeds: { $subtract: ['$capacity', { $size: { $ifNull: ['$beds', []] } }] }, // approximation
+                      status: 1,
+                      _id: 0
+                    }
+                  }
+                ],
+                as: 'rooms'
+              }
+            },
+            {
+              $project: {
+                floorId: '$_id',
+                floorNumber: 1,
+                totalRooms: { $size: '$rooms' },
+                rooms: 1,
+                _id: 0
+              }
+            }
+          ],
+          as: 'floors'
+        }
+      },
+      // Final Projection
+      {
+        $project: {
+          hostelName: '$name',
+          location: '$locationCity',
+          gender: '$genderType',
+          startingPrice: 1,
+          amenities: 1,
+          totalFloors: { $size: '$floors' },
+          floors: 1,
+          images: 1,
+          rating: 1
         }
       }
-    ).toArray();
+    ];
 
-    const mergedMap = new Map();
-    buildings.forEach(b => mergedMap.set(b._id.toString(), b));
-    ownerBuildings.forEach(b => {
-      const idStr = b._id.toString();
-      if (!mergedMap.has(idStr)) {
-        mergedMap.set(idStr, b);
-      }
-    });
+    const db = mongoose.connection.db;
+    const results = await db.collection('owner_buildings').aggregate(pipeline).toArray();
 
-    res.status(200).json(Array.from(mergedMap.values()));
+    res.status(200).json(results);
   } catch (error) {
+    console.error('[API] /buildings/public Error:', error);
     res.status(500).json({ error: error.message });
   }
 };

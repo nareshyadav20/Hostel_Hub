@@ -7013,3 +7013,15 @@
 2026-06-19T08:56:58.477Z API: GET /api/dashboard/summary
 2026-06-19T08:56:58.898Z API: POST /api/auth/send-otp
 2026-06-19T08:56:58.955Z API: POST /api/auth/verify-otp
+2026-06-19T08:57:49.815Z API: GET /api/health
+2026-06-19T08:57:49.951Z API: GET /api/buildings?status=Draft
+2026-06-19T08:57:49.966Z API: GET /api/owner/portfolio
+2026-06-19T08:57:49.990Z SOCKET: Socket connected: Zc_f-Q6IhBzk_pqOAAAD
+2026-06-19T08:57:50.047Z API: GET /api/owner/portfolio
+2026-06-19T09:26:28.787Z SOCKET: Socket connected: X--VXsgLA2jWDRqOAAAB
+2026-06-19T09:26:39.096Z SOCKET: Socket connected: vAaz1_0e-qLg-cNXAAAB
+2026-06-19T09:27:04.260Z API: GET /api/buildings/public
+2026-06-19T09:27:23.782Z SOCKET: Socket connected: o6DktnHS2w5e2BWXAAAB
+2026-06-19T09:27:47.819Z SOCKET: Socket connected: K3BV2OrglyiVNGavAAAB
+2026-06-19T09:28:00.536Z API: GET /api/buildings/public
+2026-06-19T09:28:01.780Z SOCKET: Socket connected: f6YNbz_cbJToD-rnAAAB
