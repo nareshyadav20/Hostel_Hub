@@ -403,20 +403,30 @@
 }
 
 /* ─── Hostel Card ─── */
+.results-grid-pro {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.results-grid-pro.is-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .search-hostel-card-pro {
   background: #ffffff;
   border-radius: 20px;
   border: 1px solid rgba(79, 70, 229, 0.08);
   display: flex;
+  flex-direction: row;
   overflow: hidden;
   transition: all 0.35s cubic-bezier(0.165, 0.84, 0.44, 1);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
 }
 
-.search-hostel-card-pro:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 50px rgba(79, 70, 229, 0.13);
-  border-color: rgba(79, 70, 229, 0.2);
+.search-hostel-card-pro.is-grid {
+  flex-direction: column;
 }
 
 .card-media-side {
@@ -425,6 +435,12 @@
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
+}
+
+.search-hostel-card-pro.is-grid .card-media-side {
+  width: 100%;
+  height: 220px;
+  min-height: 220px;
 }
 
 .hostel-main-img {
@@ -639,13 +655,13 @@
 
 .btn-secondary-pro {
   flex: 1;
-  padding: 0.65rem 1rem;
+  padding: 0.5rem 0.8rem;
   background: #f8fafc;
   border: 1.5px solid rgba(79, 70, 229, 0.2);
   color: #4F46E5;
-  border-radius: 10px;
+  border-radius: 8px;
   font-weight: 800;
-  font-size: 0.83rem;
+  font-size: 0.75rem;
   text-align: center;
   text-decoration: none;
   transition: all 0.22s ease;
@@ -662,13 +678,13 @@
 
 .btn-primary-pro {
   flex: 1.4;
-  padding: 0.65rem 1rem;
+  padding: 0.5rem 0.8rem;
   background: linear-gradient(135deg, #4F46E5, #3730A3);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   font-weight: 800;
-  font-size: 0.83rem;
+  font-size: 0.75rem;
   text-align: center;
   text-decoration: none;
   transition: all 0.22s ease;
@@ -682,6 +698,13 @@
 .btn-primary-pro:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(79, 70, 229, 0.32);
+}
+
+.search-hostel-card-pro.is-grid .btn-secondary-pro,
+.search-hostel-card-pro.is-grid .btn-primary-pro {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.68rem;
+  border-radius: 6px;
 }
 
 /* ─── Loading & Empty ─── */

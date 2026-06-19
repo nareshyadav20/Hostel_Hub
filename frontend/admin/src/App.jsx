@@ -14,7 +14,6 @@ import Staff from './pages/Staff';
 import Users from './pages/Users';
 import Analytics from './pages/Analytics';
 import Notifications from './pages/Notifications';
-import Cms from './pages/Cms';
 import Offers from './pages/Offers';
 import Surveys from './pages/Surveys';
 import Cities from './pages/Cities';
@@ -33,6 +32,7 @@ import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Complaints from './pages/Complaints';
+import HostelApprovalCenter from './pages/HostelApprovalCenter';
 
 function App() {
   return (
@@ -44,6 +44,7 @@ function App() {
           <Route path="/signup"        element={<Signup />} />
           <Route path="/"              element={<Navigate to="/login" replace />} />
           <Route path="/dashboard"     element={<Layout><Dashboard /></Layout>} />
+          <Route path="/approvals"     element={<Layout><HostelApprovalCenter /></Layout>} />
           <Route path="/hostels"       element={<Layout><Hostels /></Layout>} />
           <Route path="/owners"        element={<Layout><Owners /></Layout>} />
           <Route path="/tenants"       element={<Layout><Tenants /></Layout>} />
@@ -51,7 +52,6 @@ function App() {
           <Route path="/users"         element={<Layout><Users /></Layout>} />
           <Route path="/analytics"     element={<Layout><Analytics /></Layout>} />
           <Route path="/notifications" element={<Layout><Notifications /></Layout>} />
-          <Route path="/cms"           element={<Layout><Cms /></Layout>} />
           <Route path="/offers"        element={<Layout><Offers /></Layout>} />
           <Route path="/surveys"       element={<Layout><Surveys /></Layout>} />
           <Route path="/cities"        element={<Layout><Cities /></Layout>} />
@@ -59,16 +59,15 @@ function App() {
           <Route path="/bookings"      element={<Layout><Bookings /></Layout>} />
           <Route path="/issues"        element={<Layout><Issues /></Layout>} />
           <Route path="/payments"      element={<Layout><Finance /></Layout>} />
-          <Route path="/plans"         element={<Layout><Placeholder title="SaaS Plans" /></Layout>} />
-          <Route path="/promotions"    element={<Layout><Cms /></Layout>} />
-          <Route path="/integrations"  element={<Layout><Placeholder title="Partner Integrations" /></Layout>} />
+          <Route path="/plans"         element={<Placeholder title="SaaS Plans" />} />
+          <Route path="/integrations"  element={<Placeholder title="Partner Integrations" />} />
           <Route path="/security"      element={<Layout><Settings /></Layout>} />
           <Route path="/rooms"         element={<Layout><Rooms /></Layout>} />
-          <Route path="/beds"          element={<Layout><Placeholder title="Beds" /></Layout>} />
-          <Route path="/mess"          element={<Layout><Placeholder title="Mess" /></Layout>} />
-          <Route path="/inventory"     element={<Layout><Placeholder title="Inventory" /></Layout>} />
+          <Route path="/beds"          element={<Placeholder title="Beds" />} />
+          <Route path="/mess"          element={<Placeholder title="Mess" />} />
+          <Route path="/inventory"     element={<Placeholder title="Inventory" />} />
           <Route path="/finance"       element={<Layout><Finance /></Layout>} />
-          <Route path="/wallet"        element={<Layout><Placeholder title="Wallet" /></Layout>} />
+          <Route path="/wallet"        element={<Placeholder title="Wallet" />} />
           <Route path="/automation"    element={<Layout><Automation /></Layout>} />
           <Route path="/tasks"         element={<Layout><Tasks /></Layout>} />
           <Route path="/insights"      element={<Layout><Insights /></Layout>} />

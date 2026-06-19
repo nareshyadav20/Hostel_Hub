@@ -15,7 +15,8 @@ const Payments = () => {
       try {
         setLoading(true);
         const res = await API.get('/payments');
-        const mapped = (res.data || []).map(p => ({
+        const rawData = res.data?.payments || res.data || [];
+        const mapped = (Array.isArray(rawData) ? rawData : []).map(p => ({
           id: p.invoice || p.transactionId || p._id.toString().slice(-8).toUpperCase(),
           owner: p.tenantId?.name || p.buildingId?.name || 'System Guest',
           amount: p.amount ? p.amount.toLocaleString('en-IN') : '0',

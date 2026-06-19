@@ -49,9 +49,12 @@ const getHierarchyCounts = async (buildingIds) => {
   const db = mongoose.connection.db;
 
   // 1. owner_buildings side
-  const ownerFloors = await db.collection('owner_floors').find(
-    { buildingId: { $in: buildingIds } }
-  ).toArray();
+  const ownerFloors = await db.collection('owner_floors').find({
+    $or: [
+      { building: { $in: buildingIds } },
+      { buildingId: { $in: buildingIds } }
+    ]
+  }).toArray();
   const ownerFloorIds = ownerFloors.map(f => f._id);
 
   const ownerRooms = ownerFloorIds.length > 0
@@ -61,16 +64,30 @@ const getHierarchyCounts = async (buildingIds) => {
   const ownerMaintCount = ownerRooms.filter(r => r.status === 'Maintenance').length;
 
   const ownerBeds = ownerRoomIds.length > 0
-    ? await db.collection('owner_beds').countDocuments({ roomId: { $in: ownerRoomIds } })
+    ? await db.collection('owner_beds').countDocuments({
+        $or: [
+          { room: { $in: ownerRoomIds } },
+          { roomId: { $in: ownerRoomIds } }
+        ]
+      })
     : 0;
   const ownerOccupied = ownerRoomIds.length > 0
-    ? await db.collection('owner_beds').countDocuments({ roomId: { $in: ownerRoomIds }, status: 'OCCUPIED' })
+    ? await db.collection('owner_beds').countDocuments({
+        $or: [
+          { room: { $in: ownerRoomIds } },
+          { roomId: { $in: ownerRoomIds } }
+        ],
+        status: 'OCCUPIED'
+      })
     : 0;
 
   // 2. buildings (raw) side
-  const rawFloors = await db.collection('floors').find(
-    { building: { $in: buildingIds } }
-  ).toArray();
+  const rawFloors = await db.collection('floors').find({
+    $or: [
+      { building: { $in: buildingIds } },
+      { buildingId: { $in: buildingIds } }
+    ]
+  }).toArray();
   const rawFloorIds = rawFloors.map(f => f._id);
 
   const rawRooms = rawFloorIds.length > 0
@@ -80,10 +97,21 @@ const getHierarchyCounts = async (buildingIds) => {
   const rawMaintCount = rawRooms.filter(r => r.status === 'Maintenance').length;
 
   const rawBeds = rawRoomIds.length > 0
-    ? await db.collection('beds').countDocuments({ roomId: { $in: rawRoomIds } })
+    ? await db.collection('beds').countDocuments({
+        $or: [
+          { room: { $in: rawRoomIds } },
+          { roomId: { $in: rawRoomIds } }
+        ]
+      })
     : 0;
   const rawOccupied = rawRoomIds.length > 0
-    ? await db.collection('beds').countDocuments({ roomId: { $in: rawRoomIds }, status: 'OCCUPIED' })
+    ? await db.collection('beds').countDocuments({
+        $or: [
+          { room: { $in: rawRoomIds } },
+          { roomId: { $in: rawRoomIds } }
+        ],
+        status: 'OCCUPIED'
+      })
     : 0;
 
   return {
@@ -143,36 +171,24 @@ exports.getSummaryKPIs = async (req, res) => {
     const matchQuery = { _id: { $in: activeBuildingIds } };
 
     // 2. Check number of beds available
-    const stats = await Building.aggregate([
-      { $match: matchQuery },
-      { $lookup: { from: 'floors', localField: 'floors', foreignField: '_id', as: 'floorData' } },
-      { $unwind: { path: '$floorData', preserveNullAndEmptyArrays: true } },
-      { $lookup: { from: 'rooms', localField: 'floorData.rooms', foreignField: '_id', as: 'roomData' } },
-      { $unwind: { path: '$roomData', preserveNullAndEmptyArrays: true } },
-      { $lookup: { from: 'beds', localField: 'roomData.beds', foreignField: '_id', as: 'bedData' } },
-      { $unwind: { path: '$bedData', preserveNullAndEmptyArrays: true } },
-      {
-        $group: {
-          _id: null,
-          totalBeds: { $sum: { $cond: [{ $ifNull: ['$bedData._id', false] }, 1, 0] } },
-          occupiedBeds: { $sum: { $cond: [{ $eq: ['$bedData.status', 'OCCUPIED'] }, 1, 0] } },
-          maintenanceRooms: { $addToSet: { $cond: [{ $eq: ['$roomData.status', 'Maintenance'] }, '$roomData._id', null] } },
-          buildingCount: { $addToSet: '$_id' }
-        }
-      }
-    ]);
-
-    const s = stats[0] || { totalBeds: 0, occupiedBeds: 0, maintenanceRooms: [], buildingCount: [] };
-    const maintenanceRoomsCount = (s.maintenanceRooms || []).filter(id => id !== null).length;
-    const buildingCount = (s.buildingCount || []).length;
+    const hierarchy = await getHierarchyCounts(activeBuildingIds);
+    let totalBeds = hierarchy.totalBeds || 0;
+    let occupiedBeds = hierarchy.occupiedBeds || 0;
+    const maintenanceRoomsCount = hierarchy.maintenanceRoomsCount || 0;
+    const buildingCount = activeBuildingIds.length;
 
     // 3. Tenants count
-    const tenantFilter = { buildingId: { $in: activeBuildingIds } };
+    let tenantFilter = {};
+    if (buildingId) {
+      tenantFilter = { buildingId: new mongoose.Types.ObjectId(buildingId) };
+    } else if (!isPlatformAdmin) {
+      tenantFilter = { buildingId: { $in: activeBuildingIds } };
+    }
     const totalTenants = await Tenant.countDocuments(tenantFilter);
 
     // 4. Calculate occupancy rate
-    let totalBeds = s.totalBeds || 0;
-    let occupiedBeds = totalTenants; // Since active tenants occupy beds, we dynamically count occupied beds by active tenants count
+    // Since active tenants occupy beds, we dynamically make sure occupiedBeds matches or is at least totalTenants
+    occupiedBeds = Math.max(occupiedBeds, totalTenants);
 
     if (totalBeds === 0 && totalTenants > 0) {
       totalBeds = totalTenants;
@@ -606,7 +622,7 @@ exports.getStaffStats = async (req, res) => {
       activeBuildingIds = ownerBuildingIds;
     }
 
-    const staff = await Staff.find({ buildingId: { $in: activeBuildingIds } }).select('name role performance status');
+    const staff = await Staff.find({ buildingId: { $in: activeBuildingIds } }).select('name role performance status tasks');
     const efficiency = staff.length > 0 ? (staff.reduce((s, st) => s + (st.performance || 0), 0) / staff.length) * 20 : 100;
 
     res.json({

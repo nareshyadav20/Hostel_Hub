@@ -420,7 +420,7 @@ const Search = () => {
                 ))}
               </div>
 
-              {totalPages > 1 && (
+              {true && (
                 <div className="pagination-wrapper-pro">
                   <div className="pagination-pro">
                     <button

@@ -1,10 +1,104 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Search, SlidersHorizontal, Star, ShieldCheck, RefreshCw, MapPin, X, ChevronRight, ChevronDown } from 'lucide-react';
 
 import './Landing.css';
+import './Search.css'; // Import Search UI styles for identical layout
 import API from '../api/axios';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
+import ImageModal from '../components/ImageModal';
+
+const ICONS = {
+  Search: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
+  Location: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>,
+  Home: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
+  Budget: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><line x1="12" y1="18" x2="12" y2="20"></line><line x1="12" y1="4" x2="12" y2="6"></line></svg>,
+  Sharing: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
+  Filter: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>,
+  Star: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>,
+  Occupancy: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>,
+  Reset: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 .49-3.51" /></svg>,
+};
+
+const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
+  const [imgIdx, setImgIdx] = useState(0);
+
+  useEffect(() => {
+    if (!hostel.images || hostel.images.length <= 1) return;
+    const timer = setInterval(() => {
+      setImgIdx(prev => (prev + 1) % hostel.images.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [hostel.images]);
+
+  const currentImage = hostel.images && hostel.images.length > 0
+    ? hostel.images[imgIdx]
+    : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800';
+
+  return (
+    <div className="search-hostel-card-pro is-grid">
+      <div className="card-media-side" onClick={() => onImageClick(currentImage)} style={{ cursor: 'zoom-in' }}>
+        <img src={currentImage} alt={hostel.name} className="hostel-main-img" style={{ transition: 'opacity 0.5s ease-in-out' }} />
+        <div className="card-image-overlays">
+          <div className="badge-row-top">
+            {hostel.popularityLabel && <span className="label-demand">{hostel.popularityLabel}</span>}
+            <span className="label-available">Available</span>
+          </div>
+          <button
+            className={`wish-action-btn ${isWishlisted ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); toggleWishlist(hostel); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="card-details-side">
+        <div className="details-header-row">
+          <div>
+            <h3 className="hostel-title-pro">{hostel.name}</h3>
+            <p className="hostel-loc-pro"><ICONS.Location /> {hostel.location}</p>
+          </div>
+          <div className="rating-badge-pro">
+            <ICONS.Star /> <span>{hostel.rating}</span>
+          </div>
+        </div>
+
+        <div className="details-mid-grid">
+          <div className="pricing-stack-pro">
+            <span className="price-label-pro">Starts from</span>
+            <span className="price-val-pro">₹{(hostel.price || 0).toLocaleString()}</span>
+            <span className="price-per-pro">/month</span>
+          </div>
+          {hostel.hostelType && (
+            <div className="occupancy-stack-pro">
+              <span className="occ-label-pro"><ICONS.Home /> Type</span>
+              <span className="occ-val-pro">{hostel.hostelType}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="amenities-footer-row">
+          <div className="amenity-mini-tags">
+            {(hostel.amenities || ['WiFi', 'Security', 'Food']).slice(0, 3).map(a => (
+              <span key={a} className="tag-pro">{a}</span>
+            ))}
+            {(hostel.amenities || []).length > 3 && (
+              <span className="tag-more">+{(hostel.amenities || []).length - 3} More</span>
+            )}
+          </div>
+        </div>
+
+        <div className="card-actions-row-pro">
+          <Link to={`/listing/${hostel.id}`} className="btn-secondary-pro">View Details</Link>
+          <Link to={`/booking/${hostel.id}`} state={{ basePrice: hostel.price }} className="btn-primary-pro">Book Now</Link>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const EXPLORE_CACHE_KEY = 'hh_explore_buildings_v3';
 const EXPLORE_CACHE_TTL = 3 * 60 * 1000;
@@ -56,7 +150,41 @@ const Landing = () => {
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 5;
+  const [wishlist, setWishlist] = useState([]);
+  const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
+
+  const fetchWishlist = async () => {
+    try {
+      const wishRes = await API.get('/tenant-portal/wishlist').catch(() => ({ data: [] }));
+      setWishlist(Array.isArray(wishRes.data) ? wishRes.data : []);
+    } catch (err) { }
+  };
+
+  const toggleWishlist = async (hostel) => {
+    try {
+      const existing = wishlist.find(h => h.hostelId === hostel.id || h.id === hostel.id);
+      if (existing) {
+        await API.delete(`/tenant-portal/wishlist/${existing._id}`);
+        setWishlist(prev => prev.filter(h => h._id !== existing._id));
+      } else {
+        const res = await API.post('/tenant-portal/wishlist', {
+          hostelId: hostel.id,
+          hostelName: hostel.name,
+          hostelLocation: hostel.fullAddress || hostel.locality,
+          hostelPrice: hostel.price,
+          hostelImage: hostel.images && hostel.images.length > 0 ? hostel.images[0] : (hostel.img || ''),
+          hostelRating: hostel.rating,
+          type: hostel.gender
+        });
+        setWishlist(prev => [...prev, res.data]);
+      }
+    } catch (err) {
+      console.error('Error toggling wishlist:', err);
+    }
+  };
+
+  const isWishlisted = (id) => wishlist.some((h) => (h.hostelId === id || h.id === id));
 
   // Parse URL parameters — reset all filters first, then apply only what's in the URL
   useEffect(() => {
@@ -196,6 +324,7 @@ const Landing = () => {
   };
 
   useEffect(() => {
+    fetchWishlist();
     const cached = getCachedBuildings();
     if (cached) {
       setHostels(cached);
@@ -257,7 +386,7 @@ const Landing = () => {
         const matchesCity = h.city && h.city.toLowerCase().includes(query);
         const matchesLocality = h.locality && h.locality.toLowerCase().includes(query);
         const matchesName = h.name && h.name.toLowerCase().includes(query);
-        
+
         if (!matchesCity && !matchesLocality && !matchesName) return false;
         if (matchesCity) bypassCityFilter = true;
       }
@@ -284,12 +413,12 @@ const Landing = () => {
 
       // Sharing
       if (sharing && sharing !== 'Any') {
-         if (sharing === 'Single' && !h.hasSingle) return false;
-         if (sharing === '2' && !h.hasDouble) return false;
-         if (sharing === '3' && !h.hasTriple) return false;
-         if (sharing === '4' && !h.has4) return false;
-         if (sharing === '5' && !h.has5) return false;
-         if (sharing === '6' && !h.has6) return false;
+        if (sharing === 'Single' && !h.hasSingle) return false;
+        if (sharing === '2' && !h.hasDouble) return false;
+        if (sharing === '3' && !h.hasTriple) return false;
+        if (sharing === '4' && !h.has4) return false;
+        if (sharing === '5' && !h.has5) return false;
+        if (sharing === '6' && !h.has6) return false;
       }
 
       // Amenities
@@ -416,71 +545,57 @@ const Landing = () => {
       </div>
 
       {/* ── MAIN LAYOUT ── */}
-      <div className="exp-layout">
+      <div className={`search-main-layout ${isMobileFilterOpen ? 'filter-open' : ''}`}>
 
         {/* ── SIDEBAR FILTERS ── */}
-        <aside className={`exp-sidebar ${isMobileFilterOpen ? 'mobile-open' : ''}`}>
-          <div className="exp-sidebar-head">
-            <div className="exp-sidebar-title">
-              <SlidersHorizontal size={16} />
-              <span>Filters</span>
-              {activeFilterCount > 0 && <span className="exp-filter-badge">{activeFilterCount}</span>}
+        <aside className="search-sidebar-pro" style={{ marginLeft: '0.3cm' }}>
+          <div className="filter-card-premium">
+            <div className="filter-card-header">
+              <ICONS.Filter />
+              <h3>Filters</h3>
+              {activeFilterCount > 0 && (
+                <button className="filter-reset-btn" onClick={resetAllFilters}>
+                  <ICONS.Reset /> Clear all
+                </button>
+              )}
             </div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <button className="exp-reset-btn" onClick={resetAllFilters}>
-                <RefreshCw size={12} /> Reset
-              </button>
-              <button className="exp-sidebar-close-mobile" onClick={() => setIsMobileFilterOpen(false)}>
-                <X size={18} />
-              </button>
-            </div>
-          </div>
-
-          {/* Filter scroll area */}
-          <div className="exp-sidebar-scroll">
 
             {/* Location — cities */}
-            <div className="exp-filter-block">
-              <h4 className="exp-filter-label">Location</h4>
-              <select 
-                className="exp-select" 
-                value={selectedCity} 
-                onChange={e => {
+            <div className="filter-section-pro">
+              <label className="section-label-pro"><ICONS.Location /> Location</label>
+              <div className="select-wrapper-pro">
+                <select value={selectedCity} onChange={e => {
                   const city = e.target.value;
                   setSelectedCity(city);
                   setSearchLocality('');
                   navigate(`/explore${city === 'All Cities' ? '' : `?city=${city.toLowerCase()}`}`);
-                }}
-              >
-                {['All Cities', ...CITIES_LIST].map(city => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
+                }}>
+                  {['All Cities', ...CITIES_LIST].map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Localities — dynamic from selected city */}
             {uniqueLocalities.length > 0 && (
-              <div className="exp-filter-block">
-                <h4 className="exp-filter-label">
-                  Localities in {selectedCity}
-                </h4>
-                <select
-                  className="exp-select"
-                  value={searchLocality}
-                  onChange={e => setSearchLocality(e.target.value)}
-                >
-                  <option value="">All Localities</option>
-                  {uniqueLocalities.map(loc => (
-                    <option key={loc} value={loc}>{loc}</option>
-                  ))}
-                </select>
+              <div className="filter-section-pro">
+                <label className="section-label-pro"><ICONS.Location /> Localities in {selectedCity}</label>
+                <div className="select-wrapper-pro">
+                  <select value={searchLocality} onChange={e => setSearchLocality(e.target.value)}>
+                    <option value="">All Localities</option>
+                    {uniqueLocalities.map(loc => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             )}
 
             {/* Budget */}
-            <div className="exp-filter-block">
-              <h4 className="exp-filter-label">Monthly Budget</h4>
-              <div className="exp-radio-group">
+            <div className="filter-section-pro">
+              <label className="section-label-pro"><ICONS.Budget /> Monthly Budget</label>
+              <div className="budget-option-list">
                 {[
                   { label: 'Any Budget', min: 0, max: 60000 },
                   { label: 'Under ₹8k', min: 0, max: 8000 },
@@ -488,25 +603,25 @@ const Landing = () => {
                   { label: '₹12k – ₹18k', min: 12000, max: 18000 },
                   { label: 'Above ₹18k', min: 18000, max: 60000 },
                 ].map(opt => (
-                  <label key={opt.label} className={`exp-radio-item ${budgetMin === opt.min && budgetMax === opt.max ? 'active' : ''}`}>
+                  <label key={opt.label} className={`budget-radio-row ${budgetMin === opt.min && budgetMax === opt.max ? 'active' : ''}`}>
                     <input type="radio" name="budget"
                       checked={budgetMin === opt.min && budgetMax === opt.max}
                       onChange={() => { setBudgetMin(opt.min); setBudgetMax(opt.max); }}
                     />
-                    <span className="exp-radio-dot"></span>
-                    {opt.label}
+                    <span className="radio-custom-pro"></span>
+                    <span className="radio-label-text">{opt.label}</span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* Hostel Type */}
-            <div className="exp-filter-block">
-              <h4 className="exp-filter-label">Hostel Type</h4>
-              <div className="exp-pill-group">
+            <div className="filter-section-pro">
+              <label className="section-label-pro"><ICONS.Home /> Hostel Type</label>
+              <div className="pill-group">
                 {["Any", "Men's", "Women's", 'Co-living', 'Premium', 'Student'].map(t => (
                   <button key={t}
-                    className={`exp-pill ${(!hostelType && t === 'Any') || hostelType === t ? 'active' : ''}`}
+                    className={`pill-btn ${(!hostelType && t === 'Any') || hostelType === t ? 'active' : ''}`}
                     onClick={() => setHostelType(t === 'Any' ? '' : t)}
                   >{t}</button>
                 ))}
@@ -514,16 +629,14 @@ const Landing = () => {
             </div>
 
             {/* Sharing Type */}
-            <div className="exp-filter-block">
-              <h4 className="exp-filter-label">Sharing Type</h4>
-              <div className="exp-pill-group">
-                <button className={`exp-pill ${!sharing ? 'active' : ''}`} onClick={() => setSharing('')}>Any</button>
-                <button className={`exp-pill ${sharing === 'Single' ? 'active' : ''}`} onClick={() => setSharing(sharing === 'Single' ? '' : 'Single')}>Single</button>
-              </div>
-              <div className="exp-pill-group" style={{ marginTop: '8px' }}>
+            <div className="filter-section-pro">
+              <label className="section-label-pro"><ICONS.Sharing /> Sharing Type</label>
+              <div className="sharing-grid-3x3">
+                <button className={`sharing-grid-btn ${!sharing ? 'active' : ''}`} onClick={() => setSharing('')}>Any</button>
+                <button className={`sharing-grid-btn ${sharing === 'Single' ? 'active' : ''}`} onClick={() => setSharing(sharing === 'Single' ? '' : 'Single')}>Single</button>
                 {['2', '3', '4', '5', '6'].map(n => (
                   <button key={n}
-                    className={`exp-pill exp-pill-num ${sharing === n ? 'active' : ''}`}
+                    className={`sharing-grid-btn ${sharing === n ? 'active' : ''}`}
                     onClick={() => setSharing(sharing === n ? '' : n)}
                   >{n}</button>
                 ))}
@@ -531,13 +644,13 @@ const Landing = () => {
             </div>
 
             {/* Amenities */}
-            <div className="exp-filter-block">
-              <h4 className="exp-filter-label">Amenities</h4>
-              <div className="exp-amenities-grid">
+            <div className="filter-section-pro">
+              <label className="section-label-pro"><ICONS.Star /> Amenities</label>
+              <div className="sharing-grid-3x3" style={{ gridTemplateColumns: '1fr 1fr' }}>
                 {['WiFi', 'AC', 'Gym', 'Food/Mess', 'Parking', 'Power Backup', 'Laundry', 'CCTV'].map(a => (
                   <button
                     key={a}
-                    className={`exp-amenity-pill ${selectedAmenities.includes(a) ? 'active' : ''}`}
+                    className={`sharing-grid-btn ${selectedAmenities.includes(a) ? 'active' : ''}`}
                     onClick={() => {
                       if (selectedAmenities.includes(a)) {
                         setSelectedAmenities(selectedAmenities.filter(item => item !== a));
@@ -551,137 +664,129 @@ const Landing = () => {
                 ))}
               </div>
             </div>
-          </div>
 
-          {/* Mobile Apply */}
-          <div className="exp-sidebar-mobile-footer">
-            <button className="exp-apply-btn" onClick={() => setIsMobileFilterOpen(false)}>
-              Show {filteredHostels.length} Properties
+            <button
+              className="btn-apply-filters"
+              onClick={() => { setIsMobileFilterOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            >
+              Apply Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
             </button>
           </div>
         </aside>
 
-        {/* Mobile Overlay */}
-        {isMobileFilterOpen && (
-          <div className="exp-sidebar-overlay" onClick={() => setIsMobileFilterOpen(false)} />
-        )}
-
         {/* ── PROPERTIES LIST ── */}
-        <main className="exp-main">
-          {/* Desktop sort bar */}
-          <div className="exp-results-bar">
-            <p className="exp-results-count">
-              <strong>{filteredHostels.length}</strong> properties in {selectedCity}
-              {searchLocality && <span className="exp-results-locality"> · {searchLocality}</span>}
+        <main className="search-results-pro">
+          {/* Results meta bar */}
+          <div className="results-meta-bar">
+            <p className="results-meta-count">
+              <strong>{filteredHostels.length}</strong> stays found in {selectedCity}
             </p>
-            <select className="exp-select exp-desktop-sort" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+            <select className="exp-select exp-desktop-sort" style={{ width: 'auto', padding: '6px 10px', background: 'transparent' }} value={sortBy} onChange={e => setSortBy(e.target.value)}>
               <option value="">Sort: Relevance</option>
               <option value="price_low_high">Price: Low → High</option>
               <option value="price_high_low">Price: High → Low</option>
             </select>
           </div>
 
-          {/* Hostel cards scroll area */}
-          <div className="exp-cards-scroll">
-            {loading ? (
-              <div className="exp-loading">
-                <div className="exp-spinner"></div>
-                <p>Finding the best stays for you...</p>
+          {loading ? (
+            <div className="loading-placeholder-grid">
+              <div className="premium-spinner"></div>
+              <p>Discovering premium stays for you...</p>
+            </div>
+          ) : currentHostels.length === 0 ? (
+            <div className="no-results-card">
+              <div className="empty-visual"><ICONS.Search /></div>
+              <h3>No Properties Found</h3>
+              <p>Try adjusting your search filters or selecting a different city.</p>
+              <button className="btn-secondary-pro" style={{ width: 'max-content', margin: '0 auto' }} onClick={resetAllFilters}>Clear All Filters</button>
+            </div>
+          ) : (
+            <>
+              <div className="results-grid-pro is-grid">
+                {currentHostels.map(h => (
+                  <HostelCard
+                    key={h.id}
+                    hostel={{ ...h, location: h.locality + ', ' + h.city, hostelType: h.gender, images: [h.img] }}
+                    isWishlisted={isWishlisted(h.id)}
+                    toggleWishlist={toggleWishlist}
+                    onImageClick={(img) => setModalInfo({ isOpen: true, image: img })}
+                  />
+                ))}
               </div>
-            ) : currentHostels.length > 0 ? (
-              <>
-                <div className="exp-cards-grid">
-                  {currentHostels.map((hostel, idx) => (
-                    <div key={hostel.id} className="exp-card" style={{ animationDelay: `${0.05 * idx}s` }}>
-                      <div className="exp-card-img" onClick={() => goToListing(hostel.id)}>
-                        <img
-                          src={hostel.img}
-                          alt={hostel.name}
-                          onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800'; }}
-                        />
-                        <div className="exp-card-img-overlay"></div>
-                        <span className="exp-gender-tag" style={{ background: genderColor(hostel.gender) }}>
-                          {hostel.gender}
-                        </span>
-                        <div className="exp-rating-pill">
-                          <Star size={11} fill="#F59E0B" color="#F59E0B" />
-                          <span>{hostel.rating.toFixed(1)}</span>
-                        </div>
-                      </div>
 
-                      <div className="exp-card-body">
-                        <div className="exp-card-top">
-                          <p className="exp-card-locality">
-                            <MapPin size={12} /> {hostel.locality}, {hostel.city}
-                          </p>
-                          <h3 className="exp-card-title" onClick={() => goToListing(hostel.id)}>
-                            {hostel.name}
-                          </h3>
-                        </div>
-
-                        <div className="exp-card-amenities">
-                          {hostel.amenities.slice(0, 3).map((a, i) => (
-                            <span key={i} className="exp-amenity-tag">{a}</span>
-                          ))}
-                          {hostel.amenities.length > 3 && (
-                            <span className="exp-amenity-more">+{hostel.amenities.length - 3}</span>
-                          )}
-                        </div>
-
-                        <div className="exp-card-footer">
-                          <div className="exp-price-block">
-                            <span className="exp-price-label">Starts at</span>
-                            <div className="exp-price-row">
-                              <span className="exp-price-value">₹{hostel.price.toLocaleString()}</span>
-                              <span className="exp-price-per">/mo</span>
-                            </div>
-                            <span className="exp-sharing-tag">{hostel.sharingLabel}</span>
-                          </div>
-                          <button className="exp-details-btn" onClick={() => goToListing(hostel.id)}>
-                            Details <ChevronRight size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="exp-pagination">
+              {/* Pagination */}
+              {true && (
+                <div className="pagination-wrapper-pro">
+                  <div className="pagination-pro">
                     <button
-                      className="exp-pagi-btn"
                       disabled={currentPage === 1}
-                      onClick={() => { setCurrentPage(p => p - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    >← Prev</button>
-                    <div className="exp-pagi-nums">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
-                        <button
-                          key={num}
-                          className={`exp-pagi-num ${currentPage === num ? 'active' : ''}`}
-                          onClick={() => { setCurrentPage(num); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                        >{num}</button>
-                      ))}
-                    </div>
+                      onClick={() => { setCurrentPage(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="pagi-btn pagi-edge" title="First page"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
+                    </button>
+
                     <button
-                      className="exp-pagi-btn"
+                      disabled={currentPage === 1}
+                      onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="pagi-btn" title="Previous page"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+
+                    <div className="pagi-numbers">
+                      {(() => {
+                        const pages = [];
+                        const maxVisible = 5;
+                        let startPage, endPage;
+                        if (totalPages <= maxVisible + 2) { startPage = 1; endPage = totalPages; }
+                        else if (currentPage <= Math.ceil(maxVisible / 2) + 1) { startPage = 1; endPage = maxVisible; }
+                        else if (currentPage >= totalPages - Math.floor(maxVisible / 2)) { startPage = totalPages - maxVisible + 1; endPage = totalPages; }
+                        else { startPage = currentPage - Math.floor(maxVisible / 2); endPage = currentPage + Math.floor(maxVisible / 2); }
+
+                        if (startPage > 1) {
+                          pages.push(<button key={1} onClick={() => { setCurrentPage(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`pagi-num ${currentPage === 1 ? 'active' : ''}`}>1</button>);
+                          if (startPage > 2) pages.push(<span key="e1" className="pagi-ellipsis">•••</span>);
+                        }
+                        for (let i = startPage; i <= endPage; i++) {
+                          pages.push(<button key={i} onClick={() => { setCurrentPage(i); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`pagi-num ${currentPage === i ? 'active' : ''}`}>{i}</button>);
+                        }
+                        if (endPage < totalPages) {
+                          if (endPage < totalPages - 1) pages.push(<span key="e2" className="pagi-ellipsis">•••</span>);
+                          pages.push(<button key={totalPages} onClick={() => { setCurrentPage(totalPages); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`pagi-num ${currentPage === totalPages ? 'active' : ''}`}>{totalPages}</button>);
+                        }
+                        return pages;
+                      })()}
+                    </div>
+
+                    <button
                       disabled={currentPage === totalPages}
-                      onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    >Next →</button>
+                      onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="pagi-btn" title="Next page"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+
+                    <button
+                      disabled={currentPage === totalPages}
+                      onClick={() => { setCurrentPage(totalPages); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="pagi-btn pagi-edge" title="Last page"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
+                    </button>
                   </div>
-                )}
-              </>
-            ) : (
-              <div className="exp-empty">
-                <ShieldCheck size={52} color="#cbd5e1" />
-                <h3>No Properties Found</h3>
-                <p>Try adjusting your search filters or selecting a different city.</p>
-                <button className="exp-reset-full-btn" onClick={resetAllFilters}>Reset All Filters</button>
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </>
+          )}
         </main>
       </div>
+
+      <ImageModal
+        isOpen={modalInfo.isOpen}
+        image={modalInfo.image}
+        onClose={() => setModalInfo({ isOpen: false, image: '' })}
+      />
     </div>
   );
 };
