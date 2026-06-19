@@ -72,7 +72,7 @@ const roomSchema = new mongoose.Schema({
   realTimeEnabled: { type: Boolean, default: true }
 }, { 
   timestamps: true, 
-  collection: 'rooms',
+  collection: 'owner_rooms',
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });

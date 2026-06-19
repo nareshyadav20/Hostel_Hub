@@ -9,8 +9,8 @@ router.get('/public', async (req, res) => {
   try {
     const db = mongoose.connection.db;
 
-    // Fetch amenities from buildings collection
-    const buildings = await db.collection('buildings')
+    // Fetch amenities from owner_buildings collection
+    const buildings = await db.collection('owner_buildings')
       .find({}, { projection: { amenities: 1 } })
       .toArray();
 
@@ -38,7 +38,7 @@ router.get('/public', async (req, res) => {
 router.get('/', auth, async (req, res) => {
   try {
     const db = mongoose.connection.db;
-    const buildings = await db.collection('buildings')
+    const buildings = await db.collection('owner_buildings')
       .find({}, { projection: { amenities: 1, name: 1 } })
       .toArray();
 

@@ -113,7 +113,7 @@ const buildingSchema = new mongoose.Schema({
   floors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Floor' }]
 }, { 
   timestamps: true, 
-  collection: 'buildings',
+  collection: 'owner_buildings',
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });

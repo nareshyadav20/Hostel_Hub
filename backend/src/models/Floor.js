@@ -62,7 +62,7 @@ const floorSchema = new mongoose.Schema({
   realTimeEnabled: { type: Boolean, default: true }
 }, { 
   timestamps: true, 
-  collection: 'floors',
+  collection: 'owner_floors',
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });

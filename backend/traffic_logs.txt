@@ -6973,3 +6973,43 @@
 2026-06-19T08:31:37.654Z API: GET /api/owner/portfolio
 2026-06-19T08:32:21.132Z SOCKET: Socket connected: Vq0yjEwm780EgU7OAAAB
 2026-06-19T08:34:32.783Z SOCKET: Socket connected: ijo6wQXDFz5XtBf8AAAB
+2026-06-19T08:53:49.161Z SOCKET: Socket connected: dnnXbZaqG_YFngqMAAAB
+2026-06-19T08:54:12.113Z SOCKET: Socket connected: u05ZRYMXiFB-P3scAAAB
+2026-06-19T08:54:18.103Z SOCKET: Socket connected: wcISAGZWuvdU2F_OAAAB
+2026-06-19T08:54:35.794Z SOCKET: Socket connected: X_6AM92foxSlMuWUAAAB
+2026-06-19T08:55:35.702Z API: GET /api/buildings/public
+2026-06-19T08:55:35.804Z API: GET /api/rooms/public
+2026-06-19T08:55:35.848Z API: GET /api/floors/public
+2026-06-19T08:55:35.896Z API: GET /api/amenities/public
+2026-06-19T08:55:35.932Z API: GET /api/hostels/public
+2026-06-19T08:55:36.037Z API: POST /api/auth/register
+2026-06-19T08:55:36.319Z API: GET /api/profile
+2026-06-19T08:55:36.367Z API: GET /api/tenants
+2026-06-19T08:55:36.442Z API: GET /api/bookings
+2026-06-19T08:55:36.538Z API: GET /api/payments
+2026-06-19T08:55:36.604Z API: GET /api/complaints
+2026-06-19T08:55:36.787Z API: GET /api/notifications
+2026-06-19T08:55:36.909Z API: GET /api/wishlist
+2026-06-19T08:55:36.948Z API: GET /api/reviews
+2026-06-19T08:55:36.998Z API: GET /api/dashboard/summary
+2026-06-19T08:55:37.430Z API: POST /api/auth/send-otp
+2026-06-19T08:55:37.489Z API: POST /api/auth/verify-otp
+2026-06-19T08:55:59.827Z SOCKET: Socket connected: Hsa3Zwdh7S1zczEBAAAB
+2026-06-19T08:56:28.569Z SOCKET: Socket connected: l99t7h1OSB0_6A2RAAAB
+2026-06-19T08:56:57.191Z API: GET /api/buildings/public
+2026-06-19T08:56:57.292Z API: GET /api/rooms/public
+2026-06-19T08:56:57.340Z API: GET /api/floors/public
+2026-06-19T08:56:57.379Z API: GET /api/amenities/public
+2026-06-19T08:56:57.414Z API: GET /api/hostels/public
+2026-06-19T08:56:57.503Z API: POST /api/auth/register
+2026-06-19T08:56:57.749Z API: GET /api/profile
+2026-06-19T08:56:57.799Z API: GET /api/tenants
+2026-06-19T08:56:57.878Z API: GET /api/bookings
+2026-06-19T08:56:57.977Z API: GET /api/payments
+2026-06-19T08:56:58.055Z API: GET /api/complaints
+2026-06-19T08:56:58.263Z API: GET /api/notifications
+2026-06-19T08:56:58.404Z API: GET /api/wishlist
+2026-06-19T08:56:58.437Z API: GET /api/reviews
+2026-06-19T08:56:58.477Z API: GET /api/dashboard/summary
+2026-06-19T08:56:58.898Z API: POST /api/auth/send-otp
+2026-06-19T08:56:58.955Z API: POST /api/auth/verify-otp
