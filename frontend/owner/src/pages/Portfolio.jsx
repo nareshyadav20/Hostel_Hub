@@ -226,11 +226,43 @@ const Portfolio = () => {
   const resumeDraft = async (draft) => {
     try {
       const fullDraft = await api.getBuildingById(draft._id || draft.id);
-      const data = fullDraft.draftData || INITIAL_FORM_STATE;
-      setFormData({ ...INITIAL_FORM_STATE, ...data });
-      setCurrentStep(fullDraft.lastStep || 1);
+      let dataToSet;
+      
+      if (fullDraft.draftData && Object.keys(fullDraft.draftData).length > 0) {
+        dataToSet = fullDraft.draftData;
+      } else {
+        // Map actual building data to formData
+        dataToSet = {
+          name: fullDraft.name || '',
+          shortDesc: fullDraft.description || '',
+          address: fullDraft.address || '',
+          locationCity: fullDraft.locationCity || '',
+          locality: fullDraft.locality || '',
+          amenities: fullDraft.amenities || [],
+          genderType: fullDraft.genderType || 'Mixed',
+          stayQuality: fullDraft.stayQuality || '',
+          buildingAge: fullDraft.buildingAge || 0,
+          wardenName: fullDraft.warden || '',
+          wardenNumber: fullDraft.wardenNumber || '',
+          rentSingle: fullDraft.rentSingle || '',
+          rentDouble: fullDraft.rentDouble || '',
+          rentTriple: fullDraft.rentTriple || '',
+          rent4Sharing: fullDraft.rent4Sharing || '',
+          rent5Sharing: fullDraft.rent5Sharing || '',
+          rent6Sharing: fullDraft.rent6Sharing || '',
+          securityDeposit: fullDraft.securityDeposit || '',
+          coverImage: fullDraft.images?.[0] || null,
+          gallery: fullDraft.images || [],
+          ownerName: fullDraft.policies?.ownerName || '', // If stored there
+          phone: fullDraft.policies?.phone || '', 
+          email: fullDraft.policies?.email || '',
+        };
+      }
+
+      setFormData({ ...INITIAL_FORM_STATE, ...dataToSet });
+      setCurrentStep(fullDraft.status === 'Draft' ? (fullDraft.lastStep || 1) : 1);
       setActiveDraftId(fullDraft._id || fullDraft.id);
-      setDraftMsg('🔄 Resuming your draft...');
+      setDraftMsg('🔄 Opening editor...');
       setShowDrafts(false);
       setIsAddModalOpen(true);
       setTimeout(() => setDraftMsg(''), 2500);
