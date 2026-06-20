@@ -640,37 +640,49 @@ const BuildingManagement = () => {
 
 
   // --- HELPER: Image Upload ---
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
 
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          imageUrl: prev.imageUrl || reader.result, // keep legacy imageUrl working
-          images: [...(prev.images || []), reader.result]
-        }));
-      };
-      reader.readAsDataURL(file);
-    });
+    try {
+      const fd = new FormData();
+      if (selectedBuilding && selectedBuilding._id) {
+        fd.append('buildingId', selectedBuilding._id);
+      }
+      files.forEach(f => fd.append('photos', f));
+      
+      // We will just upload them. If buildingId is provided, backend saves it directly to building.images
+      // But we also need to update frontend state so user sees them immediately
+      const res = await api.uploadPhotos(fd);
+      const newImages = res.photoUrls || [];
+      
+      setFormData(prev => ({
+        ...prev,
+        imageUrl: prev.imageUrl || newImages[0] || '', // keep legacy imageUrl working
+        images: [...(prev.images || []), ...newImages]
+      }));
+    } catch (error) {
+      console.error('Image upload failed', error);
+      alert('Failed to upload photos. Please try again.');
+    }
   };
 
   const updateRoomImageDirectly = async (roomId, file) => {
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64 = reader.result;
-      try {
-        // Append to existing images
-        const currentImages = selectedRoom?.images || [];
-        const newImages = [...currentImages, base64];
-        const updated = await api.updateRoom(roomId, { images: newImages });
-        setSelectedRoom(prev => ({ ...prev, images: updated.images }));
-        setRooms(prev => prev.map(r => (r.id === roomId || r._id === roomId) ? { ...r, images: updated.images } : r));
-      } catch (err) { console.error("Room image update failed", err); }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const fd = new FormData();
+      fd.append('photos', file);
+      const res = await api.uploadPhotos(fd);
+      const uploadedUrl = res.photoUrls && res.photoUrls[0];
+      if (!uploadedUrl) throw new Error('No URL returned');
+      
+      const currentImages = selectedRoom?.images || [];
+      const newImages = [...currentImages, uploadedUrl];
+      const updated = await api.updateRoom(roomId, { images: newImages });
+      setSelectedRoom(prev => ({ ...prev, images: updated.images }));
+      setRooms(prev => prev.map(r => (r.id === roomId || r._id === roomId) ? { ...r, images: updated.images } : r));
+    } catch (err) {
+      console.error("Room image update failed", err);
+    }
   };
 
   // Generic Breadcrumb

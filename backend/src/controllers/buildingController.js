@@ -39,8 +39,7 @@ const createBuilding = async (req, res) => {
     const finalDocuments = parseField(documents, []);
     if (req.files && req.files.length > 0) {
       const uploadedImages = req.files.map(file => {
-        const b64 = file.buffer.toString('base64');
-        return `data:${file.mimetype};base64,${b64}`;
+        return `/uploads/${file.filename}`;
       });
       finalImages.push(...uploadedImages);
     }
@@ -175,8 +174,7 @@ const updateBuilding = async (req, res) => {
     if (req.files && req.files.length > 0) {
       let finalImages = parseField(updateData.images, []);
       const uploadedImages = req.files.map(file => {
-        const b64 = file.buffer.toString('base64');
-        return `data:${file.mimetype};base64,${b64}`;
+        return `/uploads/${file.filename}`;
       });
       finalImages.push(...uploadedImages);
       updateData.images = finalImages;
@@ -426,9 +424,22 @@ const seedBalanced = async (req, res) => {
   res.status(501).json({ error: 'Not implemented' });
 };
 
+const getOwnerDrafts = async (req, res) => {
+  try {
+    const ownerId = req.user.id;
+    const queryOwnerIds = [ownerId, new mongoose.Types.ObjectId(ownerId)];
+    const drafts = await Building.find({ owner: { $in: queryOwnerIds }, status: 'Draft' })
+      .select('name address draftData createdAt updatedAt')
+      .sort({ updatedAt: -1 })
+      .lean();
+    res.status(200).json(drafts);
+  } catch (error) { res.status(500).json({ error: error.message }); }
+};
+
 module.exports = {
   createBuilding,
   getBuildings,
+  getOwnerDrafts,
   updateBuilding,
   deleteBuilding,
   bulkCreateBuildings,

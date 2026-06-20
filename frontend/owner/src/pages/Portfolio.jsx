@@ -21,10 +21,10 @@ import { clearAllCache } from '../cache';
 
 // --- CONSTANTS MOVED OUTSIDE FOR STABILITY ---
 const FEATURE_GROUPS = {
-  '🔒 Security & Safety': ['Security', 'CCTV', 'Medical Support', 'Fire Safety', 'Emergency Exit'],
-  '⚡ Essential Utilities': ['Power Backup', 'Laundry', 'Housekeeping', 'Lift', 'WiFi', 'Laundry Room'],
-  '🍽️ Food & Dining': ['Mess', 'Dining Hall', 'Common Kitchen'],
-  '⭐ Additional Amenities': ['Gym', 'Parking', 'Library', 'Study Hall']
+  '≡ƒöÆ Security & Safety': ['Security', 'CCTV', 'Medical Support', 'Fire Safety', 'Emergency Exit'],
+  'ΓÜí Essential Utilities': ['Power Backup', 'Laundry', 'Housekeeping', 'Lift', 'WiFi', 'Laundry Room'],
+  '≡ƒì╜∩╕Å Food & Dining': ['Mess', 'Dining Hall', 'Common Kitchen'],
+  'Γ¡É Additional Amenities': ['Gym', 'Parking', 'Library', 'Study Hall']
 };
 
 const AMENITY_ICONS = {
@@ -41,10 +41,10 @@ const AVAILABLE_FILTER_FEATURES = [
 const TOTAL_STEPS = 6;
 const STEP_CONFIG = [
   { step: 1, title: 'Basic Info', icon: '🏨', desc: 'Name, description, media' },
-  { step: 2, title: 'Location', icon: '📍', desc: '' },
-  { step: 3, title: 'Amenities', icon: '✨', desc: 'Facilities & features' },
-  { step: 4, title: 'Financials', icon: '💰', desc: 'Pricing & deposits' },
-  { step: 5, title: 'Owner Details', icon: '🔑', desc: 'Contact information' },
+  { step: 2, title: 'Location', icon: '≡ƒôì', desc: '' },
+  { step: 3, title: 'Amenities', icon: 'Γ£¿', desc: 'Facilities & features' },
+  { step: 4, title: 'Financials', icon: '≡ƒÆ░', desc: 'Pricing & deposits' },
+  { step: 5, title: 'Owner Details', icon: '≡ƒöæ', desc: 'Contact information' },
   { step: 6, title: 'Review', icon: '✅', desc: 'Final summary' },
 ];
 
@@ -104,7 +104,7 @@ const Portfolio = () => {
       const response = await api.getPortfolio();
       const portfolioData = response?.success ? (response.data || []) : [];
       setData({
-        buildings: portfolioData.filter(bld => bld.showInPortfolio !== false && String(bld.showInPortfolio) !== 'false'),
+        buildings: portfolioData.filter(bld => bld.showInPortfolio !== false && String(bld.showInPortfolio) !== 'false' && bld.status !== 'Draft'),
         floors: [],
         rooms: [],
         beds: [],
@@ -514,7 +514,7 @@ const Portfolio = () => {
                 if (bId) fd.append('buildingId', bId);
                 files.forEach(f => fd.append('photos', f));
                 try {
-                  setDraftMsg('⏳ Uploading photos...');
+                  setDraftMsg('ΓÅ│ Uploading photos...');
                   const res = await api.uploadPhotos(fd);
                   const newImages = res.photoUrls || [];
                   setFormData(prev => ({ ...prev, gallery: [...(prev.gallery || []), ...newImages], coverImage: prev.coverImage || newImages[0] || '' }));
@@ -566,7 +566,7 @@ const Portfolio = () => {
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
                 {formData.documents.map((doc, i) => (
                   <div key={i} style={{ padding: '0.5rem', background: '#F1F5F9', borderRadius: '8px', fontSize: '0.8rem', color: '#475569', fontWeight: '600' }}>
-                    📄 {doc.name}
+                    ≡ƒôä {doc.name}
                   </div>
                 ))}
               </div>
@@ -616,16 +616,16 @@ const Portfolio = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Sharing Prices (Per Bed Rent / Month)</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem' }}>
-            <div className="input-group"><label>1 Sharing (₹)</label><input type="number" placeholder="₹" value={formData.rentSingle || ''} onChange={e => setFormData({ ...formData, rentSingle: parseInt(e.target.value) || '' })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
-            <div className="input-group"><label>2 Sharing (₹)</label><input type="number" placeholder="₹" value={formData.rentDouble || ''} onChange={e => setFormData({ ...formData, rentDouble: parseInt(e.target.value) || '' })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
-            <div className="input-group"><label>3 Sharing (₹)</label><input type="number" placeholder="₹" value={formData.rentTriple || ''} onChange={e => setFormData({ ...formData, rentTriple: parseInt(e.target.value) || '' })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
-            <div className="input-group"><label>4 Sharing (₹)</label><input type="number" placeholder="₹" value={formData.rent4Sharing || ''} onChange={e => setFormData({ ...formData, rent4Sharing: parseInt(e.target.value) || '' })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
-            <div className="input-group"><label>5 Sharing (₹)</label><input type="number" placeholder="₹" value={formData.rent5Sharing || ''} onChange={e => setFormData({ ...formData, rent5Sharing: parseInt(e.target.value) || '' })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
-            <div className="input-group"><label>6+ Sharing (₹)</label><input type="number" placeholder="₹" value={formData.rent6Sharing || ''} onChange={e => setFormData({ ...formData, rent6Sharing: parseInt(e.target.value) || '' })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
+            <div className="input-group"><label>1 Sharing (Γé╣)</label><input type="number" placeholder="Γé╣" value={formData.rentSingle ?? ''} onChange={e => setFormData({ ...formData, rentSingle: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
+            <div className="input-group"><label>2 Sharing (Γé╣)</label><input type="number" placeholder="Γé╣" value={formData.rentDouble ?? ''} onChange={e => setFormData({ ...formData, rentDouble: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
+            <div className="input-group"><label>3 Sharing (Γé╣)</label><input type="number" placeholder="Γé╣" value={formData.rentTriple ?? ''} onChange={e => setFormData({ ...formData, rentTriple: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
+            <div className="input-group"><label>4 Sharing (Γé╣)</label><input type="number" placeholder="Γé╣" value={formData.rent4Sharing ?? ''} onChange={e => setFormData({ ...formData, rent4Sharing: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
+            <div className="input-group"><label>5 Sharing (Γé╣)</label><input type="number" placeholder="Γé╣" value={formData.rent5Sharing ?? ''} onChange={e => setFormData({ ...formData, rent5Sharing: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
+            <div className="input-group"><label>6+ Sharing (Γé╣)</label><input type="number" placeholder="Γé╣" value={formData.rent6Sharing ?? ''} onChange={e => setFormData({ ...formData, rent6Sharing: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
           </div>
           <div className="input-group" style={{ marginTop: '0.5rem' }}>
-            <label>Security Deposit (₹)</label>
-            <input type="number" value={formData.securityDeposit} onChange={e => setFormData({ ...formData, securityDeposit: parseInt(e.target.value) || 0 })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} />
+            <label>Security Deposit (Γé╣)</label>
+            <input type="number" value={formData.securityDeposit ?? ''} onChange={e => setFormData({ ...formData, securityDeposit: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} />
           </div>
         </div>
       );
@@ -647,17 +647,17 @@ const Portfolio = () => {
           </div>
           {[
             { label: '🏨 Basic Info', step: 1, rows: [{ k: 'Building Name', v: formData.name }, { k: 'Type', v: formData.genderType }, { k: 'Warden', v: formData.wardenName }] },
-            { label: '📍 Location', step: 2, rows: [{ k: 'Address', v: formData.addr1 }, { k: 'City', v: `${formData.city}, ${formData.state} — ${formData.pincode}` }, { k: 'Locality', v: formData.locality }] },
-            { label: '✨ Amenities', step: 3, rows: [{ k: 'Selected', v: formData.amenities.length > 0 ? formData.amenities.join(', ') : 'None selected' }] },
-            { label: '💰 Financials', step: 4, rows: [{ k: 'Security Deposit', v: formData.securityDeposit > 0 ? `₹${formData.securityDeposit}` : 'Not Set' }] },
-            { label: '🔑 Owner Details', step: 5, rows: [{ k: 'Name', v: formData.ownerName }, { k: 'Phone', v: formData.phone }, { k: 'Email', v: formData.email }] },
+            { label: '≡ƒôì Location', step: 2, rows: [{ k: 'Address', v: formData.addr1 }, { k: 'City', v: `${formData.city}, ${formData.state} — ${formData.pincode}` }, { k: 'Locality', v: formData.locality }] },
+            { label: 'Γ£¿ Amenities', step: 3, rows: [{ k: 'Selected', v: formData.amenities.length > 0 ? formData.amenities.join(', ') : 'None selected' }] },
+            { label: '≡ƒÆ░ Financials', step: 4, rows: [{ k: 'Security Deposit', v: formData.securityDeposit > 0 ? `Γé╣${formData.securityDeposit}` : 'Not Set' }] },
+            { label: '≡ƒöæ Owner Details', step: 5, rows: [{ k: 'Name', v: formData.ownerName }, { k: 'Phone', v: formData.phone }, { k: 'Email', v: formData.email }] },
           ].map(section => (
             <div key={section.label} style={{ padding: '1.25rem', background: 'var(--bg-card)', borderRadius: '16px', border: '1.5px solid #F1F5F9' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
                 <span style={{ fontWeight: '800', fontSize: '0.9rem', color: '#1E293B' }}>{section.label}</span>
                 <button type="button" onClick={() => setCurrentStep(section.step)}
                   style={{ padding: '0.3rem 0.8rem', borderRadius: '8px', background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8', fontWeight: '700', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  ✏️ Edit
+                  Γ£Å∩╕Å Edit
                 </button>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.5rem' }}>
@@ -685,6 +685,18 @@ const Portfolio = () => {
 
 
 
+
+  useEffect(() => {
+    if (location.state?.resumeDraftId) {
+      const draftToResume = drafts.find(d => d._id === location.state.resumeDraftId || d.id === location.state.resumeDraftId) || { _id: location.state.resumeDraftId };
+      resumeDraft(draftToResume);
+      navigate('/owner/portfolio', { state: {}, replace: true });
+    } else if (location.state?.openNewForm) {
+      openFreshForm();
+      navigate('/owner/portfolio', { state: {}, replace: true });
+    }
+  }, [location.state, navigate, drafts, resumeDraft]);
+
   if (error) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
@@ -708,7 +720,7 @@ const Portfolio = () => {
         overflow: 'hidden',
         color: 'var(--text-primary)'
       }}>
-        {/* ── PART 1: FIXED TOP SECTION (Approx 25% height) ── */}
+        {/* ΓöÇΓöÇ PART 1: FIXED TOP SECTION (Approx 25% height) ΓöÇΓöÇ */}
         <div style={{
           flex: '0 0 auto',
           padding: '1.5rem 2.5rem 1rem',
@@ -827,7 +839,7 @@ const Portfolio = () => {
           </div>
         </div>
 
-        {/* ── PART 2: SCROLLABLE BOTTOM SECTION (Approx 75% height) ── */}
+        {/* ΓöÇΓöÇ PART 2: SCROLLABLE BOTTOM SECTION (Approx 75% height) ΓöÇΓöÇ */}
         <div style={{
           flex: 1,
           overflowY: 'auto',
@@ -908,7 +920,7 @@ const Portfolio = () => {
               </div>
             ) : (
               <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem', background: "var(--bg-card)", borderRadius: '24px', border: '2px dashed #E2E8F0' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>≡ƒöì</div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1E293B', margin: 0 }}>No Matching Buildings Found</h3>
                 <p style={{ color: '#64748B', marginTop: '0.5rem' }}>Try adjusting your search or filters to find what you're looking for.</p>
                 <button onClick={() => { setSearchTerm(''); setOccupancyFilter('All'); }} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#3B82F6', fontWeight: '800', cursor: 'pointer' }}>Clear All Filters</button>
@@ -955,7 +967,7 @@ const Portfolio = () => {
                 overflow: 'hidden'
               }}
             >
-              {/* ── HEADER ── */}
+              {/* ΓöÇΓöÇ HEADER ΓöÇΓöÇ */}
               <div style={{
                 padding: '1.5rem 2rem',
                 borderBottom: '1px solid var(--border-color)',
@@ -966,7 +978,7 @@ const Portfolio = () => {
                 flexShrink: 0
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>📂</div>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>≡ƒôé</div>
                   <div>
                     <h2 style={{ fontSize: '1.4rem', fontWeight: '900', margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>Saved Hostel Drafts</h2>
                     <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, fontWeight: '600' }}>
@@ -982,7 +994,7 @@ const Portfolio = () => {
                 </button>
               </div>
 
-              {/* ── CONTENT ── */}
+              {/* ΓöÇΓöÇ CONTENT ΓöÇΓöÇ */}
               <div style={{ flex: 1, overflowY: 'auto', padding: '2rem' }}>
 
                 {/* IN-PROGRESS CARD — wizard currently open */}
@@ -996,15 +1008,15 @@ const Portfolio = () => {
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>✍️</div>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>Γ£ì∩╕Å</div>
                           <div>
                             <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#1D4ED8' }}>{formData.name || 'Untitled — Currently Editing'}</div>
                             <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.15rem' }}>Currently being filled</div>
                           </div>
                         </div>
-                        <span style={{ padding: '0.25rem 0.6rem', borderRadius: '20px', background: '#DBEAFE', color: '#1D4ED8', fontSize: '0.65rem', fontWeight: '800' }}>⏳ In Progress</span>
+                        <span style={{ padding: '0.25rem 0.6rem', borderRadius: '20px', background: '#DBEAFE', color: '#1D4ED8', fontSize: '0.65rem', fontWeight: '800' }}>ΓÅ│ In Progress</span>
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: '#475569', fontWeight: '600' }}>📍 Step: <b>{STEP_CONFIG[currentStep - 1]?.title}</b></div>
+                      <div style={{ fontSize: '0.78rem', color: '#475569', fontWeight: '600' }}>≡ƒôì Step: <b>{STEP_CONFIG[currentStep - 1]?.title}</b></div>
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '6px', fontWeight: '700' }}>
                           <span>Progress</span><span style={{ color: '#3B82F6' }}>{Math.round((currentStep / TOTAL_STEPS) * 100)}%</span>
@@ -1014,7 +1026,7 @@ const Portfolio = () => {
                         </div>
                       </div>
                       <div style={{ padding: '0.65rem', borderRadius: '10px', background: '#3B82F6', color: "var(--text-on-primary)", fontWeight: '800', fontSize: '0.82rem', textAlign: 'center' }}>
-                        → Continue Editing
+                        ΓåÆ Continue Editing
                       </div>
                     </motion.div>
                   </div>
@@ -1027,7 +1039,7 @@ const Portfolio = () => {
 
                 {drafts.length === 0 && !isAddModalOpen ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '40vh', gap: '1rem' }}>
-                    <div style={{ fontSize: '4rem', opacity: 0.3 }}>📂</div>
+                    <div style={{ fontSize: '4rem', opacity: 0.3 }}>≡ƒôé</div>
                     <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-secondary)', margin: 0 }}>No saved drafts yet</h3>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Start creating a hostel and save your progress to resume later.</p>
                     <button onClick={() => { setShowDrafts(false); openFreshForm(); }} style={{ marginTop: '0.5rem', padding: '0.8rem 1.6rem', borderRadius: '12px', background: 'var(--accent-primary)', color: "var(--text-on-primary)", border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.9rem' }}>
@@ -1074,7 +1086,7 @@ const Portfolio = () => {
                           </div>
 
                           <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            <span style={{ color: 'var(--accent-primary)' }}>📍</span> Paused at: <b style={{ color: 'var(--text-primary)' }}>{stepLabel}</b>
+                            <span style={{ color: 'var(--accent-primary)' }}>≡ƒôì</span> Paused at: <b style={{ color: 'var(--text-primary)' }}>{stepLabel}</b>
                           </div>
 
                           <div>
@@ -1089,13 +1101,13 @@ const Portfolio = () => {
 
                           <div style={{ display: 'flex', gap: '0.8rem' }}>
                             <div style={{ flex: 1, padding: '0.75rem', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', color: "var(--text-on-primary)", fontWeight: '800', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                              ▶ Continue Filling
+                              Γû╢ Continue Filling
                             </div>
                             <button
                               onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: draft._id, name: draft.name || 'Untitled Draft', type: 'draft' }); }}
                               style={{ padding: '0.75rem 1rem', borderRadius: '12px', background: '#FEE2E2', color: '#EF4444', border: 'none', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', flexShrink: 0 }}
                             >
-                              🗑
+                              ≡ƒùæ
                             </button>
                           </div>
                         </motion.div>
@@ -1105,7 +1117,7 @@ const Portfolio = () => {
                 )}
               </div>
 
-              {/* ── FOOTER ── */}
+              {/* ΓöÇΓöÇ FOOTER ΓöÇΓöÇ */}
               <div style={{ padding: '1.2rem 2rem', borderTop: '1px solid var(--border-color)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                 <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>Drafts are auto-saved as you fill in the wizard</span>
                 <button onClick={() => { setShowDrafts(false); openFreshForm(); }} style={{ padding: '0.7rem 1.4rem', borderRadius: '10px', background: 'var(--accent-primary)', color: "var(--text-on-primary)", border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

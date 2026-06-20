@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './Dashboard';
 import Portfolio from './pages/Portfolio';
+import Drafts from './pages/Drafts';
 import Profile from './pages/Profile';
 import BuildingManagement from './pages/BuildingManagement';
 import Rooms from './pages/Rooms';
@@ -31,6 +32,7 @@ function App() {
 
         {/* Protected Routes */}
         <Route path="/owner/portfolio" element={<Portfolio />} />
+<Route path="/owner/drafts" element={<Drafts />} />
         <Route path="/owner/profile" element={<Layout><Profile /></Layout>} />
 
         {/* Building specific routes */}

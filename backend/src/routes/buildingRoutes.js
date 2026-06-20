@@ -27,6 +27,7 @@ router.use(authMiddleware);
 
 // Protected routes for Owner Portal
 router.get('/', buildingController.getBuildings);
+router.get('/owner-drafts', buildingController.getOwnerDrafts);
 router.get('/:id/portfolio', buildingController.getBuildingPortfolio);
 router.get('/:id', buildingController.getBuildingById);
 router.post('/', upload.array('images', 10), buildingController.createBuilding);
@@ -35,6 +36,6 @@ router.patch('/:id', upload.array('images', 10), buildingController.updateBuildi
 router.put('/:id', upload.array('images', 10), buildingController.updateBuilding);
 router.delete('/:id', buildingController.deleteBuilding);
 
-router.post('/upload', upload.array('photos', 10), buildingController.uploadPhotos);
+router.post('/upload', upload.array('photos', 50), buildingController.uploadPhotos);
 
 module.exports = router;
