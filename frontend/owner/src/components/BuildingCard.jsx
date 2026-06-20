@@ -131,33 +131,6 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
             </button>
           )}
 
-          <div style={{ position: 'absolute', top: '1.25rem', left: '1.25rem', zIndex: 5, display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            {building.popularityLabel && (
-              <div style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #FF6B6B, #EE5253)',
-                color: "var(--text-on-primary)",
-                fontSize: '0.65rem',
-                fontWeight: '900',
-                boxShadow: '0 4px 12px rgba(238, 82, 83, 0.4)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em'
-              }}>
-                {building.popularityLabel}
-              </div>
-            )}
-            <div style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '12px',
-              background: building.status === 'Active' ? 'rgba(16, 185, 129, 0.9)' : building.status === 'Pending Approval' ? 'rgba(59, 130, 246, 0.9)' : building.status === 'Rejected' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(245, 158, 11, 0.9)',
-              backdropFilter: 'blur(8px)',
-              color: "var(--text-on-primary)",
-              fontSize: '0.65rem',
-              fontWeight: '900',
-              textTransform: 'uppercase'
-            }}>{building.status}</div>
-          </div>
 
           <div style={{ position: 'absolute', bottom: '1.25rem', left: '1.25rem', right: '1.25rem', zIndex: 5 }}>
             <h3 style={{ fontSize: '1.8rem', fontWeight: '950', color: "var(--text-on-primary)", textShadow: '0 2px 8px rgba(0,0,0,0.4)', margin: 0, letterSpacing: '-0.02em' }}>{building.buildingName || building.name}</h3>
@@ -171,10 +144,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
                 <MapPin size={14} style={{ verticalAlign: 'text-bottom', marginRight: '6px', color: '#EF4444' }} />
                 {building.address || 'Address not set'}
               </p>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                 <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#64748B' }}>{building.buildingType || building.genderType || 'Boys'} Hostel</span>
-              </div>
+
               
               <div style={{ display: 'flex', gap: '0.8rem', fontSize: '0.85rem', fontWeight: '700', color: '#475569', flexWrap: 'wrap' }}>
                  <span>{building.totalFloors || 0} Floors</span>
