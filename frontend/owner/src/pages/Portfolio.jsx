@@ -55,7 +55,8 @@ const INITIAL_FORM_STATE = {
   coverImage: null, gallery: [], documents: [],
   amenities: [],
   genderType: 'Mixed', wardenName: '',
-  rentSingle: 0, rentDouble: 0, rentTriple: 0, rent4Sharing: 0, rent5Sharing: 0, rent6Sharing: 0, securityDeposit: 0
+  rentSingle: 0, rentDouble: 0, rentTriple: 0, rent4Sharing: 0, rent5Sharing: 0, rent6Sharing: 0, securityDeposit: 0,
+  stayQuality: '', buildingAge: ''
 };
 
 const Portfolio = () => {
