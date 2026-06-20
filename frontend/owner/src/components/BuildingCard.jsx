@@ -2,12 +2,15 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, AlertCircle, MapPin, Edit2, ShieldCheck, Shield, Heart, Zap, Shirt, ClipboardList, Dumbbell, Car, BookOpen, Utensils, Star, CheckCircle, X, UsersRound, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { api } from '../api';
+import { createPortal } from 'react-dom';
+
 const AMENITY_ICONS = {
   'Security': <ShieldCheck size={14} />, 'CCTV': <Shield size={14} />, 'Medical Support': <Heart size={14} />,
   'Power Backup': <Zap size={14} />, 'Laundry': <Shirt size={14} />, 'Housekeeping': <ClipboardList size={14} />,
   'Gym': <Dumbbell size={14} />, 'Parking': <Car size={14} />, 'Library': <BookOpen size={14} />,
   'Mess': <Utensils size={14} />
 };
+
 const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmit, onEdit }) => {
   const [imgIdx, setImgIdx] = useState(0);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
@@ -22,7 +25,6 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
     let amens = building.amenities || [];
     if (!Array.isArray(amens)) amens = [amens];
     
-    // Split any comma-separated strings inside the array
     let parsedAmens = [];
     amens.forEach(a => {
       if (typeof a === 'string') {
@@ -38,7 +40,6 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
     if (parsedAmens.length === 0) {
       parsedAmens = ['Security', 'CCTV', 'Parking', 'Power Backup', 'Mess'];
     }
-    // Remove duplicates
     return [...new Set(parsedAmens)];
   }, [building.amenities]);
 
@@ -107,10 +108,8 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
             />
           </AnimatePresence>
 
-          {/* Overlays */}
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.8) 100%)' }} />
 
-          {/* Navigation Arrows */}
           {images.length > 1 && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0.5rem', zIndex: 10 }}>
               <button onClick={(e) => { e.stopPropagation(); setImgIdx(prev => (prev - 1 + images.length) % images.length); }} style={{ background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)', color: '#1E293B' }}>
@@ -122,7 +121,6 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
             </div>
           )}
 
-          {/* View Full Screen Button */}
           {onImageClick && (
             <button
               onClick={(e) => { e.stopPropagation(); onImageClick(images[imgIdx]); }}
@@ -133,7 +131,6 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
             </button>
           )}
 
-          {/* Badges */}
           <div style={{ position: 'absolute', top: '1.25rem', left: '1.25rem', zIndex: 5, display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             {building.popularityLabel && (
               <div style={{
@@ -163,55 +160,42 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
           </div>
 
           <div style={{ position: 'absolute', bottom: '1.25rem', left: '1.25rem', right: '1.25rem', zIndex: 5 }}>
-            <h3 style={{ fontSize: '1.8rem', fontWeight: '950', color: "var(--text-on-primary)", textShadow: '0 2px 8px rgba(0,0,0,0.4)', margin: 0, letterSpacing: '-0.02em' }}>{building.name}</h3>
+            <h3 style={{ fontSize: '1.8rem', fontWeight: '950', color: "var(--text-on-primary)", textShadow: '0 2px 8px rgba(0,0,0,0.4)', margin: 0, letterSpacing: '-0.02em' }}>{building.buildingName || building.name}</h3>
           </div>
         </div>
 
         <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.2rem' }}>
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: '0.85rem', color: '#64748B', margin: 0, fontWeight: '600' }}>
-                <MapPin size={14} style={{ verticalAlign: 'text-bottom', marginRight: '6px', color: '#3B82F6' }} />
+              <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '0 0 1rem 0', fontWeight: '600' }}>
+                <MapPin size={14} style={{ verticalAlign: 'text-bottom', marginRight: '6px', color: '#EF4444' }} />
                 {building.address || 'Address not set'}
               </p>
-            </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              background: '#FFFBEB',
-              color: '#D97706',
-              padding: '0.4rem 0.75rem',
-              borderRadius: '10px',
-              fontSize: '0.85rem',
-              fontWeight: '900',
-              border: '1px solid #FEF3C7'
-            }}>
-              {(building.reviewCount && building.reviewCount > 0) ? (
-                <>⭐ {building.rating || 4.5} ({building.reviewCount} Reviews)</>
-              ) : (
-                <>⭐ New</>
-              )}
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                 <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#64748B' }}>{building.buildingType || building.genderType || 'Boys'} Hostel</span>
+              </div>
+              
+              <div style={{ display: 'flex', gap: '0.8rem', fontSize: '0.85rem', fontWeight: '700', color: '#475569', flexWrap: 'wrap' }}>
+                 <span>{building.totalFloors || 0} Floors</span>
+                 <span style={{ color: '#CBD5E1' }}>•</span>
+                 <span>{building.totalRooms || 0} Rooms</span>
+                 <span style={{ color: '#CBD5E1' }}>•</span>
+                 <span>{building.totalBeds || 0} Beds</span>
+              </div>
             </div>
           </div>
 
           <div style={{ padding: '1rem', borderRadius: '16px', background: '#F8FAFC', border: '1.5px solid #F1F5F9', marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: '800', textTransform: 'uppercase' }}>Occupancy Rate</span>
+              <span style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '800' }}>Occupancy</span>
               <span style={{ fontSize: '0.85rem', fontWeight: '900', color: (building.occupancyPercentage || 0) > 80 ? '#10B981' : (building.occupancyPercentage || 0) > 50 ? '#F59E0B' : '#EF4444' }}>{building.occupancyPercentage || 0}%</span>
             </div>
             <div style={{ width: '100%', height: '8px', background: '#E2E8F0', borderRadius: '4px', overflow: 'hidden', marginBottom: '1rem' }}>
               <div style={{ width: `${building.occupancyPercentage || 0}%`, height: '100%', background: (building.occupancyPercentage || 0) > 80 ? '#10B981' : (building.occupancyPercentage || 0) > 50 ? '#F59E0B' : '#EF4444', borderRadius: '4px', transition: 'width 1s ease-in-out' }} />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.65rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase' }}>Occupied Beds</span>
-                <span style={{ fontSize: '0.9rem', fontWeight: '800', color: '#1E293B' }}>{Math.round(((building.occupancyPercentage || 0) / 100) * (building.totalBeds || 0))} / {building.totalBeds || 0}</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.65rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase' }}>Vacant Beds</span>
-                <span style={{ fontSize: '0.9rem', fontWeight: '800', color: '#1E293B' }}>{(building.totalBeds || 0) - Math.round(((building.occupancyPercentage || 0) / 100) * (building.totalBeds || 0))}</span>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.occupiedBeds || Math.round(((building.occupancyPercentage || 0) / 100) * (building.totalBeds || 0))} Occupied <span style={{ margin: '0 0.4rem', color: '#CBD5E1' }}>•</span> {building.vacantBeds || ((building.totalBeds || 0) - Math.round(((building.occupancyPercentage || 0) / 100) * (building.totalBeds || 0)))} Vacant</span>
             </div>
           </div>
 
@@ -238,7 +222,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
                   onClick={(e) => { e.stopPropagation(); setShowAllAmenities(!showAllAmenities); }}
                   style={{ padding: '0.4rem', fontSize: '0.75rem', fontWeight: '900', color: 'var(--accent-primary)', alignSelf: 'center', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
                 >
-                  View All ({displayAmenities.length})
+                  {displayAmenities.length} view
                 </div>
               )}
             </div>
@@ -327,7 +311,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
                   transition: 'all 0.2s',
                   boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)'
                 }}
-                onClick={(e) => { e.stopPropagation(); onResubmit(building.id); }}
+                onClick={(e) => { e.stopPropagation(); if (onResubmit) onResubmit(building.id); }}
                 onMouseEnter={(e) => e.target.style.filter = 'brightness(1.1)'}
                 onMouseLeave={(e) => e.target.style.filter = 'none'}
               >
@@ -349,7 +333,7 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
                     transition: 'all 0.2s',
                     boxShadow: '0 4px 12px rgba(79, 70, 229, 0.2)'
                   }}
-                  onClick={(e) => { e.stopPropagation(); onNavigate(); }}
+                  onClick={(e) => { e.stopPropagation(); if (onNavigate) onNavigate(); }}
                   onMouseEnter={(e) => e.target.style.filter = 'brightness(1.1)'}
                   onMouseLeave={(e) => e.target.style.filter = 'none'}
                 >
@@ -367,12 +351,12 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                   }}
-                  onClick={(e) => { e.stopPropagation(); onEdit(building.id); }}
+                  onClick={(e) => { e.stopPropagation(); if (onEdit) onEdit(building.id); }}
                   onMouseEnter={(e) => e.target.style.background = '#E2E8F0'}
                   onMouseLeave={(e) => e.target.style.background = '#F1F5F9'}
                   title="Edit Features"
                 >
-                  ✏️ Edit
+                  Edit
                 </button>
               </div>
             )}
@@ -399,8 +383,6 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
         </div>
       </motion.div>
 
-
-      {/* Delete Confirmation Modal — rendered via Portal to escape card's stacking context */}
       {showDeleteModal && createPortal(
         <div
           onClick={(e) => e.stopPropagation()}
@@ -410,13 +392,11 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
             padding: '1rem'
           }}
         >
-          {/* Blurred Backdrop */}
           <div
             onClick={() => setShowDeleteModal(false)}
             style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
           />
 
-          {/* Modal Card */}
           <div style={{
             position: 'relative', zIndex: 1,
             background: 'var(--bg-primary, #ffffff)',
@@ -427,7 +407,6 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
             boxShadow: '0 32px 64px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)'
           }}>
 
-            {/* Red icon circle */}
             <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg, #FEE2E2, #FECACA)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', boxShadow: '0 8px 20px rgba(239,68,68,0.25)' }}>
               <Trash2 size={30} color="#EF4444" />
             </div>
@@ -439,23 +418,20 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
               You are about to permanently delete
             </p>
 
-            {/* Building name badge */}
             <p style={{ textAlign: 'center', fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary, #111)', margin: '0 0 1.2rem', background: 'var(--bg-tertiary, #f5f5f5)', padding: '0.6rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color, #e5e7eb)' }}>
-              🏢 {building.name}
+              {building.buildingName || building.name}
             </p>
 
-            {/* Warning */}
             <p style={{ textAlign: 'center', color: '#DC2626', fontSize: '0.8rem', fontWeight: '700', margin: '0 0 2rem', padding: '0.75rem 1rem', background: '#FFF1F2', borderRadius: '10px', border: '1px solid #FECACA', lineHeight: 1.6 }}>
-              ⚠️ This action is <strong>irreversible</strong>. All associated rooms, beds, and tenant records will be permanently removed.
+              This action is <strong>irreversible</strong>. All associated rooms, beds, and tenant records will be permanently removed.
             </p>
 
             {deleteError && (
               <div style={{ marginBottom: '1.5rem', padding: '0.8rem', borderRadius: '12px', background: '#FEF2F2', border: '1px solid #FEE2E2', color: '#B91C1C', fontSize: '0.8rem', fontWeight: '700', textAlign: 'center' }}>
-                ❌ {deleteError}
+                {deleteError}
               </div>
             )}
 
-            {/* Action buttons */}
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button
                 onClick={() => setShowDeleteModal(false)}
