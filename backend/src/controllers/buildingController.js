@@ -39,7 +39,8 @@ const createBuilding = async (req, res) => {
     const finalDocuments = parseField(documents, []);
     if (req.files && req.files.length > 0) {
       const uploadedImages = req.files.map(file => {
-        return `/uploads/${file.filename}`;
+        const b64 = file.buffer.toString('base64');
+        return `data:${file.mimetype};base64,${b64}`;
       });
       finalImages.push(...uploadedImages);
     }
@@ -174,7 +175,8 @@ const updateBuilding = async (req, res) => {
     if (req.files && req.files.length > 0) {
       let finalImages = parseField(updateData.images, []);
       const uploadedImages = req.files.map(file => {
-        return `/uploads/${file.filename}`;
+        const b64 = file.buffer.toString('base64');
+        return `data:${file.mimetype};base64,${b64}`;
       });
       finalImages.push(...uploadedImages);
       updateData.images = finalImages;
@@ -332,7 +334,8 @@ const uploadPhotos = async (req, res) => {
       return res.status(400).json({ error: 'No photos provided' });
     }
     const uploadedImages = req.files.map(file => {
-      return `/uploads/${file.filename}`;
+      const b64 = file.buffer.toString('base64');
+      return `data:${file.mimetype};base64,${b64}`;
     });
     
     if (req.body.buildingId) {
@@ -340,6 +343,16 @@ const uploadPhotos = async (req, res) => {
       if (building) {
         building.images = [...(building.images || []), ...uploadedImages];
         await building.save();
+
+        // Sync to BuildingPhoto collection
+        const photoDocs = uploadedImages.map((url, i) => ({
+          buildingId: building._id,
+          photoUrl: url,
+          isCover: i === 0 && (!building.images || building.images.length === uploadedImages.length)
+        }));
+        await BuildingPhoto.insertMany(photoDocs).catch(err => {
+          console.warn('[DEBUG] BuildingPhoto sync warning:', err.message);
+        });
       }
     }
     

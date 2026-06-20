@@ -6,19 +6,7 @@ const TenantProof = require('../models/TenantProof');
 const authMiddleware = require('../utils/authMiddleware');
 
 // Multer — store proofs in uploads/proofs/
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const fs = require('fs');
-    const dir = path.join(__dirname, '../../uploads/proofs');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
-    cb(null, `proof_${Date.now()}_${safeName}`);
-  }
-});
+const storage = multer.memoryStorage();
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10 MB max
 
 // POST /api/tenant-proofs/upload
@@ -38,8 +26,9 @@ router.post('/upload', authMiddleware, upload.fields([
       return res.status(400).json({ error: 'ID Proof is required.' });
     }
 
-    const idProofUrl = `/uploads/proofs/${idProofFile.filename}`;
-    const photoUrl   = photoFile ? `/uploads/proofs/${photoFile.filename}` : null;
+    const idProofB64 = idProofFile.buffer.toString('base64');
+    const idProofUrl = `data:${idProofFile.mimetype};base64,${idProofB64}`;
+    const photoUrl   = photoFile ? `data:${photoFile.mimetype};base64,${photoFile.buffer.toString('base64')}` : null;
 
     const proof = await TenantProof.create({
       tenantId,

@@ -77,10 +77,13 @@ const Wishlist = () => {
               <div
                 className="card-image-section"
                 style={{
-                  backgroundImage: `url(${hostel.hostelImage && hostel.hostelImage.startsWith('/uploads') ? `https://livora-hostel-hub-1.onrender.com${hostel.hostelImage}` : hostel.hostelImage})`,
+                  backgroundImage: `url(${hostel.hostelImage && (hostel.hostelImage.startsWith('http') || hostel.hostelImage.startsWith('data:')) ? hostel.hostelImage : hostel.hostelImage ? `https://livora-hostel-hub-1.onrender.com${hostel.hostelImage}` : ''})`,
                   cursor: 'zoom-in'
                 }}
-                onClick={() => setModalInfo({ isOpen: true, image: hostel.hostelImage && hostel.hostelImage.startsWith('/uploads') ? `https://livora-hostel-hub-1.onrender.com${hostel.hostelImage}` : hostel.hostelImage })}
+                onClick={() => {
+                  const imgUrl = hostel.hostelImage && (hostel.hostelImage.startsWith('http') || hostel.hostelImage.startsWith('data:')) ? hostel.hostelImage : hostel.hostelImage ? `https://livora-hostel-hub-1.onrender.com${hostel.hostelImage}` : '';
+                  setModalInfo({ isOpen: true, image: imgUrl });
+                }}
               >
                 <div className="card-overlay-badges">
                   <span className="availability-badge">Available</span>
