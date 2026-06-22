@@ -266,7 +266,7 @@ const getPublicBuildings = async (req, res) => {
     const publicQuery = {
       $or: [
         { approvalStatus: 'approved', isApproved: true },
-        { status: 'Active', approvalStatus: { $in: [null, undefined] } }
+        { status: { $regex: /^active$/i }, approvalStatus: { $in: [null, undefined] } }
       ]
     };
 
@@ -274,7 +274,21 @@ const getPublicBuildings = async (req, res) => {
       publicQuery,
       {
         name: 1, address: 1, locationCity: 1, locality: 1, category: 1, rating: 1,
-        startingPrice: 1, rentSingle: 1, rentDouble: 1, rentTriple: 1, rent4Sharing: 1, rent5Sharing: 1, rent6Sharing: 1, genderType: 1, amenities: 1, isAC: 1, images: 1
+        startingPrice: 1, rentSingle: 1, rentDouble: 1, rentTriple: 1, rent4Sharing: 1, rent5Sharing: 1, rent6Sharing: 1,
+        genderType: 1, amenities: 1, isAC: 1,
+        // Additional fields for accurate tenant portal display
+        description: 1, popularityLabel: 1, stayQuality: 1,
+        securityDeposit: 1, maintenanceCharges: 1, foodCharges: 1,
+        totalRooms: 1, totalBeds: 1,
+        ownerName: 1, ownerPhone: 1, ownerEmail: 1,
+        warden: 1, wardenNumber: 1,
+        // Facility booleans
+        security: 1, cctv: 1, parking: 1, powerBackup: 1, mess: 1, gym: 1,
+        library: 1, laundry: 1, housekeeping: 1, medicalSupport: 1,
+        lift: 1, wifi: 1, diningHall: 1, commonKitchen: 1, studyHall: 1,
+        laundryRoom: 1, fireSafety: 1, emergencyExit: 1,
+        // Policies
+        policies: 1
       }
     ).lean();
 
@@ -287,7 +301,7 @@ const getPublicBuildingById = async (req, res) => {
     const publicQuery = {
       $or: [
         { approvalStatus: 'approved', isApproved: true },
-        { status: 'Active', approvalStatus: { $in: [null, undefined] } }
+        { status: { $regex: /^active$/i }, approvalStatus: { $in: [null, undefined] } }
       ],
       _id: req.params.id
     };
@@ -304,8 +318,8 @@ const getPublicBuildingById = async (req, res) => {
     const floorIds = floors.map(f => f._id);
 
     const rooms = await Room.find({ floor: { $in: floorIds } })
-      .select('roomNumber roomType capacity rentAmount isAC facilities amenities balcony washroomType windowCount status floor')
-      .populate({ path: 'beds', select: 'bedNumber status currentTenant isLower price' })
+      .select('roomNumber roomType capacity rentAmount securityDeposit isAC attachedBathroom facilities amenities balcony washroomType windowCount status floor')
+      .populate({ path: 'beds', select: 'bedNumber status position bedType currentTenant isLower price' })
       .lean();
 
     let totalRooms = 0, totalBeds = 0, occupiedBeds = 0;
@@ -412,18 +426,27 @@ const getPlatformStats = async (req, res) => {
     
     const buildings = await Building.find(statsQuery).select('rating genderType category locationCity').lean();
 
+    const tenantsCount = await Tenant.countDocuments();
+    const activeCitiesCount = cities.length;
+    const avgRating = (buildings.reduce((acc, b) => acc + (b.rating || 4.5), 0) / (buildings.length || 1)).toFixed(1);
+
+    const cityStats = {};
+    cities.forEach(c => {
+      cityStats[c] = buildings.filter(b => b.locationCity === c).length;
+    });
+
     res.json({
-      totalBuildings,
-      activeCities: cities.length,
-      averageRating: buildings.reduce((acc, b) => acc + (b.rating || 0), 0) / (buildings.length || 1),
-      buildingsByCity: cities.map(c => ({
-        city: c,
-        count: buildings.filter(b => b.locationCity === c).length
-      })),
-      buildingsByCategory: {
-        Coliving: buildings.filter(b => b.category === 'Luxury' || b.genderType === 'Mixed').length,
-        Student: buildings.filter(b => b.category === 'Student').length,
-        Professional: buildings.filter(b => b.category === 'Professional').length
+      properties: totalBuildings,
+      cities: activeCitiesCount,
+      rating: avgRating,
+      tenants: tenantsCount,
+      cityStats,
+      categoryStats: {
+        coliving: buildings.filter(b => b.category === 'Luxury' || b.genderType === 'Mixed').length,
+        student: buildings.filter(b => b.category === 'Student').length,
+        professional: buildings.filter(b => b.category === 'Professional').length,
+        mens: buildings.filter(b => b.genderType === 'Boys').length,
+        womens: buildings.filter(b => b.genderType === 'Girls').length
       }
     });
   } catch (error) { res.status(500).json({ error: error.message }); }

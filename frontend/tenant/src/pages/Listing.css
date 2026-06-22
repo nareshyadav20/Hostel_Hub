@@ -2079,3 +2079,206 @@ h1, h2, h3, h4, h5, .liv-title {
   }
 }
 
+/* NEW PRICING & CONTACT OVERHAUL */
+.liv-pricing-combined-section {
+  margin-bottom: 24px;
+}
+.liv-pricing-grid-new {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.liv-pricing-card-new {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  transition: all 0.3s ease;
+}
+.liv-pricing-card-new:hover {
+  transform: translateY(-2px);
+  border-color: var(--liv-primary);
+  box-shadow: 0 8px 16px rgba(124, 58, 237, 0.08);
+}
+.liv-pc-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.liv-pc-icon.base { background: #eff6ff; color: #3b82f6; }
+.liv-pc-icon.deposit { background: #fefce8; color: #eab308; }
+.liv-pc-icon.food { background: #fff7ed; color: #f97316; }
+.liv-pc-icon.maint { background: #f3e8ff; color: #a855f7; }
+
+.liv-pc-details {
+  display: flex;
+  flex-direction: column;
+}
+.liv-pc-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.liv-pc-value {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+.liv-pc-value small {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.liv-sharing-options-box {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #f1f5f9;
+}
+.liv-sharing-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #334155;
+  margin: 0 0 16px 0;
+}
+.liv-sharing-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.liv-sharing-chip {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  padding: 10px 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 100px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+.liv-sharing-chip span {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.liv-sharing-chip strong {
+  font-size: 1.05rem;
+  color: #1e293b;
+  font-weight: 800;
+}
+
+.liv-contact-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: linear-gradient(145deg, #f8fafc, #f1f5f9);
+  border: 1px solid #e2e8f0;
+  padding: 20px;
+  border-radius: 16px;
+  margin-top: 24px;
+}
+.liv-cc-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  flex-shrink: 0;
+}
+.liv-cc-content {
+  flex: 1;
+}
+.liv-cc-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+}
+.liv-cc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+.liv-cc-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.liv-cc-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+}
+.liv-cc-val {
+  font-size: 0.95rem;
+  color: #0f172a;
+  font-weight: 600;
+}
+.liv-cc-empty {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.liv-prop-overview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.liv-overview-tag {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+.liv-ot-info {
+  display: flex;
+  flex-direction: column;
+}
+.liv-ot-info span {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.liv-ot-info strong {
+  font-size: 1rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+.liv-about-section {
+  margin-bottom: 24px;
+}
+.liv-desc-text {
+  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}

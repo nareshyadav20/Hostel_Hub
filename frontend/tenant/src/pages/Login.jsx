@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import API from '../api/axios';
 import './auth.css';
 
@@ -9,6 +9,8 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || '/dashboard';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,7 +42,7 @@ const Login = () => {
           localStorage.setItem('tenantId', String(tenantProfile._id));
         }
       }
-      navigate('/dashboard');
+      navigate(from);
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password');
     } finally {
@@ -123,7 +125,7 @@ const Login = () => {
         </form>
 
         <div className="auth-footer">
-          Don't have an account? <Link to="/signup">Create account</Link>
+          Don't have an account? <Link to="/signup" state={{ from }}>Create account</Link>
         </div>
 
       </div>

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import API from '../api/axios';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
+import { getAmenitiesFromBuilding, getHostelTypeLabel } from '../utils/buildingHelpers';
 import './Listing.css';
 import ImageModal from '../components/ImageModal';
 
@@ -347,21 +348,20 @@ const Listing = () => {
                     <Star size={16} fill="#fbbf24" color="#fbbf24" />
                     <Star size={16} fill="#fbbf24" color="#fbbf24" />
                   </span>
-                  <span className="liv-rating-value">{hostel.rating || '4.8'}</span>
-                  <span className="liv-reviews-count">(128 reviews)</span>
+                  <span className="liv-rating-value">{hostel.rating || '4.5'}</span>
                 </div>
               </div>
               <div className="liv-address">
                 <MapPin size={16} /><span>{renderField(hostel.address)}</span>
               </div>
               <div className="liv-tag-pills">
-                {(hostel.locality || hostel.city) && (
-                  <span className="liv-pill-tag location"><MapPin size={13} /> {hostel.locality || hostel.city}</span>
+                {(hostel.locality || hostel.locationCity) && (
+                  <span className="liv-pill-tag location"><MapPin size={13} /> {hostel.locality || hostel.locationCity}</span>
                 )}
                 <span className="liv-pill-tag gender">
-                  <User size={13} /> {hostel.genderType === 'Boys' ? 'Boys Hostel' : hostel.genderType === 'Girls' ? 'Girls Hostel' : 'Mixed Sharing'}
+                  <User size={13} /> {getHostelTypeLabel(hostel)}
                 </span>
-                <span className="liv-pill-tag"><Award size={13} /> Student Friendly</span>
+                {hostel.category && <span className="liv-pill-tag"><Award size={13} /> {hostel.category === 'Student' ? 'Student Friendly' : hostel.category === 'Luxury' ? 'Premium' : hostel.category === 'Professional' ? 'Professional' : hostel.category}</span>}
                 {hostel.foodCharges > 0 && <span className="liv-pill-tag food"><Coffee size={13} /> Food Included</span>}
                 {hostel.isAC && <span className="liv-pill-tag ac"><Sparkles size={13} /> AC Rooms</span>}
               </div>
@@ -387,13 +387,15 @@ const Listing = () => {
                 </div>
                 <span className="liv-metric-lbl">Total</span>
               </div>
-              <div className="liv-metric-card light-purple">
-                <div className="liv-metric-header">
-                  <span className="liv-metric-val">24/7</span>
-                  <Shield size={20} className="liv-metric-icon" />
+              {hostel.security && (
+                <div className="liv-metric-card light-purple">
+                  <div className="liv-metric-header">
+                    <span className="liv-metric-val">24/7</span>
+                    <Shield size={20} className="liv-metric-icon" />
+                  </div>
+                  <span className="liv-metric-lbl">Security</span>
                 </div>
-                <span className="liv-metric-lbl">Security</span>
-              </div>
+              )}
             </div>
 
             {/* ══════ FLOW NAVIGATION ══════ */}
@@ -425,102 +427,185 @@ const Listing = () => {
             {activeStep === 1 && (
               <div className="liv-step-panel fade-in">
                 {/* Property Overview instead of About */}
-                <div className="liv-details-section">
-                  <h2 className="liv-section-title">Property Overview</h2>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px', fontSize: '0.95rem' }}>
-                    <span><strong>Type:</strong> {renderField(hostel.propertyType, 'Hostel')}</span>
-                    <span style={{ color: '#cbd5e1' }}>|</span>
-                    <span><strong>Gender:</strong> {renderField(hostel.genderType)}</span>
-                    <span style={{ color: '#cbd5e1' }}>|</span>
-                    <span><strong>Capacity:</strong> {hostel.floors?.length ? hostel.floors.reduce((acc, f) => acc + (f.rooms?.length || 0), 0) : 30} Rooms, {hostel.totalBeds || 100} Beds</span>
+                  {(() => {
+                    const rooms = hostel.floors?.length ? hostel.floors.reduce((acc, f) => acc + (f.rooms?.length || 0), 0) : (hostel.totalRooms || 0);
+                    const beds = hostel.floors?.length ? hostel.floors.reduce((acc, f) => acc + (f.rooms?.reduce((bAcc, r) => bAcc + (r.beds?.length || 0), 0) || 0), 0) : (hostel.totalBeds || 0);
+                    
+                    return (
+                      <div className="liv-prop-overview-tags">
+                        {hostel.genderType && (
+                          <div className="liv-overview-tag">
+                            <User size={16} className="text-purple" />
+                            <div className="liv-ot-info">
+                              <span>Gender</span>
+                              <strong>{renderField(hostel.genderType)}</strong>
+                            </div>
+                          </div>
+                        )}
+                        {rooms > 0 && (
+                          <div className="liv-overview-tag">
+                            <DoorOpen size={16} className="text-blue" />
+                            <div className="liv-ot-info">
+                              <span>Rooms</span>
+                              <strong>{rooms}</strong>
+                            </div>
+                          </div>
+                        )}
+                        {beds > 0 && (
+                          <div className="liv-overview-tag">
+                            <Bed size={16} className="text-orange" />
+                            <div className="liv-ot-info">
+                              <span>Capacity</span>
+                              <strong>{beds} Beds</strong>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  
+                  {hostel.description && (
+                    <div className="liv-about-section">
+                      <h2 className="liv-section-title">About This Property</h2>
+                      <p className="liv-desc-text">
+                        {hostel.description.replace(/[#*]/g, '').replace(/---/g, '').trim()}
+                      </p>
+                    </div>
+                  )}
+                  
+                  <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
+                  
+                  <div className="liv-pricing-combined-section">
+                    <h2 className="liv-section-title">Pricing & Fees</h2>
+                    
+                    <div className="liv-pricing-grid-new">
+                      {/* Standard Fees */}
+                      <div className="liv-pricing-card-new">
+                        <div className="liv-pc-icon base"><MapPin size={20} /></div>
+                        <div className="liv-pc-details">
+                          <span className="liv-pc-label">Base Rent Starts At</span>
+                          <span className="liv-pc-value">₹{(hostel.startingPrice || 0).toLocaleString()} <small>/mo</small></span>
+                        </div>
+                      </div>
+                      
+                      <div className="liv-pricing-card-new">
+                        <div className="liv-pc-icon deposit"><Lock size={20} /></div>
+                        <div className="liv-pc-details">
+                          <span className="liv-pc-label">Security Deposit</span>
+                          <span className="liv-pc-value">₹{(hostel.securityDeposit || 0).toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      {(hostel.mess || hostel.foodCharges > 0) && (
+                        <div className="liv-pricing-card-new">
+                          <div className="liv-pc-icon food"><Coffee size={20} /></div>
+                          <div className="liv-pc-details">
+                            <span className="liv-pc-label">Food (Monthly)</span>
+                            <span className="liv-pc-value">
+                              {((hostel.mess && !hostel.foodCharges) || hostel.foodCharges === 0) ? 'Included' : `₹${hostel.foodCharges.toLocaleString()}`} <small>/mo</small>
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {hostel.maintenanceCharges > 0 && (
+                        <div className="liv-pricing-card-new">
+                          <div className="liv-pc-icon maint"><ZapIcon size={20} /></div>
+                          <div className="liv-pc-details">
+                            <span className="liv-pc-label">Maintenance</span>
+                            <span className="liv-pc-value">₹{hostel.maintenanceCharges.toLocaleString()} <small>/mo</small></span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Room Sharing Options */}
+                    {(hostel.rentSingle || hostel.rentDouble || hostel.rentTriple || hostel.rent4Sharing || hostel.rent5Sharing || hostel.rent6Sharing) && (
+                      <div className="liv-sharing-options-box">
+                        <h3 className="liv-sharing-title">Room Options</h3>
+                        <div className="liv-sharing-chips">
+                          {hostel.rentSingle > 0 && <div className="liv-sharing-chip"><span>Single</span><strong>₹{hostel.rentSingle.toLocaleString()}</strong></div>}
+                          {hostel.rentDouble > 0 && <div className="liv-sharing-chip"><span>Double</span><strong>₹{hostel.rentDouble.toLocaleString()}</strong></div>}
+                          {hostel.rentTriple > 0 && <div className="liv-sharing-chip"><span>Triple</span><strong>₹{hostel.rentTriple.toLocaleString()}</strong></div>}
+                          {hostel.rent4Sharing > 0 && <div className="liv-sharing-chip"><span>4-Sharing</span><strong>₹{hostel.rent4Sharing.toLocaleString()}</strong></div>}
+                          {hostel.rent5Sharing > 0 && <div className="liv-sharing-chip"><span>5-Sharing</span><strong>₹{hostel.rent5Sharing.toLocaleString()}</strong></div>}
+                          {hostel.rent6Sharing > 0 && <div className="liv-sharing-chip"><span>6-Sharing</span><strong>₹{hostel.rent6Sharing.toLocaleString()}</strong></div>}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
                   
-                  {(hostel.rentSingle || hostel.rentDouble || hostel.rentTriple || hostel.rent4Sharing || hostel.rent5Sharing || hostel.rent6Sharing) && (
+                  {/* Amenities from facility booleans */}
+                  {(() => {
+                    const amenities = getAmenitiesFromBuilding(hostel);
+                    if (amenities.length === 0) return null;
+                    return (
+                      <>
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 12px 0' }}>Amenities & Facilities</h2>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                          {amenities.map(a => (
+                            <span key={a} style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '6px',
+                              padding: '6px 14px', borderRadius: '20px', fontSize: '0.88rem',
+                              background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', fontWeight: 500
+                            }}>
+                              {getAmenityIcon(a)} {a}
+                            </span>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
+                  
+                  {/* Policies */}
+                  {hostel.policies && (hostel.policies.smoking || hostel.policies.alcohol || hostel.policies.visitors || hostel.policies.pets) && (
                     <>
-                      <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 12px 0' }}>Pricing Options</h2>
+                      <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
+                      <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 12px 0' }}>House Policies</h2>
                       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px', fontSize: '0.95rem' }}>
-                        {hostel.rentSingle && <><span>Single: ₹{hostel.rentSingle.toLocaleString()}/mo</span><span style={{ color: '#cbd5e1' }}>|</span></>}
-                        {hostel.rentDouble && <><span>Double: ₹{hostel.rentDouble.toLocaleString()}/mo</span><span style={{ color: '#cbd5e1' }}>|</span></>}
-                        {hostel.rentTriple && <><span>Triple: ₹{hostel.rentTriple.toLocaleString()}/mo</span><span style={{ color: '#cbd5e1' }}>|</span></>}
-                        {hostel.rent4Sharing && <><span>4-Sharing: ₹{hostel.rent4Sharing.toLocaleString()}/mo</span><span style={{ color: '#cbd5e1' }}>|</span></>}
-                        {hostel.rent5Sharing && <><span>5-Sharing: ₹{hostel.rent5Sharing.toLocaleString()}/mo</span><span style={{ color: '#cbd5e1' }}>|</span></>}
-                        {hostel.rent6Sharing && <><span>6-Sharing: ₹{hostel.rent6Sharing.toLocaleString()}/mo</span><span style={{ color: '#cbd5e1' }}>|</span></>}
-                        <span>Deposit: ₹{(hostel.securityDeposit || 0).toLocaleString()}</span>
+                        {hostel.policies.smoking && <span>🚭 Smoking: {hostel.policies.smoking}</span>}
+                        {hostel.policies.alcohol && <><span style={{ color: '#cbd5e1' }}>|</span><span>🍺 Alcohol: {hostel.policies.alcohol}</span></>}
+                        {hostel.policies.visitors && <><span style={{ color: '#cbd5e1' }}>|</span><span>👥 Visitors: {hostel.policies.visitors}</span></>}
+                        {hostel.policies.pets && <><span style={{ color: '#cbd5e1' }}>|</span><span>🐾 Pets: {hostel.policies.pets}</span></>}
                       </div>
                     </>
                   )}
                   
                   <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
                   
-                  <div style={{ fontSize: '0.95rem' }}>
-                    <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 8px 0' }}>Contact:</h2>
-                    <span>{hostel.ownerName || 'rathna babu'} ({hostel.ownerPhone || '8125336030'})</span>
-                  </div>
-                </div>
-
-                {/* Pricing Overview */}
-                <div className="liv-details-section">
-                  <h2 className="liv-section-title">Pricing Overview</h2>
-                  <div className="liv-pricing-overview-grid">
-                    <div className="liv-po-card">
-                      <span className="liv-po-icon">🏠</span>
-                      <span className="liv-po-label">Base Rent</span>
-                      <span className="liv-po-val">₹{(hostel.startingPrice || 0).toLocaleString()}<span>/mo</span></span>
+                  {/* Contact Card */}
+                  <div className="liv-contact-card">
+                    <div className="liv-cc-icon"><Info size={24} className="text-blue" /></div>
+                    <div className="liv-cc-content">
+                      <h3 className="liv-cc-title">Property Management</h3>
+                      {(hostel.ownerName || hostel.ownerPhone || hostel.warden || hostel.wardenNumber) ? (
+                        <div className="liv-cc-grid">
+                          {hostel.warden && (
+                            <div className="liv-cc-row">
+                              <span className="liv-cc-label">Warden:</span>
+                              <span className="liv-cc-val">{hostel.warden} {hostel.wardenNumber ? `(${hostel.wardenNumber})` : ''}</span>
+                            </div>
+                          )}
+                          {hostel.ownerName && (
+                            <div className="liv-cc-row">
+                              <span className="liv-cc-label">Owner:</span>
+                              <span className="liv-cc-val">{hostel.ownerName} {hostel.ownerPhone ? `(${hostel.ownerPhone})` : ''}</span>
+                            </div>
+                          )}
+                          {!hostel.warden && !hostel.ownerName && hostel.ownerPhone && (
+                            <div className="liv-cc-row">
+                              <span className="liv-cc-label">Phone:</span>
+                              <span className="liv-cc-val">{hostel.ownerPhone}</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="liv-cc-empty">Contact details are private. Please proceed with booking to communicate.</p>
+                      )}
                     </div>
-                    <div className="liv-po-card">
-                      <span className="liv-po-icon">🔒</span>
-                      <span className="liv-po-label">Security Deposit</span>
-                      <span className="liv-po-val">₹{(hostel.securityDeposit || 0).toLocaleString()}</span>
-                    </div>
-                    <div className="liv-po-card">
-                      <span className="liv-po-icon">🍽️</span>
-                      <span className="liv-po-label">Food (Monthly)</span>
-                      <span className="liv-po-val">₹{(hostel.foodCharges || 0).toLocaleString()}<span>/mo</span></span>
-                    </div>
-                    <div className="liv-po-card">
-                      <span className="liv-po-icon">🔧</span>
-                      <span className="liv-po-label">Maintenance</span>
-                      <span className="liv-po-val">₹{(hostel.maintenanceCharges || 0).toLocaleString()}<span>/mo</span></span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Reviews */}
-                <div className="liv-details-section">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 className="liv-section-title" style={{ margin: 0 }}>What Students Say</h2>
-                    <button style={{ 
-                      background: '#fff', border: '1.5px solid #7c3aed', color: '#7c3aed', 
-                      padding: '8px 16px', borderRadius: '30px', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' 
-                    }}>
-                      Write a Review
-                    </button>
-                  </div>
-                  <div className="liv-reviews-grid">
-                    <div className="liv-review-card-new">
-                      <div className="liv-rev-header">
-                        <div className="liv-rev-avatar">RV</div>
-                        <div className="liv-rev-info"><strong>Rahul Verma</strong><span>Student</span></div>
-                        <div className="liv-rev-stars">★★★★★</div>
-                      </div>
-                      <p className="liv-rev-text">Great environment, good food and peaceful place to study. Highly recommended for students who want a productive atmosphere.</p>
-                      <span className="liv-rev-time">2 weeks ago</span>
-                    </div>
-                    <div className="liv-review-card-new">
-                      <div className="liv-rev-header">
-                        <div className="liv-rev-avatar">AS</div>
-                        <div className="liv-rev-info"><strong>Ankit Sharma</strong><span>Student</span></div>
-                        <div className="liv-rev-stars">★★★★★</div>
-                      </div>
-                      <p className="liv-rev-text">Very clean rooms, supportive staff and excellent facilities. The smart entry systems and super fast WiFi are amazing additions.</p>
-                      <span className="liv-rev-time">1 month ago</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* CTA to next step */}
+                  </div>                {/* CTA to next step */}
                 <div className="liv-step-cta">
                   <button className="liv-step-next-btn" onClick={() => setActiveStep(2)}>
                     Explore Floors &amp; Rooms <ChevronRight size={18} />
@@ -681,7 +766,7 @@ const Listing = () => {
                                 </div>
                                 <div className="liv-rfc-detail-item">
                                   <Bath size={13} />
-                                  <span>{room.washroomType || 'Attached'}</span>
+                                  <span>{room.washroomType ? renderField(room.washroomType) : (room.attachedBathroom ? 'Attached' : 'Common')}</span>
                                 </div>
                               </div>
 
@@ -789,7 +874,7 @@ const Listing = () => {
                                 </div>
                                 <div className="liv-bfc-num">#{renderField(bed.bedNumber)}</div>
                                 <div className="liv-bfc-type">{renderField(bed.bedType, 'Single')}</div>
-                                <div className="liv-bfc-pos">{renderField(bed.position, 'Bunk Bed')}</div>
+                                <div className="liv-bfc-pos">{bed.position ? renderField(bed.position) : ''}</div>
                                 <div className={`liv-bfc-label ${occ ? 'occ' : isSel ? 'sel' : 'avail'}`}>
                                   {occ ? 'Occupied' : isSel ? '✓ Selected' : 'Available'}
                                 </div>
@@ -910,13 +995,20 @@ const Listing = () => {
               </div>
 
               <button
-                className="liv-proceed-btn"
-                disabled={!selectedBed}
-                onClick={handleBooking}
+                className={`liv-proceed-btn ${!selectedBed ? 'disabled-btn' : ''}`}
+                onClick={() => {
+                  if (!selectedBed) {
+                    alert('Please select a Floor, Room, and Bed before proceeding.');
+                    return;
+                  }
+                  handleBooking();
+                }}
               >
                 Proceed to Book <ChevronRight size={18} />
               </button>
-              <span className="liv-not-charged-sub">You won't be charged yet</span>
+              <span className="liv-not-charged-sub">
+                {!selectedBed ? 'Select a bed to continue' : "You won't be charged yet"}
+              </span>
             </div>
 
             {/* Trust widgets */}

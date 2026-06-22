@@ -6,6 +6,7 @@ import './Landing.css';
 import './Search.css'; // Import Search UI styles for identical layout
 import API from '../api/axios';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
+import { getAmenitiesFromBuilding, getSharingInfo, getHostelTypeLabel, getSharingAvailability } from '../utils/buildingHelpers';
 import ImageModal from '../components/ImageModal';
 
 const ICONS = {
@@ -22,6 +23,7 @@ const ICONS = {
 
 const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
   const [imgIdx, setImgIdx] = useState(0);
+  const [showAllAmenities, setShowAllAmenities] = useState(false);
 
   useEffect(() => {
     if (!hostel.images || hostel.images.length <= 1) return;
@@ -46,7 +48,7 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
           </div>
           <button
             className={`wish-action-btn ${isWishlisted ? 'active' : ''}`}
-            onClick={(e) => { e.preventDefault(); toggleWishlist(hostel); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(hostel); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -72,28 +74,44 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
             <span className="price-val-pro">₹{(hostel.price || 0).toLocaleString()}</span>
             <span className="price-per-pro">/month</span>
           </div>
-          {hostel.hostelType && (
-            <div className="occupancy-stack-pro">
-              <span className="occ-label-pro"><ICONS.Home /> Type</span>
-              <span className="occ-val-pro">{hostel.hostelType}</span>
-            </div>
-          )}
+
         </div>
 
-        <div className="amenities-footer-row">
-          <div className="amenity-mini-tags">
-            {(hostel.amenities || ['WiFi', 'Security', 'Food']).slice(0, 3).map(a => (
-              <span key={a} className="tag-pro">{a}</span>
-            ))}
-            {(hostel.amenities || []).length > 3 && (
-              <span className="tag-more">+{(hostel.amenities || []).length - 3} More</span>
+        {hostel.amenities && hostel.amenities.length > 0 && (
+          <div className="amenities-footer-row" style={{ position: 'relative' }}>
+            <div className="amenity-mini-tags">
+              {hostel.amenities.slice(0, 3).map(a => (
+                <span key={a} className="tag-pro">{a}</span>
+              ))}
+              {hostel.amenities.length > 3 && (
+                <button type="button" className="tag-more" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAllAmenities(!showAllAmenities); }} style={{ background: 'none', border: 'none', cursor: 'pointer', outline: 'none' }}>
+                  +{hostel.amenities.length - 3} More
+                </button>
+              )}
+            </div>
+
+            {showAllAmenities && hostel.amenities.length > 3 && (
+              <div style={{
+                position: 'absolute', bottom: '100%', left: '-10px', right: '-10px',
+                background: '#FFFFFF', padding: '1rem', borderRadius: '16px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.15), 0 4px 10px rgba(0,0,0,0.05)', border: '1px solid #E2E8F0',
+                zIndex: 50, marginBottom: '0.8rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem'
+              }}>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Extra Amenities</span>
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAllAmenities(false); }} style={{ background: '#F1F5F9', border: 'none', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748B', fontSize: '10px', fontWeight: 'bold' }}>✕</button>
+                </div>
+                {hostel.amenities.slice(3).map(a => (
+                  <span key={`pop-${a}`} className="tag-pro" style={{ background: '#F8FAFC', border: '1px solid #e2e8f0' }}>{a}</span>
+                ))}
+              </div>
             )}
           </div>
-        </div>
+        )}
 
         <div className="card-actions-row-pro">
           <Link to={`/listing/${hostel.id}`} className="btn-secondary-pro">View Details</Link>
-          <Link to={`/booking/${hostel.id}`} state={{ basePrice: hostel.price }} className="btn-primary-pro">Book Now</Link>
+          <Link to={`/listing/${hostel.id}`} className="btn-primary-pro">Select Room</Link>
         </div>
       </div>
     </div>
@@ -155,6 +173,8 @@ const Landing = () => {
   const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
 
   const fetchWishlist = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
     try {
       const wishRes = await API.get('/tenant-portal/wishlist').catch(() => ({ data: [] }));
       setWishlist(Array.isArray(wishRes.data) ? wishRes.data : []);
@@ -237,36 +257,13 @@ const Landing = () => {
         city = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
       }
       const address = b.address || b.location || 'Hyderabad';
-      let locality = b.locality || 'Central Hub';
+      let locality = b.locality || '';
 
-      let lowestSharingLabel = 'Sharing';
-      const rents = [
-        { val: b.rentSingle, label: 'Single Room' },
-        { val: b.rentDouble, label: '2 Sharing' },
-        { val: b.rentTriple, label: '3 Sharing' },
-        { val: b.rent4Sharing, label: '4 Sharing' },
-        { val: b.rent5Sharing, label: '5 Sharing' },
-        { val: b.rent6Sharing, label: '6 Sharing' },
-      ].filter(r => r.val > 0);
+      const { sharingLabel: lowestSharingLabel, lowestRent } = getSharingInfo(b);
+      if (lowestRent) b.startingPrice = lowestRent;
 
-      let has1 = (b.rentSingle || 0) > 0;
-      let has2 = (b.rentDouble || 0) > 0;
-      let has3 = (b.rentTriple || 0) > 0;
-      let has4 = (b.rent4Sharing || 0) > 0;
-      let has5 = (b.rent5Sharing || 0) > 0;
-      let has6 = (b.rent6Sharing || 0) > 0;
-
-      if (rents.length > 0) {
-        const minRent = rents.reduce((prev, curr) => prev.val < curr.val ? prev : curr);
-        lowestSharingLabel = minRent.label;
-        b.startingPrice = minRent.val;
-      } else {
-        if (b.startingPrice >= 12000) { lowestSharingLabel = 'Single Room'; has1 = true; }
-        else if (b.startingPrice >= 10000) { lowestSharingLabel = '2 Sharing'; has2 = true; }
-        else if (b.startingPrice >= 8000) { lowestSharingLabel = '3 Sharing'; has3 = true; }
-        else if (b.startingPrice >= 7000) { lowestSharingLabel = '4 Sharing'; has4 = true; }
-        else { lowestSharingLabel = '5 Sharing'; has5 = true; }
-      }
+      const sharingFlags = getSharingAvailability(b);
+      const derivedAmenities = getAmenitiesFromBuilding(b);
 
       return {
         id: b._id,
@@ -278,15 +275,15 @@ const Landing = () => {
         price: b.startingPrice || 8000,
         sharingLabel: lowestSharingLabel,
         img: b.images && b.images[0] ? ((b.images[0].startsWith('http') || b.images[0].startsWith('data:')) ? b.images[0] : `http://localhost:5000${b.images[0]}`) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800',
-        amenities: b.amenities && b.amenities.length > 0 ? b.amenities : ['WiFi', 'AC', 'Food/Mess'],
+        amenities: derivedAmenities,
         gender: (b.genderType && !['mixed', 'unisex'].includes(b.genderType.toLowerCase())) ? b.genderType : 'Coliving',
         category: b.category || '',
-        hasSingle: has1,
-        hasDouble: has2,
-        hasTriple: has3,
-        has4: has4,
-        has5: has5,
-        has6: has6
+        hasSingle: sharingFlags.hasSingle,
+        hasDouble: sharingFlags.hasDouble,
+        hasTriple: sharingFlags.hasTriple,
+        has4: sharingFlags.has4,
+        has5: sharingFlags.has5,
+        has6: sharingFlags.has6
       };
     });
   };

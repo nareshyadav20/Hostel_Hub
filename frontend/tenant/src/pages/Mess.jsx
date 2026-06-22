@@ -63,22 +63,9 @@ const Mess = () => {
       }
 
       let finalMenu = menuRes.data && menuRes.data.length > 0 ? menuRes.data : [];
-      const fallbackMenu = [
-        { day: 'Monday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
-        { day: 'Tuesday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
-        { day: 'Wednesday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
-        { day: 'Thursday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
-        { day: 'Friday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
-        { day: 'Saturday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' },
-        { day: 'Sunday', breakfast: 'Pending Update', lunch: 'Pending Update', dinner: 'Pending Update' }
-      ];
-
-      if (finalMenu.length === 0) {
-        finalMenu = fallbackMenu;
-      } else {
+      if (finalMenu.length > 0) {
         // Filter menu items specifically to match the tenant's plan tier
         finalMenu = finalMenu.filter(m => (m.plan || 'basic').toLowerCase() === activePlan);
-        if (finalMenu.length === 0) finalMenu = fallbackMenu;
       }
       
       // Sort weekly menu chronologically for clean, premium UX
@@ -95,7 +82,7 @@ const Mess = () => {
       
       setWeeklyMenu(finalMenu);
       const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-      const todayItem = finalMenu.find(m => m.day === today) || finalMenu[0];
+      const todayItem = finalMenu.find(m => m.day === today) || { breakfast: 'No Menu Available', lunch: 'No Menu Available', dinner: 'No Menu Available' };
       setTodayMenu(todayItem);
     } catch (err) {
       console.error('Error fetching mess data:', err);
@@ -381,62 +368,72 @@ const Mess = () => {
           <h3 className="sn-card-title">Weekly Nutrition Schedule</h3>
         </div>
 
-        <div className="table-overflow">
-          <table className="weekly-table-premium">
-            <thead>
-              <tr>
-                <th>Week Day</th>
-                <th>Breakfast</th>
-                <th>Lunch</th>
-                <th>Dinner</th>
-              </tr>
-            </thead>
-            <tbody>
-              {weeklyMenu.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((m, i) => (
-                <tr key={i} className="fade-in">
-                  <td className="td-day">{m.day}</td>
-                  <td className="td-dish">{m.breakfast}</td>
-                  <td className="td-dish">{m.lunch}</td>
-                  <td className="td-dish">{m.dinner}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination Controls */}
-        <div className="pagination-controls-premium">
-          <div className="pagination-info">
-            Showing <span>{(currentPage - 1) * itemsPerPage + 1}</span> - <span>{Math.min(currentPage * itemsPerPage, weeklyMenu.length)}</span> of <span>{weeklyMenu.length}</span> Days
-          </div>
-          <div className="pagination-btns">
-            <button 
-              className={`p-btn ${currentPage === 1 ? 'disabled' : ''}`}
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <div className="p-pages">
-              {Array.from({ length: Math.ceil(weeklyMenu.length / itemsPerPage) }).map((_, i) => (
-                <button 
-                  key={i}
-                  className={`p-page-num ${currentPage === i + 1 ? 'active' : ''}`}
-                  onClick={() => setCurrentPage(i + 1)}
-                >
-                  {i + 1}
-                </button>
-              ))}
+        {weeklyMenu.length > 0 ? (
+          <>
+            <div className="table-overflow">
+              <table className="weekly-table-premium">
+                <thead>
+                  <tr>
+                    <th>Week Day</th>
+                    <th>Breakfast</th>
+                    <th>Lunch</th>
+                    <th>Dinner</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {weeklyMenu.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((m, i) => (
+                    <tr key={i} className="fade-in">
+                      <td className="td-day">{m.day}</td>
+                      <td className="td-dish">{m.breakfast}</td>
+                      <td className="td-dish">{m.lunch}</td>
+                      <td className="td-dish">{m.dinner}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <button 
-              className={`p-btn ${currentPage === Math.ceil(weeklyMenu.length / itemsPerPage) ? 'disabled' : ''}`}
-              onClick={() => setCurrentPage(p => Math.min(Math.ceil(weeklyMenu.length / itemsPerPage), p + 1))}
-              disabled={currentPage === Math.ceil(weeklyMenu.length / itemsPerPage)}
-            >
-              <ChevronRight size={18} />
-            </button>
+
+            {/* Pagination Controls */}
+            <div className="pagination-controls-premium">
+              <div className="pagination-info">
+                Showing <span>{(currentPage - 1) * itemsPerPage + 1}</span> - <span>{Math.min(currentPage * itemsPerPage, weeklyMenu.length)}</span> of <span>{weeklyMenu.length}</span> Days
+              </div>
+              <div className="pagination-btns">
+                <button 
+                  className={`p-btn ${currentPage === 1 ? 'disabled' : ''}`}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <div className="p-pages">
+                  {Array.from({ length: Math.ceil(weeklyMenu.length / itemsPerPage) }).map((_, i) => (
+                    <button 
+                      key={i}
+                      className={`p-page-num ${currentPage === i + 1 ? 'active' : ''}`}
+                      onClick={() => setCurrentPage(i + 1)}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  className={`p-btn ${currentPage === Math.ceil(weeklyMenu.length / itemsPerPage) ? 'disabled' : ''}`}
+                  onClick={() => setCurrentPage(p => Math.min(Math.ceil(weeklyMenu.length / itemsPerPage), p + 1))}
+                  disabled={currentPage === Math.ceil(weeklyMenu.length / itemsPerPage)}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div style={{ padding: '40px 20px', textAlign: 'center', color: '#64748b' }}>
+            <Utensils size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+            <h4 style={{ margin: '0 0 8px 0', color: '#1e293b' }}>No Menu Available</h4>
+            <p style={{ margin: 0, fontSize: '0.95rem' }}>The property manager has not uploaded the mess menu for your plan yet.</p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
