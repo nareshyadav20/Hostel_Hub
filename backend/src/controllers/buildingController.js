@@ -118,7 +118,7 @@ const getBuildings = async (req, res) => {
     }
 
     const buildings = await Building.find(query)
-      .select('-floors -draftData -gallery -description')
+      .select('-floors -draftData -gallery -description -images')
       .populate('owner', 'name phone email')
       .lean();
 
