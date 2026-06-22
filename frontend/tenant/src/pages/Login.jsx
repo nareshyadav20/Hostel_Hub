@@ -31,6 +31,12 @@ const Login = () => {
       });
       const { user, token, tenantProfile } = response.data;
 
+      if (user.role !== 'TENANT') {
+        setError('Access Denied: This portal is restricted to tenants only.');
+        setLoading(false);
+        return;
+      }
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       if (tenantProfile) {

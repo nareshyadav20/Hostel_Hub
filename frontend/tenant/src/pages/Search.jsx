@@ -172,7 +172,7 @@ const Search = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
-  const hostelsPerPage = 5;
+  const hostelsPerPage = 6;
 
   const fetchHostels = async () => {
     try {

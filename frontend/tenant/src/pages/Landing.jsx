@@ -168,7 +168,7 @@ const Landing = () => {
   const [hostels, setHostels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 6;
   const [wishlist, setWishlist] = useState([]);
   const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
 
