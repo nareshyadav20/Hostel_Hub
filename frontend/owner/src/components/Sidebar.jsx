@@ -26,7 +26,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const menuItems = [
     { name: 'Dashboard', path: `/owner/building/${activeBuildingId}/dashboard`, icon: <LayoutDashboard {...iconProps} /> },
-    { name: 'Buildings', path: `/owner/building/${activeBuildingId}/buildings`, icon: <Building2 {...iconProps} /> },
+    { name: 'Floors & Rooms', path: `/owner/building/${activeBuildingId}/manage`, icon: <Building2 {...iconProps} /> },
     { name: 'Rooms & Beds', path: `/owner/building/${activeBuildingId}/rooms`, icon: <BedDouble {...iconProps} /> },
     { name: 'Tenants', path: `/owner/building/${activeBuildingId}/tenants`, icon: <UsersRound {...iconProps} /> },
     { name: 'Payments', path: `/owner/building/${activeBuildingId}/payments`, icon: <Banknote {...iconProps} /> },

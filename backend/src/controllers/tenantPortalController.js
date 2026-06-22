@@ -229,7 +229,8 @@ exports.uploadPhoto = async (req, res) => {
     let photoUrl = req.body.photoUrl;
 
     if (req.file) {
-      photoUrl = `/uploads/profile/${req.file.filename}`;
+      const b64 = req.file.buffer.toString('base64');
+      photoUrl = `data:${req.file.mimetype};base64,${b64}`;
     }
 
     if (!photoUrl) {
@@ -306,10 +307,12 @@ exports.saveStep4 = async (req, res) => {
       },
     };
     if (req.files?.profilePhoto?.[0]) {
-      update.$set['step4.profilePhotoUrl'] = `/uploads/profile-setup/${req.files.profilePhoto[0].filename}`;
+      const b64 = req.files.profilePhoto[0].buffer.toString('base64');
+      update.$set['step4.profilePhotoUrl'] = `data:${req.files.profilePhoto[0].mimetype};base64,${b64}`;
     }
     if (req.files?.idProof?.[0]) {
-      update.$set['step4.idProofUrl'] = `/uploads/profile-setup/${req.files.idProof[0].filename}`;
+      const b64 = req.files.idProof[0].buffer.toString('base64');
+      update.$set['step4.idProofUrl'] = `data:${req.files.idProof[0].mimetype};base64,${b64}`;
     }
     const doc = await TenantUpload.findOneAndUpdate(
       { userId: req.user.id },

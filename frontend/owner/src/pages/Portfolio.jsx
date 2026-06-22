@@ -15,16 +15,17 @@ import {
   Heart, Home, ArrowLeft, Settings, Trash2, ChevronUp
 } from 'lucide-react';
 import ImageModal from '../components/ImageModal';
+import BuildingCard from '../components/BuildingCard';
 import { api } from '../api';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
 import { clearAllCache } from '../cache';
 
 // --- CONSTANTS MOVED OUTSIDE FOR STABILITY ---
 const FEATURE_GROUPS = {
-  '🔒 Security & Safety': ['Security', 'CCTV', 'Medical Support'],
-  '⚡ Essential Utilities': ['Power Backup', 'Laundry', 'Housekeeping'],
-  '🍽️ Food & Dining': ['Mess'],
-  '⭐ Additional Amenities': ['Gym', 'Parking', 'Library']
+  'Security & Safety': ['Security', 'CCTV', 'Medical Support', 'Fire Safety', 'Emergency Exit'],
+  'Essential Utilities': ['Power Backup', 'Laundry', 'Housekeeping', 'Lift', 'WiFi', 'Laundry Room'],
+  'Food & Dining': ['Mess', 'Dining Hall', 'Common Kitchen'],
+  'Additional Amenities': ['Gym', 'Parking', 'Library', 'Study Hall']
 };
 
 const AMENITY_ICONS = {
@@ -38,21 +39,25 @@ const AVAILABLE_FILTER_FEATURES = [
   'Security', 'CCTV', 'Parking', 'Power Backup', 'Mess', 'Gym', 'Library', 'Laundry', 'Housekeeping', 'Medical Support'
 ];
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 const STEP_CONFIG = [
-  { step: 1, title: 'Basic Info', icon: '🏨', desc: 'Name, description, media' },
-  { step: 2, title: 'Location', icon: '📍', desc: 'Address & landmarks' },
-  { step: 3, title: 'Amenities', icon: '✨', desc: 'Facilities & features' },
-  { step: 4, title: 'Owner Details', icon: '🔑', desc: 'Contact information' },
-  { step: 5, title: 'Review', icon: '✅', desc: 'Final summary' },
+  { step: 1, title: 'Basic Info', icon: <Building size={24}/>, desc: 'Name, description, media' },
+  { step: 2, title: 'Location', icon: <MapPin size={24}/>, desc: '' },
+  { step: 3, title: 'Amenities', icon: <Star size={24}/>, desc: 'Facilities & features' },
+  { step: 4, title: 'Financials', icon: <DollarSign size={24}/>, desc: 'Pricing & deposits' },
+  { step: 5, title: 'Owner Details', icon: <UserCheck size={24}/>, desc: 'Contact information' },
+  { step: 6, title: 'Review', icon: <CheckCircle size={24}/>, desc: 'Final summary' },
 ];
 
 const INITIAL_FORM_STATE = {
   name: '', shortDesc: '',
-  addr1: '', addr2: '', city: '', state: '', pincode: '', landmark: '',
+  addr1: '', addr2: '', city: '', locality: '', state: '', pincode: '', landmark: '',
   ownerName: '', phone: '', email: '',
   coverImage: null, gallery: [], documents: [],
-  amenities: []
+  amenities: [],
+  genderType: 'Mixed', wardenName: '',
+  rentSingle: 0, rentDouble: 0, rentTriple: 0, rent4Sharing: 0, rent5Sharing: 0, rent6Sharing: 0, securityDeposit: 0,
+  stayQuality: '', buildingAge: ''
 };
 
 const Portfolio = () => {
@@ -101,7 +106,7 @@ const Portfolio = () => {
       const response = await api.getPortfolio();
       const portfolioData = response?.success ? (response.data || []) : [];
       setData({
-        buildings: portfolioData.filter(bld => bld.showInPortfolio !== false && String(bld.showInPortfolio) !== 'false'),
+        buildings: portfolioData.filter(bld => bld.showInPortfolio !== false && String(bld.showInPortfolio) !== 'false' && bld.status !== 'Draft'),
         floors: [],
         rooms: [],
         beds: [],
@@ -166,21 +171,25 @@ const Portfolio = () => {
   useEffect(() => {
     if (!isAddModalOpen) return;
     // Only trigger if user has typed something meaningful
-    const hasData = formData.name || formData.addr1 || formData.city || formData.gender || formData.rentSingle || formData.rentDouble || formData.rentTriple;
+    const hasData = formData.name || formData.addr1 || formData.city || formData.genderType || formData.rentSingle || formData.rentDouble || formData.rentTriple;
     if (!hasData) return;
     const t = setTimeout(() => {
       saveDraftToBackend(formData, currentStep, activeDraftId);
     }, 1200);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep, formData, isAddModalOpen]);
+  }, [currentStep, formData, isAddModalOpen, activeDraftId]);
 
   const saveDraftToBackend = useCallback(async (data, step, draftId = null) => {
     const payload = {
       name: data.name || 'Untitled Draft',
-      address: `${data.addr1 || ''}, ${data.city || ''}, ${data.state || ''}`.trim().replace(/^,\s*|,\s*$/g, '') || 'Draft',
-      locationCity: data.city || 'Bengaluru',
-      genderType: data.gender === 'Co-living (Both)' ? 'Mixed' : data.gender || 'Mixed',
+      address: data.address || 'Draft',
+      locationCity: data.locationCity || 'Bengaluru',
+      locality: data.locality || '',
+      genderType: data.genderType || '',
+      stayQuality: data.stayQuality || '',
+      buildingAge: data.buildingAge || 0,
+      wardenNumber: data.wardenNumber || '',
       status: 'Draft',
       lastStep: step,
       draftData: data,
@@ -214,15 +223,59 @@ const Portfolio = () => {
     setIsAddModalOpen(true);
   };
 
-  const resumeDraft = (draft) => {
-    const data = draft.draftData || INITIAL_FORM_STATE;
-    setFormData({ ...INITIAL_FORM_STATE, ...data });
-    setCurrentStep(draft.lastStep || 1);
-    setActiveDraftId(draft._id || draft.id);
-    setDraftMsg('🔄 Resuming your draft...');
-    setShowDrafts(false);
-    setIsAddModalOpen(true);
-    setTimeout(() => setDraftMsg(''), 2500);
+  const resumeDraft = async (draft) => {
+    try {
+      const fullDraft = await api.getBuildingById(draft._id || draft.id);
+      let dataToSet;
+      
+      if (fullDraft.draftData && Object.keys(fullDraft.draftData).length > 0) {
+        dataToSet = fullDraft.draftData;
+      } else {
+        // Attempt to extract the original shortDesc from the extended markdown description
+        let extractedDesc = fullDraft.description || '';
+        if (extractedDesc.includes('---\n')) {
+          extractedDesc = extractedDesc.split('---\n')[1];
+        } else if (extractedDesc.includes('---')) {
+          extractedDesc = extractedDesc.split('---')[1];
+        }
+
+        dataToSet = {
+          name: fullDraft.name || '',
+          shortDesc: extractedDesc.trim(),
+          address: fullDraft.address || '',
+          locationCity: fullDraft.locationCity || '',
+          locality: fullDraft.locality || '',
+          amenities: fullDraft.amenities || [],
+          genderType: fullDraft.genderType || 'Mixed',
+          stayQuality: fullDraft.stayQuality || '',
+          buildingAge: fullDraft.buildingAge || 0,
+          wardenName: fullDraft.warden || '',
+          wardenNumber: fullDraft.wardenNumber || '',
+          rentSingle: fullDraft.rentSingle || '',
+          rentDouble: fullDraft.rentDouble || '',
+          rentTriple: fullDraft.rentTriple || '',
+          rent4Sharing: fullDraft.rent4Sharing || '',
+          rent5Sharing: fullDraft.rent5Sharing || '',
+          rent6Sharing: fullDraft.rent6Sharing || '',
+          securityDeposit: fullDraft.securityDeposit || '',
+          coverImage: fullDraft.images?.[0] || null,
+          gallery: fullDraft.images || [],
+          ownerName: fullDraft.policies?.ownerName || fullDraft.owner?.name || '', 
+          phone: fullDraft.policies?.phone || fullDraft.owner?.phone || '', 
+          email: fullDraft.policies?.email || fullDraft.owner?.email || '',
+        };
+      }
+
+      setFormData({ ...INITIAL_FORM_STATE, ...dataToSet });
+      setCurrentStep(fullDraft.status === 'Draft' ? (fullDraft.lastStep || 1) : 1);
+      setActiveDraftId(fullDraft._id || fullDraft.id);
+      setDraftMsg('🔄 Opening editor...');
+      setShowDrafts(false);
+      setIsAddModalOpen(true);
+      setTimeout(() => setDraftMsg(''), 2500);
+    } catch (err) {
+      console.error('Failed to resume draft:', err);
+    }
   };
 
   const deleteDraft = async (id) => {
@@ -253,14 +306,28 @@ const Portfolio = () => {
 
     setIsSubmitting(true);
     try {
-      const extendedDesc = `# Property Overview\n**Type:** ${formData.propertyType} | **Gender:** ${formData.gender}\n# Contact: ${formData.ownerName} (${formData.phone})\n---\n${formData.longDesc || formData.shortDesc || ''}`;
+      const extendedDesc = `# Property Overview\n**Type:** ${formData.propertyType || formData.genderType} | **Gender:** ${formData.genderType}\n# Contact: ${formData.ownerName} (${formData.phone})\n---\n${formData.longDesc || formData.shortDesc || ''}`;
 
       const payload = {
         name: formData.name || 'New Hostel',
-        address: `${formData.addr1 || ''}, ${formData.city || ''}, ${formData.state || ''}`,
-        locationCity: formData.city || 'Bengaluru',
+        address: formData.address || '',
+        locationCity: formData.locationCity || 'Bengaluru',
+        locality: formData.locality || '',
         description: extendedDesc,
+        stayQuality: formData.stayQuality || '',
+        buildingAge: formData.buildingAge || 0,
+        genderType: formData.genderType || '',
         amenities: formData.amenities || [],
+
+        warden: formData.wardenName,
+        wardenNumber: formData.wardenNumber,
+        rentSingle: formData.rentSingle,
+        rentDouble: formData.rentDouble,
+        rentTriple: formData.rentTriple,
+        rent4Sharing: formData.rent4Sharing,
+        rent5Sharing: formData.rent5Sharing,
+        rent6Sharing: formData.rent6Sharing,
+        securityDeposit: formData.securityDeposit,
 
         // Property Facilities (Strict 1:1)
         security: formData.amenities?.includes('Security') || false,
@@ -273,9 +340,8 @@ const Portfolio = () => {
         laundry: formData.amenities?.includes('Laundry') || false,
         housekeeping: formData.amenities?.includes('Housekeeping') || false,
         medicalSupport: formData.amenities?.includes('Medical Support') || false,
-
         images: formData.gallery?.length > 0 ? formData.gallery : (formData.coverImage ? [formData.coverImage] : []),
-        genderType: formData.gender === 'Co-living (Both)' ? 'Mixed' : formData.gender || 'Mixed',
+
         category: formData.propertyType === 'Co-living' ? 'Luxury' : (formData.propertyType === 'PG' ? 'Student' : 'Professional'),
         rating: 4.5,
         popularityLabel: 'New Property',
@@ -435,7 +501,40 @@ const Portfolio = () => {
             <label>Hostel Name *</label>
             <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Royal Residency" />
           </div>
-
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem' }}>
+            <div className="input-group">
+              <label>Building Type *</label>
+              <select required value={formData.genderType || ''} onChange={e => setFormData({ ...formData, genderType: e.target.value })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }}>
+                <option value="">Select...</option>
+                <option value="Mixed">Co-Living</option>
+                <option value="Boys">Boys</option>
+                <option value="Girls">Girls</option>
+              </select>
+            </div>
+            <div className="input-group">
+              <label>Stay Quality *</label>
+              <select required value={formData.stayQuality || ''} onChange={e => setFormData({ ...formData, stayQuality: e.target.value })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }}>
+                <option value="">Select...</option>
+                <option value="Standard">Standard</option>
+                <option value="Premium">Premium</option>
+                <option value="Luxury">Luxury</option>
+              </select>
+            </div>
+            <div className="input-group">
+              <label>Building Age (Years) *</label>
+              <input type="number" required value={formData.buildingAge || ''} onChange={e => setFormData({ ...formData, buildingAge: parseInt(e.target.value) || 0 })} placeholder="e.g. 5" />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div className="input-group">
+              <label>Warden Name</label>
+              <input value={formData.wardenName || ''} onChange={e => setFormData({ ...formData, wardenName: e.target.value })} placeholder="John Doe" />
+            </div>
+            <div className="input-group">
+              <label>Warden Number</label>
+              <input value={formData.wardenNumber || ''} onChange={e => setFormData({ ...formData, wardenNumber: e.target.value })} placeholder="+91 XXXXX XXXXX" />
+            </div>
+          </div>
           <div className="input-group">
             <label>Description</label>
             <textarea rows={3} value={formData.shortDesc} onChange={e => setFormData({ ...formData, shortDesc: e.target.value })} placeholder="Provide a premium summary of your property..." />
@@ -473,20 +572,51 @@ const Portfolio = () => {
                 {formData.gallery.map((img, i) => {
                   const fullUrl = (img.startsWith('data:') || img.startsWith('http')) ? img : `${baseServerUrl}${img}`;
                   return (
-                    <img key={i} src={fullUrl} alt={`Upload ${i}`}
-                      style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: formData.coverImage === img ? '2px solid var(--accent-primary)' : '1px solid #e2e8f0', cursor: 'zoom-in' }}
-                      onClick={() => setModalInfo({ isOpen: true, image: fullUrl })}
-                      onDoubleClick={() => setFormData({ ...formData, coverImage: img })}
-                      title="Click to preview, double-click to set as cover"
-                    />
+                    <div key={i} style={{ position: 'relative', width: '60px', height: '60px' }}>
+                      <img src={fullUrl} alt={`Upload ${i}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', border: formData.coverImage === img ? '2px solid var(--accent-primary)' : '1px solid #e2e8f0', cursor: 'zoom-in' }}
+                        onClick={() => setModalInfo({ isOpen: true, image: fullUrl })}
+                        onDoubleClick={() => setFormData({ ...formData, coverImage: img })}
+                        title="Click to preview, double-click to set as cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newGallery = formData.gallery.filter((_, idx) => idx !== i);
+                          setFormData(prev => ({
+                            ...prev,
+                            gallery: newGallery,
+                            coverImage: prev.coverImage === img ? (newGallery[0] || null) : prev.coverImage
+                          }));
+                        }}
+                        style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#EF4444', color: '#FFF', border: 'none', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', padding: 0 }}
+                        title="Remove Image"
+                      >
+                        <X size={12} strokeWidth={3} />
+                      </button>
+                    </div>
                   );
                 })}
               </div>
             ) : formData.coverImage && (
-              <img src={(formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `${baseServerUrl}${formData.coverImage}`}
-                alt="Cover" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', marginTop: '0.5rem', cursor: 'zoom-in' }}
-                onClick={() => setModalInfo({ isOpen: true, image: (formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `${baseServerUrl}${formData.coverImage}` })}
-              />
+              <div style={{ position: 'relative', width: '60px', height: '60px', marginTop: '0.5rem' }}>
+                <img src={(formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `${baseServerUrl}${formData.coverImage}`}
+                  alt="Cover" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', cursor: 'zoom-in' }}
+                  onClick={() => setModalInfo({ isOpen: true, image: (formData.coverImage.startsWith('http') || formData.coverImage.startsWith('data:')) ? formData.coverImage : `${baseServerUrl}${formData.coverImage}` })}
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFormData(prev => ({ ...prev, coverImage: null, gallery: [] }));
+                  }}
+                  style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#EF4444', color: '#FFF', border: 'none', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', padding: 0 }}
+                  title="Remove Image"
+                >
+                  <X size={12} strokeWidth={3} />
+                </button>
+              </div>
             )}
             <small style={{ color: '#64748B', fontSize: '0.75rem', marginTop: '0.25rem' }}>Click an image to preview. Double-click to set as cover.</small>
           </div>
@@ -507,7 +637,7 @@ const Portfolio = () => {
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
                 {formData.documents.map((doc, i) => (
                   <div key={i} style={{ padding: '0.5rem', background: '#F1F5F9', borderRadius: '8px', fontSize: '0.8rem', color: '#475569', fontWeight: '600' }}>
-                    📄 {doc.name}
+                    <FileText size={14} style={{ marginRight: '6px' }} /> {doc.name}
                   </div>
                 ))}
               </div>
@@ -517,38 +647,19 @@ const Portfolio = () => {
       );
       case 2: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div className="input-group">
-            <label>Address Line 1 *</label>
-            <input required value={formData.addr1} onChange={e => setFormData({ ...formData, addr1: e.target.value })} placeholder="Building No, Street Name" />
-          </div>
-          <div className="input-group">
-            <label>Address Line 2</label>
-            <input value={formData.addr2} onChange={e => setFormData({ ...formData, addr2: e.target.value })} placeholder="Area, Locality" />
-          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="input-group">
-              <label>City *</label>
-              <input required value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} placeholder="Hyderabad" />
+              <label>Location (City) *</label>
+              <input required value={formData.locationCity || ''} onChange={e => setFormData({ ...formData, locationCity: e.target.value })} placeholder="e.g. Hyderabad" style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
             </div>
             <div className="input-group">
-              <label>State *</label>
-              <input required value={formData.state} onChange={e => setFormData({ ...formData, state: e.target.value })} placeholder="Telangana" />
+              <label>Locality *</label>
+              <input required value={formData.locality || ''} onChange={e => setFormData({ ...formData, locality: e.target.value })} placeholder="e.g. Hitech City" style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <div className="input-group">
-              <label>Pincode *</label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <input required value={formData.pincode}
-                  onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 6); setFormData({ ...formData, pincode: v }); }}
-                  placeholder="500081" maxLength={6}
-                  style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0', letterSpacing: '0.1em', fontWeight: '800' }} />
-              </div>
-            </div>
-            <div className="input-group">
-              <label>Landmark</label>
-              <input value={formData.landmark} onChange={e => setFormData({ ...formData, landmark: e.target.value })} placeholder="Near Cyber Towers" />
-            </div>
+          <div className="input-group">
+            <label>Full Detailed Address *</label>
+            <textarea rows={4} required value={formData.address || ''} onChange={e => setFormData({ ...formData, address: e.target.value })} placeholder="Building Name, Street, Area, Landmark, Locality, City, State, Pincode" style={{ width: '100%', padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
           </div>
         </div>
       );
@@ -574,6 +685,23 @@ const Portfolio = () => {
       );
       case 4: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Sharing Prices (Per Bed Rent / Month)</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem' }}>
+            <div className="input-group"><label>1 Sharing (₹)</label><input type="number" placeholder="₹" value={formData.rentSingle ?? ''} onChange={e => setFormData({ ...formData, rentSingle: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
+            <div className="input-group"><label>2 Sharing (₹)</label><input type="number" placeholder="₹" value={formData.rentDouble ?? ''} onChange={e => setFormData({ ...formData, rentDouble: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
+            <div className="input-group"><label>3 Sharing (₹)</label><input type="number" placeholder="₹" value={formData.rentTriple ?? ''} onChange={e => setFormData({ ...formData, rentTriple: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
+            <div className="input-group"><label>4 Sharing (₹)</label><input type="number" placeholder="₹" value={formData.rent4Sharing ?? ''} onChange={e => setFormData({ ...formData, rent4Sharing: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
+            <div className="input-group"><label>5 Sharing (₹)</label><input type="number" placeholder="₹" value={formData.rent5Sharing ?? ''} onChange={e => setFormData({ ...formData, rent5Sharing: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
+            <div className="input-group"><label>6+ Sharing (₹)</label><input type="number" placeholder="₹" value={formData.rent6Sharing ?? ''} onChange={e => setFormData({ ...formData, rent6Sharing: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} /></div>
+          </div>
+          <div className="input-group" style={{ marginTop: '0.5rem' }}>
+            <label>Security Deposit (₹)</label>
+            <input type="number" value={formData.securityDeposit ?? ''} onChange={e => setFormData({ ...formData, securityDeposit: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} />
+          </div>
+        </div>
+      );
+      case 5: return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div className="input-group"><label>Owner / Legal Representative Name *</label><input required value={formData.ownerName} onChange={e => setFormData({ ...formData, ownerName: e.target.value })} placeholder="Legal owner name" /></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="input-group"><label>Primary Contact Number *</label><input required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="+91 XXXXX XXXXX" /></div>
@@ -582,24 +710,25 @@ const Portfolio = () => {
           <div className="input-group"><label>Official Email Address *</label><input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="owner@example.com" /></div>
         </div>
       );
-      case 5: return (
+      case 6: return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ padding: '1rem', background: '#F0FDF4', borderRadius: '16px', border: '1.5px solid #DCFCE7', display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <CheckCircle size={24} color="#10B981" />
-            <p style={{ margin: 0, fontSize: '0.88rem', color: '#166534', fontWeight: '700' }}>Review your property details before publishing. Click <b>Edit</b> on any section to make changes.</p>
+            <p style={{ margin: 0, fontSize: '0.88rem', color: '#166534', fontWeight: '700' }}>Review your building details before publishing. Click <b>Edit</b> on any section to make changes.</p>
           </div>
           {[
-            { label: '🏨 Basic Info', step: 1, rows: [{ k: 'Property', v: formData.name }] },
-            { label: '📍 Location', step: 2, rows: [{ k: 'Address', v: formData.addr1 }, { k: 'City', v: `${formData.city}, ${formData.state} — ${formData.pincode}` }, { k: 'Landmark', v: formData.landmark }] },
-            { label: '✨ Amenities', step: 3, rows: [{ k: 'Selected', v: formData.amenities.length > 0 ? formData.amenities.join(', ') : 'None selected' }] },
-            { label: '🔑 Owner Details', step: 4, rows: [{ k: 'Name', v: formData.ownerName }, { k: 'Phone', v: formData.phone }, { k: 'Email', v: formData.email }] },
+            { label: 'Basic Info', step: 1, rows: [{ k: 'Building Name', v: formData.name }, { k: 'Type', v: formData.genderType }, { k: 'Warden', v: formData.wardenName }] },
+            { label: 'Location', step: 2, rows: [{ k: 'Address', v: formData.addr1 }, { k: 'City', v: `${formData.city}, ${formData.state} — ${formData.pincode}` }, { k: 'Locality', v: formData.locality }] },
+            { label: 'Amenities', step: 3, rows: [{ k: 'Selected', v: formData.amenities.length > 0 ? formData.amenities.join(', ') : 'None selected' }] },
+            { label: 'Financials', step: 4, rows: [{ k: 'Security Deposit', v: formData.securityDeposit > 0 ? `₹${formData.securityDeposit}` : 'Not Set' }] },
+            { label: 'Owner Details', step: 5, rows: [{ k: 'Name', v: formData.ownerName }, { k: 'Phone', v: formData.phone }, { k: 'Email', v: formData.email }] },
           ].map(section => (
             <div key={section.label} style={{ padding: '1.25rem', background: 'var(--bg-card)', borderRadius: '16px', border: '1.5px solid #F1F5F9' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
                 <span style={{ fontWeight: '800', fontSize: '0.9rem', color: '#1E293B' }}>{section.label}</span>
                 <button type="button" onClick={() => setCurrentStep(section.step)}
                   style={{ padding: '0.3rem 0.8rem', borderRadius: '8px', background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8', fontWeight: '700', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  ✏️ Edit
+                  Edit
                 </button>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.5rem' }}>
@@ -626,6 +755,18 @@ const Portfolio = () => {
   };
 
 
+
+
+  useEffect(() => {
+    if (location.state?.resumeDraftId) {
+      const draftToResume = drafts.find(d => d._id === location.state.resumeDraftId || d.id === location.state.resumeDraftId) || { _id: location.state.resumeDraftId };
+      resumeDraft(draftToResume);
+      navigate('/owner/portfolio', { state: {}, replace: true });
+    } else if (location.state?.openNewForm) {
+      openFreshForm();
+      navigate('/owner/portfolio', { state: {}, replace: true });
+    }
+  }, [location.state, navigate, drafts, resumeDraft]);
 
   if (error) {
     return (
@@ -694,7 +835,7 @@ const Portfolio = () => {
                   fontWeight: '600',
                   margin: '0.25rem 0 0 0',
                   fontSize: '0.95rem'
-                }}>Managing {globalStats.totalBuildings} premium properties</p>
+                }}>Managing {globalStats.totalBuildings} premium buildings</p>
               </div>
             </div>
 
@@ -703,7 +844,7 @@ const Portfolio = () => {
                 <Search size={18} style={{ position: 'absolute', left: '1.2rem', color: '#94A3B8' }} />
                 <input
                   type="text"
-                  placeholder="Search properties..."
+                  placeholder="Search buildings..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   style={{
@@ -752,7 +893,7 @@ const Portfolio = () => {
                 display: 'flex', alignItems: 'center', gap: '0.6rem',
                 boxShadow: '0 8px 24px -4px rgba(79, 70, 229, 0.4)'
               }}>
-                <Plus size={20} strokeWidth={3} /> Add Property
+                <Plus size={20} strokeWidth={3} /> Add Building
               </button>
 
               <button onClick={() => fetchData()} style={{ width: '52px', height: '52px', borderRadius: '18px', background: "var(--bg-card)", border: '1.5px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--accent-primary)' }} title="Refresh Data"><Activity size={22} /></button>
@@ -806,7 +947,7 @@ const Portfolio = () => {
               <div style={{ width: '1px', height: '24px', background: '#E2E8F0', margin: '0 0.5rem' }} />
               <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '700' }}>
                 <Building size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
-                {processedBuildings.length} Properties
+                {processedBuildings.length} Buildings
               </span>
             </div>
 
@@ -835,10 +976,11 @@ const Portfolio = () => {
                 <BuildingCard
                   key={b.id}
                   building={b}
-                  onNavigate={() => navigate(`/owner/building/${b.id}/buildings`)}
+                  onNavigate={() => navigate(`/owner/building/${b.id}/manage`)}
                   onRefresh={() => { fetchData(); loadDrafts(); }}
                   onImageClick={(img) => setModalInfo({ isOpen: true, image: img })}
                   onResubmit={handleResubmit}
+                  onEdit={(id) => resumeDraft({ id })}
                 />
               ))
             ) : data.buildings.length === 0 ? (
@@ -846,12 +988,12 @@ const Portfolio = () => {
                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏢</div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1E293B', margin: 0 }}>No Building Portfolio Data Available</h3>
                 <p style={{ color: '#64748B', marginTop: '0.5rem' }}>Start by adding your first building to your portfolio.</p>
-                <button onClick={openFreshForm} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '12px', background: 'linear-gradient(135deg, var(--accent-primary), #4F46E5)', border: 'none', color: "var(--text-on-primary)", fontWeight: '800', cursor: 'pointer' }}>+ Add Property</button>
+                <button onClick={openFreshForm} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '12px', background: 'linear-gradient(135deg, var(--accent-primary), #4F46E5)', border: 'none', color: "var(--text-on-primary)", fontWeight: '800', cursor: 'pointer' }}>+ Add Building</button>
               </div>
             ) : (
               <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '6rem', background: "var(--bg-card)", borderRadius: '24px', border: '2px dashed #E2E8F0' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1E293B', margin: 0 }}>No Matching Properties Found</h3>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#CBD5E1' }}><Search size={48} /></div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1E293B', margin: 0 }}>No Matching Buildings Found</h3>
                 <p style={{ color: '#64748B', marginTop: '0.5rem' }}>Try adjusting your search or filters to find what you're looking for.</p>
                 <button onClick={() => { setSearchTerm(''); setOccupancyFilter('All'); }} style={{ marginTop: '1.5rem', padding: '0.75rem 1.5rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#3B82F6', fontWeight: '800', cursor: 'pointer' }}>Clear All Filters</button>
               </div>
@@ -908,7 +1050,7 @@ const Portfolio = () => {
                 flexShrink: 0
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>📂</div>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366F1, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }}><FileText size={20} /></div>
                   <div>
                     <h2 style={{ fontSize: '1.4rem', fontWeight: '900', margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>Saved Hostel Drafts</h2>
                     <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, fontWeight: '600' }}>
@@ -938,25 +1080,25 @@ const Portfolio = () => {
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>✍️</div>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }}><Edit2 size={18} /></div>
                           <div>
                             <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#1D4ED8' }}>{formData.name || 'Untitled — Currently Editing'}</div>
                             <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.15rem' }}>Currently being filled</div>
                           </div>
                         </div>
-                        <span style={{ padding: '0.25rem 0.6rem', borderRadius: '20px', background: '#DBEAFE', color: '#1D4ED8', fontSize: '0.65rem', fontWeight: '800' }}>⏳ In Progress</span>
+                        <span style={{ padding: '0.25rem 0.6rem', borderRadius: '20px', background: '#DBEAFE', color: '#1D4ED8', fontSize: '0.65rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={12}/> In Progress</span>
                       </div>
                       <div style={{ fontSize: '0.78rem', color: '#475569', fontWeight: '600' }}>📍 Step: <b>{STEP_CONFIG[currentStep - 1]?.title}</b></div>
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: '6px', fontWeight: '700' }}>
-                          <span>Progress</span><span style={{ color: '#3B82F6' }}>{Math.round((currentStep / 12) * 100)}%</span>
+                          <span>Progress</span><span style={{ color: '#3B82F6' }}>{Math.round((currentStep / TOTAL_STEPS) * 100)}%</span>
                         </div>
                         <div style={{ height: '7px', background: '#DBEAFE', borderRadius: '100px', overflow: 'hidden' }}>
-                          <div style={{ width: `${Math.round((currentStep / 12) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #6366F1)', borderRadius: '100px' }} />
+                          <div style={{ width: `${Math.round((currentStep / TOTAL_STEPS) * 100)}%`, height: '100%', background: 'linear-gradient(90deg, #3B82F6, #6366F1)', borderRadius: '100px' }} />
                         </div>
                       </div>
                       <div style={{ padding: '0.65rem', borderRadius: '10px', background: '#3B82F6', color: "var(--text-on-primary)", fontWeight: '800', fontSize: '0.82rem', textAlign: 'center' }}>
-                        → Continue Editing
+                        <ArrowRight size={14} style={{ marginRight: '6px', verticalAlign: 'text-bottom' }} /> Continue Editing
                       </div>
                     </motion.div>
                   </div>
@@ -969,7 +1111,7 @@ const Portfolio = () => {
 
                 {drafts.length === 0 && !isAddModalOpen ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '40vh', gap: '1rem' }}>
-                    <div style={{ fontSize: '4rem', opacity: 0.3 }}>📂</div>
+                    <div style={{ color: '#CBD5E1', marginBottom: '1rem' }}><FileText size={64}/></div>
                     <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-secondary)', margin: 0 }}>No saved drafts yet</h3>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Start creating a hostel and save your progress to resume later.</p>
                     <button onClick={() => { setShowDrafts(false); openFreshForm(); }} style={{ marginTop: '0.5rem', padding: '0.8rem 1.6rem', borderRadius: '12px', background: 'var(--accent-primary)', color: "var(--text-on-primary)", border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.9rem' }}>
@@ -979,7 +1121,7 @@ const Portfolio = () => {
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                     {drafts.map(draft => {
-                      const progress = Math.round(((draft.lastStep || 1) / 12) * 100);
+                      const progress = Math.round(((draft.lastStep || 1) / TOTAL_STEPS) * 100);
                       const stepLabel = STEP_CONFIG[(draft.lastStep || 1) - 1]?.title || 'Basic Info';
                       const ago = draft.updatedAt ? (() => { const d = (Date.now() - new Date(draft.updatedAt)) / 60000; return d < 60 ? `${Math.round(d)}m ago` : `${Math.round(d / 60)}h ago`; })() : 'Recently';
                       return (
@@ -1037,7 +1179,7 @@ const Portfolio = () => {
                               onClick={(e) => { e.stopPropagation(); setItemToDelete({ id: draft._id, name: draft.name || 'Untitled Draft', type: 'draft' }); }}
                               style={{ padding: '0.75rem 1rem', borderRadius: '12px', background: '#FEE2E2', color: '#EF4444', border: 'none', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', flexShrink: 0 }}
                             >
-                              🗑
+                              🗑️
                             </button>
                           </div>
                         </motion.div>
@@ -1118,11 +1260,7 @@ const Portfolio = () => {
             <div style={{ flex: 1, overflowY: 'auto', padding: '2rem', display: 'flex', justifyContent: 'center' }}>
               <div style={{ width: '100%', maxWidth: '700px' }}>
                 <div style={{ marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid #E2E8F0' }}>
-                  {activeDraftId && (
-                    <div style={{ marginBottom: '1rem', padding: '0.7rem 1rem', background: '#EFF6FF', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: '700', color: '#1D4ED8', borderLeft: '3px solid #3B82F6' }}>
-                      📝 Editing saved draft &mdash; changes auto-saved
-                    </div>
-                  )}
+
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.3rem' }}>
                     <span style={{ fontSize: '1.8rem' }}>{STEP_CONFIG[currentStep - 1]?.icon}</span>
                     <h3 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#0F172A', margin: 0 }}>{STEP_CONFIG[currentStep - 1]?.title}</h3>
@@ -1150,7 +1288,7 @@ const Portfolio = () => {
                         padding: '1rem',
                         borderRadius: '12px',
                         border: 'none',
-                        background: currentStep === 12 ? '#10B981' : '#3B82F6',
+                        background: currentStep === TOTAL_STEPS ? '#10B981' : '#3B82F6',
                         color: "var(--text-on-primary)",
                         fontWeight: '800',
                         cursor: 'pointer',
@@ -1161,7 +1299,7 @@ const Portfolio = () => {
                         fontSize: '0.95rem'
                       }}
                     >
-                      {isSubmitting ? 'Processing...' : currentStep === 12 ? '🚀 Finalize & Publish' : 'Continue'} <ChevronRight size={18} />
+                      {isSubmitting ? 'Processing...' : currentStep === TOTAL_STEPS ? '🚀 Finalize & Publish' : 'Continue'} <ChevronRight size={18} />
                     </button>
                   </div>
                 </form>
@@ -1237,7 +1375,7 @@ const Portfolio = () => {
             <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
               <Trash2 size={30} color="#EF4444" />
             </div>
-            <h2 style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: '900', margin: '0 0 0.4rem', color: '#0F172A' }}>Delete {itemToDelete.type === 'draft' ? 'Draft' : 'Property'}?</h2>
+            <h2 style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: '900', margin: '0 0 0.4rem', color: '#0F172A' }}>Delete {itemToDelete.type === 'draft' ? 'Draft' : 'Building'}?</h2>
             <p style={{ textAlign: 'center', color: '#64748B', fontSize: '0.9rem', margin: '0 0 1rem' }}>You are about to permanently delete</p>
             <p style={{ textAlign: 'center', fontWeight: '800', fontSize: '1rem', color: '#1E293B', margin: '0 0 1.2rem', background: '#F8FAFC', padding: '0.6rem 1rem', borderRadius: '12px', border: '1.5px solid #F1F5F9' }}>
               {itemToDelete.type === 'draft' ? '📝' : '🏢'} {itemToDelete.name}
@@ -1262,426 +1400,4 @@ const Portfolio = () => {
     </>
   );
 };
-
-const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmit }) => {
-  const [imgIdx, setImgIdx] = useState(0);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteError, setDeleteError] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const isPending = building.status === 'Pending Approval' || building.status === 'Pending';
-  const isRejected = building.status === 'Rejected';
-
-  const images = useMemo(() => {
-    const baseServerUrl = (import.meta.env.VITE_API_URL || 'https://livora-hostel-hub-1.onrender.com/api').replace('/api', '');
-    if (building.images && building.images.length > 0) {
-      return building.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `${baseServerUrl}${img}`);
-    }
-    return [
-      'https://images.unsplash.com/photo-1555854817-5b2260d50c63?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1522770179533-24471fcdba45?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&q=80&w=800'
-    ];
-  }, [building.images]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setImgIdx(prev => (prev + 1) % images.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [images.length]);
-
-  return (
-    <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -10, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        className="property-card-premium"
-        style={{
-          padding: 0,
-          overflow: 'hidden',
-          position: 'relative',
-          borderRadius: '28px',
-          border: '1.5px solid #F1F5F9',
-          background: "var(--bg-card)",
-          cursor: (isPending || isRejected) ? 'default' : 'pointer',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-        onClick={(e) => {
-          if (isPending || isRejected) {
-            e.stopPropagation();
-            return;
-          }
-          onNavigate();
-        }}
-      >
-        <div style={{ height: '220px', position: 'relative', overflow: 'hidden' }}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={imgIdx}
-              initial={{ opacity: 0.8, scale: 1.1 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1.2, ease: "easeOut" }}
-              style={{
-                height: '100%',
-                width: '100%',
-                backgroundImage: `url("${images[imgIdx]}")`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundColor: '#F1F5F9'
-              }}
-            />
-          </AnimatePresence>
-
-          {/* Overlays */}
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.8) 100%)' }} />
-
-          {/* Navigation Arrows */}
-          {images.length > 1 && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0.5rem', zIndex: 10 }}>
-              <button onClick={(e) => { e.stopPropagation(); setImgIdx(prev => (prev - 1 + images.length) % images.length); }} style={{ background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)', color: '#1E293B' }}>
-                <ChevronLeft size={20} />
-              </button>
-              <button onClick={(e) => { e.stopPropagation(); setImgIdx(prev => (prev + 1) % images.length); }} style={{ background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(4px)', color: '#1E293B' }}>
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          )}
-
-          {/* View Full Screen Button */}
-          {onImageClick && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onImageClick(images[imgIdx]); }}
-              style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', zIndex: 10, background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-in', backdropFilter: 'blur(4px)', color: '#1E293B' }}
-              title="View Full Image"
-            >
-              <Search size={16} />
-            </button>
-          )}
-
-          {/* Badges */}
-          <div style={{ position: 'absolute', top: '1.25rem', left: '1.25rem', zIndex: 5, display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            {building.popularityLabel && (
-              <div style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #FF6B6B, #EE5253)',
-                color: "var(--text-on-primary)",
-                fontSize: '0.65rem',
-                fontWeight: '900',
-                boxShadow: '0 4px 12px rgba(238, 82, 83, 0.4)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em'
-              }}>
-                {building.popularityLabel}
-              </div>
-            )}
-            <div style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '12px',
-              background: building.status === 'Active' ? 'rgba(16, 185, 129, 0.9)' : building.status === 'Pending Approval' ? 'rgba(59, 130, 246, 0.9)' : building.status === 'Rejected' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(245, 158, 11, 0.9)',
-              backdropFilter: 'blur(8px)',
-              color: "var(--text-on-primary)",
-              fontSize: '0.65rem',
-              fontWeight: '900',
-              textTransform: 'uppercase'
-            }}>{building.status}</div>
-          </div>
-
-          <div style={{ position: 'absolute', bottom: '1.25rem', left: '1.25rem', right: '1.25rem', zIndex: 5 }}>
-            <h3 style={{ fontSize: '1.8rem', fontWeight: '950', color: "var(--text-on-primary)", textShadow: '0 2px 8px rgba(0,0,0,0.4)', margin: 0, letterSpacing: '-0.02em' }}>{building.name}</h3>
-          </div>
-        </div>
-
-        <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.2rem' }}>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: '0.85rem', color: '#64748B', margin: 0, fontWeight: '600' }}>
-                <MapPin size={14} style={{ verticalAlign: 'text-bottom', marginRight: '6px', color: '#3B82F6' }} />
-                {building.address || 'Address not set'}
-              </p>
-            </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              background: '#FFFBEB',
-              color: '#D97706',
-              padding: '0.4rem 0.75rem',
-              borderRadius: '10px',
-              fontSize: '0.85rem',
-              fontWeight: '900',
-              border: '1px solid #FEF3C7'
-            }}>
-              <Star size={16} fill="#D97706" /> {building.rating}
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', padding: '0.8rem 1rem', borderRadius: '16px', background: '#F8FAFC', border: '1.5px solid #F1F5F9', marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Building Code</span>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.buildingCode || 'N/A'}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Building Type</span>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.buildingType || 'N/A'}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Building Status</span>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: building.status === 'Active' ? '#10B981' : '#EF4444' }}>{building.buildingStatus || building.status || 'N/A'}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>City</span>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.city || 'N/A'}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>State</span>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.state || 'N/A'}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Floors</span>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.totalFloors}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Rooms</span>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.totalRooms}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Beds</span>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#1E293B' }}>{building.totalBeds}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Occupied Beds</span>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#10B981' }}>{building.occupiedBeds}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.6rem', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Vacant Beds</span>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#6366F1' }}>{building.vacantBeds}</span>
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {(building.amenities && building.amenities.length > 0 ? building.amenities.slice(0, 5) : ['Security', 'CCTV', 'Parking', 'Power Backup', 'Mess']).map((feat, fidx) => (
-                <div
-                  key={fidx}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '0.4rem',
-                    padding: '0.4rem 0.8rem', borderRadius: '10px',
-                    background: "var(--bg-card)", border: '1.5px solid #F1F5F9',
-                    fontSize: '0.75rem', fontWeight: '800', color: '#475569'
-                  }}
-                >
-                  <span style={{ color: 'var(--accent-primary)' }}><CheckCircle size={12} /></span>
-                  {feat}
-                </div>
-              ))}
-              {building.amenities && building.amenities.length > 5 && (
-                <div style={{ padding: '0.4rem', fontSize: '0.75rem', fontWeight: '900', color: 'var(--accent-primary)', alignSelf: 'center' }}>
-                  +{building.amenities.length - 5} More
-                </div>
-              )}
-            </div>
-          </div>
-
-          {isRejected && building.rejectionReason && (
-            <div style={{
-              background: '#FEF2F2',
-              border: '1.5px solid #FEE2E2',
-              borderRadius: '16px',
-              padding: '0.8rem 1rem',
-              marginBottom: '1.2rem',
-              display: 'flex',
-              gap: '0.5rem',
-              alignItems: 'flex-start'
-            }}>
-              <AlertCircle size={16} color="#EF4444" style={{ marginTop: '2px', flexShrink: 0 }} />
-              <div>
-                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '850', color: '#991B1B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rejection Reason</p>
-                <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', fontWeight: '600', color: '#EF4444', lineHeight: 1.4 }}>{building.rejectionReason}</p>
-              </div>
-            </div>
-          )}
-
-          <div style={{ marginTop: 'auto', display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-            {isPending ? (
-              <button
-                disabled
-                style={{
-                  flex: 1,
-                  padding: '0.9rem',
-                  borderRadius: '16px',
-                  fontSize: '0.9rem',
-                  fontWeight: '900',
-                  background: '#E2E8F0',
-                  color: '#94A3B8',
-                  border: 'none',
-                  cursor: 'not-allowed',
-                  transition: 'all 0.2s'
-                }}
-              >
-                Pending Approval
-              </button>
-            ) : isRejected ? (
-              <button
-                style={{
-                  flex: 1,
-                  padding: '0.9rem',
-                  borderRadius: '16px',
-                  fontSize: '0.9rem',
-                  fontWeight: '900',
-                  background: 'linear-gradient(135deg, #F59E0B, #D97706)',
-                  color: "#FFFFFF",
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)'
-                }}
-                onClick={(e) => { e.stopPropagation(); onResubmit(building.id); }}
-                onMouseEnter={(e) => e.target.style.filter = 'brightness(1.1)'}
-                onMouseLeave={(e) => e.target.style.filter = 'none'}
-              >
-                Resubmit for Approval
-              </button>
-            ) : (
-              <button
-                style={{
-                  flex: 1,
-                  padding: '0.9rem',
-                  borderRadius: '16px',
-                  fontSize: '0.9rem',
-                  fontWeight: '900',
-                  background: 'linear-gradient(135deg, var(--accent-primary), #4F46E5)',
-                  color: "var(--text-on-primary)",
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 4px 12px rgba(79, 70, 229, 0.2)'
-                }}
-                onClick={(e) => { e.stopPropagation(); onNavigate(); }}
-                onMouseEnter={(e) => e.target.style.filter = 'brightness(1.1)'}
-                onMouseLeave={(e) => e.target.style.filter = 'none'}
-              >
-                Manage Property
-              </button>
-            )}
-            <button
-              style={{
-                width: '48px',
-                height: '48px',
-                padding: 0,
-                borderRadius: '16px',
-                background: '#FEE2E2',
-                border: 'none',
-                color: '#EF4444',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer'
-              }}
-              onClick={(e) => { e.stopPropagation(); setShowDeleteModal(true); }}
-              title="Delete Property"
-            >
-              <Trash2 size={20} />
-            </button>
-          </div>
-        </div>
-      </motion.div>
-
-
-      {/* Delete Confirmation Modal — rendered via Portal to escape card's stacking context */}
-      {showDeleteModal && createPortal(
-        <div
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 99999,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '1rem'
-          }}
-        >
-          {/* Blurred Backdrop */}
-          <div
-            onClick={() => setShowDeleteModal(false)}
-            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
-          />
-
-          {/* Modal Card */}
-          <div style={{
-            position: 'relative', zIndex: 1,
-            background: 'var(--bg-primary, #ffffff)',
-            borderRadius: '24px',
-            padding: 'clamp(1.5rem, 5vw, 2.5rem)',
-            width: '100%', maxWidth: '440px',
-            border: '1px solid rgba(239,68,68,0.2)',
-            boxShadow: '0 32px 64px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)'
-          }}>
-
-            {/* Red icon circle */}
-            <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg, #FEE2E2, #FECACA)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', boxShadow: '0 8px 20px rgba(239,68,68,0.25)' }}>
-              <Trash2 size={30} color="#EF4444" />
-            </div>
-
-            <h2 style={{ textAlign: 'center', fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', fontWeight: '900', margin: '0 0 0.4rem', color: 'var(--text-primary, #111)' }}>
-              Delete Property?
-            </h2>
-            <p style={{ textAlign: 'center', color: 'var(--text-secondary, #555)', fontSize: '0.9rem', margin: '0 0 1rem' }}>
-              You are about to permanently delete
-            </p>
-
-            {/* Building name badge */}
-            <p style={{ textAlign: 'center', fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary, #111)', margin: '0 0 1.2rem', background: 'var(--bg-tertiary, #f5f5f5)', padding: '0.6rem 1rem', borderRadius: '12px', border: '1px solid var(--border-color, #e5e7eb)' }}>
-              🏢 {building.name}
-            </p>
-
-            {/* Warning */}
-            <p style={{ textAlign: 'center', color: '#DC2626', fontSize: '0.8rem', fontWeight: '700', margin: '0 0 2rem', padding: '0.75rem 1rem', background: '#FFF1F2', borderRadius: '10px', border: '1px solid #FECACA', lineHeight: 1.6 }}>
-              ⚠️ This action is <strong>irreversible</strong>. All associated rooms, beds, and tenant records will be permanently removed.
-            </p>
-
-            {deleteError && (
-              <div style={{ marginBottom: '1.5rem', padding: '0.8rem', borderRadius: '12px', background: '#FEF2F2', border: '1px solid #FEE2E2', color: '#B91C1C', fontSize: '0.8rem', fontWeight: '700', textAlign: 'center' }}>
-                ❌ {deleteError}
-              </div>
-            )}
-
-            {/* Action buttons */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                style={{ flex: 1, minWidth: '120px', padding: '0.9rem', borderRadius: '12px', background: 'var(--bg-tertiary, #f5f5f5)', border: '1px solid var(--border-color, #e5e7eb)', color: 'var(--text-primary, #111)', fontWeight: '800', cursor: 'pointer', fontSize: '0.95rem', transition: 'all 0.2s' }}
-              >
-                Cancel
-              </button>
-              <button
-                disabled={isDeleting}
-                onClick={async () => {
-                  setIsDeleting(true);
-                  try {
-                    await api.deleteBuilding(building.id);
-                    setShowDeleteModal(false);
-                    if (onRefresh) onRefresh();
-                  } catch (err) {
-                    console.error('Delete failed:', err);
-                    setDeleteError(err.response?.data?.error || 'Failed to delete property. Server connection issue.');
-                    setIsDeleting(false);
-                  }
-                }}
-                style={{ flex: 1, minWidth: '120px', padding: '0.9rem', borderRadius: '12px', background: isDeleting ? '#FCA5A5' : 'linear-gradient(135deg, #EF4444, #DC2626)', border: 'none', color: "var(--text-on-primary)", fontWeight: '900', cursor: isDeleting ? 'not-allowed' : 'pointer', fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: isDeleting ? 'none' : '0 4px 14px rgba(239,68,68,0.4)', transition: 'all 0.2s' }}
-              >
-                {isDeleting ? 'Deleting...' : <><Trash2 size={16} /> Delete Forever</>}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-    </>
-  );
-};
-
 export default Portfolio;

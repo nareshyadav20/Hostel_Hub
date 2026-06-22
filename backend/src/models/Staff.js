@@ -39,6 +39,6 @@ const staffSchema = new mongoose.Schema({
     action: String,
     time: { type: Date, default: Date.now }
   }]
-}, { timestamps: true, collection: 'staff' });
+}, { timestamps: true, collection: 'owner_staff' });
 
 module.exports = mongoose.model('Staff', staffSchema);

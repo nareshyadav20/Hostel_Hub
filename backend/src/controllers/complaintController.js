@@ -1,6 +1,6 @@
 const Complaint = require('../models/Complaint');
 const Tenant = require('../models/Tenant');
-const Hostel = require('../models/Hostel');
+// const Hostel = require('../models/Hostel');
 const Bed = require('../models/Bed');
 const Room = require('../models/Room');
 const mongoose = require('mongoose');

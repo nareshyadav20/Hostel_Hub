@@ -241,7 +241,7 @@ exports.getOwnerPhoto = async (req, res) => {
 exports.getPortfolio = async (req, res) => {
   try {
     const ownerId = req.user.id;
-    const buildings = await Building.find({ owner: ownerId }).lean();
+    const buildings = await Building.find({ owner: ownerId, status: { $ne: 'Draft' } }).lean();
 
     const formattedBuildings = buildings.map(b => {
       const totalRooms = b.totalRooms || parseInt(b.draftData?.totalRooms) || 0;
