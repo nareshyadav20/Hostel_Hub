@@ -165,21 +165,21 @@ const INITIAL_FORM_STATE = {
   position: 'Standard', bedType: 'Single', floorType: 'Tiles', windowCount: 1,
   furniture: [], amenities: [],
   rentAmount: 8000, securityDeposit: 0, noticePeriod: 30, description: '',
-  smartMonitoringEnabled: true, realTimeEnabled: true, totalRooms: 0, totalBeds: 0,
-  images: [], hygieneRating: 96, washroomsCount: 4, cctvStatus: 'Active',
+  smartMonitoringEnabled: true, realTimeEnabled: true, totalRooms: '', totalBeds: '',
+  images: [], hygieneRating: 96, washroomsCount: '', cctvStatus: 'Active',
   wifiStatus: 'Excellent', loungesCount: 2, facilities: [],
-  waterPoints: 0, washingMachines: 0, fridges: 0, hasStudyArea: false, hasLoungeArea: false,
+  waterPoints: '', washingMachines: '', fridges: '', hasStudyArea: false, hasLoungeArea: false,
   roomSize: '', fanCount: 1, chairCount: 1, hasGeyser: false, hasStudyTable: false, hasWardrobe: false, hasMirror: false, hasTV: false, hasRefrigerator: false, hasMicrowave: false, hasWiFi: true,
   hasMattress: true, pillowCount: 1, bedSheetCount: 1, hasBlanket: false, hasDustbin: false,
   // New Building Level attributes
   wardenName: '',
   wardenContact: '',
-  rentSingle: 0,
-  rentDouble: 0,
-  rentTriple: 0,
-  rent4Sharing: 0,
-  rent5Sharing: 0,
-  rent6Sharing: 0,
+  rentSingle: '',
+  rentDouble: '',
+  rentTriple: '',
+  rent4Sharing: '',
+  rent5Sharing: '',
+  rent6Sharing: '',
   foodCharges: 3000,
   maintenanceCharges: 799,
   documents: []
@@ -374,6 +374,38 @@ const BuildingManagement = () => {
       fetchBuildings();
     } catch (err) {
       alert("Failed to delete building: " + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleUpdateFloor = async (e) => {
+    e.preventDefault();
+    try {
+      const fId = formData.id || formData._id;
+      const updated = await api.updateFloor(fId, {
+        floorNumber: formData.number,
+        description: formData.description,
+        washroomsCount: formData.washroomsCount !== '' ? parseInt(formData.washroomsCount) || 0 : 0,
+        commonWashroom: formData.washroomsCount !== '' ? parseInt(formData.washroomsCount) || 0 : 0,
+        waterPoints: formData.waterPoints !== '' ? parseInt(formData.waterPoints) || 0 : 0,
+        waterPoint: formData.waterPoints !== '' ? parseInt(formData.waterPoints) || 0 : 0,
+        washingMachines: formData.washingMachines !== '' ? parseInt(formData.washingMachines) || 0 : 0,
+        washingMachine: formData.washingMachines !== '' ? parseInt(formData.washingMachines) || 0 : 0,
+        fridges: formData.fridges !== '' ? parseInt(formData.fridges) || 0 : 0,
+        fridge: formData.fridges !== '' ? parseInt(formData.fridges) || 0 : 0,
+        hasStudyArea: formData.hasStudyArea || false,
+        studyArea: formData.hasStudyArea || false,
+        hasLoungeArea: formData.hasLoungeArea || false,
+        loungeArea: formData.hasLoungeArea || false,
+        hasBalcony: formData.hasBalcony || false,
+        balcony: formData.hasBalcony || false,
+        hasWaitingArea: formData.hasWaitingArea || false,
+        waitingArea: formData.hasWaitingArea || false,
+      });
+      setFloors(prev => prev.map(f => (f.id === updated.id || f._id === updated._id) ? { ...f, ...updated } : f));
+      setIsEditFloorOpen(false);
+      silentRefresh();
+    } catch (err) {
+      alert('Failed to update floor: ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -984,17 +1016,47 @@ const BuildingManagement = () => {
           transform: scale(1.05);
           filter: brightness(1.1);
         }
+        /* Remove spinner arrows from number inputs */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type="number"] {
+          -moz-appearance: textfield;
+        }
       `}</style>
       <div className="buildings-page" style={{ animation: 'fadeIn 0.5s ease-out', minHeight: '100vh' }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
-          <div>
-            <h1 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <BuildingIcon size={32} color="var(--accent-primary)" /> Property Infrastructure
-            </h1>
-
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Advanced hierarchical management of buildings, floors, rooms, and beds.</p>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div style={{ flex: '1 1 min-content', minWidth: '300px', display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
+            {/* Icon Box */}
+            <div style={{ 
+              width: '56px', height: '56px', borderRadius: '16px', 
+              background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(168,85,247,0.1) 100%)',
+              border: '1px solid rgba(99,102,241,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 
+            }}>
+              <BuildingIcon size={28} color="#6366F1" />
+            </div>
+            
+            {/* Text Content */}
+            <div>
+              <h1 style={{ 
+                fontSize: '2rem', fontWeight: '900', margin: '0 0 0.2rem 0', 
+                letterSpacing: '-0.03em', color: 'var(--text-primary)',
+                lineHeight: 1.2
+              }}>
+                Property Infrastructure
+              </h1>
+              <p style={{ 
+                margin: 0, color: 'var(--text-muted)', fontSize: '0.95rem', 
+                fontWeight: '600', letterSpacing: '0.01em' 
+              }}>
+                Manage and organize buildings, floors, rooms, and beds
+              </p>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <Search size={18} style={{ position: 'absolute', left: '1rem', color: 'var(--text-muted)' }} />
               <input
@@ -1005,14 +1067,8 @@ const BuildingManagement = () => {
                 style={{ ...inputStyle, paddingLeft: '2.8rem', width: '250px', background: 'var(--bg-secondary)' }}
               />
             </div>
-            <button
-              className="btn"
-              onClick={() => navigate(`/owner/building/${activeBuildingId}/rooms`)}
-              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--accent-primary)', fontWeight: '700' }}
-            >
-              <BedDouble size={18} /> Occupancy View
-            </button>
-            <button className="btn" onClick={() => setShowFilters(!showFilters)} style={{ background: showFilters ? 'var(--accent-primary)' : 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: showFilters ? 'white' : 'var(--text-primary)' }}>
+
+            <button className="btn" onClick={() => setShowFilters(!showFilters)} style={{ padding: '0.7rem 1.2rem', borderRadius: '12px', background: showFilters ? 'var(--accent-primary)' : 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: showFilters ? 'white' : 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Filter size={16} /> Filters
             </button>
             {['buildings', 'floors', 'rooms', 'beds'].includes(view) && (
@@ -1119,6 +1175,23 @@ const BuildingManagement = () => {
                   onAdd={() => setIsAddFloorOpen(true)}
                   onDelete={handleDeleteFloor}
                   onViewAnalytics={() => { }}
+                  onEdit={(f) => {
+                    setFormData({
+                      ...INITIAL_FORM_STATE,
+                      ...f,
+                      id: f.id || f._id,
+                      number: f.floorNumber,
+                      washroomsCount: f.commonWashroom,
+                      waterPoints: f.waterPoint,
+                      washingMachines: f.washingMachine,
+                      fridges: f.fridge,
+                      hasStudyArea: f.studyArea,
+                      hasLoungeArea: f.loungeArea,
+                      hasBalcony: f.balcony,
+                      hasWaitingArea: f.waitingArea
+                    });
+                    setIsEditFloorOpen(true);
+                  }}
                 />
               </motion.div>
             )}
@@ -1338,27 +1411,27 @@ const BuildingManagement = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.2rem' }}>
                 <div className="input-group">
                   <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>1 SHARING RENT (₹)</label>
-                  <input type="number" placeholder="0" value={formData.rentSingle} onChange={e => setFormData({ ...formData, rentSingle: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                  <input type="number" placeholder="0" value={formData.rentSingle} onChange={e => setFormData({ ...formData, rentSingle: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} />
                 </div>
                 <div className="input-group">
                   <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>2 SHARING RENT (₹)</label>
-                  <input type="number" placeholder="0" value={formData.rentDouble} onChange={e => setFormData({ ...formData, rentDouble: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                  <input type="number" placeholder="0" value={formData.rentDouble} onChange={e => setFormData({ ...formData, rentDouble: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} />
                 </div>
                 <div className="input-group">
                   <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>3 SHARING RENT (₹)</label>
-                  <input type="number" placeholder="0" value={formData.rentTriple} onChange={e => setFormData({ ...formData, rentTriple: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                  <input type="number" placeholder="0" value={formData.rentTriple} onChange={e => setFormData({ ...formData, rentTriple: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} />
                 </div>
                 <div className="input-group">
                   <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>4 SHARING RENT (₹)</label>
-                  <input type="number" placeholder="0" value={formData.rent4Sharing} onChange={e => setFormData({ ...formData, rent4Sharing: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                  <input type="number" placeholder="0" value={formData.rent4Sharing} onChange={e => setFormData({ ...formData, rent4Sharing: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} />
                 </div>
                 <div className="input-group">
                   <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>5 SHARING RENT (₹)</label>
-                  <input type="number" placeholder="0" value={formData.rent5Sharing} onChange={e => setFormData({ ...formData, rent5Sharing: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                  <input type="number" placeholder="0" value={formData.rent5Sharing} onChange={e => setFormData({ ...formData, rent5Sharing: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} />
                 </div>
                 <div className="input-group">
                   <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>6 SHARING RENT (₹)</label>
-                  <input type="number" placeholder="0" value={formData.rent6Sharing} onChange={e => setFormData({ ...formData, rent6Sharing: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                  <input type="number" placeholder="0" value={formData.rent6Sharing} onChange={e => setFormData({ ...formData, rent6Sharing: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} />
                 </div>
               </div>
             </div>
@@ -1369,7 +1442,7 @@ const BuildingManagement = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.2rem' }}>
                 <div className="input-group">
                   <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>SECURITY DEPOSIT (₹)</label>
-                  <input type="number" placeholder="0" value={formData.securityDeposit} onChange={e => setFormData({ ...formData, securityDeposit: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                  <input type="number" placeholder="0" value={formData.securityDeposit} onChange={e => setFormData({ ...formData, securityDeposit: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} />
                 </div>
               </div>
             </div>
@@ -1385,10 +1458,10 @@ const BuildingManagement = () => {
             <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '1rem' }}>Floor Equipment & Washrooms</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>COMMON WASHROOMS</label><input type="number" placeholder="2" value={formData.washroomsCount} onChange={e => setFormData({ ...formData, washroomsCount: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" /></div>
-                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WATER POINTS</label><input type="number" placeholder="2" value={formData.waterPoints} onChange={e => setFormData({ ...formData, waterPoints: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" /></div>
-                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WASHING MACHINES</label><input type="number" placeholder="1" value={formData.washingMachines} onChange={e => setFormData({ ...formData, washingMachines: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" /></div>
-                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FRIDGES</label><input type="number" placeholder="1" value={formData.fridges} onChange={e => setFormData({ ...formData, fridges: parseInt(e.target.value) || 0 })} style={inputStyle} min="0" /></div>
+                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>COMMON WASHROOMS</label><input type="number" placeholder="2" value={formData.washroomsCount} onChange={e => setFormData({ ...formData, washroomsCount: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
+                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WATER POINTS</label><input type="number" placeholder="2" value={formData.waterPoints} onChange={e => setFormData({ ...formData, waterPoints: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
+                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WASHING MACHINES</label><input type="number" placeholder="1" value={formData.washingMachines} onChange={e => setFormData({ ...formData, washingMachines: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
+                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FRIDGES</label><input type="number" placeholder="1" value={formData.fridges} onChange={e => setFormData({ ...formData, fridges: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
@@ -1423,6 +1496,44 @@ const BuildingManagement = () => {
             </div>
 
             <button className="btn btn-primary" type="submit" style={{ padding: '1.1rem', borderRadius: '16px', fontWeight: '900', fontSize: '1rem' }}>Save Floor Structure</button>
+          </form>
+        </Modal>
+
+        {/* ── Edit Floor Modal ── */}
+        <Modal isOpen={isEditFloorOpen} onClose={() => setIsEditFloorOpen(false)} title={`Edit Floor ${formData.number}`}>
+          <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} onSubmit={handleUpdateFloor}>
+            <div className="input-group">
+              <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FLOOR NUMBER</label>
+              <input placeholder="e.g. G, 1, 2" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} style={inputStyle} required />
+            </div>
+
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '1rem' }}>Floor Equipment & Washrooms</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>COMMON WASHROOMS</label><input type="number" placeholder="2" value={formData.washroomsCount} onChange={e => setFormData({ ...formData, washroomsCount: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
+                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WATER POINTS</label><input type="number" placeholder="2" value={formData.waterPoints} onChange={e => setFormData({ ...formData, waterPoints: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
+                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>WASHING MACHINES</label><input type="number" placeholder="1" value={formData.washingMachines} onChange={e => setFormData({ ...formData, washingMachines: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
+                <div className="input-group"><label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FRIDGES</label><input type="number" placeholder="1" value={formData.fridges} onChange={e => setFormData({ ...formData, fridges: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} min="0" /></div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
+                {[
+                  { key: 'hasStudyArea', label: 'Study Area' },
+                  { key: 'hasLoungeArea', label: 'Lounge Area' },
+                  { key: 'hasBalcony', label: 'Balcony' },
+                  { key: 'hasWaitingArea', label: 'Waiting Area' },
+                ].map(({ key, label }) => (
+                  <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '12px', cursor: 'pointer', border: '1px solid var(--border-color)' }} onClick={() => setFormData({ ...formData, [key]: !formData[key] })}>
+                    <div style={{ width: '20px', height: '20px', border: '2px solid var(--accent-primary)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: formData[key] ? 'var(--accent-primary)' : 'transparent', transition: 'all 0.3s' }}>
+                      {formData[key] && <div style={{ width: '10px', height: '10px', background: 'var(--bg-card)', borderRadius: '2px' }} />}
+                    </div>
+                    <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-primary)' }}>{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button className="btn btn-primary" type="submit" style={{ padding: '1.1rem', borderRadius: '16px', fontWeight: '900', fontSize: '1rem' }}>Update Floor</button>
           </form>
         </Modal>
 
@@ -2577,38 +2688,50 @@ const PremiumBuildingCard = ({ building, onSelect, onViewAnalytics, onEditBuildi
 
 
       {/* Action Footer */}
-      <div style={{
-        marginTop: 'auto', display: 'flex', justifyContent: 'space-between', gap: '0.8rem',
-        paddingTop: '1.2rem', borderTop: '1px solid #F1F5F9', zIndex: 1, alignItems: 'center'
-      }}>
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
-          <button
-            className="btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditBuilding(building);
-            }}
-            style={{ padding: '0.9rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <Edit2 size={16} />
-          </button>
-          <button
-            className="btn"
-            onClick={(e) => { e.stopPropagation(); onDeleteBuilding(building.id || building._id); }}
-            style={{ padding: '0.9rem', borderRadius: '12px', background: '#FEF2F2', border: 'none', color: '#EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
+      <div style={{ marginTop: 'auto', paddingTop: '1.2rem', borderTop: '1px solid #F1F5F9', display: 'flex', gap: '0.6rem', zIndex: 1, alignItems: 'center' }}>
         <button
           className="btn btn-primary"
           onClick={(e) => { e.stopPropagation(); onSelect(building); }}
           style={{
-            padding: '1.1rem 2rem', borderRadius: '22px', fontWeight: '950', fontSize: '0.85rem', flex: 1,
-            boxShadow: '0 10px 20px rgba(99, 102, 241, 0.3)'
+            flex: 1, padding: '0.9rem', borderRadius: '12px', fontWeight: '800', fontSize: '0.85rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+            background: 'var(--accent-primary)', border: 'none', color: '#fff',
+            boxShadow: '0 4px 14px rgba(99,102,241,0.25)', transition: 'transform 0.2s, box-shadow 0.2s'
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(99,102,241,0.35)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(99,102,241,0.25)'; }}
         >
-          View Floors
+          <BuildingIcon size={15} /> Manage Floors <ChevronRight size={14} />
+        </button>
+
+        <button
+          onClick={(e) => { e.stopPropagation(); onEditBuilding(building); }}
+          style={{
+            width: '42px', height: '42px', padding: '0', borderRadius: '12px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)',
+            transition: 'all 0.2s', cursor: 'pointer'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-tertiary)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-secondary)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+          title="Edit Building"
+        >
+          <Edit2 size={16} />
+        </button>
+
+        <button
+          onClick={(e) => { e.stopPropagation(); onDeleteBuilding(building.id || building._id); }}
+          style={{
+            width: '42px', height: '42px', padding: '0', borderRadius: '12px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: '#FEF2F2', border: '1px solid #FECACA', color: '#EF4444',
+            transition: 'all 0.2s', cursor: 'pointer'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#FEE2E2'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = '#FEF2F2'; }}
+          title="Delete Building"
+        >
+          <Trash2 size={16} />
         </button>
       </div>
     </motion.div>
@@ -2676,209 +2799,324 @@ const BuildingsList = ({ buildings, onSelect, onAdd, onViewAnalytics, onEditBuil
   );
 };
 
-const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete }) => {
+const PremiumFloorCard = ({ floor, building, onSelect, onViewAnalytics, onDelete, onEdit }) => {
+  const [showAllAmenities, setShowAllAmenities] = useState(false);
   const occupancyRate = floor.occupancyPercentage || 0;
-  const totalRooms = floor.totalRooms || 0;
+  const totalRooms = floor.rooms?.length || floor.totalRooms || 0;
   const totalBeds = floor.totalBeds || 0;
+  const occupiedBeds = Math.round((occupancyRate / 100) * totalBeds);
+  const vacantBeds = totalBeds - occupiedBeds;
+
+  const getOccupancyColor = (rate) => {
+    if (rate >= 90) return { bg: '#FEF2F2', text: '#DC2626', bar: '#EF4444' };
+    if (rate >= 60) return { bg: '#FFFBEB', text: '#D97706', bar: '#F59E0B' };
+    if (rate >= 30) return { bg: '#F0FDF4', text: '#15803D', bar: '#22C55E' };
+    return { bg: '#F0F9FF', text: '#0369A1', bar: '#38BDF8' };
+  };
+  const occ = getOccupancyColor(occupancyRate);
+
+  const facilities = [
+    (floor.hasStudyArea || floor.studyArea) && { label: 'Study Area', icon: '📚' },
+    (floor.hasLoungeArea || floor.loungeArea) && { label: 'Lounge', icon: '🛋️' },
+    (floor.hasBalcony || floor.balcony) && { label: 'Balcony', icon: '🌿' },
+    (floor.hasWaitingArea || floor.waitingArea) && { label: 'Waiting Area', icon: '💺' },
+  ].filter(Boolean);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -15, scale: 1.01 }}
+      whileHover={{ y: -8 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
       onClick={() => onSelect(floor)}
       style={{
-        background: 'rgba(255, 255, 255, 0.7)',
-        backdropFilter: 'blur(30px)',
-        borderRadius: '32px',
-        padding: '0.8rem',
-        border: '1px solid rgba(255, 255, 255, 0.4)',
-        boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.12)',
-        position: 'relative',
+        background: 'var(--bg-card)',
+        borderRadius: '24px',
+        border: '1px solid var(--border-color)',
+        boxShadow: '0 10px 30px -10px rgba(0,0,0,0.05)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.6rem',
-        cursor: 'pointer',
         overflow: 'hidden',
-        minHeight: 'auto',
-        maxWidth: '100%'
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
       }}
     >
-      {/* Background Neon Accent */}
-      <div style={{
-        position: 'absolute', top: '-100px', right: '-100px', width: '250px', height: '250px',
-        background: 'radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%)',
-        zIndex: 0, pointerEvents: 'none'
-      }} />
-
-      {/* Header: Visual Identity */}
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
-              <span style={{
-                padding: '0.4rem 0.8rem', borderRadius: '12px', background: '#0F172A', color: "var(--text-on-primary)",
-                fontSize: '0.7rem', fontWeight: '950', letterSpacing: '0.05em'
-              }}>
-                LEVEL {floor.floorNumber}
-              </span>
-              <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: '#ECFDF5', color: '#10B981', fontSize: '0.65rem', fontWeight: '900' }}>
-                PREMIUM WING
-              </span>
-            </div>
-            <h3 style={{ fontSize: '1.8rem', fontWeight: '1000', margin: 0, color: '#0F172A', letterSpacing: '-0.04em' }}>
-              {building?.name} <span style={{ fontWeight: '500', color: '#64748B', fontSize: '1.2rem' }}>ΓÇó {floor.name || `Floor ${floor.floorNumber}`}</span>
-            </h3>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <Activity size={24} color="#6366F1" />
-          </div>
-        </div>
-      </div>
-
-      {/* Hero Visualization Area */}
-      <div style={{
-        position: 'relative', height: '100px', borderRadius: '20px', overflow: 'hidden',
-        background: '#F1F5F9', border: '1px solid rgba(255,255,255,0.8)', zIndex: 1
-      }}>
+      {/* ── IMAGE SECTION (CLEANER) ─────────────────────────────── */}
+      <div style={{ position: 'relative', height: '160px', flexShrink: 0 }}>
         <img
           src={floor.images?.[0] || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'}
+          alt={`Floor ${floor.floorNumber}`}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          alt="Floor"
         />
+        {/* Subtle Gradient */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.8) 0%, transparent 60%)'
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.6) 100%)'
         }} />
-        <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', right: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+
+
+
+        {/* Bottom-left: Status Pill */}
+        <div style={{ position: 'absolute', bottom: '1rem', left: '1rem' }}>
+          <span style={{
+            background: occupancyRate === 100 ? '#EF4444' : floor.status === 'Maintenance' ? '#F59E0B' : '#10B981',
+            color: '#fff', fontSize: '0.7rem', fontWeight: '800',
+            padding: '0.4rem 0.8rem', borderRadius: '12px', letterSpacing: '0.05em',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
+          }}>
+            {occupancyRate === 100 ? 'FULL' : floor.status === 'Maintenance' ? 'MAINTENANCE' : 'ACTIVE'}
+          </span>
+        </div>
+      </div>
+
+      {/* ── BODY ───────────────────────────────────── */}
+      <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.2rem', flex: 1, minWidth: 0 }}>
+        
+        {/* Header: Floor Name */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '900', color: 'rgba(255,255,255,0.7)', letterSpacing: '0.05em' }}></p>
-            <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '950', color: "var(--text-on-primary)" }}></p>
+            <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+              {floor.name || `Floor ${floor.floorNumber}`}
+            </h3>
+            <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+              Level {floor.floorNumber}
+            </p>
           </div>
-          <div style={{ padding: '0.4rem 0.8rem', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.3)', color: "var(--text-on-primary)", fontSize: '0.7rem', fontWeight: '900' }}>
-            {floor.occupancyPercentage || occupancyRate}% OCCUPIED
-          </div>
-        </div>
-      </div>
-
-      {/* Bento Grid: Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.6rem', zIndex: 1 }}>
-        {/* Occupancy Heatmap Bento */}
-        <div style={{ padding: '0.8rem', borderRadius: '20px', background: "var(--bg-card)", border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.7rem', fontWeight: '950', color: '#0F172A' }}>Occupancy Heatmap</span>
-            <UsersRound size={16} color="#6366F1" />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '0.3rem' }}>
-            {Array.from({ length: 12 }).map((_, i) => {
-              // Create dynamic heatmap logic based on occupancyPercentage
-              const occ = floor.occupancyPercentage || occupancyRate;
-              const filledBlocks = Math.round((occ / 100) * 12);
-              return <div key={i} style={{ height: '12px', borderRadius: '3px', background: i < filledBlocks ? '#6366F1' : '#F1F5F9' }} />;
-            })}
-          </div>
-          <div style={{ marginTop: 'auto', display: 'flex', gap: '1.5rem' }}>
-            <div>
-              <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '1000', color: '#0F172A' }}>{floor.totalRooms || totalRooms}</p>
-              <p style={{ margin: 0, fontSize: '0.55rem', fontWeight: '800', color: '#94A3B8' }}>ROOMS</p>
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '1000', color: '#0F172A' }}>{floor.totalBeds || totalBeds}</p>
-              <p style={{ margin: 0, fontSize: '0.55rem', fontWeight: '800', color: '#94A3B8' }}>TOTAL BEDS</p>
-            </div>
+          {/* Circular Occupancy Progress */}
+          <div style={{ position: 'relative', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="50" height="50" viewBox="0 0 36 36" style={{ position: 'absolute', inset: 0 }}>
+              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--border-color)" strokeWidth="3" />
+              <motion.path
+                initial={{ strokeDasharray: '0, 100' }} animate={{ strokeDasharray: `${occupancyRate}, 100` }}
+                transition={{ duration: 1, ease: 'easeOut' }}
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none" stroke={occ.bar} strokeWidth="3" strokeLinecap="round"
+              />
+            </svg>
+            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: occ.bar }}>{occupancyRate}%</span>
           </div>
         </div>
-      </div>
 
-      {/* Infrastructure KPI Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.6rem', zIndex: 1 }}>
-        {[
-          { label: 'Washrooms', value: `${floor.washroomsCount !== undefined ? floor.washroomsCount : 0}`, icon: <Droplets size={12} /> },
-          { label: 'Water Pts', value: `${floor.waterPoints || 0}`, icon: <Waves size={12} /> },
-          { label: 'Laundry', value: `${floor.washingMachines || 0}`, icon: <Layers size={12} /> },
-          { label: 'Fridges', value: `${floor.fridges || 0}`, icon: <Coffee size={12} /> }
-        ].map((kpi, i) => (
-          <div key={i} style={{ padding: '0.6rem', background: '#F8FAFC', borderRadius: '14px', border: '1px solid #F1F5F9', textAlign: 'center' }}>
-            <div style={{ color: '#6366F1', marginBottom: '0.2rem', display: 'flex', justifyContent: 'center' }}>{kpi.icon}</div>
-            <p style={{ margin: 0, fontSize: '0.5rem', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase' }}>{kpi.label}</p>
-            <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: '950', color: '#1E293B' }}>{kpi.value}</p>
+        {/* ── Core Stats ── */}
+        <div style={{ display: 'flex', gap: '0.8rem', background: 'var(--bg-secondary)', padding: '0.8rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+          <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid var(--border-color)' }}>
+            <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', color: 'var(--text-primary)' }}>{totalRooms}</p>
+            <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Rooms</p>
           </div>
-        ))}
-      </div>
-
-      {/* Quick Access Facilities */}
-      <div style={{ zIndex: 1 }}>
-        <p style={{ fontSize: '0.75rem', fontWeight: '950', color: '#0F172A', marginBottom: '0.8rem' }}>SPACES & FACILITIES</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-          {floor.hasStudyArea && <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>Study Area</span>}
-          {floor.hasLoungeArea && <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>Lounge Area</span>}
-          {floor.hasBalcony && <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>Balcony</span>}
-          {floor.hasWaitingArea && <span style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.7rem', fontWeight: '800', color: '#475569' }}>Waiting Area</span>}
-          {(!floor.hasStudyArea && !floor.hasLoungeArea && !floor.hasBalcony && !floor.hasWaitingArea) && <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: '700' }}>No facilities listed</span>}
+          <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid var(--border-color)' }}>
+            <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', color: 'var(--text-primary)' }}>{totalBeds}</p>
+            <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Beds</p>
+          </div>
+          <div style={{ flex: 1, textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', color: occ.bar }}>{vacantBeds}</p>
+            <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Vacant</p>
+          </div>
         </div>
-      </div>
 
-      {/* Action Footer */}
-      <div style={{
-        marginTop: 'auto', display: 'grid', gridTemplateColumns: '60px 1fr', gap: '0.8rem',
-        paddingTop: '1.2rem', borderTop: '1px solid #F1F5F9', zIndex: 1
-      }}>
-        <button
-          className="btn"
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          style={{
-            padding: '1rem', borderRadius: '18px', background: '#FEF2F2', color: '#EF4444',
-            fontWeight: '950', fontSize: '0.85rem', border: '1px solid #FEE2E2',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}
-        >
-          <Trash2 size={18} />
-        </button>
-        <button
-          className="btn btn-primary"
-          onClick={(e) => { e.stopPropagation(); onSelect(floor); }}
-          style={{
-            padding: '1rem', borderRadius: '20px', fontWeight: '950', fontSize: '0.85rem',
-            boxShadow: '0 10px 20px rgba(99, 102, 241, 0.3)'
-          }}
-        >
-          View Rooms
-        </button>
+        {/* ── Facilities (Dynamic) ── */}
+        <div style={{ width: '100%', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', flexWrap: showAllAmenities ? 'wrap' : 'nowrap', gap: '0.5rem', overflowX: showAllAmenities ? 'visible' : 'auto', scrollbarWidth: 'none', paddingBottom: '0.2rem', minWidth: 0 }}>
+            {(() => {
+              const allItems = [
+                { label: 'Washrooms', count: floor.washroomsCount ?? floor.commonWashroom ?? 0, icon: '🚿' },
+                { label: 'Water Points', count: floor.waterPoints ?? floor.waterPoint ?? 0, icon: '🚰' },
+                { label: 'Laundry', count: floor.washingMachines ?? floor.washingMachine ?? 0, icon: '🧺' },
+                { label: 'Refrigerators', count: floor.fridges ?? floor.fridge ?? 0, icon: '❄️' },
+                ...facilities
+              ].filter(f => f.count > 0 || f.label === 'Study Area' || f.label === 'Lounge' || f.label === 'Balcony' || f.label === 'Waiting Area');
+
+              if (allItems.length === 0) return (
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', padding: '0.4rem 0' }}>
+                  No facilities added
+                </span>
+              );
+
+              const displayItems = showAllAmenities || allItems.length <= 3 ? allItems : allItems.slice(0, 2);
+              const overflowCount = allItems.length > 3 ? allItems.length - 2 : 0;
+
+              return (
+                <>
+                  {displayItems.map((f, i) => {
+                    const countDisplay = f.count ? `${f.count} ` : '';
+                    return (
+                      <span key={i} style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                        padding: '0.4rem 0.8rem', borderRadius: '8px',
+                        background: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+                        fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)',
+                        whiteSpace: 'nowrap', flexShrink: 0
+                      }}>
+                        {f.icon} {countDisplay}{f.label}
+                      </span>
+                    );
+                  })}
+                  {overflowCount > 0 && !showAllAmenities && (
+                    <span 
+                      onClick={(e) => { e.stopPropagation(); setShowAllAmenities(true); }}
+                      style={{
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '0.4rem 0.8rem', borderRadius: '8px',
+                      background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)',
+                      fontSize: '0.75rem', fontWeight: '800', color: '#6366F1', cursor: 'pointer',
+                      whiteSpace: 'nowrap', flexShrink: 0
+                    }}>
+                      +{overflowCount} more
+                    </span>
+                  )}
+                  {showAllAmenities && allItems.length > 3 && (
+                    <span 
+                      onClick={(e) => { e.stopPropagation(); setShowAllAmenities(false); }}
+                      style={{
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '0.4rem 0.8rem', borderRadius: '8px',
+                      background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)',
+                      fontSize: '0.75rem', fontWeight: '800', color: '#EF4444', cursor: 'pointer',
+                      whiteSpace: 'nowrap', flexShrink: 0
+                    }}>
+                      Show less
+                    </span>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        </div>
+
+        {/* ── Action Footer ── */}
+        <div style={{ marginTop: 'auto', paddingTop: '0.5rem', display: 'flex', gap: '0.8rem' }}>
+          <button
+            className="btn btn-primary"
+            onClick={(e) => { e.stopPropagation(); onSelect(floor); }}
+            style={{
+              flex: 1, padding: '0.85rem', borderRadius: '14px',
+              fontWeight: '800', fontSize: '0.9rem',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem',
+              background: 'var(--accent-primary)', border: 'none', color: '#fff',
+              boxShadow: '0 8px 20px -6px rgba(99, 102, 241, 0.4)',
+              transition: 'transform 0.2s, box-shadow 0.2s'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 24px -6px rgba(99, 102, 241, 0.6)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 20px -6px rgba(99, 102, 241, 0.4)'; }}
+          >
+            Manage Rooms <ChevronRight size={18} />
+          </button>
+          
+          <button
+            onClick={(e) => { e.stopPropagation(); if (onEdit) onEdit(floor); }}
+            style={{
+              width: '46px', padding: '0', borderRadius: '14px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)',
+              transition: 'all 0.2s', cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-tertiary)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-secondary)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            title="Edit Floor"
+          >
+            <Edit2 size={18} />
+          </button>
+          
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            style={{
+              width: '46px', padding: '0', borderRadius: '14px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: '#FEF2F2', border: '1px solid #FECACA', color: '#EF4444',
+              transition: 'all 0.2s', cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#FEE2E2'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#FEF2F2'; }}
+            title="Delete Floor"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
       </div>
     </motion.div>
   );
 };
 
-const FloorsList = ({ floors, building, onSelect, onBack, onAdd, onDelete, onViewAnalytics }) => (
-  <div>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2.5rem', alignItems: 'center' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
-        <motion.button whileHover={{ x: -5 }} onClick={onBack} style={{ width: '45px', height: '45px', borderRadius: '15px', background: "var(--bg-card)", border: '1px solid var(--border-color)', color: '#0F172A', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}><ArrowLeft size={24} /></motion.button>
-        <div>
-          <h2 style={{ fontSize: '2rem', fontWeight: '1000', margin: 0, letterSpacing: '-0.04em', color: '#0F172A' }}>Floors Management</h2>
-          <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{building?.name} ΓÇó Infrastructure Overview</p>
-        </div>
+const FloorsList = ({ floors, building, onSelect, onBack, onAdd, onDelete, onViewAnalytics, onEdit }) => {
+  const totalRoomsAll = floors.reduce((s, f) => s + (f.totalRooms || 0), 0);
+  const totalBedsAll = floors.reduce((s, f) => s + (f.totalBeds || 0), 0);
+  const avgOccupancy = floors.length > 0
+    ? Math.round(floors.reduce((s, f) => s + (f.occupancyPercentage || 0), 0) / floors.length)
+    : 0;
+
+  return (
+    <div>
+      {/* 1. Header Hierarchy */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h2 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '900', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+          🏢 Property Infrastructure
+        </h2>
+        <p style={{ margin: '0.3rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+          Manage Floors, Rooms, Beds & Occupancy
+        </p>
       </div>
+
+      {/* 2. Top KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+        {[
+          { icon: '🏢', label: 'Floors', value: floors.length, color: '#6366F1' },
+          { icon: '🚪', label: 'Rooms', value: totalRoomsAll, color: '#8B5CF6' },
+          { icon: '🛏', label: 'Beds', value: totalBedsAll, color: '#06B6D4' },
+          { icon: '📈', label: 'Occupied', value: `${avgOccupancy}%`, color: avgOccupancy > 70 ? '#EF4444' : '#22C55E' },
+          { icon: '💰', label: 'Revenue', value: '₹0', color: '#10B981' },
+        ].map((s, i) => (
+          <div key={i} style={{
+            background: 'var(--bg-card)', padding: '1.2rem', borderRadius: '16px',
+            border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '1rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+          }}>
+            <div style={{ fontSize: '1.8rem' }}>{s.icon}</div>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</p>
+              <p style={{ margin: '0.1rem 0 0 0', fontSize: '1.2rem', fontWeight: '900', color: s.color, lineHeight: 1 }}>{s.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 3. Floor Cards Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+        {floors.length > 0 && floors.map((f, i) => (
+          <PremiumFloorCard
+            key={f._id || f.id || i}
+            floor={f}
+            building={building}
+            onSelect={onSelect}
+            onViewAnalytics={onViewAnalytics}
+            onDelete={() => onDelete(f.id || f._id)}
+            onEdit={onEdit}
+          />
+        ))}
+        {/* Ghost Card to fix empty space */}
+        <motion.div
+          whileHover={{ y: -6, scale: 1.02 }}
+          onClick={onAdd}
+          style={{
+            minHeight: '220px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            background: 'var(--bg-card)', borderRadius: '24px',
+            border: '2px dashed var(--border-color)', cursor: 'pointer',
+            transition: 'all 0.3s ease', opacity: 0.85
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#6366F1'; e.currentTarget.style.background = 'rgba(99,102,241,0.02)'; e.currentTarget.style.opacity = 1; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.opacity = 0.85; }}
+        >
+          <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: 'rgba(99,102,241,0.1)', color: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.2rem', transition: 'transform 0.3s' }}>
+            <PlusCircle size={32} />
+          </div>
+          <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>+ Add New Floor</p>
+          <p style={{ margin: '0.4rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>Expand your building</p>
+        </motion.div>
+      </div>
+
+
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: '2.5rem' }}>
-      {floors.length > 0 ? floors.map((f, i) => (
-        <PremiumFloorCard
-          key={f._id || f.id || i}
-          floor={f}
-          building={building}
-          onSelect={onSelect}
-          onViewAnalytics={onViewAnalytics}
-          onDelete={() => onDelete(f.id || f._id)}
-        />
-      )) : (
-        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
-          <Layers size={32} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
-          <p style={{ color: 'var(--text-secondary)' }}>No floors found in this building.</p>
-        </div>
-      )}
-    </div>
-  </div>
-);
+  );
+};
 
 const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onEdit, onDelete, onViewDetails }) => {
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -2887,19 +3125,67 @@ const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onEdit, on
   const indexOfLastRoom = currentPage * roomsPerPage;
   const indexOfFirstRoom = indexOfLastRoom - roomsPerPage;
   const currentRooms = rooms.slice(indexOfFirstRoom, indexOfLastRoom);
+  const totalRooms = rooms.length;
+  const totalBeds = rooms.reduce((s, r) => s + (r.capacity || 0), 0);
+  const occupiedBeds = rooms.reduce((s, r) => s + (r.occupied || 0), 0);
+  const vacantBeds = totalBeds - occupiedBeds;
+  const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+
+  const potentialRevenue = rooms.reduce((s, r) => s + (r.rentAmount || 0) * (r.capacity || 0), 0);
+  const currentRevenue = rooms.reduce((s, r) => s + (r.rentAmount || 0) * (r.occupied || 0), 0);
+  const vacantLoss = potentialRevenue - currentRevenue;
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}><ArrowLeft size={24} /></button>
-          <div>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: '1000', margin: 0, letterSpacing: '-0.04em', color: '#0F172A' }}>Rooms on Floor {floor?.floorNumber}</h2>
-            <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{building?.name || 'Property'} ΓÇó Advanced Inventory Management</p>
-          </div>
+      {/* 1. Header Hierarchy */}
+      <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <motion.button
+          whileHover={{ x: -3 }}
+          onClick={onBack}
+          style={{
+            width: '40px', height: '40px', borderRadius: '10px',
+            background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+            color: 'var(--text-primary)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+          }}
+        >
+          <ArrowLeft size={20} />
+        </motion.button>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '900', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+            🚪 Floor {floor?.floorNumber} Rooms
+          </h2>
+          <p style={{ margin: '0.3rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+            Manage {building?.name || 'Property'} • Advanced Inventory
+          </p>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '2rem' }}>
+
+      {/* 2. Top KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+        {[
+          { icon: '🚪', label: 'Rooms', value: totalRooms, color: '#8B5CF6' },
+          { icon: '🛏', label: 'Beds', value: totalBeds, color: '#06B6D4' },
+          { icon: '📉', label: 'Vacant', value: vacantBeds, color: '#6366F1' },
+          { icon: '📈', label: 'Occupied', value: `${occupancyRate}%`, color: occupancyRate > 70 ? '#EF4444' : '#22C55E' },
+          { icon: '💰', label: 'Revenue', value: `₹${currentRevenue.toLocaleString()}`, color: '#10B981' },
+        ].map((s, i) => (
+          <div key={i} style={{
+            background: 'var(--bg-card)', padding: '1.2rem', borderRadius: '16px',
+            border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '1rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+          }}>
+            <div style={{ fontSize: '1.8rem' }}>{s.icon}</div>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</p>
+              <p style={{ margin: '0.1rem 0 0 0', fontSize: '1.2rem', fontWeight: '900', color: s.color, lineHeight: 1 }}>{s.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 3. Rooms Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
         {currentRooms.length > 0 ? currentRooms.map((r, i) => (
           <PremiumRoomCard
             key={r._id || r.id || i}
@@ -2911,258 +3197,288 @@ const RoomsList = ({ rooms, floor, building, onSelect, onBack, onAdd, onEdit, on
             onDelete={() => onDelete(r.id || r._id)}
           />
         )) : (
-          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '2px dashed var(--border-color)' }}>
-            <DoorOpen size={32} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
-            <p style={{ color: 'var(--text-secondary)' }}>No rooms found on this floor.</p>
+          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '5rem 2rem', background: 'var(--bg-card)', borderRadius: '32px', border: '2px dashed var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(139,92,246,0.1)', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
+              <DoorOpen size={40} />
+            </div>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>No Rooms Yet</h3>
+            <p style={{ color: 'var(--text-secondary)', fontWeight: '600', margin: '0 0 1.5rem 0', maxWidth: '300px' }}>This floor is currently empty. Start adding rooms to increase your property's capacity.</p>
+            <button
+              onClick={() => onAdd(floor)}
+              className="btn btn-primary"
+              style={{ padding: '0.8rem 1.5rem', borderRadius: '14px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#8B5CF6', border: 'none', color: '#fff', boxShadow: '0 8px 20px -6px rgba(139,92,246,0.5)' }}
+            >
+              <PlusCircle size={18} /> Add First Room
+            </button>
           </div>
         )}
+
+        {/* Ghost Card */}
+        <motion.div
+          whileHover={{ y: -6, scale: 1.02 }}
+          onClick={() => onAdd(floor)}
+          style={{
+            minHeight: '220px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            background: 'var(--bg-card)', borderRadius: '24px',
+            border: '2px dashed var(--border-color)', cursor: 'pointer',
+            transition: 'all 0.3s ease', opacity: 0.85
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#10B981'; e.currentTarget.style.background = 'rgba(16,185,129,0.02)'; e.currentTarget.style.opacity = 1; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.opacity = 0.85; }}
+        >
+          <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: 'rgba(16,185,129,0.1)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.2rem', transition: 'transform 0.3s' }}>
+            <PlusCircle size={32} />
+          </div>
+          <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>+ Add New Room</p>
+          <p style={{ margin: '0.4rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '600' }}>Increase capacity</p>
+        </motion.div>
       </div>
+
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginBottom: '3rem' }}>
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(prev => prev - 1)}
             className="btn"
-            style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+            style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', fontWeight: '700' }}
           >
             Previous
           </button>
-          <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+          <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-primary)' }}>
             Page {currentPage} of {totalPages}
           </span>
           <button
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(prev => prev + 1)}
             className="btn"
-            style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+            style={{ padding: '0.6rem 1rem', borderRadius: '12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', fontWeight: '700' }}
           >
             Next
           </button>
         </div>
       )}
+
+
     </div>
   );
 };
 
 const PremiumRoomCard = ({ room, floor, onSelect, onViewDetails, onEdit, onDelete }) => {
+  const [showAllAmenities, setShowAllAmenities] = useState(false);
   const occupancyRate = Math.round(((room.occupied || 0) / room.capacity) * 100);
   const isHighDemand = occupancyRate > 80;
+  const vacantBeds = (room.capacity || 0) - (room.occupied || 0);
 
-  const statusColors = {
-    Available: '#10B981',
-    Occupied: '#3B82F6',
-    Full: '#EF4444',
-    Maintenance: '#F59E0B'
+  const statusConfig = {
+    Available: { color: '#10B981', bg: '#F0FDF4', label: 'Available' },
+    Occupied: { color: '#3B82F6', bg: '#EFF6FF', label: 'Occupied' },
+    Full: { color: '#EF4444', bg: '#FEF2F2', label: 'Full' },
+    Maintenance: { color: '#F59E0B', bg: '#FFFBEB', label: 'Maintenance' },
   };
-
   const activeStatus = room.occupied === room.capacity ? 'Full' : (room.occupied > 0 ? 'Occupied' : 'Available');
-  const themeColor = statusColors[activeStatus];
+  const { color: themeColor, bg: themeBg, label: statusLabel } = statusConfig[activeStatus];
+
+  const amenityList = [
+    room.isAC && { icon: '❄️', label: 'AC' },
+    (room.hasWiFi || room.wifi) && { icon: '📶', label: 'WiFi' },
+    room.attachedBathroom && { icon: '🚿', label: 'Attached Bath' },
+    (room.hasGeyser || room.geyser) && { icon: '🔥', label: 'Geyser' },
+    (room.hasStudyTable || room.studyTable) && { icon: '📖', label: 'Study Table' },
+    (room.hasWardrobe || room.wardrobe) && { icon: '🚪', label: 'Wardrobe' },
+    (room.hasMirror || room.mirror) && { icon: '🪞', label: 'Mirror' },
+    (room.hasTV || room.tv) && { icon: '📺', label: 'TV' },
+    (room.hasRefrigerator || room.refrigerator) && { icon: '🧊', label: 'Fridge' },
+    (room.hasMicrowave || room.microwave) && { icon: '🍳', label: 'Microwave' },
+    room.balcony && { icon: '🌿', label: 'Balcony' },
+  ].filter(Boolean);
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ y: -15, scale: 1.01 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -6 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
       onClick={() => onSelect(room)}
       style={{
-        background: 'rgba(255, 255, 255, 0.7)',
-        backdropFilter: 'blur(30px)',
-        borderRadius: '32px',
-        padding: '0.8rem',
-        border: '1px solid rgba(255, 255, 255, 0.4)',
-        boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.12)',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.6rem',
-        cursor: 'pointer',
-        overflow: 'hidden',
-        minHeight: 'auto',
-        maxWidth: '100%'
+        background: 'var(--bg-card)', borderRadius: '18px', border: `1px solid var(--border-color)`,
+        boxShadow: '0 4px 24px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column',
+        overflow: 'hidden', cursor: 'pointer', position: 'relative',
       }}
     >
-      {/* Dynamic Background Glow */}
-      <div style={{
-        position: 'absolute', top: '-150px', right: '-150px', width: '300px', height: '300px',
-        background: `radial-gradient(circle, ${themeColor}15 0%, transparent 70%)`,
-        zIndex: 0, pointerEvents: 'none'
-      }} />
-
-      {/* Header: Visual Identity */}
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
-              <span style={{
-                padding: '0.4rem 0.8rem', borderRadius: '12px', background: '#0F172A', color: "var(--text-on-primary)",
-                fontSize: '0.7rem', fontWeight: '950', letterSpacing: '0.05em'
-              }}>
-                ROOM {room.roomNumber}
-              </span>
-              {isHighDemand && (
-                <motion.span
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  style={{ padding: '0.4rem 0.8rem', borderRadius: '12px', background: '#FEF2F2', color: '#EF4444', fontSize: '0.6rem', fontWeight: '900', border: '1px solid #FEE2E2' }}
-                >
-                  HIGH DEMAND
-                </motion.span>
-              )}
-            </div>
-            <h3 style={{ fontSize: '1.8rem', fontWeight: '1000', margin: 0, color: '#0F172A', letterSpacing: '-0.04em' }}>
-              Suite
-            </h3>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: '900', color: '#64748B', letterSpacing: '0.05em' }}></p>
-            <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: '1000', color: themeColor }}></p>
-          </div>
-        </div>
-      </div>
-
-      {/* Hero Image Section */}
-      <div style={{
-        position: 'relative', height: '80px', borderRadius: '16px', overflow: 'hidden',
-        background: '#F1F5F9', border: '1px solid rgba(255,255,255,0.8)', zIndex: 1
-      }}>
+      {/* ── HERO IMAGE & HEADER ── */}
+      <div style={{ position: 'relative', height: '140px', flexShrink: 0 }}>
         <img
           src={room.images?.[0] || 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80'}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          alt="Room"
+          alt={`Room ${room.roomNumber}`}
         />
         <div style={{
-          position: 'absolute', bottom: '1.2rem', left: '1.2rem',
-          display: 'flex', gap: '0.5rem'
-        }}>
-          {room.isAC && (
-            <div style={{ padding: '0.5rem 1rem', background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(10px)', color: "var(--text-on-primary)", borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', fontWeight: '800' }}>
-              <Zap size={14} color="#F59E0B" /> Smart AC
-            </div>
-          )}
-          <div style={{ padding: '0.5rem 1rem', background: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(10px)', color: '#0F172A', borderRadius: '14px', fontSize: '0.75rem', fontWeight: '900' }}>
-            Level {floor?.floorNumber || room.floorNumber || 1}
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%)'
+        }} />
+
+
+        {/* Top-left: Room number + Status */}
+        <div style={{ position: 'absolute', top: '1rem', left: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <span style={{
+            background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)',
+            color: '#fff', fontSize: '0.65rem', fontWeight: '800',
+            padding: '0.35rem 0.75rem', borderRadius: '8px', letterSpacing: '0.05em'
+          }}>
+            ROOM {room.roomNumber} • {room.roomType || 'Standard'}
+          </span>
+          <span style={{
+            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
+            color: '#fff', fontSize: '0.65rem', fontWeight: '700',
+            padding: '0.35rem 0.6rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.3rem'
+          }}>
+            {activeStatus === 'Full' ? '🔴 Full' : activeStatus === 'Available' ? '🟢 Active' : '🟡 Occupied'}
+          </span>
+        </div>
+
+        {/* Top-right: Edit & Delete (Removed to standardize footer) */}
+
+        {/* Bottom-left: Room Stats */}
+        <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          <p style={{ margin: 0, color: '#fff', fontSize: '1.2rem', fontWeight: '800', letterSpacing: '-0.02em' }}>
+            {room.roomType || `Room ${room.roomNumber}`}
+          </p>
+          <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.75rem', fontWeight: '700', letterSpacing: '0.02em' }}>
+            {room.capacity} Beds • {vacantBeds} Vacant • ₹{(room.rentAmount || 0).toLocaleString()} Rent
+          </p>
+        </div>
+
+        {/* Bottom-right: Occupancy Ring */}
+        <div style={{ position: 'absolute', bottom: '1rem', right: '1rem', width: '44px', height: '44px' }}>
+          <svg width="44" height="44" viewBox="0 0 36 36">
+            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="3.5" />
+            <motion.path initial={{ strokeDasharray: '0, 100' }} animate={{ strokeDasharray: `${occupancyRate}, 100` }} transition={{ duration: 1, ease: 'easeOut' }} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={themeColor} strokeWidth="3.5" strokeLinecap="round" />
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '0.6rem', fontWeight: '900', color: '#fff', lineHeight: 1 }}>{occupancyRate}%</span>
           </div>
         </div>
       </div>
 
-      {/* Bento Section: Occupancy */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.8rem', zIndex: 1 }}>
-        {/* Occupancy Bento */}
-        <div style={{ padding: '0.8rem', borderRadius: '16px', background: "var(--bg-card)", border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: '950', color: '#0F172A' }}>Occupancy</span>
-              <UsersRound size={18} color={themeColor} />
-            </div>
-            <div style={{ height: '8px', background: '#F1F5F9', borderRadius: '4px', overflow: 'hidden', marginBottom: '0.5rem' }}>
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${occupancyRate}%` }}
-                style={{ height: '100%', background: themeColor }}
-              />
-            </div>
-            <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '800', color: '#64748B' }}>
-              {room.occupied} of {room.capacity} beds deployed
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-            {Array.from({ length: room.capacity }).map((_, i) => (
-              <div key={i} style={{ width: '12px', height: '12px', borderRadius: '4px', background: i < room.occupied ? themeColor : '#F1F5F9' }} />
-            ))}
+      {/* ── BODY ── */}
+      <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minWidth: 0 }}>
+        {/* Amenities */}
+        <div style={{ width: '100%', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', flexWrap: showAllAmenities ? 'wrap' : 'nowrap', gap: '0.4rem', overflowX: showAllAmenities ? 'visible' : 'auto', scrollbarWidth: 'none', paddingBottom: '0.2rem', minWidth: 0 }}>
+            {(() => {
+              if (amenityList.length === 0) return (
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                  No amenities added
+                </span>
+              );
+              
+              const displayItems = showAllAmenities || amenityList.length <= 3 ? amenityList : amenityList.slice(0, 2);
+              const overflowCount = amenityList.length > 3 ? amenityList.length - 2 : 0;
+
+              return (
+                <>
+                  {displayItems.map((a, i) => (
+                    <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', padding: '0.25rem 0.6rem', borderRadius: '6px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', fontSize: '0.65rem', fontWeight: '700', color: 'var(--text-secondary)', whiteSpace: 'nowrap', flexShrink: 0 }}>{a.icon} {a.label}</span>
+                  ))}
+                  {overflowCount > 0 && !showAllAmenities && (
+                    <span 
+                      onClick={(e) => { e.stopPropagation(); setShowAllAmenities(true); }}
+                      style={{
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '0.25rem 0.6rem', borderRadius: '6px',
+                      background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)',
+                      fontSize: '0.65rem', fontWeight: '800', color: '#10B981', cursor: 'pointer',
+                      whiteSpace: 'nowrap', flexShrink: 0
+                    }}>
+                      +{overflowCount} more
+                    </span>
+                  )}
+                  {showAllAmenities && amenityList.length > 3 && (
+                    <span 
+                      onClick={(e) => { e.stopPropagation(); setShowAllAmenities(false); }}
+                      style={{
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '0.25rem 0.6rem', borderRadius: '6px',
+                      background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)',
+                      fontSize: '0.65rem', fontWeight: '800', color: '#EF4444', cursor: 'pointer',
+                      whiteSpace: 'nowrap', flexShrink: 0
+                    }}>
+                      Show less
+                    </span>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
-      </div>
 
-      {/* Specifications Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem', zIndex: 1 }}>
-        {[
-          { label: 'Attached Bath', value: room.attachedBathroom ? 'Yes' : 'No', icon: <Droplets size={14} /> },
-          { label: 'Room Size', value: room.roomSize || 'N/A', icon: <Maximize size={14} /> },
-          { label: 'Balcony', value: room.balcony ? 'Yes' : 'No', icon: <ShieldCheck size={14} /> }
-        ].map((spec, i) => (
-          <div key={i} style={{ padding: '0.6rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #F1F5F9' }}>
-            <div style={{ color: '#6366F1', marginBottom: '0.3rem' }}>{spec.icon}</div>
-            <p style={{ margin: 0, fontSize: '0.55rem', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase' }}>{spec.label}</p>
-            <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: '950', color: '#1E293B' }}>{spec.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Appliances & Details */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.6rem', zIndex: 1 }}>
-        {[
-          { label: 'Fans', value: room.fanCount || 0, icon: <Fan size={12} /> },
-          { label: 'Chairs', value: room.chairCount || 0, icon: <LayoutGrid size={12} /> },
-          { label: 'Geyser', value: room.hasGeyser ? 'Yes' : 'No', icon: <Droplets size={12} /> },
-          { label: 'TV', value: room.hasTV ? 'Yes' : 'No', icon: <Monitor size={12} /> }
-        ].map((kpi, i) => (
-          <div key={i} style={{ padding: '0.5rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #F1F5F9', textAlign: 'center' }}>
-            <div style={{ color: '#6366F1', marginBottom: '0.2rem', display: 'flex', justifyContent: 'center' }}>{kpi.icon}</div>
-            <p style={{ margin: 0, fontSize: '0.5rem', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase' }}>{kpi.label}</p>
-            <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '950', color: '#1E293B' }}>{kpi.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Amenities Section */}
-      <div style={{ zIndex: 1 }}>
-        <p style={{ fontSize: '0.75rem', fontWeight: '950', color: '#0F172A', marginBottom: '0.6rem' }}>AMENITIES</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-          {room.hasStudyTable && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Study Table</span>}
-          {room.hasWardrobe && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Wardrobe</span>}
-          {room.hasMirror && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Mirror</span>}
-          {room.hasRefrigerator && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Fridge</span>}
-          {room.hasMicrowave && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>Microwave</span>}
-          {room.hasWiFi && <span style={{ padding: '0.3rem 0.6rem', borderRadius: '8px', background: "var(--bg-card)", border: '1px solid #E2E8F0', fontSize: '0.65rem', fontWeight: '800', color: '#475569' }}>WiFi</span>}
-        </div>
-      </div>
-
-      {/* Action Footer */}
-      <div style={{
-        marginTop: 'auto', display: 'flex', justifyContent: 'space-between', gap: '0.6rem',
-        paddingTop: '0.8rem', borderTop: '1px solid #F1F5F9', zIndex: 1, alignItems: 'center'
-      }}>
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
+        {/* Action Footer */}
+        <div style={{ marginTop: 'auto', paddingTop: '0.5rem', display: 'flex', gap: '0.6rem' }}>
           <button
-            className="btn"
+            className="btn btn-primary"
+            onClick={(e) => { e.stopPropagation(); onSelect(room); }}
+            style={{
+              flex: 1, padding: '0.75rem', borderRadius: '12px', fontWeight: '800', fontSize: '0.85rem',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              background: 'linear-gradient(135deg, #10B981, #059669)', border: 'none', color: '#fff',
+              boxShadow: '0 4px 14px rgba(16,185,129,0.25)', transition: 'transform 0.2s, box-shadow 0.2s'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(16,185,129,0.35)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(16,185,129,0.25)'; }}
+          >
+            <Bed size={15} /> Manage Beds <ChevronRight size={14} />
+          </button>
+          
+          <button
             onClick={(e) => {
               e.stopPropagation();
-              const text = encodeURIComponent(`Check out Room ${room.roomNumber} (${room.roomType}) at our property!\nRent: ₹${room.rentAmount}/month\nCapacity: ${room.capacity} Beds\nContact us for booking!`);
+              const text = encodeURIComponent(`Room ${room.roomNumber} (${room.roomType}) — ₹${room.rentAmount}/month — ${room.capacity} beds. Contact us!`);
               window.open(`https://wa.me/?text=${text}`, '_blank');
             }}
-            style={{ padding: '0.9rem', borderRadius: '12px', background: '#DCFCE7', border: 'none', color: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            title="Share to WhatsApp"
+            style={{
+              width: '42px', padding: '0', borderRadius: '12px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: '#DCFCE7', border: '1px solid #BBF7D0', color: '#16A34A',
+              transition: 'all 0.2s', cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#BBF7D0'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#DCFCE7'; }}
+            title="Share on WhatsApp"
           >
             <Smartphone size={16} />
           </button>
+
           <button
-            className="btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            style={{
+              width: '42px', padding: '0', borderRadius: '12px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)',
+              transition: 'all 0.2s', cursor: 'pointer'
             }}
-            style={{ padding: '0.9rem', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-tertiary)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-secondary)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            title="Edit Room"
           >
             <Edit2 size={16} />
           </button>
+
           <button
-            className="btn"
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            style={{ padding: '0.9rem', borderRadius: '12px', background: '#FEF2F2', border: 'none', color: '#EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{
+              width: '42px', padding: '0', borderRadius: '12px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: '#FEF2F2', border: '1px solid #FECACA', color: '#EF4444',
+              transition: 'all 0.2s', cursor: 'pointer'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#FEE2E2'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#FEF2F2'; }}
+            title="Delete Room"
           >
             <Trash2 size={16} />
           </button>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={(e) => { e.stopPropagation(); onSelect(room); }}
-          style={{
-            padding: '1.1rem 2rem', borderRadius: '22px', fontWeight: '950', fontSize: '0.85rem', flex: 1,
-            boxShadow: `0 10px 20px ${themeColor}30`
-          }}
-        >
-          Manage Beds
-        </button>
       </div>
     </motion.div>
   );
@@ -3482,39 +3798,70 @@ const BedsList = ({ beds, room, floor, building, onBack, onAdd, onEditBed, onVie
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2.5rem', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+      {/* ── Summary Banner ── */}
+      <div style={{
+        background: 'var(--bg-card)', border: '1px solid var(--border-color)',
+        borderRadius: '16px', padding: '1.2rem 1.8rem',
+        marginBottom: '2rem',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: '1rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <motion.button
-            whileHover={{ x: -5 }}
+            whileHover={{ x: -3 }}
             onClick={onBack}
             style={{
-              width: '45px', height: '45px', borderRadius: '15px',
+              width: '40px', height: '40px', borderRadius: '10px',
               background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
               color: 'var(--text-primary)', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size={20} />
           </motion.button>
+          <div style={{
+            width: '44px', height: '44px', borderRadius: '12px',
+            background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <BedDouble size={22} color="#fff" />
+          </div>
           <div>
-            <h2 style={{ fontSize: '2rem', fontWeight: '1000', margin: 0, letterSpacing: '-0.04em', color: '#0F172A' }}>Room {room?.roomNumber}</h2>
-            <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{building?.name} ΓÇó Floor {floor?.floorNumber || 'N/A'} ΓÇó Smart Bed Management</p>
+            <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+              Room {room?.roomNumber}
+            </h2>
+            <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+              {building?.name} · Floor {floor?.floorNumber || 'N/A'} · Bed Management
+            </p>
           </div>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={onAdd}
-          disabled={beds.length >= (room?.capacity || Infinity)}
-          style={{
-            padding: '0.8rem 1.8rem', borderRadius: '16px', fontWeight: '950', fontSize: '1rem',
-            display: 'flex', alignItems: 'center', gap: '0.8rem',
-            boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)',
-            opacity: beds.length >= (room?.capacity || Infinity) ? 0.5 : 1,
-            cursor: beds.length >= (room?.capacity || Infinity) ? 'not-allowed' : 'pointer'
-          }}
-        >
-          <PlusCircle size={22} /> {beds.length >= (room?.capacity || Infinity) ? 'Room at Capacity' : 'Deploy New Bed'}
-        </button>
+        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          {[
+            { label: 'Deployed', value: beds.length, color: '#F59E0B' },
+            { label: 'Capacity', value: room?.capacity || '-', color: '#6366F1' },
+          ].map((s, i) => (
+            <div key={i} style={{ textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: s.color, lineHeight: 1 }}>{s.value}</p>
+              <p style={{ margin: 0, fontSize: '0.62rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</p>
+            </div>
+          ))}
+          <button
+            className="btn btn-primary"
+            onClick={onAdd}
+            disabled={beds.length >= (room?.capacity || Infinity)}
+            style={{
+              padding: '0.7rem 1.4rem', borderRadius: '12px', fontWeight: '800', fontSize: '0.85rem',
+              display: 'flex', alignItems: 'center', gap: '0.5rem',
+              boxShadow: '0 4px 14px rgba(245, 158, 11, 0.3)',
+              background: 'linear-gradient(135deg, #F59E0B, #D97706)', border: 'none', color: '#fff',
+              opacity: beds.length >= (room?.capacity || Infinity) ? 0.5 : 1,
+              cursor: beds.length >= (room?.capacity || Infinity) ? 'not-allowed' : 'pointer',
+              marginLeft: '1rem'
+            }}
+          >
+            <PlusCircle size={16} /> {beds.length >= (room?.capacity || Infinity) ? 'At Capacity' : 'Add Bed'}
+          </button>
+        </div>
       </div>
 
       {/* Filter Chips Bar */}
