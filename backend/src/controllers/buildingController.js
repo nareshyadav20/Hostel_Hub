@@ -111,7 +111,7 @@ const getBuildings = async (req, res) => {
 
     if (req.query.status) {
       if (req.query.status === 'Active') {
-        query.status = { $ne: 'Draft' };
+        query.status = { $nin: ['Draft', 'draft'] };
       } else {
         query.status = req.query.status;
       }
@@ -382,7 +382,7 @@ const getBuildingPortfolio = async (req, res) => {
     }
     const queryOwnerIds = ownerIds.flatMap(id => [id, new mongoose.Types.ObjectId(id)]);
 
-    const buildings = await Building.find({ owner: { $in: queryOwnerIds }, status: { $ne: 'Draft' } }).lean();
+    const buildings = await Building.find({ owner: { $in: queryOwnerIds }, status: { $nin: ['Draft', 'draft'] } }).lean();
 
     const result = await Promise.all(buildings.map(async (b) => {
       const floors = await Floor.find({ building: b._id }).lean();
@@ -419,7 +419,7 @@ const getBuildingPortfolio = async (req, res) => {
 
 const getPlatformStats = async (req, res) => {
   try {
-    const statsQuery = { status: { $ne: 'Draft' }, isApproved: true };
+    const statsQuery = { status: { $nin: ['Draft', 'draft'] }, isApproved: true };
 
     const totalBuildings = await Building.countDocuments(statsQuery);
     const cities = await Building.distinct('locationCity', statsQuery);
