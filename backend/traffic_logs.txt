@@ -11931,3 +11931,10 @@
 2026-06-23T09:03:59.172Z API: GET /api/buildings/public/6a36770da8e78b79ef034b94
 2026-06-23T09:03:59.235Z SOCKET: Socket connected: ugVkWhbPxDE1tUXNAACx
 2026-06-23T09:03:59.340Z API: GET /api/buildings/public/6a36770da8e78b79ef034b94
+2026-06-23T09:08:29.059Z SOCKET: Socket connected: GxyuFEinFpXeaS79AAAB
+2026-06-23T09:08:49.208Z API: GET /api/health
+2026-06-23T09:08:49.460Z API: GET /api/buildings/public
+2026-06-23T09:08:49.492Z SOCKET: Socket connected: 1BCZ0SFFhmQRu_VpAAAD
+2026-06-23T09:08:49.495Z API: GET /api/buildings/public/stats
+2026-06-23T09:08:49.662Z API: GET /api/buildings/public
+2026-06-23T09:08:49.760Z API: GET /api/buildings/public/stats
