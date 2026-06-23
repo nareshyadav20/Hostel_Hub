@@ -675,13 +675,13 @@ body {
   background: linear-gradient(135deg, #4F46E5, #3730A3);
   color: white;
   border: none;
-  height: 58px;
-  padding-inline: 32px;
-  border-radius: 100px;
-  font-weight: 700;
-  font-size: 1.05rem;
+  height: 48px;
+  padding-inline: 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
-  box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 4px 12px -2px rgba(79, 70, 229, 0.4);
   transition: all 0.3s;
   display: inline-flex;
   align-items: center;
@@ -689,8 +689,8 @@ body {
 }
 
 .hv2-btn-primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 15px 35px -5px rgba(79, 70, 229, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px rgba(79, 70, 229, 0.5);
 }
 
 .hv2-btn-secondary {
@@ -698,11 +698,11 @@ body {
   backdrop-filter: blur(10px);
   color: #334155;
   border: 1.5px solid #cbd5e1;
-  height: 58px;
-  padding-inline: 32px;
-  border-radius: 100px;
-  font-weight: 700;
-  font-size: 1.05rem;
+  height: 48px;
+  padding-inline: 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.3s;
   display: inline-flex;
@@ -714,8 +714,8 @@ body {
   background: white;
   color: #0f172a;
   border-color: #94a3b8;
-  transform: translateY(-3px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Trust Badges Row */

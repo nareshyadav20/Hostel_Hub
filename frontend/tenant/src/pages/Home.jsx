@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, IndianRupee, Home as HomeIcon, CalendarCheck, Sparkles, Users, Building, Star, Utensils, Wifi, User, Crown, GraduationCap, ChevronDown, X, ChevronRight, Bed, BookOpen, Shirt, Droplet, Car, Video, Wrench, ShieldCheck, MessageSquare, HeartPulse, Clock, UtensilsCrossed, Lock, Settings, Heart } from 'lucide-react';
+import { Search, MapPin, IndianRupee, Home as HomeIcon, CalendarCheck, Sparkles, Users, Building, Star, Utensils, Wifi, User, Crown, GraduationCap, ChevronDown, X, ChevronRight, Bed, BookOpen, Shirt, Droplet, Car, Video, Wrench, ShieldCheck, MessageSquare, HeartPulse, Clock, UtensilsCrossed, Lock, Settings, Heart, Brush, Bell } from 'lucide-react';
 import './Home.css';
 import API from '../api/axios';
 import SearchOverlay from '../components/SearchOverlay';
@@ -137,6 +137,7 @@ const Home = () => {
   const [budget, setBudget] = useState('');
   const [stayType, setStayType] = useState('');
   const [hostelType, setHostelType] = useState('');
+  const [stayQuality, setStayQuality] = useState('');
   const [wishlist, setWishlist] = useState([]);
   const [rooms, setRooms] = useState([]);
 
@@ -144,6 +145,7 @@ const Home = () => {
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
   const [isStayTypeOpen, setIsStayTypeOpen] = useState(false);
   const [isHostelTypeOpen, setIsHostelTypeOpen] = useState(false);
+  const [isStayQualityOpen, setIsStayQualityOpen] = useState(false);
   const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
   const searchBarRef = useRef(null);
 
@@ -321,10 +323,10 @@ const Home = () => {
     { icon: <UtensilsCrossed size={26} color="#0f172a" />, title: 'Home-style Meals', desc: 'Freshly prepared meals served daily' },
     { icon: <Wifi size={26} color="#0f172a" />, title: 'High-Speed Internet', desc: 'Uninterrupted high-speed internet access' },
     { icon: <Users size={26} color="#0f172a" />, title: 'Community & Networking', desc: 'Engaging events, workshops & networking' },
-    { icon: <Lock size={26} color="#0f172a" />, title: 'Top-notch Security', desc: 'Biometric access and 24/7 CCTV surveillance' },
-    { icon: <Sparkles size={26} color="#0f172a" />, title: 'Professional Housekeeping', desc: 'Professional cleaning for pristine living spaces' },
-    { icon: <Clock size={26} color="#0f172a" />, title: '24/7 Support', desc: 'Dedicated staff available round the clock' },
-    { icon: <ShieldCheck size={26} color="#0f172a" />, title: 'No Hidden Charges', desc: 'Transparent pricing with zero surprises' },
+    { icon: <Video size={26} color="#0f172a" />, title: 'Top-notch Security', desc: 'Biometric access and 24/7 CCTV surveillance' },
+    { icon: <Brush size={26} color="#0f172a" />, title: 'Professional Housekeeping', desc: 'Professional cleaning for pristine living spaces' },
+    { icon: <Bell size={26} color="#0f172a" />, title: '24/7 Support', desc: 'Dedicated staff available round the clock' },
+    { icon: <IndianRupee size={26} color="#0f172a" />, title: 'No Hidden Charges', desc: 'Transparent pricing with zero surprises' },
   ];
 
   const testimonials = [
@@ -361,6 +363,7 @@ const Home = () => {
     if (searchLocation) params.append('location', searchLocation);
     if (budget) params.append('budget', budget);
     if (hostelType) params.append('hostelType', hostelType);
+    if (stayQuality) params.append('stayQuality', stayQuality);
     if (stayType) params.append('stayType', stayType);
     navigate(`/explore?${params.toString()}`);
   };
@@ -501,8 +504,8 @@ const Home = () => {
 
           {/* Hero CTAs */}
           <div className="hv2-hero-btns">
-            <button className="hv2-btn-primary" onClick={() => navigate('/explore')}>Explore Rooms</button>
-            <button className="hv2-btn-secondary" onClick={() => navigate('/search')}>Search Hostels</button>
+            <button className="hv2-btn-primary" onClick={() => navigate('/offers')}>View Offers</button>
+            <button className="hv2-btn-secondary" onClick={() => scrollToSection('how')}>How It Works</button>
           </div>
 
           {/* Trust badges */}

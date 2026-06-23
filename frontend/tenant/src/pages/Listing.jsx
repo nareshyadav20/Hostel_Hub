@@ -25,6 +25,12 @@ const Listing = () => {
   // Flow Step State: 1=Hostel Details, 2=Floors, 3=Rooms, 4=Beds
   const [activeStep, setActiveStep] = useState(1);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
+  const [selectedCapacityFilter, setSelectedCapacityFilter] = useState(() => {
+    const st = searchParams.get('stayType');
+    if (st === 'Single') return 1;
+    if (st && !isNaN(Number(st))) return Number(st);
+    return null;
+  });
 
   // Selection state for booking
   const [selectedFloor, setSelectedFloor] = useState(null);
@@ -72,19 +78,37 @@ const Listing = () => {
   const renderField = (value, fallback = 'No Data') =>
     (value === null || value === undefined || value === '') ? fallback : value;
 
-  const getFloorStats = (floor) => {
-    let totalBeds = 0, occupiedBeds = 0;
+  const deduplicateAddress = (address) => {
+    if (!address) return 'No Address Available';
+    // Clean up extra spaces and normalize commas
+    const cleaned = address.replace(/\s+/g, ' ').replace(/\s*,\s*/g, ',');
+    const parts = cleaned.split(',').map(p => p.trim()).filter(Boolean);
+    const uniqueParts = [...new Set(parts)];
+    return uniqueParts.join(', ');
+  };
+
+  const getSharingLabel = (cap) => {
+    const n = Number(cap);
+    if (n >= 6) return '6+ Sharing';
+    return `${n} Sharing`;
+  };
+
+  const getFloorStats = (floor, capacityFilter = null) => {
+    let totalBeds = 0, occupiedBeds = 0, roomCount = 0;
     if (floor.rooms) {
       floor.rooms.forEach(r => {
-        if (r.beds) {
-          totalBeds += r.beds.length;
-          occupiedBeds += r.beds.filter(b => checkOccupied(b)).length;
+        if (!capacityFilter || Number(r.capacity) === capacityFilter) {
+          roomCount++;
+          if (r.beds) {
+            totalBeds += r.beds.length;
+            occupiedBeds += r.beds.filter(b => checkOccupied(b)).length;
+          }
         }
       });
     }
     const availableBeds = totalBeds - occupiedBeds;
     const availabilityPercent = totalBeds > 0 ? Math.round((availableBeds / totalBeds) * 100) : 100;
-    return { totalBeds, occupiedBeds, availableBeds, availabilityPercent, roomCount: floor.rooms?.length || 0 };
+    return { totalBeds, occupiedBeds, availableBeds, availabilityPercent, roomCount };
   };
 
   const getRoomStats = (room) => {
@@ -352,16 +376,23 @@ const Listing = () => {
                 </div>
               </div>
               <div className="liv-address">
-                <MapPin size={16} /><span>{renderField(hostel.address)}</span>
+                <MapPin size={16} /><span>{deduplicateAddress(hostel.address)}</span>
               </div>
               <div className="liv-tag-pills">
                 {(hostel.locality || hostel.locationCity) && (
                   <span className="liv-pill-tag location"><MapPin size={13} /> {hostel.locality || hostel.locationCity}</span>
                 )}
-                <span className="liv-pill-tag gender">
-                  <User size={13} /> {getHostelTypeLabel(hostel)}
-                </span>
-                {hostel.category && <span className="liv-pill-tag"><Award size={13} /> {hostel.category === 'Student' ? 'Student Friendly' : hostel.category === 'Luxury' ? 'Premium' : hostel.category === 'Professional' ? 'Professional' : hostel.category}</span>}
+                
+                {getHostelTypeLabel(hostel) && (
+                  <span className="liv-pill-tag gender">
+                    <User size={13} /> {getHostelTypeLabel(hostel)}
+                  </span>
+                )}
+                
+                {hostel.category && hostel.category !== getHostelTypeLabel(hostel) && (
+                  <span className="liv-pill-tag"><Award size={13} /> {hostel.category === 'Student' ? 'Student Friendly' : hostel.category === 'Luxury' ? 'Premium' : hostel.category === 'Professional' ? 'Professional' : hostel.category}</span>
+                )}
+                
                 {hostel.foodCharges > 0 && <span className="liv-pill-tag food"><Coffee size={13} /> Food Included</span>}
                 {hostel.isAC && <span className="liv-pill-tag ac"><Sparkles size={13} /> AC Rooms</span>}
               </div>
@@ -428,8 +459,27 @@ const Listing = () => {
               <div className="liv-step-panel fade-in">
                 {/* Property Overview instead of About */}
                   {(() => {
-                    const rooms = hostel.floors?.length ? hostel.floors.reduce((acc, f) => acc + (f.rooms?.length || 0), 0) : (hostel.totalRooms || 0);
-                    const beds = hostel.floors?.length ? hostel.floors.reduce((acc, f) => acc + (f.rooms?.reduce((bAcc, r) => bAcc + (r.beds?.length || 0), 0) || 0), 0) : (hostel.totalBeds || 0);
+                    // Strictly compute from actual floor data the owner created
+                    const hasFloors = hostel.floors && hostel.floors.length > 0;
+                    const rooms = hasFloors
+                      ? hostel.floors.reduce((acc, f) => acc + (f.rooms?.length || 0), 0)
+                      : 0;
+                    const beds = hasFloors
+                      ? hostel.floors.reduce((acc, f) =>
+                          acc + (f.rooms?.reduce((bAcc, r) => bAcc + (r.beds?.length || 0), 0) || 0), 0)
+                      : 0;
+                    const floorCount = hasFloors ? hostel.floors.length : 0;
+                    
+                    // Collect unique sharing types actually created by owner
+                    const sharingTypes = new Set();
+                    if (hasFloors) {
+                      hostel.floors.forEach(f => {
+                        f.rooms?.forEach(r => {
+                          const cap = Number(r.capacity);
+                          if (cap > 0) sharingTypes.add(cap);
+                        });
+                      });
+                    }
                     
                     return (
                       <div className="liv-prop-overview-tags">
@@ -438,7 +488,16 @@ const Listing = () => {
                             <User size={16} className="text-purple" />
                             <div className="liv-ot-info">
                               <span>Gender</span>
-                              <strong>{renderField(hostel.genderType)}</strong>
+                              <strong>{hostel.genderType}</strong>
+                            </div>
+                          </div>
+                        )}
+                        {floorCount > 0 && (
+                          <div className="liv-overview-tag">
+                            <LayoutGrid size={16} className="text-blue" />
+                            <div className="liv-ot-info">
+                              <span>Floors</span>
+                              <strong>{floorCount}</strong>
                             </div>
                           </div>
                         )}
@@ -460,18 +519,44 @@ const Listing = () => {
                             </div>
                           </div>
                         )}
+                        {sharingTypes.size > 0 && (
+                          <div className="liv-overview-tag">
+                            <Users size={16} className="text-purple" />
+                            <div className="liv-ot-info">
+                              <span>Sharing</span>
+                              <strong>
+                                {Array.from(sharingTypes).sort((a,b)=>a-b).map(c =>
+                                  getSharingLabel(c)
+                                ).join(', ')}
+                              </strong>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })()}
                   
-                  {hostel.description && (
-                    <div className="liv-about-section">
-                      <h2 className="liv-section-title">About This Property</h2>
-                      <p className="liv-desc-text">
-                        {hostel.description.replace(/[#*]/g, '').replace(/---/g, '').trim()}
-                      </p>
-                    </div>
-                  )}
+                  {(() => {
+                    if (!hostel.description) return null;
+                    // Remove auto-generated metadata lines the old form used to create
+                    const cleaned = hostel.description
+                      .replace(/#+\s*Property Overview[\s\S]*?\n/gi, '')
+                      .replace(/Type:\s*[^|\n]*/gi, '')
+                      .replace(/Gender:\s*[^|\n]*/gi, '')
+                      .replace(/Contact:\s*[^\n]*/gi, '')
+                      .replace(/---+/g, '')
+                      .replace(/\|/g, '')
+                      .replace(/[#*]+/g, '')
+                      .replace(/\n{3,}/g, '\n\n')
+                      .trim();
+                    if (!cleaned) return null;
+                    return (
+                      <div className="liv-about-section">
+                        <h2 className="liv-section-title">About This Property</h2>
+                        <p className="liv-desc-text" style={{ whiteSpace: 'pre-wrap' }}>{cleaned}</p>
+                      </div>
+                    );
+                  })()}
                   
                   <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
                   
@@ -479,36 +564,43 @@ const Listing = () => {
                     <h2 className="liv-section-title">Pricing & Fees</h2>
                     
                     <div className="liv-pricing-grid-new">
-                      {/* Standard Fees */}
-                      <div className="liv-pricing-card-new">
-                        <div className="liv-pc-icon base"><MapPin size={20} /></div>
-                        <div className="liv-pc-details">
-                          <span className="liv-pc-label">Base Rent Starts At</span>
-                          <span className="liv-pc-value">₹{(hostel.startingPrice || 0).toLocaleString()} <small>/mo</small></span>
+                      {/* Base Rent — only show if explicitly set */}
+                      {hostel.startingPrice > 0 && (
+                        <div className="liv-pricing-card-new">
+                          <div className="liv-pc-icon base"><MapPin size={20} /></div>
+                          <div className="liv-pc-details">
+                            <span className="liv-pc-label">Base Rent Starts At</span>
+                            <span className="liv-pc-value">₹{hostel.startingPrice.toLocaleString()} <small>/mo</small></span>
+                          </div>
                         </div>
-                      </div>
+                      )}
                       
-                      <div className="liv-pricing-card-new">
-                        <div className="liv-pc-icon deposit"><Lock size={20} /></div>
-                        <div className="liv-pc-details">
-                          <span className="liv-pc-label">Security Deposit</span>
-                          <span className="liv-pc-value">₹{(hostel.securityDeposit || 0).toLocaleString()}</span>
+                      {/* Security Deposit — only if owner set it > 0 */}
+                      {hostel.securityDeposit > 0 && (
+                        <div className="liv-pricing-card-new">
+                          <div className="liv-pc-icon deposit"><Lock size={20} /></div>
+                          <div className="liv-pc-details">
+                            <span className="liv-pc-label">Security Deposit</span>
+                            <span className="liv-pc-value">₹{hostel.securityDeposit.toLocaleString()}</span>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      {(hostel.mess || hostel.foodCharges > 0) && (
+                      {/* Food — only if owner explicitly enabled mess */}
+                      {hostel.mess === true && (
                         <div className="liv-pricing-card-new">
                           <div className="liv-pc-icon food"><Coffee size={20} /></div>
                           <div className="liv-pc-details">
                             <span className="liv-pc-label">Food (Monthly)</span>
                             <span className="liv-pc-value">
-                              {((hostel.mess && !hostel.foodCharges) || hostel.foodCharges === 0) ? 'Included' : `₹${hostel.foodCharges.toLocaleString()}`} <small>/mo</small>
+                              {hostel.foodCharges > 0 ? `₹${hostel.foodCharges.toLocaleString()}` : 'Included'} <small>/mo</small>
                             </span>
                           </div>
                         </div>
                       )}
 
-                      {hostel.maintenanceCharges > 0 && (
+                      {/* Maintenance — only if owner explicitly set a non-default value */}
+                      {hostel.maintenanceCharges > 0 && hostel.maintenanceCharges !== 799 && (
                         <div className="liv-pricing-card-new">
                           <div className="liv-pc-icon maint"><ZapIcon size={20} /></div>
                           <div className="liv-pc-details">
@@ -519,20 +611,56 @@ const Listing = () => {
                       )}
                     </div>
 
-                    {/* Room Sharing Options */}
-                    {(hostel.rentSingle || hostel.rentDouble || hostel.rentTriple || hostel.rent4Sharing || hostel.rent5Sharing || hostel.rent6Sharing) && (
-                      <div className="liv-sharing-options-box">
-                        <h3 className="liv-sharing-title">Room Options</h3>
-                        <div className="liv-sharing-chips">
-                          {hostel.rentSingle > 0 && <div className="liv-sharing-chip"><span>Single</span><strong>₹{hostel.rentSingle.toLocaleString()}</strong></div>}
-                          {hostel.rentDouble > 0 && <div className="liv-sharing-chip"><span>Double</span><strong>₹{hostel.rentDouble.toLocaleString()}</strong></div>}
-                          {hostel.rentTriple > 0 && <div className="liv-sharing-chip"><span>Triple</span><strong>₹{hostel.rentTriple.toLocaleString()}</strong></div>}
-                          {hostel.rent4Sharing > 0 && <div className="liv-sharing-chip"><span>4-Sharing</span><strong>₹{hostel.rent4Sharing.toLocaleString()}</strong></div>}
-                          {hostel.rent5Sharing > 0 && <div className="liv-sharing-chip"><span>5-Sharing</span><strong>₹{hostel.rent5Sharing.toLocaleString()}</strong></div>}
-                          {hostel.rent6Sharing > 0 && <div className="liv-sharing-chip"><span>6-Sharing</span><strong>₹{hostel.rent6Sharing.toLocaleString()}</strong></div>}
+                    {/* Dynamic Room Sharing Options */}
+                    {(() => {
+                      const optionsMap = new Map();
+                      
+                      if (hostel.floors) {
+                        hostel.floors.forEach(f => {
+                          if (f.rooms) {
+                            f.rooms.forEach(r => {
+                              const cap = Number(r.capacity);
+                              const rent = Number(r.rentAmount) || 0;
+                              // ONLY show if the owner explicitly set a rent on this room
+                              if (cap > 0 && rent > 0) {
+                                if (!optionsMap.has(cap) || rent < optionsMap.get(cap)) {
+                                  optionsMap.set(cap, rent);
+                                }
+                              }
+                            });
+                          }
+                        });
+                      }
+                      
+                      if (optionsMap.size === 0) return null;
+                      
+                      const options = Array.from(optionsMap.entries())
+                        .map(([cap, price]) => ({ cap: Number(cap), price }))
+                        .sort((a, b) => a.cap - b.cap);
+
+                      return (
+                        <div className="liv-sharing-options-box">
+                          <h3 className="liv-sharing-title">Available Room Options</h3>
+                          <div className="liv-sharing-chips">
+                            {options.map(opt => (
+                              <button 
+                                key={opt.cap} 
+                                className={`liv-sharing-chip ${selectedCapacityFilter === opt.cap ? 'active' : ''}`}
+                                onClick={() => {
+                                  setSelectedCapacityFilter(opt.cap === selectedCapacityFilter ? null : opt.cap);
+                                  setSelectedFloor(null); // Clear floor to ensure clean navigation
+                                  setActiveStep(2); // Jump to floors view to see filtered floors
+                                }}
+                                type="button"
+                              >
+                                <span>{getSharingLabel(opt.cap)}</span>
+                                <strong>₹{opt.price.toLocaleString()}</strong>
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                   
                   <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
@@ -580,21 +708,27 @@ const Listing = () => {
                     <div className="liv-cc-icon"><Info size={24} className="text-blue" /></div>
                     <div className="liv-cc-content">
                       <h3 className="liv-cc-title">Property Management</h3>
-                      {(hostel.ownerName || hostel.ownerPhone || hostel.warden || hostel.wardenNumber) ? (
+                      {(hostel.ownerName || hostel.ownerPhone || hostel.warden || hostel.wardenNumber || hostel.staffInfo?.name) ? (
                         <div className="liv-cc-grid">
                           {hostel.warden && (
                             <div className="liv-cc-row">
                               <span className="liv-cc-label">Warden:</span>
-                              <span className="liv-cc-val">{hostel.warden} {hostel.wardenNumber ? `(${hostel.wardenNumber})` : ''}</span>
+                              <span className="liv-cc-val">{hostel.warden}{hostel.wardenNumber ? ` — ${hostel.wardenNumber}` : ''}</span>
+                            </div>
+                          )}
+                          {hostel.staffInfo?.name && (
+                            <div className="liv-cc-row">
+                              <span className="liv-cc-label">{hostel.staffInfo.role || 'Staff'}:</span>
+                              <span className="liv-cc-val">{hostel.staffInfo.name}{hostel.staffInfo.contact ? ` — ${hostel.staffInfo.contact}` : ''}</span>
                             </div>
                           )}
                           {hostel.ownerName && (
                             <div className="liv-cc-row">
                               <span className="liv-cc-label">Owner:</span>
-                              <span className="liv-cc-val">{hostel.ownerName} {hostel.ownerPhone ? `(${hostel.ownerPhone})` : ''}</span>
+                              <span className="liv-cc-val">{hostel.ownerName}{hostel.ownerPhone ? ` — ${hostel.ownerPhone}` : ''}</span>
                             </div>
                           )}
-                          {!hostel.warden && !hostel.ownerName && hostel.ownerPhone && (
+                          {!hostel.warden && !hostel.ownerName && !hostel.staffInfo?.name && hostel.ownerPhone && (
                             <div className="liv-cc-row">
                               <span className="liv-cc-label">Phone:</span>
                               <span className="liv-cc-val">{hostel.ownerPhone}</span>
@@ -636,52 +770,72 @@ const Listing = () => {
                     </div>
                   ) : (
                     <div className="liv-floor-list">
-                      {hostel.floors.map((floor) => {
-                        const stats = getFloorStats(floor);
-                        const isSelected = selectedFloor?._id === floor._id;
-                        return (
-                          <div
-                            key={floor._id}
-                            className={`liv-floor-select-card ${isSelected ? 'selected' : ''} ${stats.availableBeds === 0 ? 'full' : ''}`}
-                            onClick={() => handleFloorSelect(floor)}
-                          >
-                            <div className="liv-fsc-left">
-                              <div className={`liv-fsc-icon ${isSelected ? 'active' : ''}`}>
-                                <LayoutGrid size={22} />
-                              </div>
-                              <div className="liv-fsc-info">
-                                <h4>Floor {floor.floorNumber}</h4>
-                                <div className="liv-fsc-meta">
-                                  <span>{stats.roomCount} Rooms</span>
-                                  <span className="liv-dot">·</span>
-                                  <span>{stats.totalBeds} Beds</span>
-                                  <span className="liv-dot">·</span>
-                                  <span className={stats.availableBeds > 0 ? 'text-green' : 'text-red'}>
-                                    {stats.availableBeds} Available
-                                  </span>
+                      {(() => {
+                        const filteredFloors = hostel.floors.filter(floor => {
+                          if (!selectedCapacityFilter) return true;
+                          return floor.rooms && floor.rooms.some(r => Number(r.capacity) === selectedCapacityFilter);
+                        });
+
+                        if (filteredFloors.length === 0) {
+                          return (
+                            <div className="liv-empty-state">
+                              <Info size={32} />
+                              <h3>No Floors Match Your Filter</h3>
+                              <p>None of the floors have rooms for {selectedCapacityFilter === 1 ? 'Single Room' : `${selectedCapacityFilter}-Sharing`}.</p>
+                              <button className="liv-step-back-pill" style={{ marginTop: '1rem' }} onClick={() => setSelectedCapacityFilter(null)}>
+                                Clear Filter
+                              </button>
+                            </div>
+                          );
+                        }
+
+                        return filteredFloors.map((floor) => {
+                          const stats = getFloorStats(floor, selectedCapacityFilter);
+                          const isSelected = selectedFloor?._id === floor._id;
+                          return (
+                            <div
+                              key={floor._id}
+                              className={`liv-floor-select-card ${isSelected ? 'selected' : ''} ${stats.availableBeds === 0 ? 'full' : ''}`}
+                              onClick={() => handleFloorSelect(floor)}
+                            >
+                              <div className="liv-fsc-left">
+                                <div className={`liv-fsc-icon ${isSelected ? 'active' : ''}`}>
+                                  <LayoutGrid size={22} />
                                 </div>
-                                {floor.description && <p className="liv-fsc-desc">{floor.description}</p>}
+                                <div className="liv-fsc-info">
+                                  <h4>Floor {floor.floorNumber}</h4>
+                                  <div className="liv-fsc-meta">
+                                    <span>{stats.roomCount} Rooms</span>
+                                    <span className="liv-dot">·</span>
+                                    <span>{stats.totalBeds} Beds</span>
+                                    <span className="liv-dot">·</span>
+                                    <span className={stats.availableBeds > 0 ? 'text-green' : 'text-red'}>
+                                      {stats.availableBeds} Available
+                                    </span>
+                                  </div>
+                                  {floor.description && <p className="liv-fsc-desc">{floor.description}</p>}
+                                </div>
+                              </div>
+                              <div className="liv-fsc-right">
+                                <div className="liv-fsc-avail-ring">
+                                  <svg viewBox="0 0 36 36" className="liv-fsc-ring-svg">
+                                    <path className="liv-fsc-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path
+                                      className="liv-fsc-ring-fill"
+                                      strokeDasharray={`${stats.availabilityPercent}, 100`}
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    />
+                                    <text x="18" y="21" className="liv-fsc-ring-text">{stats.availabilityPercent}%</text>
+                                  </svg>
+                                </div>
+                                <div className={`liv-fsc-arrow-wrap ${isSelected ? 'selected' : ''}`}>
+                                  <ChevronRight size={20} />
+                                </div>
                               </div>
                             </div>
-                            <div className="liv-fsc-right">
-                              <div className="liv-fsc-avail-ring">
-                                <svg viewBox="0 0 36 36" className="liv-fsc-ring-svg">
-                                  <path className="liv-fsc-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                  <path
-                                    className="liv-fsc-ring-fill"
-                                    strokeDasharray={`${stats.availabilityPercent}, 100`}
-                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                  />
-                                  <text x="18" y="21" className="liv-fsc-ring-text">{stats.availabilityPercent}%</text>
-                                </svg>
-                              </div>
-                              <div className={`liv-fsc-arrow-wrap ${isSelected ? 'selected' : ''}`}>
-                                <ChevronRight size={20} />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        });
+                      })()}
                     </div>
                   )}
                 </div>
@@ -696,6 +850,7 @@ const Listing = () => {
                     <div>
                       <h2 className="liv-section-title">
                         {selectedFloor ? `Rooms on Floor ${selectedFloor.floorNumber}` : 'All Rooms'}
+                        {selectedCapacityFilter && ` (${selectedCapacityFilter === 1 ? 'Single Room' : selectedCapacityFilter + ' Sharing'})`}
                       </h2>
                       <p className="liv-property-desc">
                         {selectedFloor
@@ -711,9 +866,13 @@ const Listing = () => {
                   </div>
 
                   {(() => {
-                    const roomList = selectedFloor
+                    let roomList = selectedFloor
                       ? (selectedFloor.rooms || []).map(room => ({ room, floor: selectedFloor }))
                       : (hostel.floors || []).flatMap(floor => (floor.rooms || []).map(room => ({ room, floor })));
+
+                    if (selectedCapacityFilter) {
+                      roomList = roomList.filter(({ room }) => Number(room.capacity) === selectedCapacityFilter);
+                    }
 
                     if (roomList.length === 0) return (
                       <div className="liv-empty-state">
@@ -755,9 +914,7 @@ const Listing = () => {
                               <div className="liv-rfc-details">
                                 <div className="liv-rfc-detail-item">
                                   <Users size={13} />
-                                  <span>
-                                    {room.capacity === 1 ? 'Single' : room.capacity === 2 ? 'Double' : room.capacity === 3 ? 'Triple' : `${room.capacity}-Share`}
-                                  </span>
+                                  <span>{getSharingLabel(room.capacity)}</span>
                                 </div>
                                 <div className="liv-rfc-detail-item">
                                   {room.isAC

@@ -24,6 +24,7 @@ const ICONS = {
 const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
   const [imgIdx, setImgIdx] = useState(0);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!hostel.images || hostel.images.length <= 1) return;
@@ -36,6 +37,16 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
   const currentImage = hostel.images && hostel.images.length > 0
     ? hostel.images[imgIdx]
     : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800';
+
+  const handleViewDetails = (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate(`/listing/${hostel.id}`);
+    } else {
+      navigate('/login');
+    }
+  };
 
   return (
     <div className="search-hostel-card-pro is-grid">
@@ -71,26 +82,27 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
         <div className="details-mid-grid">
           <div className="pricing-stack-pro">
             <span className="price-label-pro">Starts from</span>
-            <span className="price-val-pro">₹{(hostel.price || 0).toLocaleString()}</span>
-            <span className="price-per-pro">/month</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+              <span className="price-val-pro">₹{(hostel.price || 0).toLocaleString()}</span>
+              <span className="price-per-pro">/month</span>
+            </div>
           </div>
-
         </div>
 
         {hostel.amenities && hostel.amenities.length > 0 && (
           <div className="amenities-footer-row" style={{ position: 'relative' }}>
             <div className="amenity-mini-tags">
-              {hostel.amenities.slice(0, 3).map(a => (
+              {hostel.amenities.slice(0, 2).map(a => (
                 <span key={a} className="tag-pro">{a}</span>
               ))}
-              {hostel.amenities.length > 3 && (
+              {hostel.amenities.length > 2 && (
                 <button type="button" className="tag-more" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAllAmenities(!showAllAmenities); }} style={{ background: 'none', border: 'none', cursor: 'pointer', outline: 'none' }}>
-                  +{hostel.amenities.length - 3} More
+                  +{hostel.amenities.length - 2} More
                 </button>
               )}
             </div>
 
-            {showAllAmenities && hostel.amenities.length > 3 && (
+            {showAllAmenities && hostel.amenities.length > 2 && (
               <div style={{
                 position: 'absolute', bottom: '100%', left: '-10px', right: '-10px',
                 background: '#FFFFFF', padding: '1rem', borderRadius: '16px',
@@ -101,7 +113,7 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
                   <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Extra Amenities</span>
                   <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAllAmenities(false); }} style={{ background: '#F1F5F9', border: 'none', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748B', fontSize: '10px', fontWeight: 'bold' }}>✕</button>
                 </div>
-                {hostel.amenities.slice(3).map(a => (
+                {hostel.amenities.slice(2).map(a => (
                   <span key={`pop-${a}`} className="tag-pro" style={{ background: '#F8FAFC', border: '1px solid #e2e8f0' }}>{a}</span>
                 ))}
               </div>
@@ -110,8 +122,7 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
         )}
 
         <div className="card-actions-row-pro">
-          <Link to={`/listing/${hostel.id}`} className="btn-secondary-pro">View Details</Link>
-          <Link to={`/listing/${hostel.id}`} className="btn-primary-pro">Select Room</Link>
+          <button onClick={handleViewDetails} className="btn-primary-pro" style={{ width: '100%' }}>View Details</button>
         </div>
       </div>
     </div>
@@ -161,6 +172,7 @@ const Landing = () => {
   const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [searchLocality, setSearchLocality] = useState('');
   const [hostelType, setHostelType] = useState('');
+  const [stayQualityFilter, setStayQualityFilter] = useState('');
   const [sharing, setSharing] = useState('');
   const [sortBy, setSortBy] = useState('');
   const [budgetMin, setBudgetMin] = useState(0);
@@ -235,6 +247,8 @@ const Landing = () => {
     if (typeParam) setHostelType(typeParam);
     const catParam = queryParams.get('category');
     if (catParam) setHostelType(catParam === 'Luxury' ? 'Premium' : catParam);
+    const sqParam = queryParams.get('stayQuality');
+    if (sqParam) setStayQualityFilter(sqParam);
     const stayTypeParam = queryParams.get('stayType');
     if (stayTypeParam) setSharing(stayTypeParam);
     const localityParam = queryParams.get('locality');
@@ -278,6 +292,7 @@ const Landing = () => {
         amenities: derivedAmenities,
         gender: (b.genderType && !['mixed', 'unisex'].includes(b.genderType.toLowerCase())) ? b.genderType : 'Coliving',
         category: b.category || '',
+        stayQuality: b.stayQuality || '',
         hasSingle: sharingFlags.hasSingle,
         hasDouble: sharingFlags.hasDouble,
         hasTriple: sharingFlags.hasTriple,
@@ -329,7 +344,7 @@ const Landing = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCity, selectedAmenities, searchLocality, hostelType, sharing, sortBy, budgetMin, budgetMax]);
+  }, [selectedCity, selectedAmenities, searchLocality, hostelType, sharing, sortBy, budgetMin, budgetMax, stayQualityFilter]);
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -345,6 +360,7 @@ const Landing = () => {
     setSelectedAmenities([]);
     setSearchLocality('');
     setHostelType('');
+    setStayQualityFilter('');
     setSharing('');
     setSortBy('');
     setBudgetMin(0);
@@ -400,6 +416,11 @@ const Landing = () => {
         if (typeStr === 'student' && catStr !== 'student') return false;
       }
 
+      // Stay Quality
+      if (stayQualityFilter && stayQualityFilter !== 'Any') {
+        if ((h.stayQuality || '').toLowerCase() !== stayQualityFilter.toLowerCase()) return false;
+      }
+
       // Sharing
       if (sharing && sharing !== 'Any') {
         if (sharing === 'Single' && !h.hasSingle) return false;
@@ -441,7 +462,7 @@ const Landing = () => {
   const totalPages = Math.ceil(filteredHostels.length / itemsPerPage);
 
   const activeFilterCount = [
-    hostelType, sharing, searchLocality,
+    hostelType, sharing, searchLocality, stayQualityFilter,
     selectedAmenities.length > 0 ? 'a' : '',
     (budgetMin > 0 || budgetMax < 60000) ? 'b' : ''
   ].filter(Boolean).length;
@@ -569,7 +590,7 @@ const Landing = () => {
             {/* Localities — dynamic from selected city */}
             {uniqueLocalities.length > 0 && (
               <div className="filter-section-pro">
-                <label className="section-label-pro"><ICONS.Location /> Localities in {selectedCity}</label>
+                <label className="section-label-pro"><ICONS.Location /> Localities</label>
                 <div className="select-wrapper-pro">
                   <select value={searchLocality} onChange={e => setSearchLocality(e.target.value)}>
                     <option value="">All Localities</option>
@@ -608,10 +629,23 @@ const Landing = () => {
             <div className="filter-section-pro">
               <label className="section-label-pro"><ICONS.Home /> Hostel Type</label>
               <div className="pill-group">
-                {["Any", "Men's", "Women's", 'Co-living', 'Premium', 'Student'].map(t => (
+                {["Any", "Men's", "Women's", 'Co-living'].map(t => (
                   <button key={t}
                     className={`pill-btn ${(!hostelType && t === 'Any') || hostelType === t ? 'active' : ''}`}
                     onClick={() => setHostelType(t === 'Any' ? '' : t)}
+                  >{t}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Stay Quality */}
+            <div className="filter-section-pro">
+              <label className="section-label-pro"><ICONS.Star /> Stay Quality</label>
+              <div className="pill-group">
+                {["Any", "Standard", "Premium", "Luxury"].map(t => (
+                  <button key={t}
+                    className={`pill-btn ${(!stayQualityFilter && t === 'Any') || stayQualityFilter === t ? 'active' : ''}`}
+                    onClick={() => setStayQualityFilter(t === 'Any' ? '' : t)}
                   >{t}</button>
                 ))}
               </div>
