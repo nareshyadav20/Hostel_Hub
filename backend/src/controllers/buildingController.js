@@ -72,9 +72,9 @@ const createBuilding = async (req, res) => {
       popularityLabel,
       policies: finalPolicies,
       staffInfo: finalStaffInfo,
-      status: initialStatus === 'Pending Approval' ? 'Active' : initialStatus,
-      approvalStatus: initialStatus === 'Pending Approval' ? 'approved' : 'pending',
-      isApproved: initialStatus === 'Pending Approval' ? true : false,
+      status: initialStatus,
+      approvalStatus: initialStatus === 'Active' ? 'approved' : 'pending',
+      isApproved: initialStatus === 'Active' ? true : false,
       lastStep: lastStep || 1,
       draftData: finalDraftData,
       documents: finalDocuments,
@@ -183,9 +183,9 @@ const updateBuilding = async (req, res) => {
     }
 
     if (updateData.status === 'Pending Approval' || updateData.status === 'Pending') {
-      updateData.status = 'Active';
-      updateData.approvalStatus = 'approved';
-      updateData.isApproved = true;
+      updateData.status = 'Pending Approval';
+      updateData.approvalStatus = 'pending';
+      updateData.isApproved = false;
       updateData.rejectionReason = null;
     }
 

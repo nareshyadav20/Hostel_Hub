@@ -217,8 +217,10 @@ app.get('/api/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
 });
 
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'healthy', timestamp: new Date() });
+app.get('/api/health', async (req, res) => {
+  const Building = require('./models/Building');
+  const b = await Building.find().lean();
+  res.status(200).json({ status: 'healthy', count: b.length, buildings: b.map(x => ({name: x.name, status: x.status, isApproved: x.isApproved, approvalStatus: x.approvalStatus})) });
 });
 
 app.get('/', (req, res) => {
