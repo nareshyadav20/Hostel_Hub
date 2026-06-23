@@ -87,7 +87,7 @@ const Wishlist = () => {
               >
                 <div className="card-overlay-badges">
                   <span className="availability-badge">Available</span>
-                  <button className="remove-btn-overlay" onClick={() => handleRemove(hostel._id)} title="Remove from wishlist">
+                  <button className="remove-btn-overlay" onClick={(e) => { e.stopPropagation(); handleRemove(hostel._id); }} title="Remove from wishlist">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <polyline points="3 6 5 6 21 6"></polyline>
                       <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
@@ -126,7 +126,7 @@ const Wishlist = () => {
                     <span className="price-label">per month</span>
                   </div>
                   <div className="action-button-group">
-                    <Link to={`/booking/${hostel.hostelId || hostel._id}`} state={{ basePrice: hostel.hostelPrice }} className="btn-primary-small">Book Now</Link>
+                    <Link to={`/listing/${hostel.hostelId || hostel._id}`} className="btn-primary-small">Select Room</Link>
                     <Link to={`/listing/${hostel.hostelId || hostel._id}`} className="btn-secondary-small">Details</Link>
                   </div>
                 </div>

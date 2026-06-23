@@ -187,17 +187,17 @@ const Offers = () => {
     <div className="offers-page">
       {/* Header */}
       <header className="offers-header">
-        <div className="offers-container header-flex">
-          <div className="offers-logo" onClick={() => navigate('/')}>
+        <div className="offers-container header-flex" style={{ position: 'relative' }}>
+          <button className="offers-back-btn" onClick={() => navigate(-1)}>
+            <ChevronLeft size={16} /> Back
+          </button>
+          <div className="offers-logo" onClick={() => navigate('/')} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
               <path d="M12 2L3 9V20C3 20.55 3.21 21.04 3.59 21.41 3.96 21.79 4.47 22 5 22H19C19.53 22 20.04 21.79 20.41 21.41 20.79 21.04 21 20.55 21 20V9L12 2Z" fill="#5B5BD6"/>
               <path d="M9 22V12H15V22" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
             <span className="offers-logo-text">Livora</span>
           </div>
-          <button className="offers-back-btn" onClick={() => navigate('/')}>
-            <ChevronLeft size={16} /> Back to Home
-          </button>
         </div>
       </header>
 
