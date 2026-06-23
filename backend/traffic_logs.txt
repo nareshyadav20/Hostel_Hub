@@ -11711,3 +11711,7 @@
 2026-06-23T06:26:34.781Z API: GET /api/tenant-portal/wishlist
 2026-06-23T06:26:34.815Z SOCKET: Socket connected: kcPUxTctfJyslgxCAAAR
 2026-06-23T06:26:34.847Z API: GET /api/buildings/public
+2026-06-23T06:33:01.791Z API: GET /api/buildings/public
+2026-06-23T06:33:01.796Z API: GET /api/buildings/public/stats
+2026-06-23T06:33:01.934Z API: GET /api/buildings/public
+2026-06-23T06:33:01.960Z API: GET /api/buildings/public/stats
