@@ -19,25 +19,18 @@ const ICONS = {
 };
 
 const BUDGET_OPTIONS = [
-  { label: 'Any Budget', value: 'all' },
-  { label: 'Under ₹8k', value: 'under-8k' },
-  { label: '₹8k – ₹12k', value: '8k-12k' },
-  { label: '₹12k – ₹18k', value: '12k-18k' },
-  { label: 'Above ₹18k', value: 'above-18k' },
+  { label: 'Any Budget', min: 0, max: 60000 },
+  { label: 'Under ₹8k', min: 0, max: 8000 },
+  { label: '₹8k – ₹12k', min: 8000, max: 12000 },
+  { label: '₹12k – ₹18k', min: 12000, max: 18000 },
+  { label: 'Above ₹18k', min: 18000, max: 60000 },
 ];
 
-const HOSTEL_TYPE_OPTIONS = ['Any Hostel', "Men's", "Women's", 'Co-living'];
-
-const SHARING_OPTIONS = ['No Pref', 'Single', '2 Sharing', '3 Sharing', '4 Sharing', '5 Sharing', '6 Sharing', 'Dormitory', 'Other'];
-
-const filterByBudget = (price, budgetVal) => {
-  if (budgetVal === 'all') return true;
-  if (budgetVal === 'under-8k') return price < 8000;
-  if (budgetVal === '8k-12k') return price >= 8000 && price <= 12000;
-  if (budgetVal === '12k-18k') return price > 12000 && price <= 18000;
-  if (budgetVal === 'above-18k') return price > 18000;
-  return true;
-};
+const CITIES_LIST = ['Bengaluru', 'Hyderabad', 'Mumbai', 'Chennai', 'Delhi', 'Pune', 'Noida', 'Gurgaon'];
+const HOSTEL_TYPE_OPTIONS = ['Any', "Men's", "Women's", 'Co-living'];
+const SHARING_OPTIONS = ['Any', 'Single', '2', '3', '4', '5', '6'];
+const STAY_QUALITY_OPTIONS = ["Any", "Standard", "Premium", "Luxury"];
+const AMENITIES_LIST = ['WiFi', 'AC', 'Gym', 'Food/Mess', 'Parking', 'Power Backup', 'Laundry', 'CCTV'];
 
 const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
   const [imgIdx, setImgIdx] = useState(0);
@@ -94,7 +87,6 @@ const HostelCard = ({ hostel, isWishlisted, toggleWishlist, onImageClick }) => {
             <span className="price-val-pro">₹{(hostel.price || 0).toLocaleString()}</span>
             <span className="price-per-pro">/month</span>
           </div>
-
         </div>
 
         {hostel.amenities && hostel.amenities.length > 0 && (
@@ -148,22 +140,25 @@ const Search = () => {
   const qHostelType = queryParams.get('hostelType') || 'all';
   const qStayType = queryParams.get('stayType') || 'all';
 
-  // Map home page budget labels to our internal values
-  const mapHomeBudget = (b) => {
-    if (!b || b === 'all') return 'all';
-    if (b === 'Under ₹8k') return 'under-8k';
-    if (b === '₹8k–₹12k') return '8k-12k';
-    if (b === '₹12k–₹18k') return '12k-18k';
-    if (b === 'Above ₹18k') return 'above-18k';
-    return b; // already an internal value
-  };
+  // Parse initial query params
+  const initialLoc = qLocation !== 'all' ? (qLocation.charAt(0).toUpperCase() + qLocation.slice(1).toLowerCase()) : 'All Cities';
+  const initialCity = CITIES_LIST.some(c => c.toLowerCase() === initialLoc.toLowerCase()) ? initialLoc : 'All Cities';
+  const initialLocality = initialCity === 'All Cities' && qLocation !== 'all' ? qLocation : '';
+  
+  let initBMin = 0, initBMax = 60000;
+  if (qBudget === 'Under ₹8k') { initBMax = 8000; }
+  else if (qBudget === '₹8k–₹12k') { initBMin = 8000; initBMax = 12000; }
+  else if (qBudget === '₹12k–₹18k') { initBMin = 12000; initBMax = 18000; }
+  else if (qBudget === 'Above ₹18k') { initBMin = 18000; }
 
-  const [filters, setFilters] = useState({
-    location: qLocation !== 'all' ? qLocation : '',
-    budget: mapHomeBudget(qBudget),
-    hostelType: qHostelType !== 'all' ? qHostelType : '',
-    sharing: qStayType !== 'all' ? qStayType : '',
-  });
+  const [selectedCity, setSelectedCity] = useState(initialCity);
+  const [searchLocality, setSearchLocality] = useState(initialLocality);
+  const [budgetMin, setBudgetMin] = useState(initBMin);
+  const [budgetMax, setBudgetMax] = useState(initBMax);
+  const [hostelType, setHostelType] = useState(qHostelType !== 'all' ? qHostelType : '');
+  const [stayQualityFilter, setStayQualityFilter] = useState('');
+  const [sharing, setSharing] = useState(qStayType !== 'all' ? qStayType : '');
+  const [selectedAmenities, setSelectedAmenities] = useState([]);
 
   const [wishlist, setWishlist] = useState([]);
   const [allHostels, setAllHostels] = useState([]);
@@ -197,10 +192,19 @@ const Search = () => {
             id: b._id,
             name: b.name,
             location: (b.locality ? b.locality + ', ' : '') + (b.address || b.location || 'Location unknown'),
+            locality: b.locality || '',
             city: (b.locationCity || 'bengaluru').toLowerCase(),
             price: price,
             hostelType: b.genderType || b.category || '',
+            category: b.category || '',
+            stayQuality: b.stayQuality || '',
             sharing: sharingLabel || b.sharing || b.roomType || '',
+            hasSingle: !!b.floors?.some(f => f.rooms?.some(r => Number(r.capacity) === 1)),
+            hasDouble: !!b.floors?.some(f => f.rooms?.some(r => Number(r.capacity) === 2)),
+            hasTriple: !!b.floors?.some(f => f.rooms?.some(r => Number(r.capacity) === 3)),
+            has4: !!b.floors?.some(f => f.rooms?.some(r => Number(r.capacity) === 4)),
+            has5: !!b.floors?.some(f => f.rooms?.some(r => Number(r.capacity) === 5)),
+            has6: !!b.floors?.some(f => f.rooms?.some(r => Number(r.capacity) >= 6)),
             rating: b.rating ? b.rating.toFixed(1) : null,
             popularityLabel: b.popularityLabel || (b.rating > 4.6 ? 'High Demand' : null),
             images: b.images && b.images.length > 0
@@ -231,35 +235,79 @@ const Search = () => {
 
   useEffect(() => {
     let filtered = [...allHostels];      
+    let bypassCityFilter = false;
 
-    if (filters.location) {
-      const loc = filters.location.toLowerCase();      
-      filtered = filtered.filter(h =>
-        (h.city || '').toLowerCase().includes(loc) ||
-        (h.location || '').toLowerCase().includes(loc) ||     
-        (h.name || '').toLowerCase().includes(loc)
-      );
-    }   
+    if (searchLocality) {
+      const query = searchLocality.toLowerCase();
+      filtered = filtered.filter(h => {
+        const matchesCity = h.city && h.city.toLowerCase().includes(query);
+        const matchesLocality = h.locality && h.locality.toLowerCase().includes(query);
+        const matchesName = h.name && h.name.toLowerCase().includes(query);
 
-    if (filters.budget && filters.budget !== 'all') {
-      filtered = filtered.filter(h => filterByBudget(h.price, filters.budget));
+        if (!matchesCity && !matchesLocality && !matchesName) return false;
+        if (matchesCity) bypassCityFilter = true;
+        return true;
+      });
     }
 
-    if (filters.hostelType && filters.hostelType !== 'Any Hostel') {
-      filtered = filtered.filter(h =>
-        (h.hostelType || '').toLowerCase().includes(filters.hostelType.toLowerCase().replace("'s", ''))
-      );
+    if (selectedCity !== 'All Cities' && !bypassCityFilter) {
+      filtered = filtered.filter(h => (h.city || '').toLowerCase() === selectedCity.toLowerCase());
     }
 
-    if (filters.sharing && filters.sharing !== 'No Pref') {
-      filtered = filtered.filter(h =>
-        (h.sharing || '').toLowerCase().includes(filters.sharing.toLowerCase())
-      );
+    if (budgetMin > 0) filtered = filtered.filter(h => h.price >= budgetMin);
+    if (budgetMax < 60000) filtered = filtered.filter(h => h.price <= budgetMax);
+
+    if (hostelType && hostelType !== 'Any') {
+      const typeStr = hostelType.toLowerCase();
+      filtered = filtered.filter(h => {
+        const genderStr = (h.hostelType || '').toLowerCase();
+        const catStr = (h.category || '').toLowerCase();
+        if (typeStr === "men's" && !['boys', 'male', 'men', "men's"].includes(genderStr)) return false;
+        if (typeStr === "women's" && !['girls', 'female', 'women', "women's"].includes(genderStr)) return false;
+        if (typeStr === "co-living" && !['unisex', 'co-living', 'coliving', 'both'].includes(genderStr)) return false;
+        if (typeStr === 'premium' && catStr !== 'luxury') return false;
+        if (typeStr === 'student' && catStr !== 'student') return false;
+        return true;
+      });
+    }
+
+    if (stayQualityFilter && stayQualityFilter !== 'Any') {
+      filtered = filtered.filter(h => (h.stayQuality || '').toLowerCase() === stayQualityFilter.toLowerCase());
+    }
+
+    if (sharing && sharing !== 'Any') {
+      filtered = filtered.filter(h => {
+        if (sharing === 'Single' && !h.hasSingle) return false;
+        if (sharing === '2' && !h.hasDouble) return false;
+        if (sharing === '3' && !h.hasTriple) return false;
+        if (sharing === '4' && !h.has4) return false;
+        if (sharing === '5' && !h.has5) return false;
+        if (sharing === '6' && !h.has6) return false;
+        return true;
+      });
+    }
+
+    if (selectedAmenities && selectedAmenities.length > 0) {
+      filtered = filtered.filter(h => {
+        return selectedAmenities.every(a => {
+          if (!h.amenities) return false;
+          const aLower = a.toLowerCase();
+          return h.amenities.some(ha => {
+            const haLower = ha.toLowerCase();
+            if (haLower.includes(aLower)) return true;
+            if (aLower === 'ac' && (haLower.includes('a/c') || haLower.includes('air condition'))) return true;
+            if (aLower === 'food/mess' && (haLower.includes('food') || haLower.includes('mess') || haLower.includes('meal'))) return true;
+            if (aLower === 'wifi' && (haLower.includes('wi-fi') || haLower.includes('internet'))) return true;
+            if (aLower === 'power backup' && (haLower.includes('power') || haLower.includes('generator') || haLower.includes('backup'))) return true;
+            return false;
+          });
+        });
+      });
     }
 
     setHostels(filtered);
     setCurrentPage(1);
-  }, [filters, allHostels]);
+  }, [selectedCity, searchLocality, budgetMin, budgetMax, hostelType, stayQualityFilter, sharing, selectedAmenities, allHostels]);
 
   const indexOfLastHostel = currentPage * hostelsPerPage;
   const indexOfFirstHostel = indexOfLastHostel - hostelsPerPage;
@@ -292,17 +340,38 @@ const Search = () => {
   const isWishlisted = (id) => wishlist.some((h) => (h.hostelId === id || h.id === id));
 
   const activeFilterCount = [
-    filters.location,
-    filters.budget && filters.budget !== 'all' ? filters.budget : '',
-    filters.hostelType && filters.hostelType !== 'Any Hostel' ? filters.hostelType : '',
-    filters.sharing && filters.sharing !== 'No Pref' ? filters.sharing : '',
+    selectedCity !== 'All Cities' ? selectedCity : '',
+    searchLocality,
+    (budgetMin > 0 || budgetMax < 60000) ? 'budget' : '',
+    hostelType && hostelType !== 'Any' ? hostelType : '',
+    stayQualityFilter && stayQualityFilter !== 'Any' ? stayQualityFilter : '',
+    sharing && sharing !== 'Any' ? sharing : '',
+    ...(selectedAmenities || [])
   ].filter(Boolean).length;
 
-  const clearAllFilters = () => setFilters({ location: '', budget: 'all', hostelType: '', sharing: '' });
+  const clearAllFilters = () => {
+    setSelectedCity('All Cities');
+    setSearchLocality('');
+    setBudgetMin(0);
+    setBudgetMax(60000);
+    setHostelType('');
+    setStayQualityFilter('');
+    setSharing('');
+    setSelectedAmenities([]);
+  };
+
+  const dynamicCities = Array.from(new Set(allHostels.map(h => h.city ? (h.city.charAt(0).toUpperCase() + h.city.slice(1).toLowerCase()) : '')));
+  const availableCities = Array.from(new Set(['All Cities', ...CITIES_LIST, ...dynamicCities])).filter(Boolean);
+
+  const uniqueLocalities = Array.from(new Set(
+    allHostels
+      .filter(h => selectedCity === 'All Cities' || (h.city && h.city.toLowerCase() === selectedCity.toLowerCase()))
+      .map(h => h.locality)
+      .filter(Boolean)
+  )).sort();
 
   return (
     <div className="search-page-pro">
-      {/* ── Header ── */}
       <header className="search-header-pro">
         <div className="header-icon-box"><ICONS.Search /></div>
         <div className="search-header-text">
@@ -314,7 +383,6 @@ const Search = () => {
         </div>
       </header>
 
-      {/* ── Mobile Filter Toggle ── */}
       <div className="mobile-filter-trigger">
         <button className="btn-filter-toggle" onClick={() => setIsFilterOpen(!isFilterOpen)}>
           <ICONS.Filter />
@@ -324,7 +392,6 @@ const Search = () => {
       </div>
 
       <div className={`search-main-layout ${isFilterOpen ? 'filter-open' : ''}`}>
-        {/* ── Sidebar Filters ── */}
         <aside className="search-sidebar-pro">
           <div className="sidebar-header-mobile">
             <h3>Refine Search</h3>
@@ -342,52 +409,60 @@ const Search = () => {
               )}
             </div>
 
-            {/* Location */}
             <div className="filter-section-pro">
               <label className="section-label-pro"><ICONS.Location /> Location</label>
               <div className="select-wrapper-pro">
-                <select value={filters.location} onChange={(e) => setFilters({ ...filters, location: e.target.value })}>
-                  <option value="">All Cities</option>
-                  <option value="bengaluru">Bengaluru</option>
-                  <option value="hyderabad">Hyderabad</option>
-                  <option value="mumbai">Mumbai</option>
-                  <option value="pune">Pune</option>
-                  <option value="delhi">Delhi</option>
-                  <option value="chennai">Chennai</option>
-                  <option value="noida">Noida</option>
-                  <option value="gurgaon">Gurgaon</option>
+                <select value={selectedCity} onChange={(e) => {
+                  setSelectedCity(e.target.value);
+                  setSearchLocality('');
+                }}>
+                  {availableCities.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            {/* Budget */}
+            {uniqueLocalities.length > 0 && (
+              <div className="filter-section-pro">
+                <label className="section-label-pro"><ICONS.Location /> Localities</label>
+                <div className="select-wrapper-pro">
+                  <select value={searchLocality} onChange={e => setSearchLocality(e.target.value)}>
+                    <option value="">All Localities</option>
+                    {uniqueLocalities.map(loc => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
             <div className="filter-section-pro">
               <label className="section-label-pro"><ICONS.Budget /> Monthly Budget</label>
               <div className="budget-option-list">
-                {BUDGET_OPTIONS.map(item => (
-                  <label key={item.value} className={`budget-radio-row ${filters.budget === item.value ? 'active' : ''}`}>
+                {BUDGET_OPTIONS.map(opt => (
+                  <label key={opt.label} className={`budget-radio-row ${budgetMin === opt.min && budgetMax === opt.max ? 'active' : ''}`}>
                     <input
                       type="radio"
                       name="budget"
-                      checked={filters.budget === item.value}
-                      onChange={() => setFilters({ ...filters, budget: item.value })}
+                      checked={budgetMin === opt.min && budgetMax === opt.max}
+                      onChange={() => { setBudgetMin(opt.min); setBudgetMax(opt.max); }}
                     />
                     <span className="radio-custom-pro"></span>
-                    <span className="radio-label-text">{item.label}</span>
+                    <span className="radio-label-text">{opt.label}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Hostel Type */}
             <div className="filter-section-pro">
               <label className="section-label-pro"><ICONS.Home /> Hostel Type</label>
               <div className="pill-group">
                 {HOSTEL_TYPE_OPTIONS.map(t => (
                   <button
                     key={t}
-                    className={`pill-btn ${(filters.hostelType === t) || (!filters.hostelType && t === 'Any Hostel') ? 'active' : ''}`}
-                    onClick={() => setFilters({ ...filters, hostelType: t === 'Any Hostel' ? '' : t })}
+                    className={`pill-btn ${(hostelType === t) || (!hostelType && t === 'Any') ? 'active' : ''}`}
+                    onClick={() => setHostelType(t === 'Any' ? '' : t)}
                   >
                     {t}
                   </button>
@@ -395,17 +470,49 @@ const Search = () => {
               </div>
             </div>
 
-            {/* Sharing */}
+            <div className="filter-section-pro">
+              <label className="section-label-pro"><ICONS.Star /> Stay Quality</label>
+              <div className="pill-group">
+                {STAY_QUALITY_OPTIONS.map(t => (
+                  <button key={t}
+                    className={`pill-btn ${(!stayQualityFilter && t === 'Any') || stayQualityFilter === t ? 'active' : ''}`}
+                    onClick={() => setStayQualityFilter(t === 'Any' ? '' : t)}
+                  >{t}</button>
+                ))}
+              </div>
+            </div>
+
             <div className="filter-section-pro">
               <label className="section-label-pro"><ICONS.Sharing /> Sharing Type</label>
               <div className="sharing-grid-3x3">
                 {SHARING_OPTIONS.map(opt => (
                   <button
                     key={opt}
-                    className={`sharing-grid-btn ${(filters.sharing === opt) || (!filters.sharing && opt === 'No Pref') ? 'active' : ''}`}
-                    onClick={() => setFilters({ ...filters, sharing: opt === 'No Pref' ? '' : opt })}
+                    className={`sharing-grid-btn ${(sharing === opt) || (!sharing && opt === 'Any') ? 'active' : ''}`}
+                    onClick={() => setSharing(opt === 'Any' ? '' : opt)}
                   >
                     {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="filter-section-pro">
+              <label className="section-label-pro"><ICONS.Star /> Amenities</label>
+              <div className="sharing-grid-3x3" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                {AMENITIES_LIST.map(a => (
+                  <button
+                    key={a}
+                    className={`sharing-grid-btn ${selectedAmenities.includes(a) ? 'active' : ''}`}
+                    onClick={() => {
+                      if (selectedAmenities.includes(a)) {
+                        setSelectedAmenities(selectedAmenities.filter(item => item !== a));
+                      } else {
+                        setSelectedAmenities([...selectedAmenities, a]);
+                      }
+                    }}
+                  >
+                    {a}
                   </button>
                 ))}
               </div>
@@ -420,7 +527,6 @@ const Search = () => {
           </div>
         </aside>
 
-        {/* ── Results ── */}
         <main className="search-results-pro">
           {loading ? (
             <div className="loading-placeholder-grid">
@@ -448,7 +554,7 @@ const Search = () => {
                 ))}
               </div>
 
-              {true && (
+              {totalPages > 1 && (
                 <div className="pagination-wrapper-pro">
                   <div className="pagination-pro">
                     <button

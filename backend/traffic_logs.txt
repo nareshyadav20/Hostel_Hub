@@ -11931,3 +11931,642 @@
 2026-06-23T09:03:59.172Z API: GET /api/buildings/public/6a36770da8e78b79ef034b94
 2026-06-23T09:03:59.235Z SOCKET: Socket connected: ugVkWhbPxDE1tUXNAACx
 2026-06-23T09:03:59.340Z API: GET /api/buildings/public/6a36770da8e78b79ef034b94
+2026-06-23T09:18:52.525Z SOCKET: Socket connected: qpuG6NJgaba64LYWAACz
+2026-06-23T09:55:11.093Z API: HEAD /api/dev/clear-db
+2026-06-23T09:55:11.303Z API: GET /api/dev/clear-db
+2026-06-23T09:57:13.813Z SOCKET: Socket connected: MpXfGJ1FoZ7NC7pJAAAB
+2026-06-23T09:57:18.205Z API: GET /api/buildings/public
+2026-06-23T09:57:18.281Z API: GET /api/buildings/public
+2026-06-23T09:57:18.298Z API: GET /api/tenant-portal/wishlist
+2026-06-23T09:57:18.341Z SOCKET: Socket connected: rJjpywt2Pb71QcQ1AAAD
+2026-06-23T09:57:18.362Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:04:50.345Z SOCKET: Socket connected: U3mYsGWWGjpBmq2FAAAF
+2026-06-23T10:04:50.355Z API: GET /api/buildings/public
+2026-06-23T10:04:50.420Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:10:55.159Z API: GET /api/health
+2026-06-23T10:10:55.296Z API: GET /api/buildings/public
+2026-06-23T10:10:55.306Z API: GET /api/notifications
+2026-06-23T10:10:55.392Z SOCKET: Socket connected: YvYkkYBD5xVx5TOVAAAH
+2026-06-23T10:10:55.409Z API: GET /api/buildings/public
+2026-06-23T10:10:55.551Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:10:55.614Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:10:56.043Z API: GET /api/notifications
+2026-06-23T10:11:05.345Z API: GET /api/buildings/public
+2026-06-23T10:11:05.351Z SOCKET: Socket connected: rRS3pBfyA7Z7ylWhAAAJ
+2026-06-23T10:11:05.389Z API: GET /api/buildings/public
+2026-06-23T10:11:05.394Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:11:05.433Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:13:07.100Z API: GET /api/health
+2026-06-23T10:13:07.152Z API: GET /api/buildings/public
+2026-06-23T10:13:07.157Z API: GET /api/notifications
+2026-06-23T10:13:07.161Z SOCKET: Socket connected: p6y92QOOjXoS5iGLAAAL
+2026-06-23T10:13:07.196Z API: GET /api/buildings/public
+2026-06-23T10:13:07.203Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:13:07.247Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:13:07.619Z API: GET /api/notifications
+2026-06-23T10:13:25.332Z API: GET /api/tenants/me
+2026-06-23T10:13:25.355Z API: GET /api/complaints/me
+2026-06-23T10:13:25.365Z API: GET /api/notifications?limit=3
+2026-06-23T10:13:25.371Z SOCKET: Socket connected: Gp0qixk2OP7VJBsoAAAN
+2026-06-23T10:13:25.374Z API: GET /api/bookings/me
+2026-06-23T10:13:25.430Z API: GET /api/tenants/me
+2026-06-23T10:13:25.463Z API: GET /api/complaints/me
+2026-06-23T10:13:25.533Z API: GET /api/bookings/me
+2026-06-23T10:13:25.866Z API: GET /api/notifications?limit=3
+2026-06-23T10:13:28.031Z API: GET /api/buildings/public
+2026-06-23T10:13:28.042Z SOCKET: Socket connected: uxPawETYwgEHBF_fAAAP
+2026-06-23T10:13:28.073Z API: GET /api/buildings/public
+2026-06-23T10:13:28.079Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:13:28.117Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:13:29.143Z API: GET /api/buildings/public/6a36770da8e78b79ef034b94
+2026-06-23T10:13:29.159Z SOCKET: Socket connected: iyy8nEQwaUUoASyYAAAR
+2026-06-23T10:13:29.194Z API: GET /api/buildings/public/6a36770da8e78b79ef034b94
+2026-06-23T10:13:34.739Z API: GET /api/buildings/public
+2026-06-23T10:13:34.756Z SOCKET: Socket connected: t0aFIXJX9LPbBS5mAAAT
+2026-06-23T10:13:34.791Z API: GET /api/buildings/public
+2026-06-23T10:13:34.797Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:13:34.841Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:13:40.915Z API: GET /api/buildings/public/6a34caa6cf202020d228e19c
+2026-06-23T10:13:40.926Z SOCKET: Socket connected: dXBnLDmfYjL2WdTPAAAV
+2026-06-23T10:13:40.959Z API: GET /api/buildings/public/6a34caa6cf202020d228e19c
+2026-06-23T10:13:41.714Z API: GET /api/buildings/public
+2026-06-23T10:13:41.728Z SOCKET: Socket connected: jJ7FsxfFuuaukKTIAAAX
+2026-06-23T10:13:41.764Z API: GET /api/buildings/public
+2026-06-23T10:13:41.773Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:13:41.813Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:13:42.741Z API: GET /api/buildings/public/6a34caa6cf202020d228e19c
+2026-06-23T10:13:42.757Z SOCKET: Socket connected: Emr14rypMykq1zpQAAAZ
+2026-06-23T10:13:42.792Z API: GET /api/buildings/public/6a34caa6cf202020d228e19c
+2026-06-23T10:13:45.108Z API: GET /api/buildings/public
+2026-06-23T10:13:45.133Z SOCKET: Socket connected: 5prEltOlZN5MJSt0AAAb
+2026-06-23T10:13:45.160Z API: GET /api/buildings/public
+2026-06-23T10:13:45.168Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:13:45.214Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:24:52.785Z API: GET /api/health
+2026-06-23T10:24:52.924Z API: GET /api/buildings/public
+2026-06-23T10:24:53.001Z API: GET /api/notifications
+2026-06-23T10:24:53.095Z SOCKET: Socket connected: Cj4UBSM_2xBtSboWAAAd
+2026-06-23T10:24:53.107Z API: GET /api/buildings/public
+2026-06-23T10:24:53.116Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:24:53.165Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:24:53.595Z API: GET /api/notifications
+2026-06-23T10:25:04.578Z API: GET /api/tenants/me
+2026-06-23T10:25:04.590Z API: GET /api/complaints/me
+2026-06-23T10:25:04.598Z API: GET /api/notifications?limit=3
+2026-06-23T10:25:04.608Z API: GET /api/bookings/me
+2026-06-23T10:25:04.636Z SOCKET: Socket connected: rAF3fS3lNOw24SJkAAAf
+2026-06-23T10:25:04.641Z API: GET /api/tenants/me
+2026-06-23T10:25:04.691Z API: GET /api/complaints/me
+2026-06-23T10:25:04.721Z API: GET /api/bookings/me
+2026-06-23T10:25:05.077Z API: GET /api/notifications?limit=3
+2026-06-23T10:25:07.904Z API: GET /api/buildings/public
+2026-06-23T10:25:07.915Z SOCKET: Socket connected: jPSo5Bi3n6GqlD08AAAh
+2026-06-23T10:25:07.947Z API: GET /api/buildings/public
+2026-06-23T10:25:07.954Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:25:07.994Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:25:09.391Z API: GET /api/buildings/public/6a33c5bfbdcd164605fda95a
+2026-06-23T10:25:09.399Z SOCKET: Socket connected: PtbQ3INwq1Kz5X78AAAj
+2026-06-23T10:25:09.429Z API: GET /api/buildings/public/6a33c5bfbdcd164605fda95a
+2026-06-23T10:25:11.565Z API: GET /api/buildings/public
+2026-06-23T10:25:11.588Z SOCKET: Socket connected: 6ovV1G-1mvO0JjScAAAl
+2026-06-23T10:25:11.612Z API: GET /api/buildings/public
+2026-06-23T10:25:11.617Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:25:11.667Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:25:12.305Z API: GET /api/buildings/public/6a33c5bfbdcd164605fda95a
+2026-06-23T10:25:12.334Z SOCKET: Socket connected: SweUehtihlp6S8upAAAn
+2026-06-23T10:25:12.350Z API: GET /api/buildings/public/6a33c5bfbdcd164605fda95a
+2026-06-23T10:25:14.060Z API: GET /api/buildings/public
+2026-06-23T10:25:14.077Z SOCKET: Socket connected: O7e7zfUW5YJzLAxtAAAp
+2026-06-23T10:25:14.107Z API: GET /api/buildings/public
+2026-06-23T10:25:14.114Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:25:14.150Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:25:17.755Z API: GET /api/tenants/me
+2026-06-23T10:25:17.764Z API: GET /api/complaints/me
+2026-06-23T10:25:17.781Z API: GET /api/notifications?limit=3
+2026-06-23T10:25:17.787Z API: GET /api/bookings/me
+2026-06-23T10:25:17.794Z SOCKET: Socket connected: 6FKwdS9OZd9PwrFaAAAr
+2026-06-23T10:25:17.801Z API: GET /api/tenants/me
+2026-06-23T10:25:17.842Z API: GET /api/complaints/me
+2026-06-23T10:25:17.886Z API: GET /api/bookings/me
+2026-06-23T10:25:18.272Z API: GET /api/notifications?limit=3
+2026-06-23T10:25:41.584Z API: GET /api/buildings/public
+2026-06-23T10:25:41.607Z SOCKET: Socket connected: nJcHtVW1N2Nd7NFJAAAt
+2026-06-23T10:25:41.638Z API: GET /api/buildings/public
+2026-06-23T10:25:41.645Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:25:41.694Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:25:53.682Z API: GET /api/tenants/me
+2026-06-23T10:25:53.688Z API: GET /api/complaints/me
+2026-06-23T10:25:53.691Z API: GET /api/notifications?limit=3
+2026-06-23T10:25:53.695Z API: GET /api/bookings/me
+2026-06-23T10:25:53.710Z SOCKET: Socket connected: kkLptMqpC-aOZ40_AAAv
+2026-06-23T10:25:56.288Z API: GET /api/tenants/me
+2026-06-23T10:25:56.301Z API: GET /api/complaints/me
+2026-06-23T10:25:56.339Z API: GET /api/bookings/me
+2026-06-23T10:25:56.694Z API: GET /api/notifications?limit=3
+2026-06-23T10:26:30.700Z API: GET /api/health
+2026-06-23T10:26:31.219Z API: GET /api/buildings/public
+2026-06-23T10:26:31.224Z API: GET /api/buildings/public/stats
+2026-06-23T10:26:31.272Z API: GET /api/notifications
+2026-06-23T10:26:31.278Z SOCKET: Socket connected: YyhKTiLzU4hRIT95AAAx
+2026-06-23T10:26:31.315Z API: GET /api/buildings/public
+2026-06-23T10:26:31.515Z API: GET /api/buildings/public/stats
+2026-06-23T10:26:31.783Z API: GET /api/notifications
+2026-06-23T10:26:33.087Z API: GET /api/buildings/public
+2026-06-23T10:26:33.093Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:26:33.131Z API: GET /api/buildings/public
+2026-06-23T10:26:33.139Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:26:55.191Z API: GET /api/buildings/public
+2026-06-23T10:26:55.195Z API: GET /api/buildings/public/stats
+2026-06-23T10:26:55.245Z API: GET /api/buildings/public
+2026-06-23T10:26:55.326Z API: GET /api/buildings/public/stats
+2026-06-23T10:26:57.454Z API: GET /api/buildings/public
+2026-06-23T10:26:57.459Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:26:57.497Z API: GET /api/buildings/public
+2026-06-23T10:26:57.506Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:27:06.955Z API: GET /api/buildings/public
+2026-06-23T10:27:06.975Z SOCKET: Socket connected: uHYVHoVykcLO4dIYAAAz
+2026-06-23T10:27:07.010Z API: GET /api/buildings/public
+2026-06-23T10:27:07.018Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:27:07.067Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:45:51.963Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:45:52.846Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:45:58.589Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:46:04.507Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:46:11.544Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:46:14.153Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:46:21.573Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:46:26.504Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:46:30.579Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:46:31.780Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:46:35.923Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:46:38.030Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:46:41.878Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:46:45.718Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:46:51.200Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:46:57.266Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:07.403Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:08.490Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:09.689Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:11.548Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:12.939Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:15.360Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:16.676Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:18.060Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:22.013Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:22.146Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:23.353Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:33.216Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:37.180Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:38.797Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:46.505Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:52.211Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:47:59.389Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:48:05.860Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:48:09.505Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:48:12.293Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:48:17.160Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:48:23.406Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:48:27.153Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:48:34.807Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:48:38.683Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:48:39.894Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:48:43.683Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:48:57.482Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:02.387Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:09.839Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:10.804Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:12.004Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:14.723Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:17.510Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:21.081Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:21.306Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:22.236Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:25.171Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:26.479Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:27.726Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:28.680Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:28.975Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:29.189Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:49:51.166Z SOCKET: Socket connected: Sw5Az2kxU-mzyzHQAAAB
+2026-06-23T10:49:55.271Z API: PATCH /api/buildings/6a3a4bf0b45fcb1d1728b378
+2026-06-23T10:50:00.115Z API: GET /api/health
+2026-06-23T10:50:00.250Z API: GET /api/buildings?status=Draft
+2026-06-23T10:50:00.269Z API: GET /api/owner/portfolio
+2026-06-23T10:50:00.281Z API: GET /api/notifications?buildingId=6a33c5bfbdcd164605fda95a
+2026-06-23T10:50:00.298Z SOCKET: Socket connected: ShIQ9bXjdCf0EGqJAAAD
+2026-06-23T10:50:00.316Z API: GET /api/notifications/unread-count?buildingId=6a33c5bfbdcd164605fda95a
+2026-06-23T10:50:00.351Z API: GET /api/buildings?status=Draft
+2026-06-23T10:50:00.362Z API: GET /api/owner/portfolio
+2026-06-23T10:50:00.401Z API: GET /api/notifications?buildingId=6a33c5bfbdcd164605fda95a
+2026-06-23T10:50:00.419Z API: GET /api/notifications/unread-count?buildingId=6a33c5bfbdcd164605fda95a
+2026-06-23T10:50:08.789Z API: POST /api/buildings
+2026-06-23T10:50:08.889Z API: GET /api/buildings?status=Draft
+2026-06-23T10:50:10.105Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:50:14.824Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:50:17.346Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:50:24.489Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:50:29.399Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:50:40.415Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:50:40.489Z API: GET /api/buildings?status=Draft
+2026-06-23T10:50:42.247Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:50:50.272Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:50:54.609Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:50:55.815Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:01.234Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:04.259Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:05.610Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:10.643Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:10.719Z API: GET /api/buildings?status=Draft
+2026-06-23T10:51:19.968Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:21.038Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:22.239Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:25.629Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:28.159Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:31.095Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:32.009Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:33.212Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:37.016Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:40.797Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:40.864Z API: GET /api/buildings?status=Draft
+2026-06-23T10:51:43.508Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:45.982Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:48.607Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:51.466Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:55.245Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:51:57.409Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:13.100Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:13.182Z API: GET /api/buildings?status=Draft
+2026-06-23T10:52:19.388Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:19.950Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:21.150Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:24.778Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:28.261Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:31.922Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:38.034Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:46.024Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:46.113Z API: GET /api/buildings?status=Draft
+2026-06-23T10:52:50.638Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:51.528Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:52.740Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:54.862Z API: PATCH /api/buildings/6a3a64e0b80da47713ec4db1
+2026-06-23T10:52:54.987Z API: GET /api/owner/portfolio
+2026-06-23T10:53:22.579Z API: GET /api/health
+2026-06-23T10:53:22.702Z API: GET /api/buildings/public
+2026-06-23T10:53:22.731Z API: GET /api/notifications
+2026-06-23T10:53:22.751Z SOCKET: Socket connected: _uBVJIdBSk1wP6vSAAAF
+2026-06-23T10:53:22.783Z API: GET /api/buildings/public
+2026-06-23T10:53:22.801Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:53:22.849Z API: GET /api/tenant-portal/wishlist
+2026-06-23T10:53:23.743Z API: GET /api/notifications
+2026-06-23T10:53:28.802Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-23T10:53:28.819Z SOCKET: Socket connected: MhBmStKBmsNhPVEnAAAH
+2026-06-23T10:53:28.925Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T05:08:14.849Z API: GET /api/health
+2026-06-24T05:08:14.963Z API: GET /api/notifications?buildingId=6a33c5bfbdcd164605fda95a
+2026-06-24T05:08:15.054Z API: GET /api/notifications/unread-count?buildingId=6a33c5bfbdcd164605fda95a
+2026-06-24T05:08:15.131Z SOCKET: Socket connected: Z6Nhq5ybQhtnACIbAAAB
+2026-06-24T05:08:15.189Z API: GET /api/notifications?buildingId=6a33c5bfbdcd164605fda95a
+2026-06-24T05:08:15.206Z API: GET /api/notifications/unread-count?buildingId=6a33c5bfbdcd164605fda95a
+2026-06-24T05:08:24.282Z API: POST /api/auth/login
+2026-06-24T05:08:24.580Z API: GET /api/buildings?status=Draft
+2026-06-24T05:08:24.590Z API: GET /api/owner/portfolio
+2026-06-24T05:08:24.631Z API: GET /api/buildings?status=Draft
+2026-06-24T05:08:24.654Z API: GET /api/owner/portfolio
+2026-06-24T05:08:51.828Z API: GET /api/health
+2026-06-24T05:08:52.359Z API: GET /api/buildings/public
+2026-06-24T05:08:52.374Z API: GET /api/notifications
+2026-06-24T05:08:52.386Z API: GET /api/buildings/public/stats
+2026-06-24T05:08:52.394Z SOCKET: Socket connected: TbiUWD5uR0EhUUQnAAAD
+2026-06-24T05:08:52.508Z API: GET /api/buildings/public
+2026-06-24T05:08:52.598Z API: GET /api/buildings/public/stats
+2026-06-24T05:08:52.919Z API: GET /api/notifications
+2026-06-24T05:09:13.120Z API: GET /api/tenant-portal/wishlist
+2026-06-24T05:09:13.142Z API: GET /api/buildings/public
+2026-06-24T05:09:13.182Z API: GET /api/tenant-portal/wishlist
+2026-06-24T05:09:13.212Z API: GET /api/buildings/public
+2026-06-24T05:09:17.760Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T05:09:17.778Z SOCKET: Socket connected: aZTpnRoVbfA1MVfdAAAF
+2026-06-24T05:09:17.929Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T05:10:41.610Z API: GET /api/buildings/public
+2026-06-24T05:10:41.650Z SOCKET: Socket connected: k-aL2mYKiwBKBa4pAAAH
+2026-06-24T05:10:41.707Z API: GET /api/buildings/public
+2026-06-24T05:10:41.722Z API: GET /api/tenant-portal/wishlist
+2026-06-24T05:10:41.825Z API: GET /api/tenant-portal/wishlist
+2026-06-24T05:10:47.513Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T05:10:47.539Z SOCKET: Socket connected: rs6044wuX9DRZo4MAAAJ
+2026-06-24T05:10:47.666Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T05:35:04.525Z SOCKET: Socket connected: g0l787Mu3_5DKNcVAAAL
+2026-06-24T05:35:11.914Z API: GET /api/health
+2026-06-24T05:35:12.004Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T05:35:12.129Z API: GET /api/notifications
+2026-06-24T05:35:12.277Z SOCKET: Socket connected: rDB7qRHOnlHkeD-zAAAN
+2026-06-24T05:35:12.422Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T05:35:12.837Z API: GET /api/notifications
+2026-06-24T05:35:31.468Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T05:35:31.474Z SOCKET: Socket connected: ta_IvDYh1d7L2z45AAAP
+2026-06-24T05:35:31.626Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T05:38:00.418Z API: GET /api/health
+2026-06-24T05:38:00.470Z SOCKET: Socket connected: VYZI8FeXCflXjkVvAAAR
+2026-06-24T05:38:00.482Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T05:38:00.499Z API: GET /api/notifications
+2026-06-24T05:38:00.803Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T05:38:01.246Z API: GET /api/notifications
+2026-06-24T05:57:58.712Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T05:57:58.795Z SOCKET: Socket connected: DQV6XRqXVT7nDPVgAAAT
+2026-06-24T06:00:18.494Z SOCKET: Socket connected: Y2MVgf2ETIp2OV2nAAAV
+2026-06-24T06:00:18.508Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T06:28:00.538Z SOCKET: Socket connected: 0Gn28mhru5seUxLjAAAX
+2026-06-24T06:28:09.053Z API: GET /api/health
+2026-06-24T06:28:09.111Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T06:28:09.154Z API: GET /api/notifications
+2026-06-24T06:28:09.300Z SOCKET: Socket connected: RYYMmW9CR_N4TxxdAAAZ
+2026-06-24T06:28:09.406Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T06:28:09.859Z API: GET /api/notifications
+2026-06-24T06:43:12.651Z SOCKET: Socket connected: 2e-DVbeOptQuW2xQAAAb
+2026-06-24T06:43:12.978Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T06:43:13.054Z SOCKET: Socket connected: oO4O9JEHiloZKzz_AAAd
+2026-06-24T06:43:13.849Z API: GET /api/health
+2026-06-24T06:43:13.924Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T06:43:13.935Z API: GET /api/notifications
+2026-06-24T06:43:14.025Z SOCKET: Socket connected: n6kWm5LvQ-dK0K_xAAAf
+2026-06-24T06:43:14.215Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T06:43:14.666Z API: GET /api/notifications
+2026-06-24T06:43:34.480Z SOCKET: Socket connected: NnBIcB_4iffadNlNAAAh
+2026-06-24T06:43:34.483Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T06:43:40.487Z SOCKET: Socket connected: P8Nh7I7hyqAC-t_6AAAj
+2026-06-24T06:43:40.490Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T06:44:56.500Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T06:44:56.516Z SOCKET: Socket connected: G-A7RvJREpmao_cOAAAl
+2026-06-24T06:46:01.479Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T06:46:01.484Z SOCKET: Socket connected: f4cF4kEgH8YS88RRAAAn
+2026-06-24T06:49:47.502Z SOCKET: Socket connected: InNsJ3Al-zbR37inAAAp
+2026-06-24T06:49:47.510Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T07:44:51.021Z API: GET /api/health
+2026-06-24T07:44:51.157Z SOCKET: Socket connected: 8IP0nWhy0_lDa936AAAr
+2026-06-24T07:44:51.170Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T07:44:51.228Z API: GET /api/notifications
+2026-06-24T07:44:51.915Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T07:44:52.232Z API: GET /api/notifications
+2026-06-24T07:57:02.936Z SOCKET: Socket connected: pyhvMSpmGfUTEaIbAAAt
+2026-06-24T07:57:05.245Z API: GET /api/health
+2026-06-24T07:57:05.453Z SOCKET: Socket connected: 9BFl4XOZ7xQbgMyRAAAv
+2026-06-24T07:57:05.459Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T07:57:05.650Z API: GET /api/notifications
+2026-06-24T07:57:06.667Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T07:57:06.974Z API: GET /api/notifications
+2026-06-24T08:07:20.548Z SOCKET: Socket connected: redr9ade3kfkNrOFAAAx
+2026-06-24T08:07:20.562Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T08:21:24.136Z SOCKET: Socket connected: NVZQId-pdi-dG2ePAAAz
+2026-06-24T08:21:27.611Z API: GET /api/health
+2026-06-24T08:21:27.714Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T08:21:27.742Z API: GET /api/notifications
+2026-06-24T08:21:27.898Z SOCKET: Socket connected: _tsQ7TzBamgyqx_9AAA1
+2026-06-24T08:21:28.009Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T08:21:28.546Z API: GET /api/notifications
+2026-06-24T09:03:36.290Z SOCKET: Socket connected: p590JS83mvis61BYAAA3
+2026-06-24T09:05:08.571Z SOCKET: Socket connected: P0cXNpur0lyN0AhNAAA5
+2026-06-24T09:05:08.617Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:05:43.486Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:05:43.493Z SOCKET: Socket connected: kZkaDLk9ENsLFNG7AAA7
+2026-06-24T09:08:46.495Z SOCKET: Socket connected: uoXPAL_mJIbdkxJ6AAA9
+2026-06-24T09:08:46.500Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:09:18.158Z API: GET /api/health
+2026-06-24T09:09:18.255Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:09:18.266Z SOCKET: Socket connected: 78CIuJVpvG9lR-34AAA_
+2026-06-24T09:09:18.269Z API: GET /api/notifications
+2026-06-24T09:09:18.514Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:09:18.961Z API: GET /api/notifications
+2026-06-24T09:10:32.495Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:10:32.499Z SOCKET: Socket connected: P_gJfAJXrjeJOhNFAABB
+2026-06-24T09:11:48.797Z API: GET /api/health
+2026-06-24T09:11:48.931Z API: GET /api/buildings?status=Draft
+2026-06-24T09:11:48.951Z API: GET /api/owner/portfolio
+2026-06-24T09:11:48.962Z API: GET /api/notifications?buildingId=6a33c5bfbdcd164605fda95a
+2026-06-24T09:11:49.071Z API: GET /api/notifications/unread-count?buildingId=6a33c5bfbdcd164605fda95a
+2026-06-24T09:11:49.088Z SOCKET: Socket connected: 13VXCNUiSFasPk4iAABD
+2026-06-24T09:11:49.147Z API: GET /api/buildings?status=Draft
+2026-06-24T09:11:49.157Z API: GET /api/owner/portfolio
+2026-06-24T09:11:49.738Z API: GET /api/notifications/unread-count?buildingId=6a33c5bfbdcd164605fda95a
+2026-06-24T09:11:49.848Z API: GET /api/notifications?buildingId=6a33c5bfbdcd164605fda95a
+2026-06-24T09:11:55.315Z API: GET /api/ping
+2026-06-24T09:11:55.376Z API: GET /api/ping
+2026-06-24T09:11:55.388Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:11:55.395Z API: GET /api/buildings?status=Active
+2026-06-24T09:11:55.408Z API: GET /api/notifications?buildingId=6a3a64e0b80da47713ec4db1
+2026-06-24T09:11:55.414Z API: GET /api/notifications/unread-count?buildingId=6a3a64e0b80da47713ec4db1
+2026-06-24T09:11:55.663Z API: GET /api/complaints?buildingId=6a3a64e0b80da47713ec4db1
+2026-06-24T09:11:55.956Z API: GET /api/buildings?status=Active
+2026-06-24T09:11:56.312Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:11:56.320Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:11:56.735Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:11:56.770Z API: GET /api/complaints?buildingId=6a3a64e0b80da47713ec4db1
+2026-06-24T09:11:56.776Z API: GET /api/buildings?status=Active
+2026-06-24T09:11:57.835Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:11:59.466Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:11:59.477Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:11:59.915Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:12:25.329Z API: GET /api/ping
+2026-06-24T09:12:26.291Z API: POST /api/floors
+2026-06-24T09:12:26.668Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:12:26.911Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:12:30.902Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:12:55.329Z API: GET /api/ping
+2026-06-24T09:13:21.297Z API: POST /api/rooms
+2026-06-24T09:13:21.585Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:13:22.003Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:13:22.179Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:13:25.327Z API: GET /api/ping
+2026-06-24T09:13:36.616Z API: GET /api/health
+2026-06-24T09:13:36.706Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:13:36.712Z API: GET /api/notifications
+2026-06-24T09:13:36.723Z SOCKET: Socket connected: WaA2_Nl6x7VTU2bhAABF
+2026-06-24T09:13:36.866Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:13:37.229Z API: GET /api/notifications
+2026-06-24T09:13:55.448Z API: GET /api/ping
+2026-06-24T09:14:16.795Z SOCKET: Socket connected: rKvvHNi6TAO9ukaFAAAB
+2026-06-24T09:14:22.460Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:14:22.688Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:14:22.866Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:14:25.446Z API: GET /api/ping
+2026-06-24T09:14:55.465Z API: GET /api/ping
+2026-06-24T09:15:23.455Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:15:23.656Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:15:23.831Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:15:30.447Z API: GET /api/ping
+2026-06-24T09:16:24.452Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:16:24.670Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:16:24.844Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:16:37.446Z API: GET /api/ping
+2026-06-24T09:17:25.450Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:17:25.670Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:17:25.868Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:17:37.448Z API: GET /api/ping
+2026-06-24T09:18:26.452Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:18:26.684Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:18:26.895Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:18:37.451Z API: GET /api/ping
+2026-06-24T09:19:27.454Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:19:27.649Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:19:27.829Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:19:37.450Z API: GET /api/ping
+2026-06-24T09:20:28.458Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:20:28.650Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:20:28.819Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:20:37.448Z API: GET /api/ping
+2026-06-24T09:21:28.939Z API: GET /api/health
+2026-06-24T09:21:29.034Z API: GET /api/buildings/public
+2026-06-24T09:21:29.050Z API: GET /api/buildings/public/stats
+2026-06-24T09:21:29.062Z API: GET /api/notifications
+2026-06-24T09:21:29.282Z API: GET /api/buildings/public
+2026-06-24T09:21:29.453Z API: GET /api/buildings/public/stats
+2026-06-24T09:21:29.628Z SOCKET: Socket connected: H0iq0Jw3oNJT_6GNAAAD
+2026-06-24T09:21:29.829Z API: GET /api/notifications
+2026-06-24T09:21:41.105Z API: GET /api/tenant-portal/wishlist
+2026-06-24T09:21:41.120Z API: GET /api/buildings/public
+2026-06-24T09:21:41.156Z API: GET /api/tenant-portal/wishlist
+2026-06-24T09:21:41.201Z API: GET /api/buildings/public
+2026-06-24T09:21:43.957Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:21:43.982Z SOCKET: Socket connected: bh7XjkmRTKQ0_5JKAAAF
+2026-06-24T09:21:44.198Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:37:47.748Z API: GET /api/health
+2026-06-24T09:37:48.474Z API: GET /api/notifications
+2026-06-24T09:37:48.493Z API: GET /api/buildings/public
+2026-06-24T09:37:48.516Z API: GET /api/buildings/public/stats
+2026-06-24T09:37:48.541Z SOCKET: Socket connected: 6cwdM2bCgdfRd2aUAAAB
+2026-06-24T09:37:48.598Z API: GET /api/buildings/public
+2026-06-24T09:37:48.733Z API: GET /api/buildings/public/stats
+2026-06-24T09:37:49.061Z API: GET /api/notifications
+2026-06-24T09:37:50.707Z API: GET /api/buildings/public
+2026-06-24T09:37:50.716Z API: GET /api/tenant-portal/wishlist
+2026-06-24T09:37:50.771Z API: GET /api/tenant-portal/wishlist
+2026-06-24T09:37:50.787Z API: GET /api/buildings/public
+2026-06-24T09:37:53.140Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:37:53.173Z SOCKET: Socket connected: wbuDW7b2ykPPHiynAAAD
+2026-06-24T09:37:53.415Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:40:01.528Z SOCKET: Socket connected: 1CjoelBnONazknNTAAAF
+2026-06-24T09:40:01.532Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:40:37.352Z API: GET /api/ping
+2026-06-24T09:40:37.405Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:40:37.792Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:40:37.994Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:40:41.477Z API: GET /api/beds/6a3b9fb1ab7520f5e0d2dc2c
+2026-06-24T09:40:55.322Z API: GET /api/ping
+2026-06-24T09:41:20.007Z API: POST /api/beds
+2026-06-24T09:41:33.281Z API: GET /api/ping
+2026-06-24T09:41:41.458Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:41:41.707Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:41:41.892Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:41:42.074Z API: GET /api/beds/6a3b9fb1ab7520f5e0d2dc2c
+2026-06-24T09:41:55.323Z API: GET /api/ping
+2026-06-24T09:42:14.650Z API: POST /api/beds
+2026-06-24T09:42:15.065Z API: PATCH /api/hostels/6a3a64e0b80da47713ec4db1/sync-beds
+2026-06-24T09:42:15.140Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:42:15.694Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:42:16.082Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:42:16.393Z API: GET /api/beds/6a3b9fb1ab7520f5e0d2dc2c
+2026-06-24T09:42:25.329Z API: GET /api/ping
+2026-06-24T09:42:55.325Z API: GET /api/ping
+2026-06-24T09:42:57.896Z API: POST /api/beds
+2026-06-24T09:42:58.186Z API: PATCH /api/hostels/6a3a64e0b80da47713ec4db1/sync-beds
+2026-06-24T09:42:58.249Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:42:58.544Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:42:58.889Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:42:59.130Z API: GET /api/beds/6a3b9fb1ab7520f5e0d2dc2c
+2026-06-24T09:43:31.475Z SOCKET: Socket connected: 1lxQ_YjynpvyXPy0AAAB
+2026-06-24T09:43:55.449Z API: GET /api/ping
+2026-06-24T09:43:59.450Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:43:59.809Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:44:00.121Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:44:00.373Z API: GET /api/beds/6a3b9fb1ab7520f5e0d2dc2c
+2026-06-24T09:44:37.454Z API: GET /api/ping
+2026-06-24T09:45:00.445Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:45:00.782Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:45:01.093Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:45:01.398Z API: GET /api/beds/6a3b9fb1ab7520f5e0d2dc2c
+2026-06-24T09:45:37.466Z API: GET /api/ping
+2026-06-24T09:45:42.865Z SOCKET: Socket connected: hYCJSkX6BnnKzM9OAAAD
+2026-06-24T09:45:59.691Z API: GET /api/health
+2026-06-24T09:45:59.781Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:45:59.799Z API: GET /api/notifications
+2026-06-24T09:45:59.814Z SOCKET: Socket connected: KrvQK5ueO98my-QuAAAF
+2026-06-24T09:46:00.103Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:46:00.325Z API: GET /api/notifications
+2026-06-24T09:46:01.457Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:46:01.767Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:46:02.016Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:46:02.246Z API: GET /api/beds/6a3b9fb1ab7520f5e0d2dc2c
+2026-06-24T09:46:37.450Z API: GET /api/ping
+2026-06-24T09:47:02.448Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:47:02.886Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:47:03.216Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:47:03.508Z API: GET /api/beds/6a3b9fb1ab7520f5e0d2dc2c
+2026-06-24T09:47:37.443Z API: GET /api/ping
+2026-06-24T09:48:03.455Z API: GET /api/buildings?propertyId=6a3a64e0b80da47713ec4db1&status=Active
+2026-06-24T09:48:03.722Z API: GET /api/floors/6a3a64e0b80da47713ec4db1
+2026-06-24T09:48:03.973Z API: GET /api/rooms/6a3b9f7aab7520f5e0d2dc2b
+2026-06-24T09:48:04.218Z API: GET /api/beds/6a3b9fb1ab7520f5e0d2dc2c
+2026-06-24T09:48:37.454Z API: GET /api/ping
+2026-06-24T09:51:28.760Z API: GET /api/tenants/me
+2026-06-24T09:51:28.837Z API: GET /api/tenants/me
+2026-06-24T09:51:28.846Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T09:51:29.077Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T10:18:57.131Z API: GET /api/health
+2026-06-24T10:18:57.705Z API: GET /api/buildings/public
+2026-06-24T10:18:57.724Z API: GET /api/buildings/public/stats
+2026-06-24T10:18:57.729Z API: GET /api/notifications
+2026-06-24T10:18:57.748Z SOCKET: Socket connected: BKF1eLaXnQM6wIlEAAAB
+2026-06-24T10:18:57.821Z API: GET /api/buildings/public
+2026-06-24T10:18:57.908Z API: GET /api/buildings/public/stats
+2026-06-24T10:18:58.316Z API: GET /api/notifications
+2026-06-24T10:19:00.283Z API: GET /api/buildings/public
+2026-06-24T10:19:00.289Z API: GET /api/tenant-portal/wishlist
+2026-06-24T10:19:00.339Z API: GET /api/tenant-portal/wishlist
+2026-06-24T10:19:00.368Z API: GET /api/buildings/public
+2026-06-24T10:19:02.707Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T10:19:02.743Z SOCKET: Socket connected: 8SaW6KmG6tZgLDBMAAAD
+2026-06-24T10:19:03.064Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T10:19:30.705Z API: GET /api/tenants/me
+2026-06-24T10:19:30.796Z API: GET /api/tenants/me
+2026-06-24T10:19:30.813Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T10:19:31.044Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T10:37:15.151Z API: GET /api/health
+2026-06-24T10:37:15.323Z SOCKET: Socket connected: 3waNHTEs3WZyZoJUAAAF
+2026-06-24T10:37:15.328Z API: GET /api/tenants/me
+2026-06-24T10:37:15.390Z API: GET /api/notifications
+2026-06-24T10:37:15.468Z API: GET /api/tenants/me
+2026-06-24T10:37:15.475Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T10:37:15.703Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T10:37:15.925Z API: GET /api/notifications
+2026-06-24T10:37:26.659Z API: GET /api/tenant-portal/wishlist
+2026-06-24T10:37:26.714Z API: GET /api/tenant-portal/wishlist
+2026-06-24T10:37:27.905Z API: GET /api/buildings/public
+2026-06-24T10:37:27.943Z SOCKET: Socket connected: Hq_YK8fLbDZBSKS7AAAH
+2026-06-24T10:37:27.993Z API: GET /api/buildings/public
+2026-06-24T10:37:28.000Z API: GET /api/tenant-portal/wishlist
+2026-06-24T10:37:28.103Z API: GET /api/tenant-portal/wishlist
+2026-06-24T10:39:47.652Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T10:39:47.679Z SOCKET: Socket connected: tJE6E83Hef9ZhMD6AAAJ
+2026-06-24T10:39:47.877Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T10:39:51.600Z API: GET /api/buildings/public
+2026-06-24T10:39:51.619Z SOCKET: Socket connected: bIWYtO9DOzIj579OAAAL
+2026-06-24T10:39:51.674Z API: GET /api/buildings/public
+2026-06-24T10:39:51.679Z API: GET /api/tenant-portal/wishlist
+2026-06-24T10:39:51.750Z API: GET /api/tenant-portal/wishlist
+2026-06-24T10:45:29.046Z API: GET /api/tenants/me
+2026-06-24T10:45:29.057Z API: GET /api/notifications?limit=3
+2026-06-24T10:45:29.064Z API: GET /api/complaints/me
+2026-06-24T10:45:29.080Z API: GET /api/bookings/me
+2026-06-24T10:45:29.096Z SOCKET: Socket connected: fho-7n-qbI9zHZXrAAAN
+2026-06-24T10:45:29.105Z API: GET /api/tenants/me
+2026-06-24T10:45:29.171Z API: GET /api/complaints/me
+2026-06-24T10:45:29.250Z API: GET /api/bookings/me
+2026-06-24T10:45:29.851Z API: GET /api/notifications?limit=3
+2026-06-24T10:45:35.711Z API: GET /api/buildings/public
+2026-06-24T10:45:35.731Z SOCKET: Socket connected: 4MB934jvo-oMlk7YAAAP
+2026-06-24T10:45:35.793Z API: GET /api/buildings/public
+2026-06-24T10:45:35.806Z API: GET /api/tenant-portal/wishlist
+2026-06-24T10:45:35.881Z API: GET /api/tenant-portal/wishlist
+2026-06-24T10:45:38.392Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T10:45:38.409Z SOCKET: Socket connected: GNKUIUtwyM8qvCAnAAAR
+2026-06-24T10:45:38.607Z API: GET /api/buildings/public/6a3a64e0b80da47713ec4db1
+2026-06-24T10:53:41.720Z SOCKET: Socket connected: Ut2bLvSQ_Und9isbAAAT
