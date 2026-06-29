@@ -19,6 +19,12 @@ const Login = () => {
 
     try {
       const res = await axios.post(`${API_URL}/auth/login`, { email, password });
+      const userRole = res.data.user.role;
+      if (userRole !== 'STAFF') {
+        setError('Access Denied: This portal is restricted to staff members only.');
+        setLoading(false);
+        return;
+      }
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');

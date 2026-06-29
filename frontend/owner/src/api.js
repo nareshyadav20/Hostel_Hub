@@ -396,6 +396,10 @@ export const api = {
   addBuilding: async (data) => {
     const res = await axios.post(`${API_URL}/buildings`, data);
     cacheSet('buildings_active', null);
+    cacheSet('buildings_Active', null);
+    cacheSet('buildings_draft', null);
+    cacheSet('buildings_Draft', null);
+    cacheSet('buildings_all', null);
     if (data.propertyId) {
       cacheSet(`buildings_prop_${data.propertyId}`, null);
     }
@@ -404,6 +408,10 @@ export const api = {
   updateBuilding: async (id, data) => {
     const res = await axios.patch(`${API_URL}/buildings/${id}`, data);
     cacheSet('buildings_active', null);
+    cacheSet('buildings_Active', null);
+    cacheSet('buildings_draft', null);
+    cacheSet('buildings_Draft', null);
+    cacheSet('buildings_all', null);
     if (data.propertyId) {
       cacheSet(`buildings_prop_${data.propertyId}`, null);
     }
@@ -412,6 +420,10 @@ export const api = {
   deleteBuilding: async (id) => {
     await axios.delete(`${API_URL}/buildings/${id}`);
     cacheSet('buildings_active', null);
+    cacheSet('buildings_Active', null);
+    cacheSet('buildings_draft', null);
+    cacheSet('buildings_Draft', null);
+    cacheSet('buildings_all', null);
   },
   uploadPhotos: async (formData) => {
     const res = await axios.post(`${API_URL}/buildings/upload`, formData);

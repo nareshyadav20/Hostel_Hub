@@ -111,7 +111,7 @@ const getBuildings = async (req, res) => {
 
     if (req.query.status) {
       if (req.query.status === 'Active') {
-        query.status = { $ne: 'Draft' };
+        query.status = { $nin: ['Draft', 'draft'] };
       } else {
         query.status = req.query.status;
       }
@@ -318,9 +318,19 @@ const getPublicBuildingById = async (req, res) => {
     const floorIds = floors.map(f => f._id);
 
     const rooms = await Room.find({ floor: { $in: floorIds } })
-      .select('roomNumber roomType capacity rentAmount securityDeposit isAC attachedBathroom facilities amenities balcony washroomType windowCount status floor')
-      .populate({ path: 'beds', select: 'bedNumber status position bedType currentTenant isLower price' })
+      .select('roomNumber roomType capacity rentAmount securityDeposit isAC attachedBathroom facilities amenities balcony washroomType windowCount status floor beds geyser studyTable wardrobe tv refrigerator microwave wifi')
       .lean();
+
+    // For each room, fetch beds directly by room reference (more reliable than populate on lean)
+    const roomIds = rooms.map(r => r._id);
+    const allBeds = await Bed.find({ room: { $in: roomIds } })
+      .select('bedNumber status position bedType currentTenant isLower price room')
+      .lean();
+
+    // Attach beds to their respective rooms
+    rooms.forEach(room => {
+      room.beds = allBeds.filter(b => b.room && b.room.toString() === room._id.toString());
+    });
 
     let totalRooms = 0, totalBeds = 0, occupiedBeds = 0;
     floors.forEach(f => {
@@ -329,7 +339,10 @@ const getPublicBuildingById = async (req, res) => {
       f.rooms.forEach(room => {
         const beds = room.beds || [];
         totalBeds += beds.length;
-        occupiedBeds += beds.filter(b => b.status === 'OCCUPIED' || b.status === 'Occupied').length;
+        occupiedBeds += beds.filter(b => {
+          const s = (b.status || '').toLowerCase();
+          return s === 'occupied' || s === 'occupied';
+        }).length;
       });
     });
 
@@ -382,7 +395,7 @@ const getBuildingPortfolio = async (req, res) => {
     }
     const queryOwnerIds = ownerIds.flatMap(id => [id, new mongoose.Types.ObjectId(id)]);
 
-    const buildings = await Building.find({ owner: { $in: queryOwnerIds }, status: { $ne: 'Draft' } }).lean();
+    const buildings = await Building.find({ owner: { $in: queryOwnerIds }, status: { $nin: ['Draft', 'draft'] } }).lean();
 
     const result = await Promise.all(buildings.map(async (b) => {
       const floors = await Floor.find({ building: b._id }).lean();
@@ -419,7 +432,7 @@ const getBuildingPortfolio = async (req, res) => {
 
 const getPlatformStats = async (req, res) => {
   try {
-    const statsQuery = { status: { $ne: 'Draft' }, isApproved: true };
+    const statsQuery = { status: { $nin: ['Draft', 'draft'] }, isApproved: true };
 
     const totalBuildings = await Building.countDocuments(statsQuery);
     const cities = await Building.distinct('locationCity', statsQuery);

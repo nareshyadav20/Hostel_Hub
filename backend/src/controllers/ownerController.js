@@ -241,7 +241,7 @@ exports.getOwnerPhoto = async (req, res) => {
 exports.getPortfolio = async (req, res) => {
   try {
     const ownerId = req.user.id;
-    const buildings = await Building.find({ owner: ownerId, status: { $ne: 'Draft' } })
+    const buildings = await Building.find({ owner: ownerId, status: { $nin: ['Draft', 'draft'] } })
       .select('-images -gallery -description -draftData')
       .lean();
 

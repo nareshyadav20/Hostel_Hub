@@ -19,6 +19,12 @@ const Login = () => {
     setError('');
     try {
       const res = await axios.post(`${API_URL}/auth/login`, { email, password });
+      const userRole = res.data.user.role;
+      if (userRole !== 'SUPER_ADMIN' && userRole !== 'ADMIN') {
+        setError('Access Denied: This portal is restricted to administrators only.');
+        setLoading(false);
+        return;
+      }
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');
