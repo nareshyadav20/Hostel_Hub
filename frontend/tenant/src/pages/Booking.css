@@ -367,10 +367,13 @@
 }
 
 .section-title {
-  font-size: 2rem;
-  font-weight: 900;
-  margin-bottom: 0.5rem;
+  font-family: 'Times New Roman', Times, serif;
+  font-weight: 500;
+  font-size: 1.8rem;
   color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
 }
 
 .section-subtitle {
@@ -466,46 +469,113 @@
   transform: scale(1);
 }
 
-/* Date Selection */
-.date-selection-row {
-  margin-top: 3rem;
-  padding: 2rem;
-  background: var(--bg-secondary);
-  border-radius: 15px;
-  border: 1px solid var(--border-color);
+/* Selection Grid Classic */
+.selection-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.5rem;
 }
 
-.input-group-pro {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  max-width: 300px;
-}
-
-.input-group-pro label {
+.selection-card-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  font-size: 0.9rem;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
 }
 
-.input-group-pro input {
-  padding: 1rem 1.25rem;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  font-size: 1rem;
+.sc-icon {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.sc-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sc-value {
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-primary);
-  background: var(--bg-primary);
-  transition: all 0.3s ease;
 }
 
-.input-group-pro input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 4px var(--primary-light);
+/* Date Selection Classic */
+.date-selection-premium {
+  padding: 2rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.date-header-pro {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-primary);
+}
+
+.date-header-pro h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.date-header-pro p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+.date-input-wrapper {
+  position: relative;
+  max-width: 320px;
+}
+
+.date-input-wrapper input {
+  width: 100%;
+  padding: 0.85rem 1rem 0.85rem 2.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  transition: border-color 0.2s ease;
   outline: none;
+}
+
+.date-input-wrapper input:focus {
+  border-color: var(--primary);
+}
+
+.date-icon-overlay {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
 }
 
 /* Upload Grid */
@@ -748,7 +818,8 @@
 }
 
 .payment-method-card {
-  z-index: 1; /* keep above details to hide seam */
+  z-index: 1;
+  /* keep above details to hide seam */
 }
 
 .fade-in-down {
@@ -756,8 +827,15 @@
 }
 
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .card-input-container {
@@ -1105,12 +1183,13 @@
 }
 
 @keyframes fadeInPro {
-  from { 
-    opacity: 0; 
-    transform: translateY(10px); 
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-}
+}

@@ -71,9 +71,12 @@ const Listing = () => {
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
-  const checkOccupied = (bed) =>
-    bed.status === 'OCCUPIED' ||
-    (hostel?.filledBeds && hostel.filledBeds.some(b => String(b.bedId) === String(bed._id)));
+  const checkOccupied = (bed) => {
+    const s = (bed.status || '').toLowerCase();
+    const isStatusOccupied = s === 'occupied' || s === 'reserved' || s === 'blocked';
+    const isInFilledBeds = hostel?.filledBeds && hostel.filledBeds.some(b => String(b.bedId) === String(bed._id));
+    return isStatusOccupied || isInFilledBeds;
+  };
 
   const renderField = (value, fallback = 'No Data') =>
     (value === null || value === undefined || value === '') ? fallback : value;
@@ -188,13 +191,14 @@ const Listing = () => {
         floorId: selectedFloor._id,
         roomId: selectedRoom._id,
         bedId: selectedBed._id,
-        rentAmount: selectedRoom.rentAmount || hostel.startingPrice,
-        securityDeposit: selectedRoom.securityDeposit || hostel.securityDeposit || 0,
-        foodCharges: hostel.foodCharges || 0,
-        maintenanceCharges: hostel.maintenanceCharges || 0,
+        rentAmount: finalRent,
+        securityDeposit: currentDeposit,
+        foodCharges: foodCost,
+        maintenanceCharges: maintenanceCost,
         roomNumber: selectedRoom.roomNumber,
         bedNumber: selectedBed.bedNumber,
         floorNumber: selectedFloor.floorNumber,
+        sharingType: selectedRoom.capacity,
         moveInDate,
         agreementType
       }
@@ -226,19 +230,54 @@ const Listing = () => {
 
   // ─── Pricing ────────────────────────────────────────────────────────────────
 
+  const capacityToCheck = selectedRoom ? Number(selectedRoom.capacity) : selectedCapacityFilter;
+  
+  // Calculate lowest available prices per sharing capacity
+  const rentOptionsMap = new Map();
+  if (hostel) {
+    const globalPrices = {
+      1: hostel.rentSingle, 2: hostel.rentDouble, 3: hostel.rentTriple,
+      4: hostel.rent4Sharing, 5: hostel.rent5Sharing, 6: hostel.rent6Sharing
+    };
+    Object.keys(globalPrices).forEach(cap => {
+      const price = Number(globalPrices[cap]);
+      if (price > 0) rentOptionsMap.set(Number(cap), price);
+    });
+    if (hostel.floors) {
+      hostel.floors.forEach(f => {
+        if (f.rooms) {
+          f.rooms.forEach(r => {
+            const cap = Number(r.capacity);
+            const rent = Number(r.rentAmount);
+            if (cap > 0 && rent > 0) {
+              if (!rentOptionsMap.has(cap) || rent < rentOptionsMap.get(cap)) {
+                rentOptionsMap.set(cap, rent);
+              }
+            }
+          });
+        }
+      });
+    }
+  }
+
   const currentRent = (selectedRoom?.rentAmount > 0) ? selectedRoom.rentAmount :
-    (selectedRoom?.capacity === 1 && hostel.rentSingle) ? hostel.rentSingle :
-    (selectedRoom?.capacity === 2 && hostel.rentDouble) ? hostel.rentDouble :
-    (selectedRoom?.capacity === 3 && hostel.rentTriple) ? hostel.rentTriple :
-    (selectedRoom?.capacity === 4 && hostel.rent4Sharing) ? hostel.rent4Sharing :
-    (selectedRoom?.capacity === 5 && hostel.rent5Sharing) ? hostel.rent5Sharing :
-    (selectedRoom?.capacity >= 6 && hostel.rent6Sharing) ? hostel.rent6Sharing :
-    (hostel.startingPrice || 0);
+    (capacityToCheck && rentOptionsMap.has(capacityToCheck)) ? rentOptionsMap.get(capacityToCheck) :
+      (hostel?.startingPrice || 0);
 
   const currentDeposit = selectedRoom?.securityDeposit || hostel.securityDeposit || 0;
-  const foodCost = hostel.foodCharges || 0;
-  const maintenanceCost = hostel.maintenanceCharges || 0;
-  const totalDue = currentRent + currentDeposit + foodCost + maintenanceCost;
+
+  // Multiplier based on Agreement Type
+  let agreementMultiplier = 1;
+  if (agreementType === 'Quarterly') agreementMultiplier = 3;
+  if (agreementType === 'Half Yearly') agreementMultiplier = 6;
+  if (agreementType === 'Yearly') agreementMultiplier = 12;
+
+  // Apply multiplier to monthly recurring charges
+  const finalRent = currentRent * agreementMultiplier;
+  const foodCost = (hostel.foodCharges || 0) * agreementMultiplier;
+  const maintenanceCost = (hostel.maintenanceCharges || 0) * agreementMultiplier;
+
+  const totalDue = finalRent + currentDeposit + foodCost + maintenanceCost;
 
   const images = hostel.images || [];
 
@@ -382,17 +421,17 @@ const Listing = () => {
                 {(hostel.locality || hostel.locationCity) && (
                   <span className="liv-pill-tag location"><MapPin size={13} /> {hostel.locality || hostel.locationCity}</span>
                 )}
-                
+
                 {getHostelTypeLabel(hostel) && (
                   <span className="liv-pill-tag gender">
                     <User size={13} /> {getHostelTypeLabel(hostel)}
                   </span>
                 )}
-                
+
                 {hostel.category && hostel.category !== getHostelTypeLabel(hostel) && (
                   <span className="liv-pill-tag"><Award size={13} /> {hostel.category === 'Student' ? 'Student Friendly' : hostel.category === 'Luxury' ? 'Premium' : hostel.category === 'Professional' ? 'Professional' : hostel.category}</span>
                 )}
-                
+
                 {hostel.foodCharges > 0 && <span className="liv-pill-tag food"><Coffee size={13} /> Food Included</span>}
                 {hostel.isAC && <span className="liv-pill-tag ac"><Sparkles size={13} /> AC Rooms</span>}
               </div>
@@ -401,7 +440,12 @@ const Listing = () => {
             {/* Metric cards */}
             <div className="liv-metrics-row">
               <div className="liv-metric-card green">
-                <span className="liv-metric-val">₹{renderField(hostel.startingPrice?.toLocaleString())}</span>
+                <span className="liv-metric-val">
+                  ₹{(rentOptionsMap.size > 0
+                    ? Math.min(...rentOptionsMap.values())
+                    : hostel.startingPrice || 0
+                  ).toLocaleString()}
+                </span>
                 <span className="liv-metric-lbl">Starting from / month</span>
               </div>
               <div className="liv-metric-card purple">
@@ -458,288 +502,342 @@ const Listing = () => {
             {activeStep === 1 && (
               <div className="liv-step-panel fade-in">
                 {/* Property Overview instead of About */}
-                  {(() => {
-                    // Strictly compute from actual floor data the owner created
-                    const hasFloors = hostel.floors && hostel.floors.length > 0;
-                    const rooms = hasFloors
-                      ? hostel.floors.reduce((acc, f) => acc + (f.rooms?.length || 0), 0)
-                      : 0;
-                    const beds = hasFloors
-                      ? hostel.floors.reduce((acc, f) =>
-                          acc + (f.rooms?.reduce((bAcc, r) => bAcc + (r.beds?.length || 0), 0) || 0), 0)
-                      : 0;
-                    const floorCount = hasFloors ? hostel.floors.length : 0;
-                    
-                    // Collect unique sharing types actually created by owner
-                    const sharingTypes = new Set();
-                    if (hasFloors) {
-                      hostel.floors.forEach(f => {
-                        f.rooms?.forEach(r => {
-                          const cap = Number(r.capacity);
-                          if (cap > 0) sharingTypes.add(cap);
-                        });
+                {(() => {
+                  // Strictly compute from actual floor data the owner created
+                  const hasFloors = hostel.floors && hostel.floors.length > 0;
+                  const rooms = hasFloors
+                    ? hostel.floors.reduce((acc, f) => acc + (f.rooms?.length || 0), 0)
+                    : 0;
+                  const beds = hasFloors
+                    ? hostel.floors.reduce((acc, f) =>
+                      acc + (f.rooms?.reduce((bAcc, r) => bAcc + (r.beds?.length || 0), 0) || 0), 0)
+                    : 0;
+                  const floorCount = hasFloors ? hostel.floors.length : 0;
+
+                  // Collect unique sharing types actually created by owner
+                  const sharingTypes = new Set();
+                  if (hasFloors) {
+                    hostel.floors.forEach(f => {
+                      f.rooms?.forEach(r => {
+                        const cap = Number(r.capacity);
+                        if (cap > 0) sharingTypes.add(cap);
                       });
-                    }
-                    
-                    return (
-                      <div className="liv-prop-overview-tags">
-                        {hostel.genderType && (
-                          <div className="liv-overview-tag">
-                            <User size={16} className="text-purple" />
-                            <div className="liv-ot-info">
-                              <span>Gender</span>
-                              <strong>{hostel.genderType}</strong>
-                            </div>
-                          </div>
-                        )}
-                        {floorCount > 0 && (
-                          <div className="liv-overview-tag">
-                            <LayoutGrid size={16} className="text-blue" />
-                            <div className="liv-ot-info">
-                              <span>Floors</span>
-                              <strong>{floorCount}</strong>
-                            </div>
-                          </div>
-                        )}
-                        {rooms > 0 && (
-                          <div className="liv-overview-tag">
-                            <DoorOpen size={16} className="text-blue" />
-                            <div className="liv-ot-info">
-                              <span>Rooms</span>
-                              <strong>{rooms}</strong>
-                            </div>
-                          </div>
-                        )}
-                        {beds > 0 && (
-                          <div className="liv-overview-tag">
-                            <Bed size={16} className="text-orange" />
-                            <div className="liv-ot-info">
-                              <span>Capacity</span>
-                              <strong>{beds} Beds</strong>
-                            </div>
-                          </div>
-                        )}
-                        {sharingTypes.size > 0 && (
-                          <div className="liv-overview-tag">
-                            <Users size={16} className="text-purple" />
-                            <div className="liv-ot-info">
-                              <span>Sharing</span>
-                              <strong>
-                                {Array.from(sharingTypes).sort((a,b)=>a-b).map(c =>
-                                  getSharingLabel(c)
-                                ).join(', ')}
-                              </strong>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                  
-                  {(() => {
-                    if (!hostel.description) return null;
-                    // Remove auto-generated metadata lines the old form used to create
-                    const cleaned = hostel.description
-                      .replace(/#+\s*Property Overview[\s\S]*?\n/gi, '')
-                      .replace(/Type:\s*[^|\n]*/gi, '')
-                      .replace(/Gender:\s*[^|\n]*/gi, '')
-                      .replace(/Contact:\s*[^\n]*/gi, '')
-                      .replace(/---+/g, '')
-                      .replace(/\|/g, '')
-                      .replace(/[#*]+/g, '')
-                      .replace(/\n{3,}/g, '\n\n')
-                      .trim();
-                    if (!cleaned) return null;
-                    return (
-                      <div className="liv-about-section">
-                        <h2 className="liv-section-title">About This Property</h2>
-                        <p className="liv-desc-text" style={{ whiteSpace: 'pre-wrap' }}>{cleaned}</p>
-                      </div>
-                    );
-                  })()}
-                  
-                  <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
-                  
-                  <div className="liv-pricing-combined-section">
-                    <h2 className="liv-section-title">Pricing & Fees</h2>
-                    
-                    <div className="liv-pricing-grid-new">
-                      {/* Base Rent — only show if explicitly set */}
-                      {hostel.startingPrice > 0 && (
-                        <div className="liv-pricing-card-new">
-                          <div className="liv-pc-icon base"><MapPin size={20} /></div>
-                          <div className="liv-pc-details">
-                            <span className="liv-pc-label">Base Rent Starts At</span>
-                            <span className="liv-pc-value">₹{hostel.startingPrice.toLocaleString()} <small>/mo</small></span>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Security Deposit — only if owner set it > 0 */}
-                      {hostel.securityDeposit > 0 && (
-                        <div className="liv-pricing-card-new">
-                          <div className="liv-pc-icon deposit"><Lock size={20} /></div>
-                          <div className="liv-pc-details">
-                            <span className="liv-pc-label">Security Deposit</span>
-                            <span className="liv-pc-value">₹{hostel.securityDeposit.toLocaleString()}</span>
-                          </div>
-                        </div>
-                      )}
+                    });
+                  }
 
-                      {/* Food — only if owner explicitly enabled mess */}
-                      {hostel.mess === true && (
-                        <div className="liv-pricing-card-new">
-                          <div className="liv-pc-icon food"><Coffee size={20} /></div>
-                          <div className="liv-pc-details">
-                            <span className="liv-pc-label">Food (Monthly)</span>
-                            <span className="liv-pc-value">
-                              {hostel.foodCharges > 0 ? `₹${hostel.foodCharges.toLocaleString()}` : 'Included'} <small>/mo</small>
-                            </span>
+                  return (
+                    <div className="liv-prop-overview-tags">
+                      {hostel.genderType && (
+                        <div className="liv-overview-tag">
+                          <User size={16} className="text-purple" />
+                          <div className="liv-ot-info">
+                            <span>Gender</span>
+                            <strong>{hostel.genderType}</strong>
                           </div>
                         </div>
                       )}
-
-                      {/* Maintenance — only if owner explicitly set a non-default value */}
-                      {hostel.maintenanceCharges > 0 && hostel.maintenanceCharges !== 799 && (
-                        <div className="liv-pricing-card-new">
-                          <div className="liv-pc-icon maint"><ZapIcon size={20} /></div>
-                          <div className="liv-pc-details">
-                            <span className="liv-pc-label">Maintenance</span>
-                            <span className="liv-pc-value">₹{hostel.maintenanceCharges.toLocaleString()} <small>/mo</small></span>
+                      {floorCount > 0 && (
+                        <div className="liv-overview-tag">
+                          <LayoutGrid size={16} className="text-blue" />
+                          <div className="liv-ot-info">
+                            <span>Floors</span>
+                            <strong>{floorCount}</strong>
+                          </div>
+                        </div>
+                      )}
+                      {rooms > 0 && (
+                        <div className="liv-overview-tag">
+                          <DoorOpen size={16} className="text-blue" />
+                          <div className="liv-ot-info">
+                            <span>Rooms</span>
+                            <strong>{rooms}</strong>
+                          </div>
+                        </div>
+                      )}
+                      {beds > 0 && (
+                        <div className="liv-overview-tag">
+                          <Bed size={16} className="text-orange" />
+                          <div className="liv-ot-info">
+                            <span>Capacity</span>
+                            <strong>{beds} Beds</strong>
+                          </div>
+                        </div>
+                      )}
+                      {sharingTypes.size > 0 && (
+                        <div className="liv-overview-tag">
+                          <Users size={16} className="text-purple" />
+                          <div className="liv-ot-info">
+                            <span>Sharing</span>
+                            <strong>
+                              {Array.from(sharingTypes).sort((a, b) => a - b).map(c =>
+                                getSharingLabel(c)
+                              ).join(', ')}
+                            </strong>
                           </div>
                         </div>
                       )}
                     </div>
+                  );
+                })()}
 
-                    {/* Dynamic Room Sharing Options */}
-                    {(() => {
-                      const optionsMap = new Map();
-                      
-                      if (hostel.floors) {
-                        hostel.floors.forEach(f => {
-                          if (f.rooms) {
-                            f.rooms.forEach(r => {
-                              const cap = Number(r.capacity);
-                              const rent = Number(r.rentAmount) || 0;
-                              // ONLY show if the owner explicitly set a rent on this room
-                              if (cap > 0 && rent > 0) {
-                                if (!optionsMap.has(cap) || rent < optionsMap.get(cap)) {
-                                  optionsMap.set(cap, rent);
-                                }
-                              }
-                            });
+                {(() => {
+                  if (!hostel.description) return null;
+                  // Remove auto-generated metadata lines the old form used to create
+                  const cleaned = hostel.description
+                    .replace(/#+\s*Property Overview[\s\S]*?\n/gi, '')
+                    .replace(/Type:\s*[^|\n]*/gi, '')
+                    .replace(/Gender:\s*[^|\n]*/gi, '')
+                    .replace(/Contact:\s*[^\n]*/gi, '')
+                    .replace(/---+/g, '')
+                    .replace(/\|/g, '')
+                    .replace(/[#*]+/g, '')
+                    .replace(/\n{3,}/g, '\n\n')
+                    .trim();
+                  if (!cleaned) return null;
+                  return (
+                    <div className="liv-about-section">
+                      <h2 className="liv-section-title">About This Property</h2>
+                      <p className="liv-desc-text" style={{ whiteSpace: 'pre-wrap' }}>{cleaned}</p>
+                    </div>
+                  );
+                })()}
+
+                <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
+
+                <div className="liv-pricing-combined-section">
+                  <h2 className="liv-section-title">Pricing & Fees</h2>
+
+                  <div className="liv-pricing-grid-new">
+                    {/* Base Rent */}
+                    {(currentRent > 0 || hostel.startingPrice > 0) && (
+                      <div className="liv-pricing-card-new">
+                        <div className="liv-pc-icon base"><MapPin size={20} /></div>
+                        <div className="liv-pc-details">
+                          <span className="liv-pc-label">{(selectedRoom || selectedCapacityFilter) ? 'Base Rent' : 'Base Rent Starts At'}</span>
+                          <span className="liv-pc-value">₹{currentRent.toLocaleString()} <small>/mo</small></span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Security Deposit */}
+                    {currentDeposit > 0 && (
+                      <div className="liv-pricing-card-new">
+                        <div className="liv-pc-icon deposit"><Lock size={20} /></div>
+                        <div className="liv-pc-details">
+                          <span className="liv-pc-label">Security Deposit</span>
+                          <span className="liv-pc-value">₹{currentDeposit.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Food — only if owner explicitly enabled mess */}
+                    {hostel.mess === true && (
+                      <div className="liv-pricing-card-new">
+                        <div className="liv-pc-icon food"><Coffee size={20} /></div>
+                        <div className="liv-pc-details">
+                          <span className="liv-pc-label">Food (Monthly)</span>
+                          <span className="liv-pc-value">
+                            {hostel.foodCharges > 0 ? `₹${hostel.foodCharges.toLocaleString()}` : 'Included'} <small>/mo</small>
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Maintenance */}
+                    {hostel.maintenanceCharges > 0 && (
+                      <div className="liv-pricing-card-new">
+                        <div className="liv-pc-icon maint"><ZapIcon size={20} /></div>
+                        <div className="liv-pc-details">
+                          <span className="liv-pc-label">Maintenance</span>
+                          <span className="liv-pc-value">₹{hostel.maintenanceCharges.toLocaleString()} <small>/mo</small></span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Dynamic Room Sharing Options */}
+                  {(() => {
+                    if (!rentOptionsMap || rentOptionsMap.size === 0) return null;
+
+                    const options = Array.from(rentOptionsMap.entries())
+                      .map(([cap, price]) => ({ cap: Number(cap), price }))
+                      .sort((a, b) => a.cap - b.cap);
+
+                    return (
+                      <div className="liv-sharing-options-box" style={{ marginTop: '24px' }}>
+                        <h3 className="liv-section-title" style={{ fontSize: '1.1rem', marginBottom: '12px', fontWeight: 700, color: '#1e293b' }}>Sharing Options & Pricing</h3>
+                        <div className="liv-sharing-chips" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px' }}>
+                          {options.map(opt => (
+                            <div
+                              key={opt.cap}
+                              className="liv-sharing-card"
+                              onClick={() => {
+                                setSelectedCapacityFilter(opt.cap === selectedCapacityFilter ? null : opt.cap);
+                                setSelectedFloor(null); // Clear floor to ensure clean navigation
+                                setActiveStep(2); // Jump to floors view to see filtered floors
+                              }}
+                              style={{
+                                border: opt.cap === selectedCapacityFilter ? '2px solid #7c3aed' : '1px solid #e2e8f0',
+                                borderRadius: '12px',
+                                padding: '16px',
+                                background: opt.cap === selectedCapacityFilter ? '#f5f3ff' : '#fff',
+                                boxShadow: opt.cap === selectedCapacityFilter ? '0 4px 12px rgba(124, 58, 237, 0.15)' : '0 2px 8px rgba(0,0,0,0.02)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease-in-out'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#475569', fontWeight: 600, fontSize: '0.9rem' }}>
+                                <Users size={16} color="#7c3aed" />
+                                <span>{getSharingLabel(opt.cap)}</span>
+                              </div>
+                              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>
+                                ₹{opt.price.toLocaleString()} <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#64748b' }}>/mo</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
+
+                {/* Amenities from facility booleans */}
+                {(() => {
+                  let buildingAmenities = getAmenitiesFromBuilding(hostel);
+
+                  // Filter room-specific amenities if a capacity is selected
+                  let roomAmenities = [];
+                  if (selectedCapacityFilter && hostel.floors) {
+                    const featureSet = new Set();
+                    hostel.floors.forEach(f => {
+                      if (f.rooms) {
+                        f.rooms.forEach(r => {
+                          if (Number(r.capacity) === selectedCapacityFilter) {
+                            if (r.isAC) featureSet.add('AC');
+                            if (r.attachedBathroom) featureSet.add('Attached Bathroom');
+                            if (r.balcony) featureSet.add('Balcony');
+                            if (r.geyser) featureSet.add('Geyser');
+                            if (r.studyTable) featureSet.add('Study Table');
+                            if (r.wardrobe) featureSet.add('Wardrobe');
+                            if (r.tv) featureSet.add('TV');
+                            if (r.refrigerator) featureSet.add('Refrigerator');
+                            if (r.microwave) featureSet.add('Microwave');
+                            if (r.wifi) featureSet.add('Wi-Fi');
+                            if (Array.isArray(r.amenities)) {
+                              r.amenities.forEach(a => featureSet.add(a));
+                            }
                           }
                         });
                       }
-                      
-                      if (optionsMap.size === 0) return null;
-                      
-                      const options = Array.from(optionsMap.entries())
-                        .map(([cap, price]) => ({ cap: Number(cap), price }))
-                        .sort((a, b) => a.cap - b.cap);
+                    });
+                    roomAmenities = Array.from(featureSet);
+                  }
 
-                      return (
-                        <div className="liv-sharing-options-box">
-                          <h3 className="liv-sharing-title">Available Room Options</h3>
-                          <div className="liv-sharing-chips">
-                            {options.map(opt => (
-                              <button 
-                                key={opt.cap} 
-                                className={`liv-sharing-chip ${selectedCapacityFilter === opt.cap ? 'active' : ''}`}
-                                onClick={() => {
-                                  setSelectedCapacityFilter(opt.cap === selectedCapacityFilter ? null : opt.cap);
-                                  setSelectedFloor(null); // Clear floor to ensure clean navigation
-                                  setActiveStep(2); // Jump to floors view to see filtered floors
-                                }}
-                                type="button"
-                              >
-                                <span>{getSharingLabel(opt.cap)}</span>
-                                <strong>₹{opt.price.toLocaleString()}</strong>
-                              </button>
+                  const showRoomAmenities = selectedCapacityFilter && roomAmenities.length > 0;
+
+                  if (buildingAmenities.length === 0 && roomAmenities.length === 0) return null;
+
+                  return (
+                    <>
+                      <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 12px 0' }}>
+                        Amenities & Facilities {showRoomAmenities ? `(For ${getSharingLabel(selectedCapacityFilter)})` : ''}
+                      </h2>
+
+                      {showRoomAmenities && (
+                        <div style={{ marginBottom: '16px' }}>
+                          <h4 style={{ fontSize: '0.9rem', color: '#64748b', margin: '0 0 8px 0' }}>Room Specific Features:</h4>
+                          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                            {roomAmenities.map(a => (
+                              <span key={a} style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                padding: '6px 14px', borderRadius: '20px', fontSize: '0.88rem',
+                                background: '#f5f3ff', color: '#6d28d9', border: '1px solid #ddd6fe', fontWeight: 500
+                              }}>
+                                {getAmenityIcon(a)} {a}
+                              </span>
                             ))}
                           </div>
                         </div>
-                      );
-                    })()}
-                  </div>
-                  
-                  <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
-                  
-                  {/* Amenities from facility booleans */}
-                  {(() => {
-                    const amenities = getAmenitiesFromBuilding(hostel);
-                    if (amenities.length === 0) return null;
-                    return (
-                      <>
-                        <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 12px 0' }}>Amenities & Facilities</h2>
-                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
-                          {amenities.map(a => (
-                            <span key={a} style={{
-                              display: 'inline-flex', alignItems: 'center', gap: '6px',
-                              padding: '6px 14px', borderRadius: '20px', fontSize: '0.88rem',
-                              background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', fontWeight: 500
-                            }}>
-                              {getAmenityIcon(a)} {a}
-                            </span>
-                          ))}
-                        </div>
-                      </>
-                    );
-                  })()}
-                  
-                  {/* Policies */}
-                  {hostel.policies && (hostel.policies.smoking || hostel.policies.alcohol || hostel.policies.visitors || hostel.policies.pets) && (
-                    <>
-                      <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
-                      <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 12px 0' }}>House Policies</h2>
-                      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px', fontSize: '0.95rem' }}>
-                        {hostel.policies.smoking && <span>🚭 Smoking: {hostel.policies.smoking}</span>}
-                        {hostel.policies.alcohol && <><span style={{ color: '#cbd5e1' }}>|</span><span>🍺 Alcohol: {hostel.policies.alcohol}</span></>}
-                        {hostel.policies.visitors && <><span style={{ color: '#cbd5e1' }}>|</span><span>👥 Visitors: {hostel.policies.visitors}</span></>}
-                        {hostel.policies.pets && <><span style={{ color: '#cbd5e1' }}>|</span><span>🐾 Pets: {hostel.policies.pets}</span></>}
-                      </div>
-                    </>
-                  )}
-                  
-                  <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
-                  
-                  {/* Contact Card */}
-                  <div className="liv-contact-card">
-                    <div className="liv-cc-icon"><Info size={24} className="text-blue" /></div>
-                    <div className="liv-cc-content">
-                      <h3 className="liv-cc-title">Property Management</h3>
-                      {(hostel.ownerName || hostel.ownerPhone || hostel.warden || hostel.wardenNumber || hostel.staffInfo?.name) ? (
-                        <div className="liv-cc-grid">
-                          {hostel.warden && (
-                            <div className="liv-cc-row">
-                              <span className="liv-cc-label">Warden:</span>
-                              <span className="liv-cc-val">{hostel.warden}{hostel.wardenNumber ? ` — ${hostel.wardenNumber}` : ''}</span>
-                            </div>
-                          )}
-                          {hostel.staffInfo?.name && (
-                            <div className="liv-cc-row">
-                              <span className="liv-cc-label">{hostel.staffInfo.role || 'Staff'}:</span>
-                              <span className="liv-cc-val">{hostel.staffInfo.name}{hostel.staffInfo.contact ? ` — ${hostel.staffInfo.contact}` : ''}</span>
-                            </div>
-                          )}
-                          {hostel.ownerName && (
-                            <div className="liv-cc-row">
-                              <span className="liv-cc-label">Owner:</span>
-                              <span className="liv-cc-val">{hostel.ownerName}{hostel.ownerPhone ? ` — ${hostel.ownerPhone}` : ''}</span>
-                            </div>
-                          )}
-                          {!hostel.warden && !hostel.ownerName && !hostel.staffInfo?.name && hostel.ownerPhone && (
-                            <div className="liv-cc-row">
-                              <span className="liv-cc-label">Phone:</span>
-                              <span className="liv-cc-val">{hostel.ownerPhone}</span>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="liv-cc-empty">Contact details are private. Please proceed with booking to communicate.</p>
                       )}
+
+                      {buildingAmenities.length > 0 && (
+                        <div>
+                          <h4 style={{ fontSize: '0.9rem', color: '#64748b', margin: '0 0 8px 0', display: showRoomAmenities ? 'block' : 'none' }}>General Building Amenities:</h4>
+                          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                            {buildingAmenities.map(a => (
+                              <span key={a} style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                padding: '6px 14px', borderRadius: '20px', fontSize: '0.88rem',
+                                background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', fontWeight: 500
+                              }}>
+                                {getAmenityIcon(a)} {a}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+
+                {/* Policies */}
+                {hostel.policies && (hostel.policies.smoking || hostel.policies.alcohol || hostel.policies.visitors || hostel.policies.pets) && (
+                  <>
+                    <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
+                    <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: '0 0 12px 0' }}>House Policies</h2>
+                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px', fontSize: '0.95rem' }}>
+                      {hostel.policies.smoking && <span>🚭 Smoking: {hostel.policies.smoking}</span>}
+                      {hostel.policies.alcohol && <><span style={{ color: '#cbd5e1' }}>|</span><span>🍺 Alcohol: {hostel.policies.alcohol}</span></>}
+                      {hostel.policies.visitors && <><span style={{ color: '#cbd5e1' }}>|</span><span>👥 Visitors: {hostel.policies.visitors}</span></>}
+                      {hostel.policies.pets && <><span style={{ color: '#cbd5e1' }}>|</span><span>🐾 Pets: {hostel.policies.pets}</span></>}
                     </div>
-                  </div>                {/* CTA to next step */}
+                  </>
+                )}
+
+                <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '20px 0' }} />
+
+                {/* Contact Card */}
+                <div className="liv-contact-card">
+                  <div className="liv-cc-icon"><Info size={24} className="text-blue" /></div>
+                  <div className="liv-cc-content">
+                    <h3 className="liv-cc-title">Property Management</h3>
+                    {(hostel.ownerName || hostel.ownerPhone || hostel.warden || hostel.wardenNumber || hostel.staffInfo?.name) ? (
+                      <div className="liv-cc-grid">
+                        {hostel.warden && (
+                          <div className="liv-cc-row">
+                            <span className="liv-cc-label">Warden:</span>
+                            <span className="liv-cc-val">{hostel.warden}{hostel.wardenNumber ? ` — ${hostel.wardenNumber}` : ''}</span>
+                          </div>
+                        )}
+                        {hostel.staffInfo?.name && (
+                          <div className="liv-cc-row">
+                            <span className="liv-cc-label">{hostel.staffInfo.role || 'Staff'}:</span>
+                            <span className="liv-cc-val">{hostel.staffInfo.name}{hostel.staffInfo.contact ? ` — ${hostel.staffInfo.contact}` : ''}</span>
+                          </div>
+                        )}
+                        {hostel.ownerName && (
+                          <div className="liv-cc-row">
+                            <span className="liv-cc-label">Owner:</span>
+                            <span className="liv-cc-val">{hostel.ownerName}{hostel.ownerPhone ? ` — ${hostel.ownerPhone}` : ''}</span>
+                          </div>
+                        )}
+                        {!hostel.warden && !hostel.ownerName && !hostel.staffInfo?.name && hostel.ownerPhone && (
+                          <div className="liv-cc-row">
+                            <span className="liv-cc-label">Phone:</span>
+                            <span className="liv-cc-val">{hostel.ownerPhone}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="liv-cc-empty">Contact details are private. Please proceed with booking to communicate.</p>
+                    )}
+                  </div>
+                </div>                {/* CTA to next step */}
                 <div className="liv-step-cta">
                   <button className="liv-step-next-btn" onClick={() => setActiveStep(2)}>
                     Explore Floors &amp; Rooms <ChevronRight size={18} />
@@ -895,13 +993,15 @@ const Listing = () => {
                           return (
                             <div
                               key={room._id}
-                              className={`liv-room-flow-card ${isSelected ? 'selected' : ''} ${stats.available === 0 ? 'full' : ''}`}
+                              className={`liv-room-flow-card ${isSelected ? 'selected' : ''} ${stats.total > 0 && stats.available === 0 ? 'full' : ''}`}
                             >
                               <div className="liv-rfc-header">
                                 <div className="liv-rfc-title-row">
                                   <h4>Room {room.roomNumber}</h4>
-                                  <span className={`liv-rfc-badge ${stats.available > 0 ? 'avail' : 'full'}`}>
-                                    {stats.available > 0 ? `${stats.available} Free` : 'Full'}
+                                  <span className={`liv-rfc-badge ${
+                                    stats.total === 0 ? 'pending' : stats.available > 0 ? 'avail' : 'full'
+                                  }`}>
+                                    {stats.total === 0 ? 'No Beds Yet' : stats.available > 0 ? `${stats.available} Free` : 'Full'}
                                   </span>
                                 </div>
                                 {!selectedFloor && floor && (
@@ -941,11 +1041,11 @@ const Listing = () => {
                                   <span>/month</span>
                                 </div>
                                 <button
-                                  className={`liv-rfc-select-btn ${stats.available === 0 ? 'disabled' : ''}`}
-                                  disabled={stats.available === 0}
+                                  className={`liv-rfc-select-btn ${stats.total > 0 && stats.available === 0 ? 'disabled' : ''}`}
+                                  disabled={stats.total > 0 && stats.available === 0}
                                   onClick={() => handleRoomSelect(room, floor)}
                                 >
-                                  View Beds <ChevronRight size={14} />
+                                  {stats.total === 0 ? 'View Room' : 'View Beds'} <ChevronRight size={14} />
                                 </button>
                               </div>
                             </div>
@@ -1112,15 +1212,34 @@ const Listing = () => {
               {/* Price details */}
               <div className="liv-price-section">
                 <h4>Price Details</h4>
-                <div className="liv-price-row"><span>Base Rent</span><strong>₹{currentRent.toLocaleString()}</strong></div>
-                <div className="liv-price-row"><span>Security Deposit (One-time)</span><strong>₹{currentDeposit.toLocaleString()}</strong></div>
-                <div className="liv-price-row"><span>Food Charges (Monthly)</span><strong>₹{foodCost.toLocaleString()}</strong></div>
-                <div className="liv-price-row"><span>Maintenance Charges</span><strong>₹{maintenanceCost.toLocaleString()}</strong></div>
+                <div className="liv-price-row">
+                  <span>Base Rent {agreementMultiplier > 1 ? `(x${agreementMultiplier} Months)` : ''}</span>
+                  <strong>{selectedRoom ? `₹${finalRent.toLocaleString()}` : `Starts at ₹${finalRent.toLocaleString()}`}</strong>
+                </div>
+                {currentDeposit > 0 && (
+                  <div className="liv-price-row"><span>Security Deposit (One-time)</span><strong>₹{currentDeposit.toLocaleString()}</strong></div>
+                )}
+                {foodCost > 0 && (
+                  <div className="liv-price-row">
+                    <span>Food Charges {agreementMultiplier > 1 ? `(x${agreementMultiplier} Months)` : '(Monthly)'}</span>
+                    <strong>₹{foodCost.toLocaleString()}</strong>
+                  </div>
+                )}
+                {maintenanceCost > 0 && (
+                  <div className="liv-price-row">
+                    <span>Maintenance Charges {agreementMultiplier > 1 ? `(x${agreementMultiplier} Months)` : ''}</span>
+                    <strong>₹{maintenanceCost.toLocaleString()}</strong>
+                  </div>
+                )}
               </div>
 
               <div className="liv-total-row">
-                <div className="liv-total-left"><span>Total Due Today</span></div>
-                <div className="liv-total-val">₹{totalDue.toLocaleString()}</div>
+                <div className="liv-total-left">
+                  <span>{selectedRoom ? 'Total Due Today' : 'Estimated Total Due'}</span>
+                </div>
+                <div className="liv-total-val">
+                  ₹{totalDue.toLocaleString()}
+                </div>
               </div>
 
               {/* Booking inputs */}
@@ -1164,7 +1283,7 @@ const Listing = () => {
                 Proceed to Book <ChevronRight size={18} />
               </button>
               <span className="liv-not-charged-sub">
-                {!selectedBed ? 'Select a bed to continue' : "You won't be charged yet"}
+                {!selectedBed ? 'Select a bed to continue' : 'Proceed to review and finalize booking'}
               </span>
             </div>
 

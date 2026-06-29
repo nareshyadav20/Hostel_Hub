@@ -11,6 +11,10 @@ const bookingSchema = new mongoose.Schema({
   category: { type: String, required: true },
   moveInDate: { type: String, default: 'TBD' },
   securityDeposit: { type: Number, default: 0 },
+  rentAmount: { type: Number, default: 0 },
+  foodCharges: { type: Number, default: 0 },
+  maintenanceCharges: { type: Number, default: 0 },
+  agreementType: { type: String, default: 'Monthly' },
   onboardingFee: { type: Number, default: 2000 },
   totalAmount: { type: Number, required: true },
   status: { 

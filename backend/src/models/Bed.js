@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const bedSchema = new mongoose.Schema({
   bedNumber: { type: String, required: true },
-  status:    { type: String, enum: ['Vacant', 'Occupied', 'Reserved', 'Blocked', 'Maintenance'], default: 'Vacant' },
+  status:    { type: String, enum: ['Vacant', 'Occupied', 'Reserved', 'Blocked', 'Maintenance', 'AVAILABLE', 'OCCUPIED'], default: 'AVAILABLE' },
   position:  { type: String, default: 'Standard' }, // e.g. Window side, Entrance side, Middle
   bedType:   { type: String, default: 'Single' },   // e.g. Lower Bunk, Upper Bunk, Single, Queen
   bedSize:   { type: String, default: 'Standard' },
