@@ -191,13 +191,14 @@ const Listing = () => {
         floorId: selectedFloor._id,
         roomId: selectedRoom._id,
         bedId: selectedBed._id,
-        rentAmount: selectedRoom.rentAmount || hostel.startingPrice,
-        securityDeposit: selectedRoom.securityDeposit || hostel.securityDeposit || 0,
-        foodCharges: hostel.foodCharges || 0,
-        maintenanceCharges: hostel.maintenanceCharges || 0,
+        rentAmount: finalRent,
+        securityDeposit: currentDeposit,
+        foodCharges: foodCost,
+        maintenanceCharges: maintenanceCost,
         roomNumber: selectedRoom.roomNumber,
         bedNumber: selectedBed.bedNumber,
         floorNumber: selectedFloor.floorNumber,
+        sharingType: selectedRoom.capacity,
         moveInDate,
         agreementType
       }
@@ -229,20 +230,54 @@ const Listing = () => {
 
   // ─── Pricing ────────────────────────────────────────────────────────────────
 
+  const capacityToCheck = selectedRoom ? Number(selectedRoom.capacity) : selectedCapacityFilter;
+  
+  // Calculate lowest available prices per sharing capacity
+  const rentOptionsMap = new Map();
+  if (hostel) {
+    const globalPrices = {
+      1: hostel.rentSingle, 2: hostel.rentDouble, 3: hostel.rentTriple,
+      4: hostel.rent4Sharing, 5: hostel.rent5Sharing, 6: hostel.rent6Sharing
+    };
+    Object.keys(globalPrices).forEach(cap => {
+      const price = Number(globalPrices[cap]);
+      if (price > 0) rentOptionsMap.set(Number(cap), price);
+    });
+    if (hostel.floors) {
+      hostel.floors.forEach(f => {
+        if (f.rooms) {
+          f.rooms.forEach(r => {
+            const cap = Number(r.capacity);
+            const rent = Number(r.rentAmount);
+            if (cap > 0 && rent > 0) {
+              if (!rentOptionsMap.has(cap) || rent < rentOptionsMap.get(cap)) {
+                rentOptionsMap.set(cap, rent);
+              }
+            }
+          });
+        }
+      });
+    }
+  }
+
   const currentRent = (selectedRoom?.rentAmount > 0) ? selectedRoom.rentAmount :
-    (selectedRoom?.capacity === 1 && hostel.rentSingle) ? hostel.rentSingle :
-      (selectedRoom?.capacity === 2 && hostel.rentDouble) ? hostel.rentDouble :
-        (selectedRoom?.capacity === 3 && hostel.rentTriple) ? hostel.rentTriple :
-          (selectedRoom?.capacity === 4 && hostel.rent4Sharing) ? hostel.rent4Sharing :
-            (selectedRoom?.capacity === 5 && hostel.rent5Sharing) ? hostel.rent5Sharing :
-              (selectedRoom?.capacity >= 6 && hostel.rent6Sharing) ? hostel.rent6Sharing :
-                (hostel.startingPrice || 0);
+    (capacityToCheck && rentOptionsMap.has(capacityToCheck)) ? rentOptionsMap.get(capacityToCheck) :
+      (hostel?.startingPrice || 0);
 
   const currentDeposit = selectedRoom?.securityDeposit || hostel.securityDeposit || 0;
-  // Only show charges that owner explicitly set (not schema defaults)
-  const foodCost = (hostel.foodCharges && hostel.foodCharges !== 3000) ? hostel.foodCharges : 0;
-  const maintenanceCost = (hostel.maintenanceCharges && hostel.maintenanceCharges !== 799) ? hostel.maintenanceCharges : 0;
-  const totalDue = currentRent + currentDeposit + foodCost + maintenanceCost;
+
+  // Multiplier based on Agreement Type
+  let agreementMultiplier = 1;
+  if (agreementType === 'Quarterly') agreementMultiplier = 3;
+  if (agreementType === 'Half Yearly') agreementMultiplier = 6;
+  if (agreementType === 'Yearly') agreementMultiplier = 12;
+
+  // Apply multiplier to monthly recurring charges
+  const finalRent = currentRent * agreementMultiplier;
+  const foodCost = (hostel.foodCharges || 0) * agreementMultiplier;
+  const maintenanceCost = (hostel.maintenanceCharges || 0) * agreementMultiplier;
+
+  const totalDue = finalRent + currentDeposit + foodCost + maintenanceCost;
 
   const images = hostel.images || [];
 
@@ -405,7 +440,12 @@ const Listing = () => {
             {/* Metric cards */}
             <div className="liv-metrics-row">
               <div className="liv-metric-card green">
-                <span className="liv-metric-val">₹{renderField(hostel.startingPrice?.toLocaleString())}</span>
+                <span className="liv-metric-val">
+                  ₹{(rentOptionsMap.size > 0
+                    ? Math.min(...rentOptionsMap.values())
+                    : hostel.startingPrice || 0
+                  ).toLocaleString()}
+                </span>
                 <span className="liv-metric-lbl">Starting from / month</span>
               </div>
               <div className="liv-metric-card purple">
@@ -568,24 +608,24 @@ const Listing = () => {
                   <h2 className="liv-section-title">Pricing & Fees</h2>
 
                   <div className="liv-pricing-grid-new">
-                    {/* Base Rent — only show if explicitly set */}
-                    {hostel.startingPrice > 0 && (
+                    {/* Base Rent */}
+                    {(currentRent > 0 || hostel.startingPrice > 0) && (
                       <div className="liv-pricing-card-new">
                         <div className="liv-pc-icon base"><MapPin size={20} /></div>
                         <div className="liv-pc-details">
-                          <span className="liv-pc-label">Base Rent Starts At</span>
-                          <span className="liv-pc-value">₹{hostel.startingPrice.toLocaleString()} <small>/mo</small></span>
+                          <span className="liv-pc-label">{(selectedRoom || selectedCapacityFilter) ? 'Base Rent' : 'Base Rent Starts At'}</span>
+                          <span className="liv-pc-value">₹{currentRent.toLocaleString()} <small>/mo</small></span>
                         </div>
                       </div>
                     )}
 
-                    {/* Security Deposit — only if owner set it > 0 */}
-                    {hostel.securityDeposit > 0 && (
+                    {/* Security Deposit */}
+                    {currentDeposit > 0 && (
                       <div className="liv-pricing-card-new">
                         <div className="liv-pc-icon deposit"><Lock size={20} /></div>
                         <div className="liv-pc-details">
                           <span className="liv-pc-label">Security Deposit</span>
-                          <span className="liv-pc-value">₹{hostel.securityDeposit.toLocaleString()}</span>
+                          <span className="liv-pc-value">₹{currentDeposit.toLocaleString()}</span>
                         </div>
                       </div>
                     )}
@@ -603,8 +643,8 @@ const Listing = () => {
                       </div>
                     )}
 
-                    {/* Maintenance — only if owner explicitly set a non-default value */}
-                    {hostel.maintenanceCharges > 0 && hostel.maintenanceCharges !== 799 && (
+                    {/* Maintenance */}
+                    {hostel.maintenanceCharges > 0 && (
                       <div className="liv-pricing-card-new">
                         <div className="liv-pc-icon maint"><ZapIcon size={20} /></div>
                         <div className="liv-pc-details">
@@ -617,46 +657,9 @@ const Listing = () => {
 
                   {/* Dynamic Room Sharing Options */}
                   {(() => {
-                    const optionsMap = new Map();
+                    if (!rentOptionsMap || rentOptionsMap.size === 0) return null;
 
-                    // 1. First, check global prices set by owner
-                    const globalPrices = {
-                      1: hostel.rentSingle,
-                      2: hostel.rentDouble,
-                      3: hostel.rentTriple,
-                      4: hostel.rent4Sharing,
-                      5: hostel.rent5Sharing,
-                      6: hostel.rent6Sharing
-                    };
-
-                    // Map global prices to the options map
-                    Object.keys(globalPrices).forEach(cap => {
-                      const price = Number(globalPrices[cap]);
-                      if (price > 0) {
-                        optionsMap.set(Number(cap), price);
-                      }
-                    });
-
-                    // 2. Also check if specific rooms have specific prices, override if lower
-                    if (hostel.floors) {
-                      hostel.floors.forEach(f => {
-                        if (f.rooms) {
-                          f.rooms.forEach(r => {
-                            const cap = Number(r.capacity);
-                            const rent = Number(r.rentAmount) || 0;
-                            if (cap > 0 && rent > 0) {
-                              if (!optionsMap.has(cap) || rent < optionsMap.get(cap)) {
-                                optionsMap.set(cap, rent);
-                              }
-                            }
-                          });
-                        }
-                      });
-                    }
-
-                    if (optionsMap.size === 0) return null;
-
-                    const options = Array.from(optionsMap.entries())
+                    const options = Array.from(rentOptionsMap.entries())
                       .map(([cap, price]) => ({ cap: Number(cap), price }))
                       .sort((a, b) => a.cap - b.cap);
 
@@ -1210,20 +1213,23 @@ const Listing = () => {
               <div className="liv-price-section">
                 <h4>Price Details</h4>
                 <div className="liv-price-row">
-                  <span>Base Rent</span>
-                  <strong>{selectedRoom ? `₹${currentRent.toLocaleString()}` : `Starts at ₹${currentRent.toLocaleString()}`}</strong>
+                  <span>Base Rent {agreementMultiplier > 1 ? `(x${agreementMultiplier} Months)` : ''}</span>
+                  <strong>{selectedRoom ? `₹${finalRent.toLocaleString()}` : `Starts at ₹${finalRent.toLocaleString()}`}</strong>
                 </div>
                 {currentDeposit > 0 && (
                   <div className="liv-price-row"><span>Security Deposit (One-time)</span><strong>₹{currentDeposit.toLocaleString()}</strong></div>
                 )}
                 {foodCost > 0 && (
                   <div className="liv-price-row">
-                    <span>Food Charges (Monthly)</span>
+                    <span>Food Charges {agreementMultiplier > 1 ? `(x${agreementMultiplier} Months)` : '(Monthly)'}</span>
                     <strong>₹{foodCost.toLocaleString()}</strong>
                   </div>
                 )}
                 {maintenanceCost > 0 && (
-                  <div className="liv-price-row"><span>Maintenance Charges</span><strong>₹{maintenanceCost.toLocaleString()}</strong></div>
+                  <div className="liv-price-row">
+                    <span>Maintenance Charges {agreementMultiplier > 1 ? `(x${agreementMultiplier} Months)` : ''}</span>
+                    <strong>₹{maintenanceCost.toLocaleString()}</strong>
+                  </div>
                 )}
               </div>
 
@@ -1277,7 +1283,7 @@ const Listing = () => {
                 Proceed to Book <ChevronRight size={18} />
               </button>
               <span className="liv-not-charged-sub">
-                {!selectedBed ? 'Select a bed to continue' : "You won't be charged yet"}
+                {!selectedBed ? 'Select a bed to continue' : 'Proceed to review and finalize booking'}
               </span>
             </div>
 

@@ -186,7 +186,7 @@ const Search = () => {
         mapped = response.data.map(b => {
           const { sharingLabel, lowestRent } = getSharingInfo(b);
           const derivedAmenities = getAmenitiesFromBuilding(b);
-          const price = lowestRent || b.startingPrice || 5000;
+          const price = lowestRent || b.startingPrice || 0;
 
           return {
             id: b._id,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link, useLocation } from 'react-router-dom';
+import { Calendar, Building, Layers, DoorOpen, BedDouble, ChevronRight, ArrowLeft } from 'lucide-react';
 import API from '../api/axios';
 import './Booking.css';
 
@@ -20,7 +21,7 @@ const Booking = () => {
   // Data passed from Listing.jsx
   const {
     floorId, roomId, bedId, rentAmount, securityDeposit,
-    foodCharges, maintenanceCharges, roomNumber, bedNumber, floorNumber
+    foodCharges, maintenanceCharges, roomNumber, bedNumber, floorNumber, agreementType, sharingType
   } = location.state || {};
 
   const [user, setUser] = useState({});
@@ -101,9 +102,15 @@ const Booking = () => {
       buildingId,
       category: `Room ${roomNumber} (Bed ${bedNumber})`,
       moveInDate: formData.moveInDate,
+      rentAmount,
+      securityDeposit,
+      foodCharges,
+      maintenanceCharges,
+      agreementType,
       totalAmount: totalAmount,
       proofId,
-      bedNumber: bedNumber,
+      bedNumber: String(bedNumber),
+      sharingType: Number(sharingType) || 1,
       roomId: roomId,
       bedId: bedId
     };
@@ -227,28 +234,60 @@ const Booking = () => {
           <div className="fade-in flow-section">
             <h2 className="section-title">Confirm Selection & Move-in</h2>
 
-            <div className="summary-card-pro" style={{ marginBottom: '24px' }}>
-              <div className="summary-item-row"><span className="item-label">Property</span><span className="item-value">{hostel?.name}</span></div>
-              <div className="summary-item-row"><span className="item-label">Floor</span><span className="item-value">{floorNumber}</span></div>
-              <div className="summary-item-row"><span className="item-label">Room</span><span className="item-value">{roomNumber}</span></div>
-              <div className="summary-item-row"><span className="item-label">Bed</span><span className="item-value">#{bedNumber}</span></div>
+            <div className="selection-summary-grid">
+              <div className="selection-card-item">
+                <div className="sc-icon"><Building size={20} /></div>
+                <div className="sc-info">
+                  <span className="sc-label">Property</span>
+                  <span className="sc-value">{hostel?.name || 'Loading...'}</span>
+                </div>
+              </div>
+              <div className="selection-card-item">
+                <div className="sc-icon"><Layers size={20} /></div>
+                <div className="sc-info">
+                  <span className="sc-label">Floor</span>
+                  <span className="sc-value">Floor {floorNumber || '--'}</span>
+                </div>
+              </div>
+              <div className="selection-card-item">
+                <div className="sc-icon"><DoorOpen size={20} /></div>
+                <div className="sc-info">
+                  <span className="sc-label">Room</span>
+                  <span className="sc-value">Room {roomNumber || '--'}</span>
+                </div>
+              </div>
+              <div className="selection-card-item">
+                <div className="sc-icon"><BedDouble size={20} /></div>
+                <div className="sc-info">
+                  <span className="sc-label">Bed</span>
+                  <span className="sc-value">#{bedNumber || '--'}</span>
+                </div>
+              </div>
             </div>
 
-            <div className="date-selection-row">
-              <div className="input-group-pro">
-                <label>Target Move-in Date</label>
+            <div className="date-selection-premium">
+              <div className="date-header-pro">
+                <Calendar size={24} color="var(--primary)" />
+                <div>
+                  <h3>Target Move-in Date</h3>
+                  <p>When would you like to start your stay?</p>
+                </div>
+              </div>
+              <div className="date-input-wrapper">
+                <Calendar className="date-icon-overlay" size={18} />
                 <input
                   type="date"
                   value={formData.moveInDate}
                   onChange={e => setFormData({ ...formData, moveInDate: e.target.value })}
+                  min={new Date().toISOString().split('T')[0]}
                   required
                 />
               </div>
             </div>
 
             <div className="flow-footer dual">
-              <button className="btn-secondary-pro" onClick={() => navigate(-1)}>Go Back</button>
-              <button className="btn-primary btn-large" onClick={() => setStep(2)}>Next: Identity Check</button>
+              <button className="btn-secondary-pro" onClick={() => navigate(-1)}><ArrowLeft size={16} /> Go Back</button>
+              <button className="btn-primary btn-large" onClick={() => setStep(2)}>Next: Identity Check <ChevronRight size={18} /></button>
             </div>
           </div>
         )}
@@ -332,10 +371,10 @@ const Booking = () => {
             <h2 className="section-title">Booking Summary</h2>
 
             <div className="summary-card-pro">
-              <div className="summary-item-row"><span className="item-label">Room Rent</span><span className="item-value">₹{rentAmount?.toLocaleString()}</span></div>
-              <div className="summary-item-row"><span className="item-label">Security Deposit</span><span className="item-value">₹{securityDeposit?.toLocaleString()}</span></div>
-              <div className="summary-item-row"><span className="item-label">Food (Monthly)</span><span className="item-value">₹{foodCharges?.toLocaleString()}</span></div>
-              <div className="summary-item-row"><span className="item-label">Maintenance</span><span className="item-value">₹{maintenanceCharges?.toLocaleString()}</span></div>
+              <div className="summary-item-row"><span className="item-label">Room Rent ({agreementType})</span><span className="item-value">₹{rentAmount?.toLocaleString()}</span></div>
+              <div className="summary-item-row"><span className="item-label">Security Deposit (One-time)</span><span className="item-value">₹{securityDeposit?.toLocaleString()}</span></div>
+              <div className="summary-item-row"><span className="item-label">Food Charges ({agreementType})</span><span className="item-value">₹{foodCharges?.toLocaleString()}</span></div>
+              <div className="summary-item-row"><span className="item-label">Maintenance ({agreementType})</span><span className="item-value">₹{maintenanceCharges?.toLocaleString()}</span></div>
               <div className="summary-divider"></div>
               <div className="summary-total-row">
                 <div className="total-label-group">

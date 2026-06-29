@@ -194,7 +194,7 @@ const Home = () => {
       const res = await API.get('/buildings/public');
       const formatted = res.data.map((b, i) => {
         const { sharingLabel, lowestRent } = getSharingInfo(b);
-        const price = lowestRent || b.startingPrice || 5000;
+        const price = lowestRent || b.startingPrice || 0;
         const prioritySet = new Set(['Security', 'CCTV', 'Medical Support', 'Housekeeping']);
         const derivedAmenities = getAmenitiesFromBuilding(b).sort((a, b) => {
           const aPriority = prioritySet.has(a) ? 1 : 0;

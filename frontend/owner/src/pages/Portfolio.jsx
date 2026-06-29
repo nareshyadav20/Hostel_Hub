@@ -56,7 +56,8 @@ const INITIAL_FORM_STATE = {
   coverImage: null, gallery: [], documents: [],
   amenities: [],
   genderType: 'Mixed', wardenName: '',
-  rentSingle: 0, rentDouble: 0, rentTriple: 0, rent4Sharing: 0, rent5Sharing: 0, rent6Sharing: 0, securityDeposit: 0,
+  rentSingle: '', rentDouble: '', rentTriple: '', rent4Sharing: '', rent5Sharing: '', rent6Sharing: '', securityDeposit: '',
+  foodCharges: '', maintenanceCharges: '',
   stayQuality: '', buildingAge: ''
 };
 
@@ -258,6 +259,8 @@ const Portfolio = () => {
           rent5Sharing: fullDraft.rent5Sharing || '',
           rent6Sharing: fullDraft.rent6Sharing || '',
           securityDeposit: fullDraft.securityDeposit || '',
+          foodCharges: fullDraft.foodCharges || '',
+          maintenanceCharges: fullDraft.maintenanceCharges || '',
           coverImage: fullDraft.images?.[0] || null,
           gallery: fullDraft.images || [],
           ownerName: fullDraft.policies?.ownerName || fullDraft.owner?.name || '', 
@@ -328,6 +331,8 @@ const Portfolio = () => {
         rent5Sharing: formData.rent5Sharing,
         rent6Sharing: formData.rent6Sharing,
         securityDeposit: formData.securityDeposit,
+        foodCharges: formData.foodCharges,
+        maintenanceCharges: formData.maintenanceCharges,
 
         // Property Facilities (Strict 1:1)
         security: formData.amenities?.includes('Security') || false,
@@ -696,7 +701,15 @@ const Portfolio = () => {
           </div>
           <div className="input-group" style={{ marginTop: '0.5rem' }}>
             <label>Security Deposit (₹)</label>
-            <input type="number" value={formData.securityDeposit ?? ''} onChange={e => setFormData({ ...formData, securityDeposit: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} />
+            <input type="number" placeholder="0" value={formData.securityDeposit ?? ''} onChange={e => setFormData({ ...formData, securityDeposit: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} />
+          </div>
+          <div className="input-group" style={{ marginTop: '0.5rem' }}>
+            <label>Food Charges / mo (₹)</label>
+            <input type="number" placeholder="0" value={formData.foodCharges ?? ''} onChange={e => setFormData({ ...formData, foodCharges: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} />
+          </div>
+          <div className="input-group" style={{ marginTop: '0.5rem' }}>
+            <label>Maintenance Charges / mo (₹)</label>
+            <input type="number" placeholder="0" value={formData.maintenanceCharges ?? ''} onChange={e => setFormData({ ...formData, maintenanceCharges: e.target.value === '' ? '' : parseInt(e.target.value) })} style={{ padding: '0.8rem', borderRadius: '12px', border: '1.5px solid #E2E8F0' }} />
           </div>
         </div>
       );

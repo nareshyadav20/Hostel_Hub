@@ -180,8 +180,8 @@ const INITIAL_FORM_STATE = {
   rent4Sharing: '',
   rent5Sharing: '',
   rent6Sharing: '',
-  foodCharges: 3000,
-  maintenanceCharges: 799,
+  foodCharges: '',
+  maintenanceCharges: '',
   documents: []
 };
 
@@ -787,8 +787,8 @@ const BuildingManagement = () => {
               rent4Sharing: b.rent4Sharing || 0,
               rent5Sharing: b.rent5Sharing || 0,
               rent6Sharing: b.rent6Sharing || 0,
-              foodCharges: b.foodCharges !== undefined ? b.foodCharges : 3000,
-              maintenanceCharges: b.maintenanceCharges !== undefined ? b.maintenanceCharges : 799,
+              foodCharges: b.foodCharges !== undefined ? b.foodCharges : '',
+              maintenanceCharges: b.maintenanceCharges !== undefined ? b.maintenanceCharges : '',
               securityDeposit: b.securityDeposit !== undefined ? b.securityDeposit : 0
             });
             setIsEditBuildingOpen(true);
@@ -1165,8 +1165,8 @@ const BuildingManagement = () => {
                       rent4Sharing: b.rent4Sharing || 0,
                       rent5Sharing: b.rent5Sharing || 0,
                       rent6Sharing: b.rent6Sharing || 0,
-                      foodCharges: b.foodCharges !== undefined ? b.foodCharges : 3000,
-                      maintenanceCharges: b.maintenanceCharges !== undefined ? b.maintenanceCharges : 799,
+                      foodCharges: b.foodCharges !== undefined ? b.foodCharges : '',
+                      maintenanceCharges: b.maintenanceCharges !== undefined ? b.maintenanceCharges : '',
                       securityDeposit: b.securityDeposit !== undefined ? b.securityDeposit : 0
                     });
                     setIsEditBuildingOpen(true);
@@ -1351,10 +1351,18 @@ const BuildingManagement = () => {
             {/* General Charges & Deposit */}
             <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '1rem' }}>Financials</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.2rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.2rem' }}>
                 <div className="input-group">
-                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>SECURITY DEPOSIT AMOUNT (₹)</label>
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>SECURITY DEPOSIT (₹)</label>
                   <input type="number" placeholder="0" value={formData.securityDeposit} onChange={e => setFormData({ ...formData, securityDeposit: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FOOD CHARGES / MO (₹)</label>
+                  <input type="number" placeholder="0" value={formData.foodCharges} onChange={e => setFormData({ ...formData, foodCharges: parseInt(e.target.value) || 0 })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>MAINTENANCE / MO (₹)</label>
+                  <input type="number" placeholder="0" value={formData.maintenanceCharges} onChange={e => setFormData({ ...formData, maintenanceCharges: parseInt(e.target.value) || 0 })} style={inputStyle} />
                 </div>
               </div>
             </div>
@@ -1451,10 +1459,18 @@ const BuildingManagement = () => {
             {/* General Charges & Deposit */}
             <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '1rem' }}>Financials</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.2rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.2rem' }}>
                 <div className="input-group">
                   <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>SECURITY DEPOSIT (₹)</label>
                   <input type="number" placeholder="0" value={formData.securityDeposit} onChange={e => setFormData({ ...formData, securityDeposit: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>FOOD CHARGES / MO (₹)</label>
+                  <input type="number" placeholder="0" value={formData.foodCharges} onChange={e => setFormData({ ...formData, foodCharges: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: '0.8rem', fontWeight: '900', color: 'var(--text-muted)' }}>MAINTENANCE / MO (₹)</label>
+                  <input type="number" placeholder="0" value={formData.maintenanceCharges} onChange={e => setFormData({ ...formData, maintenanceCharges: e.target.value === '' ? '' : parseInt(e.target.value) })} style={inputStyle} />
                 </div>
               </div>
             </div>
