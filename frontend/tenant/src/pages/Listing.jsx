@@ -260,9 +260,12 @@ const Listing = () => {
     }
   }
 
+  const defaultBaseRent = rentOptionsMap.has(6) ? rentOptionsMap.get(6) :
+    (rentOptionsMap.size > 0 ? Math.min(...rentOptionsMap.values()) : (hostel?.startingPrice || 0));
+
   const currentRent = (selectedRoom?.rentAmount > 0) ? selectedRoom.rentAmount :
     (capacityToCheck && rentOptionsMap.has(capacityToCheck)) ? rentOptionsMap.get(capacityToCheck) :
-      (hostel?.startingPrice || 0);
+      defaultBaseRent;
 
   const currentDeposit = selectedRoom?.securityDeposit || hostel.securityDeposit || 0;
 
@@ -441,10 +444,7 @@ const Listing = () => {
             <div className="liv-metrics-row">
               <div className="liv-metric-card green">
                 <span className="liv-metric-val">
-                  ₹{(rentOptionsMap.size > 0
-                    ? Math.min(...rentOptionsMap.values())
-                    : hostel.startingPrice || 0
-                  ).toLocaleString()}
+                  ₹{defaultBaseRent.toLocaleString()}
                 </span>
                 <span className="liv-metric-lbl">Starting from / month</span>
               </div>
