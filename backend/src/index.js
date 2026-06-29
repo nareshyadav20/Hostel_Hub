@@ -69,6 +69,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://hostel-hub-owner.vercel.app',
   'https://livora-hostel-hub-tenant.vercel.app',
+  'https://livora-hostel-hub-admin.vercel.app',
   // Allow any vercel subdomain for preview deployments
   /\.vercel\.app$/,
 ];
@@ -245,6 +246,7 @@ const io = new Server(server, {
       'http://127.0.0.1:3000',
       'https://hostel-hub-owner.vercel.app',
       'https://livora-hostel-hub-tenant.vercel.app',
+      'https://livora-hostel-hub-admin.vercel.app',
     ],
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
     credentials: true,
