@@ -13,6 +13,10 @@ const createBooking = async (req, res) => {
       securityDeposit,
       onboardingFee,
       totalAmount,
+      rentAmount,
+      foodCharges,
+      maintenanceCharges,
+      agreementType,
       method,
       proofId,
       bedNumber,
@@ -42,23 +46,20 @@ const createBooking = async (req, res) => {
       tenant = await Tenant.findOne({ email: req.user.email });
     }
 
-    // 1. Prevent multiple bookings for same tenant
-    if (tenant) {
-      // If already assigned and active in a building, block new booking
-      if (tenant.buildingId && tenant.status === 'ACTIVE') {
-        return res.status(400).json({
-          error: 'Access Denied: You already have an active residency or booking. A resident can only book one hostel at a time.'
-        });
-      }
-
-      // Check if they already have a confirmed booking
-      const existingBooking = await Booking.findOne({ tenantId: tenant._id, status: 'Confirmed' });
-      if (existingBooking) {
-        return res.status(400).json({
-          error: 'Booking limit reached: You already have a confirmed reservation. Please manage your existing stay in the dashboard.'
-        });
-      }
-    }
+    // 1. Prevent multiple bookings for same tenant (DISABLED FOR DEV TESTING)
+    // if (tenant) {
+    //   if (tenant.buildingId && tenant.status === 'ACTIVE') {
+    //     return res.status(400).json({
+    //       error: 'Access Denied: You already have an active residency or booking. A resident can only book one hostel at a time.'
+    //     });
+    //   }
+    //   const existingBooking = await Booking.findOne({ tenantId: tenant._id, status: 'Confirmed' });
+    //   if (existingBooking) {
+    //     return res.status(400).json({
+    //       error: 'Booking limit reached: You already have a confirmed reservation. Please manage your existing stay in the dashboard.'
+    //     });
+    //   }
+    // }
 
     const finalTenantId = tenant ? tenant._id : (isValidObjectId(tenantId) ? tenantId : undefined);
 
@@ -66,6 +67,10 @@ const createBooking = async (req, res) => {
       category: category || 'Standard',
       moveInDate: moveInDate || 'TBD',
       securityDeposit: securityDeposit || 0,
+      rentAmount: rentAmount || 0,
+      foodCharges: foodCharges || 0,
+      maintenanceCharges: maintenanceCharges || 0,
+      agreementType: agreementType || 'Monthly',
       onboardingFee: onboardingFee || 0,
       totalAmount: totalAmount || 0,
       paymentMethod: method || 'UPI',
@@ -98,7 +103,7 @@ const createBooking = async (req, res) => {
         status: 'ACTIVE',
         room: 'TBD (Assigning)',
         occupation: category,
-        rent: totalAmount / 2,
+        rent: rentAmount || totalAmount, // FIX: Use real rent amount instead of totalAmount/2
         rentStatus: 'PAID',
         lastPayment: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
       });
@@ -129,28 +134,46 @@ const createBooking = async (req, res) => {
       const Bed = require('../models/Bed');
       const Building = require('../models/Building');
 
+      const AVAILABLE_STATUSES = ['Vacant', 'AVAILABLE'];
+      const OCCUPIED_STATUSES = ['Occupied', 'OCCUPIED'];
+
+      // Helper: check if a bed status means it is available (case-insensitive)
+      const isBedAvailable = (bed) => {
+        if (!bed) return false;
+        const s = (bed.status || '').toLowerCase().trim();
+        return s === 'vacant' || s === 'available';
+      };
+
       let availableBed = null;
       if (isValidObjectId(bedId)) {
-        availableBed = await Bed.findOne({ _id: bedId, status: 'AVAILABLE' });
+        availableBed = await Bed.findOne({ _id: bedId });
+
+        // ✅ SAFETY CHECK: Reject if the exact bed chosen is already occupied
         if (!availableBed) {
-          return res.status(409).json({ error: 'Conflict: The selected bed is already occupied or unavailable.' });
+          return res.status(404).json({ error: 'Bed not found. It may have been removed.' });
+        }
+        if (!isBedAvailable(availableBed)) {
+          return res.status(409).json({
+            error: 'Conflict: The selected bed is already occupied or unavailable. Please go back and choose a different bed.'
+          });
         }
       } else {
-        // Fallback for legacy flows
+        // Fallback for legacy flows — find any available bed
         const floors = await Floor.find({ building: buildingId }).select('_id');
         const fIds = floors.map(f => f._id);
         const roomsPref = await Room.find({ floor: { $in: fIds }, capacity: sharingType }).select('_id');
         let rIds = roomsPref.map(r => r._id);
-        availableBed = await Bed.findOne({ room: { $in: rIds }, status: 'AVAILABLE' });
+        // Use case-insensitive regex for status
+        availableBed = await Bed.findOne({ room: { $in: rIds }, status: { $regex: /^(vacant|available)$/i } });
         if (!availableBed) {
           const roomsAll = await Room.find({ floor: { $in: fIds } }).select('_id');
           rIds = roomsAll.map(r => r._id);
-          availableBed = await Bed.findOne({ room: { $in: rIds }, status: 'AVAILABLE' });
+          availableBed = await Bed.findOne({ room: { $in: rIds }, status: { $regex: /^(vacant|available)$/i } });
         }
       }
 
       if (availableBed) {
-        availableBed.status = 'OCCUPIED';
+        availableBed.status = 'Occupied';
         availableBed.tenant = actualTenantId;
         await availableBed.save();
         console.log('✅ Bed explicitly allocated:', availableBed._id);
@@ -159,7 +182,7 @@ const createBooking = async (req, res) => {
         if (availableBed.room || roomId) {
           const targetRoomId = availableBed.room || roomId;
           const roomBeds = await Bed.find({ room: targetRoomId });
-          const occBeds = roomBeds.filter(b => b.status === 'OCCUPIED').length;
+          const occBeds = roomBeds.filter(b => OCCUPIED_STATUSES.includes(b.status)).length;
           await Room.findByIdAndUpdate(targetRoomId, { occupiedBeds: occBeds });
 
           const roomObj = await Room.findById(targetRoomId);
@@ -170,14 +193,14 @@ const createBooking = async (req, res) => {
             for (const r of floorRooms) {
               const rBeds = await Bed.find({ room: r._id });
               floorTotalBeds += rBeds.length;
-              floorOccBeds += rBeds.filter(b => b.status === 'OCCUPIED').length;
+              floorOccBeds += rBeds.filter(b => OCCUPIED_STATUSES.includes(b.status)).length;
             }
             const occPct = floorTotalBeds > 0 ? Math.round((floorOccBeds / floorTotalBeds) * 100) : 0;
             await Floor.findByIdAndUpdate(roomObj.floor, { occupancyPercentage: occPct });
           }
         }
       } else {
-        console.warn('⚠️ No physical Bed document was AVAILABLE to allocate in building', buildingId);
+        console.warn('⚠️ No physical Bed document was available to allocate in building', buildingId);
       }
 
       // Auto-sync the hostel occupancy for the owner
@@ -344,5 +367,22 @@ const updateBookingStatus = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+// DEV ONLY: Reset a bed back to AVAILABLE for testing
+const resetBedForTesting = async (req, res) => {
+  try {
+    const Bed = require('../models/Bed');
+    const { bedNumber } = req.params;
+    const bed = await Bed.findOne({ bedNumber });
+    if (!bed) return res.status(404).json({ error: `Bed ${bedNumber} not found` });
+    
+    const oldStatus = bed.status;
+    bed.status = 'AVAILABLE';
+    bed.tenant = null;
+    await bed.save();
+    res.json({ message: `Bed ${bedNumber} reset: ${oldStatus} → AVAILABLE`, bed });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
-module.exports = { createBooking, getMyBookings, getAllBookings, updateBookingStatus };
+module.exports = { createBooking, getMyBookings, getAllBookings, updateBookingStatus, resetBedForTesting };

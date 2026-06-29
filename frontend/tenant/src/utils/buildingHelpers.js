@@ -75,18 +75,31 @@ export const getSharingInfo = (building) => {
     { val: building.rent6Sharing, label: '6 Sharing' },
   ].filter(r => r.val > 0);
 
+  // Also check room-level rentAmount from floor/room data
+  if (building.floors) {
+    building.floors.forEach(f => {
+      if (f.rooms) {
+        f.rooms.forEach(r => {
+          const cap = Number(r.capacity);
+          const rent = Number(r.rentAmount);
+          if (rent > 0) {
+            const label = cap >= 6 ? '6+ Sharing' : cap === 1 ? 'Single Room' : `${cap} Sharing`;
+            rents.push({ val: rent, label });
+          }
+        });
+      }
+    });
+  }
+
   if (rents.length > 0) {
     const minRent = rents.reduce((prev, curr) => prev.val < curr.val ? prev : curr);
     return { sharingLabel: minRent.label, lowestRent: minRent.val };
   }
 
-  // Fallback based on startingPrice
-  const price = building.startingPrice || 5000;
-  if (price >= 12000) return { sharingLabel: 'Single Room', lowestRent: price };
-  if (price >= 10000) return { sharingLabel: '2 Sharing', lowestRent: price };
-  if (price >= 8000) return { sharingLabel: '3 Sharing', lowestRent: price };
-  if (price >= 7000) return { sharingLabel: '4 Sharing', lowestRent: price };
-  return { sharingLabel: '5 Sharing', lowestRent: price };
+  // Fallback based on startingPrice — no hardcoded values
+  const price = building.startingPrice || 0;
+  if (price > 0) return { sharingLabel: 'Shared Room', lowestRent: price };
+  return { sharingLabel: '', lowestRent: 0 };
 };
 
 /**
