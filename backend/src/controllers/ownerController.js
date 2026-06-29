@@ -153,7 +153,7 @@ exports.getStats = async (req, res) => {
   try {
     const ownerId = req.user.id || req.user._id;
     if (!ownerId) return res.status(401).json({ message: 'User ID not found in token' });
-    const ownerBuildings = await Building.find({ owner: ownerId });
+    const ownerBuildings = await Building.find({ owner: ownerId }).select('smartConfig status _id');
     const bIds = ownerBuildings.map(b => b._id);
     
     // Explicitly get Floor IDs first to avoid nested query issues
@@ -241,7 +241,9 @@ exports.getOwnerPhoto = async (req, res) => {
 exports.getPortfolio = async (req, res) => {
   try {
     const ownerId = req.user.id;
-    const buildings = await Building.find({ owner: ownerId, status: { $ne: 'Draft' } }).lean();
+    const buildings = await Building.find({ owner: ownerId, status: { $nin: ['Draft', 'draft'] } })
+      .select('-images -gallery -description -draftData')
+      .lean();
 
     const formattedBuildings = buildings.map(b => {
       const totalRooms = b.totalRooms || parseInt(b.draftData?.totalRooms) || 0;

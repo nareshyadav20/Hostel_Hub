@@ -111,14 +111,14 @@ const getBuildings = async (req, res) => {
 
     if (req.query.status) {
       if (req.query.status === 'Active') {
-        query.status = { $ne: 'Draft' };
+        query.status = { $nin: ['Draft', 'draft'] };
       } else {
         query.status = req.query.status;
       }
     }
 
     const buildings = await Building.find(query)
-      .select('-floors -draftData -gallery -description')
+      .select('-floors -draftData -gallery -description -images')
       .populate('owner', 'name phone email')
       .lean();
 
@@ -266,7 +266,7 @@ const getPublicBuildings = async (req, res) => {
     const publicQuery = {
       $or: [
         { approvalStatus: 'approved', isApproved: true },
-        { status: 'Active', approvalStatus: { $in: [null, undefined] } }
+        { status: { $regex: /^active$/i }, approvalStatus: { $in: [null, undefined] } }
       ]
     };
 
@@ -274,7 +274,21 @@ const getPublicBuildings = async (req, res) => {
       publicQuery,
       {
         name: 1, address: 1, locationCity: 1, locality: 1, category: 1, rating: 1,
-        startingPrice: 1, rentSingle: 1, rentDouble: 1, rentTriple: 1, rent4Sharing: 1, rent5Sharing: 1, rent6Sharing: 1, genderType: 1, amenities: 1, isAC: 1, images: 1
+        startingPrice: 1, rentSingle: 1, rentDouble: 1, rentTriple: 1, rent4Sharing: 1, rent5Sharing: 1, rent6Sharing: 1,
+        genderType: 1, amenities: 1, isAC: 1,
+        // Additional fields for accurate tenant portal display
+        description: 1, popularityLabel: 1, stayQuality: 1,
+        securityDeposit: 1, maintenanceCharges: 1, foodCharges: 1,
+        totalRooms: 1, totalBeds: 1,
+        ownerName: 1, ownerPhone: 1, ownerEmail: 1,
+        warden: 1, wardenNumber: 1,
+        // Facility booleans
+        security: 1, cctv: 1, parking: 1, powerBackup: 1, mess: 1, gym: 1,
+        library: 1, laundry: 1, housekeeping: 1, medicalSupport: 1,
+        lift: 1, wifi: 1, diningHall: 1, commonKitchen: 1, studyHall: 1,
+        laundryRoom: 1, fireSafety: 1, emergencyExit: 1,
+        // Policies
+        policies: 1
       }
     ).lean();
 
@@ -287,7 +301,7 @@ const getPublicBuildingById = async (req, res) => {
     const publicQuery = {
       $or: [
         { approvalStatus: 'approved', isApproved: true },
-        { status: 'Active', approvalStatus: { $in: [null, undefined] } }
+        { status: { $regex: /^active$/i }, approvalStatus: { $in: [null, undefined] } }
       ],
       _id: req.params.id
     };
@@ -304,9 +318,19 @@ const getPublicBuildingById = async (req, res) => {
     const floorIds = floors.map(f => f._id);
 
     const rooms = await Room.find({ floor: { $in: floorIds } })
-      .select('roomNumber roomType capacity rentAmount isAC facilities amenities balcony washroomType windowCount status floor')
-      .populate({ path: 'beds', select: 'bedNumber status currentTenant isLower price' })
+      .select('roomNumber roomType capacity rentAmount securityDeposit isAC attachedBathroom facilities amenities balcony washroomType windowCount status floor beds geyser studyTable wardrobe tv refrigerator microwave wifi')
       .lean();
+
+    // For each room, fetch beds directly by room reference (more reliable than populate on lean)
+    const roomIds = rooms.map(r => r._id);
+    const allBeds = await Bed.find({ room: { $in: roomIds } })
+      .select('bedNumber status position bedType currentTenant isLower price room')
+      .lean();
+
+    // Attach beds to their respective rooms
+    rooms.forEach(room => {
+      room.beds = allBeds.filter(b => b.room && b.room.toString() === room._id.toString());
+    });
 
     let totalRooms = 0, totalBeds = 0, occupiedBeds = 0;
     floors.forEach(f => {
@@ -315,7 +339,10 @@ const getPublicBuildingById = async (req, res) => {
       f.rooms.forEach(room => {
         const beds = room.beds || [];
         totalBeds += beds.length;
-        occupiedBeds += beds.filter(b => b.status === 'OCCUPIED' || b.status === 'Occupied').length;
+        occupiedBeds += beds.filter(b => {
+          const s = (b.status || '').toLowerCase();
+          return s === 'occupied' || s === 'occupied';
+        }).length;
       });
     });
 
@@ -368,7 +395,7 @@ const getBuildingPortfolio = async (req, res) => {
     }
     const queryOwnerIds = ownerIds.flatMap(id => [id, new mongoose.Types.ObjectId(id)]);
 
-    const buildings = await Building.find({ owner: { $in: queryOwnerIds }, status: { $ne: 'Draft' } }).lean();
+    const buildings = await Building.find({ owner: { $in: queryOwnerIds }, status: { $nin: ['Draft', 'draft'] } }).lean();
 
     const result = await Promise.all(buildings.map(async (b) => {
       const floors = await Floor.find({ building: b._id }).lean();
@@ -405,25 +432,34 @@ const getBuildingPortfolio = async (req, res) => {
 
 const getPlatformStats = async (req, res) => {
   try {
-    const statsQuery = { status: { $ne: 'Draft' }, isApproved: true };
+    const statsQuery = { status: { $nin: ['Draft', 'draft'] }, isApproved: true };
 
     const totalBuildings = await Building.countDocuments(statsQuery);
     const cities = await Building.distinct('locationCity', statsQuery);
     
     const buildings = await Building.find(statsQuery).select('rating genderType category locationCity').lean();
 
+    const tenantsCount = await Tenant.countDocuments();
+    const activeCitiesCount = cities.length;
+    const avgRating = (buildings.reduce((acc, b) => acc + (b.rating || 4.5), 0) / (buildings.length || 1)).toFixed(1);
+
+    const cityStats = {};
+    cities.forEach(c => {
+      cityStats[c] = buildings.filter(b => b.locationCity === c).length;
+    });
+
     res.json({
-      totalBuildings,
-      activeCities: cities.length,
-      averageRating: buildings.reduce((acc, b) => acc + (b.rating || 0), 0) / (buildings.length || 1),
-      buildingsByCity: cities.map(c => ({
-        city: c,
-        count: buildings.filter(b => b.locationCity === c).length
-      })),
-      buildingsByCategory: {
-        Coliving: buildings.filter(b => b.category === 'Luxury' || b.genderType === 'Mixed').length,
-        Student: buildings.filter(b => b.category === 'Student').length,
-        Professional: buildings.filter(b => b.category === 'Professional').length
+      properties: totalBuildings,
+      cities: activeCitiesCount,
+      rating: avgRating,
+      tenants: tenantsCount,
+      cityStats,
+      categoryStats: {
+        coliving: buildings.filter(b => b.category === 'Luxury' || b.genderType === 'Mixed').length,
+        student: buildings.filter(b => b.category === 'Student').length,
+        professional: buildings.filter(b => b.category === 'Professional').length,
+        mens: buildings.filter(b => b.genderType === 'Boys').length,
+        womens: buildings.filter(b => b.genderType === 'Girls').length
       }
     });
   } catch (error) { res.status(500).json({ error: error.message }); }

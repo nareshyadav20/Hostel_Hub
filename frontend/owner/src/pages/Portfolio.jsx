@@ -106,7 +106,7 @@ const Portfolio = () => {
       const response = await api.getPortfolio();
       const portfolioData = response?.success ? (response.data || []) : [];
       setData({
-        buildings: portfolioData.filter(bld => bld.showInPortfolio !== false && String(bld.showInPortfolio) !== 'false' && bld.status !== 'Draft'),
+        buildings: portfolioData.filter(bld => bld.showInPortfolio !== false && String(bld.showInPortfolio) !== 'false' && bld.buildingStatus !== 'Draft' && bld.buildingStatus !== 'draft' && bld.status !== 'Draft' && bld.status !== 'draft'),
         floors: [],
         rooms: [],
         beds: [],

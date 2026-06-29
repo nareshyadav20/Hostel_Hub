@@ -103,10 +103,10 @@
   padding: 1.75rem;
   border-radius: 20px;
   border: 1px solid rgba(79, 70, 229, 0.1);
-  box-shadow: 0 4px 24px rgba(79, 70, 229, 0.07);
+  box-shadow: 0 4px 24px rgba(79, 70, 229, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 1.5rem;
 }
 
 .filter-card-header {
@@ -117,8 +117,8 @@
 }
 
 .filter-card-header h3 {
-  font-size: 1.1rem;
-  font-weight: 900;
+  font-size: 1.15rem;
+  font-weight: 800;
   margin: 0;
   flex: 1;
 }
@@ -151,19 +151,19 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: #374151;
-  margin-bottom: 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 /* Location select */
 .select-wrapper-pro select {
   width: 100%;
   padding: 0.7rem 1rem;
-  border: 1.5px solid #e2e8f0;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   background: #f8fafc;
   color: #1e293b;
@@ -189,7 +189,7 @@
 .budget-option-list {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.4rem;
 }
 
 .budget-radio-row {
@@ -203,11 +203,11 @@
 }
 
 .budget-radio-row:hover {
-  background: rgba(79, 70, 229, 0.05);
+  background: rgba(79, 70, 229, 0.04);
 }
 
 .budget-radio-row.active {
-  background: rgba(79, 70, 229, 0.08);
+  background: rgba(79, 70, 229, 0.06);
 }
 
 .budget-radio-row input[type="radio"] {
@@ -218,7 +218,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid #cbd5e1;
+  border: 1.5px solid #cbd5e1;
   position: relative;
   transition: all 0.2s;
   flex-shrink: 0;
@@ -231,8 +231,8 @@
 .budget-radio-row input:checked + .radio-custom-pro::after {
   content: '';
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 2.5px;
+  left: 2.5px;
   width: 8px;
   height: 8px;
   background: #4F46E5;
@@ -241,12 +241,12 @@
 
 .radio-label-text {
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 500;
   color: #475569;
 }
 
 .budget-radio-row.active .radio-label-text {
-  color: #4F46E5;
+  color: #1e293b;
   font-weight: 700;
 }
 
@@ -258,48 +258,48 @@
 }
 
 .pill-btn {
-  padding: 0.6rem 0.5rem;
+  padding: 0.55rem 0.5rem;
   border-radius: 8px;
-  border: 1.5px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
   font-weight: 600;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s;
-  color: #475569;
+  color: #64748b;
   text-align: center;
 }
 
 .pill-btn:hover {
-  border-color: #4F46E5;
+  border-color: #cbd5e1;
   color: #4F46E5;
-  background: rgba(79, 70, 229, 0.04);
+  background: #f8fafc;
 }
 
 .pill-btn.active {
   background: #4F46E5;
   color: white;
   border-color: #4F46E5;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
 }
 
 /* Sharing 3x3 grid */
 .sharing-grid-3x3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.45rem;
+  gap: 0.5rem;
 }
 
 .sharing-grid-btn {
-  padding: 0.55rem 0.3rem;
+  padding: 0.5rem 0.3rem;
   border-radius: 8px;
-  border: 1.5px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
   font-weight: 600;
   font-size: 0.78rem;
   cursor: pointer;
   transition: all 0.2s;
-  color: #475569;
+  color: #64748b;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -307,16 +307,16 @@
 }
 
 .sharing-grid-btn:hover {
-  border-color: #4F46E5;
+  border-color: #cbd5e1;
   color: #4F46E5;
-  background: rgba(79, 70, 229, 0.04);
+  background: #f8fafc;
 }
 
 .sharing-grid-btn.active {
   background: #4F46E5;
   color: white;
   border-color: #4F46E5;
-  box-shadow: 0 3px 10px rgba(79, 70, 229, 0.25);
+  box-shadow: 0 3px 10px rgba(79, 70, 229, 0.2);
 }
 
 /* Apply Button */
@@ -532,7 +532,7 @@
   padding: 1.5rem 1.75rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.85rem;
 }
 
@@ -620,6 +620,7 @@
 
 .amenities-footer-row {
   margin: 0;
+  min-height: 28px;
 }
 
 .amenity-mini-tags {
@@ -650,7 +651,7 @@
 .card-actions-row-pro {
   display: flex;
   gap: 0.75rem;
-  margin-top: 0.25rem;
+  margin-top: auto;
 }
 
 .btn-secondary-pro {

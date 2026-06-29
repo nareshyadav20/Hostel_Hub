@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, IndianRupee, Home as HomeIcon, CalendarCheck, Sparkles, Users, Building, Star, Utensils, Wifi, User, Crown, GraduationCap, ChevronDown, X, ChevronRight, Bed, BookOpen, Shirt, Droplet, Car, Video, Wrench, ShieldCheck, MessageSquare, HeartPulse, Clock, UtensilsCrossed, Lock, Settings, Heart } from 'lucide-react';
+import { Search, MapPin, IndianRupee, Home as HomeIcon, CalendarCheck, Sparkles, Users, Building, Star, Utensils, Wifi, User, Crown, GraduationCap, ChevronDown, X, ChevronRight, Bed, BookOpen, Shirt, Droplet, Car, Video, Wrench, ShieldCheck, MessageSquare, HeartPulse, Clock, UtensilsCrossed, Lock, Settings, Heart, Brush, Bell } from 'lucide-react';
 import './Home.css';
 import API from '../api/axios';
 import SearchOverlay from '../components/SearchOverlay';
 import socket, { connectSocket, disconnectSocket } from '../utils/socket';
+import { getAmenitiesFromBuilding, getSharingInfo } from '../utils/buildingHelpers';
 import heroCouple from '../assets/landing/hero_couple.png';
 import extReal from '../assets/landing/ext_real.png';
 import chairsReal from '../assets/landing/chairs_real.png';
@@ -49,6 +50,7 @@ const CountUpAnimation = ({ endValue, suffix = '', isFloat = false }) => {
 
 const RoomCard = ({ room, wishlist, toggleWishlist, setModalInfo, navigate }) => {
   const [imgIdx, setImgIdx] = useState(0);
+  const [showAllAmenities, setShowAllAmenities] = useState(false);
 
   useEffect(() => {
     if (!room.images || room.images.length <= 1) return;
@@ -82,8 +84,32 @@ const RoomCard = ({ room, wishlist, toggleWishlist, setModalInfo, navigate }) =>
         </div>
         <p className="hv2-room-loc"><MapPin size={14} style={{ marginRight: '4px' }} />{room.loc}</p>
 
-        <div className="hv2-amenity-row">
-          {room.amenities.map(a => <span key={a} className="hv2-amenity">{a}</span>)}
+        <div className="hv2-amenity-row" style={{ position: 'relative', flexWrap: 'nowrap', overflow: 'visible' }}>
+          {room.allAmenities.slice(0, 2).map(a => (
+            <span key={a} className="hv2-amenity" style={{ whiteSpace: 'nowrap' }}>{a}</span>
+          ))}
+          {room.allAmenities.length > 2 && (
+            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAllAmenities(!showAllAmenities); }} style={{ background: 'none', border: 'none', cursor: 'pointer', outline: 'none', fontSize: '0.7rem', fontWeight: '800', color: '#4F46E5', whiteSpace: 'nowrap', padding: '0 4px' }}>
+              +{room.allAmenities.length - 2} More
+            </button>
+          )}
+
+          {showAllAmenities && room.allAmenities.length > 2 && (
+            <div style={{
+              position: 'absolute', bottom: '100%', left: '-10px', right: '-10px',
+              background: '#FFFFFF', padding: '1rem', borderRadius: '16px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.15), 0 4px 10px rgba(0,0,0,0.05)', border: '1px solid #E2E8F0',
+              zIndex: 50, marginBottom: '0.8rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem'
+            }}>
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Extra Amenities</span>
+                <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAllAmenities(false); }} style={{ background: '#F1F5F9', border: 'none', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748B', fontSize: '10px', fontWeight: 'bold' }}>✕</button>
+              </div>
+              {room.allAmenities.slice(2).map(a => (
+                <span key={`pop-${a}`} className="hv2-amenity" style={{ background: '#F8FAFC', border: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>{a}</span>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="hv2-room-footer">
@@ -111,6 +137,7 @@ const Home = () => {
   const [budget, setBudget] = useState('');
   const [stayType, setStayType] = useState('');
   const [hostelType, setHostelType] = useState('');
+  const [stayQuality, setStayQuality] = useState('');
   const [wishlist, setWishlist] = useState([]);
   const [rooms, setRooms] = useState([]);
 
@@ -118,6 +145,7 @@ const Home = () => {
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
   const [isStayTypeOpen, setIsStayTypeOpen] = useState(false);
   const [isHostelTypeOpen, setIsHostelTypeOpen] = useState(false);
+  const [isStayQualityOpen, setIsStayQualityOpen] = useState(false);
   const [modalInfo, setModalInfo] = useState({ isOpen: false, image: '' });
   const searchBarRef = useRef(null);
 
@@ -132,7 +160,7 @@ const Home = () => {
         tenants: res.data.tenants || 0,
         properties: res.data.properties || 0,
         cities: res.data.cities || 0,
-        rating: res.data.rating || '0/5'
+        rating: res.data.rating || '0'
       });
       if (res.data.categoryStats) setCategoryStats(res.data.categoryStats);
       if (res.data.cityStats) setCityStats(res.data.cityStats);
@@ -165,28 +193,14 @@ const Home = () => {
     try {
       const res = await API.get('/buildings/public');
       const formatted = res.data.map((b, i) => {
-        let lowestSharingLabel = 'Sharing';
-        const rents = [
-          { val: b.rentSingle, label: 'Single Room' },
-          { val: b.rentDouble, label: '2 Sharing' },
-          { val: b.rentTriple, label: '3 Sharing' },
-          { val: b.rent4Sharing, label: '4 Sharing' },
-          { val: b.rent5Sharing, label: '5 Sharing' },
-          { val: b.rent6Sharing, label: '6 Sharing' },
-        ].filter(r => r.val > 0);
-
-        if (rents.length > 0) {
-          const minRent = rents.reduce((prev, curr) => prev.val < curr.val ? prev : curr);
-          lowestSharingLabel = minRent.label;
-          b.startingPrice = minRent.val;
-        } else {
-          // Fallback logic for old unseeded properties based on startingPrice
-          if (b.startingPrice >= 12000) lowestSharingLabel = 'Single Room';
-          else if (b.startingPrice >= 10000) lowestSharingLabel = '2 Sharing';
-          else if (b.startingPrice >= 8000) lowestSharingLabel = '3 Sharing';
-          else if (b.startingPrice >= 7000) lowestSharingLabel = '4 Sharing';
-          else lowestSharingLabel = '5 Sharing';
-        }
+        const { sharingLabel, lowestRent } = getSharingInfo(b);
+        const price = lowestRent || b.startingPrice || 5000;
+        const prioritySet = new Set(['Security', 'CCTV', 'Medical Support', 'Housekeeping']);
+        const derivedAmenities = getAmenitiesFromBuilding(b).sort((a, b) => {
+          const aPriority = prioritySet.has(a) ? 1 : 0;
+          const bPriority = prioritySet.has(b) ? 1 : 0;
+          return bPriority - aPriority;
+        });
 
         return {
           id: b._id,
@@ -194,10 +208,12 @@ const Home = () => {
           badgeColor: i === 0 ? '#4F46E5' : i === 1 ? '#10B981' : '#F59E0B',
           images: b.images && b.images.length > 0 ? b.images.map(img => (img.startsWith('http') || img.startsWith('data:')) ? img : `https://livora-hostel-hub-1.onrender.com${img}`) : [extReal],
           name: b.name,
-          loc: b.address + ', ' + b.locationCity,
-          price: `₹${b.startingPrice?.toLocaleString() || '9,000'}`,
-          sharingLabel: lowestSharingLabel,
-          amenities: b.amenities && b.amenities.length > 0 ? b.amenities.slice(0, 4) : ['WiFi', 'Meals', 'AC', 'Laundry']
+          loc: (b.locality ? b.locality + ', ' : '') + (b.address || b.locationCity),
+          rating: b.rating || 4.5,
+          price: `₹${price.toLocaleString()}`,
+          sharingLabel,
+          amenities: derivedAmenities.length > 0 ? derivedAmenities.slice(0, 4) : ['Security', 'CCTV', 'Medical Support', 'Housekeeping'],
+          allAmenities: derivedAmenities.length > 0 ? derivedAmenities : ['Security', 'CCTV', 'Medical Support', 'Housekeeping']
         };
       });
       setRooms(formatted.slice(0, 3)); // Show top 3
@@ -307,10 +323,10 @@ const Home = () => {
     { icon: <UtensilsCrossed size={26} color="#0f172a" />, title: 'Home-style Meals', desc: 'Freshly prepared meals served daily' },
     { icon: <Wifi size={26} color="#0f172a" />, title: 'High-Speed Internet', desc: 'Uninterrupted high-speed internet access' },
     { icon: <Users size={26} color="#0f172a" />, title: 'Community & Networking', desc: 'Engaging events, workshops & networking' },
-    { icon: <Lock size={26} color="#0f172a" />, title: 'Top-notch Security', desc: 'Biometric access and 24/7 CCTV surveillance' },
-    { icon: <Sparkles size={26} color="#0f172a" />, title: 'Professional Housekeeping', desc: 'Professional cleaning for pristine living spaces' },
-    { icon: <Clock size={26} color="#0f172a" />, title: '24/7 Support', desc: 'Dedicated staff available round the clock' },
-    { icon: <ShieldCheck size={26} color="#0f172a" />, title: 'No Hidden Charges', desc: 'Transparent pricing with zero surprises' },
+    { icon: <Video size={26} color="#0f172a" />, title: 'Top-notch Security', desc: 'Biometric access and 24/7 CCTV surveillance' },
+    { icon: <Brush size={26} color="#0f172a" />, title: 'Professional Housekeeping', desc: 'Professional cleaning for pristine living spaces' },
+    { icon: <Bell size={26} color="#0f172a" />, title: '24/7 Support', desc: 'Dedicated staff available round the clock' },
+    { icon: <IndianRupee size={26} color="#0f172a" />, title: 'No Hidden Charges', desc: 'Transparent pricing with zero surprises' },
   ];
 
   const testimonials = [
@@ -347,6 +363,7 @@ const Home = () => {
     if (searchLocation) params.append('location', searchLocation);
     if (budget) params.append('budget', budget);
     if (hostelType) params.append('hostelType', hostelType);
+    if (stayQuality) params.append('stayQuality', stayQuality);
     if (stayType) params.append('stayType', stayType);
     navigate(`/explore?${params.toString()}`);
   };
@@ -487,8 +504,8 @@ const Home = () => {
 
           {/* Hero CTAs */}
           <div className="hv2-hero-btns">
-            <button className="hv2-btn-primary" onClick={() => navigate('/explore')}>Explore Rooms</button>
-            <button className="hv2-btn-secondary" onClick={() => navigate('/search')}>Search Hostels</button>
+            <button className="hv2-btn-primary" onClick={() => navigate('/offers')}>View Offers</button>
+            <button className="hv2-btn-secondary" onClick={() => scrollToSection('how')}>How It Works</button>
           </div>
 
           {/* Trust badges */}
@@ -505,12 +522,14 @@ const Home = () => {
         <div className="hv2-hero-right">
           <div className="hv2-hero-img-wrap">
             <img src={heroImages[currentHeroImg]} alt="Livora residents" className="hv2-hero-img hv2-slider-anim" style={{ transition: 'opacity 0.5s ease-in-out' }} />
-            <div className="hv2-float-badge">
-              <div className="hv2-float-info">
-                <div className="hv2-float-num">⭐ 4.9/5</div>
-                <div className="hv2-float-label">Trusted by Residents</div>
+            {platformStats.rating && platformStats.rating !== '0' && platformStats.rating !== '0/5' && (
+              <div className="hv2-float-badge">
+                <div className="hv2-float-info">
+                  <div className="hv2-float-num">⭐ {platformStats.rating}/5</div>
+                  <div className="hv2-float-label">Trusted by Residents</div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
@@ -645,32 +664,6 @@ const Home = () => {
           <img src={extReal} alt="" className="hv2-ls-img" />
           <img src={studentCat} alt="" className="hv2-ls-img" />
           <img src={professionalCat} alt="" className="hv2-ls-img hv2-ls-wide" />
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ── */}
-      <section className="hv2-section hv2-testi-section" id="reviews">
-        <div className="hv2-section-head">
-          <span className="hv2-tag">Resident Stories</span>
-          <h2 className="hv2-section-title">What Our Residents Say</h2>
-          <p className="hv2-section-sub">Loved by thousands who call it home</p>
-        </div>
-        <div className="hv2-testi-container">
-          <div className="hv2-testi-track">
-            {testimonials.map((t, i) => (
-              <div key={i} className={`hv2-testi-card ${i === 1 ? 'hv2-testi-featured' : ''}`}>
-                <div className="hv2-testi-stars">{'★'.repeat(t.rating)}</div>
-                <p className="hv2-testi-text">{t.text}</p>
-                <div className="hv2-testi-author">
-                  <div className="hv2-testi-avatar">{t.name[0]}</div>
-                  <div>
-                    <div className="hv2-testi-name">{t.name}</div>
-                    <div className="hv2-testi-role">{t.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 

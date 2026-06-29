@@ -22,6 +22,14 @@ const Login = () => {
     setError('');
     try {
       const res = await axios.post(`${API_URL}/auth/login`, { email, password });
+      
+      const userRole = res.data.user.role;
+      if (userRole !== 'OWNER' && userRole !== 'SUPER_ADMIN' && userRole !== 'ADMIN') {
+        setError('Access Denied: This portal is restricted to property owners only.');
+        setLoading(false);
+        return;
+      }
+
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/owner/portfolio');

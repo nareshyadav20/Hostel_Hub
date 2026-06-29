@@ -1,7 +1,7 @@
 // src/App.jsx
 
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import Landing from './pages/Landing';
 import Home from './pages/Home';
@@ -45,44 +45,15 @@ const APP_VERSION = '1.0.5';
 const ProtectedRoute = ({ children }) => {
 
   const token = localStorage.getItem('token');
+  const location = useLocation();
 
   if (!token) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   return children;
 };
 
-const ListingWrapper = () => {
-
-  try {
-
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-
-    const isLoggedIn = !!token && !!user?.name;
-
-    return isLoggedIn ? (
-      <Layout>
-        <Listing />
-      </Layout>
-    ) : (
-      <PublicLayout>
-        <Listing />
-      </PublicLayout>
-    );
-
-  } catch (error) {
-
-    console.error("ListingWrapper Error:", error);
-
-    return (
-      <PublicLayout>
-        <Listing />
-      </PublicLayout>
-    );
-  }
-};
 
 function App() {
 
@@ -234,7 +205,13 @@ function App() {
 
         <Route
           path="/listing/:id"
-          element={<ListingWrapper />}
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Listing />
+              </Layout>
+            </ProtectedRoute>
+          }
         />
 
         {/* Protected Routes */}
