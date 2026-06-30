@@ -222,7 +222,7 @@ const Support = () => {
                       className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all border cursor-pointer text-left ${
                         activeCategory === cat.id 
                           ? 'bg-primary/5 border-primary/20 text-primary shadow-subtle' 
-                          : 'bg-transparent border-transparent text-text-secondary hover:bg-slate-50 dark:hover:bg-white/2'
+                          : 'bg-transparent border-transparent text-text-secondary hover:bg-background'
                       }`}
                     >
                        <div className="flex items-center gap-3">
@@ -237,7 +237,7 @@ const Support = () => {
                </div>
             </div>
 
-            <div className="card-classic p-6 bg-slate-50/50 dark:bg-white/2 border-dashed">
+            <div className="card-classic p-6 bg-surface border-dashed">
                <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] mb-4">Tactical Status</h4>
                <div className="space-y-4">
                   <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
@@ -313,7 +313,7 @@ const Support = () => {
 
             {/* Support Ticket Tracking */}
             <div className="card-classic overflow-hidden">
-               <div className="p-6 border-b border-divider flex items-center justify-between bg-slate-50/50 dark:bg-white/2">
+               <div className="p-6 border-b border-divider flex items-center justify-between bg-surface">
                   <h4 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] flex items-center gap-2">
                     <Clock size={14} className="text-warning" /> Support Manifest
                   </h4>

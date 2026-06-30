@@ -320,7 +320,7 @@ const Finance = () => {
                <h3 className="text-[13px] font-black text-text-primary uppercase tracking-widest mb-6">Top Performers</h3>
                <div className="space-y-4">
                   {TOP_TENANTS.map((t, i) => (
-                    <div key={i} className="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-divider/50 hover:border-primary/20 transition-all cursor-pointer">
+                    <div key={i} className="flex items-center gap-4 p-3 rounded-2xl bg-background border border-divider/50 hover:border-primary/20 transition-all cursor-pointer">
                        <div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center font-black text-xs">{t.name[0]}</div>
                        <div className="flex-1 min-w-0">
                           <p className="text-[11px] font-black text-text-primary uppercase tracking-tight truncate">{t.name}</p>
@@ -338,7 +338,7 @@ const Finance = () => {
       </div>
 
       {/* --- TRANSACTION LEDGER --- */}
-      <div className="card-classic overflow-hidden shadow-premium bg-white/50 dark:bg-card/50">
+      <div className="card-classic overflow-hidden shadow-premium bg-surface">
          <div className="p-8 border-b border-divider/50 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
                <h3 className="text-lg font-black text-text-primary uppercase tracking-tight">Global Transaction Ledger</h3>
@@ -376,14 +376,14 @@ const Finance = () => {
 
          {loading ? (
             <div className="py-24 text-center">
-              <div className="premium-spinner mx-auto mb-4"></div>
-              <p className="text-sm font-black text-text-muted uppercase tracking-widest">Synchronizing financial ledger from MongoDB...</p>
+               <div className="premium-spinner mx-auto mb-4"></div>
+               <p className="text-sm font-black text-text-muted uppercase tracking-widest">Synchronizing financial ledger from MongoDB...</p>
             </div>
          ) : (
           <div className="overflow-x-auto scrollbar-hide">
              <table className="w-full text-left border-collapse whitespace-nowrap">
                 <thead>
-                   <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-divider">
+                   <tr className="bg-background border-b border-divider">
                       <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest">Transaction ID</th>
                       <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Entity Manifest</th>
                       <th className="py-5 px-4 text-[10px] font-black text-text-muted uppercase tracking-widest">Allocation</th>
@@ -395,7 +395,7 @@ const Finance = () => {
                 </thead>
                 <tbody className="divide-y divide-border/30">
                    {filteredTx.map((tx, i) => (
-                     <tr key={i} className="group hover:bg-slate-50/50 dark:hover:bg-white/1 transition-all cursor-pointer">
+                     <tr key={i} className="group hover:bg-background transition-all cursor-pointer">
                         <td className="py-5 px-8">
                            <span className="text-[11px] font-black text-text-muted font-mono tracking-tighter uppercase">{tx.id}</span>
                         </td>
@@ -453,12 +453,12 @@ const Finance = () => {
             style={{ zIndex: 99999 }}
             onClick={() => setShowReconciliation(false)}>
             <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 rounded-3xl shadow-[0_25px_80px_-10px_rgba(0,0,0,0.6)] w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden"
+              className="bg-card border border-divider rounded-3xl shadow-[0_25px_80px_-10px_rgba(0,0,0,0.6)] w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden"
               style={{ zIndex: 100000 }}
               onClick={e => e.stopPropagation()}>
               
               {/* Modal Header */}
-              <div className="flex-none p-6 md:p-8 border-b border-divider bg-slate-50/50 dark:bg-white/[0.02]">
+              <div className="flex-none p-6 md:p-8 border-b border-divider bg-surface">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shadow-glow">
@@ -573,7 +573,7 @@ const Finance = () => {
               </div>
 
               {/* Modal Footer */}
-              <div className="flex-none p-6 border-t border-divider bg-slate-50/50 dark:bg-white/[0.02]">
+              <div className="flex-none p-6 border-t border-divider bg-surface">
                 <button 
                   onClick={handleExecuteReconciliation}
                   disabled={reconciling}
@@ -605,7 +605,7 @@ const Finance = () => {
             style={{ zIndex: 99999 }}
             onClick={() => setSelectedTx(null)}>
             <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 rounded-3xl shadow-[0_25px_80px_-10px_rgba(0,0,0,0.6)] w-full max-w-lg p-8 flex flex-col overflow-hidden"
+              className="bg-card border border-divider rounded-3xl shadow-[0_25px_80px_-10px_rgba(0,0,0,0.6)] w-full max-w-lg p-8 flex flex-col overflow-hidden"
               style={{ zIndex: 100000 }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between pb-6 border-b border-divider">
@@ -659,7 +659,7 @@ const Finance = () => {
                 </div>
               </div>
               <div className="pt-6 border-t border-divider flex gap-3">
-                <button onClick={() => setSelectedTx(null)} className="flex-1 py-3 bg-slate-50 dark:bg-white/5 border border-divider text-text-secondary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 dark:hover:bg-white/10 transition-all">Close</button>
+                <button onClick={() => setSelectedTx(null)} className="flex-1 py-3 bg-background border border-divider text-text-secondary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-surface transition-all">Close</button>
               </div>
             </motion.div>
           </motion.div>,

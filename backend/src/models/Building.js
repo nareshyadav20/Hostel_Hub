@@ -49,6 +49,8 @@ const buildingSchema = new mongoose.Schema({
   isAC: { type: Boolean, default: false },
   totalRooms: { type: Number, default: 0 },
   totalBeds: { type: Number, default: 0 },
+  occupiedBeds: { type: Number, default: 0 },
+  activeTenants: { type: Number, default: 0 },
   images: [{ type: String }],
   documents: [{
     name: { type: String },

@@ -13,6 +13,9 @@ const createRoom = async (req, res) => {
     if (!floor || floor.building.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Floor not found or unauthorized' });
     }
+    if (floor.building.approvalStatus !== 'approved' && floor.building.status !== 'Active') {
+      return res.status(403).json({ error: 'Cannot add rooms to an unapproved property. Please wait for admin approval.' });
+    }
 
     const settings = await SystemSettings.findOne({ owner: req.user.id }).lean();
     const finalRent = rentAmount || (settings ? settings.rentSettings.defaultRent[roomType?.toLowerCase()] || settings.rentSettings.defaultRent.shared : 5000);

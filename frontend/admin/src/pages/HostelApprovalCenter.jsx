@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Building2, CheckCircle, XCircle, Clock, 
   MapPin, Users, Activity, FileText, ArrowLeft, 
-  Search, Filter, Eye, AlertCircle, ChevronDown
+  Search, Filter, Eye, AlertCircle, ChevronDown,
+  ShieldCheck, ShieldX, Hourglass, Home, Phone, Mail
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -96,59 +97,85 @@ const HostelApprovalCenter = () => {
     setExpandedFloors(prev => ({ ...prev, [floorId]: !prev[floorId] }));
   };
 
+  const countByStatus = (tab) => buildings.filter(b => {
+    if (tab === 'Pending') return b.approvalStatus === 'pending' || b.status === 'Pending Approval' || b.status === 'Pending';
+    if (tab === 'Approved') return b.approvalStatus === 'approved' || b.isApproved === true || b.status === 'Active';
+    if (tab === 'Rejected') return b.approvalStatus === 'rejected' || b.status === 'Rejected';
+    return false;
+  }).length;
+
   const filteredBuildings = buildings.filter(b => {
     let statusMatch = false;
-    if (activeTab === 'Pending') {
-      statusMatch = b.approvalStatus === 'pending' || b.status === 'Pending Approval' || b.status === 'Pending';
-    }
-    if (activeTab === 'Approved') {
-      statusMatch = b.approvalStatus === 'approved' || b.isApproved === true || b.status === 'Active';
-    }
-    if (activeTab === 'Rejected') {
-      statusMatch = b.approvalStatus === 'rejected' || b.status === 'Rejected';
-    }
-    
+    if (activeTab === 'Pending') statusMatch = b.approvalStatus === 'pending' || b.status === 'Pending Approval' || b.status === 'Pending';
+    if (activeTab === 'Approved') statusMatch = b.approvalStatus === 'approved' || b.isApproved === true || b.status === 'Active';
+    if (activeTab === 'Rejected') statusMatch = b.approvalStatus === 'rejected' || b.status === 'Rejected';
     const searchMatch = (b.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
                         (b.address || '').toLowerCase().includes(searchTerm.toLowerCase());
     return statusMatch && searchMatch;
   });
 
+  const tabConfig = {
+    Pending:  { icon: Hourglass,    color: 'text-amber-500',  bg: 'bg-amber-500/10',  badge: 'bg-amber-100 text-amber-700' },
+    Approved: { icon: ShieldCheck,  color: 'text-green-500',  bg: 'bg-green-500/10',  badge: 'bg-green-100 text-green-700' },
+    Rejected: { icon: ShieldX,      color: 'text-red-500',    bg: 'bg-red-500/10',    badge: 'bg-red-100 text-red-700' },
+  };
+
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 pb-24 fade-in">
+    <div className="space-y-8 pb-24 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-text-main tracking-tight flex items-center gap-3">
             <Building2 className="text-primary" size={32} />
             Approval Center
           </h1>
-          <p className="text-slate-500 mt-2 text-lg">Review and manage new property submissions.</p>
+          <p className="text-text-muted mt-2 text-base">Review and manage new property submissions from owners.</p>
+        </div>
+        <div className="flex gap-3">
+          {['Pending', 'Approved', 'Rejected'].map(tab => {
+            const { icon: Icon, bg, color, badge } = tabConfig[tab];
+            const count = countByStatus(tab);
+            return (
+              <div key={tab} className={`flex items-center gap-2 px-4 py-2 rounded-xl ${bg} border border-divider`}>
+                <Icon size={16} className={color} />
+                <span className="text-xs font-bold text-text-muted">{tab}</span>
+                <span className={`text-xs font-black px-2 py-0.5 rounded-full ${badge}`}>{count}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* Tabs & Search */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-2 rounded-2xl shadow-subtle border border-divider">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-surface p-2 rounded-2xl shadow-soft border border-divider">
         <div className="flex gap-2 w-full md:w-auto overflow-x-auto scrollbar-hide">
-          {['Pending', 'Approved', 'Rejected'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
-                activeTab === tab
-                  ? 'bg-primary text-white shadow-md scale-105'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+          {['Pending', 'Approved', 'Rejected'].map((tab) => {
+            const { icon: Icon } = tabConfig[tab];
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-200 flex items-center gap-2 ${
+                  activeTab === tab
+                    ? 'bg-primary text-white shadow-md scale-105'
+                    : 'text-text-muted hover:bg-background hover:text-text-main'
+                }`}
+              >
+                <Icon size={14} />
+                {tab}
+                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${activeTab === tab ? 'bg-white/20 text-white' : 'bg-background text-text-muted'}`}>
+                  {countByStatus(tab)}
+                </span>
+              </button>
+            );
+          })}
         </div>
         <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
           <input 
             type="text" 
             placeholder="Search properties..." 
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+            className="w-full pl-10 pr-4 py-2.5 bg-background border border-divider rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm text-text-main"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -158,82 +185,89 @@ const HostelApprovalCenter = () => {
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="spinner w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filteredBuildings.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 bg-white rounded-2xl border border-divider">
-          <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-            <CheckCircle className="text-slate-400" size={32} />
+        <div className="flex flex-col items-center justify-center h-64 bg-surface rounded-2xl border border-divider">
+          <div className="w-16 h-16 bg-background rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="text-text-muted" size={32} />
           </div>
-          <h3 className="text-lg font-semibold text-slate-900">No {activeTab} Properties</h3>
-          <p className="text-slate-500">Everything is caught up.</p>
+          <h3 className="text-lg font-semibold text-text-main">No {activeTab} Properties</h3>
+          <p className="text-text-muted text-sm mt-1">Everything is caught up.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence>
-            {filteredBuildings.map((b) => (
-              <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                key={b._id}
-                className="bg-white rounded-2xl border border-divider overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col group card-glow"
-              >
-                <div className="relative h-48 bg-slate-100 overflow-hidden">
-                  <img 
-                    src={b.images?.[0] || 'https://images.unsplash.com/photo-1555854817-5b2260d50c63?auto=format&fit=crop&q=80&w=800'} 
-                    alt={b.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 right-3">
-                    <span className={`px-3 py-1 text-xs font-bold rounded-full shadow-sm backdrop-blur-md ${
-                      activeTab === 'Pending' ? 'bg-amber-100/90 text-amber-700 border border-amber-200' :
-                      activeTab === 'Approved' ? 'bg-green-100/90 text-green-700 border border-green-200' :
-                      'bg-red-100/90 text-red-700 border border-red-200'
-                    }`}>
-                      {activeTab}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="text-xl font-bold text-slate-900 line-clamp-1">{b.name || 'Unnamed Property'}</h3>
-                  <div className="flex items-center gap-1.5 text-slate-500 mt-1 mb-4">
-                    <MapPin size={16} />
-                    <span className="text-sm line-clamp-1">{b.address || b.locationCity}</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-5 p-4 bg-slate-50 rounded-xl">
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">Owner</p>
-                      <p className="text-sm font-semibold text-slate-900">{b.owner?.name || 'Unknown'}</p>
+            {filteredBuildings.map((b) => {
+              const { color, bg } = tabConfig[activeTab];
+              return (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  key={b._id}
+                  className="bg-surface rounded-2xl border border-divider overflow-hidden hover:shadow-premium transition-all duration-300 flex flex-col group"
+                >
+                  {/* Image */}
+                  <div className="relative h-48 bg-background overflow-hidden">
+                    <img 
+                      src={b.images?.[0] || 'https://images.unsplash.com/photo-1555854817-5b2260d50c63?auto=format&fit=crop&q=80&w=800'} 
+                      alt={b.name} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                    <div className="absolute top-3 right-3">
+                      <span className={`px-3 py-1 text-xs font-bold rounded-full shadow-sm backdrop-blur-md ${
+                        activeTab === 'Pending' ? 'bg-amber-100/90 text-amber-700 border border-amber-200' :
+                        activeTab === 'Approved' ? 'bg-green-100/90 text-green-700 border border-green-200' :
+                        'bg-red-100/90 text-red-700 border border-red-200'
+                      }`}>
+                        {activeTab}
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">Capacity</p>
-                      <p className="text-sm font-semibold text-slate-900">{b.totalRooms} Rooms</p>
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <h3 className="text-white font-bold text-lg line-clamp-1 drop-shadow">{b.name || 'Unnamed Property'}</h3>
                     </div>
                   </div>
 
-                  <div className="mt-auto flex gap-3 pt-4 border-t border-divider">
-                    <button 
-                      onClick={() => setSelectedBuilding(b)}
-                      className="flex-1 px-4 py-2 bg-slate-50 text-slate-700 rounded-xl font-semibold hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 btn-enhanced"
-                    >
-                      <Eye size={18} /> Details
-                    </button>
-                    {activeTab === 'Pending' && (
+                  <div className="p-5 flex-1 flex flex-col gap-3">
+                    <div className="flex items-center gap-1.5 text-text-muted">
+                      <MapPin size={14} />
+                      <span className="text-sm line-clamp-1">{b.address || b.locationCity || 'Address not set'}</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 bg-background rounded-xl border border-divider">
+                        <p className="text-[10px] text-text-muted font-bold uppercase tracking-wide mb-1">Owner</p>
+                        <p className="text-sm font-semibold text-text-main truncate">{b.owner?.name || 'Unknown'}</p>
+                      </div>
+                      <div className="p-3 bg-background rounded-xl border border-divider">
+                        <p className="text-[10px] text-text-muted font-bold uppercase tracking-wide mb-1">Capacity</p>
+                        <p className="text-sm font-semibold text-text-main">{b.totalRooms || 0} Rooms</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-auto flex gap-3 pt-3 border-t border-divider">
                       <button 
-                        onClick={() => { setSelectedBuilding(b); setActionModal({ isOpen: true, type: 'approve', reason: '' }); }}
-                        className="flex-1 px-4 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover shadow-md hover:shadow-lg transition-all btn-enhanced"
+                        onClick={() => setSelectedBuilding(b)}
+                        className="flex-1 px-4 py-2 bg-background text-text-muted border border-divider rounded-xl font-semibold hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2 text-sm"
                       >
-                        Action
+                        <Eye size={15} /> Details
                       </button>
-                    )}
+                      {activeTab === 'Pending' && (
+                        <button 
+                          onClick={() => { setSelectedBuilding(b); setActionModal({ isOpen: true, type: 'approve', reason: '' }); }}
+                          className="flex-1 px-4 py-2 bg-primary text-white rounded-xl font-semibold shadow-md hover:brightness-110 transition-all text-sm"
+                        >
+                          Review
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
       )}
@@ -243,31 +277,36 @@ const HostelApprovalCenter = () => {
         {selectedBuilding && (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-xl bg-slate-100 overflow-hidden shrink-0">
+              <div className="w-20 h-20 rounded-xl bg-background overflow-hidden shrink-0 border border-divider">
                 <img src={selectedBuilding.images?.[0] || 'https://images.unsplash.com/photo-1555854817-5b2260d50c63'} className="w-full h-full object-cover" alt="Property" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900">{selectedBuilding.name}</h3>
-                <p className="text-slate-500">{selectedBuilding.address}</p>
+                <h3 className="text-2xl font-bold text-text-main">{selectedBuilding.name}</h3>
+                <p className="text-text-muted text-sm mt-1">{selectedBuilding.address}</p>
+                <span className={`inline-block mt-1 px-3 py-0.5 text-xs font-bold rounded-full ${
+                  activeTab === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                  activeTab === 'Approved' ? 'bg-green-100 text-green-700' :
+                  'bg-red-100 text-red-700'
+                }`}>{activeTab}</span>
               </div>
             </div>
 
             {loadingDetails ? (
               <div className="flex items-center justify-center py-12">
-                <div className="spinner w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
               </div>
             ) : (
               <>
                 {/* Modal Sub-Tabs */}
-                <div className="flex border-b border-divider mb-4">
+                <div className="flex border-b border-divider">
                   {['Overview', 'Amenities & Policies', 'Infrastructure'].map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setModalTab(tab)}
-                      className={`flex-1 py-2 text-center text-sm font-semibold border-b-2 transition-all ${
+                      className={`flex-1 py-2.5 text-center text-sm font-semibold border-b-2 transition-all ${
                         modalTab === tab
                           ? 'border-primary text-primary'
-                          : 'border-transparent text-slate-500 hover:text-slate-900'
+                          : 'border-transparent text-text-muted hover:text-text-main'
                       }`}
                     >
                       {tab}
@@ -277,49 +316,50 @@ const HostelApprovalCenter = () => {
 
                 {modalTab === 'Overview' && (
                   <div className="space-y-4">
-                    {/* Description */}
                     <div>
-                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Description</h4>
-                      <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl leading-relaxed">
+                      <h4 className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-2">Description</h4>
+                      <p className="text-sm text-text-main bg-background p-3 rounded-xl leading-relaxed border border-divider">
                         {detailedBuilding?.description || 'No description provided.'}
                       </p>
                     </div>
 
-                    {/* Metadata Grid */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
-                        <span className="text-xs text-slate-400 font-bold block mb-0.5">Gender Specificity</span>
-                        <span className="text-sm font-semibold text-slate-800">{detailedBuilding?.genderType || 'Mixed'}</span>
-                      </div>
-                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
-                        <span className="text-xs text-slate-400 font-bold block mb-0.5">Category</span>
-                        <span className="text-sm font-semibold text-slate-800">{detailedBuilding?.category || 'Student'}</span>
-                      </div>
-                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
-                        <span className="text-xs text-slate-400 font-bold block mb-0.5">Starting Rent</span>
-                        <span className="text-sm font-semibold text-slate-800">₹{detailedBuilding?.startingPrice || 'N/A'}/mo</span>
-                      </div>
-                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
-                        <span className="text-xs text-slate-400 font-bold block mb-0.5">Security Deposit</span>
-                        <span className="text-sm font-semibold text-slate-800">₹{detailedBuilding?.securityDeposit || 0}</span>
-                      </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        ['Gender', detailedBuilding?.genderType || 'Mixed'],
+                        ['Category', detailedBuilding?.category || 'Student'],
+                        ['Starting Rent', `₹${detailedBuilding?.startingPrice || 'N/A'}/mo`],
+                        ['Security Deposit', `₹${detailedBuilding?.securityDeposit || 0}`],
+                      ].map(([label, value]) => (
+                        <div key={label} className="p-3 bg-background rounded-xl border border-divider">
+                          <span className="text-[10px] text-text-muted font-bold block mb-0.5 uppercase tracking-wide">{label}</span>
+                          <span className="text-sm font-semibold text-text-main">{value}</span>
+                        </div>
+                      ))}
                     </div>
 
-                    {/* Owner Info Card */}
-                    <div className="p-4 bg-slate-50 rounded-xl border border-divider space-y-2">
-                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Owner Profile</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-1 text-sm text-slate-700">
-                        <div>
-                          <span className="text-xs text-slate-400 block">Name</span>
-                          <span className="font-semibold">{detailedBuilding?.owner?.name || 'N/A'}</span>
+                    <div className="p-4 bg-background rounded-xl border border-divider space-y-3">
+                      <h4 className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Owner Profile</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Users size={14} className="text-text-muted shrink-0" />
+                          <div>
+                            <span className="text-[10px] text-text-muted block">Name</span>
+                            <span className="font-semibold text-text-main">{detailedBuilding?.owner?.name || 'N/A'}</span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-xs text-slate-400 block">Email</span>
-                          <span className="font-semibold text-slate-900 break-all">{detailedBuilding?.owner?.email || 'N/A'}</span>
+                        <div className="flex items-center gap-2">
+                          <Mail size={14} className="text-text-muted shrink-0" />
+                          <div>
+                            <span className="text-[10px] text-text-muted block">Email</span>
+                            <span className="font-semibold text-text-main break-all">{detailedBuilding?.owner?.email || 'N/A'}</span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-xs text-slate-400 block">Phone</span>
-                          <span className="font-semibold">{detailedBuilding?.owner?.phone || 'N/A'}</span>
+                        <div className="flex items-center gap-2">
+                          <Phone size={14} className="text-text-muted shrink-0" />
+                          <div>
+                            <span className="text-[10px] text-text-muted block">Phone</span>
+                            <span className="font-semibold text-text-main">{detailedBuilding?.owner?.phone || 'N/A'}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -328,9 +368,8 @@ const HostelApprovalCenter = () => {
 
                 {modalTab === 'Amenities & Policies' && (
                   <div className="space-y-4">
-                    {/* Amenities */}
                     <div>
-                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Amenities</h4>
+                      <h4 className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-2">Amenities</h4>
                       <div className="flex flex-wrap gap-2">
                         {detailedBuilding?.amenities && detailedBuilding.amenities.length > 0 ? (
                           detailedBuilding.amenities.map((amenity, idx) => (
@@ -339,46 +378,39 @@ const HostelApprovalCenter = () => {
                             </span>
                           ))
                         ) : (
-                          <span className="text-sm text-slate-500 italic">No amenities specified.</span>
+                          <span className="text-sm text-text-muted italic">No amenities specified.</span>
                         )}
                       </div>
                     </div>
 
-                    {/* Policies */}
                     <div>
-                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Hostel Policies</h4>
+                      <h4 className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-2">Hostel Policies</h4>
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 bg-slate-50 rounded-xl border border-divider">
-                          <span className="text-xs text-slate-400 font-bold block mb-0.5">Smoking</span>
-                          <span className="text-sm font-semibold text-slate-700">{detailedBuilding?.policies?.smoking || 'Not Allowed'}</span>
-                        </div>
-                        <div className="p-3 bg-slate-50 rounded-xl border border-divider">
-                          <span className="text-xs text-slate-400 font-bold block mb-0.5">Alcohol</span>
-                          <span className="text-sm font-semibold text-slate-700">{detailedBuilding?.policies?.alcohol || 'Not Allowed'}</span>
-                        </div>
-                        <div className="p-3 bg-slate-50 rounded-xl border border-divider">
-                          <span className="text-xs text-slate-400 font-bold block mb-0.5">Visitors</span>
-                          <span className="text-sm font-semibold text-slate-700">{detailedBuilding?.policies?.visitors || 'Allowed till 8 PM'}</span>
-                        </div>
-                        <div className="p-3 bg-slate-50 rounded-xl border border-divider">
-                          <span className="text-xs text-slate-400 font-bold block mb-0.5">Pets</span>
-                          <span className="text-sm font-semibold text-slate-700">{detailedBuilding?.policies?.pets || 'No'}</span>
-                        </div>
+                        {[
+                          ['Smoking', detailedBuilding?.policies?.smoking || 'Not Allowed'],
+                          ['Alcohol', detailedBuilding?.policies?.alcohol || 'Not Allowed'],
+                          ['Visitors', detailedBuilding?.policies?.visitors || 'Allowed till 8 PM'],
+                          ['Pets', detailedBuilding?.policies?.pets || 'No'],
+                        ].map(([label, value]) => (
+                          <div key={label} className="p-3 bg-background rounded-xl border border-divider">
+                            <span className="text-[10px] text-text-muted font-bold block mb-0.5 uppercase tracking-wide">{label}</span>
+                            <span className="text-sm font-semibold text-text-main">{value}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
-                    {/* Staff info */}
                     {detailedBuilding?.staffInfo && (detailedBuilding.staffInfo.name || detailedBuilding.staffInfo.contact) && (
-                      <div className="p-4 bg-slate-50 rounded-xl border border-divider">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Staff Info</h4>
-                        <div className="grid grid-cols-2 gap-4 text-sm text-slate-700">
+                      <div className="p-4 bg-background rounded-xl border border-divider">
+                        <h4 className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-2">Staff Info</h4>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
-                            <span className="text-xs text-slate-400 block">Name</span>
-                            <span className="font-semibold">{detailedBuilding.staffInfo.name || 'N/A'}</span>
+                            <span className="text-[10px] text-text-muted block">Name</span>
+                            <span className="font-semibold text-text-main">{detailedBuilding.staffInfo.name || 'N/A'}</span>
                           </div>
                           <div>
-                            <span className="text-xs text-slate-400 block">Role & Contact</span>
-                            <span className="font-semibold">{detailedBuilding.staffInfo.role || 'Warden'} ({detailedBuilding.staffInfo.contact || 'N/A'})</span>
+                            <span className="text-[10px] text-text-muted block">Role & Contact</span>
+                            <span className="font-semibold text-text-main">{detailedBuilding.staffInfo.role || 'Warden'} ({detailedBuilding.staffInfo.contact || 'N/A'})</span>
                           </div>
                         </div>
                       </div>
@@ -388,92 +420,74 @@ const HostelApprovalCenter = () => {
 
                 {modalTab === 'Infrastructure' && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
-                        <span className="text-xs text-slate-400 font-bold block">Floors</span>
-                        <span className="text-lg font-bold text-slate-800">{detailedBuilding?.floors?.length || 0}</span>
-                      </div>
-                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
-                        <span className="text-xs text-slate-400 font-bold block">Total Rooms</span>
-                        <span className="text-lg font-bold text-slate-800">{detailedBuilding?.totalRooms || 0}</span>
-                      </div>
-                      <div className="p-3 bg-slate-50 rounded-xl border border-divider">
-                        <span className="text-xs text-slate-400 font-bold block">Total Beds</span>
-                        <span className="text-lg font-bold text-slate-800">{detailedBuilding?.totalBeds || 0}</span>
-                      </div>
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      {[
+                        ['Floors', detailedBuilding?.floors?.length || 0],
+                        ['Total Rooms', detailedBuilding?.totalRooms || 0],
+                        ['Total Beds', detailedBuilding?.totalBeds || 0],
+                      ].map(([label, value]) => (
+                        <div key={label} className="p-3 bg-background rounded-xl border border-divider">
+                          <span className="text-[10px] text-text-muted font-bold block uppercase tracking-wide">{label}</span>
+                          <span className="text-2xl font-bold text-text-main">{value}</span>
+                        </div>
+                      ))}
                     </div>
 
-                    {/* Floors tree */}
                     <div className="space-y-2 max-h-[35vh] overflow-y-auto pr-1">
-                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Infrastructure Details</h4>
+                      <h4 className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Infrastructure Details</h4>
                       {detailedBuilding?.floors && detailedBuilding.floors.length > 0 ? (
                         detailedBuilding.floors.map((floor) => {
                           const isExpanded = expandedFloors[floor._id];
                           return (
-                            <div key={floor._id} className="border border-divider rounded-xl overflow-hidden bg-white mb-2">
+                            <div key={floor._id} className="border border-divider rounded-xl overflow-hidden bg-surface mb-2">
                               <button
                                 type="button"
                                 onClick={() => toggleFloor(floor._id)}
-                                className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
+                                className="w-full flex items-center justify-between p-3 bg-background hover:bg-background/70 transition-colors text-left"
                               >
                                 <div className="flex items-center gap-2">
-                                  <span className="font-bold text-slate-800 text-sm">
-                                    Floor {floor.floorNumber}
-                                  </span>
-                                  <span className="text-xs bg-slate-200 px-2 py-0.5 rounded-full text-slate-600">
+                                  <span className="font-bold text-text-main text-sm">Floor {floor.floorNumber}</span>
+                                  <span className="text-xs bg-surface border border-divider px-2 py-0.5 rounded-full text-text-muted">
                                     {floor.rooms?.length || 0} Rooms
                                   </span>
                                 </div>
-                                <ChevronDown
-                                  size={18}
-                                  className={`text-slate-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                                />
+                                <ChevronDown size={18} className={`text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                               </button>
 
                               {isExpanded && (
-                                <div className="p-3 divide-y divide-divider space-y-3 bg-white">
+                                <div className="p-3 divide-y divide-divider space-y-3 bg-surface">
                                   {floor.rooms && floor.rooms.length > 0 ? (
                                     floor.rooms.map((room) => (
                                       <div key={room._id} className="pt-2 first:pt-0">
                                         <div className="flex justify-between items-start mb-2">
                                           <div>
-                                            <h5 className="font-bold text-slate-800 text-sm">
-                                              Room {room.roomNumber}
-                                            </h5>
-                                            <span className="text-xs text-slate-500">
+                                            <h5 className="font-bold text-text-main text-sm">Room {room.roomNumber}</h5>
+                                            <span className="text-xs text-text-muted">
                                               {room.roomType || 'Standard'} • {room.isAC ? 'AC' : 'Non-AC'}
                                             </span>
                                           </div>
-                                          <span className="text-xs font-bold text-primary">
-                                            ₹{room.rentAmount || 'N/A'}/mo
-                                          </span>
+                                          <span className="text-xs font-bold text-primary">₹{room.rentAmount || 'N/A'}/mo</span>
                                         </div>
-                                        
-                                        {/* Beds list */}
                                         <div className="grid grid-cols-2 gap-2 mt-2">
                                           {room.beds && room.beds.length > 0 ? (
                                             room.beds.map((bed) => {
                                               const isOccupied = (bed.status || '').toUpperCase() === 'OCCUPIED';
                                               return (
-                                                <div key={bed._id} className="flex items-center gap-2 p-1.5 bg-slate-50 rounded-lg border border-divider">
+                                                <div key={bed._id} className="flex items-center gap-2 p-1.5 bg-background rounded-lg border border-divider">
                                                   <span className={`w-2 h-2 rounded-full ${isOccupied ? 'bg-red-500' : 'bg-emerald-500'}`} />
-                                                  <span className="text-xs font-semibold text-slate-700">
-                                                    Bed {bed.bedNumber}
-                                                  </span>
-                                                  <span className="text-[10px] text-slate-400 ml-auto">
-                                                    {isOccupied ? 'Occupied' : 'Available'}
-                                                  </span>
+                                                  <span className="text-xs font-semibold text-text-main">Bed {bed.bedNumber}</span>
+                                                  <span className="text-[10px] text-text-muted ml-auto">{isOccupied ? 'Occupied' : 'Available'}</span>
                                                 </div>
                                               );
                                             })
                                           ) : (
-                                            <span className="text-xs text-slate-400 italic col-span-full">No beds defined.</span>
+                                            <span className="text-xs text-text-muted italic col-span-full">No beds defined.</span>
                                           )}
                                         </div>
                                       </div>
                                     ))
                                   ) : (
-                                    <p className="text-xs text-slate-400 italic p-2">No rooms on this floor.</p>
+                                    <p className="text-xs text-text-muted italic p-2">No rooms on this floor.</p>
                                   )}
                                 </div>
                               )}
@@ -481,7 +495,7 @@ const HostelApprovalCenter = () => {
                           );
                         })
                       ) : (
-                        <p className="text-sm text-slate-500 italic py-2">No floor infrastructure details available.</p>
+                        <p className="text-sm text-text-muted italic py-2">No floor infrastructure details available.</p>
                       )}
                     </div>
                   </div>
@@ -490,7 +504,7 @@ const HostelApprovalCenter = () => {
             )}
 
             {selectedBuilding.rejectionReason && (
-              <div className="p-4 bg-red-50 text-red-700 rounded-xl flex gap-3">
+              <div className="p-4 bg-red-500/10 text-red-500 rounded-xl flex gap-3 border border-red-500/20">
                 <AlertCircle className="shrink-0 mt-0.5" size={20} />
                 <div>
                   <h4 className="font-bold text-sm">Rejection Reason</h4>
@@ -503,15 +517,15 @@ const HostelApprovalCenter = () => {
               <div className="flex gap-4 pt-4 border-t border-divider">
                 <button 
                   onClick={() => setActionModal({ isOpen: true, type: 'reject', reason: '' })}
-                  className="flex-1 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors btn-enhanced"
+                  className="flex-1 py-3 bg-red-500/10 text-red-500 rounded-xl font-bold hover:bg-red-500/20 transition-colors border border-red-500/20 flex items-center justify-center gap-2"
                 >
-                  Reject
+                  <XCircle size={18} /> Reject
                 </button>
                 <button 
                   onClick={() => setActionModal({ isOpen: true, type: 'approve', reason: '' })}
-                  className="flex-1 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-hover shadow-md btn-enhanced"
+                  className="flex-1 py-3 bg-primary text-white rounded-xl font-bold hover:brightness-110 shadow-md flex items-center justify-center gap-2"
                 >
-                  Approve
+                  <CheckCircle size={18} /> Approve
                 </button>
               </div>
             )}
@@ -520,35 +534,45 @@ const HostelApprovalCenter = () => {
       </Modal>
 
       {/* Action Modal (Approve/Reject) */}
-      <Modal isOpen={actionModal.isOpen} onClose={() => setActionModal({ isOpen: false, type: null, reason: '' })} title={actionModal.type === 'approve' ? 'Approve Property' : 'Reject Property'}>
+      <Modal 
+        isOpen={actionModal.isOpen} 
+        onClose={() => setActionModal({ isOpen: false, type: null, reason: '' })} 
+        title={actionModal.type === 'approve' ? '✅ Approve Property' : '❌ Reject Property'}
+      >
         <div className="space-y-6">
-          <p className="text-slate-600 text-lg">
-            Are you sure you want to {actionModal.type} <strong>{selectedBuilding?.name}</strong>?
-          </p>
+          <div className={`p-4 rounded-xl border ${actionModal.type === 'approve' ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+            <p className="text-text-main text-sm">
+              Are you sure you want to <strong>{actionModal.type}</strong>{' '}
+              <strong className="text-primary">{selectedBuilding?.name}</strong>?
+            </p>
+            {actionModal.type === 'approve' && (
+              <p className="text-text-muted text-xs mt-1">The owner will be notified and can start adding floors, rooms, and beds.</p>
+            )}
+          </div>
           
           {actionModal.type === 'reject' && (
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Reason for Rejection *</label>
+              <label className="text-sm font-semibold text-text-main">Reason for Rejection *</label>
               <textarea 
-                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                className="w-full p-3 border border-divider rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-background text-text-main text-sm resize-none"
                 rows="4"
                 placeholder="Explain why this property is being rejected..."
                 value={actionModal.reason}
                 onChange={(e) => setActionModal({ ...actionModal, reason: e.target.value })}
-              ></textarea>
+              />
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-3 pt-2">
             <button 
               onClick={() => setActionModal({ isOpen: false, type: null, reason: '' })}
-              className="px-6 py-2.5 text-slate-600 font-semibold hover:bg-slate-50 rounded-xl"
+              className="px-6 py-2.5 text-text-muted font-semibold hover:bg-background rounded-xl transition-colors border border-divider"
             >
               Cancel
             </button>
             <button 
               onClick={actionModal.type === 'approve' ? handleApprove : handleReject}
-              className={`px-6 py-2.5 text-white font-bold rounded-xl shadow-md ${actionModal.type === 'approve' ? 'bg-primary hover:bg-primary-hover' : 'bg-red-500 hover:bg-red-600'}`}
+              className={`px-6 py-2.5 text-white font-bold rounded-xl shadow-md transition-all ${actionModal.type === 'approve' ? 'bg-primary hover:brightness-110' : 'bg-red-500 hover:bg-red-600'}`}
             >
               Confirm {actionModal.type === 'approve' ? 'Approval' : 'Rejection'}
             </button>

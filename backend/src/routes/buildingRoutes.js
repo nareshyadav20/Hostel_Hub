@@ -27,7 +27,7 @@ router.post('/bulk', buildingController.bulkCreateBuildings);
 router.patch('/:id', upload.array('images', 10), buildingController.updateBuilding);
 router.put('/:id', upload.array('images', 10), buildingController.updateBuilding);
 router.delete('/:id', buildingController.deleteBuilding);
-
+router.patch('/:id/approve', buildingController.approveBuilding);
 router.post('/upload', upload.array('photos', 50), buildingController.uploadPhotos);
 
 module.exports = router;

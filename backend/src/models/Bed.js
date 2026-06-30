@@ -57,4 +57,49 @@ const bedSchema = new mongoose.Schema({
   realTimeEnabled: { type: Boolean, default: true }
 }, { timestamps: true, collection: 'owner_beds' });
 
+bedSchema.index({ room: 1, status: 1 });
+
+async function updateBuildingBedCounts(roomId) {
+  if (!roomId) return;
+  const room = await mongoose.model('Room').findById(roomId).populate('floor');
+  if (!room || !room.floor || !room.floor.building) return;
+  
+  const buildingId = room.floor.building;
+  
+  // Recalculate occupied beds for the whole building asynchronously on write
+  const occupiedCount = await mongoose.model('Floor').aggregate([
+    { $match: { building: buildingId } },
+    { $lookup: { from: 'rooms', localField: '_id', foreignField: 'floor', as: 'rooms' } },
+    { $unwind: '$rooms' },
+    { $lookup: { from: 'owner_beds', localField: 'rooms._id', foreignField: 'room', as: 'beds' } },
+    { $unwind: '$beds' },
+    { $match: { 'beds.status': { $in: ['OCCUPIED', 'Occupied'] } } },
+    { $count: 'occupied' }
+  ]);
+  
+  const totalOccupied = occupiedCount.length > 0 ? occupiedCount[0].occupied : 0;
+  
+  await mongoose.model('Building').findByIdAndUpdate(buildingId, { occupiedBeds: totalOccupied });
+}
+
+bedSchema.post('save', function(doc, next) {
+  updateBuildingBedCounts(doc.room).then(() => next()).catch(err => next(err));
+});
+
+bedSchema.post('findOneAndDelete', function(doc, next) {
+  if (doc) {
+    updateBuildingBedCounts(doc.room).then(() => next()).catch(err => next(err));
+  } else {
+    next();
+  }
+});
+
+bedSchema.post('findOneAndUpdate', function(doc, next) {
+  if (doc) {
+    updateBuildingBedCounts(doc.room).then(() => next()).catch(err => next(err));
+  } else {
+    next();
+  }
+});
+
 module.exports = mongoose.model('Bed', bedSchema);

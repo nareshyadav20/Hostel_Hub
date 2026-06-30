@@ -255,9 +255,33 @@ const Hostels = () => {
       : `₹${(totalRevAmount / 1000).toFixed(0)}K`;
 
    const portfolioStats = [
-      { label: 'Total Properties', value: totalProperties.toString(), change: `+${totalProperties}`, icon: <Building2 />, color: 'primary' },
-      { label: 'Portfolio Occupancy', value: `${avgOccupancy}%`, change: '+4.2%', icon: <Users />, color: 'success' },
-      { label: 'Monthly Yield', value: totalRevStr, change: '+12%', icon: <TrendingUp />, color: 'indigo' },
+      {
+         label: 'Total Properties',
+         value: totalProperties.toString(),
+         change: `+${totalProperties}`,
+         icon: Building2,
+         gradient: 'from-emerald-500/20 to-emerald-600/5',
+         iconBg: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+         badgeColor: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+      },
+      {
+         label: 'Portfolio Occupancy',
+         value: `${avgOccupancy}%`,
+         change: '+4.2%',
+         icon: Users,
+         gradient: 'from-sky-500/20 to-sky-600/5',
+         iconBg: 'bg-sky-500/10 text-sky-500 border-sky-500/20',
+         badgeColor: 'text-sky-400 bg-sky-400/10 border-sky-400/20',
+      },
+      {
+         label: 'Monthly Yield',
+         value: totalRevStr,
+         change: '+12%',
+         icon: TrendingUp,
+         gradient: 'from-violet-500/20 to-violet-600/5',
+         iconBg: 'bg-violet-500/10 text-violet-500 border-violet-500/20',
+         badgeColor: 'text-violet-400 bg-violet-400/10 border-violet-400/20',
+      },
    ];
 
    const steps = [
@@ -655,20 +679,36 @@ const Hostels = () => {
 
          {/* --- PORTFOLIO STATS --- */}
          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {portfolioStats.map((stat, i) => (
-               <div key={i} className="card-classic p-6 flex items-center gap-5 group border-none glass-effect">
-                  <div className={`w-14 h-14 rounded-2xl bg-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/10 text-${stat.color === 'primary' ? 'primary' : stat.color + '-500'} flex items-center justify-center border border-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/10 group-hover:shadow-glow transition-all duration-300`}>
-                     {React.cloneElement(stat.icon, { size: 24, strokeWidth: 2.5 })}
-                  </div>
-                  <div>
-                     <p className="text-premium-label mb-1">{stat.label}</p>
-                     <div className="flex items-center gap-3">
-                        <h3 className="text-2xl font-black text-text-primary tracking-tighter italic">{stat.value}</h3>
-                        <span className="text-[10px] font-black text-success bg-success/10 px-2 py-0.5 rounded-lg border border-success/20">{stat.change}</span>
+            {portfolioStats.map((stat, i) => {
+               const Icon = stat.icon;
+               return (
+                  <motion.div
+                     key={i}
+                     initial={{ opacity: 0, y: 16 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: i * 0.08 }}
+                     className="relative bg-surface border border-divider rounded-2xl p-5 overflow-hidden group hover:shadow-premium hover:-translate-y-0.5 transition-all duration-300"
+                  >
+                     <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-100 pointer-events-none rounded-2xl`} />
+
+                     <div className="relative flex items-start justify-between mb-4">
+                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${stat.iconBg} shrink-0`}>
+                           <Icon size={20} />
+                        </div>
+                        <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${stat.badgeColor}`}>
+                           {stat.change}
+                        </span>
                      </div>
-                  </div>
-               </div>
-            ))}
+
+                     <div className="relative mb-1">
+                        <h3 className="text-3xl font-black text-text-main tracking-tight leading-none">
+                           {stat.value}
+                        </h3>
+                     </div>
+                     <p className="relative text-[11px] font-black text-text-main">{stat.label}</p>
+                  </motion.div>
+               );
+            })}
          </div>
 
          {/* --- FILTERS & SEARCH --- */}
@@ -764,25 +804,25 @@ const Hostels = () => {
                         </div>
                         <div className="text-right shrink-0">
                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Performance</p>
-                           <div className="flex items-center gap-1 text-success font-black text-sm italic">
-                              <TrendingUp size={14} /> 94%
+                           <div className={`flex items-center gap-1 font-black text-sm italic ${h.occupancy >= 70 ? 'text-success' : h.occupancy >= 40 ? 'text-warning' : 'text-danger'}`}>
+                              <TrendingUp size={14} /> {h.occupancy}%
                            </div>
                         </div>
                      </div>
 
                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-divider/50">
+                        <div className="p-4 rounded-xl bg-background border border-divider/50">
                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1 leading-none">Occupancy</p>
                            <div className="flex items-baseline gap-1 mt-1">
                               <span className="text-xl font-black text-text-primary italic">{h.occupancy}%</span>
                               <span className="text-[10px] font-bold text-text-muted">/ {h.capacity}</span>
                            </div>
                         </div>
-                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-divider/50">
+                        <div className="p-4 rounded-xl bg-background border border-divider/50">
                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1 leading-none">Monthly Rev</p>
                            <div className="flex items-baseline gap-1 mt-1">
                               <span className="text-xl font-black text-text-primary italic">₹{h.revenue}</span>
-                              <span className="text-[9px] font-black text-success uppercase">Up</span>
+                              {parseInt(h.revenue) > 0 && <span className="text-[9px] font-black text-success uppercase">Up</span>}
                            </div>
                         </div>
                      </div>
@@ -795,7 +835,7 @@ const Hostels = () => {
                               </div>
                            ))}
                         </div>
-                        <span className="text-[10px] font-black text-text-muted uppercase tracking-widest italic opacity-50">#SN-P0{h.id}xAsset</span>
+                        <span className="text-[10px] font-black text-text-muted uppercase tracking-widest italic opacity-50">#{h.id.toString().slice(-8).toUpperCase()}</span>
                      </div>
                   </div>
                </motion.div>

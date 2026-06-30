@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, AlertCircle, MapPin, Edit2, ShieldCheck, Shield, Heart, Zap, Shirt, ClipboardList, Dumbbell, Car, BookOpen, Utensils, Star, CheckCircle, X, UsersRound, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Trash2, AlertCircle, MapPin, Edit2, ShieldCheck, Shield, Heart, Zap, Shirt, ClipboardList, Dumbbell, Car, BookOpen, Utensils, Star, CheckCircle, X, UsersRound, ChevronLeft, ChevronRight, Search, Clock } from 'lucide-react';
 import { api } from '../api';
 import { createPortal } from 'react-dom';
 
@@ -18,8 +18,9 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
   const [deleteError, setDeleteError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const isPending = building.status === 'Pending Approval' || building.status === 'Pending';
-  const isRejected = building.status === 'Rejected';
+  const isPending = building.status === 'Pending Approval' || building.status === 'Pending' || building.approvalStatus === 'pending';
+  const isRejected = building.status === 'Rejected' || building.approvalStatus === 'rejected';
+  const isApproved = building.approvalStatus === 'approved' && building.isApproved;
 
   const displayAmenities = useMemo(() => {
     let amens = building.amenities || [];
@@ -135,6 +136,21 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
           <div style={{ position: 'absolute', bottom: '1.25rem', left: '1.25rem', right: '1.25rem', zIndex: 5 }}>
             <h3 style={{ fontSize: '1.8rem', fontWeight: '950', color: "var(--text-on-primary)", textShadow: '0 2px 8px rgba(0,0,0,0.4)', margin: 0, letterSpacing: '-0.02em' }}>{building.buildingName || building.name}</h3>
           </div>
+
+          {/* Pending Approval badge on image */}
+          {isPending && (
+            <div style={{
+              position: 'absolute', top: '1rem', left: '1rem', zIndex: 15,
+              background: 'rgba(245, 158, 11, 0.95)', backdropFilter: 'blur(8px)',
+              borderRadius: '12px', padding: '0.4rem 0.8rem',
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)',
+              animation: 'pulse 2s infinite'
+            }}>
+              <Clock size={13} color="#FFFFFF" />
+              <span style={{ fontSize: '0.72rem', fontWeight: '900', color: '#FFFFFF', letterSpacing: '0.04em' }}>PENDING APPROVAL</span>
+            </div>
+          )}
         </div>
 
         <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -249,23 +265,30 @@ const BuildingCard = ({ building, onNavigate, onRefresh, onImageClick, onResubmi
 
           <div style={{ marginTop: 'auto', display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
             {isPending ? (
-              <button
-                disabled
-                style={{
-                  flex: 1,
-                  padding: '0.9rem',
-                  borderRadius: '16px',
-                  fontSize: '0.9rem',
-                  fontWeight: '900',
-                  background: '#E2E8F0',
-                  color: '#94A3B8',
-                  border: 'none',
-                  cursor: 'not-allowed',
-                  transition: 'all 0.2s'
-                }}
-              >
-                Pending Approval
-              </button>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <button
+                  disabled
+                  style={{
+                    flex: 1,
+                    padding: '0.9rem',
+                    borderRadius: '16px',
+                    fontSize: '0.9rem',
+                    fontWeight: '900',
+                    background: 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
+                    color: '#92400E',
+                    border: '2px solid #FCD34D',
+                    cursor: 'not-allowed',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <Clock size={16} />
+                  Pending Admin Approval
+                </button>
+                <p style={{ margin: 0, fontSize: '0.72rem', color: '#92400E', textAlign: 'center', fontWeight: '600' }}>
+                  You can add floors &amp; rooms after approval
+                </p>
+              </div>
             ) : isRejected ? (
               <button
                 style={{

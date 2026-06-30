@@ -12,6 +12,9 @@ const createFloor = async (req, res) => {
     const { floorNumber, buildingId, description, images } = req.body;
     const building = await Building.findOne({ _id: buildingId, owner: req.user.id });
     if (!building) return res.status(404).json({ error: 'Building not found or unauthorized' });
+    if (building.approvalStatus !== 'approved' && building.status !== 'Active') {
+      return res.status(403).json({ error: 'Cannot add floors to an unapproved property. Please wait for admin approval.' });
+    }
     
     const floor = await Floor.create({
       floorNumber,
