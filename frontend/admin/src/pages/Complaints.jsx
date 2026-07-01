@@ -271,11 +271,11 @@ const Complaints = () => {
         </div>
       ) : (
         /* --- COMPLAINT MANIFEST (TABULAR) --- */
-        <div className="card-classic overflow-hidden border border-divider/50 shadow-premium bg-white/50 dark:bg-card/50">
+        <div className="card-classic overflow-hidden border border-divider/50 shadow-premium bg-surface">
            <div className="overflow-x-auto scrollbar-hide">
               <table className="w-full text-left border-collapse whitespace-nowrap">
                  <thead>
-                    <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-divider sticky top-0 z-20 backdrop-blur-md">
+                    <tr className="bg-background border-b border-divider sticky top-0 z-20 backdrop-blur-md">
                        <th className="py-5 px-8 w-12">
                           <input 
                             type="checkbox" 
@@ -299,7 +299,7 @@ const Complaints = () => {
                       <React.Fragment key={c._id}>
                          <tr 
                            onClick={() => setExpandedId(expandedId === c._id ? null : c._id)}
-                           className={`group hover:bg-slate-50/50 dark:hover:bg-white/1 transition-all cursor-pointer ${expandedId === c._id ? 'bg-primary/5' : ''}`}
+                           className={`group hover:bg-background transition-all cursor-pointer ${expandedId === c._id ? 'bg-primary/5' : ''}`}
                          >
                             <td className="py-5 px-8" onClick={(e) => e.stopPropagation()}>
                                <input 
@@ -446,12 +446,8 @@ const Complaints = () => {
       )}
 
       {/* --- PAGINATION --- */}
-      <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-6 p-6 card-classic bg-slate-50/50 dark:bg-white/2">
+      <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-6 p-6 card-classic bg-surface">
          <div className="flex items-center gap-4">
-            <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">
-               Showing {filteredComplaints.length === 0 ? 0 : currentPage * itemsPerPage + 1} to {Math.min((currentPage + 1) * itemsPerPage, filteredComplaints.length)} of {filteredComplaints.length} reports
-            </span>
-            <div className="h-4 w-px bg-border" />
             <div className="flex items-center gap-2 bg-background border border-divider rounded-xl px-3 py-1.5 shadow-subtle">
                <FileText size={14} className="text-primary" />
                <button className="text-[10px] font-black uppercase tracking-widest text-text-secondary" onClick={fetchComplaintsData}>Refresh Dashboard</button>

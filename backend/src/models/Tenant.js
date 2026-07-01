@@ -60,4 +60,32 @@ const tenantSchema = new mongoose.Schema({
 
 }, { timestamps: true, collection: 'tenants' });
 
+tenantSchema.index({ buildingId: 1, status: 1 });
+
+async function updateBuildingActiveTenants(buildingId) {
+  if (!buildingId) return;
+  const activeTenantsCount = await mongoose.model('Tenant').countDocuments({ buildingId, status: 'ACTIVE' });
+  await mongoose.model('Building').findByIdAndUpdate(buildingId, { activeTenants: activeTenantsCount });
+}
+
+tenantSchema.post('save', function(doc, next) {
+  updateBuildingActiveTenants(doc.buildingId).then(() => next()).catch(err => next(err));
+});
+
+tenantSchema.post('findOneAndDelete', function(doc, next) {
+  if (doc) {
+    updateBuildingActiveTenants(doc.buildingId).then(() => next()).catch(err => next(err));
+  } else {
+    next();
+  }
+});
+
+tenantSchema.post('findOneAndUpdate', function(doc, next) {
+  if (doc) {
+    updateBuildingActiveTenants(doc.buildingId).then(() => next()).catch(err => next(err));
+  } else {
+    next();
+  }
+});
+
 module.exports = mongoose.models.Tenant || mongoose.model('Tenant', tenantSchema);

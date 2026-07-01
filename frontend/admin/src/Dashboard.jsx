@@ -86,14 +86,14 @@ const Dashboard = () => {
   const staffEfficiency = staffData?.efficiencyScore || 100;
 
   const stats = [
-    { label: 'Total Hostels', value: totalHostels.toString(), trend: '+12%', icon: <Building2 className="text-primary" />, color: 'primary' },
-    { label: 'Platform Owners', value: totalOwners.toString(), trend: '+5%', icon: <UserCheck className="text-success" />, color: 'success' },
-    { label: 'Total Tenants', value: totalTenants.toString(), trend: '+18%', icon: <Users className="text-accent" />, color: 'accent' },
-    { label: 'Live Occupancy', value: `${liveOccupancy}%`, trend: '+4.2%', icon: <Activity className="text-primary" />, color: 'primary' },
-    { label: 'Collected Revenue', value: `₹${collectedRevenue.toLocaleString('en-IN')}`, trend: '+15%', icon: <CreditCard className="text-success" />, color: 'success' },
-    { label: 'Active Plans', value: plans.length.toString(), trend: '+4%', icon: <Package className="text-accent" />, color: 'accent' },
-    { label: 'Pending Dues', value: `₹${pendingPayments.toLocaleString('en-IN')}`, trend: '-2%', icon: <TrendingDown className="text-danger" />, isNegative: true, color: 'danger' },
-    { label: 'Platform Staff', value: totalStaff.toString(), trend: '+8%', icon: <Users className="text-primary" />, color: 'primary' },
+    { label: 'Total Hostels', value: totalHostels.toString(), icon: <Building2 className="text-primary" />, color: 'primary' },
+    { label: 'Platform Owners', value: totalOwners.toString(), icon: <UserCheck className="text-success" />, color: 'success' },
+    { label: 'Total Tenants', value: totalTenants.toString(), icon: <Users className="text-accent" />, color: 'accent' },
+    { label: 'Live Occupancy', value: `${liveOccupancy}%`, icon: <Activity className="text-primary" />, color: 'primary' },
+    { label: 'Collected Revenue', value: `₹${collectedRevenue.toLocaleString('en-IN')}`, icon: <CreditCard className="text-success" />, color: 'success' },
+    { label: 'Active Plans', value: plans.length.toString(), icon: <Package className="text-accent" />, color: 'accent' },
+    { label: 'Pending Dues', value: `₹${pendingPayments.toLocaleString('en-IN')}`, isNegative: true, icon: <TrendingDown className="text-danger" />, color: 'danger' },
+    { label: 'Platform Staff', value: totalStaff.toString(), icon: <Users className="text-primary" />, color: 'primary' },
   ];
 
   // Dynamic Chart Data
@@ -445,28 +445,28 @@ const Dashboard = () => {
             <p className="text-xs text-text-muted mt-1 mb-6">Staff attendance, tasks & efficiency scorecard</p>
             
             <div className="space-y-6">
-              <div className="flex justify-between items-center bg-indigo-50/50 p-4 rounded-2xl border border-divider">
+              <div className="flex justify-between items-center bg-primary/5 p-4 rounded-2xl border border-primary/10">
                 <div>
                   <p className="text-xs font-semibold text-text-muted">Staff Efficiency</p>
                   <p className="text-2xl font-bold text-primary mt-1">{staffEfficiency}%</p>
                 </div>
-                <div className="w-12 h-12 bg-indigo-100 text-indigo-700 rounded-xl flex items-center justify-center font-bold text-lg">
+                <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold text-lg">
                   ⚡
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
-                <div className="bg-emerald-50/30 p-3 rounded-2xl border border-emerald-100/50 text-center">
-                  <p className="text-[10px] font-bold text-emerald-700">ASSIGNED</p>
-                  <p className="text-lg font-bold text-emerald-800 mt-1">{staffData?.tasksAssigned || 0}</p>
+                <div className="bg-emerald-500/10 p-3 rounded-2xl border border-emerald-500/20 text-center">
+                  <p className="text-[10px] font-bold text-emerald-500 dark:text-emerald-400">ASSIGNED</p>
+                  <p className="text-lg font-bold text-emerald-600 dark:text-emerald-300 mt-1">{staffData?.tasksAssigned || 0}</p>
                 </div>
-                <div className="bg-blue-50/30 p-3 rounded-2xl border border-blue-100/50 text-center">
-                  <p className="text-[10px] font-bold text-blue-700">COMPLETED</p>
-                  <p className="text-lg font-bold text-blue-800 mt-1">{staffData?.tasksCompleted || 0}</p>
+                <div className="bg-sky-500/10 p-3 rounded-2xl border border-sky-500/20 text-center">
+                  <p className="text-[10px] font-bold text-sky-500 dark:text-sky-400">COMPLETED</p>
+                  <p className="text-lg font-bold text-sky-600 dark:text-sky-300 mt-1">{staffData?.tasksCompleted || 0}</p>
                 </div>
-                <div className="bg-amber-50/30 p-3 rounded-2xl border border-amber-100/50 text-center">
-                  <p className="text-[10px] font-bold text-amber-700">PENDING</p>
-                  <p className="text-lg font-bold text-amber-800 mt-1">{staffData?.tasksPending || 0}</p>
+                <div className="bg-amber-500/10 p-3 rounded-2xl border border-amber-500/20 text-center">
+                  <p className="text-[10px] font-bold text-amber-500 dark:text-amber-400">PENDING</p>
+                  <p className="text-lg font-bold text-amber-600 dark:text-amber-300 mt-1">{staffData?.tasksPending || 0}</p>
                 </div>
               </div>
             </div>
@@ -530,7 +530,7 @@ const Dashboard = () => {
 
             {/* SECTION: RECENT ACTIVITY TABLE */}
       <div id="registrations-table" className="bg-surface rounded-xl border border-divider shadow-sm overflow-hidden flex flex-col">
-        <div className="p-5 border-b border-divider flex items-center justify-between bg-gray-50/50">
+        <div className="p-5 border-b border-divider flex items-center justify-between bg-surface">
           <div>
             <h2 className="text-base font-bold text-text-main">Property Directory</h2>
             <p className="text-xs text-text-muted mt-0.5">Manage all registered facilities across the platform</p>
@@ -543,14 +543,14 @@ const Dashboard = () => {
                 placeholder="Search facilities..." 
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                className="pl-9 pr-4 py-1.5 rounded-lg border border-divider text-xs focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all w-60 bg-white" 
+                className="pl-9 pr-4 py-1.5 rounded-lg border border-divider text-xs focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all w-60 bg-background text-text-main" 
               />
             </div>
             
             <div className="relative">
               <button 
                 onClick={() => setShowPropertyFilters(!showPropertyFilters)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border border-divider bg-white hover:bg-gray-50 text-xs font-semibold text-text-main transition-colors ${showPropertyFilters ? 'border-primary bg-indigo-50/20' : ''}`}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border border-divider bg-background hover:bg-surface text-xs font-semibold text-text-main transition-colors ${showPropertyFilters ? 'border-primary bg-primary/10' : ''}`}
               >
                 <Filter size={14} /> Filter
               </button>
@@ -561,7 +561,7 @@ const Dashboard = () => {
                     <select 
                       value={selectedCategory} 
                       onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
-                      className="w-full p-2 border border-divider rounded-xl font-bold bg-white focus:outline-none"
+                      className="w-full p-2 border border-divider rounded-xl font-bold bg-background text-text-main focus:outline-none"
                     >
                       <option value="All">All Categories</option>
                       <option value="Standard">Standard</option>
@@ -575,7 +575,7 @@ const Dashboard = () => {
                     <select 
                       value={selectedGender} 
                       onChange={(e) => { setSelectedGender(e.target.value); setCurrentPage(1); }}
-                      className="w-full p-2 border border-divider rounded-xl font-bold bg-white focus:outline-none"
+                      className="w-full p-2 border border-divider rounded-xl font-bold bg-background text-text-main focus:outline-none"
                     >
                       <option value="All">All Genders</option>
                       <option value="Boys">Boys</option>
@@ -588,7 +588,7 @@ const Dashboard = () => {
                     <select 
                       value={selectedStatus} 
                       onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
-                      className="w-full p-2 border border-divider rounded-xl font-bold bg-white focus:outline-none"
+                      className="w-full p-2 border border-divider rounded-xl font-bold bg-background text-text-main focus:outline-none"
                     >
                       <option value="All">All Statuses</option>
                       <option value="Active">Active</option>
@@ -598,7 +598,7 @@ const Dashboard = () => {
                   </div>
                   <button 
                     onClick={() => { setSelectedCategory('All'); setSelectedGender('All'); setSelectedStatus('All'); setSearchQuery(''); setCurrentPage(1); setShowPropertyFilters(false); }}
-                    className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-text-main font-bold rounded-xl transition-all"
+                    className="w-full py-2 bg-background hover:brightness-95 dark:hover:brightness-110 text-text-main font-bold rounded-xl transition-all"
                   >
                     Clear All Filters
                   </button>
@@ -608,7 +608,7 @@ const Dashboard = () => {
 
             <button 
               onClick={handleExportPropertiesCSV}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-white hover:bg-indigo-700 text-xs font-semibold transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-white hover:brightness-110 text-xs font-semibold transition-colors"
             >
               <Download size={14} /> Export CSV
             </button>
@@ -622,29 +622,29 @@ const Dashboard = () => {
             </div>
           ) : filteredBuildings.length === 0 ? (
             <div className="p-16 text-center text-sm text-text-muted font-medium">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Building2 className="text-gray-400" size={24} />
+              <div className="w-12 h-12 bg-background rounded-full flex items-center justify-center mx-auto mb-3">
+                <Building2 className="text-text-muted opacity-50" size={24} />
               </div>
               No matching properties found.
             </div>
           ) : (
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-white border-b border-divider">
-                  <th className="px-6 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider sticky top-0 bg-white z-10">Facility Name</th>
-                  <th className="px-6 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider sticky top-0 bg-white z-10">Location</th>
-                  <th className="px-6 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider sticky top-0 bg-white z-10">Subscription</th>
-                  <th className="px-6 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider sticky top-0 bg-white z-10">Type</th>
-                  <th className="px-6 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider sticky top-0 bg-white z-10">Status</th>
-                  <th className="px-6 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider sticky top-0 bg-white z-10 text-right">Actions</th>
+                <tr className="bg-surface border-b border-divider">
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider sticky top-0 bg-surface z-10">Facility Name</th>
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider sticky top-0 bg-surface z-10">Location</th>
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider sticky top-0 bg-surface z-10">Subscription</th>
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider sticky top-0 bg-surface z-10">Type</th>
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider sticky top-0 bg-surface z-10">Status</th>
+                  <th className="px-6 py-3 text-[10px] font-bold text-text-muted uppercase tracking-wider sticky top-0 bg-surface z-10 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-white">
+              <tbody className="divide-y divide-border bg-surface">
                 {currentBuildings.map((row, i) => (
-                  <tr key={row._id} className="hover:bg-slate-50/80 transition-colors group">
+                  <tr key={row._id} className="hover:bg-background transition-colors group">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded border border-divider bg-slate-50 flex items-center justify-center text-xs font-bold text-slate-700 shadow-sm">
+                        <div className="w-8 h-8 rounded border border-divider bg-background flex items-center justify-center text-xs font-bold text-text-main shadow-sm">
                           {row.name.charAt(0)}
                         </div>
                         <div>
@@ -658,7 +658,7 @@ const Dashboard = () => {
                       <p className="text-xs text-text-muted mt-0.5">Primary Node</p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${row.category === 'Luxury' ? 'bg-slate-900 text-white border-slate-900' : row.category === 'Professional' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${row.category === 'Luxury' ? 'bg-primary/20 text-primary border-primary/20' : row.category === 'Professional' ? 'bg-sky-500/10 text-sky-500 border-sky-500/20' : 'bg-background text-text-muted border-divider'}`}>
                         {row.category || 'Standard'}
                       </span>
                     </td>
@@ -666,10 +666,10 @@ const Dashboard = () => {
                       <span className="text-sm text-text-main font-medium">{row.genderType || 'Mixed'}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-semibold ${
-                        row.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                        row.status === 'Draft' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                        'bg-slate-50 text-slate-700 border border-slate-200'
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-semibold border ${
+                        row.status === 'Active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                        row.status === 'Draft' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                        'bg-background text-text-muted border-divider'
                       }`}>
                         <div className={`w-1.5 h-1.5 rounded-full ${
                           row.status === 'Active' ? 'bg-emerald-500' :
@@ -679,7 +679,7 @@ const Dashboard = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button className="p-1.5 text-text-muted hover:text-primary hover:bg-indigo-50 rounded-md transition-colors opacity-0 group-hover:opacity-100">
+                      <button className="p-1.5 text-text-muted hover:text-primary hover:bg-background rounded-md transition-colors opacity-0 group-hover:opacity-100">
                         <MoreVertical size={16} />
                       </button>
                     </td>
@@ -689,7 +689,7 @@ const Dashboard = () => {
             </table>
           )}
         </div>
-        <div className="p-4 bg-white border-t border-divider flex flex-wrap items-center justify-between gap-2">
+        <div className="p-4 bg-surface border-t border-divider flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs text-text-muted font-medium">
             Showing <span className="font-semibold text-text-main">{filteredBuildings.length === 0 ? 0 : indexOfFirstProperty + 1}</span> to <span className="font-semibold text-text-main">{Math.min(indexOfLastProperty, filteredBuildings.length)}</span> of <span className="font-semibold text-text-main">{filteredBuildings.length}</span> entries
           </p>
@@ -698,7 +698,7 @@ const Dashboard = () => {
             <button 
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 rounded border border-divider text-xs font-semibold text-text-muted hover:bg-gray-50 disabled:opacity-50"
+              className="px-3 py-1.5 rounded border border-divider text-xs font-semibold text-text-muted hover:bg-background disabled:opacity-50"
             >
               Prev
             </button>
@@ -706,7 +706,7 @@ const Dashboard = () => {
               <button 
                 key={pageIdx + 1}
                 onClick={() => handlePageChange(pageIdx + 1)}
-                className={`px-3 py-1.5 rounded text-xs font-semibold transition-all ${currentPage === pageIdx + 1 ? 'bg-primary text-white' : 'border border-divider text-text-muted hover:bg-gray-50'}`}
+                className={`px-3 py-1.5 rounded text-xs font-semibold transition-all ${currentPage === pageIdx + 1 ? 'bg-primary text-white' : 'border border-divider text-text-muted hover:bg-background'}`}
               >
                 {pageIdx + 1}
               </button>
@@ -714,7 +714,7 @@ const Dashboard = () => {
             <button 
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 rounded border border-divider text-xs font-semibold text-text-muted hover:bg-gray-50 disabled:opacity-50"
+              className="px-3 py-1.5 rounded border border-divider text-xs font-semibold text-text-muted hover:bg-background disabled:opacity-50"
             >
               Next
             </button>

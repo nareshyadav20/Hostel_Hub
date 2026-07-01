@@ -291,7 +291,7 @@ const Staff = () => {
          <div className="overflow-x-auto scrollbar-hide">
             <table className="w-full text-left border-collapse whitespace-nowrap">
                <thead>
-                  <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-divider sticky top-0 z-20 backdrop-blur-md">
+                  <tr className="bg-background border-b border-divider sticky top-0 z-20 backdrop-blur-md">
                      <th className="py-5 px-8 w-12">
                         <input 
                           type="checkbox" 
@@ -323,7 +323,7 @@ const Staff = () => {
                     <React.Fragment key={s.id}>
                        <tr 
                          onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
-                         className={`group hover:bg-slate-50/50 dark:hover:bg-white/1 transition-all cursor-pointer ${expandedId === s.id ? 'bg-primary/5' : ''}`}
+                         className={`group hover:bg-background transition-all cursor-pointer ${expandedId === s.id ? 'bg-primary/5' : ''}`}
                        >
                           <td className="py-5 px-8" onClick={(e) => e.stopPropagation()}>
                              <input 
@@ -342,7 +342,7 @@ const Staff = () => {
                                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-xs border border-primary/20">
                                       {s.name.split(' ').map(n => n[0]).join('')}
                                    </div>
-                                   <div className={`absolute -right-1 -bottom-1 w-3 h-3 rounded-full border-2 border-background ${s.status === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                                   <div className={`absolute -right-1 -bottom-1 w-3 h-3 rounded-full border-2 border-surface ${s.status === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
                                 </div>
                                 <div>
                                    <p className="text-[13px] font-black text-text-primary uppercase tracking-tight">{s.name}</p>
@@ -370,7 +370,7 @@ const Staff = () => {
                                 <div className="w-16 h-1 bg-border rounded-full overflow-hidden">
                                    <motion.div initial={{ width: 0 }} animate={{ width: `${(s.rating / 5) * 100}%` }} transition={{ duration: 1 }} className="h-full bg-warning" />
                                 </div>
-                             </div>
+                              </div>
                           </td>
                           <td className="py-5 px-4">
                              <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm ${
@@ -395,7 +395,7 @@ const Staff = () => {
                                       initial={{ height: 0, opacity: 0 }}
                                       animate={{ height: 'auto', opacity: 1 }}
                                       exit={{ height: 0, opacity: 0 }}
-                                      className="bg-slate-50/30 dark:bg-white/[0.01] overflow-hidden"
+                                      className="bg-background/40 overflow-hidden"
                                    >
                                       <div className="p-10 grid grid-cols-1 lg:grid-cols-3 gap-12 border-b border-divider/50">
                                          {/* Staff Intelligence */}

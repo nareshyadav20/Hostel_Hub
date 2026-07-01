@@ -127,16 +127,11 @@ const Layout = ({ children }) => {
             <div className="flex-1 max-w-md ml-auto">
               <button 
                 onClick={() => setIsCommandOpen(true)}
-                className="w-full flex items-center justify-between bg-gray-50/50 hover:bg-gray-100 border border-divider rounded-xl py-2 pl-4 pr-3 text-sm text-text-muted transition-all group"
+                className="w-full flex items-center justify-between bg-surface hover:bg-background border border-divider rounded-xl py-2 pl-4 pr-3 text-sm text-text-muted transition-all group"
               >
                 <div className="flex items-center gap-3">
                   <Search className="text-text-muted group-hover:text-primary transition-colors" size={16} />
                   <span>Search commands...</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 bg-white border border-divider rounded text-[10px] font-bold text-text-muted shadow-sm">
-                    <span className="text-xs">⌘</span>K
-                  </kbd>
                 </div>
               </button>
             </div>
@@ -146,14 +141,14 @@ const Layout = ({ children }) => {
           <div className="flex items-center gap-4">
             <button 
               onClick={toggle}
-              className="p-2.5 text-text-muted hover:text-primary hover:bg-gray-50 rounded-xl transition-all"
+              className="p-2.5 text-text-muted hover:text-primary hover:bg-background rounded-xl transition-all"
             >
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
             <button 
               onClick={() => navigate('/notifications')}
-              className="p-2.5 text-text-muted hover:text-primary hover:bg-gray-50 rounded-xl transition-all relative border-none bg-transparent cursor-pointer active:scale-95"
+              className="p-2.5 text-text-muted hover:text-primary hover:bg-background rounded-xl transition-all relative border-none bg-transparent cursor-pointer active:scale-95"
             >
               <Bell size={20} />
               {unreadCount > 0 && (
@@ -168,7 +163,7 @@ const Layout = ({ children }) => {
             <div className="relative">
               <div 
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center gap-3 cursor-pointer group p-1 hover:bg-gray-50 rounded-xl transition-all"
+                className="flex items-center gap-3 cursor-pointer group p-1 hover:bg-background rounded-xl transition-all"
               >
                 <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs border border-primary/20 overflow-hidden">
                   {profile?.avatar ? (

@@ -90,4 +90,6 @@ roomSchema.virtual('virtualBedsAlias', {
   foreignField: 'roomId'
 });
 
+roomSchema.index({ floor: 1 });
+
 module.exports = mongoose.model('Room', roomSchema);

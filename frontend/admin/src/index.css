@@ -227,6 +227,7 @@ body, html {
   }
 }
 
+
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out forwards;
 }
@@ -251,3 +252,110 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield; /* Firefox */
 }
+
+/* =====================================================
+   DARK MODE — Global overrides for components that
+   use standard Tailwind gray utilities instead of
+   CSS-variable-based classes like bg-surface/bg-background.
+   This makes dark mode apply everywhere automatically.
+   ===================================================== */
+.dark body {
+  background-color: var(--background);
+  color: var(--text-main);
+}
+
+/* Card / panel surfaces */
+.dark .bg-white {
+  background-color: var(--surface) !important;
+}
+.dark .bg-gray-50,
+.dark .bg-slate-50 {
+  background-color: var(--bg-tertiary, #1e293b) !important;
+}
+.dark .bg-gray-100,
+.dark .bg-slate-100 {
+  background-color: #1e293b !important;
+}
+.dark .bg-gray-200,
+.dark .bg-slate-200 {
+  background-color: #334155 !important;
+}
+
+/* Text */
+.dark .text-gray-900,
+.dark .text-slate-900,
+.dark .text-gray-800,
+.dark .text-slate-800 {
+  color: var(--text-main) !important;
+}
+.dark .text-gray-700,
+.dark .text-slate-700,
+.dark .text-gray-600,
+.dark .text-slate-600 {
+  color: var(--text-secondary, #94a3b8) !important;
+}
+.dark .text-gray-500,
+.dark .text-slate-500,
+.dark .text-gray-400,
+.dark .text-slate-400 {
+  color: var(--text-muted) !important;
+}
+
+/* Borders */
+.dark .border-gray-200,
+.dark .border-slate-200,
+.dark .border-gray-100,
+.dark .border-slate-100 {
+  border-color: var(--border) !important;
+}
+
+/* Hover states */
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-slate-50:hover {
+  background-color: var(--bg-tertiary, #1e293b) !important;
+}
+.dark .hover\:bg-gray-100:hover,
+.dark .hover\:bg-slate-100:hover {
+  background-color: #1e293b !important;
+}
+
+/* Inputs & form controls */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: var(--bg-tertiary, #1e293b);
+  color: var(--text-main);
+  border-color: var(--border);
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Stat card icon backgrounds */
+.dark .bg-indigo-50 { background-color: rgba(99, 102, 241, 0.15) !important; }
+.dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.15) !important; }
+.dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.15) !important; }
+.dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.15) !important; }
+.dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.15) !important; }
+
+/* Revenue filter dropdown */
+.dark .hover\:bg-slate-50:hover { background-color: #1e293b !important; }
+
+/* Navigation & Layout specific */
+.dark header {
+  background-color: var(--surface);
+  border-color: var(--border);
+}
+
+/* Rechart tooltip */
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text-main) !important;
+}
+
+/* Platform Live indicator */
+.dark .bg-green-50 { background-color: rgba(34, 197, 94, 0.1) !important; }
+.dark .border-green-100 { border-color: rgba(34, 197, 94, 0.2) !important; }
+

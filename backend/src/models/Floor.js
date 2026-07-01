@@ -73,4 +73,6 @@ floorSchema.virtual('virtualRooms', {
   foreignField: 'floor'
 });
 
+floorSchema.index({ building: 1 });
+
 module.exports = mongoose.model('Floor', floorSchema);

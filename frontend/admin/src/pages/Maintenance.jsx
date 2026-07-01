@@ -323,7 +323,7 @@ const Maintenance = () => {
            <div className="overflow-x-auto scrollbar-hide">
               <table className="w-full text-left border-collapse whitespace-nowrap">
                  <thead>
-                    <tr className="bg-slate-50/80 dark:bg-white/2 border-b border-divider sticky top-0 z-20 backdrop-blur-md">
+                    <tr className="bg-background border-b border-divider sticky top-0 z-20 backdrop-blur-md">
                        <th className="py-5 px-8 w-12">
                           <input 
                             type="checkbox" 
@@ -347,7 +347,7 @@ const Maintenance = () => {
                       <React.Fragment key={t._id}>
                          <tr 
                            onClick={() => setExpandedId(expandedId === t._id ? null : t._id)}
-                           className={`group hover:bg-slate-50/50 dark:hover:bg-white/1 transition-all cursor-pointer ${expandedId === t._id ? 'bg-primary/5' : ''}`}
+                           className={`group hover:bg-background transition-all cursor-pointer ${expandedId === t._id ? 'bg-primary/5' : ''}`}
                          >
                             <td className="py-5 px-8" onClick={(e) => e.stopPropagation()}>
                                <input 
@@ -450,12 +450,8 @@ const Maintenance = () => {
       )}
 
       {/* --- PAGINATION --- */}
-      <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-6 p-6 card-classic bg-slate-50/50 dark:bg-white/2">
+      <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-6 p-6 card-classic bg-surface">
          <div className="flex items-center gap-4">
-            <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">
-               Showing {filteredTasks.length === 0 ? 0 : currentPage * itemsPerPage + 1} to {Math.min((currentPage + 1) * itemsPerPage, filteredTasks.length)} of {filteredTasks.length} logs
-            </span>
-            <div className="h-4 w-px bg-border" />
             <div className="flex items-center gap-2 bg-background border border-divider rounded-xl px-3 py-1.5 shadow-subtle cursor-pointer" onClick={fetchMaintenanceData}>
                <FileText size={14} className="text-primary" />
                <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">Refresh Manifest</span>

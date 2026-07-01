@@ -53,7 +53,7 @@ const Owners = () => {
     const blob = new Blob([csv], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `Owner_Directory_${new Date().toISOString().slice(0,10)}.csv`;
+    link.download = `Owner_Directory_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -69,10 +69,50 @@ const Owners = () => {
   });
 
   const kpiCards = [
-    { label: 'Total Partners', value: stats.totalOwners.toString(), change: 'Live', icon: <Users size={22} />, color: 'primary' },
-    { label: 'Enterprise Tier', value: stats.enterpriseOwners.toString(), change: '5+ Properties', icon: <ShieldCheck size={22} />, color: 'indigo' },
-    { label: 'Total Assets', value: stats.totalBuildings.toString(), change: 'Active', icon: <Building size={22} />, color: 'success' },
-    { label: 'Active Owners', value: owners.filter(o => o.status === 'Active').length.toString(), change: 'Online', icon: <TrendingUp size={22} />, color: 'warning' },
+    {
+      label: 'Total Partners',
+      value: stats.totalOwners,
+      sub: 'Registered Owners',
+      badge: 'Live',
+      badgeColor: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+      icon: Users,
+      gradient: 'from-emerald-500/20 to-emerald-600/5',
+      iconBg: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+      accent: '#10b981',
+    },
+    {
+      label: 'Enterprise Tier',
+      value: stats.enterpriseOwners,
+      sub: '5+ Properties',
+      badge: 'Premium',
+      badgeColor: 'text-violet-400 bg-violet-400/10 border-violet-400/20',
+      icon: ShieldCheck,
+      gradient: 'from-violet-500/20 to-violet-600/5',
+      iconBg: 'bg-violet-500/10 text-violet-500 border-violet-500/20',
+      accent: '#8b5cf6',
+    },
+    {
+      label: 'Total Assets',
+      value: stats.totalBuildings,
+      sub: 'Properties Listed',
+      badge: 'Active',
+      badgeColor: 'text-sky-400 bg-sky-400/10 border-sky-400/20',
+      icon: Building,
+      gradient: 'from-sky-500/20 to-sky-600/5',
+      iconBg: 'bg-sky-500/10 text-sky-500 border-sky-500/20',
+      accent: '#0ea5e9',
+    },
+    {
+      label: 'Active Owners',
+      value: owners.filter(o => o.status === 'Active').length,
+      sub: 'Currently Online',
+      badge: 'Online',
+      badgeColor: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
+      icon: TrendingUp,
+      gradient: 'from-amber-500/20 to-amber-600/5',
+      iconBg: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+      accent: '#f59e0b',
+    },
   ];
 
   const planBadge = (plan) => {
@@ -85,7 +125,7 @@ const Owners = () => {
   };
 
   return (
-    <div className="space-y-8 pb-10 animate-fade">
+    <div className="space-y-8 pb-10 animate-fade-in">
 
       {/* --- BACK NAVIGATION --- */}
       <button
@@ -99,7 +139,7 @@ const Owners = () => {
       {/* --- HEADER --- */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl text-premium-header">Hostel Owners Directory</h1>
+          <h1 className="text-3xl font-bold text-text-main tracking-tight">Hostel Owners Directory</h1>
           <p className="text-sm text-text-muted mt-1 font-medium italic">
             Live feed from <span className="text-primary font-black">owner_users</span> ·{' '}
             <span className="text-primary font-black">owner_buildings</span> ·{' '}
@@ -109,13 +149,13 @@ const Owners = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={fetchOwners}
-            className="flex items-center gap-2 px-4 py-2.5 bg-card border border-divider rounded-xl text-[10px] font-black uppercase tracking-widest text-text-secondary hover:border-primary hover:text-primary transition-all shadow-subtle"
+            className="flex items-center gap-2 px-4 py-2.5 bg-surface border border-divider rounded-xl text-[10px] font-black uppercase tracking-widest text-text-muted hover:border-primary hover:text-primary transition-all"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
           </button>
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all"
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:brightness-110 transition-all"
           >
             <Download size={14} /> Export CSV
           </button>
@@ -124,30 +164,68 @@ const Owners = () => {
 
       {/* --- KPI STATS --- */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-        {kpiCards.map((stat, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08 }}
-            className="card-classic p-5 flex items-center gap-4 group border-none glass-effect relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-full -mr-8 -mt-8 blur-2xl group-hover:bg-primary/10 transition-colors" />
-            <div className={`w-12 h-12 rounded-2xl bg-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/10 text-${stat.color === 'primary' ? 'primary' : stat.color + '-500'} flex items-center justify-center border border-${stat.color === 'primary' ? 'primary' : stat.color + '-500'}/10 shrink-0 relative z-10`}>
-              {stat.icon}
-            </div>
-            <div className="relative z-10 min-w-0">
-              <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.15em] truncate">{stat.label}</p>
-              <div className="flex items-baseline gap-2 mt-0.5">
-                <h3 className="text-2xl font-black text-text-primary tracking-tight italic">
-                  {loading ? '—' : stat.value}
-                </h3>
-                <span className="text-[9px] font-black text-success uppercase tracking-tight">{stat.change}</span>
+        {kpiCards.map((card, i) => {
+          const Icon = card.icon;
+          const pct = card.label === 'Enterprise Tier'
+            ? Math.round(((card.value || 0) / Math.max(stats.totalOwners, 1)) * 100)
+            : card.label === 'Active Owners'
+              ? Math.round(((card.value || 0) / Math.max(stats.totalOwners, 1)) * 100)
+              : 100;
+
+          return (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+              className="relative bg-surface border border-divider rounded-2xl p-5 overflow-hidden group hover:shadow-premium hover:-translate-y-0.5 transition-all duration-300"
+            >
+              {/* Gradient blob */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-100 pointer-events-none rounded-2xl`} />
+
+              {/* Top row */}
+              <div className="relative flex items-start justify-between mb-4">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${card.iconBg} shrink-0`}>
+                  <Icon size={20} />
+                </div>
+                <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${card.badgeColor}`}>
+                  {card.badge}
+                </span>
               </div>
-            </div>
-          </motion.div>
-        ))}
+
+              {/* Value */}
+              <div className="relative mb-1">
+                <h3 className="text-3xl font-black text-text-main tracking-tight leading-none">
+                  {loading ? (
+                    <span className="inline-block w-10 h-7 bg-background rounded animate-pulse" />
+                  ) : (card.value ?? 0)}
+                </h3>
+              </div>
+
+              {/* Labels */}
+              <p className="relative text-[11px] font-black text-text-main">{card.label}</p>
+              <p className="relative text-[10px] text-text-muted mt-0.5">{card.sub}</p>
+
+              {/* Progress bar (for Enterprise & Active only) */}
+              {(card.label === 'Enterprise Tier' || card.label === 'Active Owners') && !loading && (
+                <div className="relative mt-3">
+                  <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ delay: i * 0.1 + 0.3, duration: 0.6, ease: 'easeOut' }}
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: card.accent }}
+                    />
+                  </div>
+                  <p className="text-[9px] text-text-muted mt-1">{pct}% of total partners</p>
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
       </div>
+
 
       {/* --- FILTER BAR --- */}
       <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -166,9 +244,8 @@ const Owners = () => {
             <button
               key={plan}
               onClick={() => setFilterPlan(plan)}
-              className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                filterPlan === plan ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-text-muted hover:text-text-primary'
-              }`}
+              className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterPlan === plan ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-text-muted hover:text-text-primary'
+                }`}
             >
               {plan}
             </button>

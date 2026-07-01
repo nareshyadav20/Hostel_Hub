@@ -73,8 +73,8 @@ const createBuilding = async (req, res) => {
       policies: finalPolicies,
       staffInfo: finalStaffInfo,
       status: initialStatus,
-      approvalStatus: initialStatus === 'Active' ? 'approved' : 'pending',
-      isApproved: initialStatus === 'Active' ? true : false,
+      approvalStatus: initialStatus === 'Draft' ? 'pending' : 'pending',
+      isApproved: false,
       lastStep: lastStep || 1,
       draftData: finalDraftData,
       documents: finalDocuments,
@@ -485,6 +485,33 @@ const getOwnerDrafts = async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
+const approveBuilding = async (req, res) => {
+  try {
+    // Only allow ADMIN or SUPER_ADMIN
+    const isPlatformAdmin = req.user && req.user.role && ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role.toUpperCase());
+    if (!isPlatformAdmin) {
+      return res.status(403).json({ error: 'Only admins can approve buildings' });
+    }
+
+    const building = await Building.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: 'Active',
+        approvalStatus: 'approved',
+        isApproved: true,
+        approvedBy: req.user.id,
+        approvedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!building) return res.status(404).json({ error: 'Building not found' });
+    res.status(200).json({ message: 'Building approved successfully', building });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createBuilding,
   getBuildings,
@@ -498,5 +525,6 @@ module.exports = {
   uploadPhotos,
   getBuildingPortfolio,
   getPlatformStats,
-  seedBalanced
+  seedBalanced,
+  approveBuilding
 };

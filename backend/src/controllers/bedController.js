@@ -13,6 +13,10 @@ const createBed = async (req, res) => {
     if (!room || room.floor.building.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Room not found or unauthorized' });
     }
+    const building = room.floor.building;
+    if (building.approvalStatus !== 'approved' && building.status !== 'Active') {
+      return res.status(403).json({ error: 'Cannot add beds to an unapproved property. Please wait for admin approval.' });
+    }
 
     const bed = await Bed.create({ 
       bedNumber, status: 'AVAILABLE', images: images||[], 
@@ -392,6 +396,10 @@ const bulkCreateBeds = async (req, res) => {
     const room = await Room.findById(roomId).populate({ path: 'floor', populate: { path: 'building' } });
     if (!room || room.floor.building.owner.toString() !== req.user.id) {
       return res.status(404).json({ error: 'Room not found or unauthorized' });
+    }
+    const building = room.floor.building;
+    if (building.approvalStatus !== 'approved' && building.status !== 'Active') {
+      return res.status(403).json({ error: 'Cannot add beds to an unapproved property. Please wait for admin approval.' });
     }
 
     const bedsWithRoom = beds.map(b => ({ ...b, room: roomId }));
